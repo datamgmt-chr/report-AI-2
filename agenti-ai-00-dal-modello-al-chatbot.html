@@ -1,0 +1,846 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Dal Modello al Chatbot — Cosa Cambia Davvero</title>
+<link href="https://fonts.googleapis.com/css2?family=Spectral:ital,wght@0,300;0,400;0,500;0,600;1,400&family=Sora:wght@200;300;400;500;600;700;800&family=IBM+Plex+Mono:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg:     #f6f4ee;
+  --bg2:    #eeebe2;
+  --bg3:    #e3ddd2;
+  --ink:    #1a1815;
+  --ink2:   #2c2922;
+  --ink3:   #66614f;
+  --ink4:   #9d9886;
+  --border: #d7d2c5;
+  --border2:#c6c0b1;
+
+  /* layer accents — dal nucleo verso l'esterno */
+  --core:   #b3402a;   /* il modello — il nucleo */
+  --l1:     #2e7d9c;   /* parametri */
+  --l2:     #7b5ea7;   /* system prompt */
+  --l3:     #b8860b;   /* contesto/memoria */
+  --l4:     #4a8c3f;   /* strumenti */
+  --l5:     #3a7ca5;   /* RAG */
+  --l6:     #c47a00;   /* skills/config */
+  --l7:     #c0392b;   /* guardrail */
+  --l8:     #8b7355;   /* orchestrazione */
+
+  --good:   #3d7a45;
+  --bad:    #b3402a;
+}
+
+* { margin:0; padding:0; box-sizing:border-box; }
+html { scroll-behavior:smooth; }
+
+body {
+  background: var(--bg);
+  color: var(--ink);
+  font-family: 'Sora', sans-serif;
+  font-weight: 300;
+  font-size: 14px;
+  line-height: 1.78;
+}
+
+/* ── HEADER ── */
+.masthead {
+  background: var(--ink);
+  color: rgba(255,255,255,0.9);
+  padding: 64px 56px 54px;
+  position: relative;
+  overflow: hidden;
+}
+.masthead::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(circle at 78% 30%, rgba(179,64,42,0.22) 0, transparent 42%),
+    repeating-linear-gradient(0deg, rgba(255,255,255,0.012) 0, rgba(255,255,255,0.012) 1px, transparent 1px, transparent 58px);
+  pointer-events: none;
+}
+.mh-eye {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 10px;
+  letter-spacing: 3px;
+  text-transform: uppercase;
+  color: rgba(255,255,255,0.28);
+  margin-bottom: 20px;
+  position: relative;
+}
+.masthead h1 {
+  font-family: 'Spectral', serif;
+  font-weight: 400;
+  font-size: clamp(33px, 5.2vw, 60px);
+  line-height: 1.06;
+  letter-spacing: -1px;
+  max-width: 720px;
+  position: relative;
+}
+.masthead h1 em { font-style: italic; color: #e8a48c; }
+.mh-sub {
+  margin-top: 22px;
+  font-size: 15px;
+  font-weight: 300;
+  color: rgba(255,255,255,0.4);
+  max-width: 660px;
+  line-height: 1.72;
+  position: relative;
+}
+
+/* ── NAV ── */
+.nav {
+  background: var(--ink2);
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  display: flex;
+  overflow-x: auto;
+  border-bottom: 1px solid rgba(255,255,255,0.06);
+}
+.nav-btn {
+  flex: 1;
+  min-width: 120px;
+  padding: 13px 14px;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  font-family: 'Sora', sans-serif;
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+  color: rgba(255,255,255,0.3);
+  border-right: 1px solid rgba(255,255,255,0.06);
+  transition: all 0.2s;
+  white-space: nowrap;
+}
+.nav-btn:last-child { border-right: none; }
+.nav-btn:hover { color: rgba(255,255,255,0.62); }
+.nav-btn.active { color: #fff; background: rgba(255,255,255,0.05); }
+.nav-btn.active::after {
+  content: '';
+  display: block;
+  height: 2px;
+  background: var(--core);
+  margin-top: 6px;
+  border-radius: 1px;
+}
+
+/* ── SECTIONS ── */
+.sect { display: none; }
+.sect.active { display: block; animation: fadeIn 0.3s ease; }
+@keyframes fadeIn { from { opacity:0; transform:translateY(6px); } to { opacity:1; transform:translateY(0); } }
+
+.sect-head {
+  padding: 50px 56px 36px;
+  border-bottom: 1px solid var(--border);
+}
+.sect-num {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 10px;
+  letter-spacing: 3px;
+  text-transform: uppercase;
+  color: var(--ink4);
+  margin-bottom: 12px;
+}
+.sect-head h2 {
+  font-family: 'Spectral', serif;
+  font-weight: 400;
+  font-size: clamp(27px, 3.6vw, 43px);
+  line-height: 1.1;
+  letter-spacing: -0.5px;
+  max-width: 640px;
+  margin-bottom: 14px;
+}
+.sect-head h2 em { font-style: italic; }
+.sect-head p {
+  color: var(--ink3);
+  max-width: 700px;
+  font-size: 14.5px;
+}
+.wrap { padding: 36px 56px 60px; }
+
+/* body prose */
+.prose { max-width: 760px; }
+.prose p { color: var(--ink3); margin-bottom: 18px; font-size: 14.5px; }
+.prose p strong { color: var(--ink2); font-weight: 500; }
+.prose p em { font-style: italic; color: var(--ink2); }
+.lead { font-size: 16px !important; color: var(--ink2) !important; }
+
+.h3 {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 10px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: var(--ink4);
+  margin: 38px 0 14px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid var(--border);
+  max-width: 760px;
+}
+
+/* ── ONION DIAGRAM ── */
+.diagram-wrap {
+  margin: 8px 0 8px;
+  padding: 36px 24px;
+  background: var(--ink);
+  border: 1px solid var(--border2);
+  overflow-x: auto;
+}
+.diagram-wrap svg { display: block; margin: 0 auto; }
+.diagram-cap {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 11px;
+  color: var(--ink4);
+  text-align: center;
+  margin-top: 14px;
+  letter-spacing: 0.5px;
+}
+
+/* ── COMPARISON (api vs chatbot) ── */
+.vs {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1px;
+  background: var(--border2);
+  border: 1px solid var(--border2);
+  margin: 18px 0;
+  max-width: 880px;
+}
+.vs-col { background: var(--bg); padding: 22px 24px; }
+.vs-col.api { background: var(--bg2); }
+.vs-tag {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 9px;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  padding: 4px 10px;
+  display: inline-block;
+  margin-bottom: 14px;
+  border: 1px solid;
+}
+.vs-tag.api { color: var(--ink3); border-color: var(--border2); }
+.vs-tag.bot { color: var(--core); border-color: var(--core); }
+.vs-q {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 12px;
+  color: var(--ink2);
+  background: var(--bg3);
+  padding: 8px 12px;
+  border-left: 3px solid var(--ink4);
+  margin-bottom: 14px;
+  line-height: 1.5;
+}
+.vs-out {
+  font-size: 13px;
+  color: var(--ink3);
+  line-height: 1.65;
+  font-style: italic;
+}
+.vs-note {
+  margin-top: 14px;
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 10.5px;
+  color: var(--ink4);
+  line-height: 1.55;
+  letter-spacing: 0.2px;
+}
+
+/* ── LAYER LIST ── */
+.layers { margin: 18px 0; max-width: 820px; }
+.layer {
+  display: grid;
+  grid-template-columns: 5px 38px 1fr;
+  border: 1px solid var(--border);
+  border-bottom: none;
+  background: var(--bg);
+  align-items: stretch;
+}
+.layer:last-child { border-bottom: 1px solid var(--border); }
+.layer-accent { }
+.layer-num {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 12px;
+  color: var(--ink4);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--bg2);
+}
+.layer-body { padding: 13px 18px; }
+.layer-name { font-weight: 600; font-size: 14px; color: var(--ink2); }
+.layer-name span {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 9px;
+  font-weight: 400;
+  color: var(--ink4);
+  margin-left: 8px;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+}
+.layer-desc { font-size: 12.5px; color: var(--ink3); line-height: 1.55; margin-top: 2px; }
+.layer-rep {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 10px;
+  color: var(--ink4);
+  margin-top: 6px;
+}
+.layer-rep b { color: var(--core); font-weight: 500; }
+
+/* ── KEY POINT ── */
+.key-point {
+  margin: 36px 0 8px;
+  padding: 26px 30px;
+  border-left: 4px solid var(--core);
+  background: var(--bg2);
+  max-width: 820px;
+}
+.kp-label {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 9px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: var(--core);
+  margin-bottom: 8px;
+}
+.kp-text {
+  font-family: 'Spectral', serif;
+  font-size: 20px;
+  line-height: 1.42;
+  color: var(--ink2);
+  font-style: italic;
+}
+.kp-sub { margin-top: 12px; font-size: 13px; color: var(--ink3); line-height: 1.65; }
+
+/* ── INSIGHT / NUANCE ── */
+.insight {
+  margin: 22px 0;
+  padding: 18px 22px;
+  border-left: 4px solid var(--l1);
+  background: var(--bg2);
+  max-width: 820px;
+}
+.insight-label {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 9px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  margin-bottom: 6px;
+  color: var(--l1);
+}
+.insight p { font-size: 13.5px; line-height: 1.7; color: var(--ink2); margin: 0; }
+
+/* ── BEST PRACTICE BLOCK (formato ricorrente della serie) ── */
+.bp {
+  margin: 28px 0 8px;
+  border: 1px solid var(--good);
+  background: var(--bg);
+  max-width: 880px;
+}
+.bp-head {
+  background: var(--good);
+  color: #fff;
+  padding: 12px 22px;
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 11px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.bp-head::before { content: '◆'; font-size: 11px; }
+.bp-body { padding: 6px 0; }
+.bp-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1px;
+  background: var(--border);
+  border-bottom: 1px solid var(--border);
+}
+.bp-row:last-child { border-bottom: none; }
+.bp-do, .bp-dont { padding: 14px 20px; background: var(--bg); }
+.bp-tag {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 9px;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  margin-bottom: 7px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.bp-do .bp-tag { color: var(--good); }
+.bp-dont .bp-tag { color: var(--bad); }
+.bp-do .bp-tag::before { content: '✓'; font-weight: 700; }
+.bp-dont .bp-tag::before { content: '✕'; font-weight: 700; }
+.bp-text { font-size: 12.5px; color: var(--ink3); line-height: 1.6; }
+.bp-text strong { color: var(--ink2); font-weight: 500; }
+.bp-single {
+  padding: 14px 20px;
+  border-bottom: 1px solid var(--border);
+  font-size: 13px;
+  color: var(--ink3);
+  line-height: 1.65;
+}
+.bp-single:last-child { border-bottom: none; }
+.bp-single strong { color: var(--ink2); font-weight: 600; }
+
+/* ── SOURCE NOTE ── */
+.srcnote {
+  margin: 22px 0;
+  padding: 14px 20px;
+  background: var(--bg2);
+  border: 1px dashed var(--border2);
+  max-width: 820px;
+  font-size: 12px;
+  color: var(--ink3);
+  line-height: 1.6;
+}
+.srcnote b {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 9px;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  color: var(--ink4);
+  display: block;
+  margin-bottom: 4px;
+}
+
+/* ── ROADMAP TABLE ── */
+.sum-table {
+  width: 100%;
+  max-width: 880px;
+  border-collapse: collapse;
+  font-size: 12.5px;
+  margin: 20px 0;
+  border: 1px solid var(--border2);
+}
+.sum-table th, .sum-table td {
+  padding: 11px 14px;
+  border: 1px solid var(--border);
+  text-align: left;
+  vertical-align: top;
+}
+.sum-table thead th {
+  background: var(--ink);
+  color: rgba(255,255,255,0.82);
+  font-weight: 600;
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+}
+.sum-table tbody tr:nth-child(even) { background: var(--bg2); }
+.sum-table td { color: var(--ink3); }
+.sum-table .n-cell { font-family: 'IBM Plex Mono', monospace; color: var(--core); font-weight: 500; white-space: nowrap; }
+.sum-table .t-cell { font-weight: 600; color: var(--ink2); }
+
+/* ── FOOTER ── */
+.footer {
+  background: var(--ink);
+  color: rgba(255,255,255,0.22);
+  padding: 30px 56px;
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 10px;
+  letter-spacing: 1px;
+  display: flex;
+  justify-content: space-between;
+}
+
+@media (max-width: 860px) {
+  .masthead, .sect-head, .wrap, .footer { padding-left: 20px; padding-right: 20px; }
+  .vs, .bp-row { grid-template-columns: 1fr; }
+  .footer { flex-direction: column; gap: 6px; }
+}
+</style>
+</head>
+<body>
+
+<!-- HEADER -->
+<div class="masthead">
+  <div class="mh-eye">Serie Agenti AI · Parte II — Report 00</div>
+  <h1>Dal modello al chatbot:<br>cosa cambia <em>davvero</em></h1>
+  <p class="mh-sub">Lo stesso LLM, interrogato via API o tramite un chatbot come Claude, può rispondere in modo diverso. Questo report apre una nuova serie che decostruisce, strato per strato, ciò che un chatbot aggiunge al modello nudo — per imparare a costruire agenti migliori.</p>
+</div>
+
+<!-- NAV -->
+<nav class="nav">
+  <button class="nav-btn active" onclick="show(0)">Il problema</button>
+  <button class="nav-btn" onclick="show(1)">La dimostrazione</button>
+  <button class="nav-btn" onclick="show(2)">La cipolla</button>
+  <button class="nav-btn" onclick="show(3)">Gli strati</button>
+  <button class="nav-btn" onclick="show(4)">Best practice</button>
+  <button class="nav-btn" onclick="show(5)">La serie</button>
+</nav>
+
+
+<!-- ═══════════════════════════ S0 — IL PROBLEMA ═══════════════════════════ -->
+<div class="sect active" id="s0">
+  <div class="sect-head">
+    <div class="sect-num">Sezione 00 · L'intuizione di partenza</div>
+    <h2>Perché lo stesso modello <em>risponde diversamente</em></h2>
+    <p>Un fatto che spiazza chi inizia a sviluppare: prendere un LLM e interrogarlo via API può restituire risultati molto diversi da quelli dello stesso modello dentro un chatbot. Eppure il modello è identico. La differenza non è nel cervello — è in tutto ciò che gli sta intorno.</p>
+  </div>
+  <div class="wrap">
+    <div class="prose">
+      <p class="lead">Se chiedi la stessa cosa a Claude sul sito e a <em>claude-opus</em> via API, puoi ottenere due risposte con tono, lunghezza, formattazione e perfino contenuto diversi. Non è un malfunzionamento: è il segnale che il chatbot non è "il modello", ma il modello <strong>più una serie di strati</strong> che ne condizionano il comportamento prima ancora che tu scriva una parola.</p>
+
+      <p>La documentazione di Anthropic lo dichiara apertamente. L'interfaccia web e le app di Claude <strong>caricano automaticamente un system prompt a ogni conversazione</strong>, che fornisce informazioni come la data corrente e incoraggia comportamenti specifici — per esempio fornire sempre i blocchi di codice in Markdown. <span style="font-style:italic;color:var(--ink4)">Questi aggiornamenti del system prompt non si applicano all'API.</span></p>
+
+      <p>Detto in modo netto: chi usa Claude.ai riceve il system prompt di default di Anthropic; chi usa un'app di terze parti riceve quello scritto dall'operatore di quell'app; chi usa l'API <strong>non riceve alcun system prompt di default</strong>. Stesso modello, regole di comportamento diverse. È lo stesso principio che, nei tuoi report precedenti, distingueva l'LLM (il componente "cervello") da tutto il resto dell'architettura.</p>
+
+      <div class="key-point">
+        <div class="kp-label">Il punto fondante della serie</div>
+        <div class="kp-text">Un chatbot non è un LLM. È un LLM avvolto da strati di configurazione, contesto e controllo — ed è in quegli strati che vive la maggior parte dell'esperienza d'uso.</div>
+        <div class="kp-sub">Capire quali sono questi strati, cosa fa ciascuno e perché esiste, è il modo più diretto per imparare a progettare agenti: invece di studiare componenti astratti, si studia un prodotto reale e maturo e lo si "smonta" dall'esterno verso l'interno.</div>
+      </div>
+
+      <div class="srcnote">
+        <b>Nota su fonti e affidabilità</b>
+        In questa serie terremo sempre distinto ciò che è <strong>documentato pubblicamente</strong> (i system prompt che Anthropic pubblica, la documentazione dell'API) da ciò che è <strong>inferenza ragionevole</strong> sull'implementazione interna, che non è del tutto pubblica. Lo scopo non è il reverse-engineering di Claude, ma usare un chatbot di frontiera come <em>esempio illustrativo</em> dell'architettura tipica — un modello mentale trasferibile ai tuoi progetti.
+      </div>
+    </div>
+  </div>
+</div>
+
+
+<!-- ═══════════════════════════ S1 — LA DIMOSTRAZIONE ═══════════════════════════ -->
+<div class="sect" id="s1">
+  <div class="sect-head">
+    <div class="sect-num">Sezione 01 · La prova concreta</div>
+    <h2>API nuda vs chatbot, <em>fianco a fianco</em></h2>
+    <p>Il modo migliore per fissare l'intuizione è vederla. Ecco cosa cambia, sulla stessa domanda, tra una chiamata API senza alcuna configurazione e lo stesso modello dentro un chatbot configurato.</p>
+  </div>
+  <div class="wrap">
+    <div class="prose">
+      <p>Prendiamo una domanda banale e una più rivelatrice. La prima mostra differenze di <strong>forma</strong>; la seconda mostra differenze di <strong>contenuto</strong> dovute a informazioni che il chatbot inietta e l'API no.</p>
+    </div>
+
+    <div class="h3">Esempio A — differenza di forma e tono</div>
+    <div class="vs">
+      <div class="vs-col api">
+        <span class="vs-tag api">API · nessun system prompt</span>
+        <div class="vs-q">"Scrivimi una funzione che inverte una stringa in Python"</div>
+        <div class="vs-out">Risposta minimale: spesso solo il codice, formattazione non garantita, nessun commento sullo stile, tono neutro. Il modello non sa nulla del contesto né di come "dovrebbe" presentarsi.</div>
+      </div>
+      <div class="vs-col">
+        <span class="vs-tag bot">Chatbot · system prompt attivo</span>
+        <div class="vs-q">"Scrivimi una funzione che inverte una stringa in Python"</div>
+        <div class="vs-out">Codice in blocco Markdown (perché il system prompt lo richiede esplicitamente), tono colloquiale e disponibile, eventuale breve spiegazione, formato coerente con le linee guida del prodotto.</div>
+      </div>
+    </div>
+
+    <div class="h3">Esempio B — differenza di contenuto</div>
+    <div class="vs">
+      <div class="vs-col api">
+        <span class="vs-tag api">API · nessun system prompt</span>
+        <div class="vs-q">"Che giorno è oggi?"</div>
+        <div class="vs-out">Il modello non ha modo di saperlo: non esiste un "oggi" nei suoi pesi. Risponde con incertezza, rimanda al knowledge cutoff, o tira a indovinare. L'informazione non è nel modello.</div>
+        <div class="vs-note">Il modello, da solo, è congelato al suo cutoff di addestramento.</div>
+      </div>
+      <div class="vs-col">
+        <span class="vs-tag bot">Chatbot · system prompt attivo</span>
+        <div class="vs-q">"Che giorno è oggi?"</div>
+        <div class="vs-out">Risponde con la data esatta — perché il system prompt gliela inietta a ogni conversazione ("The current date is..."). L'informazione non viene dal modello, viene dallo strato che lo avvolge.</div>
+        <div class="vs-note">La data è iniettata dall'esterno, a ogni turno, prima del tuo messaggio.</div>
+      </div>
+    </div>
+
+    <div class="insight">
+      <div class="insight-label">La lezione dell'esempio B</div>
+      <p>Quando un chatbot "sa" qualcosa che il modello nudo non sa (la data, quali strumenti può usare, come deve comportarsi), quel sapere quasi sempre <strong>non è nel modello</strong>: è in uno degli strati che gli vengono anteposti. Imparare a sviluppare agenti significa, in larga parte, imparare a costruire bene questi strati.</p>
+    </div>
+
+    <div class="prose">
+      <p>Un dato che dà la misura del fenomeno: analisi pubbliche del system prompt di Claude hanno stimato che esso possa occupare <strong>oltre il 10% dell'intera finestra di contesto</strong> prima ancora che l'utente scriva. Non è un dettaglio accessorio — è una parte sostanziale di ciò che definisce il prodotto.</p>
+    </div>
+  </div>
+</div>
+
+
+<!-- ═══════════════════════════ S2 — LA CIPOLLA ═══════════════════════════ -->
+<div class="sect" id="s2">
+  <div class="sect-head">
+    <div class="sect-num">Sezione 02 · Il modello mentale</div>
+    <h2>La <em>cipolla</em>: il modello al centro, gli strati intorno</h2>
+    <p>Per tenere insieme tutta la serie usiamo un'unica metafora: l'LLM è il nucleo, e ogni strato che lo avvolge aggiunge una capacità che il modello, da solo, non possiede. Si legge dal centro verso l'esterno — dal più vicino al modello al più vicino all'utente.</p>
+  </div>
+  <div class="wrap">
+    <div class="diagram-wrap">
+      <svg viewBox="0 0 760 560" width="760" height="560" xmlns="http://www.w3.org/2000/svg" font-family="'Sora', sans-serif">
+        <defs>
+          <radialGradient id="coreglow" cx="50%" cy="50%" r="50%">
+            <stop offset="0%" stop-color="#d4543a"/>
+            <stop offset="100%" stop-color="#b3402a"/>
+          </radialGradient>
+        </defs>
+
+        <!-- onion rings, outer to inner -->
+        <g text-anchor="middle">
+          <!-- ring 8 -->
+          <circle cx="380" cy="250" r="240" fill="none" stroke="#8b7355" stroke-width="1.5" opacity="0.55"/>
+          <circle cx="380" cy="250" r="212" fill="none" stroke="#c0392b" stroke-width="1.5" opacity="0.55"/>
+          <circle cx="380" cy="250" r="184" fill="none" stroke="#c47a00" stroke-width="1.5" opacity="0.6"/>
+          <circle cx="380" cy="250" r="156" fill="none" stroke="#3a7ca5" stroke-width="1.5" opacity="0.65"/>
+          <circle cx="380" cy="250" r="128" fill="none" stroke="#4a8c3f" stroke-width="1.5" opacity="0.7"/>
+          <circle cx="380" cy="250" r="100" fill="none" stroke="#b8860b" stroke-width="1.5" opacity="0.75"/>
+          <circle cx="380" cy="250" r="72"  fill="none" stroke="#7b5ea7" stroke-width="1.5" opacity="0.8"/>
+          <circle cx="380" cy="250" r="46"  fill="none" stroke="#2e7d9c" stroke-width="1.5" opacity="0.85"/>
+
+          <!-- core -->
+          <circle cx="380" cy="250" r="30" fill="url(#coreglow)"/>
+          <text x="380" y="247" fill="#fff" font-size="12" font-weight="600">LLM</text>
+          <text x="380" y="261" fill="rgba(255,255,255,0.75)" font-size="8">il nucleo</text>
+
+          <!-- ring labels, placed along the top of each ring -->
+          <g font-size="10.5" font-weight="500" fill="rgba(255,255,255,0.92)">
+            <text x="380" y="208">parametri</text>
+            <text x="380" y="182">system prompt</text>
+            <text x="380" y="154">contesto · memoria</text>
+            <text x="380" y="126">strumenti</text>
+            <text x="380" y="98">RAG · conoscenza</text>
+            <text x="380" y="70">skills · configurazione</text>
+            <text x="380" y="42">guardrail</text>
+            <text x="380" y="22">orchestrazione</text>
+          </g>
+        </g>
+
+        <!-- side legend -->
+        <g font-size="10" fill="rgba(255,255,255,0.55)" text-anchor="start">
+          <text x="40" y="520" font-family="'IBM Plex Mono', monospace" font-size="9" letter-spacing="1" fill="rgba(255,255,255,0.4)">DAL NUCLEO VERSO L'ESTERNO →</text>
+          <text x="40" y="538" font-family="'IBM Plex Mono', monospace" font-size="9" fill="rgba(255,255,255,0.35)">più vicino al modello · · · più vicino all'utente</text>
+        </g>
+      </svg>
+      <div class="diagram-cap">La struttura della serie: ogni report tratta uno strato, procedendo dal centro verso l'esterno.</div>
+    </div>
+
+    <div class="prose">
+      <p>Questa è la stessa anatomia dei tuoi due report precedenti, vista da un'altra angolazione. Dove prima elencavi <em>9 componenti</em> di un agente o <em>7 leve</em> di specializzazione, qui li disponiamo come <strong>strati concentrici</strong> attorno al modello, nell'ordine in cui condizionano una singola risposta. Il vantaggio: l'ordine non è arbitrario, segue il flusso reale di ciò che accade a ogni messaggio.</p>
+    </div>
+  </div>
+</div>
+
+
+<!-- ═══════════════════════════ S3 — GLI STRATI ═══════════════════════════ -->
+<div class="sect" id="s3">
+  <div class="sect-head">
+    <div class="sect-num">Sezione 03 · La mappa</div>
+    <h2>Gli otto strati, <em>uno per uno</em></h2>
+    <p>Ecco la lista completa degli strati che la serie analizzerà. Per ciascuno: cosa aggiunge al modello nudo, e a quale componente dei tuoi report precedenti corrisponde.</p>
+  </div>
+  <div class="wrap">
+    <div class="layers">
+
+      <div class="layer">
+        <div class="layer-accent" style="background:var(--l1)"></div>
+        <div class="layer-num">1</div>
+        <div class="layer-body">
+          <div class="layer-name">Parametri del modello <span>temperature · top-p · max tokens</span></div>
+          <div class="layer-desc">Le manopole che il chatbot imposta per te e che via API devi impostare a mano. Determinano creatività, lunghezza, determinismo.</div>
+          <div class="layer-rep">corrisponde a → <b>Modello LLM</b></div>
+        </div>
+      </div>
+
+      <div class="layer">
+        <div class="layer-accent" style="background:var(--l2)"></div>
+        <div class="layer-num">2</div>
+        <div class="layer-body">
+          <div class="layer-name">System prompt <span>identità · comportamento · limiti</span></div>
+          <div class="layer-desc">Le istruzioni invisibili che danno al modello un ruolo, uno stile, dei vincoli e la consapevolezza di data e strumenti. Lo strato a più alto impatto sul comportamento.</div>
+          <div class="layer-rep">corrisponde a → <b>Prompt</b></div>
+        </div>
+      </div>
+
+      <div class="layer">
+        <div class="layer-accent" style="background:var(--l3)"></div>
+        <div class="layer-num">3</div>
+        <div class="layer-body">
+          <div class="layer-name">Contesto e memoria <span>sessione · persistenza · compattazione</span></div>
+          <div class="layer-desc">Come il chatbot mantiene il filo della conversazione e ricorda tra sessioni, gestendo una finestra di contesto limitata.</div>
+          <div class="layer-rep">corrisponde a → <b>Memoria</b></div>
+        </div>
+      </div>
+
+      <div class="layer">
+        <div class="layer-accent" style="background:var(--l4)"></div>
+        <div class="layer-num">4</div>
+        <div class="layer-body">
+          <div class="layer-name">Strumenti <span>tool use · function calling</span></div>
+          <div class="layer-desc">Come il modello decide di usare uno strumento esterno, riceve il risultato e lo integra. Ciò che trasforma un chatbot da "parla" a "agisce".</div>
+          <div class="layer-rep">corrisponde a → <b>Strumenti</b></div>
+        </div>
+      </div>
+
+      <div class="layer">
+        <div class="layer-accent" style="background:var(--l5)"></div>
+        <div class="layer-num">5</div>
+        <div class="layer-body">
+          <div class="layer-name">RAG e accesso alla conoscenza <span>ricerca · retrieval · citazioni</span></div>
+          <div class="layer-desc">Come informazioni esterne (web, documenti) rientrano nel contesto per superare il knowledge cutoff e ridurre le invenzioni.</div>
+          <div class="layer-rep">corrisponde a → <b>RAG</b></div>
+        </div>
+      </div>
+
+      <div class="layer">
+        <div class="layer-accent" style="background:var(--l6)"></div>
+        <div class="layer-num">6</div>
+        <div class="layer-body">
+          <div class="layer-name">Skills e configurazione <span>istruzioni custom · preferenze · stili</span></div>
+          <div class="layer-desc">Come si estende un chatbot senza riaddestrarlo: pacchetti di istruzioni e preferenze che si attivano al bisogno.</div>
+          <div class="layer-rep">corrisponde a → <b>Prompt / Strumenti</b> (estesi)</div>
+        </div>
+      </div>
+
+      <div class="layer">
+        <div class="layer-accent" style="background:var(--l7)"></div>
+        <div class="layer-num">7</div>
+        <div class="layer-body">
+          <div class="layer-name">Guardrail e sicurezza <span>filtri input/output · policy</span></div>
+          <div class="layer-desc">I controlli che intercettano richieste e risposte prima e dopo il modello, per sicurezza, conformità e reputazione.</div>
+          <div class="layer-rep">corrisponde a → <b>Guardrail</b></div>
+        </div>
+      </div>
+
+      <div class="layer">
+        <div class="layer-accent" style="background:var(--l8)"></div>
+        <div class="layer-num">8</div>
+        <div class="layer-body">
+          <div class="layer-name">Orchestrazione <span>il flusso di un singolo turno</span></div>
+          <div class="layer-desc">Come tutti gli strati precedenti vengono cuciti insieme, nell'ordine giusto, a ogni messaggio. Lo strato che rende il sistema un sistema.</div>
+          <div class="layer-rep">corrisponde a → <b>Orchestratore</b></div>
+        </div>
+      </div>
+
+    </div>
+
+    <div class="insight">
+      <div class="insight-label">Come leggere la corrispondenza</div>
+      <p>La colonna "corrisponde a" aggancia ogni strato ai componenti che hai già studiato. Non è una ripetizione: lì li vedevi come <strong>scatole da assemblare</strong>; qui li vedi come <strong>decisioni già prese</strong> da chi costruisce un prodotto maturo. È il confronto tra le due viste a generare le best practice trasferibili.</p>
+    </div>
+  </div>
+</div>
+
+
+<!-- ═══════════════════════════ S4 — BEST PRACTICE ═══════════════════════════ -->
+<div class="sect" id="s4">
+  <div class="sect-head">
+    <div class="sect-num">Sezione 04 · Cosa porto a casa</div>
+    <h2>Best practice <em>di metodo</em></h2>
+    <p>Questo è il blocco che ricorrerà in ogni report della serie, sempre con lo stesso formato. Qui, nel report fondante, le best practice riguardano il metodo di studio e i primi principi generali. Dal prossimo report saranno specifiche di ciascuno strato.</p>
+  </div>
+  <div class="wrap">
+
+    <div class="bp">
+      <div class="bp-head">Best practice · principi fondanti</div>
+      <div class="bp-body">
+        <div class="bp-row">
+          <div class="bp-do">
+            <div class="bp-tag">Fai così</div>
+            <div class="bp-text">Quando un comportamento dell'agente ti sorprende, chiediti <strong>quale strato</strong> lo ha causato prima di toccare il modello. Nove volte su dieci è il prompt o il contesto, non i pesi.</div>
+          </div>
+          <div class="bp-dont">
+            <div class="bp-tag">Non fare così</div>
+            <div class="bp-text">Non attribuire al "modello" ciò che dipende dalla configurazione. Cambiare modello per risolvere un problema di prompt è costoso e spesso inutile.</div>
+          </div>
+        </div>
+        <div class="bp-row">
+          <div class="bp-do">
+            <div class="bp-tag">Fai così</div>
+            <div class="bp-text">Quando testi un modello, parti dall'<strong>API nuda</strong> per vedere il comportamento di base, poi aggiungi gli strati uno alla volta osservando cosa cambia a ogni passo.</div>
+          </div>
+          <div class="bp-dont">
+            <div class="bp-tag">Non fare così</div>
+            <div class="bp-text">Non confrontare le prestazioni di due modelli usando un chatbot per uno e l'API per l'altro: staresti confrontando configurazioni, non modelli.</div>
+          </div>
+        </div>
+        <div class="bp-row">
+          <div class="bp-do">
+            <div class="bp-tag">Fai così</div>
+            <div class="bp-text">Tratta ogni informazione "fresca" che l'agente deve conoscere (data, contesto, dati aziendali) come qualcosa da <strong>iniettare da uno strato</strong>, mai come qualcosa che il modello sa.</div>
+          </div>
+          <div class="bp-dont">
+            <div class="bp-tag">Non fare così</div>
+            <div class="bp-text">Non dare per scontato che il modello conosca il presente. Tutto ciò che è successo dopo il suo cutoff va fornito esplicitamente.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="bp" style="border-color:var(--ink3);">
+      <div class="bp-head" style="background:var(--ink3);">Trade-off · da tenere a mente in tutta la serie</div>
+      <div class="bp-body">
+        <div class="bp-single"><strong>Controllo vs semplicità.</strong> L'API ti dà controllo totale ma devi costruire ogni strato; il chatbot ti dà strati pronti ma poca visibilità su di essi. I tuoi agenti vivranno quasi sempre nel mezzo: deciderai strato per strato quanto controllo vuoi.</div>
+        <div class="bp-single"><strong>Ogni strato costa contesto.</strong> System prompt, memoria e RAG consumano finestra di contesto (e token, e denaro) prima che l'utente parli. Più strati arricchisci, meno spazio resta per la conversazione: è un budget da gestire, non una risorsa infinita.</div>
+        <div class="bp-single"><strong>Replicare non è sempre giusto.</strong> Claude cura tutti gli strati perché è un prodotto generalista per milioni di utenti. Il tuo agente potrebbe averne bisogno di molti meno: l'obiettivo è scegliere consapevolmente cosa replicare, cosa semplificare e cosa omettere.</div>
+      </div>
+    </div>
+
+    <div class="srcnote">
+      <b>Affidabilità di queste indicazioni</b>
+      I principi di questa sezione sono <strong>documentati o ampiamente condivisi</strong> nella pratica di sviluppo. Le best practice specifiche per strato, nei prossimi report, distingueranno sempre con chiarezza il documentato dall'inferito.
+    </div>
+
+  </div>
+</div>
+
+
+<!-- ═══════════════════════════ S5 — LA SERIE ═══════════════════════════ -->
+<div class="sect" id="s5">
+  <div class="sect-head">
+    <div class="sect-num">Sezione 05 · La roadmap</div>
+    <h2>I report che <em>verranno</em></h2>
+    <p>La struttura completa della serie. Ogni report seguirà lo stesso scheletro: come funziona lo strato → dimostrazione concreta → trade-off → best practice azionabili per i tuoi agenti.</p>
+  </div>
+  <div class="wrap">
+    <table class="sum-table">
+      <thead>
+        <tr>
+          <th>Report</th>
+          <th>Strato</th>
+          <th>La domanda a cui risponde</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr><td class="n-cell">00</td><td class="t-cell">Dal modello al chatbot</td><td>Perché lo stesso modello risponde diversamente? <em>(questo report)</em></td></tr>
+        <tr><td class="n-cell">01</td><td class="t-cell">Il nucleo: modello e parametri</td><td>Cosa fa l'LLM da solo, e quali manopole il chatbot imposta per te?</td></tr>
+        <tr><td class="n-cell">02</td><td class="t-cell">Il system prompt</td><td>Come si dà un'identità e un comportamento a un modello?</td></tr>
+        <tr><td class="n-cell">03</td><td class="t-cell">Contesto e memoria</td><td>Come fa il chatbot a ricordare, dentro e tra le conversazioni?</td></tr>
+        <tr><td class="n-cell">04</td><td class="t-cell">Gli strumenti</td><td>Come passa il modello dal parlare all'agire?</td></tr>
+        <tr><td class="n-cell">05</td><td class="t-cell">RAG e conoscenza</td><td>Come accede a informazioni che non ha nei pesi?</td></tr>
+        <tr><td class="n-cell">06</td><td class="t-cell">Skills e configurazione</td><td>Come si estende un chatbot senza riaddestrarlo?</td></tr>
+        <tr><td class="n-cell">07</td><td class="t-cell">Guardrail e sicurezza</td><td>Cosa filtra le richieste e le risposte, e come?</td></tr>
+        <tr><td class="n-cell">08</td><td class="t-cell">L'orchestrazione invisibile</td><td>Come si cuciono insieme tutti gli strati a ogni turno?</td></tr>
+        <tr><td class="n-cell">09</td><td class="t-cell">Sintesi e manuale operativo</td><td>Cosa replico, cosa semplifico, cosa evito nei miei agenti?</td></tr>
+      </tbody>
+    </table>
+
+    <div class="key-point">
+      <div class="kp-label">Il filo conduttore</div>
+      <div class="kp-text">Ogni strato che studieremo è una risposta a una domanda: "cosa manca al modello nudo per essere utile in questo modo?"</div>
+      <div class="kp-sub">Rispondere bene a quella domanda, strato per strato, è esattamente ciò che ti serve per progettare agenti: non aggiungere componenti perché esistono, ma perché colmano una mancanza precisa del modello rispetto al tuo caso d'uso.</div>
+    </div>
+  </div>
+</div>
+
+
+<!-- FOOTER -->
+<div class="footer">
+  <span>Serie Agenti AI · Parte II — Report 00 · Dal Modello al Chatbot</span>
+  <span>Maggio 2026</span>
+</div>
+
+<script>
+function show(n) {
+  document.querySelectorAll('.sect').forEach(s => s.classList.remove('active'));
+  document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('s'+n).classList.add('active');
+  document.querySelectorAll('.nav-btn')[n].classList.add('active');
+  window.scrollTo({top:0, behavior:'smooth'});
+}
+</script>
+
+</body>
+</html>
