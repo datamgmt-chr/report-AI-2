@@ -1,0 +1,944 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>RAG — E · RAG Avanzato e Decisioni Architetturali</title>
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Outfit:wght@200;300;400;500;600;700;800;900&family=IBM+Plex+Mono:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg:     #faf8f5;
+  --bg2:    #f2efe9;
+  --bg3:    #e9e5dc;
+  --ink:    #1b1915;
+  --ink2:   #2e2b25;
+  --ink3:   #6d685c;
+  --ink4:   #a19c8f;
+  --border: #d9d4c8;
+  --border2:#cac4b6;
+
+  --accent:  #1a6b5a;
+  --accent2: #0f4a3e;
+  --accent-light: #ecf7f4;
+
+  --adv:  #8b5c3a;
+  --adv-l:#fdf3ec;
+  --adv2: #5c3820;
+
+  --s-idx: #2e7d9c;
+  --s-ret: #7b5ea7;
+  --s-aug: #b07d24;
+  --s-gen: #3d7a45;
+
+  --ok:  #3d7a45;
+  --ok-l:#f4faf5;
+  --bad: #c0392b;
+  --bad-l:#fdf5f5;
+  --warn:#b07d24;
+  --warn-l:#fdf6e8;
+}
+
+* { margin:0; padding:0; box-sizing:border-box; }
+html { scroll-behavior:smooth; }
+body {
+  background:var(--bg); color:var(--ink);
+  font-family:'Outfit',sans-serif; font-weight:300;
+  font-size:14px; line-height:1.75;
+}
+
+.masthead {
+  background:var(--ink); color:rgba(255,255,255,.9);
+  padding:60px 56px 52px; position:relative; overflow:hidden;
+}
+.masthead::before {
+  content:''; position:absolute; inset:0;
+  background:
+    repeating-linear-gradient(90deg,rgba(255,255,255,.012) 0,rgba(255,255,255,.012) 1px,transparent 1px,transparent 64px),
+    repeating-linear-gradient(0deg,rgba(255,255,255,.012) 0,rgba(255,255,255,.012) 1px,transparent 1px,transparent 64px);
+  pointer-events:none;
+}
+.masthead::after {
+  content:'E'; position:absolute; right:44px; bottom:-28px;
+  font-family:'Instrument Serif',serif; font-size:280px; line-height:1;
+  color:rgba(255,255,255,.025); pointer-events:none;
+}
+.mh-eye {
+  font-family:'IBM Plex Mono',monospace; font-size:10px;
+  letter-spacing:3px; text-transform:uppercase;
+  color:rgba(255,255,255,.25); margin-bottom:18px; position:relative;
+}
+.mh-cluster {
+  display:inline-block; font-family:'IBM Plex Mono',monospace;
+  font-size:10px; letter-spacing:2px; text-transform:uppercase;
+  padding:4px 12px; border:1px solid var(--adv);
+  color:var(--adv); margin-bottom:20px; position:relative;
+}
+.masthead h1 {
+  font-family:'Instrument Serif',serif; font-weight:400;
+  font-size:clamp(30px,4.5vw,54px); line-height:1.08;
+  letter-spacing:-1px; max-width:700px; position:relative;
+}
+.mh-sub {
+  margin-top:20px; font-size:15px; font-weight:300;
+  color:rgba(255,255,255,.38); max-width:660px;
+  line-height:1.7; position:relative;
+}
+.mh-meta {
+  margin-top:32px; display:flex; gap:32px; flex-wrap:wrap; position:relative;
+}
+.mh-stat { display:flex; flex-direction:column; gap:4px; }
+.mh-stat-val {
+  font-family:'IBM Plex Mono',monospace; font-size:22px; font-weight:500;
+  color:rgba(255,255,255,.85);
+}
+.mh-stat-lbl {
+  font-size:10px; letter-spacing:2px; text-transform:uppercase;
+  color:rgba(255,255,255,.25);
+}
+
+.nav {
+  background:var(--ink2); position:sticky; top:0; z-index:100;
+  display:flex; overflow-x:auto;
+  border-bottom:1px solid rgba(255,255,255,.06);
+}
+.nav-btn {
+  flex:1; min-width:110px; padding:13px 12px;
+  border:none; background:transparent; cursor:pointer;
+  font-family:'Outfit',sans-serif; font-size:10.5px; font-weight:600;
+  text-transform:uppercase; letter-spacing:.4px;
+  color:rgba(255,255,255,.3);
+  border-right:1px solid rgba(255,255,255,.06);
+  transition:all .2s; white-space:nowrap;
+}
+.nav-btn:last-child { border-right:none; }
+.nav-btn:hover { color:rgba(255,255,255,.6); }
+.nav-btn.active { color:#fff; background:rgba(255,255,255,.05); }
+
+.sect { display:none; }
+.sect.active { display:block; animation:fadeIn .3s ease; }
+@keyframes fadeIn { from{opacity:0;transform:translateY(6px)} to{opacity:1;transform:translateY(0)} }
+
+.sect-head { padding:48px 56px 36px; border-bottom:1px solid var(--border); }
+.sect-num {
+  font-family:'IBM Plex Mono',monospace; font-size:10px;
+  letter-spacing:3px; text-transform:uppercase; color:var(--ink4); margin-bottom:10px;
+}
+.sect-head h2 {
+  font-family:'Instrument Serif',serif; font-weight:400;
+  font-size:clamp(26px,3.5vw,42px); line-height:1.1;
+  letter-spacing:-.5px; max-width:640px; margin-bottom:14px;
+}
+.sect-head p { color:var(--ink3); max-width:700px; font-size:14.5px; }
+.wrap { padding:0 56px 64px; }
+
+.prose { max-width:760px; }
+.prose p { font-size:14.5px; color:var(--ink3); line-height:1.85; margin-bottom:16px; }
+.prose p strong { color:var(--ink2); font-weight:500; }
+.prose p em { font-style:italic; color:var(--ink2); }
+
+/* ── TECHNIQUE CARD ── */
+.tech-card {
+  margin-top:20px; border:1px solid var(--border2);
+  background:var(--bg); overflow:hidden;
+}
+.tc-bar { height:5px; background:var(--adv); }
+.tc-head {
+  padding:16px 20px; background:var(--bg2);
+  border-bottom:1px solid var(--border);
+  display:flex; align-items:flex-start; gap:16px;
+}
+.tc-badge {
+  font-family:'IBM Plex Mono',monospace; font-size:9px;
+  font-weight:700; letter-spacing:2px; padding:3px 9px;
+  background:var(--adv); color:#fff; flex-shrink:0; margin-top:2px;
+}
+.tc-title-wrap {}
+.tc-label {
+  font-family:'IBM Plex Mono',monospace; font-size:8px;
+  letter-spacing:2px; text-transform:uppercase; color:var(--ink4); margin-bottom:3px;
+}
+.tc-title {
+  font-family:'Instrument Serif',serif; font-size:22px;
+  color:var(--ink2); line-height:1.1; margin-bottom:4px;
+}
+.tc-tagline { font-size:13px; color:var(--ink3); }
+.tc-body { display:grid; grid-template-columns:1fr 1fr; gap:1px; background:var(--border); }
+.tc-col { background:var(--bg); padding:18px 20px; }
+.tc-col-title {
+  font-family:'IBM Plex Mono',monospace; font-size:9px;
+  letter-spacing:2px; text-transform:uppercase; color:var(--ink4);
+  margin-bottom:10px; padding-bottom:6px; border-bottom:1px solid var(--border);
+}
+.tc-col p { font-size:13px; color:var(--ink3); line-height:1.65; }
+.tc-col p strong { color:var(--ink2); font-weight:500; }
+.tc-footer { padding:16px 20px; border-top:1px solid var(--border); background:var(--adv-l); }
+.tc-when-label {
+  font-family:'IBM Plex Mono',monospace; font-size:9px;
+  letter-spacing:2px; text-transform:uppercase; color:var(--adv); margin-bottom:4px;
+}
+.tc-when-text { font-size:13px; color:var(--adv2); line-height:1.6; }
+.tc-when-text strong { font-weight:500; }
+
+/* ── CODE BOX ── */
+.code-box {
+  margin-top:12px;
+  font-family:'IBM Plex Mono',monospace; font-size:11.5px; line-height:1.75;
+  padding:16px 20px; border:1px solid var(--border2);
+  background:var(--ink); color:rgba(255,255,255,.75);
+  white-space:pre-wrap; word-break:break-word;
+}
+.code-box .kw  { color:#c4a8e8; }
+.code-box .str { color:#7dd3a8; }
+.code-box .cm  { color:rgba(255,255,255,.28); }
+.code-box .num { color:#f4a87a; }
+.code-box .hl  { color:#93c5e8; }
+
+/* ── COMPARE GRID ── */
+.compare-grid { display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-top:12px; }
+.pex-lbl {
+  font-family:'IBM Plex Mono',monospace; font-size:9px;
+  letter-spacing:2px; text-transform:uppercase; margin-bottom:6px;
+}
+.pex-lbl.bad  { color:var(--bad); }
+.pex-lbl.good { color:var(--adv); }
+.pex-lbl.neutral { color:var(--ink4); }
+.prompt-box {
+  font-family:'IBM Plex Mono',monospace; font-size:11.5px; line-height:1.75;
+  padding:14px 18px; border:1px solid; white-space:pre-wrap; word-break:break-word;
+}
+.prompt-box.bad  { border-color:#e8c5c5; background:var(--bad-l); color:#6b3030; }
+.prompt-box.good { border-color:#e8d4c0; background:var(--adv-l); color:var(--adv2); }
+.prompt-box.neutral { border-color:var(--border2); background:var(--bg2); color:var(--ink3); }
+.prompt-box .hl { color:var(--adv); font-weight:500; }
+
+/* ── DECISION MATRIX ── */
+.decision-matrix {
+  width:100%; border-collapse:collapse; margin-top:20px; border:1px solid var(--border2);
+}
+.decision-matrix th, .decision-matrix td {
+  padding:11px 14px; border:1px solid var(--border);
+  font-size:12.5px; line-height:1.5; vertical-align:top; text-align:left;
+}
+.decision-matrix thead th {
+  background:var(--ink); color:rgba(255,255,255,.82);
+  font-family:'IBM Plex Mono',monospace; font-size:9px;
+  letter-spacing:.5px; text-transform:uppercase;
+}
+.decision-matrix tbody tr:nth-child(even) { background:var(--bg2); }
+.decision-matrix td:first-child { font-weight:500; color:var(--ink2); }
+.dm-yes  { background:var(--ok-l);   color:#2e4a32; font-weight:600; }
+.dm-no   { background:var(--bad-l);  color:#6b3030; font-weight:600; }
+.dm-cond { background:var(--warn-l); color:#5a3a00; font-weight:500; }
+
+/* ── ARCHITECTURE FLOW CARDS ── */
+.arch-grid { display:grid; grid-template-columns:1fr 1fr; gap:14px; margin-top:16px; }
+.arch-card { border:1px solid var(--border2); background:var(--bg); overflow:hidden; }
+.arch-head {
+  padding:12px 16px; background:var(--bg2); border-bottom:1px solid var(--border);
+}
+.arch-tag {
+  font-family:'IBM Plex Mono',monospace; font-size:8px;
+  letter-spacing:2px; text-transform:uppercase; color:var(--ink4); margin-bottom:3px;
+}
+.arch-name { font-weight:600; font-size:14px; color:var(--ink2); }
+.arch-body { padding:14px 16px; }
+.arch-desc { font-size:13px; color:var(--ink3); line-height:1.65; margin-bottom:8px; }
+.arch-desc strong { color:var(--ink2); font-weight:500; }
+.arch-stack {
+  display:flex; flex-direction:column; gap:3px;
+  font-family:'IBM Plex Mono',monospace; font-size:11px;
+}
+.arch-layer-item {
+  padding:5px 10px; background:var(--bg2);
+  border-left:3px solid; color:var(--ink3);
+}
+
+/* ── SPECTRUM ── */
+.spectrum { margin-top:16px; border:1px solid var(--border); overflow:hidden; }
+.spectrum-row { display:grid; border-bottom:1px solid var(--border); font-size:12.5px; }
+.spectrum-row:last-child { border-bottom:none; }
+.spectrum-row.head {
+  background:var(--ink); color:rgba(255,255,255,.7);
+  font-family:'IBM Plex Mono',monospace; font-size:9px;
+  letter-spacing:1px; text-transform:uppercase;
+}
+.spectrum-row.col3 { grid-template-columns:220px 1fr 1fr; }
+.spectrum-row.col4 { grid-template-columns:160px 1fr 1fr 1fr; }
+.s-cell {
+  padding:11px 14px; border-right:1px solid var(--border);
+  color:var(--ink3); line-height:1.5;
+}
+.s-cell:last-child { border-right:none; }
+.s-cell.lbl { font-weight:500; color:var(--ink2); background:var(--bg2); }
+.s-cell.hi  { background:var(--adv-l); color:var(--adv2); }
+.s-cell.ok  { background:var(--ok-l); color:#2e4a32; }
+.s-cell.lo  { background:var(--bad-l); color:#8b3030; }
+.s-cell.mid { background:var(--warn-l); color:#5a3a00; }
+
+/* ── SERIES RECAP ── */
+.series-grid {
+  display:grid; grid-template-columns:repeat(5,1fr);
+  gap:1px; background:var(--border); margin-top:20px;
+  border:1px solid var(--border2);
+}
+.sg-cell { background:var(--bg); padding:16px 14px; }
+.sg-label {
+  font-family:'IBM Plex Mono',monospace; font-size:8px;
+  letter-spacing:2px; text-transform:uppercase; color:var(--ink4); margin-bottom:4px;
+}
+.sg-title { font-family:'Instrument Serif',serif; font-size:15px; color:var(--ink2); margin-bottom:4px; }
+.sg-desc { font-size:11.5px; color:var(--ink3); line-height:1.5; }
+
+/* ── CHECKLIST ── */
+.checklist { margin-top:16px; }
+.check-item {
+  display:flex; gap:12px; align-items:flex-start;
+  padding:10px 0; border-bottom:1px solid var(--border);
+  font-size:13.5px; color:var(--ink3);
+}
+.check-item:last-child { border-bottom:none; }
+.check-icon {
+  width:20px; height:20px; border-radius:50%;
+  background:var(--adv); color:#fff;
+  display:flex; align-items:center; justify-content:center;
+  font-size:11px; font-weight:700; flex-shrink:0; margin-top:1px;
+}
+.check-item strong { color:var(--ink2); font-weight:500; }
+
+/* ── MECHANISM ── */
+.mechanism {
+  margin-top:14px; padding:14px 18px;
+  border-left:3px solid var(--adv); background:var(--adv-l);
+}
+.mech-lbl {
+  font-family:'IBM Plex Mono',monospace; font-size:9px;
+  letter-spacing:2px; text-transform:uppercase; color:var(--adv); margin-bottom:6px;
+}
+.mechanism p { font-size:13px; color:var(--ink3); line-height:1.65; }
+.mechanism p strong { color:var(--ink2); font-weight:500; }
+
+/* ── KEY POINT ── */
+.key-point {
+  margin-top:36px; padding:24px 28px;
+  border-left:4px solid var(--accent); background:var(--accent-light);
+}
+.kp-label {
+  font-family:'IBM Plex Mono',monospace; font-size:9px;
+  letter-spacing:2px; text-transform:uppercase; color:var(--accent); margin-bottom:8px;
+}
+.kp-text {
+  font-family:'Instrument Serif',serif; font-size:18px; line-height:1.45; color:var(--ink2);
+}
+.kp-sub { margin-top:10px; font-size:13px; color:var(--ink3); line-height:1.65; }
+
+/* ── INSIGHT ── */
+.insight {
+  margin:16px 0; padding:16px 20px;
+  border-left:4px solid var(--adv); background:var(--adv-l);
+}
+.insight-lbl {
+  font-family:'IBM Plex Mono',monospace; font-size:9px;
+  letter-spacing:2px; text-transform:uppercase; color:var(--adv); margin-bottom:6px;
+}
+.insight p { font-size:13.5px; color:var(--ink2); line-height:1.65; max-width:700px; }
+.insight p strong { font-weight:500; }
+
+/* ── FOOTER ── */
+.footer {
+  padding:24px 56px; border-top:1px solid var(--border);
+  display:flex; justify-content:space-between; align-items:center;
+  font-family:'IBM Plex Mono',monospace; font-size:10px;
+  letter-spacing:1px; text-transform:uppercase; color:var(--ink4);
+}
+
+@media (max-width:700px) {
+  .masthead,.sect-head,.wrap,.footer { padding-left:20px; padding-right:20px; }
+  .tc-body,.compare-grid,.arch-grid { grid-template-columns:1fr; }
+  .series-grid { grid-template-columns:1fr 1fr; }
+  .spectrum-row.col3,.spectrum-row.col4 { grid-template-columns:1fr; }
+}
+</style>
+</head>
+<body>
+
+<!-- HEADER -->
+<div class="masthead">
+  <div class="mh-eye">Serie Agenti AI · Leva 04 · Knowledge / RAG</div>
+  <div class="mh-cluster">Report E — Finale</div>
+  <h1>RAG avanzato e decisioni architetturali</h1>
+  <p class="mh-sub">Le tecniche che vanno oltre il RAG base: query rewriting, HyDE, self-RAG, agentic RAG. E la mappa delle decisioni architetturali — quando aggiungere ogni tecnica, quando il RAG non basta, quando serve fine-tuning.</p>
+  <div class="mh-meta">
+    <div class="mh-stat"><div class="mh-stat-val">4</div><div class="mh-stat-lbl">Tecniche avanzate</div></div>
+    <div class="mh-stat"><div class="mh-stat-val">4</div><div class="mh-stat-lbl">Architetture tipo</div></div>
+    <div class="mh-stat"><div class="mh-stat-val">Fine serie</div><div class="mh-stat-lbl">Report 6/6</div></div>
+    <div class="mh-stat"><div class="mh-stat-val">Misura prima</div><div class="mh-stat-lbl">Principio guida</div></div>
+  </div>
+</div>
+
+<!-- NAV -->
+<div class="nav">
+  <button class="nav-btn active" onclick="show(1)">Quando avanzare</button>
+  <button class="nav-btn" onclick="show(2)">Query rewriting</button>
+  <button class="nav-btn" onclick="show(3)">HyDE</button>
+  <button class="nav-btn" onclick="show(4)">Self-RAG e Agentic RAG</button>
+  <button class="nav-btn" onclick="show(5)">Decisioni architetturali</button>
+  <button class="nav-btn" onclick="show(6)">La serie completa</button>
+</div>
+
+
+<!-- ═══════════════════════════
+     S1 — QUANDO AVANZARE
+═══════════════════════════ -->
+<div class="sect active" id="s1">
+  <div class="sect-head">
+    <div class="sect-num">Introduzione</div>
+    <h2>Quando le tecniche avanzate sono giustificate</h2>
+    <p>Le tecniche avanzate hanno tutte un costo: complessità, latenza, overhead computazionale. Aggiungerle prima di aver ottimizzato il sistema base è controproducente. Il prerequisito è misurare.</p>
+  </div>
+  <div class="wrap">
+
+    <div class="prose" style="margin-top:28px;">
+      <p>Ogni tecnica avanzata descritta in questo report si giustifica quando una metrica specifica è sotto soglia e le leve del sistema base (chunking, embedding, k, re-ranking, grounding) non bastano più. <strong>Aggiungere HyDE a un sistema con recall basso dovuto al chunking sbagliato non risolve nulla</strong> — sposta il problema senza affrontarlo. La sequenza corretta è sempre: misura (Report D) → identifica il bottleneck → applica la soluzione più semplice prima di quella più complessa.</p>
+    </div>
+
+    <div class="spectrum" style="margin-top:24px;">
+      <div class="spectrum-row head col4">
+        <div class="s-cell">Problema misurato</div>
+        <div class="s-cell">Soluzione base da provare prima</div>
+        <div class="s-cell">Tecnica avanzata se la base non basta</div>
+        <div class="s-cell">Sezione</div>
+      </div>
+      <div class="spectrum-row col4">
+        <div class="s-cell lbl">Context Recall basso su query conversazionali</div>
+        <div class="s-cell">Query rewriting semplice (già visto in Report B)</div>
+        <div class="s-cell hi">Query rewriting con LLM + multi-query expansion</div>
+        <div class="s-cell">Sezione 2</div>
+      </div>
+      <div class="spectrum-row col4">
+        <div class="s-cell lbl">Recall basso su domande astratte o ipotetiche</div>
+        <div class="s-cell">Migliorare embedding model o aumentare k</div>
+        <div class="s-cell hi">HyDE — generare un documento ipotetico per guidare la ricerca</div>
+        <div class="s-cell">Sezione 3</div>
+      </div>
+      <div class="spectrum-row col4">
+        <div class="s-cell lbl">Retrieval inutile su alcune query (risposta già nella conoscenza interna)</div>
+        <div class="s-cell">Istruzioni di grounding più precise</div>
+        <div class="s-cell hi">Self-RAG — il modello decide quando recuperare</div>
+        <div class="s-cell">Sezione 4</div>
+      </div>
+      <div class="spectrum-row col4">
+        <div class="s-cell lbl">Task complessi che richiedono retrieval multi-step</div>
+        <div class="s-cell">Aumentare k, iterative retrieval (Report C)</div>
+        <div class="s-cell hi">Agentic RAG — retrieval come tool in loop</div>
+        <div class="s-cell">Sezione 4</div>
+      </div>
+    </div>
+
+    <div class="key-point" style="margin-top:28px;">
+      <div class="kp-label">Il principio delle tecniche avanzate</div>
+      <div class="kp-text">Non aggiungere complessità prima di aver esaurito le leve semplici. Ogni tecnica avanzata ha un costo — assicurati che il beneficio lo giustifichi con misure reali.</div>
+      <div class="kp-sub">Il RAG base ben configurato (chunking ottimale, embedding giusto, retrieval ibrido, re-ranking, grounding preciso) risolve il 90% dei problemi reali. Le tecniche avanzate di questo report servono per quel 10% di casi in cui il sistema base ha raggiunto il suo tetto di qualità e la metrica target è ancora sotto soglia — oppure per task strutturalmente diversi (agentic, multi-step, apertura su query ambigue) che il RAG base non può gestire per design.</div>
+    </div>
+
+  </div>
+</div>
+
+
+<!-- ═══════════════════════════
+     S2 — QUERY REWRITING AVANZATO
+═══════════════════════════ -->
+<div class="sect" id="s2">
+  <div class="sect-head">
+    <div class="sect-num">Tecnica avanzata 01</div>
+    <h2>Query rewriting avanzato e multi-query expansion</h2>
+    <p>Oltre la semplice riformulazione conversazionale: come generare più varianti della stessa query per aumentare il recall, e come combinarle senza produrre rumore.</p>
+  </div>
+  <div class="wrap">
+
+    <div class="tech-card" style="margin-top:28px;">
+      <div class="tc-bar"></div>
+      <div class="tc-head">
+        <div class="tc-badge">Tecnica 01</div>
+        <div class="tc-title-wrap">
+          <div class="tc-label">Query transformation</div>
+          <div class="tc-title">Multi-query expansion</div>
+          <div class="tc-tagline">Genera 3–5 varianti della query originale, esegui il retrieval su ognuna, deduplicati i risultati.</div>
+        </div>
+      </div>
+      <div class="tc-body">
+        <div class="tc-col">
+          <div class="tc-col-title">Il meccanismo</div>
+          <p>Una singola query può avere molte formulazioni equivalenti che trovano chunk diversi nell'indice. <strong>Multi-query expansion genera N varianti</strong> della query originale usando un LLM, esegue il retrieval per ognuna, e poi aggrega i risultati con deduplicazione e re-ranking. Il recall risultante è sistematicamente più alto — copre casi che la formulazione originale avrebbe mancato per vocabulary mismatch.</p>
+        </div>
+        <div class="tc-col">
+          <div class="tc-col-title">Punti di forza e limiti</div>
+          <p><strong>Forza:</strong> migliora significativamente il recall su query ambigue o su corpora con terminologia variabile. Non richiede modifiche all'indicizzazione.</p>
+          <p style="margin-top:8px;"><strong>Limite:</strong> moltiplica le chiamate al retrieval (3–5×) e richiede una chiamata LLM aggiuntiva per la generazione delle varianti. Latenza aumenta proporzionalmente. Non aiuta se il problema è nel chunking — i chunk sbagliati rimangono non trovabili in qualsiasi formulazione.</p>
+        </div>
+      </div>
+      <div class="tc-footer">
+        <div class="tc-when-label">Quando usarla</div>
+        <div class="tc-when-text">Context Recall sotto soglia dopo aver ottimizzato chunking, embedding e k. <strong>Corpus con terminologia variabile</strong> (lo stesso concetto è espresso in molti modi diversi nei documenti). Query aperte dove l'utente non conosce la terminologia esatta usata nei documenti.</div>
+      </div>
+    </div>
+
+    <div class="prose" style="margin-top:24px;">
+      <p style="font-size:14px; font-weight:500; color:var(--ink2);">Implementazione: prompt per la generazione delle varianti</p>
+    </div>
+
+    <div class="code-box"><span class="cm"># Prompt per multi-query expansion</span>
+
+Sei un assistente che aiuta a ottimizzare le ricerche documentali.
+Data una domanda utente, genera <span class="num">4</span> varianti che esprimono
+la stessa intenzione con formulazioni diverse.
+
+Obiettivo: massimizzare il recall del retrieval coprendo
+diverse possibili formulazioni presenti nei documenti.
+
+Domanda originale: <span class="str">"{query}"</span>
+
+Genera esattamente 4 varianti, una per riga.
+Includi: sinonimi, formulazioni più tecniche, formulazioni più colloquiali,
+riformulazioni con keyword esplicite.
+NON inventare intenzioni diverse — solo varianti della stessa domanda.
+
+<span class="cm"># Esempio:</span>
+<span class="cm"># Input:  "Come faccio il reso?"</span>
+<span class="cm"># Output:</span>
+<span class="cm"># 1. Procedura di restituzione merce acquistata</span>
+<span class="cm"># 2. Politica di rimborso e reso prodotti</span>
+<span class="cm"># 3. Come restituire un articolo e ottenere il rimborso</span>
+<span class="cm"># 4. Modalità e tempistiche per la restituzione degli ordini</span></div>
+
+    <div class="compare-grid" style="margin-top:20px;">
+      <div>
+        <div class="pex-lbl bad">❌ Query singola — recall limitato dalla formulazione</div>
+        <div class="prompt-box bad">Query: "costi di spedizione internazionale"
+
+Retrieval recupera:
+→ Chunk su "tariffe di trasporto estero" ✓
+→ MANCA il chunk su "prezzi per invio oltreconfine"
+→ MANCA il chunk su "fee logistica internazionale"
+
+Recall@5 = 0.62</div>
+      </div>
+      <div>
+        <div class="pex-lbl good">✓ Multi-query — recall migliorato</div>
+        <div class="prompt-box good">Varianti generate:
+1. "costi di spedizione internazionale"
+2. "tariffe trasporto estero e paesi UE"
+3. "prezzi invio merce oltreconfine"
+4. "fee logistica per destinazioni internazionali"
+
+Retrieval su ognuna + deduplicazione + re-ranking
+→ Tutti i chunk rilevanti recuperati
+
+<span class="hl">Recall@5 = 0.89 (+27 punti)</span></div>
+      </div>
+    </div>
+
+    <div class="mechanism" style="margin-top:20px;">
+      <div class="mech-lbl">Il meccanismo della copertura dello spazio semantico</div>
+      <p>Lo spazio vettoriale degli embedding ha una topologia irregolare: concetti simili non sono sempre equidistanti da tutti i loro sinonimi. Una singola query copre un punto in questo spazio. Più varianti della query coprono una regione più ampia, aumentando la probabilità di intercettare tutti i cluster di chunk rilevanti. <strong>La deduplicazione successiva elimina i duplicati; il re-ranking seleziona i migliori dalla pool ampliata.</strong></p>
+    </div>
+
+  </div>
+</div>
+
+
+<!-- ═══════════════════════════
+     S3 — HyDE
+═══════════════════════════ -->
+<div class="sect" id="s3">
+  <div class="sect-head">
+    <div class="sect-num">Tecnica avanzata 02</div>
+    <h2>HyDE — Hypothetical Document Embeddings</h2>
+    <p>Invece di cercare direttamente la risposta, genera prima un documento ipotetico che potrebbe rispondere alla domanda, e usa quello per il retrieval. Un'idea controintuitiva con risultati spesso sorprendenti.</p>
+  </div>
+  <div class="wrap">
+
+    <div class="tech-card" style="margin-top:28px;">
+      <div class="tc-bar"></div>
+      <div class="tc-head">
+        <div class="tc-badge">Tecnica 02</div>
+        <div class="tc-title-wrap">
+          <div class="tc-label">Retrieval augmentation</div>
+          <div class="tc-title">Hypothetical Document Embeddings (HyDE)</div>
+          <div class="tc-tagline">Genera un documento ipotetico, embeddalo, usa quell'embedding per cercare documenti reali simili.</div>
+        </div>
+      </div>
+      <div class="tc-body">
+        <div class="tc-col">
+          <div class="tc-col-title">Il meccanismo in tre passi</div>
+          <p><strong>Passo 1 — Genera:</strong> usa un LLM per produrre un documento ipotetico che risponde alla query — senza accesso ai documenti reali. Questo documento è spesso impreciso nei dettagli ma ha la struttura e il vocabolario giusti.</p>
+          <p style="margin-top:8px;"><strong>Passo 2 — Embeddalo:</strong> calcola l'embedding del documento ipotetico (non della query originale). L'embedding di un testo simile a quelli nel corpus è molto più vicino ai documenti reali rilevanti rispetto all'embedding di una query breve.</p>
+          <p style="margin-top:8px;"><strong>Passo 3 — Cerca:</strong> usa questo embedding per il retrieval semantico. I documenti reali con contenuto simile al documento ipotetico hanno alta similarità — anche se non condividono le keyword con la query originale.</p>
+        </div>
+        <div class="tc-col">
+          <div class="tc-col-title">Perché funziona — e quando fallisce</div>
+          <p><strong>Perché funziona:</strong> le query brevi hanno embedding "compressi" che rappresentano un'intenzione generica. Un documento ipotetico ha un embedding nello stesso spazio dei documenti nel corpus — più ricco e più specifico. Il retrieval da documento a documento è più preciso del retrieval da query a documento.</p>
+          <p style="margin-top:8px;"><strong>Quando fallisce:</strong> se il dominio è molto specializzato e il LLM non conosce la terminologia esatta usata nei documenti, il documento ipotetico sarà lontano nello spazio vettoriale dai documenti reali. Il guadagno in recall è minimo o nullo. <strong>Testa HyDE con A/B sul tuo corpus specifico prima di adottarlo.</strong></p>
+        </div>
+      </div>
+      <div class="tc-footer">
+        <div class="tc-when-label">Quando usarla</div>
+        <div class="tc-when-text">Query astratte o analitiche dove la formulazione dell'utente è molto diversa dalla struttura dei documenti nel corpus. <strong>Corpora tecnici ben rappresentati nel training del LLM</strong> (il LLM deve poter generare un documento plausibile nel dominio). Recall basso nonostante chunking e embedding ottimali. Non usare su corpora molto specializzati con terminologia proprietaria.</div>
+      </div>
+    </div>
+
+    <div class="prose" style="margin-top:24px;">
+      <p style="font-size:14px; font-weight:500; color:var(--ink2);">HyDE in pratica — il flusso implementativo</p>
+    </div>
+
+    <div class="code-box"><span class="cm"># Flusso HyDE — pseudocodice</span>
+
+<span class="kw">def</span> hyde_retrieval(query, k=5):
+
+    <span class="cm"># Passo 1: genera documento ipotetico</span>
+    hyde_prompt = f<span class="str">"""Scrivi un breve paragrafo (100-200 parole) che
+    potrebbe rispondere a questa domanda, come se fosse
+    estratto da un documento tecnico o procedurale:
+
+    Domanda: {query}
+
+    Paragrafo (senza preamboli, solo il contenuto):"""</span>
+
+    hypothetical_doc = llm.generate(hyde_prompt, max_tokens=<span class="num">250</span>)
+
+    <span class="cm"># Passo 2: embeddalo (stesso modello usato per il corpus)</span>
+    hyde_embedding = embedding_model.encode(hypothetical_doc)
+
+    <span class="cm"># Passo 3: retrieval semantico con l'embedding del documento ipotetico</span>
+    chunks = vector_store.search(
+        query_embedding=hyde_embedding,  <span class="cm"># ← embedding del documento, non della query</span>
+        k=k
+    )
+
+    <span class="kw">return</span> chunks
+
+<span class="cm"># Opzionale: combina con retrieval standard (ensemble)</span>
+<span class="kw">def</span> hybrid_hyde_retrieval(query, k=5):
+    standard_chunks = semantic_retrieval(query, k=k)
+    hyde_chunks     = hyde_retrieval(query, k=k)
+    <span class="kw">return</span> rrf_merge(standard_chunks, hyde_chunks)  <span class="cm"># RRF fusion</span></div>
+
+  </div>
+</div>
+
+
+<!-- ═══════════════════════════
+     S4 — SELF-RAG E AGENTIC RAG
+═══════════════════════════ -->
+<div class="sect" id="s4">
+  <div class="sect-head">
+    <div class="sect-num">Tecniche avanzate 03 – 04</div>
+    <h2>Self-RAG e Agentic RAG</h2>
+    <p>Due architetture che portano il RAG in dimensioni diverse: Self-RAG dà al modello il controllo su quando recuperare; Agentic RAG integra il retrieval come tool in un loop agente.</p>
+  </div>
+  <div class="wrap">
+
+    <!-- Self-RAG -->
+    <div class="tech-card" style="margin-top:28px;">
+      <div class="tc-bar"></div>
+      <div class="tc-head">
+        <div class="tc-badge">Tecnica 03</div>
+        <div class="tc-title-wrap">
+          <div class="tc-label">Retrieval condizionale</div>
+          <div class="tc-title">Self-RAG</div>
+          <div class="tc-tagline">Il modello decide autonomamente se recuperare documenti o rispondere dalla propria conoscenza.</div>
+        </div>
+      </div>
+      <div class="tc-body">
+        <div class="tc-col">
+          <div class="tc-col-title">Il meccanismo</div>
+          <p>In un sistema RAG classico il retrieval avviene <em>sempre</em> — ogni query recupera k chunk, indipendentemente dal fatto che la risposta sia già nella conoscenza interna del modello. Self-RAG aggiunge un passo di decisione: <strong>il modello valuta se la query richiede informazioni esterne prima di eseguire il retrieval</strong>. Solo se la risposta non è già nella propria conoscenza procede al retrieval.</p>
+          <p style="margin-top:8px;">Il modello usa token speciali di riflessione: <code>[Retrieve]</code> (recupera documenti), <code>[No Retrieve]</code> (rispondi dalla conoscenza interna), <code>[Relevant]</code> / <code>[Irrelevant]</code> (valuta i chunk recuperati), <code>[Fully Supported]</code> / <code>[Partially Supported]</code> (valuta la risposta generata).</p>
+        </div>
+        <div class="tc-col">
+          <div class="tc-col-title">Quando conviene — e overhead</div>
+          <p><strong>Conviene quando:</strong> il corpus ha alta variabilità (alcune query trovano risposta nei documenti, altre no) e il costo del retrieval non necessario è significativo (latenza, costo API). Riduce il rumore da chunk irrilevanti su query per cui la conoscenza interna è sufficiente.</p>
+          <p style="margin-top:8px;"><strong>Overhead:</strong> richiede un fine-tuning del modello sui token speciali di riflessione (non disponibile off-the-shelf su modelli commerciali). L'alternativa pratica è un prompt che chiede esplicitamente al modello di valutare se il retrieval è necessario — risultati inferiori ma senza fine-tuning.</p>
+        </div>
+      </div>
+      <div class="tc-footer">
+        <div class="tc-when-label">Quando usarla</div>
+        <div class="tc-when-text">Sistemi dove una percentuale significativa delle query ha risposta nella conoscenza interna del modello e non richiede documenti specifici. <strong>Corpus misti</strong> con informazioni generali e informazioni aziendali specifiche. Non necessario se quasi tutte le query richiedono sempre i documenti.</div>
+      </div>
+    </div>
+
+    <!-- Agentic RAG -->
+    <div class="tech-card" style="margin-top:20px;">
+      <div class="tc-bar"></div>
+      <div class="tc-head">
+        <div class="tc-badge">Tecnica 04</div>
+        <div class="tc-title-wrap">
+          <div class="tc-label">RAG come tool in loop</div>
+          <div class="tc-title">Agentic RAG</div>
+          <div class="tc-tagline">Il retrieval diventa un tool che l'agente usa quando decide di usarlo — più volte, con query diverse, nel corso di un ragionamento.</div>
+        </div>
+      </div>
+      <div class="tc-body">
+        <div class="tc-col">
+          <div class="tc-col-title">Il meccanismo</div>
+          <p>Nel RAG classico il retrieval avviene una volta prima della generazione. In Agentic RAG il retrieval è un <strong>tool disponibile all'agente nel loop di ragionamento</strong>: l'agente può eseguire retrieval multipli con query diverse, valutare i risultati, decidere se servono ulteriori ricerche, e integrare informazioni da retrieval successivi. Il pattern è identico all'agentic RAG descritto nella serie Leva 6.</p>
+          <p style="margin-top:8px;">Questo abilita task che il RAG classico non può gestire: rispondere a domande che richiedono informazioni da sezioni diverse del corpus, sintetizzare informazioni da più documenti, comparare documenti.</p>
+        </div>
+        <div class="tc-col">
+          <div class="tc-col-title">Come strutturare i tool</div>
+          <p>L'agente ha accesso a uno o più tool di retrieval che può invocare con una query specifica. Ogni tool call restituisce i chunk rilevanti per quella query. L'agente accumula il contesto attraverso più call e genera la risposta finale quando ritiene di avere informazioni sufficienti.</p>
+          <p style="margin-top:8px;"><strong>Tool tipici nell'Agentic RAG:</strong> <code>search_documents(query, k, filters)</code> per retrieval semantico, <code>get_document_section(doc_id, section)</code> per accesso diretto a sezioni specifiche, <code>list_documents(filters)</code> per navigare il corpus.</p>
+        </div>
+      </div>
+      <div class="tc-footer">
+        <div class="tc-when-label">Quando usarla</div>
+        <div class="tc-when-text">Task che richiedono <strong>retrieval multi-step</strong>: comparazione tra documenti, sintesi su domande aperte, ricerca di informazioni distribuite su molte sezioni. Utenti che pongono domande analitiche complesse invece di domande puntuali. Non necessario — e overkill — per Q&A semplice su FAQ e documentazione strutturata.</div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+
+<!-- ═══════════════════════════
+     S5 — DECISIONI ARCHITETTURALI
+═══════════════════════════ -->
+<div class="sect" id="s5">
+  <div class="sect-head">
+    <div class="sect-num">Mappa decisionale</div>
+    <h2>La mappa delle decisioni architetturali</h2>
+    <p>Quando aggiungere ogni tecnica, quando il RAG non basta, quando serve il fine-tuning, quando servono entrambi. La guida operativa per scegliere l'architettura giusta.</p>
+  </div>
+  <div class="wrap">
+
+    <div class="prose" style="margin-top:28px;">
+      <p>Le decisioni architetturali più frequenti in un sistema RAG si riducono a cinque domande. Risponderle nell'ordine giusto — dalla più semplice alla più costosa — produce quasi sempre l'architettura ottimale senza over-engineering.</p>
+    </div>
+
+    <div class="prose" style="margin-top:20px;">
+      <p style="font-size:14px; font-weight:500; color:var(--ink2);">Decisione 1 — Quando aggiungere il re-ranking?</p>
+    </div>
+    <table class="decision-matrix" style="margin-top:12px;">
+      <thead><tr><th>Situazione</th><th>Aggiungere re-ranking?</th><th>Motivazione</th></tr></thead>
+      <tbody>
+        <tr><td>Context Precision sotto 0.65 dopo aver ridotto k e aggiunto filtri metadati</td><td class="dm-yes">Sì</td><td>Il retrieval porta troppi chunk irrilevanti che il re-ranker può filtrare.</td></tr>
+        <tr><td>Corpus eterogeneo (documenti di tipo molto diverso)</td><td class="dm-yes">Sì</td><td>Corpora eterogenei producono più falsi positivi nel retrieval — il re-ranking riduce il rumore.</td></tr>
+        <tr><td>Context Precision già sopra 0.75 con solo retrieval</td><td class="dm-no">No</td><td>Aggiunge latenza senza beneficio misurabile. Non ottimizzare ciò che già funziona.</td></tr>
+        <tr><td>Latenza richiesta < 500ms totali</td><td class="dm-cond">Solo se indispensabile</td><td>Il re-ranking aggiunge 100–300ms. Verificare se la qualità giustifica la latenza aggiuntiva.</td></tr>
+      </tbody>
+    </table>
+
+    <div class="prose" style="margin-top:24px;">
+      <p style="font-size:14px; font-weight:500; color:var(--ink2);">Decisione 2 — Quando passare alla ricerca ibrida?</p>
+    </div>
+    <table class="decision-matrix" style="margin-top:12px;">
+      <thead><tr><th>Situazione</th><th>Passare alla ricerca ibrida?</th><th>Motivazione</th></tr></thead>
+      <tbody>
+        <tr><td>Corpus con codici, nomi propri, acronimi tecnici nelle query</td><td class="dm-yes">Sì</td><td>BM25 gestisce keyword esatte che la ricerca semantica manca sistematicamente.</td></tr>
+        <tr><td>Context Recall basso su query con termini tecnici precisi</td><td class="dm-yes">Sì</td><td>Il retrieval semantico fallisce su termini rari non ben rappresentati negli embedding.</td></tr>
+        <tr><td>Corpus generico con solo testo narrativo</td><td class="dm-no">No</td><td>La ricerca semantica è già ottimale. BM25 aggiunge complessità senza beneficio.</td></tr>
+        <tr><td>Corpus multilingua</td><td class="dm-no">No</td><td>BM25 richiede tokenizer per lingua — overhead elevato. Meglio embedding model multilingua.</td></tr>
+      </tbody>
+    </table>
+
+    <div class="prose" style="margin-top:24px;">
+      <p style="font-size:14px; font-weight:500; color:var(--ink2);">Decisione 3 — RAG, fine-tuning, o entrambi?</p>
+    </div>
+    <table class="decision-matrix" style="margin-top:12px;">
+      <thead><tr><th>Obiettivo</th><th>RAG</th><th>Fine-tuning</th><th>Entrambi</th></tr></thead>
+      <tbody>
+        <tr><td>Il modello non sa — informazioni non nel training (documenti interni, dati recenti)</td><td class="dm-yes">Sì — prima scelta</td><td class="dm-no">No — non scala con aggiornamenti frequenti</td><td class="dm-no">Non necessario</td></tr>
+        <tr><td>Il modello non si comporta come voglio — stile, tono, formato fisso</td><td class="dm-no">No — il prompt aiuta ma non basta</td><td class="dm-yes">Sì — internalizza il comportamento</td><td class="dm-no">Non necessario</td></tr>
+        <tr><td>Terminologia tecnica specializzata non nel training (settore molto niche)</td><td class="dm-cond">Parzialmente — glossari nel contesto</td><td class="dm-cond">Meglio — impara l'uso corretto</td><td class="dm-yes">Ottimale — entrambi</td></tr>
+        <tr><td>Ridurre le allucinazioni su fatti specifici del dominio</td><td class="dm-yes">Sì — grounding su documenti</td><td class="dm-no">No — non elimina allucinazioni</td><td class="dm-cond">RAG prima, poi valuta</td></tr>
+        <tr><td>Citazione tracciabile delle fonti</td><td class="dm-yes">Sì — nativamente</td><td class="dm-no">No — il fine-tuning non produce citazioni</td><td class="dm-no">Non necessario</td></tr>
+      </tbody>
+    </table>
+
+    <div class="prose" style="margin-top:28px;">
+      <p style="font-size:14px; font-weight:500; color:var(--ink2);">Le 4 architetture tipo — da semplice a complessa</p>
+    </div>
+
+    <div class="arch-grid" style="margin-top:16px;">
+      <div class="arch-card">
+        <div class="arch-head">
+          <div class="arch-tag">Architettura 1 — La maggior parte dei casi</div>
+          <div class="arch-name">RAG base con ibrido e re-ranking</div>
+        </div>
+        <div class="arch-body">
+          <div class="arch-desc">Il punto di arrivo ottimale per la maggior parte dei sistemi RAG in produzione. <strong>Copre il 90% dei casi d'uso</strong> senza complessità architetturale.</div>
+          <div class="arch-stack">
+            <div class="arch-layer-item" style="border-color:var(--s-idx)">Indicizzazione: structure-aware chunking + embedding multilingua</div>
+            <div class="arch-layer-item" style="border-color:var(--s-ret)">Retrieval: ibrido (semantico + BM25) + filtri metadati</div>
+            <div class="arch-layer-item" style="border-color:var(--s-ret)">Re-ranking: cross-encoder su top-20, passa top-5 al modello</div>
+            <div class="arch-layer-item" style="border-color:var(--s-aug)">Augmentation: prompt strutturato + grounding + citazioni</div>
+          </div>
+        </div>
+      </div>
+      <div class="arch-card">
+        <div class="arch-head">
+          <div class="arch-tag">Architettura 2 — Recall insufficiente</div>
+          <div class="arch-name">RAG con multi-query + HyDE</div>
+        </div>
+        <div class="arch-body">
+          <div class="arch-desc">Quando il recall rimane basso dopo l'ottimizzazione base. <strong>Aggiunge overhead di latenza</strong> ma migliora significativamente il recall su query astratte.</div>
+          <div class="arch-stack">
+            <div class="arch-layer-item" style="border-color:var(--s-idx)">Indicizzazione: parent-child hierarchical + embedding specializzato</div>
+            <div class="arch-layer-item" style="border-color:var(--adv)">Query: multi-query expansion (4 varianti) + HyDE per query astratte</div>
+            <div class="arch-layer-item" style="border-color:var(--s-ret)">Retrieval: ibrido su tutte le varianti + RRF fusion + re-ranking</div>
+            <div class="arch-layer-item" style="border-color:var(--s-aug)">Augmentation: prompt strutturato con soglia di rilevanza</div>
+          </div>
+        </div>
+      </div>
+      <div class="arch-card">
+        <div class="arch-head">
+          <div class="arch-tag">Architettura 3 — Task analitici complessi</div>
+          <div class="arch-name">Agentic RAG</div>
+        </div>
+        <div class="arch-body">
+          <div class="arch-desc">Per task che richiedono multi-step reasoning su documenti. <strong>Massima flessibilità</strong>, overhead computazionale elevato — giustificato solo per task complessi.</div>
+          <div class="arch-stack">
+            <div class="arch-layer-item" style="border-color:var(--s-idx)">Indicizzazione: come architettura 1 o 2</div>
+            <div class="arch-layer-item" style="border-color:var(--adv)">Agente: loop con tool search_documents(), get_section(), list_docs()</div>
+            <div class="arch-layer-item" style="border-color:var(--adv)">Retrieval: invocato dall'agente N volte con query diverse</div>
+            <div class="arch-layer-item" style="border-color:var(--s-aug)">Generazione: risposta finale dopo N retrieval + ragionamento</div>
+          </div>
+        </div>
+      </div>
+      <div class="arch-card">
+        <div class="arch-head">
+          <div class="arch-tag">Architettura 4 — Massima qualità</div>
+          <div class="arch-name">RAG + fine-tuning combinati</div>
+        </div>
+        <div class="arch-body">
+          <div class="arch-desc">Quando RAG da solo non basta per tono/stile/comportamento specifico. <strong>Costo elevato</strong> di sviluppo e manutenzione — giustificato per sistemi critici ad alto volume.</div>
+          <div class="arch-stack">
+            <div class="arch-layer-item" style="border-color:var(--s-gen)">Modello: fine-tuned su esempi di ragionamento e stile del dominio</div>
+            <div class="arch-layer-item" style="border-color:var(--s-idx)">Indicizzazione: come architettura 1</div>
+            <div class="arch-layer-item" style="border-color:var(--s-ret)">Retrieval: ibrido + re-ranking</div>
+            <div class="arch-layer-item" style="border-color:var(--s-aug)">Augmentation: prompt semplificato (modello già specializzato)</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="insight" style="margin-top:28px;">
+      <div class="insight-lbl">La regola di selezione dell'architettura</div>
+      <p>Inizia sempre dall'Architettura 1. Misura con RAGAS (Report D). Se recall è sotto soglia → aggiungi multi-query o HyDE (Architettura 2). Se il task è strutturalmente multi-step → Architettura 3. Se il comportamento del modello è il problema dopo aver ottimizzato tutto il resto → considera il fine-tuning (Architettura 4). <strong>Non saltare livelli: ogni architettura richiede la precedente come prerequisito.</strong></p>
+    </div>
+
+  </div>
+</div>
+
+
+<!-- ═══════════════════════════
+     S6 — LA SERIE COMPLETA
+═══════════════════════════ -->
+<div class="sect" id="s6">
+  <div class="sect-head">
+    <div class="sect-num">Chiusura della serie</div>
+    <h2>La serie RAG — mappa completa e principi fondamentali</h2>
+    <p>Una vista d'insieme dei 6 report, dei principi trasversali che li unificano, e di come si collegano alle altre leve della serie Agenti AI.</p>
+  </div>
+  <div class="wrap">
+
+    <div class="series-grid" style="margin-top:28px;">
+      <div class="sg-cell">
+        <div class="sg-label">Report Quadro</div>
+        <div class="sg-title">Cos'è e perché</div>
+        <div class="sg-desc">Pipeline completa, 4 stadi, RAG vs. fine-tuning, quando non basta.</div>
+      </div>
+      <div class="sg-cell">
+        <div class="sg-label" style="color:var(--s-idx);">Report A</div>
+        <div class="sg-title">Indicizzazione</div>
+        <div class="sg-desc">Chunking strategy, embedding model, vector store, metadati.</div>
+      </div>
+      <div class="sg-cell">
+        <div class="sg-label" style="color:var(--s-ret);">Report B</div>
+        <div class="sg-title">Retrieval</div>
+        <div class="sg-desc">Semantico, BM25, ibrido, re-ranking, k, lost-in-middle, filtri.</div>
+      </div>
+      <div class="sg-cell">
+        <div class="sg-label" style="color:var(--s-aug);">Report C</div>
+        <div class="sg-title">Augmentation</div>
+        <div class="sg-desc">Struttura prompt, grounding, conflitti, context window, citazioni.</div>
+      </div>
+      <div class="sg-cell">
+        <div class="sg-label" style="color:var(--s-idx);">Report D</div>
+        <div class="sg-title">Valutazione</div>
+        <div class="sg-desc">Context recall/precision, faithfulness, answer relevance, RAGAS.</div>
+      </div>
+    </div>
+
+    <div class="key-point" style="margin-top:32px;">
+      <div class="kp-label">I 5 principi trasversali della serie RAG</div>
+      <div class="kp-text">La qualità di un sistema RAG è determinata dallo stadio più debole — non dalla somma degli stadi.</div>
+      <div class="kp-sub" style="margin-top:12px;">
+        <strong>1. Misura prima di ottimizzare.</strong> Ogni intervento deve essere guidato dalle metriche RAGAS, non dall'intuizione. Un recall basso indica un problema diverso da una faithfulness bassa — e la soluzione è opposta.
+        <br><br>
+        <strong>2. Il chunking è il fondamento.</strong> Nessuna tecnica downstream compensa un chunking che produce frammenti incoerenti. Ogni chunk deve essere autonomo e rispondere da solo a qualcosa di utile.
+        <br><br>
+        <strong>3. Retrieval e generazione si valutano separatamente.</strong> Un sistema con recall alto e faithfulness bassa ha un problema nel prompt di augmentation, non nell'indicizzazione. La diagnosi corretta dipende dalla separazione delle misure.
+        <br><br>
+        <strong>4. Aggiungi complessità nell'ordine corretto.</strong> Base → ibrido → re-ranking → tecniche avanzate. Ogni livello richiede il precedente come prerequisito e aggiunge costo — giustificato solo da evidenza misurata.
+        <br><br>
+        <strong>5. Il RAG non è un sistema autonomo.</strong> È la leva 4 su 7. Si integra con la leva 1 (il prompt di augmentation), la leva 6 (la valutazione), e la leva 5 (orchestrazione) per i sistemi agentic. La qualità finale dipende dall'integrazione coerente di tutte le leve.
+      </div>
+    </div>
+
+    <div class="prose" style="margin-top:28px; padding-top:28px; border-top:1px solid var(--border);">
+      <p style="font-size:14px; font-weight:500; color:var(--ink2);">Checklist — sistema RAG maturo e pronto per la produzione</p>
+    </div>
+
+    <div class="checklist" style="margin-top:12px;">
+      <div class="check-item">
+        <div class="check-icon" style="background:var(--s-idx)">A</div>
+        <div><strong>Indicizzazione:</strong> chunking strategy scelta in base alla struttura dei documenti, embedding model validato con recall@k, metadati progettati prima dell'indicizzazione.</div>
+      </div>
+      <div class="check-item">
+        <div class="check-icon" style="background:var(--s-ret)">B</div>
+        <div><strong>Retrieval:</strong> strategia di ricerca scelta (semantica/ibrida), k calibrato tra 3–8, re-ranking aggiunto se precision insufficiente, filtri metadati attivi.</div>
+      </div>
+      <div class="check-item">
+        <div class="check-icon" style="background:var(--s-aug)">C</div>
+        <div><strong>Augmentation:</strong> prompt strutturato a 5 layer, grounding esplicito per i 3 casi, strategia di gestione conflitti, citazioni delle fonti nel formato corretto.</div>
+      </div>
+      <div class="check-item">
+        <div class="check-icon" style="background:var(--s-idx)">D</div>
+        <div><strong>Valutazione:</strong> RAGAS configurato, suite di test con le 5 categorie, soglie definite a priori, diagnosi per ogni combinazione di metriche sotto soglia.</div>
+      </div>
+      <div class="check-item">
+        <div class="check-icon" style="background:var(--adv)">E</div>
+        <div><strong>Tecniche avanzate:</strong> aggiunte solo dove la metrica specifica è sotto soglia dopo aver esaurito le leve base. Ogni aggiunta validata con A/B test sulla suite di test.</div>
+      </div>
+      <div class="check-item">
+        <div class="check-icon" style="background:var(--accent)">↻</div>
+        <div><strong>Ciclo di iterazione:</strong> ogni modifica alla pipeline è misurata con RAGAS prima del deployment. I failure in produzione vengono aggiunti alla suite di test come casi di regressione.</div>
+      </div>
+    </div>
+
+    <div class="prose" style="margin-top:32px; padding-top:28px; border-top:1px solid var(--border);">
+      <p style="color:var(--ink4); font-size:13px;">Serie Agenti AI · Leva 04 · Knowledge / RAG · 6 report · Marzo 2026</p>
+      <p style="font-size:13px; color:var(--ink4);">Quadro · A · B · C · D · <strong style="color:var(--ink2);">E ← questo report · Fine serie leva 4</strong></p>
+    </div>
+
+  </div>
+</div>
+
+
+<!-- FOOTER -->
+<div class="footer">
+  <span>Serie Agenti AI — Leva 04 · Knowledge / RAG · Report E · Fine serie</span>
+  <span>Marzo 2026</span>
+</div>
+
+<script>
+function show(n) {
+  document.querySelectorAll('.sect').forEach(s => s.classList.remove('active'));
+  document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('s'+n).classList.add('active');
+  document.querySelectorAll('.nav-btn')[n-1].classList.add('active');
+  window.scrollTo({top:0, behavior:'smooth'});
+}
+</script>
+</body>
+</html>

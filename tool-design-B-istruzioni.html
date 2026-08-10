@@ -1,0 +1,1059 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Strumenti — B · Come il modello usa i tool: istruzioni e skill latenti</title>
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Outfit:wght@200;300;400;500;600;700;800;900&family=IBM+Plex+Mono:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg:     #faf8f5;
+  --bg2:    #f2efe9;
+  --bg3:    #e9e5dc;
+  --ink:    #1b1915;
+  --ink2:   #2e2b25;
+  --ink3:   #6d685c;
+  --ink4:   #a19c8f;
+  --border: #d9d4c8;
+  --border2:#cac4b6;
+
+  --accent:  #4a7c59;
+  --accent2: #2e5038;
+  --accent-light: #eef5f1;
+
+  --sk:  #5a6e8a;
+  --sk-l:#f0f3f7;
+  --sk2: #2e3a4a;
+
+  --ok:  #3d7a45;
+  --ok-l:#f4faf5;
+  --bad: #c0392b;
+  --bad-l:#fdf5f5;
+  --warn:#b07d24;
+  --warn-l:#fdf6e8;
+}
+
+* { margin:0; padding:0; box-sizing:border-box; }
+html { scroll-behavior:smooth; }
+body {
+  background:var(--bg); color:var(--ink);
+  font-family:'Outfit',sans-serif; font-weight:300;
+  font-size:14px; line-height:1.75;
+}
+
+.masthead {
+  background:var(--ink); color:rgba(255,255,255,.9);
+  padding:60px 56px 52px; position:relative; overflow:hidden;
+}
+.masthead::before {
+  content:''; position:absolute; inset:0;
+  background:
+    repeating-linear-gradient(90deg,rgba(255,255,255,.012) 0,rgba(255,255,255,.012) 1px,transparent 1px,transparent 64px),
+    repeating-linear-gradient(0deg,rgba(255,255,255,.012) 0,rgba(255,255,255,.012) 1px,transparent 1px,transparent 64px);
+  pointer-events:none;
+}
+.masthead::after {
+  content:'B'; position:absolute; right:44px; bottom:-28px;
+  font-family:'Instrument Serif',serif; font-size:280px; line-height:1;
+  color:rgba(255,255,255,.025); pointer-events:none;
+}
+.mh-eye {
+  font-family:'IBM Plex Mono',monospace; font-size:10px;
+  letter-spacing:3px; text-transform:uppercase;
+  color:rgba(255,255,255,.25); margin-bottom:18px; position:relative;
+}
+.mh-cluster {
+  display:inline-block; font-family:'IBM Plex Mono',monospace;
+  font-size:10px; letter-spacing:2px; text-transform:uppercase;
+  padding:4px 12px; border:1px solid var(--accent);
+  color:var(--accent); margin-bottom:20px; position:relative;
+}
+.masthead h1 {
+  font-family:'Instrument Serif',serif; font-weight:400;
+  font-size:clamp(30px,4.5vw,54px); line-height:1.08;
+  letter-spacing:-1px; max-width:700px; position:relative;
+}
+.mh-sub {
+  margin-top:20px; font-size:15px; font-weight:300;
+  color:rgba(255,255,255,.38); max-width:660px;
+  line-height:1.7; position:relative;
+}
+.mh-meta {
+  margin-top:32px; display:flex; gap:32px; flex-wrap:wrap; position:relative;
+}
+.mh-stat { display:flex; flex-direction:column; gap:4px; }
+.mh-stat-val {
+  font-family:'IBM Plex Mono',monospace; font-size:22px; font-weight:500;
+  color:rgba(255,255,255,.85);
+}
+.mh-stat-lbl {
+  font-size:10px; letter-spacing:2px; text-transform:uppercase;
+  color:rgba(255,255,255,.25);
+}
+
+.nav {
+  background:var(--ink2); position:sticky; top:0; z-index:100;
+  display:flex; overflow-x:auto;
+  border-bottom:1px solid rgba(255,255,255,.06);
+}
+.nav-btn {
+  flex:1; min-width:110px; padding:13px 12px;
+  border:none; background:transparent; cursor:pointer;
+  font-family:'Outfit',sans-serif; font-size:10.5px; font-weight:600;
+  text-transform:uppercase; letter-spacing:.4px;
+  color:rgba(255,255,255,.3);
+  border-right:1px solid rgba(255,255,255,.06);
+  transition:all .2s; white-space:nowrap;
+}
+.nav-btn:last-child { border-right:none; }
+.nav-btn:hover { color:rgba(255,255,255,.6); }
+.nav-btn.active { color:#fff; background:rgba(255,255,255,.05); }
+
+.sect { display:none; }
+.sect.active { display:block; animation:fadeIn .3s ease; }
+@keyframes fadeIn { from{opacity:0;transform:translateY(6px)} to{opacity:1;transform:translateY(0)} }
+
+.sect-head { padding:48px 56px 36px; border-bottom:1px solid var(--border); }
+.sect-num {
+  font-family:'IBM Plex Mono',monospace; font-size:10px;
+  letter-spacing:3px; text-transform:uppercase; color:var(--ink4); margin-bottom:10px;
+}
+.sect-head h2 {
+  font-family:'Instrument Serif',serif; font-weight:400;
+  font-size:clamp(26px,3.5vw,42px); line-height:1.1;
+  letter-spacing:-.5px; max-width:640px; margin-bottom:14px;
+}
+.sect-head p { color:var(--ink3); max-width:700px; font-size:14.5px; }
+.wrap { padding:0 56px 64px; }
+
+.prose { max-width:760px; }
+.prose p { font-size:14.5px; color:var(--ink3); line-height:1.85; margin-bottom:16px; }
+.prose p strong { color:var(--ink2); font-weight:500; }
+.prose p em { font-style:italic; color:var(--ink2); }
+
+/* ── GL CARD ── */
+.gl-group { margin-top:40px; }
+.gl-group-title {
+  font-family:'IBM Plex Mono',monospace; font-size:9px;
+  letter-spacing:3px; text-transform:uppercase;
+  color:var(--ink4); padding-bottom:10px; border-bottom:1px solid var(--border);
+}
+.gl-card { border:1px solid var(--border2); border-top:none; background:var(--bg); }
+.gl-header {
+  display:grid; grid-template-columns:5px 52px 1fr auto;
+  align-items:stretch; border-bottom:1px solid var(--border);
+}
+.gl-stripe { background:var(--accent); }
+.gl-num {
+  font-family:'Outfit',sans-serif; font-weight:800; font-size:20px; color:var(--bg3);
+  display:flex; align-items:center; justify-content:center;
+  border-right:1px solid var(--border);
+}
+.gl-title-wrap { padding:16px 20px; }
+.gl-title { font-family:'Instrument Serif',serif; font-size:20px; color:var(--ink2); line-height:1.2; }
+.gl-subtitle { font-size:12px; color:var(--ink4); margin-top:3px; }
+.gl-impact-wrap {
+  padding:14px 20px; display:flex; flex-direction:column;
+  align-items:flex-end; justify-content:center; gap:4px;
+}
+.gl-impact-stars { font-size:14px; }
+.gl-impact-lbl {
+  font-family:'IBM Plex Mono',monospace; font-size:8px;
+  letter-spacing:1px; text-transform:uppercase; color:var(--ink4);
+}
+.gl-body { padding:0; }
+.gl-section { padding:20px 24px; border-bottom:1px solid var(--border); }
+.gl-section:last-child { border-bottom:none; }
+.gl-section-lbl {
+  font-family:'IBM Plex Mono',monospace; font-size:9px;
+  letter-spacing:2px; text-transform:uppercase; color:var(--ink4);
+  margin-bottom:10px; padding-bottom:6px; border-bottom:1px solid var(--border);
+}
+.gl-section p { font-size:13.5px; color:var(--ink3); line-height:1.8; max-width:740px; }
+.gl-section p strong { color:var(--ink2); font-weight:500; }
+
+/* ── PROMPT TEMPLATE ── */
+.prompt-template {
+  margin-top:16px;
+  font-family:'IBM Plex Mono',monospace; font-size:12px; line-height:1.85;
+  padding:20px 24px; border:1px solid var(--border2);
+  background:var(--ink); color:rgba(255,255,255,.75);
+  white-space:pre-wrap; word-break:break-word;
+}
+.pt-section { color:#f4a87a; font-weight:500; }
+.pt-tool    { color:#93c5e8; }
+.pt-instr   { color:#7dd3a8; }
+.pt-var     { color:rgba(255,255,255,.85); }
+.pt-comment { color:rgba(255,255,255,.28); }
+.pt-skill   { color:#c4a8e8; }
+.pt-neg     { color:#f4a87a; }
+
+/* ── COMPARE GRID ── */
+.compare-grid { display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-top:12px; }
+.pex-lbl {
+  font-family:'IBM Plex Mono',monospace; font-size:9px;
+  letter-spacing:2px; text-transform:uppercase; margin-bottom:6px;
+}
+.pex-lbl.bad  { color:var(--bad); }
+.pex-lbl.good { color:var(--accent); }
+.pex-lbl.neutral { color:var(--ink4); }
+.prompt-box {
+  font-family:'IBM Plex Mono',monospace; font-size:11.5px; line-height:1.75;
+  padding:14px 18px; border:1px solid; white-space:pre-wrap; word-break:break-word;
+}
+.prompt-box.bad     { border-color:#e8c5c5; background:var(--bad-l);        color:#6b3030; }
+.prompt-box.good    { border-color:#a8d4b8; background:var(--accent-light);  color:var(--accent2); }
+.prompt-box.skill   { border-color:#b4c4d8; background:var(--sk-l);          color:var(--sk2); }
+.prompt-box.neutral { border-color:var(--border2); background:var(--bg2);    color:var(--ink3); }
+.prompt-box .hl  { font-weight:500; color:var(--accent); }
+.prompt-box .sk  { font-weight:500; color:var(--sk); }
+.prompt-box.bad .hl { color:#8b3030; }
+
+/* ── SKILL PANEL ── */
+.skill-layer {
+  margin-top:20px; border:1px solid var(--border2);
+}
+.sl-head {
+  padding:12px 16px; background:var(--sk);
+  border-bottom:1px solid rgba(255,255,255,.15);
+  display:flex; align-items:center; gap:12px;
+}
+.sl-head-tag {
+  font-family:'IBM Plex Mono',monospace; font-size:9px;
+  letter-spacing:2px; text-transform:uppercase; color:rgba(255,255,255,.6);
+}
+.sl-head-title { font-family:'Instrument Serif',serif; font-size:18px; color:#fff; }
+.sl-body { display:grid; grid-template-columns:1fr 1fr; gap:1px; background:var(--border); }
+.sl-col { background:var(--bg); padding:18px 20px; }
+.sl-col-title {
+  font-family:'IBM Plex Mono',monospace; font-size:9px;
+  letter-spacing:2px; text-transform:uppercase; color:var(--ink4);
+  margin-bottom:10px; padding-bottom:6px; border-bottom:1px solid var(--border);
+}
+.sl-col p { font-size:13px; color:var(--ink3); line-height:1.65; }
+.sl-col p strong { color:var(--ink2); font-weight:500; }
+
+/* ── HIERARCHY VISUAL ── */
+.hierarchy-visual {
+  margin-top:16px; border:1px solid var(--border2);
+}
+.hv-head {
+  padding:10px 16px; background:var(--ink);
+  border-bottom:1px solid rgba(255,255,255,.06);
+  font-family:'IBM Plex Mono',monospace; font-size:9px;
+  letter-spacing:2px; text-transform:uppercase; color:rgba(255,255,255,.4);
+}
+.hv-level {
+  display:grid; grid-template-columns:32px 1fr;
+  border-bottom:1px solid var(--border);
+}
+.hv-level:last-child { border-bottom:none; }
+.hv-num {
+  display:flex; align-items:center; justify-content:center;
+  font-family:'IBM Plex Mono',monospace; font-size:13px; font-weight:700;
+  border-right:1px solid var(--border); background:var(--bg2);
+}
+.hv-content { padding:12px 16px; }
+.hv-label {
+  font-family:'IBM Plex Mono',monospace; font-size:9px;
+  letter-spacing:1.5px; text-transform:uppercase; margin-bottom:3px;
+}
+.hv-text { font-size:13px; color:var(--ink3); line-height:1.6; }
+.hv-text strong { color:var(--ink2); font-weight:500; }
+.hv-example {
+  margin-top:6px; padding:6px 10px;
+  font-family:'IBM Plex Mono',monospace; font-size:11px;
+  color:rgba(255,255,255,.7); background:var(--ink); line-height:1.6;
+}
+
+/* ── SPECTRUM ── */
+.spectrum { margin-top:16px; border:1px solid var(--border); overflow:hidden; }
+.spectrum-row { display:grid; border-bottom:1px solid var(--border); font-size:12.5px; }
+.spectrum-row:last-child { border-bottom:none; }
+.spectrum-row.head {
+  background:var(--ink); color:rgba(255,255,255,.7);
+  font-family:'IBM Plex Mono',monospace; font-size:9px;
+  letter-spacing:1px; text-transform:uppercase;
+}
+.spectrum-row.col3 { grid-template-columns:200px 1fr 1fr; }
+.spectrum-row.col4 { grid-template-columns:160px 1fr 1fr 1fr; }
+.s-cell {
+  padding:11px 14px; border-right:1px solid var(--border);
+  color:var(--ink3); line-height:1.5;
+}
+.s-cell:last-child { border-right:none; }
+.s-cell.lbl  { font-weight:500; color:var(--ink2); background:var(--bg2); }
+.s-cell.hi   { background:var(--accent-light); color:var(--accent2); }
+.s-cell.sk   { background:var(--sk-l); color:var(--sk2); }
+.s-cell.both { background:#f0f5f1; color:#2e3a30; }
+.s-cell.ok   { background:var(--ok-l); color:#2e4a32; }
+.s-cell.lo   { background:var(--bad-l); color:#8b3030; }
+
+/* ── CHECKLIST ── */
+.checklist { margin-top:16px; }
+.check-item {
+  display:flex; gap:12px; align-items:flex-start;
+  padding:10px 0; border-bottom:1px solid var(--border);
+  font-size:13.5px; color:var(--ink3);
+}
+.check-item:last-child { border-bottom:none; }
+.check-icon {
+  width:20px; height:20px; border-radius:50%;
+  background:var(--accent); color:#fff;
+  display:flex; align-items:center; justify-content:center;
+  font-size:11px; font-weight:700; flex-shrink:0; margin-top:1px;
+}
+.check-item strong { color:var(--ink2); font-weight:500; }
+
+/* ── MECHANISM ── */
+.mechanism {
+  margin-top:14px; padding:14px 18px;
+  border-left:3px solid var(--accent); background:var(--accent-light);
+}
+.mech-lbl {
+  font-family:'IBM Plex Mono',monospace; font-size:9px;
+  letter-spacing:2px; text-transform:uppercase; color:var(--accent); margin-bottom:6px;
+}
+.mechanism p { font-size:13px; color:var(--ink3); line-height:1.65; }
+.mechanism p strong { color:var(--ink2); font-weight:500; }
+
+/* ── KEY POINT ── */
+.key-point {
+  margin-top:36px; padding:24px 28px;
+  border-left:4px solid var(--accent); background:var(--accent-light);
+}
+.kp-label {
+  font-family:'IBM Plex Mono',monospace; font-size:9px;
+  letter-spacing:2px; text-transform:uppercase; color:var(--accent); margin-bottom:8px;
+}
+.kp-text {
+  font-family:'Instrument Serif',serif; font-size:18px; line-height:1.45; color:var(--ink2);
+}
+.kp-sub { margin-top:10px; font-size:13px; color:var(--ink3); line-height:1.65; }
+
+/* ── INSIGHT ── */
+.insight {
+  margin:16px 0; padding:16px 20px;
+  border-left:4px solid var(--accent); background:var(--accent-light);
+}
+.insight-lbl {
+  font-family:'IBM Plex Mono',monospace; font-size:9px;
+  letter-spacing:2px; text-transform:uppercase; color:var(--accent); margin-bottom:6px;
+}
+.insight p { font-size:13.5px; color:var(--ink2); line-height:1.65; max-width:700px; }
+.insight p strong { font-weight:500; }
+
+/* ── FOOTER ── */
+.footer {
+  padding:24px 56px; border-top:1px solid var(--border);
+  display:flex; justify-content:space-between; align-items:center;
+  font-family:'IBM Plex Mono',monospace; font-size:10px;
+  letter-spacing:1px; text-transform:uppercase; color:var(--ink4);
+}
+
+@media (max-width:700px) {
+  .masthead,.sect-head,.wrap,.footer { padding-left:20px; padding-right:20px; }
+  .compare-grid { grid-template-columns:1fr; }
+  .sl-body { grid-template-columns:1fr; }
+  .gl-header { grid-template-columns:5px 40px 1fr; }
+  .gl-impact-wrap { display:none; }
+  .spectrum-row.col3,.spectrum-row.col4 { grid-template-columns:1fr; }
+}
+</style>
+</head>
+<body>
+
+<!-- HEADER -->
+<div class="masthead">
+  <div class="mh-eye">Serie Agenti AI · Leva 03 · Strumenti</div>
+  <div class="mh-cluster">Report B</div>
+  <h1>Come il modello usa i tool: istruzioni e skill latenti</h1>
+  <p class="mh-sub">Un tool ben progettato non basta. Il modello deve sapere quando sceglierlo, come relazionarlo agli altri tool, quando non usarne nessuno, e come combinare tool con skill latenti nel prompt. Il system prompt è il regista di tutto questo.</p>
+  <div class="mh-meta">
+    <div class="mh-stat"><div class="mh-stat-val">4</div><div class="mh-stat-lbl">Linee guida</div></div>
+    <div class="mh-stat"><div class="mh-stat-val">2</div><div class="mh-stat-lbl">Meccanismi: tool + skill</div></div>
+    <div class="mh-stat"><div class="mh-stat-val">G+</div><div class="mh-stat-lbl">Cluster G esteso</div></div>
+    <div class="mh-stat"><div class="mh-stat-value">Sistema</div><div class="mh-stat-lbl">Tool come ecosistema</div></div>
+  </div>
+</div>
+
+<!-- NAV -->
+<div class="nav">
+  <button class="nav-btn active" onclick="show(1)">Il sistema prompt dei tool</button>
+  <button class="nav-btn" onclick="show(2)">Gerarchia e selezione</button>
+  <button class="nav-btn" onclick="show(3)">Limiti e guardrail</button>
+  <button class="nav-btn" onclick="show(4)">Skill latenti nel prompt</button>
+  <button class="nav-btn" onclick="show(5)">Tool + skill: la combinazione</button>
+  <button class="nav-btn" onclick="show(6)">Il template completo</button>
+</div>
+
+
+<!-- ═══════════════════════════
+     S1 — IL SYSTEM PROMPT DEI TOOL
+═══════════════════════════ -->
+<div class="sect active" id="s1">
+  <div class="sect-head">
+    <div class="sect-num">Introduzione</div>
+    <h2>Il system prompt come regista dei tool</h2>
+    <p>Le descrizioni dei singoli tool (Report A) governano l'uso di ogni tool individualmente. Il system prompt governa il sistema nel suo insieme — gerarchia, selezione, limiti, e l'integrazione con le skill latenti.</p>
+  </div>
+  <div class="wrap">
+
+    <div class="prose" style="margin-top:28px;">
+      <p>Un agente con cinque tool ben progettati ma senza un system prompt che ne governa l'uso è come un team di specialisti senza un coordinatore. Ognuno sa fare bene il proprio lavoro, ma non sa quando cedere il turno agli altri, quando fermarsi, o come collaborare su task che richiedono più competenze.</p>
+      <p>Il system prompt svolge quattro funzioni distinte rispetto ai tool: definisce <strong>la gerarchia di preferenza</strong> tra tool sovrapposti, specifica <strong>i limiti operativi</strong> (quante invocazioni, in quale ordine, con quale cautela), integra <strong>le skill latenti</strong> — le capacità codificate nel prompt stesso che lavorano insieme ai tool — e gestisce <strong>i casi di ambiguità</strong> quando non è chiaro quale tool usare.</p>
+    </div>
+
+    <div class="key-point" style="margin-top:24px;">
+      <div class="kp-label">Il report B in relazione al Cluster G</div>
+      <div class="kp-text">Il Cluster G del prompt engineering (Leva 1) ha introdotto i concetti di base: istruzioni sui tool, terminazione, guardrail. Questo report li approfondisce con due dimensioni nuove — la gestione del sistema multi-tool e l'integrazione con le skill latenti.</div>
+      <div class="kp-sub">Il Cluster G era sufficiente per un agente con uno o due tool semplici. Con sistemi più maturi — cinque o più tool, sovrapposizioni tra tool, skill che completano i tool — servono istruzioni più precise. Questo report è il Cluster G per sistemi complessi.</div>
+    </div>
+
+  </div>
+</div>
+
+
+<!-- ═══════════════════════════
+     S2 — GERARCHIA E SELEZIONE
+═══════════════════════════ -->
+<div class="sect" id="s2">
+  <div class="sect-head">
+    <div class="sect-num">Linea guida 01</div>
+    <h2>Gerarchia di preferenza e selezione tra tool sovrapposti</h2>
+    <p>Quando più tool potrebbero rispondere alla stessa query, il modello deve sapere quale preferire. Senza una gerarchia esplicita, la scelta è arbitraria e instabile.</p>
+  </div>
+  <div class="wrap">
+
+    <!-- GL 01 -->
+    <div class="gl-group" style="margin-top:28px;">
+      <div class="gl-group-title">Linea guida 01</div>
+      <div class="gl-card">
+        <div class="gl-header">
+          <div class="gl-stripe"></div>
+          <div class="gl-num">01</div>
+          <div class="gl-title-wrap">
+            <div class="gl-title">Definisci una gerarchia esplicita per ogni gruppo di tool sovrapposti</div>
+            <div class="gl-subtitle">Senza gerarchia, il modello sceglie in modo non deterministico — la stessa query può produrre scelte diverse tra run</div>
+          </div>
+          <div class="gl-impact-wrap">
+            <div class="gl-impact-stars" style="color:var(--accent)">★★★</div>
+            <div class="gl-impact-lbl">Impatto</div>
+          </div>
+        </div>
+        <div class="gl-body">
+
+          <div class="gl-section">
+            <div class="gl-section-lbl">Esempio concreto: tre tool di ricerca sovrapposti</div>
+            <div class="hierarchy-visual">
+              <div class="hv-head">Sistema con tre tool di ricerca — gerarchia necessaria</div>
+              <div class="hv-level">
+                <div class="hv-num" style="color:var(--ok); background:var(--ok-l)">1°</div>
+                <div class="hv-content">
+                  <div class="hv-label" style="color:var(--ok);">Prima preferenza — più specifico</div>
+                  <div class="hv-text"><strong>search_internal_docs</strong> — cerca nelle policy, procedure e contratti aziendali. Usare quando la query riguarda regole o documenti specifici dell'organizzazione.</div>
+                  <div class="hv-example">Trigger: "qual è la policy sulle ferie?", "come funziona il rimborso spese?", "cosa dice il contratto con X?"</div>
+                </div>
+              </div>
+              <div class="hv-level">
+                <div class="hv-num" style="color:var(--warn); background:var(--warn-l)">2°</div>
+                <div class="hv-content">
+                  <div class="hv-label" style="color:var(--warn);">Seconda preferenza — se il primo non trova</div>
+                  <div class="hv-text"><strong>search_knowledge_base</strong> — cerca nella knowledge base condivisa (FAQ, guide, tutorial). Usare quando search_internal_docs non trova risultati o quando la query riguarda procedure operative generali.</div>
+                  <div class="hv-example">Trigger: search_internal_docs → risultati vuoti, oppure "come si usa il software X?", "guida per i nuovi assunti"</div>
+                </div>
+              </div>
+              <div class="hv-level">
+                <div class="hv-num" style="color:var(--bad); background:var(--bad-l)">3°</div>
+                <div class="hv-content">
+                  <div class="hv-label" style="color:var(--bad);">Ultima risorsa — solo se le prime due falliscono</div>
+                  <div class="hv-text"><strong>search_web</strong> — cerca su internet. Usare solo quando le prime due ricerche non hanno trovato risultati e la domanda riguarda informazioni pubbliche. Non usare mai per domande su policy o procedure interne.</div>
+                  <div class="hv-example">Trigger: entrambe le ricerche interne vuote + domanda su informazione pubblica (normativa, notizie, terminologia)</div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="gl-section">
+            <div class="gl-section-lbl">Come scrivere la gerarchia nel system prompt</div>
+            <div class="prompt-template"><span class="pt-comment"># Istruzioni per la selezione dei tool di ricerca</span>
+
+<span class="pt-section">Ordine di preferenza per le ricerche:</span>
+
+<span class="pt-tool">1. search_internal_docs</span> — <span class="pt-instr">SEMPRE prima per domande su
+   policy, procedure o documenti aziendali.</span>
+
+<span class="pt-tool">2. search_knowledge_base</span> — <span class="pt-instr">Solo se search_internal_docs
+   restituisce risultati vuoti, o per guide operative generali.</span>
+
+<span class="pt-tool">3. search_web</span> — <span class="pt-instr">Solo se entrambe le ricerche interne
+   sono vuote E la domanda riguarda informazioni pubbliche.
+   MAI usare per domande su policy o procedure interne.</span>
+
+<span class="pt-neg">Non usare search_web come prima scelta, anche se sembra
+più probabile trovare risposta su internet.</span></div>
+          </div>
+
+          <div class="gl-section">
+            <div class="gl-section-lbl">Il pattern "fallback esplicito" — quando il tool preferito non funziona</div>
+            <p>La gerarchia non si limita alla preferenza iniziale — deve coprire anche il comportamento di fallback. Se il tool preferito restituisce risultati vuoti o un errore, il modello deve sapere esplicitamente se passare al successivo o informare l'utente.</p>
+            <div class="compare-grid">
+              <div>
+                <div class="pex-lbl bad">❌ Senza fallback esplicito — comportamento imprevedibile</div>
+                <div class="prompt-box bad">Usa search_internal_docs per le policy aziendali.
+
+→ Quando non trova nulla, il modello:
+  - A volte prova search_web autonomamente
+  - A volte risponde dalla conoscenza interna
+  - A volte dice "non trovato"
+  In modo inconsistente tra run diverse.</div>
+              </div>
+              <div>
+                <div class="pex-lbl good">✓ Con fallback esplicito — comportamento stabile</div>
+                <div class="prompt-box good">Usa search_internal_docs per le policy.
+Se restituisce array vuoto:
+→ Prova search_knowledge_base.
+Se anche quella è vuota:
+→ Informa l'utente: "Non ho trovato
+  documentazione su questo argomento
+  nei sistemi aziendali disponibili."
+→ NON provare search_web per policy interne.</div>
+              </div>
+            </div>
+          </div>
+
+          <div class="gl-section">
+            <div class="gl-section-lbl">Perché funziona — la gerarchia come decisione pre-computata</div>
+            <div class="mechanism">
+              <div class="mech-lbl">Riduzione dell'ambiguità decisionale</div>
+              <p>Senza gerarchia esplicita, il modello deve valutare ogni tool disponibile rispetto alla query in ogni invocazione — un processo che introduce varianza. La gerarchia nel system prompt <strong>pre-computa quella decisione</strong>: il modello segue le regole invece di ragionarci da zero ogni volta. Il risultato è comportamento più stabile, più prevedibile e più testabile. Due query semanticamente identiche producono la stessa scelta di tool — indipendentemente da variazioni minori nella formulazione.</p>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+
+<!-- ═══════════════════════════
+     S3 — LIMITI E GUARDRAIL
+═══════════════════════════ -->
+<div class="sect" id="s3">
+  <div class="sect-head">
+    <div class="sect-num">Linea guida 02</div>
+    <h2>Limiti operativi e guardrail nel system prompt</h2>
+    <p>Il Cluster G della Leva 1 ha introdotto i guardrail di base. Qui li approfondiamo per sistemi con tool multipli: limiti di invocazione, ordini fissi, e la gestione delle sovrapposizioni pericolose.</p>
+  </div>
+  <div class="wrap">
+
+    <!-- GL 02 -->
+    <div class="gl-group" style="margin-top:28px;">
+      <div class="gl-group-title">Linea guida 02</div>
+      <div class="gl-card">
+        <div class="gl-header">
+          <div class="gl-stripe"></div>
+          <div class="gl-num">02</div>
+          <div class="gl-title-wrap">
+            <div class="gl-title">Specifica limiti di invocazione, ordini obbligatori e confini assoluti per ogni tool con effetti</div>
+            <div class="gl-subtitle">I limiti nel system prompt sono le istruzioni operative che completano i guardrail nella descrizione dei tool</div>
+          </div>
+          <div class="gl-impact-wrap">
+            <div class="gl-impact-stars" style="color:var(--accent)">★★★</div>
+            <div class="gl-impact-lbl">Impatto critico</div>
+          </div>
+        </div>
+        <div class="gl-body">
+
+          <div class="gl-section">
+            <div class="gl-section-lbl">I tre tipi di vincolo operativo</div>
+
+            <div style="margin-top:12px;">
+              <div class="pex-lbl neutral">Vincolo 1 — Limite di invocazioni per sessione o per task</div>
+              <div class="prompt-box neutral" style="margin-top:6px; font-size:11.5px;">Per ogni richiesta dell'utente:
+- Massimo 3 invocazioni di search_* (qualsiasi tipo)
+- Massimo 1 invocazione di send_email
+- Massimo 5 tool call totali prima di produrre una risposta parziale
+  e chiedere all'utente se continuare.
+
+Se raggiungi il limite: informa l'utente e chiedi istruzioni,
+non continuare autonomamente.</div>
+            </div>
+
+            <div style="margin-top:14px;">
+              <div class="pex-lbl neutral">Vincolo 2 — Ordine obbligatorio tra tool dipendenti</div>
+              <div class="prompt-box neutral" style="margin-top:6px; font-size:11.5px;">Per creare un ticket di supporto:
+1. PRIMA: get_user_info(user_id) — verifica che l'utente esista
+2. POI: search_existing_tickets(query) — verifica duplicati
+3. SOLO SE non esistono duplicati: create_support_ticket(...)
+
+Non saltare i passi 1 e 2, anche se l'utente ha già fornito
+tutte le informazioni necessarie per il passo 3.</div>
+            </div>
+
+            <div style="margin-top:14px;">
+              <div class="pex-lbl neutral">Vincolo 3 — Confini assoluti non derogabili</div>
+              <div class="prompt-box neutral" style="margin-top:6px; font-size:11.5px;">Confini assoluti — non derogabili in nessuna circostanza:
+
+- NON invocare delete_* su nessun record senza mostrare
+  prima esattamente cosa verrà eliminato e ottenere
+  conferma esplicita ("confermo l'eliminazione").
+
+- NON invocare send_email se il campo "to" non è
+  un indirizzo email @azienda.com. Rifiuta e informa l'utente.
+
+- NON invocare execute_python con codice che contiene
+  import os, subprocess, sys, o accessi a rete.</div>
+            </div>
+          </div>
+
+          <div class="gl-section">
+            <div class="gl-section-lbl">La distinzione tra guardrail nella descrizione del tool e vincoli nel system prompt</div>
+            <p>Il guardrail nella descrizione del tool (Report A) dice al modello come deve comportarsi quando usa <em>quel tool specifico</em>. Il vincolo nel system prompt dice come deve comportarsi rispetto al <em>sistema di tool nel suo insieme</em>. Entrambi sono necessari — non si sostituiscono.</p>
+            <div class="spectrum" style="margin-top:12px;">
+              <div class="spectrum-row head col3">
+                <div class="s-cell">Tipo di istruzione</div>
+                <div class="s-cell">Dove va</div>
+                <div class="s-cell">Esempio</div>
+              </div>
+              <div class="spectrum-row col3">
+                <div class="s-cell lbl">Comportamento del singolo tool</div>
+                <div class="s-cell hi">Descrizione del tool (Report A)</div>
+                <div class="s-cell">"send_email: NON usare senza conferma dell'utente"</div>
+              </div>
+              <div class="spectrum-row col3">
+                <div class="s-cell lbl">Ordine tra tool dipendenti</div>
+                <div class="s-cell hi">System prompt (questo report)</div>
+                <div class="s-cell">"Prima get_user_info, poi create_ticket — sempre in questo ordine"</div>
+              </div>
+              <div class="spectrum-row col3">
+                <div class="s-cell lbl">Limite di invocazioni totale</div>
+                <div class="s-cell hi">System prompt (questo report)</div>
+                <div class="s-cell">"Massimo 5 tool call per richiesta utente"</div>
+              </div>
+              <div class="spectrum-row col3">
+                <div class="s-cell lbl">Gerarchia di preferenza</div>
+                <div class="s-cell hi">System prompt (questo report)</div>
+                <div class="s-cell">"Usa search_internal_docs prima di search_web"</div>
+              </div>
+              <div class="spectrum-row col3">
+                <div class="s-cell lbl">Confini assoluti di sicurezza</div>
+                <div class="s-cell both">Entrambi — ridondanza è un bene per la sicurezza</div>
+                <div class="s-cell">"Nessuna azione irreversibile senza conferma" — in descrizione E in system prompt</div>
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+
+<!-- ═══════════════════════════
+     S4 — SKILL LATENTI NEL PROMPT
+═══════════════════════════ -->
+<div class="sect" id="s4">
+  <div class="sect-head">
+    <div class="sect-num">Linea guida 03</div>
+    <h2>Le skill latenti nel prompt</h2>
+    <p>Le skill sono capacità codificate nel system prompt che il modello attiva implicitamente, senza invocare nessun tool. Spesso sono più potenti dei tool per certi tipi di task — e quasi sempre si combinano con loro.</p>
+  </div>
+  <div class="wrap">
+
+    <div class="prose" style="margin-top:28px;">
+      <p>Una skill latente è un framework di ragionamento, un set di regole operative, una prospettiva disciplinare, o uno stile di analisi che il modello applica automaticamente al contesto giusto. Non si invoca — si attiva. Non è nel context window come dato — è nel system prompt come istruzione di comportamento.</p>
+    </div>
+
+    <!-- GL 03 -->
+    <div class="gl-group" style="margin-top:20px;">
+      <div class="gl-group-title">Linea guida 03</div>
+      <div class="gl-card">
+        <div class="gl-header">
+          <div class="gl-stripe" style="background:var(--sk)"></div>
+          <div class="gl-num">03</div>
+          <div class="gl-title-wrap">
+            <div class="gl-title">Codifica le skill nel system prompt come istruzioni di comportamento — non come tool</div>
+            <div class="gl-subtitle">Le skill appartengono al sistema nervoso dell'agente, non alla sua cassetta degli attrezzi</div>
+          </div>
+          <div class="gl-impact-wrap">
+            <div class="gl-impact-stars" style="color:var(--sk)">★★★</div>
+            <div class="gl-impact-lbl">Impatto</div>
+          </div>
+        </div>
+        <div class="gl-body">
+
+          <div class="gl-section">
+            <div class="gl-section-lbl">I 4 tipi di skill latente e come si codificano</div>
+
+            <div class="skill-layer" style="margin-top:12px;">
+              <div class="sl-head">
+                <div class="sl-head-tag">Tipo 1</div>
+                <div class="sl-head-title">Framework di analisi</div>
+              </div>
+              <div class="sl-body">
+                <div class="sl-col">
+                  <div class="sl-col-title">Cosa è</div>
+                  <p>Una procedura strutturata di ragionamento che il modello applica ogni volta che riceve un certo tipo di input. Non richiede dati esterni — è puro ragionamento sul testo ricevuto. <strong>Esempio: framework di analisi del rischio per contratti.</strong></p>
+                </div>
+                <div class="sl-col">
+                  <div class="sl-col-title">Come si codifica nel prompt</div>
+                  <div class="prompt-box skill" style="font-size:11px; margin-top:0;">Quando l'utente invia un contratto da analizzare,
+applica questo framework in ordine:
+1. Identifica le parti e l'oggetto del contratto
+2. Analizza le clausole economiche (prezzo, penali, revisioni)
+3. Analizza le clausole di uscita (recesso, disdetta, scadenza)
+4. Segnala clausole non standard o potenzialmente sfavorevoli
+5. Produci un risk score [BASSO/MEDIO/ALTO] con motivazione
+
+Applica il framework SEMPRE quando ricevi testo contrattuale,
+anche se l'utente non lo chiede esplicitamente.</div>
+                </div>
+              </div>
+            </div>
+
+            <div class="skill-layer" style="margin-top:8px;">
+              <div class="sl-head">
+                <div class="sl-head-tag">Tipo 2</div>
+                <div class="sl-head-title">Expertise di dominio</div>
+              </div>
+              <div class="sl-body">
+                <div class="sl-col">
+                  <div class="sl-col-title">Cosa è</div>
+                  <p>Una prospettiva disciplinare specifica che il modello adotta — terminologia, assunzioni implicite, pattern di ragionamento tipici di un esperto del settore. <strong>Esempio: ragionamento da analista creditizio.</strong></p>
+                </div>
+                <div class="sl-col">
+                  <div class="sl-col-title">Come si codifica nel prompt</div>
+                  <div class="prompt-box skill" style="font-size:11px; margin-top:0;">Sei un analista creditizio senior specializzato in PMI.
+Quando valuti la solidità finanziaria di un'azienda:
+- Considera DSCR, leverage e liquidità come indicatori primari
+- Distingui sempre tra rischio di credito e rischio di mercato
+- Usa i benchmark del settore manifatturiero italiano come riferimento
+- Segnala sempre le assunzioni che stai facendo quando i dati mancano
+
+Questo framework si applica a ogni domanda di natura finanziaria.</div>
+                </div>
+              </div>
+            </div>
+
+            <div class="skill-layer" style="margin-top:8px;">
+              <div class="sl-head">
+                <div class="sl-head-tag">Tipo 3</div>
+                <div class="sl-head-title">Stile e formato di output</div>
+              </div>
+              <div class="sl-body">
+                <div class="sl-col">
+                  <div class="sl-col-title">Cosa è</div>
+                  <p>Regole di presentazione costanti — tono, struttura, lunghezza, elementi obbligatori. Non cambiano in base al contesto ma si applicano a tutte le risposte. <strong>Esempio: risposta sempre con sezione "azione consigliata".</strong></p>
+                </div>
+                <div class="sl-col">
+                  <div class="sl-col-title">Come si codifica nel prompt</div>
+                  <div class="prompt-box skill" style="font-size:11px; margin-top:0;">Ogni risposta che include un'analisi o una raccomandazione
+deve terminare con:
+
+AZIONE CONSIGLIATA: [una frase concreta e azionabile]
+URGENZA: [IMMEDIATA / ENTRO 7 GIORNI / NON URGENTE]
+
+Non aggiungere questa sezione per risposte puramente informative
+o per domande di chiarimento.</div>
+                </div>
+              </div>
+            </div>
+
+            <div class="skill-layer" style="margin-top:8px;">
+              <div class="sl-head">
+                <div class="sl-head-tag">Tipo 4</div>
+                <div class="sl-head-title">Regole di ragionamento</div>
+              </div>
+              <div class="sl-body">
+                <div class="sl-col">
+                  <div class="sl-col-title">Cosa è</div>
+                  <p>Istruzioni su <em>come</em> ragionare — non su cosa dire, ma su quale processo di pensiero seguire prima di rispondere. <strong>Esempio: verifica sempre le assunzioni prima di concludere.</strong></p>
+                </div>
+                <div class="sl-col">
+                  <div class="sl-col-title">Come si codifica nel prompt</div>
+                  <div class="prompt-box skill" style="font-size:11px; margin-top:0;">Prima di rispondere a qualsiasi domanda analitica:
+1. Identifica le assunzioni che stai facendo
+2. Verifica se hai abbastanza informazioni o devi chiedere
+3. Distingui fatti da inferenze nella tua risposta
+   usando [FATTO] e [INFERENZA] se utile
+
+Se l'informazione è insufficiente per concludere,
+dì esplicitamente cosa ti manca invece di ipotizzare.</div>
+                </div>
+              </div>
+            </div>
+
+          </div>
+
+          <div class="gl-section">
+            <div class="gl-section-lbl">Perché le skill latenti sono spesso più potenti dei tool per questi task</div>
+            <p>Le skill latenti non hanno latenza di rete, non possono fallire per problemi di connessione, non hanno un output contract da rispettare. Si attivano istantaneamente e operano con la piena capacità del modello. <strong>Per task di ragionamento puro — analisi, strutturazione, valutazione — le skill latenti quasi sempre producono risultati migliori di un tool che fa la stessa cosa</strong>, perché il modello può applicare giudizio contestuale che un tool deterministico non ha.</p>
+          </div>
+
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+
+<!-- ═══════════════════════════
+     S5 — TOOL + SKILL: LA COMBINAZIONE
+═══════════════════════════ -->
+<div class="sect" id="s5">
+  <div class="sect-head">
+    <div class="sect-num">Linea guida 04</div>
+    <h2>Tool e skill insieme — la combinazione più potente</h2>
+    <p>Il pattern che caratterizza gli agenti maturi: skill latenti che governano il ragionamento, tool che eseguono le azioni. Le due dimensioni si combinano — non si sostituiscono.</p>
+  </div>
+  <div class="wrap">
+
+    <!-- GL 04 -->
+    <div class="gl-group" style="margin-top:28px;">
+      <div class="gl-group-title">Linea guida 04</div>
+      <div class="gl-card">
+        <div class="gl-header">
+          <div class="gl-stripe"></div>
+          <div class="gl-num">04</div>
+          <div class="gl-title-wrap">
+            <div class="gl-title">Usa le skill per il ragionamento, i tool per i dati e le azioni — e progetta l'integrazione esplicitamente</div>
+            <div class="gl-subtitle">La skill decide cosa fare; il tool lo fa; la skill interpreta il risultato — questo è il pattern</div>
+          </div>
+          <div class="gl-impact-wrap">
+            <div class="gl-impact-stars" style="color:var(--accent)">★★★</div>
+            <div class="gl-impact-lbl">Impatto</div>
+          </div>
+        </div>
+        <div class="gl-body">
+
+          <div class="gl-section">
+            <div class="gl-section-lbl">Il pattern skill → tool → skill — come funziona concretamente</div>
+            <div class="prompt-box neutral" style="margin-top:12px; font-size:11.5px;">Esempio: agente di analisi contrattuale
+
+FASE 1 — Skill (ragionamento pre-retrieval):
+Il modello riceve un contratto → applica il framework
+di analisi → identifica i punti che richiedono
+confronto con documentazione interna.
+
+FASE 2 — Tool (azione):
+→ search_internal_docs("clausole di penale standard")
+→ search_internal_docs("policy contratti con fornitori IT")
+Il modello decide autonomamente cosa cercare
+basandosi sull'analisi della fase 1.
+
+FASE 3 — Skill (ragionamento post-retrieval):
+Il modello confronta i risultati del retrieval con
+il contratto analizzato → produce il risk score →
+formula l'azione consigliata nel formato standard.</div>
+          </div>
+
+          <div class="gl-section">
+            <div class="gl-section-lbl">Come progettare l'integrazione nel system prompt</div>
+            <p>L'integrazione tra skill e tool va esplicitata nel system prompt — non si può lasciare che il modello la scopra autonomamente. In particolare: quando le skill devono guidare la scelta di quale tool invocare, e come interpretare i risultati del tool alla luce delle skill.</p>
+            <div class="prompt-template" style="margin-top:12px;"><span class="pt-comment"># Integrazione skill-tool per agente di analisi contrattuale</span>
+
+<span class="pt-section">SKILL — Framework di analisi contrattuale</span>
+<span class="pt-skill">Quando ricevi un testo contrattuale, analizza in questo ordine:
+[1] Parti e oggetto [2] Clausole economiche [3] Clausole di uscita
+[4] Elementi non standard [5] Risk score</span>
+
+<span class="pt-section">TOOL — Quando e come usare il retrieval</span>
+<span class="pt-tool">Durante la fase [4] dell'analisi</span><span class="pt-instr">, per ogni elemento
+non standard identificato:</span>
+<span class="pt-instr">→ Cerca in search_internal_docs la policy aziendale corrispondente
+→ Confronta il testo contrattuale con la policy trovata
+→ Segnala le discrepanze come rischi</span>
+
+<span class="pt-section">SKILL — Interpretazione del risultato</span>
+<span class="pt-skill">Se search_internal_docs restituisce risultati vuoti per una
+clausola non standard: classificala come [RISCHIO SCONOSCIUTO]
+e suggerisci di chiedere parere legale — non classificarla come
+accettabile per mancanza di evidenza contraria.</span></div>
+          </div>
+
+          <div class="gl-section">
+            <div class="gl-section-lbl">La matrice skill vs. tool — quando usare quale</div>
+            <div class="spectrum">
+              <div class="spectrum-row head col4">
+                <div class="s-cell">Task</div>
+                <div class="s-cell">Solo skill</div>
+                <div class="s-cell">Solo tool</div>
+                <div class="s-cell">Skill + tool</div>
+              </div>
+              <div class="spectrum-row col4">
+                <div class="s-cell lbl">Analisi di testo ricevuto dall'utente</div>
+                <div class="s-cell sk">✓ Skill — ragionamento sul testo già disponibile</div>
+                <div class="s-cell lo">✗ Nessun dato da recuperare</div>
+                <div class="s-cell lo">Solo se serve confronto con documenti interni</div>
+              </div>
+              <div class="spectrum-row col4">
+                <div class="s-cell lbl">Recupero di informazioni aggiornate</div>
+                <div class="s-cell lo">✗ Il modello non ha i dati</div>
+                <div class="s-cell hi">✓ Tool — retrieval o API</div>
+                <div class="s-cell lo">Solo se serve ragionamento sui risultati</div>
+              </div>
+              <div class="spectrum-row col4">
+                <div class="s-cell lbl">Analisi + confronto con dati interni</div>
+                <div class="s-cell lo">✗ Dati interni non disponibili</div>
+                <div class="s-cell lo">✗ Tool non interpreta il contresto</div>
+                <div class="s-cell both">✓ Skill per analisi, tool per dati, skill per sintesi</div>
+              </div>
+              <div class="spectrum-row col4">
+                <div class="s-cell lbl">Mantenere stile e tono costante</div>
+                <div class="s-cell sk">✓ Skill — è un comportamento del modello</div>
+                <div class="s-cell lo">✗ Il tool non governa lo stile</div>
+                <div class="s-cell lo">Non serve — la skill basta</div>
+              </div>
+              <div class="spectrum-row col4">
+                <div class="s-cell lbl">Calcolo preciso su dati numerici</div>
+                <div class="s-cell lo">✗ Inaffidabile su calcoli complessi</div>
+                <div class="s-cell hi">✓ execute_python — deterministico</div>
+                <div class="s-cell sk">Skill per interpretare il risultato</div>
+              </div>
+            </div>
+          </div>
+
+          <div class="gl-section">
+            <div class="gl-section-lbl">Perché funziona — skill come meta-cognizione, tool come esecuzione</div>
+            <div class="mechanism">
+              <div class="mech-lbl">La separazione tra ragionamento ed esecuzione</div>
+              <p>Le skill nel prompt operano al livello della meta-cognizione — governano <em>come</em> il modello pensa, struttura il problema, interpreta i risultati. I tool operano al livello dell'esecuzione — fanno cose nel mondo. <strong>Questa separazione è esattamente come funziona un esperto umano</strong>: il medico ha un framework di ragionamento clinico (skill) che lo guida a richiedere un esame specifico (tool), interpretarne i risultati (skill) e comunicare la diagnosi nel modo giusto (skill). Nessun tool sostituisce il ragionamento; nessun ragionamento sostituisce i dati del tool.</p>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+
+<!-- ═══════════════════════════
+     S6 — IL TEMPLATE COMPLETO
+═══════════════════════════ -->
+<div class="sect" id="s6">
+  <div class="sect-head">
+    <div class="sect-num">Template e checklist</div>
+    <h2>Il template del system prompt per un agente multi-tool</h2>
+    <p>Come strutturare il system prompt completo di un agente che combina tool multipli e skill latenti — nell'ordine e con il contenuto giusto.</p>
+  </div>
+  <div class="wrap">
+
+    <div class="prompt-template" style="margin-top:28px;"><span class="pt-comment"># ── SYSTEM PROMPT COMPLETO — AGENTE MULTI-TOOL ─────────────────</span>
+
+<span class="pt-comment"># ── SEZIONE 1: IDENTITÀ E CONTESTO ────────────────────────────</span>
+<span class="pt-var">Sei un assistente specializzato in [ruolo specifico] per [organizzazione].
+Il tuo scopo è [obiettivo operazionalizzato — non generico].</span>
+
+<span class="pt-comment"># ── SEZIONE 2: SKILL LATENTI ──────────────────────────────────</span>
+<span class="pt-skill">Framework di analisi (se applicabile):
+Quando ricevi [tipo di input], analizza in questo ordine: [...]
+
+Expertise di dominio:
+Ragioni come [tipo di esperto]. Questo significa: [...]
+
+Stile di output obbligatorio:
+Ogni risposta che include [condizione] deve contenere: [...]
+
+Regole di ragionamento:
+Prima di rispondere a [tipo di domanda]: [...]</span>
+
+<span class="pt-comment"># ── SEZIONE 3: TOOL DISPONIBILI E GERARCHIA ───────────────────</span>
+<span class="pt-tool">Tool disponibili:</span>
+<span class="pt-var">- [tool_1]: [una riga di riepilogo — la descrizione completa è nel tool stesso]
+- [tool_2]: [una riga di riepilogo]
+- [tool_3]: [una riga di riepilogo]</span>
+
+<span class="pt-tool">Ordine di preferenza per ricerche:</span>
+<span class="pt-instr">1. [tool_specifico] — per [tipo di query]
+2. [tool_generale] — se [tool_specifico] è vuoto
+3. [tool_fallback] — solo se [condizioni precise]</span>
+
+<span class="pt-comment"># ── SEZIONE 4: VINCOLI OPERATIVI ──────────────────────────────</span>
+<span class="pt-neg">Limiti:
+- Massimo [N] tool call per richiesta
+- [tool_A] deve sempre precedere [tool_B] in [contesto]
+- Non usare [tool_X] senza [precondizione]
+
+Confini assoluti:
+- MAI [azione irreversibile] senza conferma esplicita
+- MAI [altra azione pericolosa] in [circostanza]</span>
+
+<span class="pt-comment"># ── SEZIONE 5: INTEGRAZIONE SKILL-TOOL ────────────────────────</span>
+<span class="pt-skill">Durante [fase del framework]</span><span class="pt-instr">, usa [tool] per [scopo specifico].
+Interpreta i risultati di [tool] applicando [skill/criterio].
+Se [tool] restituisce vuoto su [caso critico]: [comportamento preciso].</span>
+
+<span class="pt-comment"># ── SEZIONE 6: COMPORTAMENTO DI DEFAULT ───────────────────────</span>
+<span class="pt-var">Se non sei sicuro di quale tool usare: [istruzione esplicita].
+Se tutti i tool falliscono: [comportamento di fallback].
+Se la richiesta è fuori scope: [come gestirla].</span></div>
+
+    <div class="prose" style="margin-top:32px;">
+      <p style="font-size:15px; font-weight:500; color:var(--ink2);">Checklist — system prompt per tool configurato correttamente?</p>
+    </div>
+
+    <div class="checklist" style="margin-top:12px;">
+      <div class="check-item">
+        <div class="check-icon">1</div>
+        <div><strong>Gerarchia esplicita</strong> per ogni gruppo di tool sovrapposti: quale preferire, quando passare al secondo, quando al terzo. Il fallback per risultati vuoti è specificato.</div>
+      </div>
+      <div class="check-item">
+        <div class="check-icon">2</div>
+        <div><strong>Limiti di invocazione</strong> per sessione: numero massimo di tool call totali, numero massimo per tool specifici ad alto impatto (send_email, delete_*).</div>
+      </div>
+      <div class="check-item">
+        <div class="check-icon">3</div>
+        <div><strong>Ordini obbligatori</strong> tra tool dipendenti: quando un tool deve sempre precedere un altro, la sequenza è esplicitata e non derogabile.</div>
+      </div>
+      <div class="check-item">
+        <div class="check-icon">4</div>
+        <div><strong>Confini assoluti</strong> per tool con effetti irreversibili: ripetuti sia nella descrizione del tool (Report A) sia nel system prompt — la ridondanza è intenzionale.</div>
+      </div>
+      <div class="check-item">
+        <div class="check-icon" style="background:var(--sk)">S</div>
+        <div><strong>Skill latenti codificate</strong> per il tipo di task: framework di analisi, expertise di dominio, stile di output, regole di ragionamento — dove applicabili.</div>
+      </div>
+      <div class="check-item">
+        <div class="check-icon" style="background:var(--sk)">S</div>
+        <div><strong>Integrazione skill-tool esplicitata</strong>: quale skill guida quale tool call, come si interpretano i risultati del tool alla luce della skill, cosa fare se il tool restituisce vuoto su un caso che la skill considera critico.</div>
+      </div>
+      <div class="check-item">
+        <div class="check-icon">✓</div>
+        <div><strong>Comportamento di default</strong> definito per i tre casi di ambiguità: tool non chiaro, tutti i tool falliti, richiesta fuori scope.</div>
+      </div>
+    </div>
+
+    <div class="insight" style="margin-top:28px; border-color:#b07d24; background:#fdf6e8;">
+      <div class="insight-lbl" style="color:#b07d24;">Prossimo — Report C</div>
+      <p>Con il design del singolo tool (A) e le istruzioni di sistema (B) coperti, il Report C scende nella specificità dei <strong>5 tipi di tool in dettaglio</strong>: linee guida diverse per tool di lettura, scrittura, code execution, retrieval agentic e percezione multimodale — ognuno con le sue caratteristiche operative, considerazioni di sicurezza e pattern d'uso ottimali.</p>
+    </div>
+
+  </div>
+</div>
+
+
+<!-- FOOTER -->
+<div class="footer">
+  <span>Serie Agenti AI — Leva 03 · Strumenti · Report B · Istruzioni e skill latenti</span>
+  <span>Marzo 2026</span>
+</div>
+
+<script>
+function show(n) {
+  document.querySelectorAll('.sect').forEach(s => s.classList.remove('active'));
+  document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('s'+n).classList.add('active');
+  document.querySelectorAll('.nav-btn')[n-1].classList.add('active');
+  window.scrollTo({top:0, behavior:'smooth'});
+}
+</script>
+</body>
+</html>

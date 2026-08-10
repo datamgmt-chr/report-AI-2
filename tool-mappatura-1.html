@@ -1,0 +1,638 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Mappatura Tool — Report 1 · Lettura, Scrittura, Comunicazione</title>
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Outfit:wght@200;300;400;500;600;700;800;900&family=IBM+Plex+Mono:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg:     #faf8f5;
+  --bg2:    #f2efe9;
+  --bg3:    #e9e5dc;
+  --ink:    #1b1915;
+  --ink2:   #2e2b25;
+  --ink3:   #6d685c;
+  --ink4:   #a19c8f;
+  --border: #d9d4c8;
+  --border2:#cac4b6;
+
+  --accent:  #3a3a5c;
+  --accent2: #22223a;
+  --accent-light: #f0f0f8;
+
+  /* Categorie */
+  --cat1: #2e7d9c; --cat1-l: #edf4f9;   /* lettura — teal */
+  --cat2: #b07d24; --cat2-l: #fdf6e8;   /* scrittura — oro */
+  --cat3: #8a3a5a; --cat3-l: #faf0f4;   /* comunicazione — viola-rosso */
+
+  --ok:   #3d7a45; --ok-l:  #f4faf5;
+  --bad:  #c0392b; --bad-l: #fdf5f5;
+  --warn: #b07d24; --warn-l:#fdf6e8;
+}
+
+* { margin:0; padding:0; box-sizing:border-box; }
+html { scroll-behavior:smooth; }
+body { background:var(--bg); color:var(--ink); font-family:'Outfit',sans-serif; font-weight:300; font-size:14px; line-height:1.75; }
+
+.masthead { background:var(--ink); color:rgba(255,255,255,.9); padding:60px 56px 52px; position:relative; overflow:hidden; }
+.masthead::before { content:''; position:absolute; inset:0; background: repeating-linear-gradient(90deg,rgba(255,255,255,.012) 0,rgba(255,255,255,.012) 1px,transparent 1px,transparent 64px), repeating-linear-gradient(0deg,rgba(255,255,255,.012) 0,rgba(255,255,255,.012) 1px,transparent 1px,transparent 64px); pointer-events:none; }
+.masthead::after { content:'①'; position:absolute; right:48px; bottom:-20px; font-size:240px; line-height:1; color:rgba(255,255,255,.025); pointer-events:none; }
+.mh-eye { font-family:'IBM Plex Mono',monospace; font-size:10px; letter-spacing:3px; text-transform:uppercase; color:rgba(255,255,255,.25); margin-bottom:18px; position:relative; }
+.mh-cluster { display:inline-block; font-family:'IBM Plex Mono',monospace; font-size:10px; letter-spacing:2px; text-transform:uppercase; padding:4px 12px; border:1px solid var(--accent); color:var(--accent); margin-bottom:20px; position:relative; }
+.masthead h1 { font-family:'Instrument Serif',serif; font-weight:400; font-size:clamp(30px,4.5vw,52px); line-height:1.08; letter-spacing:-1px; max-width:720px; position:relative; }
+.mh-sub { margin-top:20px; font-size:15px; font-weight:300; color:rgba(255,255,255,.38); max-width:660px; line-height:1.7; position:relative; }
+.mh-meta { margin-top:32px; display:flex; gap:32px; flex-wrap:wrap; position:relative; }
+.mh-stat { display:flex; flex-direction:column; gap:4px; }
+.mh-stat-val { font-family:'IBM Plex Mono',monospace; font-size:22px; font-weight:500; color:rgba(255,255,255,.85); }
+.mh-stat-lbl { font-size:10px; letter-spacing:2px; text-transform:uppercase; color:rgba(255,255,255,.25); }
+
+.nav { background:var(--ink2); position:sticky; top:0; z-index:100; display:flex; overflow-x:auto; border-bottom:1px solid rgba(255,255,255,.06); }
+.nav-btn { flex:1; min-width:100px; padding:13px 12px; border:none; background:transparent; cursor:pointer; font-family:'Outfit',sans-serif; font-size:10.5px; font-weight:600; text-transform:uppercase; letter-spacing:.4px; color:rgba(255,255,255,.3); border-right:1px solid rgba(255,255,255,.06); transition:all .2s; white-space:nowrap; }
+.nav-btn:last-child { border-right:none; }
+.nav-btn:hover { color:rgba(255,255,255,.6); }
+.nav-btn.active { color:#fff; background:rgba(255,255,255,.05); }
+
+.sect { display:none; }
+.sect.active { display:block; animation:fadeIn .3s ease; }
+@keyframes fadeIn { from{opacity:0;transform:translateY(6px)} to{opacity:1;transform:translateY(0)} }
+.sect-head { padding:44px 56px 32px; border-bottom:1px solid var(--border); }
+.sect-num { font-family:'IBM Plex Mono',monospace; font-size:10px; letter-spacing:3px; text-transform:uppercase; color:var(--ink4); margin-bottom:10px; }
+.sect-head h2 { font-family:'Instrument Serif',serif; font-weight:400; font-size:clamp(26px,3.5vw,40px); line-height:1.1; letter-spacing:-.5px; max-width:640px; margin-bottom:12px; }
+.sect-head p { color:var(--ink3); max-width:700px; font-size:14.5px; }
+.wrap { padding:0 56px 64px; }
+
+/* ── CATEGORY HEADER ── */
+.cat-header { display:flex; align-items:center; gap:14px; padding:20px 0 16px; border-bottom:2px solid; margin-top:32px; }
+.cat-icon { width:40px; height:40px; border-radius:6px; display:flex; align-items:center; justify-content:center; font-size:20px; flex-shrink:0; }
+.cat-title { font-family:'Instrument Serif',serif; font-size:26px; }
+.cat-sub { font-size:13px; color:var(--ink4); margin-top:1px; }
+
+/* ── TOOL CARD ── */
+.tool-card { border:1px solid var(--border2); background:var(--bg); margin-top:12px; overflow:hidden; }
+.tc-head { display:grid; grid-template-columns:5px 1fr auto; border-bottom:1px solid var(--border); }
+.tc-stripe { }
+.tc-head-content { padding:12px 16px; background:var(--bg2); }
+.tc-name { font-family:'IBM Plex Mono',monospace; font-size:13px; font-weight:500; color:var(--ink2); margin-bottom:2px; }
+.tc-oneliner { font-size:12.5px; color:var(--ink3); }
+.tc-badges { padding:12px 14px; background:var(--bg2); display:flex; flex-direction:column; gap:4px; align-items:flex-end; justify-content:center; }
+.badge { font-family:'IBM Plex Mono',monospace; font-size:8px; letter-spacing:1px; text-transform:uppercase; padding:2px 7px; border:1px solid; white-space:nowrap; }
+.badge-ok   { color:var(--ok);  border-color:var(--ok);  background:var(--ok-l); }
+.badge-warn { color:var(--warn);border-color:var(--warn);background:var(--warn-l); }
+.badge-bad  { color:var(--bad); border-color:var(--bad); background:var(--bad-l); }
+.badge-info { color:var(--accent);border-color:var(--accent);background:var(--accent-light); }
+
+.tc-body { display:grid; grid-template-columns:1fr 1fr; gap:1px; background:var(--border); }
+.tc-col { background:var(--bg); padding:13px 16px; }
+.tc-col-full { background:var(--bg); padding:13px 16px; grid-column:span 2; }
+.tc-col-lbl { font-family:'IBM Plex Mono',monospace; font-size:8px; letter-spacing:2px; text-transform:uppercase; color:var(--ink4); margin-bottom:7px; padding-bottom:4px; border-bottom:1px solid var(--border); }
+.tc-col p { font-size:12.5px; color:var(--ink3); line-height:1.6; margin-bottom:5px; }
+.tc-col p:last-child { margin-bottom:0; }
+.tc-col p strong { color:var(--ink2); font-weight:500; }
+.tc-col-full p { font-size:12.5px; color:var(--ink3); line-height:1.6; margin-bottom:4px; }
+.tc-col-full p strong { color:var(--ink2); font-weight:500; }
+
+.tc-tag { font-family:'IBM Plex Mono',monospace; font-size:10px; padding:2px 6px; margin-right:4px; margin-bottom:3px; display:inline-block; }
+
+/* ── DESCRIPTION TEMPLATE ── */
+.desc-template { margin-top:10px; border:1px solid var(--border2); }
+.dt-head { padding:7px 14px; background:var(--ink); font-family:'IBM Plex Mono',monospace; font-size:8px; letter-spacing:2px; text-transform:uppercase; color:rgba(255,255,255,.4); border-bottom:1px solid rgba(255,255,255,.06); }
+.dt-body { font-family:'IBM Plex Mono',monospace; font-size:11px; line-height:1.8; padding:12px 16px; background:var(--ink); color:rgba(255,255,255,.72); white-space:pre-wrap; }
+.dt-body .k  { color:#93c5e8; }
+.dt-body .v  { color:#7dd3a8; }
+.dt-body .w  { color:#f4c87a; }
+.dt-body .e  { color:#f4a8a8; }
+.dt-body .cm { color:rgba(255,255,255,.28); }
+
+/* ── ERRORS TABLE ── */
+.err-list { margin-top:8px; }
+.err-item { display:grid; grid-template-columns:20px 1fr; gap:8px; padding:5px 0; border-bottom:1px solid var(--border); font-size:12px; align-items:flex-start; }
+.err-item:last-child { border-bottom:none; }
+.err-ico { color:var(--bad); font-weight:700; }
+.err-text { color:var(--ink3); line-height:1.45; }
+.err-text strong { color:var(--ink2); font-weight:500; }
+
+/* ── NAMING CHIPS ── */
+.naming-row { display:flex; flex-wrap:wrap; gap:6px; margin-top:6px; }
+.name-chip { font-family:'IBM Plex Mono',monospace; font-size:11px; padding:3px 10px; border:1px solid var(--border2); background:var(--bg2); color:var(--ink3); }
+.name-chip.good { border-color:#a8c4a8; background:var(--ok-l); color:#2e4a32; }
+
+/* ── KP / INSIGHT ── */
+.key-point { margin-top:28px; padding:20px 24px; border-left:4px solid var(--accent); background:var(--accent-light); }
+.kp-label { font-family:'IBM Plex Mono',monospace; font-size:9px; letter-spacing:2px; text-transform:uppercase; color:var(--accent); margin-bottom:7px; }
+.kp-text { font-family:'Instrument Serif',serif; font-size:17px; line-height:1.45; color:var(--ink2); }
+.kp-sub { margin-top:9px; font-size:13px; color:var(--ink3); line-height:1.65; }
+.insight { margin:14px 0; padding:13px 17px; border-left:4px solid var(--accent); background:var(--accent-light); }
+.insight-lbl { font-family:'IBM Plex Mono',monospace; font-size:9px; letter-spacing:2px; text-transform:uppercase; color:var(--accent); margin-bottom:5px; }
+.insight p { font-size:13px; color:var(--ink2); line-height:1.65; }
+.insight p strong { font-weight:500; }
+
+.footer { padding:24px 56px; border-top:1px solid var(--border); display:flex; justify-content:space-between; align-items:center; font-family:'IBM Plex Mono',monospace; font-size:10px; letter-spacing:1px; text-transform:uppercase; color:var(--ink4); }
+
+@media (max-width:700px) {
+  .masthead,.sect-head,.wrap,.footer { padding-left:20px; padding-right:20px; }
+  .tc-body { grid-template-columns:1fr; }
+  .tc-col-full { grid-column:span 1; }
+}
+</style>
+</head>
+<body>
+
+<div class="masthead">
+  <div class="mh-eye">Mappatura Tool & Skill · Approfondimento pratico</div>
+  <div class="mh-cluster">Report 1 di 2</div>
+  <h1>Lettura e ricerca · Scrittura e modifica · Comunicazione</h1>
+  <p class="mh-sub">Le prime tre categorie funzionali: tool che leggono senza modificare, tool che scrivono e modificano stato, tool che inviano messaggi verso l'esterno. Pattern di naming, description template, rischi tipici e errori di design per ognuna.</p>
+  <div class="mh-meta">
+    <div class="mh-stat"><div class="mh-stat-val">3</div><div class="mh-stat-lbl">Categorie coperte</div></div>
+    <div class="mh-stat"><div class="mh-stat-val">Naming</div><div class="mh-stat-lbl">Pattern per categoria</div></div>
+    <div class="mh-stat"><div class="mh-stat-val">Template</div><div class="mh-stat-lbl">Description pronta all'uso</div></div>
+    <div class="mh-stat"><div class="mh-stat-val">Rischi</div><div class="mh-stat-lbl">Errori tipici per tipo</div></div>
+  </div>
+</div>
+
+<div class="nav">
+  <button class="nav-btn active" onclick="show(1)">Come leggere la mappa</button>
+  <button class="nav-btn" onclick="show(2)">① Lettura e ricerca</button>
+  <button class="nav-btn" onclick="show(3)">② Scrittura e modifica</button>
+  <button class="nav-btn" onclick="show(4)">③ Comunicazione</button>
+  <button class="nav-btn" onclick="show(5)">Confronto tra categorie</button>
+</div>
+
+
+<!-- ═══════════════════════════
+     S1 — COME LEGGERE
+═══════════════════════════ -->
+<div class="sect active" id="s1">
+  <div class="sect-head">
+    <div class="sect-num">Guida alla lettura</div>
+    <h2>Come usare questa mappa — e cosa specifica per ogni tool</h2>
+    <p>Non è un catalogo da leggere dall'inizio alla fine. È una guida di riferimento: identifica la categoria del tool che stai progettando, leggi le caratteristiche operative di quella categoria, usa il template come punto di partenza.</p>
+  </div>
+  <div class="wrap" style="padding-top:28px;">
+
+    <p style="font-size:14.5px; color:var(--ink3); line-height:1.85; max-width:760px;">Per ogni tool sono specificati <strong>6 elementi operativi</strong> — tutti con impatto diretto su come si scrive lo schema e il system prompt:</p>
+
+    <div style="margin-top:20px; display:grid; grid-template-columns:1fr 1fr 1fr; gap:10px;">
+      <div style="border:1px solid var(--border2); padding:14px 16px; background:var(--bg);">
+        <div style="font-family:'IBM Plex Mono',monospace; font-size:9px; letter-spacing:2px; text-transform:uppercase; color:var(--ink4); margin-bottom:5px;">1. Pattern di naming</div>
+        <div style="font-size:13px; color:var(--ink3); line-height:1.55;">Come si nomina un tool di questa categoria. Il nome condiziona quando l'LLM lo invoca — un nome ambiguo produce invocazioni ambigue.</div>
+      </div>
+      <div style="border:1px solid var(--border2); padding:14px 16px; background:var(--bg);">
+        <div style="font-family:'IBM Plex Mono',monospace; font-size:9px; letter-spacing:2px; text-transform:uppercase; color:var(--ink4); margin-bottom:5px;">2. Livello di rischio</div>
+        <div style="font-size:13px; color:var(--ink3); line-height:1.55;">Reversibile, parzialmente reversibile, o irreversibile. Determina se serve conferma umana e quanti guardrail nello schema.</div>
+      </div>
+      <div style="border:1px solid var(--border2); padding:14px 16px; background:var(--bg);">
+        <div style="font-family:'IBM Plex Mono',monospace; font-size:9px; letter-spacing:2px; text-transform:uppercase; color:var(--ink4); margin-bottom:5px;">3. Approvazione umana</div>
+        <div style="font-size:13px; color:var(--ink3); line-height:1.55;">Mai / a volte / quasi sempre / sempre. Con il criterio esplicito — non una raccomandazione vaga.</div>
+      </div>
+      <div style="border:1px solid var(--border2); padding:14px 16px; background:var(--bg);">
+        <div style="font-family:'IBM Plex Mono',monospace; font-size:9px; letter-spacing:2px; text-transform:uppercase; color:var(--ink4); margin-bottom:5px;">4. Output contract</div>
+        <div style="font-size:13px; color:var(--ink3); line-height:1.55;">Cosa il tool deve restituire perché il modello lo usi bene. Include il caso "nessun risultato".</div>
+      </div>
+      <div style="border:1px solid var(--border2); padding:14px 16px; background:var(--bg);">
+        <div style="font-family:'IBM Plex Mono',monospace; font-size:9px; letter-spacing:2px; text-transform:uppercase; color:var(--ink4); margin-bottom:5px;">5. Errori tipici</div>
+        <div style="font-size:13px; color:var(--ink3); line-height:1.55;">I 2-3 errori di design specifici di quella categoria — non generici. Quelli che si ripetono nei sistemi reali.</div>
+      </div>
+      <div style="border:1px solid var(--border2); padding:14px 16px; background:var(--bg);">
+        <div style="font-family:'IBM Plex Mono',monospace; font-size:9px; letter-spacing:2px; text-transform:uppercase; color:var(--ink4); margin-bottom:5px;">6. Description template</div>
+        <div style="font-size:13px; color:var(--ink3); line-height:1.55;">Un template concreto con le 4 parti (cosa fa / quando / quando NON / vincoli) compilato per quella categoria.</div>
+      </div>
+    </div>
+
+    <div class="key-point" style="margin-top:24px;">
+      <div class="kp-label">La regola trasversale a tutte le categorie</div>
+      <div class="kp-text">Il livello di rischio del tool determina il livello di istruzione necessario. Più è irreversibile, più istruzione serve — nella description, nel system prompt, e come punto di HITL.</div>
+      <div class="kp-sub">Un tool di lettura mal istruito produce al peggio una risposta sbagliata — correggibile. Un tool di comunicazione mal istruito invia un'email al cliente sbagliato — non correggibile. La quantità di istruzione deve essere proporzionale a questa asimmetria.</div>
+    </div>
+
+  </div>
+</div>
+
+
+<!-- ═══════════════════════════
+     S2 — CATEGORIA 1: LETTURA
+═══════════════════════════ -->
+<div class="sect" id="s2">
+  <div class="sect-head">
+    <div class="sect-num">Categoria 01</div>
+    <h2>Lettura e ricerca</h2>
+    <p>Tool che recuperano informazioni senza modificare alcuno stato. La categoria più sicura — ma con il rischio specifico del falso negativo silenzioso: il tool non trova nulla e il modello continua come se la ricerca non fosse necessaria.</p>
+  </div>
+  <div class="wrap">
+
+    <!-- Cat Header -->
+    <div class="cat-header" style="border-color:var(--cat1);">
+      <div class="cat-icon" style="background:var(--cat1-l);">🔍</div>
+      <div>
+        <div class="cat-title" style="color:var(--cat1);">Lettura e ricerca</div>
+        <div class="cat-sub">Recupera informazioni · Non modifica stato · Sicuro da ripetere</div>
+      </div>
+    </div>
+
+    <!-- TOOL: search / query / get -->
+    <div class="tool-card">
+      <div class="tc-head">
+        <div class="tc-stripe" style="background:var(--cat1)"></div>
+        <div class="tc-head-content">
+          <div class="tc-name">search_* · query_* · get_* · find_* · list_*</div>
+          <div class="tc-oneliner">Ricerca libera per testo, query su database, recupero record per ID, listato di entità filtrate</div>
+        </div>
+        <div class="tc-badges">
+          <span class="badge badge-ok">Reversibile</span>
+          <span class="badge badge-ok">No approvazione</span>
+          <span class="badge badge-info">Idempotente</span>
+        </div>
+      </div>
+      <div class="tc-body">
+        <div class="tc-col">
+          <div class="tc-col-lbl">Pattern di naming</div>
+          <p><strong>Verbo + oggetto specifico.</strong> Il verbo segnala l'intenzione all'LLM — usa il verbo più preciso disponibile.</p>
+          <div class="naming-row" style="margin-top:8px;">
+            <span class="name-chip good">search_documents</span>
+            <span class="name-chip good">get_customer_by_email</span>
+            <span class="name-chip good">query_orders</span>
+            <span class="name-chip good">find_similar_tickets</span>
+            <span class="name-chip good">list_open_tasks</span>
+          </div>
+          <div style="margin-top:8px; font-size:12px; color:var(--bad);">❌ Evita: <code>fetch</code>, <code>retrieve</code>, <code>lookup</code> senza oggetto — troppo generici. L'LLM fatica a distinguerli.</div>
+        </div>
+        <div class="tc-col">
+          <div class="tc-col-lbl">Output contract</div>
+          <p><strong>Risultati trovati:</strong> lista di oggetti con i campi rilevanti. Evita campi tecnici (ID interni, timestamp epoch, codici di stato).</p>
+          <p><strong>Nessun risultato:</strong> <code>{"found": false, "message": "Nessun documento trovato per 'contratto Rossi'."}</code> — mai restituire array vuoto senza messaggio. Il modello gestisce meglio una stringa esplicativa.</p>
+          <p><strong>Troppi risultati:</strong> restituisci i top-N più rilevanti con un campo <code>"has_more": true</code> invece di troncare senza segnalarlo.</p>
+        </div>
+        <div class="tc-col">
+          <div class="tc-col-lbl">Quando NON serve approvazione — e quando sì</div>
+          <p><strong>Mai:</strong> i tool di lettura non modificano stato — nessuna approvazione necessaria per la ricerca in sé.</p>
+          <p><strong>Eccezione:</strong> se il tool legge dati personali o sensibili, valuta se loggare l'accesso — non per approvazione ma per audit trail. Non è una questione di HITL ma di compliance.</p>
+        </div>
+        <div class="tc-col">
+          <div class="tc-col-lbl">Errori tipici di design</div>
+          <div class="err-list">
+            <div class="err-item"><span class="err-ico">✗</span><span class="err-text"><strong>Falso negativo silenzioso:</strong> il tool non trova nulla, restituisce <code>[]</code>, il modello continua senza avvertire l'utente. Fix: restituisci sempre un messaggio esplicito su "nessun risultato".</span></div>
+            <div class="err-item"><span class="err-ico">✗</span><span class="err-text"><strong>Tool troppo generico:</strong> un unico <code>search()</code> per tutto. L'LLM non sa quando usarlo vs. quando rispondere dalla propria conoscenza. Fix: tool separati per corpus separati.</span></div>
+            <div class="err-item"><span class="err-ico">✗</span><span class="err-text"><strong>Output verboso:</strong> restituire l'intero record Salesforce con 40 campi tecnici. Il modello produce risposte peggiori con troppo rumore nel context. Fix: proietta solo i campi rilevanti.</span></div>
+          </div>
+        </div>
+        <div class="tc-col-full">
+          <div class="tc-col-lbl">Description template</div>
+          <div class="desc-template">
+            <div class="dt-head">search_documents — template compilato</div>
+            <div class="dt-body"><span class="k">Cosa fa:</span> <span class="v">Cerca nei documenti interni aziendali per testo libero o parole chiave.
+Restituisce i documenti più rilevanti con titolo, estratto e data.</span>
+
+<span class="k">Quando usare:</span> <span class="v">Quando l'utente chiede informazioni su policy, procedure, contratti
+o documenti interni. Usare PRIMA di rispondere dalla propria conoscenza
+su temi aziendali specifici.</span>
+
+<span class="w">Quando NON usare:</span> <span class="v">Per informazioni generali non aziendali (usa la tua conoscenza).
+Per cercare record CRM o ticket (usa search_crm o get_tickets).
+Se l'utente ha già fornito il documento nel messaggio.</span>
+
+<span class="k">Vincoli:</span> <span class="v">Max 10 risultati per chiamata. Query in italiano o inglese.
+Se i risultati sembrano irrilevanti, prova con termini più specifici.</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="insight" style="margin-top:16px;">
+      <div class="insight-lbl">Il "quando usare PRIMA" — istruzione critica per la lettura</div>
+      <p>Il rischio principale dei tool di lettura non è l'uso sbagliato — è il <strong>non uso</strong>. Il modello risponde dalla propria conoscenza quando dovrebbe cercare. La description deve includere esplicitamente "Usare prima di rispondere su [dominio specifico]" — non solo "usare quando l'utente chiede". Senza questo trigger esplicito, il modello risponde direttamente troppo spesso.</p>
+    </div>
+
+  </div>
+</div>
+
+
+<!-- ═══════════════════════════
+     S3 — CATEGORIA 2: SCRITTURA
+═══════════════════════════ -->
+<div class="sect" id="s3">
+  <div class="sect-head">
+    <div class="sect-num">Categoria 02</div>
+    <h2>Scrittura e modifica stato</h2>
+    <p>Tool che creano, aggiornano o eliminano dati persistenti. La categoria che richiede più attenzione nel design — ogni invocazione lascia una traccia che potrebbe richiedere lavoro per essere corretta.</p>
+  </div>
+  <div class="wrap">
+
+    <div class="cat-header" style="border-color:var(--cat2);">
+      <div class="cat-icon" style="background:var(--cat2-l);">✏️</div>
+      <div>
+        <div class="cat-title" style="color:var(--cat2);">Scrittura e modifica stato</div>
+        <div class="cat-sub">Crea, aggiorna, elimina · Modifica stato persistente · Richiede cautela</div>
+      </div>
+    </div>
+
+    <!-- TOOL: create -->
+    <div class="tool-card" style="margin-top:14px;">
+      <div class="tc-head">
+        <div class="tc-stripe" style="background:var(--cat2)"></div>
+        <div class="tc-head-content">
+          <div class="tc-name">create_* · add_* · insert_*</div>
+          <div class="tc-oneliner">Creazione di nuovi record, entità, elementi — ticket, task, contatti, ordini</div>
+        </div>
+        <div class="tc-badges">
+          <span class="badge badge-warn">Parz. reversibile</span>
+          <span class="badge badge-warn">Approv. a volte</span>
+        </div>
+      </div>
+      <div class="tc-body">
+        <div class="tc-col">
+          <div class="tc-col-lbl">Quando serve approvazione</div>
+          <p><strong>Quasi mai:</strong> creare un ticket o un task è a basso rischio — reversibile cancellando il record. L'approvazione rallenta senza proteggere da rischi significativi.</p>
+          <p><strong>Eccezioni:</strong> creazione di record che inviano notifiche automatiche a terzi (un ordine che notifica il fornitore), o record che hanno conseguenze economiche (un preventivo inviato). In questi casi: mostra prima cosa verrà creato.</p>
+        </div>
+        <div class="tc-col">
+          <div class="tc-col-lbl">Errori tipici</div>
+          <div class="err-list">
+            <div class="err-item"><span class="err-ico">✗</span><span class="err-text"><strong>Record duplicati:</strong> l'agente crea due ticket per la stessa richiesta. Fix: istruzione esplicita "prima di creare, verifica se esiste già con search_*".</span></div>
+            <div class="err-item"><span class="err-ico">✗</span><span class="err-text"><strong>Campi obbligatori inventati:</strong> il modello compila campi che non conosce con valori plausibili. Fix: marca i campi opzionali come tali; per i campi obbligatori senza valore, chiedi all'utente invece di inventare.</span></div>
+          </div>
+        </div>
+        <div class="tc-col-full">
+          <div class="tc-col-lbl">Description template — create_support_ticket</div>
+          <div class="desc-template">
+            <div class="dt-head">create_support_ticket</div>
+            <div class="dt-body"><span class="k">Cosa fa:</span> <span class="v">Crea un nuovo ticket di supporto nel sistema CRM assegnandolo alla
+coda appropriata in base alla categoria.</span>
+
+<span class="k">Quando usare:</span> <span class="v">Quando l'utente segnala un problema, richiede assistenza, o chiede
+di aprire una richiesta formale. Usare DOPO aver identificato il cliente
+con get_customer_info.</span>
+
+<span class="w">Quando NON usare:</span> <span class="v">Se esiste già un ticket aperto per lo stesso problema (verifica con
+get_open_tickets prima). Se la richiesta è una semplice domanda
+informativa risolvibile senza creare un ticket.</span>
+
+<span class="k">Comportamento:</span> <span class="v">Prima di creare, mostra all'utente: categoria selezionata, priorità
+assegnata e assegnatario. Aspetta conferma se la priorità è ALTA o CRITICA.</span>
+
+<span class="k">Vincoli:</span> <span class="v">title: max 100 caratteri. description: min 20 caratteri — non accettare
+descrizioni vaghe come "problema". priority: LOW|MEDIUM|HIGH|CRITICAL.</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- TOOL: update -->
+    <div class="tool-card" style="margin-top:10px;">
+      <div class="tc-head">
+        <div class="tc-stripe" style="background:var(--cat2)"></div>
+        <div class="tc-head-content">
+          <div class="tc-name">update_* · set_* · change_* · patch_*</div>
+          <div class="tc-oneliner">Modifica di record esistenti — aggiornamento stato, dati, configurazioni</div>
+        </div>
+        <div class="tc-badges">
+          <span class="badge badge-warn">Parz. reversibile</span>
+          <span class="badge badge-warn">Approv. a volte</span>
+        </div>
+      </div>
+      <div class="tc-body">
+        <div class="tc-col">
+          <div class="tc-col-lbl">La regola del read-before-write</div>
+          <p>Prima di aggiornare un record, l'agente deve sapere qual è il suo stato attuale. <strong>Istruzione nel system prompt:</strong> "Prima di usare qualsiasi tool update_*, recupera lo stato corrente del record con il corrispondente get_* o search_*. Non aggiornare basandoti solo su ciò che l'utente dice — verifica prima."</p>
+          <p>Questo previene aggiornamenti basati su stato assunto errato (il record è già nello stato che si vuole impostare, o è in uno stato incompatibile con l'aggiornamento richiesto).</p>
+        </div>
+        <div class="tc-col">
+          <div class="tc-col-lbl">Errori tipici</div>
+          <div class="err-list">
+            <div class="err-item"><span class="err-ico">✗</span><span class="err-text"><strong>Update senza verifica:</strong> l'agente aggiorna lo stato di un ticket senza verificare che esista e sia modificabile. Fix: read-before-write obbligatorio nella description.</span></div>
+            <div class="err-item"><span class="err-ico">✗</span><span class="err-text"><strong>Sovrascrittura dati buoni:</strong> update_customer_info sovrascrive un campo che aveva un valore corretto con uno meno preciso. Fix: descrizione parametri con "lascia null per non modificare il campo".</span></div>
+            <div class="err-item"><span class="err-ico">✗</span><span class="err-text"><strong>ID sbagliato:</strong> l'agente aggiorna il record sbagliato quando ce ne sono di simili. Fix: mostra sempre nome/descrizione del record che verrà modificato prima di procedere.</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- TOOL: delete -->
+    <div class="tool-card" style="margin-top:10px;">
+      <div class="tc-head">
+        <div class="tc-stripe" style="background:var(--bad)"></div>
+        <div class="tc-head-content">
+          <div class="tc-name">delete_* · remove_* · archive_*</div>
+          <div class="tc-oneliner">Eliminazione o archiviazione di record — la categoria più rischiosa della scrittura</div>
+        </div>
+        <div class="tc-badges">
+          <span class="badge badge-bad">Irreversibile</span>
+          <span class="badge badge-bad">Approv. sempre</span>
+        </div>
+      </div>
+      <div class="tc-body">
+        <div class="tc-col">
+          <div class="tc-col-lbl">Approvazione — sempre, senza eccezioni</div>
+          <p>I tool delete_* devono sempre mostrare cosa verrà eliminato e aspettare conferma esplicita dell'utente. <strong>Questa istruzione va sia nella description ("mostra sempre cosa verrà eliminato e aspetta conferma") che nel system prompt ("MAI eseguire delete_* senza conferma dell'utente — anche se richiesto esplicitamente").</strong></p>
+          <p>Preferisci <code>archive_*</code> a <code>delete_*</code> quando possibile — l'archiviazione è reversibile, l'eliminazione no. Esponili come tool separati con descrizioni che chiariscono la differenza.</p>
+        </div>
+        <div class="tc-col">
+          <div class="tc-col-lbl">Design della description per delete</div>
+          <div class="desc-template" style="margin-top:0;">
+            <div class="dt-head">delete_document — pattern critico</div>
+            <div class="dt-body"><span class="e">ATTENZIONE: azione irreversibile.</span>
+<span class="k">Cosa fa:</span> <span class="v">Elimina permanentemente un documento.</span>
+<span class="w">OBBLIGATORIO prima di eseguire:</span>
+<span class="v">1. Recupera il documento con get_document(id)
+2. Mostra all'utente: nome, data creazione, autore
+3. Chiedi conferma esplicita ("Sei sicuro?")
+4. Esegui SOLO dopo "sì" o conferma esplicita.</span>
+<span class="e">NON eseguire in risposta a "sì elimina tutto" generico.</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+
+<!-- ═══════════════════════════
+     S4 — CATEGORIA 3: COMUNICAZIONE
+═══════════════════════════ -->
+<div class="sect" id="s4">
+  <div class="sect-head">
+    <div class="sect-num">Categoria 03</div>
+    <h2>Comunicazione</h2>
+    <p>Tool che inviano messaggi verso l'esterno — email, Slack, SMS, notifiche push. La categoria a maggiore rischio reputazionale: un messaggio inviato al destinatario sbagliato o con contenuto errato non è correggibile.</p>
+  </div>
+  <div class="wrap">
+
+    <div class="cat-header" style="border-color:var(--cat3);">
+      <div class="cat-icon" style="background:var(--cat3-l);">📨</div>
+      <div>
+        <div class="cat-title" style="color:var(--cat3);">Comunicazione</div>
+        <div class="cat-sub">Email, Slack, SMS, notifiche · Impatto su terzi · Quasi sempre irreversibile</div>
+      </div>
+    </div>
+
+    <!-- TOOL: send_email -->
+    <div class="tool-card" style="margin-top:14px;">
+      <div class="tc-head">
+        <div class="tc-stripe" style="background:var(--cat3)"></div>
+        <div class="tc-head-content">
+          <div class="tc-name">send_email · send_message · send_notification · post_*</div>
+          <div class="tc-oneliner">Invio di messaggi verso destinatari esterni o interni — la categoria più critica per il HITL</div>
+        </div>
+        <div class="tc-badges">
+          <span class="badge badge-bad">Irreversibile</span>
+          <span class="badge badge-bad">Approv. quasi sempre</span>
+          <span class="badge badge-bad">Impatta terzi</span>
+        </div>
+      </div>
+      <div class="tc-body">
+        <div class="tc-col">
+          <div class="tc-col-lbl">Quando serve approvazione — il criterio</div>
+          <p><strong>Sempre quando:</strong> destinatario esterno all'organizzazione, contenuto non standard (non da template approvato), allegati, comunicazione in nome dell'azienda.</p>
+          <p><strong>A volte non serve:</strong> notifiche interne di sistema (es. "il task X è stato completato" a un sistema interno), alert automatici su eventi previsti e approvati a monte nel flusso.</p>
+          <p><strong>Mai senza approvazione:</strong> email a clienti, comunicazioni commerciali, qualsiasi messaggio che potrebbe essere interpretato come una promessa o un impegno.</p>
+        </div>
+        <div class="tc-col">
+          <div class="tc-col-lbl">Il pattern "mostra-poi-invia" — obbligatorio</div>
+          <p>Prima di inviare, l'agente deve sempre:</p>
+          <p>1. Mostrare destinatario, oggetto e corpo completo</p>
+          <p>2. Chiedere esplicita approvazione</p>
+          <p>3. Inviare solo dopo conferma</p>
+          <p><strong>Non è sufficiente mostrare solo il destinatario o solo il corpo.</strong> Il rischio è sia nel contenuto sbagliato che nel destinatario sbagliato — servono entrambi.</p>
+        </div>
+        <div class="tc-col">
+          <div class="tc-col-lbl">Errori tipici</div>
+          <div class="err-list">
+            <div class="err-item"><span class="err-ico">✗</span><span class="err-text"><strong>Whitelist assente:</strong> l'agente può inviare email a qualsiasi indirizzo. Fix: whitelist hardcoded nel wrapper Python — non affidarsi solo alla description.</span></div>
+            <div class="err-item"><span class="err-ico">✗</span><span class="err-text"><strong>Reply-to sbagliato:</strong> l'agente usa il proprio indirizzo come mittente invece di quello dell'utente. Fix: il mittente va specificato esplicitamente nel wrapper, non lasciato all'LLM.</span></div>
+            <div class="err-item"><span class="err-ico">✗</span><span class="err-text"><strong>Tono non verificato:</strong> il modello genera un'email con tono assertivo su una questione legale. Fix: per email su temi sensibili (legale, finanziario, lamentele), template approvati obbligatori.</span></div>
+          </div>
+        </div>
+        <div class="tc-col-full">
+          <div class="tc-col-lbl">Description template — send_email con pattern mostra-poi-invia</div>
+          <div class="desc-template">
+            <div class="dt-head">send_email — template completo</div>
+            <div class="dt-body"><span class="k">Cosa fa:</span> <span class="v">Invia un'email tramite il server aziendale al destinatario specificato.</span>
+
+<span class="k">Quando usare:</span> <span class="v">Solo quando l'utente ha approvato esplicitamente contenuto E destinatario.</span>
+
+<span class="w">PROCEDURA OBBLIGATORIA — seguire sempre nell'ordine:</span>
+<span class="v">1. Redigi la bozza completa (oggetto + corpo)
+2. Mostra all'utente: "Invierò questa email a [destinatario]:
+   Oggetto: [oggetto]
+   ---
+   [corpo completo]
+   ---
+   Procedo?"
+3. Aspetta risposta affermativa esplicita
+4. Solo dopo: chiama send_email</span>
+
+<span class="e">NON INVIARE se:</span>
+<span class="v">- Il destinatario non è nella lista approvata (vedi parametro to)
+- L'utente non ha confermato esplicitamente
+- Il contenuto menziona impegni legali o finanziari (escalata al manager)</span>
+
+<span class="k">Vincoli:</span> <span class="v">to: solo domini @azienda.it o nella whitelist clienti.
+Max 1 email per turno di conversazione.</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- TOOL: save_draft -->
+    <div class="tool-card" style="margin-top:10px;">
+      <div class="tc-head">
+        <div class="tc-stripe" style="background:var(--ok)"></div>
+        <div class="tc-head-content">
+          <div class="tc-name">save_draft · schedule_message · queue_notification</div>
+          <div class="tc-oneliner">Varianti sicure — salvano o schedulano senza inviare immediatamente</div>
+        </div>
+        <div class="tc-badges">
+          <span class="badge badge-ok">Reversibile</span>
+          <span class="badge badge-ok">No approvazione</span>
+        </div>
+      </div>
+      <div class="tc-body">
+        <div class="tc-col-full">
+          <div class="tc-col-lbl">Perché esporre save_draft separatamente da send_email — e cosa dice la description</div>
+          <p>Avere un tool <code>save_draft</code> separato da <code>send_email</code> serve per due ragioni: permette all'agente di costruire la comunicazione in più passi prima di inviarla, e crea un punto di pausa naturale prima dell'azione irreversibile. <strong>La description di save_draft deve linkare esplicitamente a send_email:</strong> "Per inviare la bozza salvata, usa send_email specificando il draft_id. Non inviare direttamente." Questo rende il flusso esplicito invece di implicito — e testabile in isolamento.</p>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+
+<!-- ═══════════════════════════
+     S5 — CONFRONTO
+═══════════════════════════ -->
+<div class="sect" id="s5">
+  <div class="sect-head">
+    <div class="sect-num">Sezione finale</div>
+    <h2>Confronto rapido tra le tre categorie</h2>
+  </div>
+  <div class="wrap" style="padding-top:28px;">
+
+    <div style="border:1px solid var(--border2); overflow:hidden;">
+
+      <!-- Header -->
+      <div style="display:grid; grid-template-columns:160px 1fr 1fr 1fr; background:var(--ink); border-bottom:1px solid rgba(255,255,255,.08);">
+        <div style="padding:10px 14px; font-family:'IBM Plex Mono',monospace; font-size:9px; letter-spacing:1px; text-transform:uppercase; color:rgba(255,255,255,.4);">Dimensione</div>
+        <div style="padding:10px 14px; font-family:'IBM Plex Mono',monospace; font-size:9px; letter-spacing:1px; text-transform:uppercase; color:var(--cat1); border-left:1px solid rgba(255,255,255,.08);">① Lettura</div>
+        <div style="padding:10px 14px; font-family:'IBM Plex Mono',monospace; font-size:9px; letter-spacing:1px; text-transform:uppercase; color:var(--cat2); border-left:1px solid rgba(255,255,255,.08);">② Scrittura</div>
+        <div style="padding:10px 14px; font-family:'IBM Plex Mono',monospace; font-size:9px; letter-spacing:1px; text-transform:uppercase; color:var(--cat3); border-left:1px solid rgba(255,255,255,.08);">③ Comunicazione</div>
+      </div>
+
+      <!-- Rows -->
+      <div style="display:grid; grid-template-columns:160px 1fr 1fr 1fr; border-bottom:1px solid var(--border);">
+        <div style="padding:10px 14px; font-size:12.5px; font-weight:500; color:var(--ink2); background:var(--bg2);">Reversibilità</div>
+        <div style="padding:10px 14px; font-size:12.5px; color:var(--ok); font-family:'IBM Plex Mono',monospace; border-left:1px solid var(--border);">Sempre</div>
+        <div style="padding:10px 14px; font-size:12.5px; color:var(--warn); font-family:'IBM Plex Mono',monospace; border-left:1px solid var(--border);">Parziale (create/update) · No (delete)</div>
+        <div style="padding:10px 14px; font-size:12.5px; color:var(--bad); font-family:'IBM Plex Mono',monospace; border-left:1px solid var(--border);">Mai</div>
+      </div>
+      <div style="display:grid; grid-template-columns:160px 1fr 1fr 1fr; border-bottom:1px solid var(--border);">
+        <div style="padding:10px 14px; font-size:12.5px; font-weight:500; color:var(--ink2); background:var(--bg2);">Approvazione</div>
+        <div style="padding:10px 14px; font-size:12.5px; color:var(--ok); font-family:'IBM Plex Mono',monospace; border-left:1px solid var(--border);">Mai</div>
+        <div style="padding:10px 14px; font-size:12.5px; color:var(--warn); font-family:'IBM Plex Mono',monospace; border-left:1px solid var(--border);">A volte (create) · Sempre (delete)</div>
+        <div style="padding:10px 14px; font-size:12.5px; color:var(--bad); font-family:'IBM Plex Mono',monospace; border-left:1px solid var(--border);">Quasi sempre</div>
+      </div>
+      <div style="display:grid; grid-template-columns:160px 1fr 1fr 1fr; border-bottom:1px solid var(--border);">
+        <div style="padding:10px 14px; font-size:12.5px; font-weight:500; color:var(--ink2); background:var(--bg2);">Rischio principale</div>
+        <div style="padding:10px 14px; font-size:12.5px; color:var(--ink3); border-left:1px solid var(--border);">Non uso (risponde senza cercare)</div>
+        <div style="padding:10px 14px; font-size:12.5px; color:var(--ink3); border-left:1px solid var(--border);">Duplicati · Sovrascrittura · ID sbagliato</div>
+        <div style="padding:10px 14px; font-size:12.5px; color:var(--ink3); border-left:1px solid var(--border);">Destinatario sbagliato · Tono errato</div>
+      </div>
+      <div style="display:grid; grid-template-columns:160px 1fr 1fr 1fr; border-bottom:1px solid var(--border);">
+        <div style="padding:10px 14px; font-size:12.5px; font-weight:500; color:var(--ink2); background:var(--bg2);">Istruzione chiave</div>
+        <div style="padding:10px 14px; font-size:12.5px; color:var(--ink3); border-left:1px solid var(--border);">"Usare PRIMA di rispondere su [dominio]"</div>
+        <div style="padding:10px 14px; font-size:12.5px; color:var(--ink3); border-left:1px solid var(--border);">Read-before-write obbligatorio</div>
+        <div style="padding:10px 14px; font-size:12.5px; color:var(--ink3); border-left:1px solid var(--border);">Pattern mostra-poi-invia sempre</div>
+      </div>
+      <div style="display:grid; grid-template-columns:160px 1fr 1fr 1fr;">
+        <div style="padding:10px 14px; font-size:12.5px; font-weight:500; color:var(--ink2); background:var(--bg2);">Output contract</div>
+        <div style="padding:10px 14px; font-size:12.5px; color:var(--ink3); border-left:1px solid var(--border);">Messaggio esplicito se nessun risultato</div>
+        <div style="padding:10px 14px; font-size:12.5px; color:var(--ink3); border-left:1px solid var(--border);">ID del record creato/modificato + stato</div>
+        <div style="padding:10px 14px; font-size:12.5px; color:var(--ink3); border-left:1px solid var(--border);">Conferma di consegna + timestamp</div>
+      </div>
+    </div>
+
+    <div class="insight" style="margin-top:20px; border-color:var(--warn); background:var(--warn-l);">
+      <div class="insight-lbl" style="color:var(--warn);">Prossimo — Report 2</div>
+      <p>Il Report 2 copre le categorie rimanenti: <strong>Esecuzione di codice</strong> (il pattern sandbox, il ciclo errore→correzione, come descrivere l'ambiente), <strong>Integrazione sistemi esterni</strong> (CRM, GitHub, calendari — wrapper semantici e gestione autenticazione), <strong>Elaborazione file e media</strong> (PDF, immagini, conversioni — gestione path e artefatti).</p>
+    </div>
+
+  </div>
+</div>
+
+<div class="footer">
+  <span>Mappatura Tool &amp; Skill · Report 1 di 2 · Lettura · Scrittura · Comunicazione</span>
+  <span>Marzo 2026</span>
+</div>
+
+<script>
+function show(n) {
+  document.querySelectorAll('.sect').forEach(s => s.classList.remove('active'));
+  document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('s'+n).classList.add('active');
+  document.querySelectorAll('.nav-btn')[n-1].classList.add('active');
+  window.scrollTo({top:0, behavior:'smooth'});
+}
+</script>
+</body>
+</html>

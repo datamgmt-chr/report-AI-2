@@ -1,0 +1,1053 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Strumenti — A · Anatomia di un tool ben progettato</title>
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Outfit:wght@200;300;400;500;600;700;800;900&family=IBM+Plex+Mono:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg:     #faf8f5;
+  --bg2:    #f2efe9;
+  --bg3:    #e9e5dc;
+  --ink:    #1b1915;
+  --ink2:   #2e2b25;
+  --ink3:   #6d685c;
+  --ink4:   #a19c8f;
+  --border: #d9d4c8;
+  --border2:#cac4b6;
+
+  --accent:  #4a7c59;
+  --accent2: #2e5038;
+  --accent-light: #eef5f1;
+
+  --ok:  #3d7a45;
+  --ok-l:#f4faf5;
+  --bad: #c0392b;
+  --bad-l:#fdf5f5;
+  --warn:#b07d24;
+  --warn-l:#fdf6e8;
+}
+
+* { margin:0; padding:0; box-sizing:border-box; }
+html { scroll-behavior:smooth; }
+body {
+  background:var(--bg); color:var(--ink);
+  font-family:'Outfit',sans-serif; font-weight:300;
+  font-size:14px; line-height:1.75;
+}
+
+.masthead {
+  background:var(--ink); color:rgba(255,255,255,.9);
+  padding:60px 56px 52px; position:relative; overflow:hidden;
+}
+.masthead::before {
+  content:''; position:absolute; inset:0;
+  background:
+    repeating-linear-gradient(90deg,rgba(255,255,255,.012) 0,rgba(255,255,255,.012) 1px,transparent 1px,transparent 64px),
+    repeating-linear-gradient(0deg,rgba(255,255,255,.012) 0,rgba(255,255,255,.012) 1px,transparent 1px,transparent 64px);
+  pointer-events:none;
+}
+.masthead::after {
+  content:'A'; position:absolute; right:44px; bottom:-28px;
+  font-family:'Instrument Serif',serif; font-size:280px; line-height:1;
+  color:rgba(255,255,255,.025); pointer-events:none;
+}
+.mh-eye {
+  font-family:'IBM Plex Mono',monospace; font-size:10px;
+  letter-spacing:3px; text-transform:uppercase;
+  color:rgba(255,255,255,.25); margin-bottom:18px; position:relative;
+}
+.mh-cluster {
+  display:inline-block; font-family:'IBM Plex Mono',monospace;
+  font-size:10px; letter-spacing:2px; text-transform:uppercase;
+  padding:4px 12px; border:1px solid var(--accent);
+  color:var(--accent); margin-bottom:20px; position:relative;
+}
+.masthead h1 {
+  font-family:'Instrument Serif',serif; font-weight:400;
+  font-size:clamp(30px,4.5vw,54px); line-height:1.08;
+  letter-spacing:-1px; max-width:700px; position:relative;
+}
+.mh-sub {
+  margin-top:20px; font-size:15px; font-weight:300;
+  color:rgba(255,255,255,.38); max-width:660px;
+  line-height:1.7; position:relative;
+}
+.mh-meta {
+  margin-top:32px; display:flex; gap:32px; flex-wrap:wrap; position:relative;
+}
+.mh-stat { display:flex; flex-direction:column; gap:4px; }
+.mh-stat-val {
+  font-family:'IBM Plex Mono',monospace; font-size:22px; font-weight:500;
+  color:rgba(255,255,255,.85);
+}
+.mh-stat-lbl {
+  font-size:10px; letter-spacing:2px; text-transform:uppercase;
+  color:rgba(255,255,255,.25);
+}
+
+.nav {
+  background:var(--ink2); position:sticky; top:0; z-index:100;
+  display:flex; overflow-x:auto;
+  border-bottom:1px solid rgba(255,255,255,.06);
+}
+.nav-btn {
+  flex:1; min-width:110px; padding:13px 12px;
+  border:none; background:transparent; cursor:pointer;
+  font-family:'Outfit',sans-serif; font-size:10.5px; font-weight:600;
+  text-transform:uppercase; letter-spacing:.4px;
+  color:rgba(255,255,255,.3);
+  border-right:1px solid rgba(255,255,255,.06);
+  transition:all .2s; white-space:nowrap;
+}
+.nav-btn:last-child { border-right:none; }
+.nav-btn:hover { color:rgba(255,255,255,.6); }
+.nav-btn.active { color:#fff; background:rgba(255,255,255,.05); }
+
+.sect { display:none; }
+.sect.active { display:block; animation:fadeIn .3s ease; }
+@keyframes fadeIn { from{opacity:0;transform:translateY(6px)} to{opacity:1;transform:translateY(0)} }
+
+.sect-head { padding:48px 56px 36px; border-bottom:1px solid var(--border); }
+.sect-num {
+  font-family:'IBM Plex Mono',monospace; font-size:10px;
+  letter-spacing:3px; text-transform:uppercase; color:var(--ink4); margin-bottom:10px;
+}
+.sect-head h2 {
+  font-family:'Instrument Serif',serif; font-weight:400;
+  font-size:clamp(26px,3.5vw,42px); line-height:1.1;
+  letter-spacing:-.5px; max-width:640px; margin-bottom:14px;
+}
+.sect-head p { color:var(--ink3); max-width:700px; font-size:14.5px; }
+.wrap { padding:0 56px 64px; }
+
+.prose { max-width:760px; }
+.prose p { font-size:14.5px; color:var(--ink3); line-height:1.85; margin-bottom:16px; }
+.prose p strong { color:var(--ink2); font-weight:500; }
+.prose p em { font-style:italic; color:var(--ink2); }
+
+/* ── GL CARD ── */
+.gl-group { margin-top:40px; }
+.gl-group-title {
+  font-family:'IBM Plex Mono',monospace; font-size:9px;
+  letter-spacing:3px; text-transform:uppercase;
+  color:var(--ink4); padding-bottom:10px; border-bottom:1px solid var(--border);
+}
+.gl-card { border:1px solid var(--border2); border-top:none; background:var(--bg); }
+.gl-header {
+  display:grid; grid-template-columns:5px 52px 1fr auto;
+  align-items:stretch; border-bottom:1px solid var(--border);
+}
+.gl-stripe { background:var(--accent); }
+.gl-num {
+  font-family:'Outfit',sans-serif; font-weight:800; font-size:20px; color:var(--bg3);
+  display:flex; align-items:center; justify-content:center;
+  border-right:1px solid var(--border);
+}
+.gl-title-wrap { padding:16px 20px; }
+.gl-title { font-family:'Instrument Serif',serif; font-size:20px; color:var(--ink2); line-height:1.2; }
+.gl-subtitle { font-size:12px; color:var(--ink4); margin-top:3px; }
+.gl-impact-wrap {
+  padding:14px 20px; display:flex; flex-direction:column;
+  align-items:flex-end; justify-content:center; gap:4px;
+}
+.gl-impact-stars { font-size:14px; }
+.gl-impact-lbl {
+  font-family:'IBM Plex Mono',monospace; font-size:8px;
+  letter-spacing:1px; text-transform:uppercase; color:var(--ink4);
+}
+.gl-body { padding:0; }
+.gl-section { padding:20px 24px; border-bottom:1px solid var(--border); }
+.gl-section:last-child { border-bottom:none; }
+.gl-section-lbl {
+  font-family:'IBM Plex Mono',monospace; font-size:9px;
+  letter-spacing:2px; text-transform:uppercase; color:var(--ink4);
+  margin-bottom:10px; padding-bottom:6px; border-bottom:1px solid var(--border);
+}
+.gl-section p { font-size:13.5px; color:var(--ink3); line-height:1.8; max-width:740px; }
+.gl-section p strong { color:var(--ink2); font-weight:500; }
+
+/* ── COMPONENT ANATOMY ── */
+.anatomy-panel { margin-top:16px; border:1px solid var(--border2); }
+.anat-head {
+  padding:10px 16px; background:var(--ink);
+  border-bottom:1px solid rgba(255,255,255,.06);
+  font-family:'IBM Plex Mono',monospace; font-size:9px;
+  letter-spacing:2px; text-transform:uppercase; color:rgba(255,255,255,.4);
+}
+.anat-row { display:grid; grid-template-columns:5px 130px 1fr; border-bottom:1px solid var(--border); }
+.anat-row:last-child { border-bottom:none; }
+.anat-stripe {}
+.anat-label-col {
+  padding:14px 16px; border-right:1px solid var(--border); background:var(--bg2);
+}
+.anat-tag {
+  font-family:'IBM Plex Mono',monospace; font-size:8px;
+  letter-spacing:2px; text-transform:uppercase; margin-bottom:3px;
+}
+.anat-name { font-weight:600; font-size:13px; color:var(--ink2); }
+.anat-why { font-size:11px; color:var(--ink4); margin-top:2px; line-height:1.4; }
+.anat-content {
+  padding:14px 18px; font-family:'IBM Plex Mono',monospace;
+  font-size:11.5px; line-height:1.7; color:rgba(255,255,255,.75);
+  background:var(--ink); white-space:pre-wrap;
+}
+.anat-hl { color:#93c5e8; font-weight:500; }
+.anat-good { color:#7dd3a8; }
+.anat-comment { color:rgba(255,255,255,.28); }
+
+/* ── COMPARE GRID ── */
+.compare-grid { display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-top:12px; }
+.pex-lbl {
+  font-family:'IBM Plex Mono',monospace; font-size:9px;
+  letter-spacing:2px; text-transform:uppercase; margin-bottom:6px;
+}
+.pex-lbl.bad  { color:var(--bad); }
+.pex-lbl.good { color:var(--accent); }
+.pex-lbl.neutral { color:var(--ink4); }
+.prompt-box {
+  font-family:'IBM Plex Mono',monospace; font-size:11.5px; line-height:1.75;
+  padding:14px 18px; border:1px solid; white-space:pre-wrap; word-break:break-word;
+}
+.prompt-box.bad  { border-color:#e8c5c5; background:var(--bad-l); color:#6b3030; }
+.prompt-box.good { border-color:#a8d4b8; background:var(--accent-light); color:var(--accent2); }
+.prompt-box.neutral { border-color:var(--border2); background:var(--bg2); color:var(--ink3); }
+.prompt-box .hl { font-weight:500; color:var(--accent); }
+.prompt-box.bad .hl { color:#8b3030; text-decoration:line-through; }
+
+/* ── PARAM ANATOMY ── */
+.param-anatomy { margin-top:12px; border:1px solid var(--border2); }
+.pa-head {
+  padding:10px 16px; background:var(--ink);
+  border-bottom:1px solid rgba(255,255,255,.06);
+  font-family:'IBM Plex Mono',monospace; font-size:9px;
+  letter-spacing:2px; text-transform:uppercase; color:rgba(255,255,255,.4);
+}
+.pa-param { border-bottom:1px solid var(--border); }
+.pa-param:last-child { border-bottom:none; }
+.pa-code {
+  padding:10px 16px; background:var(--ink);
+  font-family:'IBM Plex Mono',monospace; font-size:11.5px;
+  line-height:1.6; color:rgba(255,255,255,.75); white-space:pre-wrap;
+  border-bottom:1px solid rgba(255,255,255,.06);
+}
+.pa-code .k  { color:#93c5e8; }
+.pa-code .v  { color:#7dd3a8; }
+.pa-code .t  { color:#f4a87a; }
+.pa-code .cm { color:rgba(255,255,255,.28); }
+.pa-notes { padding:10px 16px 12px; font-size:12.5px; color:var(--ink3); line-height:1.6; }
+.pa-notes strong { color:var(--ink2); font-weight:500; }
+
+/* ── ERROR STATES ── */
+.error-states { margin-top:12px; display:flex; flex-direction:column; gap:2px; }
+.es-item {
+  display:grid; grid-template-columns:140px 1fr 1fr;
+  border:1px solid var(--border2); background:var(--bg);
+}
+.es-item.head {
+  background:var(--ink); color:rgba(255,255,255,.7);
+  font-family:'IBM Plex Mono',monospace; font-size:9px;
+  letter-spacing:1px; text-transform:uppercase;
+}
+.es-cell { padding:11px 14px; border-right:1px solid var(--border); font-size:12.5px; color:var(--ink3); line-height:1.5; }
+.es-cell:last-child { border-right:none; }
+.es-cell.lbl { font-weight:500; color:var(--ink2); font-family:'IBM Plex Mono',monospace; font-size:11px; }
+.es-good { background:var(--ok-l); color:#2e4a32; }
+.es-bad  { background:var(--bad-l); color:#6b3030; }
+
+/* ── CHECKLIST ── */
+.checklist { margin-top:16px; }
+.check-item {
+  display:flex; gap:12px; align-items:flex-start;
+  padding:10px 0; border-bottom:1px solid var(--border);
+  font-size:13.5px; color:var(--ink3);
+}
+.check-item:last-child { border-bottom:none; }
+.check-icon {
+  width:20px; height:20px; border-radius:50%;
+  background:var(--accent); color:#fff;
+  display:flex; align-items:center; justify-content:center;
+  font-size:11px; font-weight:700; flex-shrink:0; margin-top:1px;
+}
+.check-item strong { color:var(--ink2); font-weight:500; }
+
+/* ── MECHANISM ── */
+.mechanism {
+  margin-top:14px; padding:14px 18px;
+  border-left:3px solid var(--accent); background:var(--accent-light);
+}
+.mech-lbl {
+  font-family:'IBM Plex Mono',monospace; font-size:9px;
+  letter-spacing:2px; text-transform:uppercase; color:var(--accent); margin-bottom:6px;
+}
+.mechanism p { font-size:13px; color:var(--ink3); line-height:1.65; }
+.mechanism p strong { color:var(--ink2); font-weight:500; }
+
+/* ── KEY POINT ── */
+.key-point {
+  margin-top:36px; padding:24px 28px;
+  border-left:4px solid var(--accent); background:var(--accent-light);
+}
+.kp-label {
+  font-family:'IBM Plex Mono',monospace; font-size:9px;
+  letter-spacing:2px; text-transform:uppercase; color:var(--accent); margin-bottom:8px;
+}
+.kp-text {
+  font-family:'Instrument Serif',serif; font-size:18px; line-height:1.45; color:var(--ink2);
+}
+.kp-sub { margin-top:10px; font-size:13px; color:var(--ink3); line-height:1.65; }
+
+/* ── INSIGHT ── */
+.insight {
+  margin:16px 0; padding:16px 20px;
+  border-left:4px solid var(--accent); background:var(--accent-light);
+}
+.insight-lbl {
+  font-family:'IBM Plex Mono',monospace; font-size:9px;
+  letter-spacing:2px; text-transform:uppercase; color:var(--accent); margin-bottom:6px;
+}
+.insight p { font-size:13.5px; color:var(--ink2); line-height:1.65; max-width:700px; }
+.insight p strong { font-weight:500; }
+
+/* ── FOOTER ── */
+.footer {
+  padding:24px 56px; border-top:1px solid var(--border);
+  display:flex; justify-content:space-between; align-items:center;
+  font-family:'IBM Plex Mono',monospace; font-size:10px;
+  letter-spacing:1px; text-transform:uppercase; color:var(--ink4);
+}
+
+@media (max-width:700px) {
+  .masthead,.sect-head,.wrap,.footer { padding-left:20px; padding-right:20px; }
+  .compare-grid { grid-template-columns:1fr; }
+  .gl-header { grid-template-columns:5px 40px 1fr; }
+  .gl-impact-wrap { display:none; }
+  .anat-row { grid-template-columns:5px 1fr; }
+  .anat-label-col { display:none; }
+  .es-item { grid-template-columns:1fr; }
+}
+</style>
+</head>
+<body>
+
+<!-- HEADER -->
+<div class="masthead">
+  <div class="mh-eye">Serie Agenti AI · Leva 03 · Strumenti</div>
+  <div class="mh-cluster">Report A</div>
+  <h1>Anatomia di un tool ben progettato</h1>
+  <p class="mh-sub">Cinque componenti, ognuna con impatto diretto su come il modello usa il tool. Quasi tutti i problemi di uso scorretto dei tool — invocazioni sbagliate, parametri errati, risultati non usabili — nascono da una delle cinque componenti mal definita.</p>
+  <div class="mh-meta">
+    <div class="mh-stat"><div class="mh-stat-val">5</div><div class="mh-stat-lbl">Componenti</div></div>
+    <div class="mh-stat"><div class="mh-stat-val">Descrizione</div><div class="mh-stat-lbl">La più critica</div></div>
+    <div class="mh-stat"><div class="mh-stat-val">Error contract</div><div class="mh-stat-lbl">La più trascurata</div></div>
+    <div class="mh-stat"><div class="mh-stat-value">Design</div><div class="mh-stat-lbl">Prima della logica</div></div>
+  </div>
+</div>
+
+<!-- NAV -->
+<div class="nav">
+  <button class="nav-btn active" onclick="show(1)">Panoramica</button>
+  <button class="nav-btn" onclick="show(2)">Nome</button>
+  <button class="nav-btn" onclick="show(3)">Descrizione</button>
+  <button class="nav-btn" onclick="show(4)">Parametri</button>
+  <button class="nav-btn" onclick="show(5)">Output contract</button>
+  <button class="nav-btn" onclick="show(6)">Error contract</button>
+</div>
+
+
+<!-- ═══════════════════════════
+     S1 — PANORAMICA
+═══════════════════════════ -->
+<div class="sect active" id="s1">
+  <div class="sect-head">
+    <div class="sect-num">Introduzione</div>
+    <h2>Le 5 componenti — e perché quasi tutti ne trascurano almeno due</h2>
+    <p>Un tool non è solo codice che fa qualcosa. È un'interfaccia tra il modello e il mondo — e come ogni interfaccia, la sua qualità dipende da quanto è chiara per chi la usa.</p>
+  </div>
+  <div class="wrap">
+
+    <div class="prose" style="margin-top:28px;">
+      <p>Chi sviluppa un tool tende a concentrarsi sulla logica — cosa fa il codice, come chiama l'API, come gestisce le eccezioni. Queste cose contano, ma non sono ciò che determina se il modello userà il tool correttamente. Il modello non vede il codice. Vede solo l'interfaccia: il nome, la descrizione, i parametri, l'output e il contratto di errore.</p>
+      <p><strong>Un tool con logica eccellente e interfaccia mediocre viene usato male.</strong> Un tool con logica semplice e interfaccia precisa viene usato bene. Questo report tratta interamente l'interfaccia — perché è quella che il modello legge per decidere quando, come e con quali parametri invocare il tool.</p>
+    </div>
+
+    <div class="anatomy-panel">
+      <div class="anat-head">Anatomia completa di un tool — le 5 componenti</div>
+
+      <div class="anat-row">
+        <div class="anat-stripe" style="background:var(--accent)"></div>
+        <div class="anat-label-col">
+          <div class="anat-tag" style="color:var(--accent)">Componente 1</div>
+          <div class="anat-name">Nome</div>
+          <div class="anat-why">Come il modello trova il tool nella lista</div>
+        </div>
+        <div class="anat-content"><span class="anat-hl">name</span>: <span class="anat-good">"search_internal_docs"</span>
+<span class="anat-comment">← verbo_oggetto, snake_case, specifico</span></div>
+      </div>
+
+      <div class="anat-row">
+        <div class="anat-stripe" style="background:#c0392b"></div>
+        <div class="anat-label-col">
+          <div class="anat-tag" style="color:#c0392b">Componente 2 ★</div>
+          <div class="anat-name">Descrizione</div>
+          <div class="anat-why">Il testo che il modello legge per decidere se e quando usare il tool — il componente più critico</div>
+        </div>
+        <div class="anat-content"><span class="anat-hl">description</span>: <span class="anat-good">"Cerca nei documenti interni aziendali (policy,
+procedure, contratti) usando ricerca semantica.
+Usare quando l'utente pone domande su regole interne,
+procedure aziendali o documenti specifici.
+NON usare per informazioni generali disponibili
+nella conoscenza interna del modello."</span></div>
+      </div>
+
+      <div class="anat-row">
+        <div class="anat-stripe" style="background:#7b5ea7"></div>
+        <div class="anat-label-col">
+          <div class="anat-tag" style="color:#7b5ea7">Componente 3</div>
+          <div class="anat-name">Parametri</div>
+          <div class="anat-why">Tipi, vincoli, descrizioni — cosa il modello deve passare</div>
+        </div>
+        <div class="anat-content"><span class="anat-hl">parameters</span>: {
+  <span class="anat-good">"query"</span>: {
+    <span class="anat-good">"type"</span>: "string",
+    <span class="anat-good">"description"</span>: "Testo della ricerca. Formulare come query
+                    autonoma, senza riferimenti al contesto
+                    della conversazione.",
+    <span class="anat-good">"minLength"</span>: 3
+  },
+  <span class="anat-good">"k"</span>: {
+    <span class="anat-good">"type"</span>: "integer",
+    <span class="anat-good">"description"</span>: "Numero di risultati da restituire (1-10).",
+    <span class="anat-good">"default"</span>: 5, <span class="anat-good">"minimum"</span>: 1, <span class="anat-good">"maximum"</span>: 10
+  }
+}</div>
+      </div>
+
+      <div class="anat-row">
+        <div class="anat-stripe" style="background:#b07d24"></div>
+        <div class="anat-label-col">
+          <div class="anat-tag" style="color:#b07d24">Componente 4</div>
+          <div class="anat-name">Output contract</div>
+          <div class="anat-why">Formato e struttura del risultato — come il modello deve interpretarlo</div>
+        </div>
+        <div class="anat-content"><span class="anat-comment"># Formato di ritorno — documentato nella descrizione:</span>
+<span class="anat-good">"Restituisce un array di oggetti con:
+- title: titolo del documento
+- excerpt: estratto rilevante (max 300 caratteri)
+- source: nome file e pagina
+- score: rilevanza 0.0-1.0
+Array vuoto se nessun documento trovato."</span></div>
+      </div>
+
+      <div class="anat-row">
+        <div class="anat-stripe" style="background:#2e5f8a"></div>
+        <div class="anat-label-col">
+          <div class="anat-tag" style="color:#2e5f8a">Componente 5</div>
+          <div class="anat-name">Error contract</div>
+          <div class="anat-why">Cosa il modello deve fare quando il tool fallisce</div>
+        </div>
+        <div class="anat-content"><span class="anat-comment"># Errori possibili e come gestirli:</span>
+<span class="anat-good">"CONNECTION_ERROR: il sistema di ricerca non è
+  raggiungibile. Informare l'utente e non riprovare.
+TIMEOUT: ricerca troppo lenta. Riprovare con query
+  più breve o k ridotto (massimo 1 retry).
+INVALID_QUERY: query troppo breve o vuota.
+  Riformulare prima di riprovare."</span></div>
+      </div>
+
+    </div>
+
+    <div class="key-point" style="margin-top:24px;">
+      <div class="kp-label">Il principio di questo report</div>
+      <div class="kp-text">Il design di un tool inizia dall'interfaccia, non dall'implementazione. Scrivi prima le 5 componenti — poi implementa la logica.</div>
+      <div class="kp-sub">Questo approccio "interface-first" ha un vantaggio pratico immediato: puoi testare se il modello usa correttamente il tool prima ancora di avere l'implementazione completa — basta un mock che restituisce dati statici. Se il modello lo usa male con l'implementazione mock, cambiarla non risolverà il problema.</div>
+    </div>
+
+  </div>
+</div>
+
+
+<!-- ═══════════════════════════
+     S2 — NOME
+═══════════════════════════ -->
+<div class="sect" id="s2">
+  <div class="sect-head">
+    <div class="sect-num">Componente 01</div>
+    <h2>Il nome — come il modello trova il tool</h2>
+    <p>Il nome appare in ogni tool call generato dal modello. Deve essere descrittivo, univoco e seguire convenzioni che il modello riconosce. Piccola componente, impatto non trascurabile.</p>
+  </div>
+  <div class="wrap">
+
+    <!-- GL 01 -->
+    <div class="gl-group" style="margin-top:28px;">
+      <div class="gl-group-title">Linea guida 01</div>
+      <div class="gl-card">
+        <div class="gl-header">
+          <div class="gl-stripe"></div>
+          <div class="gl-num">01</div>
+          <div class="gl-title-wrap">
+            <div class="gl-title">Usa la struttura verbo_oggetto in snake_case — specifica, non generica</div>
+            <div class="gl-subtitle">Il nome è la prima selezione che il modello fa quando deve scegliere quale tool invocare</div>
+          </div>
+          <div class="gl-impact-wrap">
+            <div class="gl-impact-stars" style="color:var(--accent)">★★☆</div>
+            <div class="gl-impact-lbl">Impatto</div>
+          </div>
+        </div>
+        <div class="gl-body">
+          <div class="gl-section">
+            <div class="gl-section-lbl">Confronto diretto — nomi buoni vs. nomi problematici</div>
+            <div class="compare-grid">
+              <div>
+                <div class="pex-lbl bad">❌ Nomi problematici</div>
+                <div class="prompt-box bad">tool1()
+<span class="hl">process()</span>        ← cosa processa?
+<span class="hl">data()</span>           ← legge? scrive? trasforma?
+<span class="hl">search()</span>         ← cerca dove? cosa?
+<span class="hl">get()</span>            ← prende cosa?
+<span class="hl">do_stuff()</span>       ← evidente
+<span class="hl">emailHelper()</span>    ← camelCase + vago</div>
+              </div>
+              <div>
+                <div class="pex-lbl good">✓ Nomi corretti</div>
+                <div class="prompt-box good">search_internal_docs(query, k)
+send_email(to, subject, body)
+get_calendar_events(date, user_id)
+create_support_ticket(title, desc)
+execute_python(code)
+transcribe_audio(file_path)
+update_crm_contact(id, fields)</div>
+              </div>
+            </div>
+          </div>
+          <div class="gl-section">
+            <div class="gl-section-lbl">Le 4 regole del nome</div>
+            <p><strong>1. Struttura verbo_oggetto:</strong> il verbo descrive l'azione (get, search, send, create, update, delete, execute, analyze), l'oggetto descrive su cosa. Il modello usa il verbo per inferire la natura dell'operazione prima ancora di leggere la descrizione.</p>
+            <p><strong>2. Snake_case senza eccezioni:</strong> i modelli sono stati addestrati su codice che usa snake_case per le funzioni — è il formato che si aspettano e riconoscono più facilmente come nome di funzione.</p>
+            <p><strong>3. Specifico, non generico:</strong> <code>search_internal_docs</code> è meglio di <code>search</code> perché quando ci sono più tool di ricerca (documenti interni, web, database), il nome da solo aiuta il modello a scegliere quello giusto senza dover leggere tutta la descrizione.</p>
+            <p><strong>4. Consistente nel sistema:</strong> se hai <code>get_calendar_events</code>, usa anche <code>get_crm_contacts</code> e non <code>fetch_contacts</code> o <code>retrieve_contacts</code>. La consistenza riduce l'ambiguità nella scelta tra tool simili.</p>
+          </div>
+          <div class="gl-section">
+            <div class="gl-section-lbl">Perché funziona — il meccanismo del nome come segnale primario</div>
+            <div class="mechanism">
+              <div class="mech-lbl">Pre-selezione per nome prima della lettura della descrizione</div>
+              <p>Quando il modello ha accesso a molti tool, non legge ogni descrizione in modo identicamente approfondito. Il nome funziona come <strong>segnale primario di rilevanza</strong>: un nome chiaramente non pertinente viene scartato senza leggere la descrizione. Un nome pertinente porta il modello a leggere la descrizione con più attenzione. <strong>Un nome vago porta il modello a leggere più descrizioni del necessario, aumentando la probabilità di confusione e di selezione sbagliata.</strong></p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+
+<!-- ═══════════════════════════
+     S3 — DESCRIZIONE
+═══════════════════════════ -->
+<div class="sect" id="s3">
+  <div class="sect-head">
+    <div class="sect-num">Componente 02 — La più critica</div>
+    <h2>La descrizione — il testo che governa tutto</h2>
+    <p>La descrizione è il testo che il modello legge per decidere se invocare il tool, quando farlo, e cosa aspettarsi. È la componente con il maggiore impatto sulla qualità dell'uso — e quella su cui si investe meno tempo.</p>
+  </div>
+  <div class="wrap">
+
+    <div class="prose" style="margin-top:28px;">
+      <p>Se dovessi scegliere una sola componente su cui concentrare il tempo di design, sarebbe la descrizione. Il nome aiuta la selezione iniziale. I parametri guidano la compilazione. L'output e l'error contract gestiscono i casi successivi. Ma <strong>la descrizione è l'unico posto dove puoi spiegare al modello il ragionamento — quando usare questo tool, quando non usarlo, come si differenzia dagli altri</strong>.</p>
+    </div>
+
+    <!-- GL 02 -->
+    <div class="gl-group" style="margin-top:20px;">
+      <div class="gl-group-title">Linea guida 02</div>
+      <div class="gl-card">
+        <div class="gl-header">
+          <div class="gl-stripe" style="background:#c0392b"></div>
+          <div class="gl-num">02</div>
+          <div class="gl-title-wrap">
+            <div class="gl-title">La descrizione ha 4 elementi obbligatori — non uno, non due, tutti e quattro</div>
+            <div class="gl-subtitle">Cosa fa · Quando usarlo · Quando NON usarlo · Come differisce da tool simili</div>
+          </div>
+          <div class="gl-impact-wrap">
+            <div class="gl-impact-stars" style="color:#c0392b">★★★</div>
+            <div class="gl-impact-lbl">Critico</div>
+          </div>
+        </div>
+        <div class="gl-body">
+          <div class="gl-section">
+            <div class="gl-section-lbl">I 4 elementi e il loro ruolo</div>
+            <p><strong>1. Cosa fa</strong> — una frase chiara sull'azione. Non "questo tool serve per le ricerche" ma "cerca nei documenti interni aziendali usando ricerca semantica e restituisce i frammenti più rilevanti". Specifico sull'azione, sull'oggetto e sul meccanismo.</p>
+            <p><strong>2. Quando usarlo</strong> — i trigger espliciti. In quali situazioni il modello deve considerare questo tool? Senza questo, il modello usa euristiche proprie — spesso sbagliate. "Usare quando l'utente chiede di policy, procedure o documenti specifici dell'azienda."</p>
+            <p><strong>3. Quando NON usarlo</strong> — i confini negativi. Questo è il più spesso omesso ed è quello con l'impatto più alto sulla precisione. "NON usare per domande su argomenti generali che il modello conosce già. NON usare per calcoli o trasformazioni dati." Senza questo, il modello tende a usare il tool su troppi casi.</p>
+            <p><strong>4. Come differisce da tool simili</strong> — solo se ci sono tool con nomi o funzioni simili nel sistema. "A differenza di search_web, questo tool cerca solo nei documenti aziendali interni, non su internet."</p>
+          </div>
+
+          <div class="gl-section">
+            <div class="gl-section-lbl">Confronto — descrizione minima vs. descrizione completa</div>
+            <div class="compare-grid">
+              <div>
+                <div class="pex-lbl bad">❌ Descrizione minima — produce uso impreciso</div>
+                <div class="prompt-box bad">"Cerca nei documenti."
+
+Problemi:
+- Quali documenti? Tutti? Solo interni?
+- Quando usarla? Non lo dice.
+- Differenza da search_web? Nessuna indicazione.
+- Risultato: il modello la usa su tutto, anche quando
+  la risposta è già nella sua conoscenza interna.</div>
+              </div>
+              <div>
+                <div class="pex-lbl good">✓ Descrizione completa — produce uso preciso</div>
+                <div class="prompt-box good">"Cerca nei documenti interni aziendali (policy,
+procedure, contratti, manuali) tramite ricerca
+semantica e restituisce i frammenti più rilevanti.
+
+Usare quando: l'utente chiede di regole aziendali,
+procedure interne, o documenti specifici.
+
+NON usare quando: la risposta è già nella
+conoscenza generale del modello; per calcoli;
+per informazioni sul web.
+
+Differenza da search_web: cerca SOLO nei
+documenti aziendali, non su internet."</div>
+              </div>
+            </div>
+          </div>
+
+          <div class="gl-section">
+            <div class="gl-section-lbl">I guardrail negativi sono i più importanti</div>
+            <p>Il "NON usare quando" è la parte della descrizione con l'impatto più alto sulla precisione dell'uso — e quella quasi sempre omessa. Senza guardrail negativi espliciti, il modello tende verso il <em>over-triggering</em>: usa il tool su casi per cui non serve, producendo latenza inutile, costi aggiuntivi e — nel caso di tool con effetti collaterali — azioni non volute.</p>
+
+            <div class="compare-grid" style="margin-top:12px;">
+              <div>
+                <div class="pex-lbl bad">❌ Senza guardrail negativo</div>
+                <div class="prompt-box bad">Tool: send_email
+Descrizione: "Invia un'email al destinatario specificato."
+
+→ Il modello lo invoca ogni volta che c'è
+  un'email da gestire, incluso quando l'utente
+  chiede solo di redigere la bozza senza inviarla.
+
+→ Risultato: email inviate senza che l'utente
+  lo volesse.</div>
+              </div>
+              <div>
+                <div class="pex-lbl good">✓ Con guardrail negativo esplicito</div>
+                <div class="prompt-box good">Tool: send_email
+Descrizione: "Invia l'email al destinatario.
+
+Usare SOLO dopo aver mostrato la bozza
+all'utente e ricevuto conferma esplicita.
+
+NON usare se l'utente ha chiesto solo
+di redigere o modificare una bozza.
+NON usare senza conferma dell'utente,
+anche se l'email sembra pronta."</div>
+              </div>
+            </div>
+          </div>
+
+          <div class="gl-section">
+            <div class="gl-section-lbl">Perché funziona — la descrizione come prompt del Cluster B applicato al tool</div>
+            <div class="mechanism">
+              <div class="mech-lbl">Obiettivo, vincoli e guardrail a livello di tool</div>
+              <p>La descrizione di un tool è esattamente il Cluster B del prompt engineering applicato al singolo tool: definisce l'obiettivo (cosa fa), i criteri di attivazione (quando usarlo), i vincoli negativi (quando non usarlo). <strong>Un tool senza "NON usare quando" è come un prompt senza vincoli — il modello interpreta il perimetro nel modo più ampio possibile.</strong> I guardrail negativi sono la differenza tra un agente che usa i tool con precisione chirurgica e uno che li applica su ogni caso vagamente correlato.</p>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+
+<!-- ═══════════════════════════
+     S4 — PARAMETRI
+═══════════════════════════ -->
+<div class="sect" id="s4">
+  <div class="sect-head">
+    <div class="sect-num">Componente 03</div>
+    <h2>I parametri — cosa il modello deve passare</h2>
+    <p>I parametri definiscono l'interfaccia di input del tool. Una definizione precisa riduce errori di compilazione, parametri mancanti e valori fuori range.</p>
+  </div>
+  <div class="wrap">
+
+    <!-- GL 03 -->
+    <div class="gl-group" style="margin-top:28px;">
+      <div class="gl-group-title">Linea guida 03</div>
+      <div class="gl-card">
+        <div class="gl-header">
+          <div class="gl-stripe"></div>
+          <div class="gl-num">03</div>
+          <div class="gl-title-wrap">
+            <div class="gl-title">Ogni parametro ha 4 attributi obbligatori — tipo, descrizione, vincoli, default</div>
+            <div class="gl-subtitle">Un parametro senza descrizione è un parametro che il modello interpreta da solo — quasi sempre in modo subottimale</div>
+          </div>
+          <div class="gl-impact-wrap">
+            <div class="gl-impact-stars" style="color:var(--accent)">★★★</div>
+            <div class="gl-impact-lbl">Impatto</div>
+          </div>
+        </div>
+        <div class="gl-body">
+
+          <div class="gl-section">
+            <div class="gl-section-lbl">Anatomia di parametri ben definiti — esempio completo</div>
+            <div class="param-anatomy">
+              <div class="pa-head">Tool: create_support_ticket — definizione parametri</div>
+
+              <div class="pa-param">
+                <div class="pa-code"><span class="k">"title"</span>: {
+  <span class="k">"type"</span>:        <span class="v">"string"</span>,
+  <span class="k">"description"</span>: <span class="v">"Titolo breve e descrittivo del problema (max 80 caratteri).
+               Deve identificare chiaramente il tipo di problema.
+               Es: 'Impossibile accedere al portale HR' — non 'Problema'"</span>,
+  <span class="k">"maxLength"</span>:   <span class="t">80</span>,
+  <span class="k">"required"</span>:    <span class="t">true</span>
+}</div>
+                <div class="pa-notes"><strong>Perché funziona:</strong> il modello sa che deve generare un titolo breve e descrittivo, non una stringa generica. L'esempio negativo ("non 'Problema'") è particolarmente efficace — il modello impara cosa evitare.</div>
+              </div>
+
+              <div class="pa-param">
+                <div class="pa-code"><span class="k">"priority"</span>: {
+  <span class="k">"type"</span>:        <span class="v">"string"</span>,
+  <span class="k">"enum"</span>:        [<span class="v">"low"</span>, <span class="v">"medium"</span>, <span class="v">"high"</span>, <span class="v">"critical"</span>],
+  <span class="k">"description"</span>: <span class="v">"Priorità del ticket basata sull'impatto.
+               critical: sistema non usabile o dati a rischio.
+               high: funzionalità importante compromessa.
+               medium: problema reale ma workaround disponibile.
+               low: miglioramento o problema marginale."</span>,
+  <span class="k">"default"</span>:     <span class="v">"medium"</span>
+}</div>
+                <div class="pa-notes"><strong>Perché funziona:</strong> l'enum elimina i valori liberi; le descrizioni per ogni valore permettono al modello di scegliere il livello corretto basandosi sul contesto, non su un'interpretazione propria di "alta priorità".</div>
+              </div>
+
+              <div class="pa-param">
+                <div class="pa-code"><span class="k">"affected_users"</span>: {
+  <span class="k">"type"</span>:        <span class="v">"integer"</span>,
+  <span class="k">"description"</span>: <span class="v">"Numero stimato di utenti impattati dal problema.
+               Usare 1 se il problema riguarda solo l'utente che segnala.
+               Usare -1 se il numero è sconosciuto."</span>,
+  <span class="k">"minimum"</span>:     <span class="t">-1</span>,
+  <span class="k">"default"</span>:     <span class="t">1</span>
+}</div>
+                <div class="pa-notes"><strong>Perché funziona:</strong> il valore speciale -1 per "sconosciuto" evita che il modello inventi un numero o ometta il campo. I casi speciali vanno esplicitati — il modello non li inferisce.</div>
+              </div>
+
+            </div>
+          </div>
+
+          <div class="gl-section">
+            <div class="gl-section-lbl">Le 5 regole dei parametri</div>
+            <p><strong>1. Descrizione per ogni parametro, sempre.</strong> Un parametro senza descrizione viene interpretato dal modello in base al nome — che quasi mai è abbastanza esplicito. La descrizione spiega il significato semantico, non solo il tipo.</p>
+            <p><strong>2. Enum per valori discreti.</strong> Se un parametro ammette solo N valori, definiscili come enum. Il modello non inventa valori fuori dall'enum — ma inventa liberamente su un campo stringa libero.</p>
+            <p><strong>3. Valori speciali esplicitati.</strong> -1 per "sconosciuto", stringa vuota per "nessuno", null per "non applicabile" — tutti vanno documentati. Il modello non li inferisce dal tipo.</p>
+            <p><strong>4. Default per i campi opzionali.</strong> Un default ben scelto riduce la probabilità che il modello ometta parametri opzionali importanti. Scegli il default più sicuro, non il più comune.</p>
+            <p><strong>5. Esempi negativi per parametri critici.</strong> Per i parametri dove il modello tende a sbagliare (titoli troppo generici, date in formato sbagliato), aggiungi un esempio di cosa <em>non</em> fare nella descrizione del parametro.</p>
+          </div>
+
+          <div class="gl-section">
+            <div class="gl-section-lbl">Il caso speciale: parametri dipendenti tra loro</div>
+            <p>Quando il valore di un parametro dipende da un altro (es. <code>end_date</code> deve essere dopo <code>start_date</code>), esplicita il vincolo nella descrizione di entrambi. Il sistema di validazione del JSON Schema può esprimere vincoli di base, ma i vincoli semantici complessi vanno nella descrizione testuale dove il modello può leggerli.</p>
+            <div class="prompt-box neutral" style="margin-top:10px; font-size:11.5px;">"start_date": {
+  "type": "string", "format": "date",
+  "description": "Data di inizio nel formato YYYY-MM-DD.
+                  Deve essere precedente o uguale a end_date."
+},
+"end_date": {
+  "type": "string", "format": "date",
+  "description": "Data di fine nel formato YYYY-MM-DD.
+                  Deve essere successiva o uguale a start_date.
+                  Se non specificata, default = start_date (giornata singola)."
+}</div>
+          </div>
+
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+
+<!-- ═══════════════════════════
+     S5 — OUTPUT CONTRACT
+═══════════════════════════ -->
+<div class="sect" id="s5">
+  <div class="sect-head">
+    <div class="sect-num">Componente 04</div>
+    <h2>L'output contract — come il modello usa il risultato</h2>
+    <p>Il risultato di un tool call torna nel context window e il modello lo legge come testo. Un output mal strutturato o inaspettato viene frainteso, ignorato o usato in modo scorretto.</p>
+  </div>
+  <div class="wrap">
+
+    <!-- GL 04 -->
+    <div class="gl-group" style="margin-top:28px;">
+      <div class="gl-group-title">Linea guida 04</div>
+      <div class="gl-card">
+        <div class="gl-header">
+          <div class="gl-stripe"></div>
+          <div class="gl-num">04</div>
+          <div class="gl-title-wrap">
+            <div class="gl-title">Documenta il formato dell'output nella descrizione — strutturato, prevedibile, completo</div>
+            <div class="gl-subtitle">Il modello non indovina il formato del risultato: lo legge e interpreta basandosi sulla documentazione</div>
+          </div>
+          <div class="gl-impact-wrap">
+            <div class="gl-impact-stars" style="color:var(--accent)">★★★</div>
+            <div class="gl-impact-lbl">Impatto</div>
+          </div>
+        </div>
+        <div class="gl-body">
+
+          <div class="gl-section">
+            <div class="gl-section-lbl">Confronto — output non documentato vs. output con contratto chiaro</div>
+            <div class="compare-grid">
+              <div>
+                <div class="pex-lbl bad">❌ Output non documentato — il modello indovina</div>
+                <div class="prompt-box bad">Tool result:
+{"data": [{"id": 42, "t": "Q1 Review",
+  "s": "2026-03-15", "e": "2026-03-15",
+  "p": ["alice@co.com", "bob@co.com"],
+  "l": "conf_room_A", "c": true}]}
+
+Il modello deve inferire:
+- "t" = titolo? tipo? tag?
+- "s" e "e" = start/end? stato/evento?
+- "c" = cancelled? confirmed? completed?
+
+→ Alta probabilità di fraintendimento</div>
+              </div>
+              <div>
+                <div class="pex-lbl good">✓ Output con contratto — il modello capisce</div>
+                <div class="prompt-box good">Tool result:
+{"events": [
+  {
+    "id": 42,
+    "title": "Q1 Review",
+    "start_date": "2026-03-15",
+    "end_date": "2026-03-15",
+    "participants": ["alice@co.com", "bob@co.com"],
+    "location": "conf_room_A",
+    "confirmed": true
+  }
+]}
+
+Nomi espliciti + struttura documentata
+→ Nessuna ambiguità nell'interpretazione</div>
+              </div>
+            </div>
+          </div>
+
+          <div class="gl-section">
+            <div class="gl-section-lbl">Le 4 regole dell'output contract</div>
+            <p><strong>1. Nomi di campo espliciti, non abbreviazioni.</strong> <code>start_date</code> invece di <code>s</code>, <code>confirmed</code> invece di <code>c</code>. Il modello legge il JSON come testo — le abbreviazioni aumentano l'ambiguità e la probabilità di fraintendimento.</p>
+            <p><strong>2. Documenta il risultato vuoto.</strong> Cosa restituisce il tool quando non trova nulla? <code>[]</code>, <code>null</code>, un oggetto con <code>"count": 0</code>? Il modello deve sapere come distinguere "nessun risultato" da "errore" — e come comunicarlo all'utente. Senza questa documentazione, tende a inventare o a gestire il caso in modo imprevedibile.</p>
+            <p><strong>3. Includi il contesto necessario per la risposta.</strong> Se il tool restituisce dati che il modello userà per rispondere all'utente, assicurati che il risultato contenga tutto il necessario — fonte, data, limitazioni. Il modello non può tornare a cercare informazioni mancanti nel risultato.</p>
+            <p><strong>4. Struttura gerarchica per risultati complessi.</strong> Un array di oggetti con campi chiari è sempre preferibile a una stringa di testo libera. Il modello può navigare una struttura JSON meglio di quanto possa estrarre informazioni da testo non strutturato.</p>
+          </div>
+
+          <div class="gl-section">
+            <div class="gl-section-lbl">Il caso del risultato vuoto — il più trascurato</div>
+            <p>Quando un tool non trova risultati, quasi tutti i design restituiscono semplicemente un array vuoto senza documentarlo. Il modello si trova davanti a <code>[]</code> senza sapere se significa "nessun risultato trovato", "sistema non raggiungibile" o "parametri sbagliati". Il comportamento diventa imprevedibile.</p>
+            <div class="compare-grid" style="margin-top:12px;">
+              <div>
+                <div class="pex-lbl bad">❌ Risultato vuoto ambiguo</div>
+                <div class="prompt-box bad">search_internal_docs("polizza ferie") → []
+
+Il modello non sa se:
+- Non esistono documenti su questo tema
+- La query era sbagliata
+- Il sistema non funziona
+→ Risponde in modo casuale</div>
+              </div>
+              <div>
+                <div class="pex-lbl good">✓ Risultato vuoto documentato</div>
+                <div class="prompt-box good">Documentato nella descrizione del tool:
+"Se nessun documento trovato, restituisce:
+{'results': [], 'query_received': true,
+ 'message': 'Nessun documento corrisponde
+             alla query specificata.'}"
+
+→ Il modello sa che il sistema ha funzionato
+  ma non ha trovato nulla — e lo comunica
+  correttamente all'utente.</div>
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+
+<!-- ═══════════════════════════
+     S6 — ERROR CONTRACT
+═══════════════════════════ -->
+<div class="sect" id="s6">
+  <div class="sect-head">
+    <div class="sect-num">Componente 05 — La più trascurata</div>
+    <h2>L'error contract — cosa fare quando il tool fallisce</h2>
+    <p>Quasi nessun tool design include un error contract esplicito. Il risultato è che il modello, di fronte a un errore, improvvisa — e quasi sempre nel modo sbagliato.</p>
+  </div>
+  <div class="wrap">
+
+    <div class="prose" style="margin-top:28px;">
+      <p>Un tool fallisce. Non è un'eccezione rara — in produzione, ogni tool con dipendenze esterne fallirà prima o poi: timeout, rate limiting, autenticazione scaduta, servizio non disponibile, parametri che passano la validazione del modello ma non quella del sistema reale. <strong>Senza un error contract, il modello non sa cosa fare e improvvisa</strong> — a volte inventa un risultato, a volte si blocca, a volte ritenta all'infinito.</p>
+    </div>
+
+    <!-- GL 05 -->
+    <div class="gl-group" style="margin-top:20px;">
+      <div class="gl-group-title">Linea guida 05</div>
+      <div class="gl-card">
+        <div class="gl-header">
+          <div class="gl-stripe"></div>
+          <div class="gl-num">05</div>
+          <div class="gl-title-wrap">
+            <div class="gl-title">Definisci ogni errore possibile con codice, significato e azione attesa</div>
+            <div class="gl-subtitle">Il modello non può gestire correttamente un errore che non conosce — il default è sempre sbagliato</div>
+          </div>
+          <div class="gl-impact-wrap">
+            <div class="gl-impact-stars" style="color:var(--accent)">★★★</div>
+            <div class="gl-impact-lbl">Impatto critico</div>
+          </div>
+        </div>
+        <div class="gl-body">
+
+          <div class="gl-section">
+            <div class="gl-section-lbl">La struttura di un error contract completo</div>
+            <div class="error-states">
+              <div class="es-item head">
+                <div class="es-cell">Codice errore</div>
+                <div class="es-cell">Significato</div>
+                <div class="es-cell">Azione attesa dal modello</div>
+              </div>
+              <div class="es-item">
+                <div class="es-cell lbl">CONNECTION_ERROR</div>
+                <div class="es-cell">Il sistema esterno non è raggiungibile. Problema di rete o servizio down.</div>
+                <div class="es-cell es-good">Informare l'utente che il servizio non è disponibile. Non riprovare — il problema è sistemico, non temporaneo.</div>
+              </div>
+              <div class="es-item">
+                <div class="es-cell lbl">TIMEOUT</div>
+                <div class="es-cell">La risposta ha impiegato troppo tempo. Il sistema è sovraccarico o la query è troppo complessa.</div>
+                <div class="es-cell es-good">Riprovare una sola volta con query semplificata (k ridotto o query più breve). Se il secondo tentativo fallisce, informare l'utente.</div>
+              </div>
+              <div class="es-item">
+                <div class="es-cell lbl">RATE_LIMITED</div>
+                <div class="es-cell">Troppe richieste in poco tempo. Limite di quota raggiunto.</div>
+                <div class="es-cell es-good">Non riprovare immediatamente. Informare l'utente del limite e suggerire di riprovare tra qualche minuto.</div>
+              </div>
+              <div class="es-item">
+                <div class="es-cell lbl">AUTH_ERROR</div>
+                <div class="es-cell">Credenziali scadute o autorizzazione insufficiente.</div>
+                <div class="es-cell es-bad">Non riprovare — le credenziali non cambieranno da sole. Informare l'utente e escalare all'amministratore di sistema.</div>
+              </div>
+              <div class="es-item">
+                <div class="es-cell lbl">INVALID_PARAMS</div>
+                <div class="es-cell">I parametri passati non sono validi secondo le regole del sistema (non del modello).</div>
+                <div class="es-cell es-good">Rileggere i parametri, identificare il problema, riformulare e riprovare una volta. Se persiste, informare l'utente.</div>
+              </div>
+              <div class="es-item">
+                <div class="es-cell lbl">NOT_FOUND</div>
+                <div class="es-cell">La risorsa specificata non esiste (ID non valido, file non presente).</div>
+                <div class="es-cell es-good">Non è un errore tecnico — la risorsa semplicemente non esiste. Informare l'utente senza riprovare.</div>
+              </div>
+            </div>
+          </div>
+
+          <div class="gl-section">
+            <div class="gl-section-lbl">Come includere l'error contract nel tool — nella descrizione o come schema</div>
+            <p>L'error contract va documentato nella descrizione del tool — non come schema JSON separato (che il modello potrebbe non leggere nel dettaglio). La posizione ottimale è alla fine della descrizione, dopo "Quando NON usare".</p>
+            <div class="prompt-box neutral" style="margin-top:12px; font-size:11.5px;">Descrizione completa con error contract:
+
+"Cerca nei documenti interni aziendali...
+[descrizione, quando usare, quando non usare]
+
+In caso di errore:
+- CONNECTION_ERROR: il servizio non è disponibile.
+  Informare l'utente, non riprovare.
+- TIMEOUT: riprovare una volta con k=3 invece
+  del valore richiesto. Se persiste, informare.
+- AUTH_ERROR: escalare all'IT, non riprovare.
+- NOT_FOUND: comunicare che il documento non esiste."</div>
+          </div>
+
+          <div class="gl-section">
+            <div class="gl-section-lbl">Il comportamento di default del modello senza error contract</div>
+            <p>Senza un error contract esplicito, il comportamento di default del modello su un errore è imprevedibile. I pattern più comuni — tutti problematici:</p>
+            <p><strong>Retry infinito:</strong> il modello riprova lo stesso tool call con gli stessi parametri, aspettandosi un risultato diverso. Consuma quota, non risolve il problema.</p>
+            <p><strong>Invenzione del risultato:</strong> il modello, non avendo ricevuto un risultato valido, genera quello che "probabilmente" avrebbe dovuto ricevere — allucinazione del tool result.</p>
+            <p><strong>Blocco silenzioso:</strong> il modello smette di usare il tool senza informare l'utente, rispondendo dalla propria conoscenza interna come se il tool non fosse mai stato invocato.</p>
+            <div class="mechanism" style="margin-top:12px;">
+              <div class="mech-lbl">Perché il default è sempre sbagliato</div>
+              <p>Il modello non ha una strategia di error handling incorporata — ha solo euristiche generali del training che non corrispondono quasi mai alla strategia corretta per il sistema specifico. <strong>Un timeout dovrebbe avere una strategia diversa da un auth error, che dovrebbe avere una strategia diversa da un not found.</strong> Queste distinzioni non sono inferibili dal solo fatto che il tool ha restituito un errore — devono essere esplicitate nell'error contract.</p>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </div>
+
+    <!-- Checklist finale -->
+    <div class="prose" style="margin-top:36px;">
+      <p style="font-size:15px; font-weight:500; color:var(--ink2);">Checklist — tool progettato correttamente?</p>
+    </div>
+
+    <div class="checklist" style="margin-top:12px;">
+      <div class="check-item">
+        <div class="check-icon">1</div>
+        <div><strong>Nome:</strong> struttura verbo_oggetto in snake_case, specifico (non generico), consistente con gli altri tool del sistema.</div>
+      </div>
+      <div class="check-item">
+        <div class="check-icon">2</div>
+        <div><strong>Descrizione:</strong> include tutti e 4 gli elementi — cosa fa, quando usarlo, quando NON usarlo, come differisce da tool simili. I guardrail negativi sono espliciti.</div>
+      </div>
+      <div class="check-item">
+        <div class="check-icon">3</div>
+        <div><strong>Parametri:</strong> ogni parametro ha tipo, descrizione semantica, vincoli (min/max/enum), default per i facoltativi. Valori speciali documentati. Vincoli tra parametri dipendenti esplicitati.</div>
+      </div>
+      <div class="check-item">
+        <div class="check-icon">4</div>
+        <div><strong>Output contract:</strong> formato del risultato documentato nella descrizione. Il risultato vuoto ha un formato distinto dall'errore. I nomi dei campi sono espliciti, non abbreviati.</div>
+      </div>
+      <div class="check-item">
+        <div class="check-icon">5</div>
+        <div><strong>Error contract:</strong> ogni errore possibile ha codice, significato e azione attesa. In particolare: CONNECTION_ERROR (non riprovare), TIMEOUT (una retry), AUTH_ERROR (escalate), NOT_FOUND (informare).</div>
+      </div>
+      <div class="check-item">
+        <div class="check-icon">✓</div>
+        <div><strong>Test interface-first:</strong> il modello è stato testato con un'implementazione mock prima di sviluppare la logica completa — per verificare che l'interfaccia produca il comportamento atteso.</div>
+      </div>
+    </div>
+
+    <div class="insight" style="margin-top:28px; border-color:#7b5ea7; background:#f4f0fa;">
+      <div class="insight-lbl" style="color:#7b5ea7;">Prossimo — Report B</div>
+      <p>Con i singoli tool ben progettati, il Report B affronta <strong>come il modello viene istruito ad usarli</strong>: la gerarchia tra tool sovrapposti, come comunicare i confini nel system prompt, e — la dimensione nuova — come le skill latenti nel prompt interagiscono con i tool per formare le capacità complete di un agente.</p>
+    </div>
+
+  </div>
+</div>
+
+
+<!-- FOOTER -->
+<div class="footer">
+  <span>Serie Agenti AI — Leva 03 · Strumenti · Report A · Anatomia di un tool ben progettato</span>
+  <span>Marzo 2026</span>
+</div>
+
+<script>
+function show(n) {
+  document.querySelectorAll('.sect').forEach(s => s.classList.remove('active'));
+  document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('s'+n).classList.add('active');
+  document.querySelectorAll('.nav-btn')[n-1].classList.add('active');
+  window.scrollTo({top:0, behavior:'smooth'});
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,893 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>RAG Pratico — Report 4 · Dalla query al risultato</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:ital,wght@0,300;0,400;0,500;0,600;1,300;1,400&family=DM+Mono:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg:      #fafaf7;
+  --bg2:     #f2f1ec;
+  --bg3:     #e8e6df;
+  --ink:     #1a1916;
+  --ink2:    #2d2b26;
+  --ink3:    #5c5a52;
+  --ink4:    #9c9a90;
+  --border:  #dddbd2;
+  --border2: #cbc9bf;
+
+  --accent:  #2a4878;   /* deep navy — new color for this report */
+  --accent2: #e8edf6;
+  --accent3: #b8c8e0;
+
+  --teal:    #1a5f5f;
+  --teal-bg: #e5f3f3;
+  --teal-bd: #8ecece;
+
+  --warm:    #7a4a10;
+  --warm-bg: #fdf3e3;
+  --warm-bd: #e8c878;
+
+  --ok:      #2d6040;
+  --ok-bg:   #eaf4ee;
+  --ok-bd:   #a8d4b4;
+
+  --bad:     #8a1a1a;
+  --bad-bg:  #fdf0f0;
+  --bad-bd:  #e8a8a8;
+
+  --note:    #4a2d7a;
+  --note-bg: #f0ecfb;
+  --note-bd: #c4aef0;
+}
+
+* { margin:0; padding:0; box-sizing:border-box; }
+html { scroll-behavior:smooth; }
+body {
+  background: var(--bg);
+  color: var(--ink);
+  font-family: 'DM Sans', sans-serif;
+  font-weight: 300;
+  font-size: 15px;
+  line-height: 1.75;
+}
+
+/* ── MASTHEAD ── */
+.masthead {
+  background: var(--accent);
+  color: #fff;
+  padding: 56px 60px 52px;
+  position: relative;
+  overflow: hidden;
+}
+.masthead::before {
+  content: '';
+  position: absolute;
+  top: -80px; right: -80px;
+  width: 380px; height: 380px;
+  border-radius: 50%;
+  border: 1px solid rgba(255,255,255,.06);
+  pointer-events: none;
+}
+.mh-series {
+  font-family: 'DM Mono', monospace;
+  font-size: 10px; letter-spacing: 3px;
+  text-transform: uppercase; color: rgba(255,255,255,.35);
+  margin-bottom: 20px;
+}
+.mh-num {
+  font-family: 'DM Serif Display', serif;
+  font-size: 80px; line-height: 1;
+  color: rgba(255,255,255,.08);
+  position: absolute; right: 60px; top: 40px;
+  letter-spacing: -4px; user-select: none;
+}
+.masthead h1 {
+  font-family: 'DM Serif Display', serif;
+  font-size: clamp(28px, 4vw, 44px);
+  font-weight: 400; line-height: 1.1;
+  letter-spacing: -.5px; max-width: 720px; position: relative;
+}
+.masthead h1 em { font-style: italic; color: rgba(255,255,255,.7); }
+.mh-sub {
+  margin-top: 20px; font-size: 15px; font-weight: 300;
+  color: rgba(255,255,255,.45); max-width: 640px;
+  line-height: 1.7; position: relative;
+}
+.mh-pills {
+  margin-top: 28px; display: flex; gap: 8px;
+  flex-wrap: wrap; position: relative;
+}
+.mh-pill {
+  font-family: 'DM Mono', monospace; font-size: 10px;
+  letter-spacing: 1px; padding: 4px 12px;
+  border: 1px solid rgba(255,255,255,.2);
+  color: rgba(255,255,255,.5); border-radius: 20px;
+}
+
+/* ── NAV ── */
+.nav {
+  position: sticky; top: 0; z-index: 100;
+  background: var(--ink); display: flex; overflow-x: auto;
+  border-bottom: 1px solid rgba(255,255,255,.08);
+}
+.nav-btn {
+  flex-shrink: 0; padding: 14px 20px;
+  border: none; background: transparent; cursor: pointer;
+  font-family: 'DM Mono', monospace; font-size: 10px;
+  letter-spacing: 1px; text-transform: uppercase;
+  color: rgba(255,255,255,.3);
+  border-right: 1px solid rgba(255,255,255,.06);
+  transition: color .2s; white-space: nowrap;
+}
+.nav-btn:hover { color: rgba(255,255,255,.65); }
+.nav-btn.active { color: #fff; background: rgba(255,255,255,.06); }
+
+.sect { display: none; }
+.sect.active { display: block; animation: fadeUp .3s ease; }
+@keyframes fadeUp { from{opacity:0;transform:translateY(5px)} to{opacity:1;transform:translateY(0)} }
+
+/* ── CONTENT WRAP ── */
+.cw { max-width: 860px; margin: 0 auto; padding: 52px 60px 64px; }
+
+.s-eyebrow {
+  font-family: 'DM Mono', monospace; font-size: 10px;
+  letter-spacing: 3px; text-transform: uppercase;
+  color: var(--ink4); margin-bottom: 8px;
+}
+.s-title {
+  font-family: 'DM Serif Display', serif; font-size: 30px;
+  font-weight: 400; letter-spacing: -.3px; color: var(--ink);
+  line-height: 1.15; margin-bottom: 28px;
+}
+
+p { margin-bottom: 18px; color: var(--ink2); }
+p:last-child { margin-bottom: 0; }
+p strong { font-weight: 600; color: var(--ink); }
+code {
+  font-family: 'DM Mono', monospace;
+  background: var(--bg3); padding: 1px 6px;
+  border-radius: 3px; font-size: 13px; color: var(--ink2);
+}
+
+/* ── CALLOUT ── */
+.callout {
+  padding: 20px 24px; border-left: 3px solid;
+  margin: 28px 0; border-radius: 0 6px 6px 0;
+}
+.callout-warn   { background: var(--warm-bg); border-color: var(--warm); }
+.callout-ok     { background: var(--ok-bg);   border-color: var(--ok);   }
+.callout-bad    { background: var(--bad-bg);  border-color: var(--bad);  }
+.callout-note   { background: var(--note-bg); border-color: var(--note); }
+.callout-accent { background: var(--accent2); border-color: var(--accent); }
+.callout-teal   { background: var(--teal-bg); border-color: var(--teal); }
+.callout-title {
+  font-family: 'DM Mono', monospace; font-size: 10px;
+  letter-spacing: 2px; text-transform: uppercase; margin-bottom: 8px;
+}
+.callout-warn .callout-title   { color: var(--warm);   }
+.callout-ok .callout-title     { color: var(--ok);     }
+.callout-bad .callout-title    { color: var(--bad);    }
+.callout-note .callout-title   { color: var(--note);   }
+.callout-accent .callout-title { color: var(--accent); }
+.callout-teal .callout-title   { color: var(--teal);   }
+.callout p { font-size: 14px; line-height: 1.65; margin-bottom: 8px; }
+.callout p:last-child { margin-bottom: 0; }
+
+/* ── DIAGRAM ── */
+.diagram {
+  background: var(--bg2); border: 1px solid var(--border2);
+  padding: 28px 32px; margin: 28px 0;
+}
+.diagram-title {
+  font-family: 'DM Mono', monospace; font-size: 10px;
+  letter-spacing: 2px; text-transform: uppercase; color: var(--ink4);
+  margin-bottom: 20px; padding-bottom: 12px; border-bottom: 1px solid var(--border);
+}
+
+/* ── PIPELINE FULL ── */
+.pipeline-full {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+.pf-step {
+  display: grid;
+  grid-template-columns: 44px 1fr;
+  gap: 0;
+  border-bottom: 1px solid var(--border);
+}
+.pf-step:last-child { border-bottom: none; }
+.pf-num {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--accent);
+  color: rgba(255,255,255,.9);
+  font-family: 'DM Mono', monospace;
+  font-size: 13px;
+  font-weight: 500;
+  border-right: 1px solid rgba(255,255,255,.1);
+  writing-mode: horizontal-tb;
+  flex-shrink: 0;
+}
+.pf-content {
+  padding: 14px 18px;
+}
+.pf-label {
+  font-family: 'DM Mono', monospace;
+  font-size: 9px; letter-spacing: 2px;
+  text-transform: uppercase; color: var(--ink4); margin-bottom: 4px;
+}
+.pf-title { font-size: 14px; font-weight: 600; color: var(--ink); margin-bottom: 6px; }
+.pf-body { font-size: 13px; color: var(--ink3); line-height: 1.6; }
+
+/* ── QUERY TRANSFORM ── */
+.query-transform {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  gap: 16px;
+  align-items: center;
+  margin: 16px 0;
+}
+.qt-box {
+  border: 1.5px solid var(--border2);
+  border-radius: 4px;
+  overflow: hidden;
+}
+.qt-label {
+  font-family: 'DM Mono', monospace; font-size: 9px;
+  letter-spacing: 1.5px; text-transform: uppercase;
+  padding: 6px 12px; border-bottom: 1px solid var(--border);
+}
+.qt-body {
+  padding: 10px 12px; font-size: 13px; color: var(--ink2); line-height: 1.55;
+}
+.qt-arr {
+  font-family: 'DM Mono', monospace; font-size: 20px;
+  color: var(--border2); text-align: center; flex-shrink: 0;
+}
+
+/* ── RETRIEVAL RESULTS ── */
+.results-list {
+  display: flex; flex-direction: column; gap: 8px; margin: 16px 0;
+}
+.result-item {
+  display: grid;
+  grid-template-columns: 44px 1fr auto;
+  gap: 12px;
+  align-items: start;
+  border: 1px solid var(--border2);
+  border-radius: 4px;
+  overflow: hidden;
+  background: var(--bg);
+}
+.ri-rank {
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+  background: var(--bg2); border-right: 1px solid var(--border);
+  padding: 14px 8px; gap: 4px; align-self: stretch;
+}
+.ri-rank-num {
+  font-family: 'DM Mono', monospace;
+  font-size: 14px; font-weight: 500; color: var(--ink);
+}
+.ri-rank-label {
+  font-family: 'DM Mono', monospace;
+  font-size: 7.5px; letter-spacing: 1px; text-transform: uppercase; color: var(--ink4);
+}
+.ri-body { padding: 12px 4px 12px 0; }
+.ri-meta {
+  font-family: 'DM Mono', monospace;
+  font-size: 9.5px; letter-spacing: .5px; color: var(--ink4); margin-bottom: 4px;
+}
+.ri-text { font-size: 13px; color: var(--ink2); line-height: 1.55; }
+.ri-score-wrap {
+  padding: 12px 14px; display: flex; flex-direction: column;
+  align-items: flex-end; justify-content: center; gap: 6px;
+}
+.ri-score-num {
+  font-family: 'DM Mono', monospace; font-size: 17px; font-weight: 500;
+}
+.ri-score-bar {
+  width: 60px; height: 5px; border-radius: 2px; background: var(--bg3); overflow: hidden;
+}
+.ri-score-fill { height: 100%; border-radius: 2px; }
+.ri-score-label { font-family: 'DM Mono', monospace; font-size: 8px; letter-spacing: .5px; color: var(--ink4); }
+
+/* ── CONTEXT CONSTRUCTION ── */
+.ctx-construction {
+  border: 1.5px solid var(--accent3);
+  border-radius: 6px;
+  overflow: hidden;
+  margin: 16px 0;
+  font-size: 13px;
+}
+.cc-head {
+  padding: 10px 16px; background: var(--accent); color: rgba(255,255,255,.8);
+  font-family: 'DM Mono', monospace; font-size: 10px; letter-spacing: 1.5px;
+  text-transform: uppercase;
+}
+.cc-layer {
+  padding: 10px 16px; border-bottom: 1px solid var(--border);
+  display: flex; gap: 12px; align-items: start;
+}
+.cc-layer:last-child { border-bottom: none; }
+.cc-layer-label {
+  font-family: 'DM Mono', monospace; font-size: 9px; letter-spacing: 1px;
+  text-transform: uppercase; color: var(--ink4); min-width: 110px; flex-shrink: 0;
+  padding-top: 2px;
+}
+.cc-layer-body { font-size: 12.5px; color: var(--ink2); line-height: 1.6; flex: 1; }
+.cc-layer-tokens {
+  font-family: 'DM Mono', monospace; font-size: 10px;
+  color: var(--ink4); text-align: right; white-space: nowrap; padding-top: 2px;
+}
+
+/* ── HYBRID SEARCH ── */
+.hybrid-diagram {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+  margin: 16px 0;
+}
+.hd-side {
+  border: 1px solid var(--border2); border-radius: 4px; overflow: hidden;
+}
+.hd-head {
+  padding: 8px 14px; border-bottom: 1px solid var(--border);
+  font-family: 'DM Mono', monospace; font-size: 9.5px;
+  letter-spacing: 1px; text-transform: uppercase;
+}
+.hd-body {
+  padding: 12px 14px; font-size: 12.5px; color: var(--ink3); line-height: 1.6;
+}
+.hd-body p { font-size: 12.5px; margin-bottom: 7px; }
+.hd-body p:last-child { margin-bottom: 0; }
+
+/* ── GROUNDING BLOCK ── */
+.grounding-example {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1px;
+  background: var(--border2);
+  border: 1px solid var(--border2);
+  border-radius: 6px;
+  overflow: hidden;
+  margin: 20px 0;
+}
+.ge-side { background: var(--bg); padding: 18px 20px; }
+.ge-label {
+  font-family: 'DM Mono', monospace; font-size: 9px; letter-spacing: 2px;
+  text-transform: uppercase; color: var(--ink4); margin-bottom: 10px;
+}
+.ge-prompt {
+  font-family: 'DM Mono', monospace; font-size: 12px;
+  background: var(--bg2); border: 1px solid var(--border);
+  padding: 10px 12px; border-radius: 3px;
+  line-height: 1.6; color: var(--ink2);
+}
+.ge-response {
+  font-size: 13.5px; color: var(--ink2); line-height: 1.65;
+  border-left: 2px solid; padding-left: 12px; margin-top: 10px;
+}
+
+/* ── LIMITS TABLE ── */
+.limits-table {
+  width: 100%; border-collapse: collapse; margin: 20px 0; font-size: 13.5px;
+}
+.limits-table th {
+  background: var(--accent); color: rgba(255,255,255,.85);
+  font-family: 'DM Mono', monospace; font-size: 9.5px;
+  letter-spacing: 1.5px; text-transform: uppercase;
+  padding: 10px 14px; text-align: left; font-weight: 400;
+}
+.limits-table td {
+  padding: 11px 14px; border: 1px solid var(--border);
+  vertical-align: top; line-height: 1.55; color: var(--ink2);
+}
+.limits-table tr:nth-child(even) td { background: var(--bg2); }
+.limits-table td:first-child { font-weight: 500; color: var(--ink); white-space: nowrap; }
+
+/* ── KEY INSIGHT ── */
+.key-insight {
+  background: var(--ink); color: #fff;
+  padding: 28px 32px; margin: 32px 0; border-radius: 6px;
+  position: relative; overflow: hidden;
+}
+.key-insight::before {
+  content: '"'; position: absolute; right: 24px; top: -10px;
+  font-family: 'DM Serif Display', serif; font-size: 100px;
+  color: rgba(255,255,255,.06); line-height: 1; pointer-events: none;
+}
+.ki-label {
+  font-family: 'DM Mono', monospace; font-size: 9px;
+  letter-spacing: 2.5px; text-transform: uppercase;
+  color: rgba(255,255,255,.3); margin-bottom: 12px;
+}
+.ki-text {
+  font-family: 'DM Serif Display', serif; font-size: 20px;
+  font-weight: 400; line-height: 1.4;
+  color: rgba(255,255,255,.9); max-width: 680px;
+}
+
+/* ── NEXT REPORT ── */
+.next-report {
+  border-top: 1px solid var(--border); margin-top: 52px;
+  padding-top: 32px; display: flex;
+  justify-content: space-between; align-items: center; gap: 20px;
+}
+.nr-label {
+  font-family: 'DM Mono', monospace; font-size: 9px;
+  letter-spacing: 2px; text-transform: uppercase;
+  color: var(--ink4); margin-bottom: 6px;
+}
+.nr-title { font-family: 'DM Serif Display', serif; font-size: 18px; color: var(--ink); line-height: 1.2; }
+.nr-sub { font-size: 13px; color: var(--ink4); margin-top: 4px; }
+.nr-arrow { font-family: 'DM Mono', monospace; font-size: 22px; color: var(--accent); flex-shrink: 0; }
+
+/* ── FOOTER ── */
+.footer {
+  padding: 22px 60px; border-top: 1px solid var(--border);
+  display: flex; justify-content: space-between; align-items: center;
+  font-family: 'DM Mono', monospace; font-size: 10px;
+  letter-spacing: 1px; text-transform: uppercase; color: var(--ink4);
+}
+
+@media (max-width: 720px) {
+  .masthead, .cw, .footer { padding-left: 24px; padding-right: 24px; }
+  .mh-num { display: none; }
+  .query-transform { grid-template-columns: 1fr; }
+  .qt-arr { display: none; }
+  .hybrid-diagram { grid-template-columns: 1fr; }
+  .grounding-example { grid-template-columns: 1fr; }
+  .result-item { grid-template-columns: 44px 1fr; }
+  .ri-score-wrap { display: none; }
+}
+</style>
+</head>
+<body>
+
+<!-- ══ MASTHEAD ══ -->
+<div class="masthead">
+  <div class="mh-series">Serie RAG Pratico · Report 4 di 6</div>
+  <div class="mh-num">04</div>
+  <h1>RAG in pratica:<br><em>dalla query al risultato</em></h1>
+  <p class="mh-sub">Abbiamo visto come si indicizza e come si chunkano i documenti. Ora vediamo cosa succede quando arriva una query: come diventa una ricerca, come si scelgono i chunk giusti, e come si costruisce il contesto che il modello riceve.</p>
+  <div class="mh-pills">
+    <span class="mh-pill">Query embedding</span>
+    <span class="mh-pill">Retrieval top-K</span>
+    <span class="mh-pill">Ricerca ibrida</span>
+    <span class="mh-pill">Costruzione del contesto</span>
+    <span class="mh-pill">Grounding</span>
+    <span class="mh-pill">Quando RAG non basta</span>
+  </div>
+</div>
+
+<!-- ══ NAV ══ -->
+<div class="nav">
+  <button class="nav-btn active" onclick="show(0)">1 · Il ciclo completo</button>
+  <button class="nav-btn" onclick="show(1)">2 · La query come vettore</button>
+  <button class="nav-btn" onclick="show(2)">3 · Retrieval e ranking</button>
+  <button class="nav-btn" onclick="show(3)">4 · Costruire il contesto</button>
+  <button class="nav-btn" onclick="show(4)">5 · Limiti e quando non basta</button>
+</div>
+
+
+<!-- ══════════════════════════════════
+     S0 — IL CICLO COMPLETO
+══════════════════════════════════ -->
+<div class="sect active" id="s0">
+<div class="cw">
+
+  <div class="s-eyebrow">La visione d'insieme</div>
+  <div class="s-title">Il ciclo completo di una chiamata RAG</div>
+
+  <p>Nei report precedenti abbiamo visto la <em>fase offline</em> — quella che avviene una volta sola quando si prepara il sistema: chunking, embedding, archiviazione nel vector store. Ora guardiamo la <em>fase online</em> — quella che avviene ad ogni chiamata, ogni volta che l'utente o il sistema fa una richiesta.</p>
+
+  <p>Questo ciclo è la risposta alla domanda: <strong>cosa succede concretamente tra "l'utente manda un brief" e "il modello risponde con una selezione di prodotti"?</strong></p>
+
+  <div class="diagram">
+    <div class="diagram-title">Il ciclo online RAG — passo per passo</div>
+    <div class="pipeline-full">
+
+      <div class="pf-step">
+        <div class="pf-num" style="font-size:18px;">1</div>
+        <div class="pf-content">
+          <div class="pf-label">Input</div>
+          <div class="pf-title">Arriva la query</div>
+          <div class="pf-body">La query può essere una domanda testuale, un brief, un'istruzione. Nel tuo caso: il brief del cliente con le caratteristiche del prodotto cercato. Questa è l'unica cosa che arriva "dall'esterno" in fase online.</div>
+        </div>
+      </div>
+
+      <div class="pf-step">
+        <div class="pf-num" style="font-size:18px;">2</div>
+        <div class="pf-content">
+          <div class="pf-label">Trasformazione</div>
+          <div class="pf-title">La query viene trasformata in vettore</div>
+          <div class="pf-body">Lo stesso modello di embedding usato per i documenti trasforma la query in un vettore. Fondamentale: <strong>stesso modello</strong> — altrimenti i vettori non sono comparabili e il retrieval non funziona. Questa operazione richiede tipicamente 50–200ms.</div>
+        </div>
+      </div>
+
+      <div class="pf-step">
+        <div class="pf-num" style="font-size:18px;">3</div>
+        <div class="pf-content">
+          <div class="pf-label">Ricerca</div>
+          <div class="pf-title">Il vector store trova i chunk più vicini</div>
+          <div class="pf-body">Il vector store esegue una ricerca per prossimità: trova i K chunk il cui vettore è più simile al vettore della query. K è un parametro configurabile — tipicamente 5–20. Possono essere applicati filtri sui metadati prima o dopo la ricerca vettoriale.</div>
+        </div>
+      </div>
+
+      <div class="pf-step">
+        <div class="pf-num" style="font-size:18px;">4</div>
+        <div class="pf-content">
+          <div class="pf-label">Opzionale</div>
+          <div class="pf-title">Re-ranking dei risultati</div>
+          <div class="pf-body">Un secondo modello — il re-ranker — valuta ogni chunk recuperato rispetto alla query con più attenzione di quanto faccia la semplice similarità vettoriale. Riordina i risultati per rilevanza effettiva. Più preciso ma aggiunge latenza.</div>
+        </div>
+      </div>
+
+      <div class="pf-step">
+        <div class="pf-num" style="font-size:18px;">5</div>
+        <div class="pf-content">
+          <div class="pf-label">Preparazione</div>
+          <div class="pf-title">Costruzione del contesto aumentato</div>
+          <div class="pf-body">Il sistema assembla il contesto da mandare al modello: system prompt + chunk recuperati (con o senza i metadati) + la query originale. L'ordine e il formato di questo contesto influenzano significativamente la qualità della risposta.</div>
+        </div>
+      </div>
+
+      <div class="pf-step" style="border-bottom:none;">
+        <div class="pf-num" style="font-size:18px;">6</div>
+        <div class="pf-content">
+          <div class="pf-label">Generazione</div>
+          <div class="pf-title">Il modello LLM genera la risposta</div>
+          <div class="pf-body">Il modello riceve il contesto aumentato e genera la risposta. Con le giuste istruzioni di grounding, usa solo le informazioni nei chunk recuperati — non inventa. Il risultato torna all'utente o al sistema che ha fatto la richiesta.</div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <div class="callout callout-accent">
+    <div class="callout-title">Quanto tempo richiede questo ciclo?</div>
+    <p>La fase di retrieval (passi 2–3) richiede tipicamente <strong>100–400ms</strong> su un sistema ben configurato. Con re-ranking, si sale a 400–800ms. La fase di generazione (passo 6) dipende dalla lunghezza dell'output e dal modello — può variare da 1 a 10 secondi.</p>
+    <p>Per un agente di selezione prodotti che non richiede risposta in tempo reale, questi tempi sono pienamente accettabili. Per sistemi interattivi con utenti che aspettano, il retrieval raramente è il collo di bottiglia — lo è quasi sempre la generazione.</p>
+  </div>
+
+</div>
+</div>
+
+
+<!-- ══════════════════════════════════
+     S1 — LA QUERY COME VETTORE
+══════════════════════════════════ -->
+<div class="sect" id="s1">
+<div class="cw">
+
+  <div class="s-eyebrow">Il passaggio più sottovalutato</div>
+  <div class="s-title">La query come vettore: cosa succede alla ricerca</div>
+
+  <p>Uno degli aspetti meno intuitivi del RAG è che la query non viene cercata direttamente — viene prima trasformata in un vettore, e poi si cercano i vettori simili a quel vettore. Questo ha conseguenze concrete sul tipo di query che funziona bene e su quelle che funzionano male.</p>
+
+  <div class="diagram">
+    <div class="diagram-title">Da brief a vettore — esempio concreto</div>
+    <div class="query-transform">
+      <div class="qt-box">
+        <div class="qt-label" style="background:var(--bg3); color:var(--ink3);">Brief originale</div>
+        <div class="qt-body" style="font-size:13.5px; line-height:1.65; color:var(--ink2);">
+          "Cerchiamo un capo tecnico per attività outdoor invernali, con ottima protezione dal vento e dalla pioggia, materiali di qualità premium, adatto a clienti che praticano trekking d'alta quota."
+        </div>
+      </div>
+      <div class="qt-arr">→</div>
+      <div class="qt-box">
+        <div class="qt-label" style="background:var(--accent2); color:var(--accent);">Diventa un vettore</div>
+        <div class="qt-body">
+          <div style="display:flex; flex-wrap:wrap; gap:4px; margin-bottom:8px;">
+            <span style="font-family:'DM Mono',monospace; font-size:10.5px; padding:2px 6px; background:var(--accent2); color:var(--accent); border:1px solid var(--accent3); border-radius:2px;">outdoor invernale</span>
+            <span style="font-family:'DM Mono',monospace; font-size:10.5px; padding:2px 6px; background:var(--accent2); color:var(--accent); border:1px solid var(--accent3); border-radius:2px;">protezione intemperie</span>
+            <span style="font-family:'DM Mono',monospace; font-size:10.5px; padding:2px 6px; background:var(--accent2); color:var(--accent); border:1px solid var(--accent3); border-radius:2px;">premium</span>
+            <span style="font-family:'DM Mono',monospace; font-size:10.5px; padding:2px 6px; background:var(--accent2); color:var(--accent); border:1px solid var(--accent3); border-radius:2px;">alta quota</span>
+          </div>
+          <div style="font-size:11.5px; color:var(--ink4); font-family:'DM Mono',monospace;">[0.412, -0.203, 0.891, 0.034, -0.667 ... × 1536]</div>
+          <div style="font-size:12px; color:var(--ink3); margin-top:8px; line-height:1.5;">Il vettore cattura il <em>significato complessivo</em> del brief — non singole parole chiave, ma il concetto di "protezione outdoor di alta gamma in condizioni difficili".</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <p>Questa trasformazione ha un'implicazione importante: il retrieval non cerca documenti che contengono le parole del brief — cerca documenti che trattano gli stessi concetti, anche con vocabolario diverso. Una scheda che usa "impermeabilità 20.000mm", "anti-vento classe 3", "alpinismo" verrà recuperata anche se non contiene le parole "capo tecnico" o "trekking d'alta quota".</p>
+
+  <p>Ma ci sono anche casi in cui questo meccanismo <strong>non funziona bene</strong>. La ricerca semantica fallisce quando:</p>
+
+  <div class="hybrid-diagram">
+    <div class="hd-side">
+      <div class="hd-head" style="background:var(--bad-bg); color:var(--bad);">Retrieval semantico puro — limiti</div>
+      <div class="hd-body">
+        <p><strong>Codici e identificatori:</strong> "SKU PRD-2847" o "modello Alpentech-X3" non hanno un significato semantico — sono etichette. Il vettore non cattura la differenza tra SKU diversi.</p>
+        <p><strong>Valori numerici precisi:</strong> "impermeabilità esattamente 20.000mm" — il vettore cattura "impermeabilità alta" ma non la soglia esatta.</p>
+        <p><strong>Negazioni complesse:</strong> "prodotti che NON contengono piumino" è difficile da rappresentare come vettore di prossimità.</p>
+        <p><strong>Terminologia molto specifica del dominio:</strong> acronimi proprietari o terminologia tecnica rara che non compare nei dati di training del modello di embedding.</p>
+      </div>
+    </div>
+    <div class="hd-side">
+      <div class="hd-head" style="background:var(--ok-bg); color:var(--ok);">Ricerca ibrida — la soluzione</div>
+      <div class="hd-body">
+        <p>La ricerca ibrida combina due approcci in parallelo:</p>
+        <p><strong>Ricerca semantica:</strong> vettoriale, trova documenti concettualmente simili. Ottima per concetti, descrizioni, intenti.</p>
+        <p><strong>Ricerca keyword (BM25):</strong> classica, trova corrispondenze esatte di termini. Ottima per codici, nomi propri, valori numerici.</p>
+        <p>I due ranking vengono fusi con <strong>RRF (Reciprocal Rank Fusion)</strong>: si sommano i reciproci dei rank di ciascun documento nei due sistemi. Un documento che compare in posizione alta in entrambi viene promosso in cima al risultato finale.</p>
+        <p>Per il caso catalogo prodotti: la ricerca ibrida è quasi sempre superiore alla sola semantica, specialmente quando il brief contiene specifiche tecniche o nomi di tecnologie proprietarie.</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="callout callout-teal">
+    <div class="callout-title">Query rewriting — quando il brief non è una buona query</div>
+    <p>I brief sono scritti per gli umani, non per il retrieval. Contengono frasi introduttive, contesto ridondante, pronomi riferiti a conversazioni precedenti. Prima del retrieval, può valere la pena riscrivere il brief in una forma più adatta alla ricerca.</p>
+    <p>Esempio: il brief "Come ti dicevo la settimana scorsa, stiamo cercando qualcosa per la linea invernale, un capo che possa reggere bene in alta montagna, simile a quello che abbiamo venduto bene l'anno scorso ma con qualcosa in più" → query di retrieval riscritta: "capo outdoor invernale alta montagna performance premium".</p>
+    <p>Questo rewriting può essere fatto con una chiamata LLM preliminare, oppure con regole semplici (rimozione di stop words, estrazione di keyword principali).</p>
+  </div>
+
+</div>
+</div>
+
+
+<!-- ══════════════════════════════════
+     S2 — RETRIEVAL E RANKING
+══════════════════════════════════ -->
+<div class="sect" id="s2">
+<div class="cw">
+
+  <div class="s-eyebrow">Trovare i chunk giusti</div>
+  <div class="s-title">Retrieval e ranking: quanti chunk, quali, in che ordine</div>
+
+  <p>Il retrieval restituisce i K chunk più simili alla query. K è il parametro più semplice da configurare e uno dei più impattanti. Troppo piccolo e rischi di perdere documenti rilevanti; troppo grande e il contesto si riempie di informazioni irrilevanti che "distraggono" il modello.</p>
+
+  <div class="diagram">
+    <div class="diagram-title">Risultati di retrieval — esempio per il brief outdoor invernale</div>
+    <div class="results-list">
+
+      <div class="result-item">
+        <div class="ri-rank">
+          <div class="ri-rank-num">1</div>
+          <div class="ri-rank-label">rank</div>
+        </div>
+        <div class="ri-body">
+          <div class="ri-meta">PRD-2847 · Alpentech Pro Jacket · Chunk 2 · Materiali</div>
+          <div class="ri-text">"La giacca Alpentech Pro utilizza tessuto esterno Gore-Tex Pro 3L con trattamento DWR C6 rinnovato, che garantisce impermeabilità classe 20.000mm anche dopo 50 lavaggi. Progettata per alpinismo e trekking d'alta quota in condizioni estreme di freddo e pioggia…"</div>
+        </div>
+        <div class="ri-score-wrap">
+          <div class="ri-score-num" style="color:var(--ok);">0.91</div>
+          <div class="ri-score-bar"><div class="ri-score-fill" style="width:91%; background:var(--ok);"></div></div>
+          <div class="ri-score-label">similarità</div>
+        </div>
+      </div>
+
+      <div class="result-item">
+        <div class="ri-rank">
+          <div class="ri-rank-num">2</div>
+          <div class="ri-rank-label">rank</div>
+        </div>
+        <div class="ri-body">
+          <div class="ri-meta">PRD-2847 · Alpentech Pro Jacket · Chunk 1 · Overview</div>
+          <div class="ri-text">"Alpentech Pro Jacket è un capo tecnico progettato per alpinismo e trekking d'alta quota. Combina protezione dalle intemperie con leggerezza estrema, nella gamma outdoor premium del brand…"</div>
+        </div>
+        <div class="ri-score-wrap">
+          <div class="ri-score-num" style="color:var(--ok);">0.87</div>
+          <div class="ri-score-bar"><div class="ri-score-fill" style="width:87%; background:var(--ok);"></div></div>
+          <div class="ri-score-label">similarità</div>
+        </div>
+      </div>
+
+      <div class="result-item">
+        <div class="ri-rank">
+          <div class="ri-rank-num">3</div>
+          <div class="ri-rank-label">rank</div>
+        </div>
+        <div class="ri-body">
+          <div class="ri-meta">PRD-3102 · WinterShell Pro · Chunk 1 · Overview</div>
+          <div class="ri-text">"WinterShell Pro è una giacca hardshell per escursionismo invernale e alpinismo tecnico. Il sistema di ventilazione underarm permette la regolazione termica anche durante attività ad alta intensità…"</div>
+        </div>
+        <div class="ri-score-wrap">
+          <div class="ri-score-num" style="color:#8a6a10;">0.79</div>
+          <div class="ri-score-bar"><div class="ri-score-fill" style="width:79%; background:#e8b84a;"></div></div>
+          <div class="ri-score-label">similarità</div>
+        </div>
+      </div>
+
+      <div class="result-item" style="opacity:.65;">
+        <div class="ri-rank">
+          <div class="ri-rank-num">4</div>
+          <div class="ri-rank-label">rank</div>
+        </div>
+        <div class="ri-body">
+          <div class="ri-meta">PRD-1890 · FleeceLayer Mid · Chunk 2 · Performance</div>
+          <div class="ri-text">"FleeceLayer Mid offre isolamento termico per attività outdoor a temperature moderate, abbinabile a giacche hardshell come layer intermedio in condizioni invernali avanzate…"</div>
+        </div>
+        <div class="ri-score-wrap">
+          <div class="ri-score-num" style="color:var(--ink4);">0.63</div>
+          <div class="ri-score-bar"><div class="ri-score-fill" style="width:63%; background:var(--border2);"></div></div>
+          <div class="ri-score-label">similarità</div>
+        </div>
+      </div>
+
+    </div>
+    <p style="font-size:12px; color:var(--ink4); margin-top:12px; margin-bottom:0;">Il retrieval ha restituito due chunk dello stesso prodotto (PRD-2847) ai primi due posti. Questo è normale — prodotti molto rilevanti avranno più chunk pertinenti. Il sistema deve decidere se deduplicare o tenere entrambi.</p>
+  </div>
+
+  <div class="callout callout-warn">
+    <div class="callout-title">Il problema dei chunk duplicati dallo stesso prodotto</div>
+    <p>Quando un prodotto è molto rilevante per una query, più chunk dello stesso prodotto possono finire nei top-K risultati. Questo occupa spazio nel contesto con informazioni ridondanti sullo stesso prodotto, a scapito di altri prodotti potenzialmente rilevanti.</p>
+    <p><strong>Soluzione: deduplicazione per prodotto.</strong> Dopo il retrieval, si applica una regola: massimo N chunk per prodotto_id nei risultati finali. Con N=2 si preserva la diversità pur mantenendo abbastanza contesto per ogni prodotto rilevante.</p>
+  </div>
+
+  <p>Un parametro spesso trascurato è la <strong>soglia di similarità minima</strong>. Se nessun chunk supera una certa soglia (es. 0.55), potrebbe non valere la pena includerlo nel contesto — un chunk poco rilevante è rumore che peggiora la risposta. Impostare una soglia è più robusto che affidarsi sempre a un K fisso.</p>
+
+</div>
+</div>
+
+
+<!-- ══════════════════════════════════
+     S3 — COSTRUIRE IL CONTESTO
+══════════════════════════════════ -->
+<div class="sect" id="s3">
+<div class="cw">
+
+  <div class="s-eyebrow">Il momento critico</div>
+  <div class="s-title">Costruire il contesto: come arriva al modello</div>
+
+  <p>Il retrieval ha trovato i chunk giusti. Ora bisogna assemblarli in un contesto che il modello possa usare efficacemente. Questo passaggio — spesso trattato come un dettaglio implementativo — ha un impatto significativo sulla qualità della risposta finale.</p>
+
+  <div class="diagram">
+    <div class="diagram-title">Struttura del contesto aumentato — anatomia di una chiamata RAG</div>
+    <div class="ctx-construction">
+      <div class="cc-head">Chiamata al modello — contenuto del context window</div>
+      <div class="cc-layer">
+        <div class="cc-layer-label">System prompt</div>
+        <div class="cc-layer-body">Identità dell'agente, istruzioni su come usare il contesto, regole di grounding ("rispondi solo sulla base delle informazioni fornite"), formato di output atteso.</div>
+        <div class="cc-layer-tokens">~400 token</div>
+      </div>
+      <div class="cc-layer" style="background:var(--accent2);">
+        <div class="cc-layer-label">Chunk recuperati</div>
+        <div class="cc-layer-body">I K chunk più rilevanti, ciascuno preceduto da un'intestazione con i metadati: <code>[Prodotto: Alpentech Pro | ID: PRD-2847 | Sezione: Materiali]</code>. Ordinati per score decrescente, oppure con i più rilevanti agli estremi (anti lost-in-the-middle).</div>
+        <div class="cc-layer-tokens">~2.000–4.000 token</div>
+      </div>
+      <div class="cc-layer">
+        <div class="cc-layer-label">Dati strutturati</div>
+        <div class="cc-layer-body">Opzionale ma spesso utile: i dati strutturati (prezzo, categoria, disponibilità) dei prodotti i cui chunk sono stati recuperati. In formato compatto — una riga per prodotto.</div>
+        <div class="cc-layer-tokens">~300–600 token</div>
+      </div>
+      <div class="cc-layer" style="background:var(--ok-bg);">
+        <div class="cc-layer-label">Query / brief</div>
+        <div class="cc-layer-body">Il brief originale dell'utente, posizionato <strong>alla fine</strong> del contesto — non all'inizio. La posizione finale massimizza l'attenzione del modello sul compito specifico.</div>
+        <div class="cc-layer-tokens">~200–400 token</div>
+      </div>
+    </div>
+  </div>
+
+  <p>Un elemento spesso sottovalutato è <strong>come si istruisce il modello ad usare i chunk</strong>. Senza istruzioni esplicite, il modello tenderà a integrare le informazioni dei chunk con la propria conoscenza generale — il che può portare a risposte plausibili ma non ancorate ai tuoi documenti.</p>
+
+  <div class="grounding-example">
+    <div class="ge-side">
+      <div class="ge-label">Senza grounding — rischioso</div>
+      <div class="ge-prompt">
+        Sei un agente di selezione prodotti. Usa le informazioni fornite per rispondere.
+      </div>
+      <div class="ge-response" style="border-color:var(--bad); color:var(--ink3); margin-top:10px;">
+        <div style="font-family:'DM Mono',monospace; font-size:9px; letter-spacing:1px; color:var(--bad); margin-bottom:4px;">PROBLEMA</div>
+        Il modello può integrare i chunk con la propria conoscenza generica su prodotti simili. La risposta sembra fondata ma mescola fatti reali e generici.
+      </div>
+    </div>
+    <div class="ge-side" style="background:var(--ok-bg);">
+      <div class="ge-label">Con grounding — raccomandato</div>
+      <div class="ge-prompt" style="background:var(--bg); border-color:var(--ok-bd);">
+        Sei un agente di selezione prodotti. Basa la tua risposta <strong>esclusivamente</strong> sulle schede prodotto fornite nel contesto. Se le informazioni non sono presenti nelle schede, dichiara esplicitamente che non hai dati sufficienti per valutare quel criterio. Non integrare con conoscenze generiche sui prodotti.
+      </div>
+      <div class="ge-response" style="border-color:var(--ok); color:var(--ink3); margin-top:10px;">
+        <div style="font-family:'DM Mono',monospace; font-size:9px; letter-spacing:1px; color:var(--ok); margin-bottom:4px;">RISULTATO</div>
+        Il modello risponde solo su ciò che è nei chunk, cita le fonti specifiche, e segnala quando mancano informazioni per valutare un criterio.
+      </div>
+    </div>
+  </div>
+
+  <div class="callout callout-note">
+    <div class="callout-title">Il formato dei chunk nel contesto — dettaglio che conta</div>
+    <p>Come si separano i chunk nel contesto influenza come il modello li usa. Un formato efficace:</p>
+    <p><code>--- SCHEDA PRODOTTO ---<br>Prodotto: Alpentech Pro Jacket<br>ID: PRD-2847 | Categoria: Outdoor | Score rilevanza: 0.91<br><br>[testo del chunk]<br>--- FINE SCHEDA ---</code></p>
+    <p>I delimitatori espliciti aiutano il modello a distinguere i documenti e a citarli correttamente. I metadati (ID, categoria, score) danno al modello informazioni strutturate che può usare nel ragionamento senza doverle inferire dal testo.</p>
+  </div>
+
+</div>
+</div>
+
+
+<!-- ══════════════════════════════════
+     S4 — LIMITI E QUANDO NON BASTA
+══════════════════════════════════ -->
+<div class="sect" id="s4">
+<div class="cw">
+
+  <div class="s-eyebrow">I confini del RAG classico</div>
+  <div class="s-title">Quando il RAG classico non basta — e perché</div>
+
+  <p>Il RAG classico che abbiamo descritto nei report 1–4 è efficace per un'ampia gamma di casi d'uso. Ma ha limiti strutturali che emergono in situazioni specifiche — e il tuo caso di screening sistematico del catalogo è esattamente uno di quei casi.</p>
+
+  <table class="limits-table">
+    <thead>
+      <tr>
+        <th>Scenario</th>
+        <th>Come funziona il RAG classico</th>
+        <th>Perché non basta</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>Domanda su un argomento specifico</td>
+        <td>Recupera 5–10 chunk rilevanti, il modello risponde. Funziona molto bene.</td>
+        <td>Non si applica — questo è il caso d'uso ideale per il RAG classico.</td>
+      </tr>
+      <tr>
+        <td>Confronto tra pochi prodotti specifici</td>
+        <td>Recupera i chunk dei prodotti richiesti, il modello li confronta. Funziona bene.</td>
+        <td>Solo se i prodotti sono nominati esplicitamente. Se bisogna trovarli prima, serve screening.</td>
+      </tr>
+      <tr>
+        <td>Screening sistematico su catalogo grande</td>
+        <td>Recupera top-K chunk per il brief. Il modello vede solo quei K chunk e non sa cosa c'è nel resto del catalogo.</td>
+        <td><strong>Il retrieval semantico non garantisce completezza.</strong> Prodotti rilevanti con embedding distante dalla query vengono persi. Non si può sapere quanti prodotti potenzialmente validi non sono stati considerati.</td>
+      </tr>
+      <tr>
+        <td>Aggregazione su tutto il corpus</td>
+        <td>Ogni query recupera solo un sottoinsieme del catalogo.</td>
+        <td>Impossibile rispondere a "quanti prodotti del catalogo soddisfano questo criterio?" — il RAG vede solo una parte.</td>
+      </tr>
+      <tr>
+        <td>Criteri di esclusione precisi</td>
+        <td>Filtri sui metadati funzionano bene (es. categoria, prezzo). Filtri su contenuto testuale funzionano meno bene.</td>
+        <td>"Escludere tutti i prodotti che contengono poliestere" richiede di leggere tutti i testi, non solo i top-K.</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <div class="callout callout-warn">
+    <div class="callout-title">Il problema specifico del tuo caso</div>
+    <p>Il tuo agente deve fare qualcosa di strutturalmente diverso da una ricerca RAG: deve <strong>scorrere l'intero catalogo</strong> e valutare ogni prodotto rispetto al brief. Non stai cercando "la risposta" — stai cercando "tutti i candidati" che soddisfano certi criteri.</p>
+    <p>Questo richiede un approccio diverso che il Report 5 esplora in dettaglio: la differenza tra retrieval selettivo (RAG classico) e screening sistematico, e le architetture che rendono lo screening efficiente su cataloghi grandi.</p>
+  </div>
+
+  <div class="key-insight">
+    <div class="ki-label">Il confine tra RAG classico e screening</div>
+    <div class="ki-text">Il RAG classico risponde alla domanda: "qual è la risposta migliore nel corpus?". Lo screening sistematico risponde a: "quali elementi del corpus soddisfano questi criteri?". Sembrano simili, ma richiedono architetture diverse.</div>
+  </div>
+
+  <!-- NEXT REPORT -->
+  <div class="next-report">
+    <div>
+      <div class="nr-label">Prossimo report</div>
+      <div class="nr-title">Retrieval classico vs. screening sistematico:<br>due architetture diverse</div>
+      <div class="nr-sub">Come funziona il retrieval top-K · Perché non garantisce completezza · Le architetture per lo screening su catalogo</div>
+    </div>
+    <div class="nr-arrow">→</div>
+  </div>
+
+</div>
+</div>
+
+<!-- FOOTER -->
+<div class="footer">
+  <span>Serie RAG Pratico · Report 4 · Dalla query al risultato</span>
+  <span>2026</span>
+</div>
+
+<script>
+function show(n) {
+  document.querySelectorAll('.sect').forEach(s => s.classList.remove('active'));
+  document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('s'+n).classList.add('active');
+  document.querySelectorAll('.nav-btn')[n].classList.add('active');
+  window.scrollTo({top:0, behavior:'smooth'});
+}
+</script>
+</body>
+</html>

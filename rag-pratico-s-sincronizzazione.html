@@ -1,0 +1,1014 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>RAG Pratico — Sincronizzazione del vector store</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:ital,wght@0,300;0,400;0,500;0,600;1,300;1,400&family=DM+Mono:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg:      #fafaf7;
+  --bg2:     #f2f1ec;
+  --bg3:     #e8e6df;
+  --ink:     #1a1916;
+  --ink2:    #2d2b26;
+  --ink3:    #5c5a52;
+  --ink4:    #9c9a90;
+  --border:  #dddbd2;
+  --border2: #cbc9bf;
+
+  --accent:  #5a3a1a;
+  --accent2: #f7f0e8;
+  --accent3: #e0c8a8;
+
+  --teal:    #1a5f5f;
+  --teal-bg: #e5f3f3;
+  --teal-bd: #8ecece;
+
+  --warm:    #7a4a10;
+  --warm-bg: #fdf3e3;
+  --warm-bd: #e8c878;
+
+  --ok:      #2d6040;
+  --ok-bg:   #eaf4ee;
+  --ok-bd:   #a8d4b4;
+
+  --bad:     #8a1a1a;
+  --bad-bg:  #fdf0f0;
+  --bad-bd:  #e8a8a8;
+
+  --note:    #4a2d7a;
+  --note-bg: #f0ecfb;
+  --note-bd: #c4aef0;
+}
+
+* { margin:0; padding:0; box-sizing:border-box; }
+html { scroll-behavior:smooth; }
+body {
+  background: var(--bg);
+  color: var(--ink);
+  font-family: 'DM Sans', sans-serif;
+  font-weight: 300;
+  font-size: 15px;
+  line-height: 1.75;
+}
+
+/* ── MASTHEAD ── */
+.masthead {
+  background: var(--accent);
+  color: #fff;
+  padding: 56px 60px 52px;
+  position: relative;
+  overflow: hidden;
+}
+.masthead::before {
+  content: '';
+  position: absolute;
+  top: -80px; right: -80px;
+  width: 400px; height: 400px;
+  border-radius: 50%;
+  border: 1px solid rgba(255,255,255,.06);
+  pointer-events: none;
+}
+.mh-series {
+  font-family: 'DM Mono', monospace;
+  font-size: 10px; letter-spacing: 3px;
+  text-transform: uppercase; color: rgba(255,255,255,.35);
+  margin-bottom: 20px;
+}
+.mh-num {
+  font-family: 'DM Serif Display', serif;
+  font-size: 80px; line-height: 1;
+  color: rgba(255,255,255,.07);
+  position: absolute; right: 60px; top: 36px;
+  letter-spacing: -4px; user-select: none;
+}
+.masthead h1 {
+  font-family: 'DM Serif Display', serif;
+  font-size: clamp(26px, 3.8vw, 46px);
+  font-weight: 400; line-height: 1.08;
+  letter-spacing: -.5px; max-width: 740px; position: relative;
+}
+.masthead h1 em { font-style: italic; color: rgba(255,255,255,.68); }
+.mh-sub {
+  margin-top: 20px; font-size: 15px; font-weight: 300;
+  color: rgba(255,255,255,.42); max-width: 660px;
+  line-height: 1.7; position: relative;
+}
+.mh-pills {
+  margin-top: 28px; display: flex; gap: 8px;
+  flex-wrap: wrap; position: relative;
+}
+.mh-pill {
+  font-family: 'DM Mono', monospace; font-size: 10px;
+  letter-spacing: 1px; padding: 4px 12px;
+  border: 1px solid rgba(255,255,255,.2);
+  color: rgba(255,255,255,.48); border-radius: 20px;
+}
+
+/* ── NAV ── */
+.nav {
+  position: sticky; top: 0; z-index: 100;
+  background: var(--ink); display: flex; overflow-x: auto;
+  border-bottom: 1px solid rgba(255,255,255,.08);
+}
+.nav-btn {
+  flex-shrink: 0; padding: 14px 20px;
+  border: none; background: transparent; cursor: pointer;
+  font-family: 'DM Mono', monospace; font-size: 10px;
+  letter-spacing: 1px; text-transform: uppercase;
+  color: rgba(255,255,255,.3);
+  border-right: 1px solid rgba(255,255,255,.06);
+  transition: color .2s; white-space: nowrap;
+}
+.nav-btn:hover { color: rgba(255,255,255,.65); }
+.nav-btn.active { color: #fff; background: rgba(255,255,255,.06); }
+
+.sect { display: none; }
+.sect.active { display: block; animation: fadeUp .3s ease; }
+@keyframes fadeUp { from{opacity:0;transform:translateY(5px)} to{opacity:1;transform:translateY(0)} }
+
+/* ── CONTENT WRAP ── */
+.cw { max-width: 860px; margin: 0 auto; padding: 52px 60px 64px; }
+
+.s-eyebrow {
+  font-family: 'DM Mono', monospace; font-size: 10px;
+  letter-spacing: 3px; text-transform: uppercase;
+  color: var(--ink4); margin-bottom: 8px;
+}
+.s-title {
+  font-family: 'DM Serif Display', serif; font-size: 30px;
+  font-weight: 400; letter-spacing: -.3px; color: var(--ink);
+  line-height: 1.15; margin-bottom: 28px;
+}
+
+p { margin-bottom: 18px; color: var(--ink2); }
+p:last-child { margin-bottom: 0; }
+p strong { font-weight: 600; color: var(--ink); }
+code {
+  font-family: 'DM Mono', monospace;
+  background: var(--bg3); padding: 1px 6px;
+  border-radius: 3px; font-size: 13px; color: var(--ink2);
+}
+
+/* ── CALLOUT ── */
+.callout {
+  padding: 20px 24px; border-left: 3px solid;
+  margin: 28px 0; border-radius: 0 6px 6px 0;
+}
+.callout-warn   { background: var(--warm-bg); border-color: var(--warm); }
+.callout-ok     { background: var(--ok-bg);   border-color: var(--ok);   }
+.callout-bad    { background: var(--bad-bg);  border-color: var(--bad);  }
+.callout-note   { background: var(--note-bg); border-color: var(--note); }
+.callout-accent { background: var(--accent2); border-color: var(--accent); }
+.callout-teal   { background: var(--teal-bg); border-color: var(--teal); }
+.callout-title {
+  font-family: 'DM Mono', monospace; font-size: 10px;
+  letter-spacing: 2px; text-transform: uppercase; margin-bottom: 8px;
+}
+.callout-warn .callout-title   { color: var(--warm);   }
+.callout-ok .callout-title     { color: var(--ok);     }
+.callout-bad .callout-title    { color: var(--bad);    }
+.callout-note .callout-title   { color: var(--note);   }
+.callout-accent .callout-title { color: var(--accent); }
+.callout-teal .callout-title   { color: var(--teal);   }
+.callout p { font-size: 14px; line-height: 1.65; margin-bottom: 8px; }
+.callout p:last-child { margin-bottom: 0; }
+
+/* ── DIAGRAM ── */
+.diagram {
+  background: var(--bg2); border: 1px solid var(--border2);
+  padding: 28px 32px; margin: 28px 0;
+}
+.diagram-title {
+  font-family: 'DM Mono', monospace; font-size: 10px;
+  letter-spacing: 2px; text-transform: uppercase; color: var(--ink4);
+  margin-bottom: 20px; padding-bottom: 12px; border-bottom: 1px solid var(--border);
+}
+
+/* ── ARCH CARD ── */
+.arch-card {
+  border: 1.5px solid var(--border2);
+  border-radius: 6px; overflow: hidden; margin: 20px 0;
+}
+.ac-head {
+  display: flex; align-items: center; gap: 14px;
+  padding: 14px 20px; border-bottom: 1px solid var(--border);
+}
+.ac-badge {
+  font-family: 'DM Mono', monospace; font-size: 9px;
+  letter-spacing: 2px; text-transform: uppercase;
+  padding: 3px 10px; border-radius: 20px; flex-shrink: 0;
+}
+.ac-name {
+  font-family: 'DM Serif Display', serif;
+  font-size: 17px; color: var(--ink); line-height: 1.1;
+}
+.ac-meta {
+  margin-left: auto;
+  display: flex; flex-direction: column; align-items: flex-end; gap: 3px;
+}
+.ac-complexity {
+  font-family: 'DM Mono', monospace; font-size: 9px;
+  letter-spacing: .5px; text-transform: uppercase; color: var(--ink4);
+}
+.ac-freshness {
+  font-family: 'DM Mono', monospace; font-size: 9px;
+  letter-spacing: .5px; padding: 1px 8px; border-radius: 10px;
+}
+.ac-body {
+  padding: 18px 20px;
+  display: grid; grid-template-columns: 1fr 1fr; gap: 20px;
+}
+.ac-col-label {
+  font-family: 'DM Mono', monospace; font-size: 9px;
+  letter-spacing: 2px; text-transform: uppercase; color: var(--ink4);
+  margin-bottom: 10px; padding-bottom: 6px; border-bottom: 1px solid var(--border);
+}
+.ac-list { display: flex; flex-direction: column; gap: 6px; }
+.ac-item {
+  display: grid; grid-template-columns: 12px 1fr; gap: 6px;
+  font-size: 13px; color: var(--ink2); line-height: 1.45; align-items: start;
+}
+.ac-dot { width: 5px; height: 5px; border-radius: 50%; margin-top: 5px; flex-shrink: 0; }
+
+/* ── FLOW PIPELINE ── */
+.flow-pipeline {
+  display: flex; flex-direction: column; gap: 0;
+  border: 1px solid var(--border2); border-radius: 4px; overflow: hidden;
+  margin: 16px 0;
+}
+.fp-step {
+  display: grid; grid-template-columns: 48px 1fr;
+  border-bottom: 1px solid var(--border);
+}
+.fp-step:last-child { border-bottom: none; }
+.fp-num {
+  display: flex; align-items: center; justify-content: center;
+  font-family: 'DM Mono', monospace; font-size: 14px; font-weight: 500;
+  border-right: 1px solid var(--border); background: var(--bg2);
+}
+.fp-body { padding: 12px 16px; }
+.fp-label {
+  font-family: 'DM Mono', monospace; font-size: 9px;
+  letter-spacing: 1.5px; text-transform: uppercase; color: var(--ink4); margin-bottom: 3px;
+}
+.fp-title { font-size: 13.5px; font-weight: 600; color: var(--ink); margin-bottom: 4px; }
+.fp-text { font-size: 12.5px; color: var(--ink3); line-height: 1.55; }
+
+/* ── DESYNC VISUAL ── */
+.desync-timeline {
+  position: relative;
+  margin: 20px 0;
+}
+.dt-row {
+  display: grid;
+  grid-template-columns: 110px 1fr;
+  gap: 0;
+  margin-bottom: 0;
+}
+.dt-label {
+  font-family: 'DM Mono', monospace;
+  font-size: 9.5px; letter-spacing: .5px; text-transform: uppercase;
+  color: var(--ink4); padding: 10px 12px 10px 0;
+  display: flex; align-items: center; border-right: 1px solid var(--border);
+  border-bottom: 1px solid var(--border);
+  flex-shrink: 0;
+}
+.dt-row:last-child .dt-label { border-bottom: none; }
+.dt-row:last-child .dt-cells { border-bottom: none; }
+.dt-cells {
+  display: flex; gap: 0; border-bottom: 1px solid var(--border);
+}
+.dt-cell {
+  flex: 1; padding: 8px 6px;
+  font-family: 'DM Mono', monospace; font-size: 9.5px;
+  border-right: 1px solid var(--border); text-align: center;
+  line-height: 1.35;
+}
+.dt-cell:last-child { border-right: none; }
+.dt-time {
+  font-family: 'DM Mono', monospace; font-size: 8.5px;
+  letter-spacing: .5px; color: var(--ink4); text-align: center;
+  margin-bottom: 4px; padding: 6px 0; border-bottom: 1px solid var(--border);
+  display: flex; gap: 0;
+}
+.dt-time-cell {
+  flex: 1; border-right: 1px solid var(--border);
+}
+.dt-time-cell:last-child { border-right: none; }
+
+/* ── CHANGE DETECTION ── */
+.change-methods {
+  display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; margin: 20px 0;
+}
+.cm-card {
+  border: 1px solid var(--border2); border-radius: 4px; overflow: hidden;
+}
+.cm-head {
+  padding: 8px 14px; border-bottom: 1px solid var(--border);
+  font-family: 'DM Mono', monospace; font-size: 9px;
+  letter-spacing: 1.5px; text-transform: uppercase; color: rgba(255,255,255,.85);
+}
+.cm-body {
+  padding: 12px 14px; font-size: 12.5px; color: var(--ink3); line-height: 1.6;
+}
+.cm-body p { font-size: 12.5px; margin-bottom: 8px; }
+.cm-pro { font-size: 12px; color: var(--ok); margin-top: 6px; }
+.cm-con { font-size: 12px; color: var(--bad); margin-top: 3px; }
+.cm-pro::before { content: '✓ '; font-weight: 700; }
+.cm-con::before { content: '✗ '; font-weight: 700; }
+
+/* ── DECISION TABLE ── */
+.dec-table {
+  width: 100%; border-collapse: collapse; margin: 20px 0; font-size: 13.5px;
+}
+.dec-table th {
+  background: var(--accent); color: rgba(255,255,255,.85);
+  font-family: 'DM Mono', monospace; font-size: 9.5px;
+  letter-spacing: 1.5px; text-transform: uppercase;
+  padding: 10px 14px; text-align: left; font-weight: 400;
+}
+.dec-table td {
+  padding: 11px 14px; border: 1px solid var(--border);
+  vertical-align: top; line-height: 1.55; color: var(--ink2);
+}
+.dec-table tr:nth-child(even) td { background: var(--bg2); }
+.dec-table td:first-child { font-weight: 500; color: var(--ink); white-space: nowrap; }
+
+/* ── MONITORING ── */
+.metric-row {
+  display: grid; grid-template-columns: 1fr 120px 1fr;
+  gap: 12px; align-items: center; margin-bottom: 12px;
+}
+.mr-name { font-size: 13px; color: var(--ink2); font-weight: 500; }
+.mr-track {
+  height: 8px; background: var(--bg3); border-radius: 2px; overflow: hidden; position: relative;
+}
+.mr-fill { height: 100%; border-radius: 2px; }
+.mr-label { font-family: 'DM Mono', monospace; font-size: 11px; color: var(--ink4); }
+
+/* ── CODE BLOCK ── */
+.code-block {
+  background: var(--ink); border-radius: 6px; overflow: hidden; margin: 16px 0;
+  font-family: 'DM Mono', monospace;
+}
+.cb-head {
+  padding: 8px 16px; background: rgba(255,255,255,.06);
+  border-bottom: 1px solid rgba(255,255,255,.06);
+  font-size: 9.5px; letter-spacing: 1px;
+  text-transform: uppercase; color: rgba(255,255,255,.3);
+}
+.cb-body {
+  padding: 16px; font-size: 12px; line-height: 1.75;
+  color: rgba(255,255,255,.78); overflow-x: auto;
+}
+.cb-comment { color: rgba(255,255,255,.25); }
+.cb-key { color: #7ec8e3; }
+.cb-val { color: #c8e67e; }
+.cb-str { color: #e8c87e; }
+.cb-kw  { color: #e87ec8; }
+
+/* ── KEY INSIGHT ── */
+.key-insight {
+  background: var(--ink); color: #fff;
+  padding: 28px 32px; margin: 32px 0; border-radius: 6px;
+  position: relative; overflow: hidden;
+}
+.key-insight::before {
+  content: '"'; position: absolute; right: 24px; top: -10px;
+  font-family: 'DM Serif Display', serif; font-size: 100px;
+  color: rgba(255,255,255,.06); line-height: 1; pointer-events: none;
+}
+.ki-label {
+  font-family: 'DM Mono', monospace; font-size: 9px;
+  letter-spacing: 2.5px; text-transform: uppercase;
+  color: rgba(255,255,255,.3); margin-bottom: 12px;
+}
+.ki-text {
+  font-family: 'DM Serif Display', serif; font-size: 20px;
+  font-weight: 400; line-height: 1.4;
+  color: rgba(255,255,255,.9); max-width: 680px;
+}
+
+/* ── FOOTER ── */
+.footer {
+  padding: 22px 60px; border-top: 1px solid var(--border);
+  display: flex; justify-content: space-between; align-items: center;
+  font-family: 'DM Mono', monospace; font-size: 10px;
+  letter-spacing: 1px; text-transform: uppercase; color: var(--ink4);
+}
+
+@media (max-width: 720px) {
+  .masthead, .cw, .footer { padding-left: 24px; padding-right: 24px; }
+  .mh-num { display: none; }
+  .ac-body { grid-template-columns: 1fr; }
+  .change-methods { grid-template-columns: 1fr; }
+}
+</style>
+</head>
+<body>
+
+<!-- ══ MASTHEAD ══ -->
+<div class="masthead">
+  <div class="mh-series">Serie RAG Pratico · Report supplementare</div>
+  <div class="mh-num">S</div>
+  <h1>Il vector store<br>come strato derivato:<br><em>sincronizzazione e aggiornamento</em></h1>
+  <p class="mh-sub">Un sistema RAG non si costruisce una volta sola. I documenti cambiano, i prodotti si aggiornano, il catalogo evolve. Come si mantiene il vector store allineato con la fonte — e quanto velocemente deve esserlo?</p>
+  <div class="mh-pills">
+    <span class="mh-pill">Desincronizzazione</span>
+    <span class="mh-pill">Batch vs. incrementale</span>
+    <span class="mh-pill">Change detection</span>
+    <span class="mh-pill">CDC</span>
+    <span class="mh-pill">Architettura fonte + indice</span>
+    <span class="mh-pill">Monitoraggio</span>
+  </div>
+</div>
+
+<!-- ══ NAV ══ -->
+<div class="nav">
+  <button class="nav-btn active" onclick="show(0)">1 · Il problema</button>
+  <button class="nav-btn" onclick="show(1)">2 · Tre architetture</button>
+  <button class="nav-btn" onclick="show(2)">3 · Rilevare i cambiamenti</button>
+  <button class="nav-btn" onclick="show(3)">4 · Aggiornare il vector store</button>
+  <button class="nav-btn" onclick="show(4)">5 · Monitorare la salute</button>
+  <button class="nav-btn" onclick="show(5)">6 · Come scegliere</button>
+</div>
+
+
+<!-- ══════════════════════════════════
+     S0 — IL PROBLEMA
+══════════════════════════════════ -->
+<div class="sect active" id="s0">
+<div class="cw">
+
+  <div class="s-eyebrow">Il problema spesso trascurato</div>
+  <div class="s-title">Il vector store invecchia — e non lo dice</div>
+
+  <p>Quando si costruisce un sistema RAG, tutta l'attenzione va all'indicizzazione iniziale: si chunkano i documenti, si calcolano gli embedding, si popola il vector store. Il sistema funziona. Si va in produzione.</p>
+
+  <p>Poi il mondo cambia. Una scheda prodotto viene aggiornata con nuove specifiche tecniche. Un prodotto viene rimosso dal catalogo. Ne arrivano dieci nuovi. La policy di reso viene revisionata.</p>
+
+  <p>Il vector store non sa nulla di tutto questo. Continua a restituire i chunk della versione vecchia della scheda, continua a proporre prodotti rimossi, non trova i nuovi. <strong>Il sistema risponde con sicurezza usando informazioni che non sono più vere</strong> — e nessuno lo nota subito, perché la risposta sembra plausibile.</p>
+
+  <div class="diagram">
+    <div class="diagram-title">La desincronizzazione nel tempo — un catalogo di esempio</div>
+
+    <div style="font-family:'DM Mono',monospace; font-size:8.5px; letter-spacing:1px; text-transform:uppercase; color:var(--ink4); margin-bottom:8px;">Timeline — 60 giorni dopo l'indicizzazione iniziale</div>
+
+    <div class="desync-timeline">
+      <div class="dt-time">
+        <div class="dt-time-cell" style="flex:0.5">Giorno 0</div>
+        <div class="dt-time-cell">Giorno 10</div>
+        <div class="dt-time-cell">Giorno 25</div>
+        <div class="dt-time-cell">Giorno 40</div>
+        <div class="dt-time-cell">Giorno 60</div>
+      </div>
+
+      <div class="dt-row">
+        <div class="dt-label">Database fonte</div>
+        <div class="dt-cells">
+          <div class="dt-cell" style="flex:0.5; background:var(--ok-bg); color:var(--ok);">250 prodotti ✓</div>
+          <div class="dt-cell" style="background:var(--warm-bg); color:var(--warm);">+5 nuovi<br>2 aggiornati</div>
+          <div class="dt-cell" style="background:var(--bad-bg); color:var(--bad);">3 rimossi<br>8 aggiornati</div>
+          <div class="dt-cell" style="background:var(--warm-bg); color:var(--warm);">+12 nuovi<br>5 aggiornati</div>
+          <div class="dt-cell" style="background:var(--bad-bg); color:var(--bad);">268 prodotti<br>30 diversi da g.0</div>
+        </div>
+      </div>
+
+      <div class="dt-row">
+        <div class="dt-label">Vector store</div>
+        <div class="dt-cells">
+          <div class="dt-cell" style="flex:0.5; background:var(--ok-bg); color:var(--ok);">250 prodotti ✓</div>
+          <div class="dt-cell" style="background:var(--ok-bg); color:var(--ok);">250 prodotti<br>(non aggiornato)</div>
+          <div class="dt-cell" style="background:var(--ok-bg); color:var(--ok);">250 prodotti<br>(non aggiornato)</div>
+          <div class="dt-cell" style="background:var(--ok-bg); color:var(--ok);">250 prodotti<br>(non aggiornato)</div>
+          <div class="dt-cell" style="background:var(--bad-bg); color:var(--bad);">250 prodotti<br>30 sbagliati/mancanti</div>
+        </div>
+      </div>
+
+      <div class="dt-row">
+        <div class="dt-label">Impatto</div>
+        <div class="dt-cells">
+          <div class="dt-cell" style="flex:0.5; color:var(--ink4);">nessuno</div>
+          <div class="dt-cell" style="color:var(--ink4);">i 5 nuovi<br>non trovati</div>
+          <div class="dt-cell" style="color:var(--warm);">3 rimossi<br>ancora proposti</div>
+          <div class="dt-cell" style="color:var(--warm);">12 nuovi<br>invisibili</div>
+          <div class="dt-cell" style="background:var(--bad-bg); color:var(--bad); font-weight:500;">11% del catalogo<br>sbagliato o mancante</div>
+        </div>
+      </div>
+    </div>
+
+    <p style="font-size:12px; color:var(--ink4); margin-top:14px; margin-bottom:0;">Dopo 60 giorni senza aggiornamenti, il vector store è desincronizzato su oltre il 10% del catalogo. Il sistema non segnala nessun errore — risponde normalmente, ma su informazioni parzialmente obsolete.</p>
+  </div>
+
+  <p>La desincronizzazione è silenziosa per definizione. Non produce errori tecnici — il vector store funziona correttamente, semplicemente restituisce dati vecchi. Gli unici segnali sono di qualità: risposte meno accurate, prodotti proposti che non esistono più, mancanza di prodotti nuovi nei risultati.</p>
+
+  <div class="callout callout-warn">
+    <div class="callout-title">I tre tipi di cambiamento che producono desincronizzazione</div>
+    <p><strong>Aggiornamento:</strong> un documento esistente cambia — nuova versione della scheda, prezzi modificati, specifiche riviste. I vecchi chunk rimangono nel vector store con le informazioni obsolete.</p>
+    <p><strong>Aggiunta:</strong> nuovi documenti entrano nel corpus — nuovi prodotti, nuovi articoli, nuove policy. Non sono nel vector store e non vengono mai trovati dal retrieval.</p>
+    <p><strong>Cancellazione:</strong> documenti vengono rimossi dalla fonte — prodotti fuori catalogo, contenuti deprecati. Continuano a essere restituiti dal retrieval come se esistessero ancora.</p>
+  </div>
+
+  <div class="key-insight">
+    <div class="ki-label">Il principio da tenere a mente</div>
+    <div class="ki-text">Il vector store non è un database — è un indice derivato. La fonte di verità rimane sempre la fonte originale. Il vector store è valido solo quanto è fedele alla fonte.</div>
+  </div>
+
+</div>
+</div>
+
+
+<!-- ══════════════════════════════════
+     S1 — TRE ARCHITETTURE
+══════════════════════════════════ -->
+<div class="sect" id="s1">
+<div class="cw">
+
+  <div class="s-eyebrow">Le soluzioni disponibili</div>
+  <div class="s-title">Tre architetture di sincronizzazione</div>
+
+  <p>Esistono tre approcci fondamentali per mantenere il vector store allineato con la fonte. Differiscono per complessità implementativa, freschezza dei dati e costo operativo. Non esiste un approccio universalmente migliore — la scelta dipende da quanto spesso cambiano i dati e quanto rapidamente il vector store deve riflettere quei cambiamenti.</p>
+
+  <!-- Arch 1: Batch -->
+  <div class="arch-card">
+    <div class="ac-head">
+      <div class="ac-badge" style="background:var(--teal-bg); color:var(--teal);">Architettura 1</div>
+      <div class="ac-name">Reindicizzazione batch periodica</div>
+      <div class="ac-meta">
+        <div class="ac-complexity">Complessità: bassa</div>
+        <div class="ac-freshness" style="background:var(--warm-bg); color:var(--warm);">Freschezza: ore / giorni</div>
+      </div>
+    </div>
+    <div class="ac-body">
+      <div>
+        <div class="ac-col-label">Come funziona</div>
+        <div class="flow-pipeline">
+          <div class="fp-step">
+            <div class="fp-num" style="color:var(--teal);">1</div>
+            <div class="fp-body">
+              <div class="fp-label">Scheduler</div>
+              <div class="fp-title">Avvio periodico</div>
+              <div class="fp-text">Un job schedulato (ogni notte, ogni settimana) avvia il processo di reindicizzazione. Nessun trigger sui dati — solo il tempo che scorre.</div>
+            </div>
+          </div>
+          <div class="fp-step">
+            <div class="fp-num" style="color:var(--teal);">2</div>
+            <div class="fp-body">
+              <div class="fp-label">Estrazione</div>
+              <div class="fp-title">Legge tutti i documenti dalla fonte</div>
+              <div class="fp-text">Scarica l'intero corpus dalla fonte — tutti i prodotti, tutti i documenti. Non distingue tra modificati e non modificati.</div>
+            </div>
+          </div>
+          <div class="fp-step">
+            <div class="fp-num" style="color:var(--teal);">3</div>
+            <div class="fp-body">
+              <div class="fp-label">Ricostruzione</div>
+              <div class="fp-title">Svuota e ripopola il vector store</div>
+              <div class="fp-text">Cancella tutti i record esistenti nel vector store. Chunka, calcola gli embedding, reinserisce tutto da zero. Al termine, il vector store è perfettamente allineato con la fonte.</div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div>
+        <div class="ac-col-label">Quando usarla e trade-off</div>
+        <div class="ac-list" style="margin-bottom:14px;">
+          <div class="ac-item"><div class="ac-dot" style="background:var(--ok)"></div><div>Semplicissima da implementare — un cron job e uno script</div></div>
+          <div class="ac-item"><div class="ac-dot" style="background:var(--ok)"></div><div>Robusta: non accumula errori, ogni run riparte da zero</div></div>
+          <div class="ac-item"><div class="ac-dot" style="background:var(--ok)"></div><div>Nessuna logica di "cosa è cambiato" — sempre corretto dopo il run</div></div>
+          <div class="ac-item"><div class="ac-dot" style="background:var(--bad)"></div><div>Costosa per corpus grandi — embedding di tutto ogni volta</div></div>
+          <div class="ac-item"><div class="ac-dot" style="background:var(--bad)"></div><div>Finestra di desincronizzazione proporzionale all'intervallo di run</div></div>
+          <div class="ac-item"><div class="ac-dot" style="background:var(--bad)"></div><div>Durante il run il vector store può essere temporaneamente inconsistente</div></div>
+        </div>
+        <div style="padding:10px 14px; background:var(--teal-bg); border:1px solid var(--teal-bd); border-radius:3px; font-size:12.5px; color:var(--teal);">
+          <strong>Ideale quando:</strong> i dati cambiano raramente (settimanale o meno), il corpus è piccolo (embedding di tutto costa poco), la freschezza giornaliera è accettabile.
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Arch 2: Incrementale -->
+  <div class="arch-card">
+    <div class="ac-head">
+      <div class="ac-badge" style="background:var(--accent2); color:var(--accent);">Architettura 2</div>
+      <div class="ac-name">Reindicizzazione incrementale a eventi</div>
+      <div class="ac-meta">
+        <div class="ac-complexity">Complessità: media</div>
+        <div class="ac-freshness" style="background:var(--ok-bg); color:var(--ok);">Freschezza: minuti</div>
+      </div>
+    </div>
+    <div class="ac-body">
+      <div>
+        <div class="ac-col-label">Come funziona</div>
+        <div class="flow-pipeline">
+          <div class="fp-step">
+            <div class="fp-num" style="color:var(--accent);">1</div>
+            <div class="fp-body">
+              <div class="fp-label">Trigger / evento</div>
+              <div class="fp-title">Un documento cambia nella fonte</div>
+              <div class="fp-text">Un trigger sul database, un webhook da un CMS, o un evento su una coda di messaggi segnala che un documento specifico è stato creato, aggiornato o cancellato.</div>
+            </div>
+          </div>
+          <div class="fp-step">
+            <div class="fp-num" style="color:var(--accent);">2</div>
+            <div class="fp-body">
+              <div class="fp-label">Identificazione</div>
+              <div class="fp-title">Si identifica il documento coinvolto</div>
+              <div class="fp-text">L'evento porta con sé l'identificatore del documento modificato. Non serve guardare il corpus intero — si sa già cosa è cambiato.</div>
+            </div>
+          </div>
+          <div class="fp-step">
+            <div class="fp-num" style="color:var(--accent);">3</div>
+            <div class="fp-body">
+              <div class="fp-label">Aggiornamento mirato</div>
+              <div class="fp-title">Si aggiornano solo i chunk di quel documento</div>
+              <div class="fp-text">Si eliminano tutti i chunk con il <code>doc_id</code> del documento modificato. Si rechunkano e reindicizzano solo quei contenuti. Il resto del vector store rimane intatto.</div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div>
+        <div class="ac-col-label">Quando usarla e trade-off</div>
+        <div class="ac-list" style="margin-bottom:14px;">
+          <div class="ac-item"><div class="ac-dot" style="background:var(--ok)"></div><div>Freschezza quasi real-time — il vector store riflette la fonte in minuti</div></div>
+          <div class="ac-item"><div class="ac-dot" style="background:var(--ok)"></div><div>Costo basso — si reindicizza solo ciò che cambia, non tutto</div></div>
+          <div class="ac-item"><div class="ac-dot" style="background:var(--ok)"></div><div>Scalabile — funziona anche con corpus molto grandi</div></div>
+          <div class="ac-item"><div class="ac-dot" style="background:var(--bad)"></div><div>Richiede un meccanismo affidabile di propagazione degli eventi</div></div>
+          <div class="ac-item"><div class="ac-dot" style="background:var(--bad)"></div><div>Se un evento viene perso, il documento rimane desincronizzato silenziosamente</div></div>
+          <div class="ac-item"><div class="ac-dot" style="background:var(--bad)"></div><div>Richiede logica di gestione errori e retry per gli eventi falliti</div></div>
+        </div>
+        <div style="padding:10px 14px; background:var(--accent2); border:1px solid var(--accent3); border-radius:3px; font-size:12.5px; color:var(--accent);">
+          <strong>Ideale quando:</strong> i dati cambiano frequentemente, il corpus è grande, la freschezza in minuti è necessaria.
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Arch 3: Ibrida -->
+  <div class="arch-card">
+    <div class="ac-head">
+      <div class="ac-badge" style="background:var(--note-bg); color:var(--note);">Architettura 3</div>
+      <div class="ac-name">Fonte + indice sincronizzato (il "meglio dei due mondi")</div>
+      <div class="ac-meta">
+        <div class="ac-complexity">Complessità: alta</div>
+        <div class="ac-freshness" style="background:var(--ok-bg); color:var(--ok);">Freschezza: secondi</div>
+      </div>
+    </div>
+    <div class="ac-body">
+      <div>
+        <div class="ac-col-label">Come funziona</div>
+        <p style="font-size:13px; color:var(--ink3); line-height:1.65; margin-bottom:12px;">Invece di mantenere la sincronizzazione come processo separato, il vector store diventa parte integrante del sistema di scrittura. Ogni operazione sulla fonte include automaticamente l'aggiornamento dell'indice.</p>
+        <div class="flow-pipeline">
+          <div class="fp-step">
+            <div class="fp-num" style="color:var(--note);">1</div>
+            <div class="fp-body">
+              <div class="fp-title">Scrittura transazionale</div>
+              <div class="fp-text">Quando si aggiorna un documento nella fonte, l'aggiornamento del vector store avviene nella stessa transazione (o in una transazione compensativa garantita). Non è possibile aggiornare la fonte senza aggiornare l'indice.</div>
+            </div>
+          </div>
+          <div class="fp-step">
+            <div class="fp-num" style="color:var(--note);">2</div>
+            <div class="fp-body">
+              <div class="fp-title">CDC — Change Data Capture</div>
+              <div class="fp-text">In sistemi distribuiti, si usa il CDC: si legge il log delle transazioni del database (WAL in PostgreSQL) e si propagano i cambiamenti al vector store in tempo quasi reale, garantendo consistenza eventuale.</div>
+            </div>
+          </div>
+          <div class="fp-step">
+            <div class="fp-num" style="color:var(--note);">3</div>
+            <div class="fp-body">
+              <div class="fp-title">Riconciliazione periodica</div>
+              <div class="fp-text">Un job periodico confronta il conteggio e le versioni tra fonte e indice per rilevare eventuali inconsistenze sfuggite al meccanismo principale. È la rete di sicurezza, non il meccanismo principale.</div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div>
+        <div class="ac-col-label">Quando usarla e trade-off</div>
+        <div class="ac-list" style="margin-bottom:14px;">
+          <div class="ac-item"><div class="ac-dot" style="background:var(--ok)"></div><div>Consistenza molto alta — quasi impossibile avere desincronizzazione</div></div>
+          <div class="ac-item"><div class="ac-dot" style="background:var(--ok)"></div><div>Freschezza in secondi — l'indice riflette la fonte quasi istantaneamente</div></div>
+          <div class="ac-item"><div class="ac-dot" style="background:var(--bad)"></div><div>Complessità elevata — richiede infrastruttura di messaggistica (Kafka, RabbitMQ) o CDC</div></div>
+          <div class="ac-item"><div class="ac-dot" style="background:var(--bad)"></div><div>Accoppia il sistema di scrittura al vector store — un bug nell'indicizzazione può bloccare le scritture</div></div>
+          <div class="ac-item"><div class="ac-dot" style="background:var(--bad)"></div><div>Richiede gestione di transazioni distribuite o compensazione</div></div>
+        </div>
+        <div style="padding:10px 14px; background:var(--note-bg); border:1px solid var(--note-bd); border-radius:3px; font-size:12.5px; color:var(--note);">
+          <strong>Ideale quando:</strong> la desincronizzazione anche di pochi minuti è inaccettabile, il sistema è critico per il business, c'è un team di ingegneria dedicato.
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+</div>
+
+
+<!-- ══════════════════════════════════
+     S2 — RILEVARE I CAMBIAMENTI
+══════════════════════════════════ -->
+<div class="sect" id="s2">
+<div class="cw">
+
+  <div class="s-eyebrow">Il cuore del problema</div>
+  <div class="s-title">Come si rileva che qualcosa è cambiato nella fonte</div>
+
+  <p>Per le Architetture 2 e 3, il problema centrale è: <strong>come sa il sistema che un documento è cambiato?</strong> Esistono quattro meccanismi principali, con caratteristiche molto diverse. La scelta dipende da quale tipo di fonte stai usando e da quanta complessità puoi permetterti.</p>
+
+  <div class="change-methods">
+    <div class="cm-card">
+      <div class="cm-head" style="background:var(--teal);">Timestamp di modifica</div>
+      <div class="cm-body">
+        <p>Ogni documento ha un campo <code>updated_at</code>. Il sistema di indicizzazione tiene traccia del timestamp dell'ultimo run e processa solo i documenti con <code>updated_at</code> più recente.</p>
+        <div class="cm-pro">Semplice da implementare</div>
+        <div class="cm-pro">Funziona su qualsiasi database relazionale</div>
+        <div class="cm-con">Non rileva le cancellazioni — i documenti eliminati non hanno timestamp</div>
+        <div class="cm-con">Richiede che la fonte abbia e mantenga il campo updated_at</div>
+      </div>
+    </div>
+    <div class="cm-card">
+      <div class="cm-head" style="background:var(--accent);">Hash del contenuto</div>
+      <div class="cm-body">
+        <p>Si calcola un hash (MD5, SHA-256) del testo di ogni documento. Si confronta con l'hash memorizzato al momento dell'ultima indicizzazione. Se diverso, il documento è cambiato.</p>
+        <div class="cm-pro">Rileva qualsiasi modifica al contenuto</div>
+        <div class="cm-pro">Non dipende da metadati della fonte</div>
+        <div class="cm-con">Richiede di leggere tutti i documenti per calcolare gli hash</div>
+        <div class="cm-con">Non rileva le cancellazioni — un documento cancellato non viene confrontato</div>
+      </div>
+    </div>
+    <div class="cm-card">
+      <div class="cm-head" style="background:var(--note);">CDC — Change Data Capture</div>
+      <div class="cm-body">
+        <p>Si legge direttamente il log delle transazioni del database (WAL in PostgreSQL, binlog in MySQL). Ogni INSERT, UPDATE, DELETE viene catturato e propagato al vector store.</p>
+        <div class="cm-pro">Rileva tutti i tipi di cambiamento incluse le cancellazioni</div>
+        <div class="cm-pro">Quasi real-time, zero polling</div>
+        <div class="cm-con">Richiede accesso al log delle transazioni del database</div>
+        <div class="cm-con">Infrastruttura più complessa (Debezium, Kafka Connect)</div>
+      </div>
+    </div>
+  </div>
+
+  <p>Nella pratica, la combinazione più efficace per sistemi di media complessità è <strong>timestamp + riconciliazione periodica con hash</strong>: il timestamp gestisce gli aggiornamenti in tempo quasi reale, la riconciliazione periodica con hash individua le cancellazioni e le eventuali discrepanze sfuggite al timestamp.</p>
+
+  <div class="callout callout-warn">
+    <div class="callout-title">Il problema delle cancellazioni — il più insidioso</div>
+    <p>Le cancellazioni sono il tipo di cambiamento più difficile da rilevare. Un documento eliminato dalla fonte non emette nessun segnale nel vector store — semplicemente sparisce. I chunk corrispondenti rimangono nell'indice e continuano a essere restituiti dal retrieval.</p>
+    <p>L'unico modo per rilevarle con certezza è la <strong>riconciliazione</strong>: confrontare periodicamente la lista di tutti i <code>doc_id</code> presenti nel vector store con la lista di tutti i documenti presenti nella fonte. I <code>doc_id</code> presenti nell'indice ma non nella fonte corrispondono a documenti cancellati.</p>
+    <div class="code-block" style="margin-top:14px;">
+      <div class="cb-head">Riconciliazione cancellazioni — pseudocodice</div>
+      <div class="cb-body"><span class="cb-comment"># ID nel vector store</span>
+ids_in_indice = set(vector_store.get_all_doc_ids())
+
+<span class="cb-comment"># ID ancora presenti nella fonte</span>
+ids_in_fonte = set(db.query(<span class="cb-str">"SELECT id FROM prodotti"</span>))
+
+<span class="cb-comment"># Documenti cancellati dalla fonte ma ancora nell'indice</span>
+da_eliminare = ids_in_indice - ids_in_fonte
+
+<span class="cb-kw">for</span> doc_id <span class="cb-kw">in</span> da_eliminare:
+    vector_store.delete_by_doc_id(doc_id)
+    log.info(<span class="cb-str">f"Rimosso dall'indice: {doc_id}"</span>)</div>
+    </div>
+  </div>
+
+</div>
+</div>
+
+
+<!-- ══════════════════════════════════
+     S3 — AGGIORNARE IL VECTOR STORE
+══════════════════════════════════ -->
+<div class="sect" id="s3">
+<div class="cw">
+
+  <div class="s-eyebrow">La meccanica dell'aggiornamento</div>
+  <div class="s-title">Come si aggiorna il vector store senza rompere nulla</div>
+
+  <p>Saputo che un documento è cambiato, come si aggiorna il vector store in modo corretto? La risposta non è ovvia — non si "modifica" un chunk come si modifica una riga in un database relazionale, perché il chunking del documento aggiornato potrebbe produrre un numero diverso di chunk, con confini diversi.</p>
+
+  <div class="callout callout-accent">
+    <div class="callout-title">Il principio di aggiornamento: delete-and-reinsert</div>
+    <p>La strategia universalmente corretta per aggiornare un documento nel vector store è: <strong>elimina tutti i chunk associati al doc_id, poi reindicizza il documento da zero</strong>. Non si aggiornano i chunk esistenti — si ripartono da zero per quel documento.</p>
+    <p>Questo è corretto perché il documento aggiornato potrebbe avere una struttura di paragrafi diversa, generando chunk con confini completamente diversi. Non ha senso cercare di "mappare" i vecchi chunk sui nuovi.</p>
+  </div>
+
+  <div class="diagram">
+    <div class="diagram-title">Il ciclo di aggiornamento corretto per un singolo documento</div>
+    <div class="flow-pipeline">
+      <div class="fp-step">
+        <div class="fp-num" style="color:var(--accent);">1</div>
+        <div class="fp-body">
+          <div class="fp-label">Rilevamento</div>
+          <div class="fp-title">Il documento PRD-2847 è cambiato</div>
+          <div class="fp-text">Il sistema rileva la modifica tramite timestamp, hash o evento. Conosce solo il <code>doc_id</code> — non sa ancora cosa è cambiato nel contenuto.</div>
+        </div>
+      </div>
+      <div class="fp-step">
+        <div class="fp-num" style="color:var(--accent);">2</div>
+        <div class="fp-body">
+          <div class="fp-label">Staging</div>
+          <div class="fp-title">Prepara i nuovi chunk in memoria — non ancora nel vector store</div>
+          <div class="fp-text">Leggi il documento aggiornato dalla fonte. Chunkalo, calcola gli embedding. Tieni i nuovi chunk in memoria senza ancora scriverli. Questo evita un momento in cui il documento non è né vecchio né nuovo.</div>
+        </div>
+      </div>
+      <div class="fp-step">
+        <div class="fp-num" style="color:var(--accent);">3</div>
+        <div class="fp-body">
+          <div class="fp-label">Sostituzione atomica</div>
+          <div class="fp-title">Elimina i vecchi chunk e inserisci i nuovi</div>
+          <div class="fp-text">Esegui le due operazioni in rapida sequenza: <code>DELETE WHERE doc_id = PRD-2847</code>, poi <code>INSERT</code> dei nuovi chunk. Se il vector store supporta le transazioni, usale. Se no, la finestra di inconsistenza è minima (millisecondi).</div>
+        </div>
+      </div>
+      <div class="fp-step">
+        <div class="fp-num" style="color:var(--accent);">4</div>
+        <div class="fp-body">
+          <div class="fp-label">Registrazione</div>
+          <div class="fp-title">Aggiorna i metadati di sincronizzazione</div>
+          <div class="fp-text">Registra nel tuo sistema di tracking: timestamp dell'aggiornamento, hash del contenuto, numero di chunk prodotti. Servirà per la riconciliazione periodica e per il monitoraggio.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="callout callout-note">
+    <div class="callout-title">Gestire gli errori durante l'aggiornamento</div>
+    <p>L'operazione più rischiosa è la sequenza delete-insert: se il delete avviene ma l'insert fallisce per un errore (timeout API di embedding, problema di rete), il documento sparisce dall'indice senza essere reinserito.</p>
+    <p>La strategia più robusta: usa un <strong>campo di stato</strong> sui chunk nel vector store (<code>status: "active" | "pending_deletion"</code>). Prima marca i vecchi chunk come <code>pending_deletion</code>, poi inserisci i nuovi come <code>active</code>, poi elimina fisicamente quelli marcati. Se qualcosa va storto nel mezzo, i chunk vecchi sono ancora accessibili e il documento rimane nell'indice in versione precedente — meglio che sparire del tutto.</p>
+  </div>
+
+  <div class="callout callout-ok">
+    <div class="callout-title">Ottimizzare il costo degli embedding</div>
+    <p>Ogni reindicizzazione richiede chiamate API al modello di embedding — che hanno un costo. Su un corpus di medie dimensioni con aggiornamenti frequenti, questo può diventare significativo.</p>
+    <p><strong>Strategia di ottimizzazione:</strong> prima di reindicizzare, confronta l'hash del testo del documento con l'hash registrato al momento dell'ultima indicizzazione. Se sono uguali, il documento non è realmente cambiato (anche se il timestamp suggeriva il contrario) — salta la reindicizzazione.</p>
+    <p>Questa semplice verifica può ridurre le chiamate di embedding del 60–80% in sistemi dove i metadati cambiano frequentemente ma il testo descrittivo rimane stabile.</p>
+  </div>
+
+</div>
+</div>
+
+
+<!-- ══════════════════════════════════
+     S4 — MONITORARE LA SALUTE
+══════════════════════════════════ -->
+<div class="sect" id="s4">
+<div class="cw">
+
+  <div class="s-eyebrow">Mantenere il sistema sano</div>
+  <div class="s-title">Come monitorare che il vector store sia allineato</div>
+
+  <p>Un sistema di sincronizzazione senza monitoraggio è un sistema di cui non ti puoi fidare. Anche la migliore architettura ha bug, eventi persi, timeout occasionali. Il monitoraggio è ciò che trasforma una desincronizzazione silenziosa in un problema visibile che può essere risolto.</p>
+
+  <div class="diagram">
+    <div class="diagram-title">Metriche chiave di salute del vector store</div>
+
+    <div style="display:flex; flex-direction:column; gap:16px; margin-top:4px;">
+
+      <div style="border:1px solid var(--border2); border-radius:4px; overflow:hidden;">
+        <div style="padding:8px 16px; background:var(--ok); font-family:'DM Mono',monospace; font-size:9px; letter-spacing:2px; text-transform:uppercase; color:rgba(255,255,255,.8);">Metrica 1 — Conteggio documenti</div>
+        <div style="padding:12px 16px; font-size:13px; color:var(--ink3); line-height:1.6;">
+          <strong style="color:var(--ink2);">Cosa misura:</strong> il numero di <code>doc_id</code> distinti nel vector store vs. il numero di documenti nella fonte.<br>
+          <strong style="color:var(--ink2);">Come calcolarla:</strong> <code>SELECT COUNT(DISTINCT doc_id) FROM vector_store</code> confrontato con <code>SELECT COUNT(*) FROM prodotti</code>.<br>
+          <strong style="color:var(--ink2);">Soglia di allarme:</strong> differenza &gt; 0. Qualsiasi discrepanza indica documenti non indicizzati o non rimossi.
+        </div>
+      </div>
+
+      <div style="border:1px solid var(--border2); border-radius:4px; overflow:hidden;">
+        <div style="padding:8px 16px; background:var(--accent); font-family:'DM Mono',monospace; font-size:9px; letter-spacing:2px; text-transform:uppercase; color:rgba(255,255,255,.8);">Metrica 2 — Età media dei chunk</div>
+        <div style="padding:12px 16px; font-size:13px; color:var(--ink3); line-height:1.6;">
+          <strong style="color:var(--ink2);">Cosa misura:</strong> quanto tempo è passato mediamente dall'ultima indicizzazione di ogni documento.<br>
+          <strong style="color:var(--ink2);">Come calcolarla:</strong> confronta il campo <code>last_indexed_at</code> nel vector store con <code>updated_at</code> nella fonte. La differenza media è il "ritardo di sincronizzazione".<br>
+          <strong style="color:var(--ink2);">Soglia di allarme:</strong> dipende dall'architettura scelta. Per batch notturno: &gt;25 ore. Per incrementale: &gt;30 minuti.
+        </div>
+      </div>
+
+      <div style="border:1px solid var(--border2); border-radius:4px; overflow:hidden;">
+        <div style="padding:8px 16px; background:var(--note); font-family:'DM Mono',monospace; font-size:9px; letter-spacing:2px; text-transform:uppercase; color:rgba(255,255,255,.8);">Metrica 3 — Documenti con hash divergente</div>
+        <div style="padding:12px 16px; font-size:13px; color:var(--ink3); line-height:1.6;">
+          <strong style="color:var(--ink2);">Cosa misura:</strong> quanti documenti hanno un contenuto diverso nella fonte rispetto all'ultima indicizzazione registrata.<br>
+          <strong style="color:var(--ink2);">Come calcolarla:</strong> confronta l'hash del testo attuale nella fonte con il <code>content_hash</code> memorizzato al momento dell'indicizzazione.<br>
+          <strong style="color:var(--ink2);">Soglia di allarme:</strong> qualsiasi numero &gt; 0 che persiste per più di 2× l'intervallo di aggiornamento atteso.
+        </div>
+      </div>
+
+      <div style="border:1px solid var(--border2); border-radius:4px; overflow:hidden;">
+        <div style="padding:8px 16px; background:var(--warm); font-family:'DM Mono',monospace; font-size:9px; letter-spacing:2px; text-transform:uppercase; color:rgba(255,255,255,.8);">Metrica 4 — Tasso di errore nelle indicizzazioni</div>
+        <div style="padding:12px 16px; font-size:13px; color:var(--ink3); line-height:1.6;">
+          <strong style="color:var(--ink2);">Cosa misura:</strong> quante operazioni di indicizzazione falliscono (timeout API embedding, errori di rete, eccezioni).<br>
+          <strong style="color:var(--ink2);">Come calcolarla:</strong> conta gli errori nel log del sistema di sincronizzazione. Traccia anche i retry e quanti retry hanno avuto successo.<br>
+          <strong style="color:var(--ink2);">Soglia di allarme:</strong> tasso di errore &gt; 1% senza retry riuscito. Ogni errore non recuperato è un documento desincronizzato.
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <div class="callout callout-teal">
+    <div class="callout-title">La riconciliazione come strumento di monitoraggio attivo</div>
+    <p>Anche con Architettura 2 o 3, una riconciliazione periodica (settimanale o mensile) è sempre utile — non come meccanismo principale di sincronizzazione, ma come rete di sicurezza che rileva le anomalie sfuggite al sistema principale.</p>
+    <p>Una riconciliazione completa confronta: (1) conteggio documenti fonte vs. indice, (2) hash del contenuto per ogni documento, (3) numero di chunk per ogni documento rispetto all'atteso. Qualsiasi discrepanza viene loggata e, se significativa, triggerata una reindicizzazione del documento coinvolto.</p>
+  </div>
+
+</div>
+</div>
+
+
+<!-- ══════════════════════════════════
+     S5 — COME SCEGLIERE
+══════════════════════════════════ -->
+<div class="sect" id="s5">
+<div class="cw">
+
+  <div class="s-eyebrow">La guida decisionale</div>
+  <div class="s-title">Quale architettura per quale contesto</div>
+
+  <p>La scelta dell'architettura di sincronizzazione dipende fondamentalmente da due variabili: la <strong>frequenza di cambiamento</strong> del corpus e la <strong>tolleranza alla desincronizzazione</strong> del caso d'uso. Una terza variabile — la complessità che il team può gestire — è spesso la più determinante in pratica.</p>
+
+  <table class="dec-table">
+    <thead>
+      <tr>
+        <th>Scenario</th>
+        <th>Frequenza cambiamenti</th>
+        <th>Tolleranza desincronizzazione</th>
+        <th>Architettura consigliata</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>Catalogo prodotti stabile, aggiornamenti rari</td>
+        <td>Settimanale o meno</td>
+        <td>Alta — aggiornamento in giornata è ok</td>
+        <td><strong>Batch notturno</strong> (Arch. 1). Semplice, robusto, basso costo.</td>
+      </tr>
+      <tr>
+        <td>Catalogo con aggiornamenti frequenti, nuovi prodotti regolari</td>
+        <td>Giornaliera, più volte al giorno</td>
+        <td>Media — aggiornamento entro l'ora</td>
+        <td><strong>Incrementale a eventi</strong> (Arch. 2). Timestamp + trigger sul database. Con riconciliazione settimanale per le cancellazioni.</td>
+      </tr>
+      <tr>
+        <td>Knowledge base aziendale con editor multipli</td>
+        <td>Continua, imprevedibile</td>
+        <td>Media-alta — minuti accettabili</td>
+        <td><strong>Incrementale a eventi</strong> (Arch. 2) con webhook dal CMS o sistema di gestione documenti.</td>
+      </tr>
+      <tr>
+        <td>Dati critici — policy legali, info mediche, dati finanziari</td>
+        <td>Variabile</td>
+        <td>Bassa — la desincronizzazione è inaccettabile</td>
+        <td><strong>Fonte + indice sincronizzato</strong> (Arch. 3) con CDC. La complessità è giustificata dal rischio.</td>
+      </tr>
+      <tr>
+        <td>Corpus da fonti esterne (web, API terze parti)</td>
+        <td>Imprevedibile</td>
+        <td>Media — polling periodico accettabile</td>
+        <td><strong>Batch con polling</strong> (variante dell'Arch. 1): si interroga la fonte ogni ora o ogni 4 ore, si processano solo i documenti con timestamp recente.</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <div class="callout callout-ok">
+    <div class="callout-title">Il percorso evolutivo consigliato</div>
+    <p>Non è necessario scegliere l'architettura finale dall'inizio. Il percorso più pragmatico è evolutivo:</p>
+    <p><strong>Fase 1 — Batch semplice:</strong> inizia con un cron job notturno che reindicizza tutto. Zero complessità, ti dà subito un sistema funzionante. Monitora quanto spesso i dati cambiano e quanto la desincronizzazione crea problemi reali.</p>
+    <p><strong>Fase 2 — Incrementale se serve:</strong> se la desincronizzazione giornaliera diventa un problema concreto (non teorico), aggiungi i trigger sul database per gli aggiornamenti + la riconciliazione settimanale per le cancellazioni. Mantieni il batch notturno come fallback.</p>
+    <p><strong>Fase 3 — Sincronizzazione stretta solo se necessario:</strong> passa all'Architettura 3 solo se hai un caso d'uso dove anche pochi minuti di desincronizzazione producono problemi reali e misurabili. La complessità aggiuntiva va giustificata da un bisogno concreto, non da perfezione architettuale.</p>
+  </div>
+
+  <div class="key-insight">
+    <div class="ki-label">Il principio che guida la scelta</div>
+    <div class="ki-text">L'architettura giusta è quella più semplice che garantisce la freschezza di cui hai davvero bisogno. La complessità si giustifica solo con un bisogno concreto — non con la possibilità astratta che i dati possano cambiare.</div>
+  </div>
+
+  <!-- recap serie -->
+  <div style="margin-top:40px; padding:24px 28px; border:1px solid var(--border2); border-radius:6px; background:var(--bg2);">
+    <div style="font-family:'DM Mono',monospace; font-size:9px; letter-spacing:2.5px; text-transform:uppercase; color:var(--ink4); margin-bottom:14px; padding-bottom:10px; border-bottom:1px solid var(--border);">Serie RAG Pratico — tutti i report</div>
+    <div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:10px;">
+      <div style="font-size:12.5px; color:var(--ink3); line-height:1.55;"><span style="font-family:'DM Mono',monospace; font-size:9px; color:var(--ink4);">R1</span><br>Come l'LLM usa le informazioni</div>
+      <div style="font-size:12.5px; color:var(--ink3); line-height:1.55;"><span style="font-family:'DM Mono',monospace; font-size:9px; color:var(--ink4);">R2</span><br>Indicizzazione e vector store</div>
+      <div style="font-size:12.5px; color:var(--ink3); line-height:1.55;"><span style="font-family:'DM Mono',monospace; font-size:9px; color:var(--ink4);">R3</span><br>Chunking</div>
+      <div style="font-size:12.5px; color:var(--ink3); line-height:1.55;"><span style="font-family:'DM Mono',monospace; font-size:9px; color:var(--ink4);">R4</span><br>Dalla query al risultato</div>
+      <div style="font-size:12.5px; color:var(--ink3); line-height:1.55;"><span style="font-family:'DM Mono',monospace; font-size:9px; color:var(--ink4);">R5</span><br>Retrieval classico vs. screening</div>
+      <div style="font-size:12.5px; color:var(--ink3); line-height:1.55;"><span style="font-family:'DM Mono',monospace; font-size:9px; color:var(--ink4);">R6</span><br>Il caso catalogo prodotti</div>
+      <div style="font-size:12.5px; color:var(--accent); font-weight:500; line-height:1.55; grid-column:span 3;"><span style="font-family:'DM Mono',monospace; font-size:9px; color:var(--accent); font-weight:400;">R-S · questo</span><br>Sincronizzazione e aggiornamento del vector store</div>
+    </div>
+  </div>
+
+</div>
+</div>
+
+<!-- FOOTER -->
+<div class="footer">
+  <span>Serie RAG Pratico · Report supplementare · Sincronizzazione del vector store</span>
+  <span>2026</span>
+</div>
+
+<script>
+function show(n) {
+  document.querySelectorAll('.sect').forEach(s => s.classList.remove('active'));
+  document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('s'+n).classList.add('active');
+  document.querySelectorAll('.nav-btn')[n].classList.add('active');
+  window.scrollTo({top:0, behavior:'smooth'});
+}
+</script>
+</body>
+</html>

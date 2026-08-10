@@ -1,0 +1,773 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Rischi AI — Dati e Compliance</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&family=Source+Sans+3:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --accent:       #1A5C8A;
+    --accent-light: #C8DFF0;
+    --accent-dim:   #0F3D5E;
+    --ink:          #1A1A1A;
+    --ink-mid:      #444444;
+    --ink-light:    #777777;
+    --paper:        #F8FAFC;
+    --paper-alt:    #EEF3F8;
+    --border:       #D8E3ED;
+    --green:        #4A8C4F;
+    --green-light:  #EAF3EB;
+    --amber:        #B35900;
+    --amber-light:  #FFF4E5;
+    --sidebar-w:    260px;
+    --content-max:  800px;
+  }
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  html { scroll-behavior: smooth; }
+
+  body {
+    font-family: 'Source Sans 3', sans-serif;
+    font-size: 16px; line-height: 1.75;
+    color: var(--ink); background: var(--paper);
+    display: flex; min-height: 100vh;
+  }
+
+  nav#sidebar {
+    width: var(--sidebar-w); min-height: 100vh;
+    background: var(--ink); color: #ccc;
+    position: fixed; top: 0; left: 0;
+    display: flex; flex-direction: column;
+    z-index: 100; overflow-y: auto;
+  }
+  .nav-brand { padding: 28px 24px 20px; border-bottom: 1px solid #333; }
+  .nav-brand .series-label {
+    font-size: 10px; font-weight: 600; letter-spacing: .18em;
+    text-transform: uppercase; color: var(--accent); margin-bottom: 6px;
+  }
+  .nav-brand .doc-title {
+    font-family: 'Playfair Display', serif; font-size: 15px; color: #fff; line-height: 1.35;
+  }
+  .nav-section-label {
+    font-size: 9.5px; font-weight: 600; letter-spacing: .15em;
+    text-transform: uppercase; color: #555; padding: 20px 24px 8px;
+  }
+  nav#sidebar a {
+    display: block; padding: 8px 24px; font-size: 13px; color: #999;
+    text-decoration: none; border-left: 2px solid transparent;
+    transition: color .2s, border-color .2s, background .2s; line-height: 1.4;
+  }
+  nav#sidebar a:hover, nav#sidebar a.active {
+    color: #fff; border-left-color: var(--accent); background: rgba(26,92,138,.1);
+  }
+  nav#sidebar a.sub { padding-left: 36px; font-size: 12px; color: #666; }
+  nav#sidebar a.sub:hover, nav#sidebar a.sub.active {
+    color: #ddd; border-left-color: var(--accent); background: rgba(26,92,138,.06);
+  }
+  .nav-report-links { margin-top: auto; padding: 20px 24px; border-top: 1px solid #333; }
+  .nav-report-links .label {
+    font-size: 9.5px; font-weight: 600; letter-spacing: .15em;
+    text-transform: uppercase; color: #555; margin-bottom: 10px;
+  }
+  .nav-report-links a { padding: 5px 0; border-left: none; font-size: 12px; }
+  .nav-report-links a.current { color: var(--accent); font-weight: 600; }
+  .nav-report-links a:hover { background: none; color: #fff; border-left: none; }
+
+  main { margin-left: var(--sidebar-w); flex: 1; }
+
+  .hero {
+    background: var(--ink); color: #fff;
+    padding: 72px 64px 60px; position: relative; overflow: hidden;
+  }
+  .hero::before {
+    content: ''; position: absolute; top: -60px; right: -60px;
+    width: 320px; height: 320px; border-radius: 50%;
+    background: radial-gradient(circle, rgba(26,92,138,.3) 0%, transparent 70%);
+    pointer-events: none;
+  }
+  .hero::after {
+    content: ''; position: absolute; bottom: 0; left: 0; right: 0;
+    height: 3px; background: linear-gradient(90deg, var(--accent), transparent);
+  }
+  .hero-meta {
+    font-size: 11px; font-weight: 600; letter-spacing: .2em;
+    text-transform: uppercase; color: var(--accent); margin-bottom: 16px;
+    display: flex; align-items: center; gap: 12px;
+  }
+  .hero-meta span { color: #555; }
+  .hero h1 {
+    font-family: 'Playfair Display', serif;
+    font-size: clamp(28px, 4vw, 42px); font-weight: 700;
+    line-height: 1.15; margin-bottom: 20px; max-width: 640px;
+  }
+  .hero-lead { font-size: 17px; font-weight: 300; color: #bbb; max-width: 580px; line-height: 1.65; }
+  .hero-tags { margin-top: 28px; display: flex; flex-wrap: wrap; gap: 8px; }
+  .tag {
+    font-size: 11px; font-weight: 600; letter-spacing: .08em; text-transform: uppercase;
+    padding: 4px 12px; border-radius: 2px;
+    background: rgba(26,92,138,.2); color: #80b8d8; border: 1px solid rgba(26,92,138,.35);
+  }
+
+  .content { max-width: calc(var(--content-max) + 128px); padding: 64px 64px 96px; }
+  section { margin-bottom: 80px; }
+
+  .section-eyebrow {
+    font-size: 10px; font-weight: 700; letter-spacing: .22em;
+    text-transform: uppercase; color: var(--accent); margin-bottom: 12px;
+  }
+  h2 {
+    font-family: 'Playfair Display', serif; font-size: 30px; font-weight: 600;
+    color: var(--ink); margin-bottom: 24px; line-height: 1.25;
+  }
+  h3 {
+    font-family: 'Playfair Display', serif; font-size: 21px; font-weight: 600;
+    color: var(--ink); margin-bottom: 12px; line-height: 1.3;
+  }
+  p { margin-bottom: 18px; color: var(--ink-mid); }
+  p:last-child { margin-bottom: 0; }
+  strong { color: var(--ink); font-weight: 600; }
+
+  .risk-card {
+    background: #fff; border: 1px solid var(--border); border-radius: 4px;
+    margin-bottom: 56px; overflow: hidden; box-shadow: 0 2px 16px rgba(0,0,0,.05);
+    transition: box-shadow .2s;
+  }
+  .risk-card:hover { box-shadow: 0 4px 28px rgba(0,0,0,.09); }
+  .risk-card-header {
+    display: flex; align-items: flex-start; gap: 20px;
+    padding: 32px 36px; border-bottom: 1px solid var(--border); background: var(--paper-alt);
+  }
+  .risk-number {
+    font-family: 'Playfair Display', serif; font-size: 40px; font-weight: 700;
+    color: var(--accent-light); line-height: 1; min-width: 52px; padding-top: 2px;
+  }
+  .risk-subtitle { font-size: 14px; font-weight: 400; color: var(--ink-light); font-style: italic; }
+  .risk-card-body { padding: 36px; }
+
+  .severity-row {
+    display: flex; align-items: center; gap: 10px;
+    margin-bottom: 28px; padding-bottom: 28px; border-bottom: 1px solid var(--border);
+    flex-wrap: wrap;
+  }
+  .severity-label {
+    font-size: 11px; font-weight: 700; letter-spacing: .12em;
+    text-transform: uppercase; color: var(--ink-light);
+  }
+  .severity-badge {
+    font-size: 11px; font-weight: 700; letter-spacing: .08em;
+    text-transform: uppercase; padding: 3px 10px; border-radius: 2px;
+  }
+  .sev-alta  { background: #FDECEA; color: #C00000; border: 1px solid #f5c0bc; }
+  .sev-media { background: #FFF4E5; color: #B35900; border: 1px solid #ffd599; }
+
+  .mechanism {
+    background: #f5f8fb; border: 1px solid var(--border);
+    border-radius: 4px; padding: 24px 28px; margin-bottom: 28px;
+  }
+  .mechanism-label {
+    font-size: 10px; font-weight: 700; letter-spacing: .18em;
+    text-transform: uppercase; color: var(--ink-light); margin-bottom: 12px;
+  }
+  .mechanism p { font-size: 15px; margin-bottom: 12px; }
+
+  .scenario {
+    background: #f0f7ff; border: 1px solid #c8dff0;
+    border-left: 4px solid var(--accent); border-radius: 0 4px 4px 0;
+    padding: 24px 28px; margin-bottom: 28px;
+  }
+  .scenario-label {
+    font-size: 10px; font-weight: 700; letter-spacing: .18em;
+    text-transform: uppercase; color: var(--accent); margin-bottom: 12px;
+  }
+  .scenario p { font-size: 15px; color: var(--ink-mid); margin-bottom: 10px; }
+
+  .alert-box {
+    background: var(--amber-light); border: 1px solid #ffd599;
+    border-left: 4px solid var(--amber); border-radius: 0 4px 4px 0;
+    padding: 24px 28px; margin-bottom: 28px;
+  }
+  .alert-label {
+    font-size: 10px; font-weight: 700; letter-spacing: .18em;
+    text-transform: uppercase; color: var(--amber); margin-bottom: 12px;
+  }
+  ul.alerts { list-style: none; padding: 0; }
+  ul.alerts li {
+    font-size: 14px; color: #5a3a00; padding: 7px 0 7px 24px;
+    position: relative; border-bottom: 1px solid #ffe0b2; line-height: 1.5;
+  }
+  ul.alerts li:last-child { border-bottom: none; }
+  ul.alerts li::before {
+    content: '⚑'; position: absolute; left: 0; color: var(--amber); font-size: 12px; top: 9px;
+  }
+
+  .contexts-block {
+    background: var(--paper-alt); border: 1px solid var(--border);
+    border-radius: 4px; padding: 24px 28px; margin-bottom: 28px;
+  }
+  .contexts-label {
+    font-size: 10px; font-weight: 700; letter-spacing: .18em;
+    text-transform: uppercase; color: var(--ink-light); margin-bottom: 12px;
+  }
+  .context-pills { display: flex; flex-wrap: wrap; gap: 8px; }
+  .context-pill {
+    font-size: 12px; font-weight: 500; padding: 5px 14px;
+    background: #fff; border: 1px solid var(--border); border-radius: 20px; color: var(--ink-mid);
+  }
+  .context-pill.high { background: #FDECEA; border-color: #f5c0bc; color: #8B1A1A; }
+  .context-pill.med  { background: #FFF4E5; border-color: #ffd599; color: #7A3E00; }
+
+  .mitigations-block {
+    background: var(--green-light); border: 1px solid #c3e6c5; border-radius: 4px; padding: 24px 28px;
+  }
+  .mitigations-label {
+    font-size: 10px; font-weight: 700; letter-spacing: .18em;
+    text-transform: uppercase; color: var(--green); margin-bottom: 16px;
+  }
+  .mitigation-item { display: flex; gap: 14px; padding: 14px 0; border-bottom: 1px solid #c3e6c5; }
+  .mitigation-item:last-child { border-bottom: none; padding-bottom: 0; }
+  .mit-icon {
+    width: 26px; height: 26px; min-width: 26px; background: var(--green);
+    color: #fff; border-radius: 50%; display: flex; align-items: center;
+    justify-content: center; font-size: 13px; font-weight: 700; margin-top: 1px;
+  }
+  .mit-content { flex: 1; }
+  .mit-title { font-size: 14px; font-weight: 600; color: #1f4d22; margin-bottom: 4px; }
+  .mit-desc { font-size: 13.5px; color: #2d5e31; line-height: 1.55; margin: 0; }
+
+  .callout {
+    background: var(--accent-light); border-left: 4px solid var(--accent);
+    padding: 22px 26px; border-radius: 0 4px 4px 0; margin-bottom: 32px;
+  }
+  .callout p { font-size: 15.5px; color: var(--accent-dim); margin: 0; line-height: 1.6; }
+
+  /* Data classification table */
+  .data-table {
+    width: 100%; border-collapse: collapse; font-size: 14px; margin: 20px 0 28px;
+  }
+  .data-table th {
+    background: var(--accent); color: #fff; padding: 11px 16px;
+    text-align: left; font-weight: 600; font-size: 12px; letter-spacing: .06em;
+  }
+  .data-table td {
+    padding: 11px 16px; border-bottom: 1px solid var(--border);
+    vertical-align: top; line-height: 1.5;
+  }
+  .data-table tr:nth-child(even) td { background: var(--paper-alt); }
+  .data-table td:first-child { font-weight: 600; color: var(--ink); }
+  .badge-critical { display:inline-block; background:#FDECEA; color:#C00000; border:1px solid #f5c0bc; border-radius:2px; font-size:11px; font-weight:700; padding:1px 7px; letter-spacing:.06em; }
+  .badge-high     { display:inline-block; background:#FFF4E5; color:#B35900; border:1px solid #ffd599; border-radius:2px; font-size:11px; font-weight:700; padding:1px 7px; letter-spacing:.06em; }
+  .badge-med      { display:inline-block; background:#EAF3EB; color:#2d6e32; border:1px solid #c3e6c5; border-radius:2px; font-size:11px; font-weight:700; padding:1px 7px; letter-spacing:.06em; }
+
+  .summary-table { width: 100%; border-collapse: collapse; font-size: 14px; margin-top: 20px; }
+  .summary-table th {
+    background: var(--ink); color: #fff; padding: 12px 18px;
+    text-align: left; font-weight: 600; font-size: 12px; letter-spacing: .06em;
+  }
+  .summary-table td {
+    padding: 12px 18px; border-bottom: 1px solid var(--border);
+    vertical-align: top; font-size: 14px; line-height: 1.5;
+  }
+  .summary-table tr:nth-child(even) td { background: var(--paper-alt); }
+  .summary-table td:first-child { font-weight: 600; color: var(--ink); white-space: nowrap; }
+
+  hr.section-divider { border: none; border-top: 1px solid var(--border); margin: 56px 0; }
+
+  #progress-bar {
+    position: fixed; top: 0; left: var(--sidebar-w); right: 0;
+    height: 3px; background: var(--accent); transform-origin: left;
+    transform: scaleX(0); z-index: 200; transition: transform .1s linear;
+  }
+
+  @media (max-width: 900px) {
+    nav#sidebar { display: none; }
+    main { margin-left: 0; }
+    .hero, .content { padding: 48px 28px; }
+  }
+</style>
+</head>
+<body>
+
+<div id="progress-bar"></div>
+
+<nav id="sidebar">
+  <div class="nav-brand">
+    <div class="series-label">Serie: Rischi AI in Azienda</div>
+    <div class="doc-title">Report 02 — Dati e Compliance</div>
+  </div>
+  <div class="nav-section-label">Contenuti</div>
+  <a href="#intro">Introduzione</a>
+  <a href="#classificazione">Classificazione dei dati</a>
+  <a href="#r3">1. Rischio di Dato</a>
+  <a class="sub" href="#r3-mec">↳ Come funziona</a>
+  <a class="sub" href="#r3-sce">↳ Scenario</a>
+  <a class="sub" href="#r3-ale">↳ Segnali di allerta</a>
+  <a class="sub" href="#r3-mit">↳ Mitigazioni</a>
+  <a href="#r4">2. Rischio Legale e Compliance</a>
+  <a class="sub" href="#r4-mec">↳ Come funziona</a>
+  <a class="sub" href="#r4-sce">↳ Scenario</a>
+  <a class="sub" href="#r4-ale">↳ Segnali di allerta</a>
+  <a class="sub" href="#r4-mit">↳ Mitigazioni</a>
+  <a href="#r9">3. Autenticità e Tracciabilità</a>
+  <a class="sub" href="#r9-mec">↳ Come funziona</a>
+  <a class="sub" href="#r9-sce">↳ Scenario</a>
+  <a class="sub" href="#r9-ale">↳ Segnali di allerta</a>
+  <a class="sub" href="#r9-mit">↳ Mitigazioni</a>
+  <a href="#riepilogo">Riepilogo comparativo</a>
+  <div class="nav-report-links">
+    <div class="label">Serie completa</div>
+    <a href="report_01_qualita_output.html">01 · Qualità degli output</a>
+    <a href="report_02_dati_compliance.html" class="current">02 · Dati e compliance</a>
+    <a href="Tutti%20i%20report%20html/report_03_reputazione.html">03 · Reputazione</a>
+    <a href="Tutti%20i%20report%20html/report_04_rischi_strategici.html">04 · Rischi strategici</a>
+    <a href="Tutti%20i%20report%20html/report_05_sicurezza.html">05 · Sicurezza</a>
+  </div>
+</nav>
+
+<main>
+  <div class="hero">
+    <div class="hero-meta">Serie: Rischi AI in Azienda <span>·</span> Report 02 di 05</div>
+    <h1>Rischi legati a Dati e Compliance</h1>
+    <p class="hero-lead">Ogni volta che si condivide un'informazione con un assistente AI esterno, si compie una scelta — spesso inconsapevole — su cosa esce dal perimetro aziendale. Questo report analizza i tre rischi legati alla gestione dei dati, agli obblighi legali e alla tracciabilità degli output prodotti con AI.</p>
+    <div class="hero-tags">
+      <span class="tag">Rischio di Dato</span>
+      <span class="tag">Compliance e Copyright</span>
+      <span class="tag">Tracciabilità</span>
+    </div>
+  </div>
+
+  <div class="content">
+
+    <!-- INTRO -->
+    <section id="intro">
+      <div class="section-eyebrow">Introduzione</div>
+      <h2>Dati, diritti e responsabilità nell'era dell'AI</h2>
+      <div class="callout">
+        <p>I rischi di questo cluster sono spesso i meno visibili nell'uso quotidiano, ma tra i più rilevanti sul piano delle conseguenze. Un errore fattuale si vede subito; una violazione di riservatezza o di copyright può emergere settimane o mesi dopo, con impatti legali, commerciali e reputazionali difficili da contenere.</p>
+      </div>
+      <p>Quando si usa un assistente AI come ChatGPT, Claude o Gemini nella loro versione consumer, si interagisce con sistemi gestiti da provider esterni. I dati inseriti nei prompt escono dall'infrastruttura aziendale, vengono elaborati su server di terze parti, e — a seconda delle condizioni contrattuali e delle impostazioni dell'account — possono essere usati per addestrare i modelli futuri.</p>
+      <p>A questo si aggiunge la dimensione legale: i contenuti generati dall'AI sollevano questioni aperte su copyright, proprietà intellettuale e responsabilità. E la dimensione della tracciabilità: in assenza di processi definiti, diventa difficile sapere chi ha prodotto cosa, con quali input, e chi ne ha verificato la correttezza.</p>
+      <p>Questo report analizza questi tre rischi — <strong>rischio di dato</strong>, <strong>rischio legale e di compliance</strong>, e <strong>rischio di autenticità e tracciabilità</strong> — che insieme definiscono il perimetro di ciò che è lecito, sicuro e governabile nell'uso dell'AI in azienda.</p>
+    </section>
+
+    <!-- CLASSIFICAZIONE DATI -->
+    <section id="classificazione">
+      <div class="section-eyebrow">Strumento di supporto</div>
+      <h2>Cosa non condividere con un'AI esterna</h2>
+      <p>Prima di analizzare i rischi nel dettaglio, è utile avere un riferimento pratico su quali tipi di dati aziendali richiedono attenzione particolare. La tabella seguente propone una classificazione orientativa, costruita sulla realtà specifica della nostra azienda.</p>
+
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>Categoria di dato</th>
+            <th>Esempi concreti</th>
+            <th>Livello di rischio</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Formule e composizioni prodotto</td>
+            <td>Percentuali di ingredienti, INCI, parametri di processo, formule R&D in sviluppo</td>
+            <td><span class="badge-critical">Critico</span></td>
+          </tr>
+          <tr>
+            <td>Dati commerciali e di cliente</td>
+            <td>Condizioni contrattuali, prezzi, sconti, nomi e contatti clienti, brief ricevuti</td>
+            <td><span class="badge-critical">Critico</span></td>
+          </tr>
+          <tr>
+            <td>Dati personali di dipendenti</td>
+            <td>Nomi, ruoli, compensi, valutazioni, dati sensibili in senso GDPR</td>
+            <td><span class="badge-critical">Critico</span></td>
+          </tr>
+          <tr>
+            <td>Strategie e piani aziendali</td>
+            <td>Pipeline NPD, roadmap prodotto, piani di acquisizione, strategie commerciali</td>
+            <td><span class="badge-high">Alto</span></td>
+          </tr>
+          <tr>
+            <td>Dati operativi e di produzione</td>
+            <td>Capacità produttive, fornitori, costi di produzione, piani di pianificazione</td>
+            <td><span class="badge-high">Alto</span></td>
+          </tr>
+          <tr>
+            <td>Documenti interni non pubblici</td>
+            <td>Verbali, policy interne, procedure operative, comunicazioni interne riservate</td>
+            <td><span class="badge-high">Alto</span></td>
+          </tr>
+          <tr>
+            <td>Informazioni di dominio pubblico</td>
+            <td>Trend di mercato generici, normative pubbliche, informazioni già pubblicate</td>
+            <td><span class="badge-med">Basso</span></td>
+          </tr>
+        </tbody>
+      </table>
+
+      <p style="font-size:13.5px; color: var(--ink-light);">Nota: questa classificazione si riferisce all'uso di assistenti AI consumer (ChatGPT, Claude.ai, Gemini) nella loro versione gratuita o standard. I livelli di rischio possono variare significativamente con soluzioni enterprise dotate di accordi contrattuali specifici sulla riservatezza dei dati.</p>
+    </section>
+
+    <hr class="section-divider">
+
+    <!-- R3: RISCHIO DI DATO -->
+    <section id="r3">
+      <div class="section-eyebrow">Rischio 04</div>
+      <div class="risk-card">
+        <div class="risk-card-header">
+          <div class="risk-number">04</div>
+          <div class="risk-card-header-text">
+            <h3>Rischio di Dato</h3>
+            <div class="risk-subtitle">Informazioni riservate o proprietarie condivise con sistemi AI esterni al perimetro aziendale</div>
+          </div>
+        </div>
+        <div class="risk-card-body">
+          <div class="severity-row">
+            <span class="severity-label">Rilevanza generale</span>
+            <span class="severity-badge sev-alta">Alta</span>
+            <span class="severity-label" style="margin-left:16px">Per dati proprietari e commerciali</span>
+            <span class="severity-badge sev-alta">Molto Alta</span>
+          </div>
+
+          <div id="r3-mec" class="mechanism">
+            <div class="mechanism-label">Come funziona — il meccanismo sottostante</div>
+            <p>Quando si usa un assistente AI nella sua versione consumer o standard, il prompt viene inviato ai server del provider attraverso Internet. A seconda della piattaforma e delle impostazioni dell'account, questo dato può essere: <strong>archiviato</strong> per periodi variabili, <strong>letto da dipendenti del provider</strong> per finalità di sicurezza o quality assurance, e in alcuni casi <strong>usato per addestrare versioni future del modello</strong>.</p>
+            <p>OpenAI (ChatGPT), Google (Gemini) e Anthropic (Claude) offrono tutti la possibilità di disabilitare l'uso dei dati per il training, ma questa impostazione non è attiva di default negli account gratuiti o standard, e richiede un'azione consapevole da parte dell'utente. Con account enterprise o API dedicate, le condizioni sono generalmente più favorevoli — ma richiedono un contratto specifico.</p>
+            <p>Il rischio non è necessariamente che il provider usi i dati in modo malevolo: il problema è strutturale. Le informazioni aziendali entrano in un sistema che non è sotto il controllo dell'azienda, con policy che possono cambiare nel tempo e che variano tra paesi e contesti giuridici. Nel caso di un'azienda che lavora in conto terzi, la riservatezza delle formule e dei dati di cliente non è solo un interesse interno — è spesso un obbligo contrattuale esplicito.</p>
+            <p>Un secondo vettore di rischio è quello indiretto: dati inseriti oggi in un modello potrebbero — in scenari di data breach del provider, o di modelli mal configurati — emergere in output generati per altri utenti. Questo è accaduto in casi documentati con modelli di AI che hanno "ricordato" frammenti di dati sensibili inseriti nel training.</p>
+          </div>
+
+          <div id="r3-sce" class="scenario">
+            <div class="scenario-label">Scenario esemplificativo</div>
+            <p>Un membro del team R&D sta lavorando a una nuova formula per un cliente del lusso. Per velocizzare la stesura del brief tecnico da inviare al cliente, carica su ChatGPT la bozza della formula — inclusa la lista degli ingredienti con le relative percentuali, i parametri di processo e alcune note sulle proprietà sensoriali sviluppate internamente.</p>
+            <p>Chiede all'AI di trasformare queste informazioni in un documento più formale e leggibile. L'AI produce un ottimo risultato. Il brief viene approvato e inviato. Nessuno si accorge di nulla.</p>
+            <p>Quello che è successo: la formula completa — uno degli asset più preziosi dell'azienda, frutto di mesi di sviluppo — è uscita dal perimetro aziendale ed è stata elaborata da un sistema esterno. In base alle impostazioni dell'account, potrebbe essere archiviata sui server di OpenAI. Se l'account non aveva la disabilitazione del training attiva, quei dati potrebbero influenzare future versioni del modello. Se il cliente aveva vincoli di riservatezza espliciti nel contratto, potrebbe esserci anche un'esposizione legale.</p>
+          </div>
+
+          <div class="contexts-block">
+            <div class="contexts-label">Contesti d'uso più esposti</div>
+            <div class="context-pills">
+              <span class="context-pill high">Redazione brief e documenti tecnici</span>
+              <span class="context-pill high">Costruzione proposte commerciali</span>
+              <span class="context-pill high">Sintesi documenti interni</span>
+              <span class="context-pill high">Verifica conformità blacklist</span>
+              <span class="context-pill med">Analisi di mercato con dati interni</span>
+              <span class="context-pill med">Supporto pianificazione</span>
+              <span class="context-pill med">Traduzione di documenti</span>
+            </div>
+          </div>
+
+          <div id="r3-ale" class="alert-box">
+            <div class="alert-label">Segnali di allerta — quando alzare la guardia</div>
+            <ul class="alerts">
+              <li>Si sta per incollare in un prompt un documento che contiene formule, ingredienti con percentuali, o parametri di processo proprietari</li>
+              <li>Il prompt include nomi di clienti, condizioni contrattuali, prezzi o sconti concordati</li>
+              <li>Si sta usando un assistente AI consumer (versione gratuita o standard) senza aver verificato le impostazioni sulla privacy e sull'uso dei dati</li>
+              <li>Si sta chiedendo all'AI di "migliorare" o "formalizzare" un documento interno che contiene informazioni riservate</li>
+              <li>Il documento da elaborare è soggetto a obblighi di riservatezza contrattuali con un cliente o con un fornitore</li>
+            </ul>
+          </div>
+
+          <div id="r3-mit" class="mitigations-block">
+            <div class="mitigations-label">Misure di mitigazione</div>
+            <div class="mitigation-item">
+              <div class="mit-icon">1</div>
+              <div class="mit-content">
+                <div class="mit-title">Stabilire una regola chiara su quali dati non escono dall'azienda</div>
+                <p class="mit-desc">Formalizzare nella policy aziendale le categorie di dati che non possono essere inserite in assistenti AI consumer: formule e composizioni prodotto, dati di cliente, condizioni commerciali, piani strategici. La regola deve essere semplice e memorabile, non una lista esaustiva che nessuno legge.</p>
+              </div>
+            </div>
+            <div class="mitigation-item">
+              <div class="mit-icon">2</div>
+              <div class="mit-content">
+                <div class="mit-title">Anonimizzare o generalizzare i dati sensibili prima di usare l'AI</div>
+                <p class="mit-desc">In molti casi l'AI può svolgere il suo compito anche senza i dati specifici: invece di incollare la formula completa, si può descrivere la struttura del documento che si vuole ottenere; invece di nominare il cliente, si può usare "un cliente del segmento lusso". La tecnica di anonimizzazione del prompt è semplice e riduce significativamente il rischio.</p>
+              </div>
+            </div>
+            <div class="mitigation-item">
+              <div class="mit-icon">3</div>
+              <div class="mit-content">
+                <div class="mit-title">Verificare e configurare le impostazioni privacy degli strumenti in uso</div>
+                <p class="mit-desc">Per gli account aziendali degli assistenti AI già in uso, verificare che le impostazioni sull'uso dei dati per il training siano correttamente configurate. La maggior parte dei provider offre questa opzione — ma non è attiva di default. È un'azione una tantum che riduce il rischio strutturalmente.</p>
+              </div>
+            </div>
+            <div class="mitigation-item">
+              <div class="mit-icon">4</div>
+              <div class="mit-content">
+                <div class="mit-title">Valutare soluzioni enterprise per i casi d'uso più critici</div>
+                <p class="mit-desc">Per i casi d'uso in cui il rischio di dato è più alto (elaborazione di brief tecnici, analisi di portfolio formule, documenti contrattuali), valutare l'adozione di soluzioni AI con accordi contrattuali espliciti sulla riservatezza — come le versioni enterprise di ChatGPT, Claude o Microsoft Copilot con Azure OpenAI. Il costo è giustificato dalla rilevanza strategica dei dati.</p>
+              </div>
+            </div>
+            <div class="mitigation-item">
+              <div class="mit-icon">5</div>
+              <div class="mit-content">
+                <div class="mit-title">Sensibilizzare sulle conseguenze contrattuali, non solo etiche</div>
+                <p class="mit-desc">Per molti dipendenti, l'argomento "i dati potrebbero finire nel training del modello" è astratto. L'argomento "se condividi la formula di un cliente con un sistema esterno potresti violare il nostro accordo di riservatezza con quel cliente" è concreto e immediato. Usare questo tipo di framing nella comunicazione interna.</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- R4: RISCHIO LEGALE -->
+    <section id="r4">
+      <div class="section-eyebrow">Rischio 05</div>
+      <div class="risk-card">
+        <div class="risk-card-header">
+          <div class="risk-number">05</div>
+          <div class="risk-card-header-text">
+            <h3>Rischio Legale e di Compliance</h3>
+            <div class="risk-subtitle">Copyright, GDPR, proprietà intellettuale e responsabilità degli output generati con AI</div>
+          </div>
+        </div>
+        <div class="risk-card-body">
+          <div class="severity-row">
+            <span class="severity-label">Rilevanza generale</span>
+            <span class="severity-badge sev-media">Media</span>
+            <span class="severity-label" style="margin-left:16px">Per contenuti visivi e testi commerciali</span>
+            <span class="severity-badge sev-alta">Alta</span>
+          </div>
+
+          <div id="r4-mec" class="mechanism">
+            <div class="mechanism-label">Come funziona — il meccanismo sottostante</div>
+            <p>Il quadro legale intorno all'AI generativa è ancora largamente in costruzione, sia in Europa che negli Stati Uniti. Questo non significa che non esistano rischi legali — significa che i confini non sono ancora chiari e che alcune questioni saranno definite dalla giurisprudenza nei prossimi anni. Nel frattempo, alcune aree di rischio sono già sufficientemente delineate da richiedere attenzione.</p>
+            <p><strong>Copyright nei contenuti generati.</strong> I modelli di generazione di immagini (come quelli alla base di Nano Banana e strumenti simili) sono stati addestrati su miliardi di immagini raccolte dal web, molte delle quali protette da copyright. Esiste un dibattito legale aperto — e cause in corso — sulla legittimità di questo training. Dal punto di vista pratico, il rischio è che immagini generate da questi modelli contengano elementi stilistici o compositivi che riecheggiano opere protette, esponendo l'azienda a contestazioni.</p>
+            <p><strong>GDPR e dati personali.</strong> Inserire dati personali (nomi, email, ruoli, valutazioni) in un prompt inviato a un sistema AI esterno costituisce un trasferimento di dati personali a un responsabile del trattamento esterno. Questo richiede una base legale adeguata e, in molti casi, un Data Processing Agreement (DPA) con il provider. L'assenza di questi accordi espone l'azienda a violazioni del GDPR.</p>
+            <p><strong>Proprietà intellettuale degli output.</strong> In molte giurisdizioni, i contenuti generati interamente da AI non sono automaticamente tutelabili come proprietà intellettuale dell'azienda che li ha generati, perché manca il requisito dell'originalità umana. Questo crea potenziali zone grigie sulla titolarità di testi, immagini e codice prodotti con AI.</p>
+            <p><strong>Responsabilità degli output.</strong> Se un documento generato con AI contiene affermazioni false, fuorvianti o lesive nei confronti di terzi, la responsabilità legale ricade sull'azienda che lo ha prodotto e diffuso — non sul provider del modello. L'AI è uno strumento: chi lo usa risponde delle conseguenze.</p>
+          </div>
+
+          <div id="r4-sce" class="scenario">
+            <div class="scenario-label">Scenario esemplificativo</div>
+            <p>Il team Marketing Comunicazione deve preparare il materiale visivo per una fiera internazionale. Per velocizzare i tempi, usa uno strumento di generazione di immagini AI per creare una serie di render concettuali che evocano il mood del brand — texture, superfici, composizioni astratte.</p>
+            <p>Le immagini sono convincenti e vengono approvate rapidamente. Vengono stampate su pannelli e usate nello stand fieristico. Alcune vengono pubblicate sui canali social dell'azienda.</p>
+            <p>Settimane dopo, un fotografo professionista contatta l'azienda: riconosce nelle immagini elementi stilistici e compositivi molto simili a una serie di fotografie che aveva pubblicato online e che erano state probabilmente incluse nel dataset di training del modello. Richiede un risarcimento per violazione di copyright. Non è chiaro se la contestazione sia fondata — ma la gestione del caso richiede tempo, risorse legali e crea una situazione di incertezza.</p>
+          </div>
+
+          <div class="contexts-block">
+            <div class="contexts-label">Contesti d'uso più esposti</div>
+            <div class="context-pills">
+              <span class="context-pill high">Render fotorealistici di prodotto</span>
+              <span class="context-pill high">Contenuti per comunicazione esterna</span>
+              <span class="context-pill med">Redazione testi commerciali e contrattuali</span>
+              <span class="context-pill med">Creazione contenuti social media</span>
+              <span class="context-pill med">Ricerca su ingredienti e normative</span>
+              <span class="context-pill med">Sintesi di documenti con dati personali</span>
+            </div>
+          </div>
+
+          <div id="r4-ale" class="alert-box">
+            <div class="alert-label">Segnali di allerta — quando alzare la guardia</div>
+            <ul class="alerts">
+              <li>Si stanno generando immagini con AI da pubblicare o usare in contesti commerciali — verificare la policy del provider sull'uso commerciale e le limitazioni di copyright</li>
+              <li>Il prompt include nomi, email o altri dati personali di dipendenti, clienti o partner — verificare che esista una base legale GDPR adeguata</li>
+              <li>Un testo o un documento generato con AI verrà presentato all'esterno come prodotto originale dell'azienda, senza indicazione dell'uso di AI</li>
+              <li>Si sta usando un modello AI per generare contenuti in un dominio regolamentato (claims cosmetici, comunicazioni finanziarie, testi legali) senza revisione da parte di un esperto</li>
+              <li>Non esiste un DPA (Data Processing Agreement) firmato con il provider dell'AI usato per elaborare dati personali</li>
+            </ul>
+          </div>
+
+          <div id="r4-mit" class="mitigations-block">
+            <div class="mitigations-label">Misure di mitigazione</div>
+            <div class="mitigation-item">
+              <div class="mit-icon">1</div>
+              <div class="mit-content">
+                <div class="mit-title">Leggere e comprendere le condizioni d'uso dei provider per l'uso commerciale</div>
+                <p class="mit-desc">Ogni provider di strumenti AI (generazione di testo, immagini, audio) ha condizioni specifiche sull'uso commerciale degli output. Alcune versioni gratuite non consentono l'uso commerciale; alcune versioni a pagamento includono garanzie di indennizzo in caso di contestazioni copyright. Prima di usare un output AI in contesti commerciali, verificare cosa dicono i termini del servizio.</p>
+              </div>
+            </div>
+            <div class="mitigation-item">
+              <div class="mit-icon">2</div>
+              <div class="mit-content">
+                <div class="mit-title">Non inserire dati personali in assistenti AI privi di DPA</div>
+                <p class="mit-desc">Qualsiasi elaborazione di dati personali tramite AI deve essere coperta da un accordo contrattuale adeguato con il provider (Data Processing Agreement). In assenza di questo accordo, evitare di inserire dati personali nei prompt. Coinvolgere il responsabile della privacy aziendale per valutare la situazione attuale.</p>
+              </div>
+            </div>
+            <div class="mitigation-item">
+              <div class="mit-icon">3</div>
+              <div class="mit-content">
+                <div class="mit-title">Trattare i contenuti AI come bozze da rielaborare, non come prodotti finiti</div>
+                <p class="mit-desc">Per ridurre il rischio di copyright sui contenuti visivi e testuali, usare l'AI come punto di partenza creativo da rielaborare significativamente, non come generatore di asset finali. Più la rielaborazione umana è sostanziale, più il risultato finale è distinto dall'output originale del modello.</p>
+              </div>
+            </div>
+            <div class="mitigation-item">
+              <div class="mit-icon">4</div>
+              <div class="mit-content">
+                <div class="mit-title">Documentare l'uso di AI nella produzione di contenuti</div>
+                <p class="mit-desc">Tenere traccia di quali contenuti sono stati prodotti con il supporto di AI, con quale strumento e in quale data. Questa documentazione può essere utile sia in caso di contestazioni legali, sia come base per definire una policy interna sulla divulgazione dell'uso di AI nei materiali aziendali.</p>
+              </div>
+            </div>
+            <div class="mitigation-item">
+              <div class="mit-icon">5</div>
+              <div class="mit-content">
+                <div class="mit-title">Far revisionare da esperti i contenuti in domini regolamentati</div>
+                <p class="mit-desc">Testi che riguardano claims cosmetici, proprietà di prodotti, comunicazioni a clienti su aspetti contrattuali: anche se generati con AI, devono essere revisionati da chi ha la competenza per valutarne la correttezza legale e regolatoria. L'AI non conosce le specificità normative del settore cosmetico europeo o le clausole dei singoli contratti.</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- R9: AUTENTICITÀ E TRACCIABILITÀ -->
+    <section id="r9">
+      <div class="section-eyebrow">Rischio 06</div>
+      <div class="risk-card">
+        <div class="risk-card-header">
+          <div class="risk-number">06</div>
+          <div class="risk-card-header-text">
+            <h3>Rischio di Autenticità e Tracciabilità</h3>
+            <div class="risk-subtitle">Impossibilità di sapere chi ha prodotto cosa, con quali input, e chi ne ha verificato la correttezza</div>
+          </div>
+        </div>
+        <div class="risk-card-body">
+          <div class="severity-row">
+            <span class="severity-label">Rilevanza generale</span>
+            <span class="severity-badge sev-media">Media</span>
+            <span class="severity-label" style="margin-left:16px">Per la governance dell'AI</span>
+            <span class="severity-badge sev-alta">Alta</span>
+          </div>
+
+          <div id="r9-mec" class="mechanism">
+            <div class="mechanism-label">Come funziona — il meccanismo sottostante</div>
+            <p>L'introduzione dell'AI nei processi produttivi di contenuti e documenti crea un problema nuovo di governance: <strong>diventa difficile rispondere a domande elementari sulla provenienza e sulla validazione degli output</strong>. Chi ha scritto questa email? Chi ha approvato questo render? Quali dati sono stati usati per produrre questa analisi? Il testo di questo contratto è stato modificato dall'AI rispetto alla versione originale?</p>
+            <p>Questo problema ha due dimensioni. La prima è <strong>interna</strong>: senza tracciabilità, è difficile applicare qualsiasi policy sull'uso dell'AI, perché non c'è modo di verificare se le regole vengano rispettate. Se la policy dice "i render inviati ai clienti devono essere approvati da un product manager", ma non c'è modo di sapere se un render è stato generato con AI o prodotto in altro modo, la policy è inapplicabile.</p>
+            <p>La seconda dimensione è <strong>esterna</strong>: in caso di contestazione da parte di un cliente, di un partner o di un'autorità, la capacità di ricostruire il processo che ha portato a un output — chi ha fatto cosa, quando, con quali informazioni — è fondamentale per dimostrare diligenza e buona fede. L'assenza di questa traccia può trasformare un problema gestibile in uno molto più complicato.</p>
+            <p>C'è infine un aspetto di <strong>autenticità</strong> che riguarda specificamente i contenuti creativi e commerciali: un render di prodotto inviato a un cliente deve corrispondere al prodotto reale che verrà consegnato. Se il render è stato generato con AI partendo da specifiche approssimative, senza un processo di validazione, il rischio è che il cliente sviluppi aspettative che il prodotto reale non può soddisfare.</p>
+          </div>
+
+          <div id="r9-sce" class="scenario">
+            <div class="scenario-label">Scenario esemplificativo</div>
+            <p>Il team Sales prepara una proposta per un cliente importante. Per la sezione visiva, usa uno strumento AI per generare render del prodotto finito — packaging, colore, texture. I render sono molto convincenti e il cliente approva la proposta anche sulla base di quelle immagini.</p>
+            <p>Mesi dopo, alla consegna del prodotto, il cliente rileva delle discrepanze tra il prodotto reale e i render che aveva visto. Il colore è leggermente diverso, la texture della superficie non corrisponde esattamente. Sostiene che la proposta commerciale includeva rappresentazioni che non corrispondevano alle specifiche reali del prodotto.</p>
+            <p>Il team Sales non riesce a ricostruire con precisione quali specifiche fossero state usate come input per generare quei render, né chi avesse approvato le immagini prima dell'invio. Non c'è traccia del processo. Gestire la contestazione diventa molto più complicato di quanto sarebbe stato se ci fosse stata documentazione adeguata.</p>
+          </div>
+
+          <div class="contexts-block">
+            <div class="contexts-label">Contesti d'uso più esposti</div>
+            <div class="context-pills">
+              <span class="context-pill high">Render fotorealistici di prodotto</span>
+              <span class="context-pill high">Costruzione proposte commerciali</span>
+              <span class="context-pill med">Redazione e revisione documenti</span>
+              <span class="context-pill med">Sintesi documenti interni</span>
+              <span class="context-pill med">Contenuti per comunicazione esterna</span>
+              <span class="context-pill med">Supporto a decisioni</span>
+            </div>
+          </div>
+
+          <div id="r9-ale" class="alert-box">
+            <div class="alert-label">Segnali di allerta — quando alzare la guardia</div>
+            <ul class="alerts">
+              <li>Si sta inviando a un cliente un documento o un render prodotto con AI senza che ci sia stata una revisione e approvazione esplicita da parte di chi ha la competenza necessaria</li>
+              <li>Non è chiaro se un documento ricevuto da un collega sia stato scritto da lui, rielaborato con AI, o generato quasi interamente con AI</li>
+              <li>Si sta usando l'AI per modificare un documento contrattuale o tecnico senza tenere traccia di quali parti siano state modificate</li>
+              <li>Non esiste un processo definito per sapere chi ha approvato un output AI prima che venisse condiviso all'esterno</li>
+              <li>Un render di prodotto viene usato in una proposta commerciale senza essere stato validato rispetto alle specifiche tecniche reali del prodotto</li>
+            </ul>
+          </div>
+
+          <div id="r9-mit" class="mitigations-block">
+            <div class="mitigations-label">Misure di mitigazione</div>
+            <div class="mitigation-item">
+              <div class="mit-icon">1</div>
+              <div class="mit-content">
+                <div class="mit-title">Definire un processo di approvazione per i contenuti AI destinati all'esterno</div>
+                <p class="mit-desc">Qualsiasi output AI che viene condiviso con clienti, partner o sul web deve passare attraverso una revisione esplicita da parte di una persona responsabile. Questa persona verifica correttezza, conformità alle specifiche e coerenza con il brand. Il processo di approvazione deve essere documentato, anche in modo semplice.</p>
+              </div>
+            </div>
+            <div class="mitigation-item">
+              <div class="mit-icon">2</div>
+              <div class="mit-content">
+                <div class="mit-title">Conservare gli input usati per generare output critici</div>
+                <p class="mit-desc">Per render di prodotto, proposte commerciali e documenti tecnici generati con AI: conservare una copia del prompt e delle specifiche usate come input, insieme all'output finale approvato. Questo permette di ricostruire il processo in caso di contestazione e di verificare la coerenza tra specifiche e risultato.</p>
+              </div>
+            </div>
+            <div class="mitigation-item">
+              <div class="mit-icon">3</div>
+              <div class="mit-content">
+                <div class="mit-title">Validare i render rispetto alle specifiche tecniche reali del prodotto</div>
+                <p class="mit-desc">Prima di inviare a un cliente un render generato con AI, verificare esplicitamente che colore, texture, packaging e altri elementi visivi corrispondano alle specifiche tecniche reali del prodotto. Questa validazione deve essere fatta da chi conosce le specifiche, non solo da chi ha giudizio estetico.</p>
+              </div>
+            </div>
+            <div class="mitigation-item">
+              <div class="mit-icon">4</div>
+              <div class="mit-content">
+                <div class="mit-title">Usare il controllo versione per documenti modificati con AI</div>
+                <p class="mit-desc">Quando si usa l'AI per rielaborare un documento esistente (contratto, brief, specifica tecnica), usare sempre la funzione di controllo modifiche o tenere una versione "prima" e una versione "dopo". Questo rende trasparente cosa è cambiato e permette una revisione mirata delle modifiche introdotte dall'AI.</p>
+              </div>
+            </div>
+            <div class="mitigation-item">
+              <div class="mit-icon">5</div>
+              <div class="mit-content">
+                <div class="mit-title">Introdurre gradualmente una policy di trasparenza sull'uso di AI</div>
+                <p class="mit-desc">Valutare se e quando dichiarare ai clienti l'uso di AI in determinati processi (es: nella generazione di render, nella stesura di proposte). La trasparenza proattiva riduce il rischio di contestazioni future e posiziona l'azienda come un utilizzatore maturo e responsabile di queste tecnologie.</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <hr class="section-divider">
+
+    <!-- RIEPILOGO -->
+    <section id="riepilogo">
+      <div class="section-eyebrow">Riepilogo comparativo</div>
+      <h2>I tre rischi a confronto</h2>
+      <p>I tre rischi di questo cluster operano su piani diversi ma si rafforzano a vicenda: un dato condiviso senza attenzione può generare sia un problema di riservatezza sia una violazione contrattuale; un contenuto non tracciato può creare sia un problema di autenticità sia un'esposizione legale.</p>
+
+      <table class="summary-table">
+        <thead>
+          <tr>
+            <th>Rischio</th>
+            <th>Cosa può succedere</th>
+            <th>Chi è più esposto</th>
+            <th>Prima azione concreta</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Rischio di dato</td>
+            <td>Dati riservati escono dal perimetro aziendale e finiscono in sistemi non controllati</td>
+            <td>R&D, Sales, Supply Chain</td>
+            <td>Definire le categorie di dati che non entrano in AI consumer</td>
+          </tr>
+          <tr>
+            <td>Rischio legale</td>
+            <td>Violazioni di copyright, GDPR o responsabilità su contenuti errati o lesivi</td>
+            <td>Marketing Comunicazione, Sales, R&D</td>
+            <td>Verificare i termini d'uso dei provider per l'uso commerciale</td>
+          </tr>
+          <tr>
+            <td>Autenticità e tracciabilità</td>
+            <td>Impossibilità di ricostruire chi ha prodotto cosa, con quali input e chi ha approvato</td>
+            <td>Sales, Marketing, R&D</td>
+            <td>Definire un processo di approvazione per output AI destinati all'esterno</td>
+          </tr>
+        </tbody>
+      </table>
+    </section>
+
+  </div>
+</main>
+
+<script>
+  window.addEventListener('scroll', () => {
+    const doc = document.documentElement;
+    const scrolled = doc.scrollTop / (doc.scrollHeight - doc.clientHeight);
+    document.getElementById('progress-bar').style.transform = `scaleX(${scrolled})`;
+  });
+  const allTargets = document.querySelectorAll('[id]');
+  const navLinks = document.querySelectorAll('nav#sidebar a[href^="#"]');
+  const observer = new IntersectionObserver(entries => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        navLinks.forEach(a => {
+          a.classList.toggle('active', a.getAttribute('href') === '#' + entry.target.id);
+        });
+      }
+    });
+  }, { rootMargin: '-15% 0px -75% 0px' });
+  allTargets.forEach(s => observer.observe(s));
+</script>
+</body>
+</html>

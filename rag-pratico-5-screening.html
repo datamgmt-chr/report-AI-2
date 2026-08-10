@@ -1,0 +1,875 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>RAG Pratico — Report 5 · Retrieval classico vs. screening sistematico</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:ital,wght@0,300;0,400;0,500;0,600;1,300;1,400&family=DM+Mono:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg:      #fafaf7;
+  --bg2:     #f2f1ec;
+  --bg3:     #e8e6df;
+  --ink:     #1a1916;
+  --ink2:    #2d2b26;
+  --ink3:    #5c5a52;
+  --ink4:    #9c9a90;
+  --border:  #dddbd2;
+  --border2: #cbc9bf;
+
+  --accent:  #3d1a6b;
+  --accent2: #ede8f8;
+  --accent3: #c4aef0;
+
+  --teal:    #1a5f5f;
+  --teal-bg: #e5f3f3;
+  --teal-bd: #8ecece;
+
+  --warm:    #7a4a10;
+  --warm-bg: #fdf3e3;
+  --warm-bd: #e8c878;
+
+  --ok:      #2d6040;
+  --ok-bg:   #eaf4ee;
+  --ok-bd:   #a8d4b4;
+
+  --bad:     #8a1a1a;
+  --bad-bg:  #fdf0f0;
+  --bad-bd:  #e8a8a8;
+
+  --navy:    #2a4878;
+  --navy-bg: #e8edf6;
+}
+
+* { margin:0; padding:0; box-sizing:border-box; }
+html { scroll-behavior:smooth; }
+body {
+  background: var(--bg);
+  color: var(--ink);
+  font-family: 'DM Sans', sans-serif;
+  font-weight: 300;
+  font-size: 15px;
+  line-height: 1.75;
+}
+
+/* ── MASTHEAD ── */
+.masthead {
+  background: var(--accent);
+  color: #fff;
+  padding: 56px 60px 52px;
+  position: relative;
+  overflow: hidden;
+}
+.masthead::before {
+  content: '';
+  position: absolute;
+  top: -80px; right: -80px;
+  width: 380px; height: 380px;
+  border-radius: 50%;
+  border: 1px solid rgba(255,255,255,.06);
+  pointer-events: none;
+}
+.mh-series {
+  font-family: 'DM Mono', monospace;
+  font-size: 10px; letter-spacing: 3px;
+  text-transform: uppercase; color: rgba(255,255,255,.35);
+  margin-bottom: 20px;
+}
+.mh-num {
+  font-family: 'DM Serif Display', serif;
+  font-size: 80px; line-height: 1;
+  color: rgba(255,255,255,.08);
+  position: absolute; right: 60px; top: 40px;
+  letter-spacing: -4px; user-select: none;
+}
+.masthead h1 {
+  font-family: 'DM Serif Display', serif;
+  font-size: clamp(26px, 3.5vw, 42px);
+  font-weight: 400; line-height: 1.1;
+  letter-spacing: -.5px; max-width: 740px; position: relative;
+}
+.masthead h1 em { font-style: italic; color: rgba(255,255,255,.7); }
+.mh-sub {
+  margin-top: 20px; font-size: 15px; font-weight: 300;
+  color: rgba(255,255,255,.45); max-width: 640px;
+  line-height: 1.7; position: relative;
+}
+.mh-pills {
+  margin-top: 28px; display: flex; gap: 8px;
+  flex-wrap: wrap; position: relative;
+}
+.mh-pill {
+  font-family: 'DM Mono', monospace; font-size: 10px;
+  letter-spacing: 1px; padding: 4px 12px;
+  border: 1px solid rgba(255,255,255,.2);
+  color: rgba(255,255,255,.5); border-radius: 20px;
+}
+
+/* ── NAV ── */
+.nav {
+  position: sticky; top: 0; z-index: 100;
+  background: var(--ink); display: flex; overflow-x: auto;
+  border-bottom: 1px solid rgba(255,255,255,.08);
+}
+.nav-btn {
+  flex-shrink: 0; padding: 14px 20px;
+  border: none; background: transparent; cursor: pointer;
+  font-family: 'DM Mono', monospace; font-size: 10px;
+  letter-spacing: 1px; text-transform: uppercase;
+  color: rgba(255,255,255,.3);
+  border-right: 1px solid rgba(255,255,255,.06);
+  transition: color .2s; white-space: nowrap;
+}
+.nav-btn:hover { color: rgba(255,255,255,.65); }
+.nav-btn.active { color: #fff; background: rgba(255,255,255,.06); }
+
+.sect { display: none; }
+.sect.active { display: block; animation: fadeUp .3s ease; }
+@keyframes fadeUp { from{opacity:0;transform:translateY(5px)} to{opacity:1;transform:translateY(0)} }
+
+/* ── CONTENT WRAP ── */
+.cw { max-width: 860px; margin: 0 auto; padding: 52px 60px 64px; }
+
+.s-eyebrow {
+  font-family: 'DM Mono', monospace; font-size: 10px;
+  letter-spacing: 3px; text-transform: uppercase;
+  color: var(--ink4); margin-bottom: 8px;
+}
+.s-title {
+  font-family: 'DM Serif Display', serif; font-size: 30px;
+  font-weight: 400; letter-spacing: -.3px; color: var(--ink);
+  line-height: 1.15; margin-bottom: 28px;
+}
+
+p { margin-bottom: 18px; color: var(--ink2); }
+p:last-child { margin-bottom: 0; }
+p strong { font-weight: 600; color: var(--ink); }
+code {
+  font-family: 'DM Mono', monospace;
+  background: var(--bg3); padding: 1px 6px;
+  border-radius: 3px; font-size: 13px; color: var(--ink2);
+}
+
+/* ── CALLOUT ── */
+.callout {
+  padding: 20px 24px; border-left: 3px solid;
+  margin: 28px 0; border-radius: 0 6px 6px 0;
+}
+.callout-warn   { background: var(--warm-bg); border-color: var(--warm); }
+.callout-ok     { background: var(--ok-bg);   border-color: var(--ok);   }
+.callout-bad    { background: var(--bad-bg);  border-color: var(--bad);  }
+.callout-accent { background: var(--accent2); border-color: var(--accent); }
+.callout-teal   { background: var(--teal-bg); border-color: var(--teal); }
+.callout-navy   { background: var(--navy-bg); border-color: var(--navy); }
+.callout-title {
+  font-family: 'DM Mono', monospace; font-size: 10px;
+  letter-spacing: 2px; text-transform: uppercase; margin-bottom: 8px;
+}
+.callout-warn .callout-title   { color: var(--warm);   }
+.callout-ok .callout-title     { color: var(--ok);     }
+.callout-bad .callout-title    { color: var(--bad);    }
+.callout-accent .callout-title { color: var(--accent); }
+.callout-teal .callout-title   { color: var(--teal);   }
+.callout-navy .callout-title   { color: var(--navy);   }
+.callout p { font-size: 14px; line-height: 1.65; margin-bottom: 8px; }
+.callout p:last-child { margin-bottom: 0; }
+
+/* ── DIAGRAM ── */
+.diagram {
+  background: var(--bg2); border: 1px solid var(--border2);
+  padding: 28px 32px; margin: 28px 0;
+}
+.diagram-title {
+  font-family: 'DM Mono', monospace; font-size: 10px;
+  letter-spacing: 2px; text-transform: uppercase; color: var(--ink4);
+  margin-bottom: 20px; padding-bottom: 12px; border-bottom: 1px solid var(--border);
+}
+
+/* ── SIDE BY SIDE COMPARE ── */
+.compare-two {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1px;
+  background: var(--border2);
+  border: 1px solid var(--border2);
+  border-radius: 6px;
+  overflow: hidden;
+  margin: 24px 0;
+}
+.ct-side { background: var(--bg); padding: 22px 24px; }
+.ct-label {
+  font-family: 'DM Mono', monospace; font-size: 9px;
+  letter-spacing: 2px; text-transform: uppercase;
+  margin-bottom: 8px;
+}
+.ct-title {
+  font-family: 'DM Serif Display', serif; font-size: 18px;
+  color: var(--ink); margin-bottom: 12px; line-height: 1.2;
+}
+.ct-body { font-size: 13px; color: var(--ink3); line-height: 1.65; }
+.ct-body p { font-size: 13px; margin-bottom: 8px; }
+
+/* ── FLOW VISUAL ── */
+.flow-visual {
+  display: flex;
+  align-items: stretch;
+  gap: 0;
+  margin: 16px 0;
+}
+.fv-step {
+  flex: 1;
+  border: 1px solid var(--border2);
+  background: var(--bg);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+.fv-head {
+  padding: 8px 12px;
+  font-family: 'DM Mono', monospace;
+  font-size: 9px; letter-spacing: 1.5px; text-transform: uppercase;
+  color: rgba(255,255,255,.85);
+  border-bottom: 1px solid rgba(255,255,255,.1);
+}
+.fv-body {
+  padding: 10px 12px;
+  font-size: 12.5px; color: var(--ink3); line-height: 1.5; flex: 1;
+}
+.fv-body strong { color: var(--ink2); font-weight: 600; }
+.fv-conn {
+  display: flex; align-items: center;
+  font-family: 'DM Mono', monospace; font-size: 18px;
+  color: var(--border2); padding: 0 6px; flex-shrink: 0;
+}
+
+/* ── ARCHITECTURE CARD ── */
+.arch-card {
+  border: 1.5px solid var(--border2);
+  border-radius: 6px;
+  overflow: hidden;
+  margin: 20px 0;
+}
+.ac-head {
+  padding: 14px 20px;
+  display: flex; align-items: center; gap: 14px;
+  border-bottom: 1px solid var(--border);
+}
+.ac-badge {
+  font-family: 'DM Mono', monospace; font-size: 10px;
+  letter-spacing: 1.5px; text-transform: uppercase;
+  padding: 3px 10px; border-radius: 20px; flex-shrink: 0;
+}
+.ac-name {
+  font-family: 'DM Serif Display', serif; font-size: 18px;
+  color: var(--ink); line-height: 1.1;
+}
+.ac-tag {
+  font-family: 'DM Mono', monospace; font-size: 9.5px;
+  letter-spacing: .5px; color: var(--ink4); margin-left: auto;
+}
+.ac-body {
+  padding: 18px 20px;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
+}
+.ac-col-label {
+  font-family: 'DM Mono', monospace; font-size: 9px;
+  letter-spacing: 2px; text-transform: uppercase; color: var(--ink4);
+  margin-bottom: 10px; padding-bottom: 6px; border-bottom: 1px solid var(--border);
+}
+.ac-list {
+  display: flex; flex-direction: column; gap: 6px;
+}
+.ac-item {
+  display: grid; grid-template-columns: 14px 1fr; gap: 6px;
+  font-size: 13px; color: var(--ink2); line-height: 1.45; align-items: start;
+}
+.ac-dot {
+  width: 5px; height: 5px; border-radius: 50%; margin-top: 5px; flex-shrink: 0;
+}
+.ac-steps {
+  display: flex; flex-direction: column; gap: 0;
+}
+.ac-step {
+  display: grid; grid-template-columns: 28px 1fr; gap: 10px;
+  align-items: start; padding: 8px 0;
+  border-bottom: 1px solid var(--border);
+}
+.ac-step:last-child { border-bottom: none; }
+.ac-step-num {
+  width: 24px; height: 24px; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-family: 'DM Mono', monospace; font-size: 11px;
+  font-weight: 500; color: #fff; flex-shrink: 0;
+}
+.ac-step-body { font-size: 13px; color: var(--ink2); line-height: 1.5; }
+.ac-step-body strong { font-weight: 600; display: block; margin-bottom: 2px; }
+
+/* ── COMPARISON TABLE ── */
+.comp-table {
+  width: 100%; border-collapse: collapse; margin: 20px 0; font-size: 13.5px;
+}
+.comp-table th {
+  background: var(--accent); color: rgba(255,255,255,.85);
+  font-family: 'DM Mono', monospace; font-size: 9.5px;
+  letter-spacing: 1.5px; text-transform: uppercase;
+  padding: 10px 14px; text-align: left; font-weight: 400;
+}
+.comp-table td {
+  padding: 11px 14px; border: 1px solid var(--border);
+  vertical-align: top; line-height: 1.55; color: var(--ink2);
+}
+.comp-table tr:nth-child(even) td { background: var(--bg2); }
+.comp-table td:first-child { font-weight: 500; color: var(--ink); }
+
+/* ── SCORE SPECTRUM ── */
+.spectrum-row {
+  display: flex; align-items: center; gap: 12px;
+  margin-bottom: 10px;
+}
+.spec-label {
+  font-size: 12.5px; color: var(--ink2); line-height: 1.4;
+  min-width: 220px; flex-shrink: 0;
+}
+.spec-track {
+  flex: 1; height: 8px; background: var(--bg3);
+  border-radius: 2px; overflow: hidden; position: relative;
+}
+.spec-fill {
+  height: 100%; border-radius: 2px;
+  transition: width .4s ease;
+}
+.spec-score {
+  font-family: 'DM Mono', monospace; font-size: 11px;
+  color: var(--ink4); min-width: 36px; text-align: right;
+}
+
+/* ── KEY INSIGHT ── */
+.key-insight {
+  background: var(--ink); color: #fff;
+  padding: 28px 32px; margin: 32px 0; border-radius: 6px;
+  position: relative; overflow: hidden;
+}
+.key-insight::before {
+  content: '"'; position: absolute; right: 24px; top: -10px;
+  font-family: 'DM Serif Display', serif; font-size: 100px;
+  color: rgba(255,255,255,.06); line-height: 1; pointer-events: none;
+}
+.ki-label {
+  font-family: 'DM Mono', monospace; font-size: 9px;
+  letter-spacing: 2.5px; text-transform: uppercase;
+  color: rgba(255,255,255,.3); margin-bottom: 12px;
+}
+.ki-text {
+  font-family: 'DM Serif Display', serif; font-size: 20px;
+  font-weight: 400; line-height: 1.4;
+  color: rgba(255,255,255,.9); max-width: 680px;
+}
+
+/* ── NEXT REPORT ── */
+.next-report {
+  border-top: 1px solid var(--border); margin-top: 52px;
+  padding-top: 32px; display: flex;
+  justify-content: space-between; align-items: center; gap: 20px;
+}
+.nr-label {
+  font-family: 'DM Mono', monospace; font-size: 9px;
+  letter-spacing: 2px; text-transform: uppercase;
+  color: var(--ink4); margin-bottom: 6px;
+}
+.nr-title { font-family: 'DM Serif Display', serif; font-size: 18px; color: var(--ink); line-height: 1.2; }
+.nr-sub { font-size: 13px; color: var(--ink4); margin-top: 4px; }
+.nr-arrow { font-family: 'DM Mono', monospace; font-size: 22px; color: var(--accent); flex-shrink: 0; }
+
+/* ── FOOTER ── */
+.footer {
+  padding: 22px 60px; border-top: 1px solid var(--border);
+  display: flex; justify-content: space-between; align-items: center;
+  font-family: 'DM Mono', monospace; font-size: 10px;
+  letter-spacing: 1px; text-transform: uppercase; color: var(--ink4);
+}
+
+@media (max-width: 720px) {
+  .masthead, .cw, .footer { padding-left: 24px; padding-right: 24px; }
+  .mh-num { display: none; }
+  .compare-two { grid-template-columns: 1fr; }
+  .ac-body { grid-template-columns: 1fr; }
+  .flow-visual { flex-direction: column; }
+  .fv-conn { transform: rotate(90deg); align-self: center; padding: 4px 0; }
+}
+</style>
+</head>
+<body>
+
+<!-- ══ MASTHEAD ══ -->
+<div class="masthead">
+  <div class="mh-series">Serie RAG Pratico · Report 5 di 6</div>
+  <div class="mh-num">05</div>
+  <h1>Retrieval classico<br>vs. screening sistematico:<br><em>due architetture diverse</em></h1>
+  <p class="mh-sub">Il RAG classico recupera la risposta migliore. Lo screening sistematico valuta ogni elemento del corpus rispetto a un criterio. Sembrano simili — ma richiedono architetture, strategie e trade-off completamente diversi.</p>
+  <div class="mh-pills">
+    <span class="mh-pill">Top-K retrieval</span>
+    <span class="mh-pill">Completezza vs. precisione</span>
+    <span class="mh-pill">Pre-filtering</span>
+    <span class="mh-pill">Two-stage screening</span>
+    <span class="mh-pill">Recall garantito</span>
+    <span class="mh-pill">Varianti del retrieval</span>
+  </div>
+</div>
+
+<!-- ══ NAV ══ -->
+<div class="nav">
+  <button class="nav-btn active" onclick="show(0)">1 · La differenza fondamentale</button>
+  <button class="nav-btn" onclick="show(1)">2 · Perché top-K non basta</button>
+  <button class="nav-btn" onclick="show(2)">3 · Le architetture per lo screening</button>
+  <button class="nav-btn" onclick="show(3)">4 · Quattro varianti del retrieval</button>
+  <button class="nav-btn" onclick="show(4)">5 · Come scegliere</button>
+</div>
+
+
+<!-- ══════════════════════════════════
+     S0 — LA DIFFERENZA FONDAMENTALE
+══════════════════════════════════ -->
+<div class="sect active" id="s0">
+<div class="cw">
+
+  <div class="s-eyebrow">Il punto di partenza</div>
+  <div class="s-title">Due domande diverse, due architetture diverse</div>
+
+  <p>Il Report 4 ha mostrato come funziona il RAG classico: la query arriva, si trasforma in vettore, si recuperano i K chunk più vicini, il modello risponde. Questo funziona perfettamente per un tipo specifico di domanda — quella in cui stai cercando <em>la risposta</em> che esiste da qualche parte nel corpus.</p>
+
+  <p>Il tuo caso è strutturalmente diverso. Non stai cercando la risposta a una domanda — stai cercando <em>tutti i prodotti</em> che soddisfano un insieme di criteri. La differenza sembra sottile ma ha conseguenze architetturali profonde.</p>
+
+  <div class="compare-two">
+    <div class="ct-side">
+      <div class="ct-label" style="color:var(--navy);">RAG classico</div>
+      <div class="ct-title">Trovare la risposta migliore</div>
+      <div class="ct-body">
+        <p><strong>La domanda:</strong> "Qual è la politica di reso per i prodotti difettosi?"</p>
+        <p><strong>L'obiettivo:</strong> trovare il chunk (o i pochi chunk) del corpus che contengono questa risposta. Ne basta uno buono.</p>
+        <p><strong>Il criterio di successo:</strong> il chunk più rilevante è tra i top-K risultati. Se lo score è 0.85 o 0.75 non cambia molto — l'informazione c'è.</p>
+        <p><strong>Cosa si perde se si sbaglia:</strong> una risposta meno precisa o leggermente incompleta. Recuperabile.</p>
+      </div>
+    </div>
+    <div class="ct-side" style="background:var(--accent2);">
+      <div class="ct-label" style="color:var(--accent);">Screening sistematico</div>
+      <div class="ct-title">Valutare ogni elemento del corpus</div>
+      <div class="ct-body">
+        <p><strong>La domanda:</strong> "Quali prodotti del catalogo corrispondono a questo brief?"</p>
+        <p><strong>L'obiettivo:</strong> identificare <em>tutti</em> i candidati rilevanti. Non uno — tutti. Anche quelli che corrispondono "solo" al 70%.</p>
+        <p><strong>Il criterio di successo:</strong> nessun prodotto rilevante viene escluso. Un falso negativo (prodotto rilevante non recuperato) è un errore grave — stai dicendo al cliente che quel prodotto non esiste.</p>
+        <p><strong>Cosa si perde se si sbaglia:</strong> si propone al cliente una selezione incompleta. Non recuperabile senza sapere cosa manca.</p>
+      </div>
+    </div>
+  </div>
+
+  <p>La differenza si riduce a due concetti opposti: <strong>precisione</strong> vs. <strong>recall</strong>. Il RAG classico ottimizza per la precisione — i chunk che recupero sono davvero rilevanti. Lo screening ottimizza per il recall — nessun prodotto rilevante deve essere perso.</p>
+
+  <div class="key-insight">
+    <div class="ki-label">La distinzione che cambia tutto</div>
+    <div class="ki-text">Nel RAG classico un falso negativo è accettabile — la risposta è magari un po' meno completa. Nello screening sistematico un falso negativo è un errore di business — stai escludendo dalla selezione un prodotto che forse era la risposta giusta.</div>
+  </div>
+
+</div>
+</div>
+
+
+<!-- ══════════════════════════════════
+     S1 — PERCHÉ TOP-K NON BASTA
+══════════════════════════════════ -->
+<div class="sect" id="s1">
+<div class="cw">
+
+  <div class="s-eyebrow">Il limite strutturale</div>
+  <div class="s-title">Perché il top-K retrieval non garantisce completezza</div>
+
+  <p>Il retrieval top-K è progettato per trovare i documenti più simili a una query. "Più simili" significa: i K documenti il cui vettore di embedding è più vicino al vettore della query nello spazio semantico. È una definizione di prossimità, non di rilevanza esaustiva.</p>
+
+  <p>Il problema è che la prossimità vettoriale e la rilevanza per un brief non sono la stessa cosa. Un prodotto può essere rilevante per un brief pur avendo un embedding relativamente distante da esso — per esempio perché usa terminologia tecnica specializzata che l'embedding generalizza in modo diverso dal linguaggio del brief.</p>
+
+  <div class="diagram">
+    <div class="diagram-title">Il problema della completezza — uno scenario concreto</div>
+
+    <p style="font-size:13px; color:var(--ink3); margin-bottom:16px; margin-top:0;">Brief: <em>"Cerchiamo un capo per alta montagna, impermeabile, in materiali tecnici di qualità, per un cliente professionale"</em></p>
+
+    <p style="font-family:'DM Mono',monospace; font-size:9px; letter-spacing:1.5px; text-transform:uppercase; color:var(--ink4); margin-bottom:10px;">Retrieval top-5 — cosa trova e cosa perde</p>
+
+    <div style="display:flex; flex-direction:column; gap:6px; margin-bottom:20px;">
+      <div style="display:flex; align-items:center; gap:10px;">
+        <div style="width:3px; height:36px; background:var(--ok); border-radius:1px; flex-shrink:0;"></div>
+        <div style="flex:1;">
+          <div style="font-size:12.5px; color:var(--ink2);">PRD-2847 Alpentech Pro — <em>"giacca per alpinismo, Gore-Tex, alta quota, professionale"</em></div>
+          <div style="font-family:'DM Mono',monospace; font-size:10px; color:var(--ok);">score 0.91 · RECUPERATO ✓</div>
+        </div>
+      </div>
+      <div style="display:flex; align-items:center; gap:10px;">
+        <div style="width:3px; height:36px; background:var(--ok); border-radius:1px; flex-shrink:0;"></div>
+        <div style="flex:1;">
+          <div style="font-size:12.5px; color:var(--ink2);">PRD-3102 WinterShell Pro — <em>"hardshell invernale, alpinismo tecnico"</em></div>
+          <div style="font-family:'DM Mono',monospace; font-size:10px; color:var(--ok);">score 0.84 · RECUPERATO ✓</div>
+        </div>
+      </div>
+      <div style="display:flex; align-items:center; gap:10px;">
+        <div style="width:3px; height:36px; background:var(--ok); border-radius:1px; flex-shrink:0;"></div>
+        <div style="flex:1;">
+          <div style="font-size:12.5px; color:var(--ink2);">PRD-1540 ArcticLayer — <em>"capo termico per escursionismo invernale"</em></div>
+          <div style="font-family:'DM Mono',monospace; font-size:10px; color:var(--ok);">score 0.78 · RECUPERATO ✓</div>
+        </div>
+      </div>
+      <div style="display:flex; align-items:center; gap:10px;">
+        <div style="width:3px; height:36px; background:var(--ok); border-radius:1px; flex-shrink:0;"></div>
+        <div style="flex:1;">
+          <div style="font-size:12.5px; color:var(--ink2);">PRD-2201 SummitPro 3L — <em>"impermeabile mountain guide"</em></div>
+          <div style="font-family:'DM Mono',monospace; font-size:10px; color:var(--ok);">score 0.75 · RECUPERATO ✓</div>
+        </div>
+      </div>
+      <div style="display:flex; align-items:center; gap:10px;">
+        <div style="width:3px; height:36px; background:var(--ok); border-radius:1px; flex-shrink:0;"></div>
+        <div style="flex:1;">
+          <div style="font-size:12.5px; color:var(--ink2);">PRD-0892 TrekMaster — <em>"abbigliamento trekking outdoor"</em></div>
+          <div style="font-family:'DM Mono',monospace; font-size:10px; color:var(--ok);">score 0.71 · RECUPERATO ✓</div>
+        </div>
+      </div>
+    </div>
+
+    <p style="font-family:'DM Mono',monospace; font-size:9px; letter-spacing:1.5px; text-transform:uppercase; color:var(--bad); margin-bottom:10px;">Prodotti rilevanti NON recuperati (fuori dal top-5)</p>
+
+    <div style="display:flex; flex-direction:column; gap:6px;">
+      <div style="display:flex; align-items:center; gap:10px;">
+        <div style="width:3px; height:40px; background:var(--bad); border-radius:1px; flex-shrink:0;"></div>
+        <div style="flex:1;">
+          <div style="font-size:12.5px; color:var(--ink2);">PRD-4421 Ascent GTX Pro — <em>usa terminologia tecnica diversa: "GORE-TEX PACLITE® Plus, classe impermeabilità ISO 811, resistenza al vento EN 13537"</em></div>
+          <div style="font-family:'DM Mono',monospace; font-size:10px; color:var(--bad);">score 0.64 · NON RECUPERATO — ma è altamente rilevante per il brief ✗</div>
+        </div>
+      </div>
+      <div style="display:flex; align-items:center; gap:10px;">
+        <div style="width:3px; height:40px; background:var(--bad); border-radius:1px; flex-shrink:0;"></div>
+        <div style="flex:1;">
+          <div style="font-size:12.5px; color:var(--ink2);">PRD-3890 ProGuide Shell — <em>scheda scritta con focus su "guide e istruttori di alpinismo", non su "alta montagna" o "trekking"</em></div>
+          <div style="font-family:'DM Mono',monospace; font-size:10px; color:var(--bad);">score 0.61 · NON RECUPERATO — ma perfettamente allineato con "cliente professionale" ✗</div>
+        </div>
+      </div>
+    </div>
+
+    <p style="font-size:12px; color:var(--ink4); margin-top:16px; margin-bottom:0;">Entrambi i prodotti persi sono autenticamente rilevanti per il brief. Il loro score basso non indica irrilevanza — indica che il vocabolario delle loro schede è distante da quello del brief, anche se il prodotto è quello giusto.</p>
+  </div>
+
+  <div class="callout callout-warn">
+    <div class="callout-title">Aumentare K non risolve il problema</div>
+    <p>Una risposta intuitiva è "allora metto K=50 invece di K=5". Il problema è che aumentare K degrada la qualità in due modi: il contesto si riempie di prodotti irrilevanti che "inquinano" il ragionamento del modello, e il costo per chiamata cresce linearmente con K.</p>
+    <p>Oltre a un certo punto (tipicamente K=15–20 su un catalogo medio), la qualità della selezione finale peggiora anche aumentando il recall grezzo — il modello ha troppo rumore da filtrare.</p>
+  </div>
+
+</div>
+</div>
+
+
+<!-- ══════════════════════════════════
+     S2 — LE ARCHITETTURE PER LO SCREENING
+══════════════════════════════════ -->
+<div class="sect" id="s2">
+<div class="cw">
+
+  <div class="s-eyebrow">Le soluzioni</div>
+  <div class="s-title">Tre architetture per lo screening sistematico</div>
+
+  <p>Il problema del recall nello screening ha soluzioni diverse a seconda delle dimensioni del catalogo, della disponibilità di dati strutturati e dei requisiti di latenza. Esistono tre approcci principali, con trade-off distinti.</p>
+
+  <!-- Architettura 1 -->
+  <div class="arch-card">
+    <div class="ac-head">
+      <div class="ac-badge" style="background:var(--teal-bg); color:var(--teal);">Architettura 1</div>
+      <div class="ac-name">Pre-filtering strutturato + RAG semantico</div>
+      <div class="ac-tag">Cataloghi fino a ~500 prodotti</div>
+    </div>
+    <div class="ac-body">
+      <div>
+        <div class="ac-col-label">Come funziona</div>
+        <div class="ac-steps">
+          <div class="ac-step">
+            <div class="ac-step-num" style="background:var(--teal);">1</div>
+            <div class="ac-step-body">
+              <strong>Filtro strutturato</strong>
+              Usa le colonne strutturate della tabella (categoria, fascia di prezzo, disponibilità, materiale principale) per ridurre il catalogo a un sottoinsieme di candidati plausibili. Un catalogo di 400 prodotti diventa 80–120 candidati.
+            </div>
+          </div>
+          <div class="ac-step">
+            <div class="ac-step-num" style="background:var(--teal);">2</div>
+            <div class="ac-step-body">
+              <strong>RAG semantico sul sottoinsieme</strong>
+              Esegui il retrieval vettoriale solo sui candidati filtrati, con K grande (es. K=40). Su 100 prodotti con K=40 recuperi il 40% del sottoinsieme — recall molto alto.
+            </div>
+          </div>
+          <div class="ac-step">
+            <div class="ac-step-num" style="background:var(--teal);">3</div>
+            <div class="ac-step-body">
+              <strong>Valutazione LLM</strong>
+              Il modello riceve i chunk dei 40 candidati e il brief, e produce il ranking finale con motivazioni.
+            </div>
+          </div>
+        </div>
+      </div>
+      <div>
+        <div class="ac-col-label">Trade-off</div>
+        <div class="ac-list">
+          <div class="ac-item"><div class="ac-dot" style="background:var(--ok)"></div><div>Semplice da implementare — si estende l'architettura RAG esistente</div></div>
+          <div class="ac-item"><div class="ac-dot" style="background:var(--ok)"></div><div>Recall alto sul sottoinsieme filtrato</div></div>
+          <div class="ac-item"><div class="ac-dot" style="background:var(--ok)"></div><div>I filtri strutturati sono deterministici e veloci</div></div>
+          <div class="ac-item"><div class="ac-dot" style="background:var(--bad)"></div><div>Dipende dalla qualità dei filtri strutturati — se il brief non mappa bene sulle colonne, il filtro pre-esclude candidati rilevanti</div></div>
+          <div class="ac-item"><div class="ac-dot" style="background:var(--bad)"></div><div>Non scala bene oltre ~500 prodotti senza filtri molto selettivi</div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Architettura 2 -->
+  <div class="arch-card">
+    <div class="ac-head">
+      <div class="ac-badge" style="background:var(--accent2); color:var(--accent);">Architettura 2</div>
+      <div class="ac-name">Two-stage: embedding grossolano + LLM preciso</div>
+      <div class="ac-tag">Cataloghi 200–2.000 prodotti</div>
+    </div>
+    <div class="ac-body">
+      <div>
+        <div class="ac-col-label">Come funziona</div>
+        <div class="ac-steps">
+          <div class="ac-step">
+            <div class="ac-step-num" style="background:var(--accent);">1</div>
+            <div class="ac-step-body">
+              <strong>Stage 1 — Candidati con soglia bassa</strong>
+              Retrieval semantico con K grande e soglia bassa (es. K=80, soglia minima 0.45). L'obiettivo è il recall massimo anche a costo di precision bassa — includere troppo è meno grave che escludere rilevanti.
+            </div>
+          </div>
+          <div class="ac-step">
+            <div class="ac-step-num" style="background:var(--accent);">2</div>
+            <div class="ac-step-body">
+              <strong>Stage 2 — Scoring LLM rapido</strong>
+              Per ogni candidato, una chiamata LLM veloce con un prompt corto: "Su una scala 1–5, quanto questo prodotto corrisponde al brief? Rispondi solo con il numero." Produce un punteggio per ogni candidato senza generare testo.
+            </div>
+          </div>
+          <div class="ac-step">
+            <div class="ac-step-num" style="background:var(--accent);">3</div>
+            <div class="ac-step-body">
+              <strong>Stage 3 — Selezione finale</strong>
+              Prendi i top-10 per score LLM. Per questi, una chiamata LLM completa con tutti i chunk e il brief produce la selezione finale con motivazioni dettagliate.
+            </div>
+          </div>
+        </div>
+      </div>
+      <div>
+        <div class="ac-col-label">Trade-off</div>
+        <div class="ac-list">
+          <div class="ac-item"><div class="ac-dot" style="background:var(--ok)"></div><div>Recall molto alto nel stage 1 — pochi falsi negativi</div></div>
+          <div class="ac-item"><div class="ac-dot" style="background:var(--ok)"></div><div>Lo scoring LLM rapido è economico (output minimo, prompt corto)</div></div>
+          <div class="ac-item"><div class="ac-dot" style="background:var(--ok)"></div><div>La selezione finale ha qualità alta perché lavora su un sottoinsieme già filtrato</div></div>
+          <div class="ac-item"><div class="ac-dot" style="background:var(--bad)"></div><div>Più chiamate LLM — latenza maggiore rispetto al RAG classico</div></div>
+          <div class="ac-item"><div class="ac-dot" style="background:var(--bad)"></div><div>Lo stage 2 può essere parallelizzato ma richiede gestione della concorrenza</div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Architettura 3 -->
+  <div class="arch-card">
+    <div class="ac-head">
+      <div class="ac-badge" style="background:var(--navy-bg); color:var(--navy);">Architettura 3</div>
+      <div class="ac-name">Embedding prodotto aggregato per prodotto intero</div>
+      <div class="ac-tag">Cataloghi grandi, query molto diverse</div>
+    </div>
+    <div class="ac-body">
+      <div>
+        <div class="ac-col-label">Come funziona</div>
+        <div class="ac-steps">
+          <div class="ac-step">
+            <div class="ac-step-num" style="background:var(--navy);">1</div>
+            <div class="ac-step-body">
+              <strong>Embedding aggregato per prodotto</strong>
+              In fase di indicizzazione, invece di (o in aggiunta a) indicizzare i chunk singoli, si crea un embedding riassuntivo per ogni prodotto intero — generando prima un testo di sintesi e poi il suo embedding.
+            </div>
+          </div>
+          <div class="ac-step">
+            <div class="ac-step-num" style="background:var(--navy);">2</div>
+            <div class="ac-step-body">
+              <strong>Retrieval a livello prodotto</strong>
+              Il primo retrieval opera sugli embedding prodotto (non sui chunk) — recupera i 30–50 prodotti più rilevanti. Questo garantisce diversità nella selezione.
+            </div>
+          </div>
+          <div class="ac-step">
+            <div class="ac-step-num" style="background:var(--navy);">3</div>
+            <div class="ac-step-body">
+              <strong>Retrieval a livello chunk per i candidati</strong>
+              Per i 30–50 prodotti selezionati, recupera i chunk specifici più rilevanti. Ora il modello ha informazioni dettagliate sui candidati giusti.
+            </div>
+          </div>
+        </div>
+      </div>
+      <div>
+        <div class="ac-col-label">Trade-off</div>
+        <div class="ac-list">
+          <div class="ac-item"><div class="ac-dot" style="background:var(--ok)"></div><div>Diversità garantita — non si saturano i risultati con chunk dello stesso prodotto</div></div>
+          <div class="ac-item"><div class="ac-dot" style="background:var(--ok)"></div><div>L'embedding aggregato è più robusto a variazioni terminologiche</div></div>
+          <div class="ac-item"><div class="ac-dot" style="background:var(--bad)"></div><div>Richiede un passaggio di indicizzazione aggiuntivo (generazione del testo riassuntivo)</div></div>
+          <div class="ac-item"><div class="ac-dot" style="background:var(--bad)"></div><div>La qualità del riassunto impatta direttamente la qualità del retrieval</div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="callout callout-teal">
+    <div class="callout-title">Quale architettura per il caso catalogo prodotti</div>
+    <p>Per un catalogo di 100–500 prodotti con schede di 2–3 pagine, la <strong>Architettura 1</strong> è il punto di partenza più pragmatico se hai buoni dati strutturati per il filtro (categoria, fascia di prezzo, tipo di utilizzo previsto). È la più semplice da implementare e spesso sufficiente.</p>
+    <p>Se i brief sono molto eterogenei e i filtri strutturati non coprono bene le variabili rilevanti, passa all'<strong>Architettura 2</strong>. Lo scoring LLM rapido nello stage 2 aggiunge una qualità semantica che i filtri strutturati non possono dare, a un costo relativamente basso.</p>
+  </div>
+
+</div>
+</div>
+
+
+<!-- ══════════════════════════════════
+     S3 — QUATTRO VARIANTI DEL RETRIEVAL
+══════════════════════════════════ -->
+<div class="sect" id="s3">
+<div class="cw">
+
+  <div class="s-eyebrow">Il panorama completo</div>
+  <div class="s-title">Le quattro varianti principali del retrieval</div>
+
+  <p>Il RAG classico e lo screening sistematico non esauriscono il panorama delle architetture di retrieval. Vale la pena avere una mappa completa delle varianti, per scegliere quella più adatta a ogni caso d'uso — presente e futuro.</p>
+
+  <table class="comp-table">
+    <thead>
+      <tr>
+        <th>Variante</th>
+        <th>Come funziona</th>
+        <th>Ottimizza per</th>
+        <th>Caso d'uso tipico</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>RAG classico<br><span style="font-family:'DM Mono',monospace; font-size:10px; color:var(--ink4); font-weight:400;">top-K retrieval</span></td>
+        <td>Query → embedding → K chunk più vicini → risposta. Un'unica chiamata di retrieval.</td>
+        <td>Precisione e latenza. I chunk recuperati sono molto rilevanti.</td>
+        <td>Q&A su documentazione, chatbot su knowledge base, assistente informativo.</td>
+      </tr>
+      <tr>
+        <td>Screening sistematico<br><span style="font-family:'DM Mono',monospace; font-size:10px; color:var(--ink4); font-weight:400;">exhaustive evaluation</span></td>
+        <td>Brief → filtro strutturato + retrieval con K alto → scoring → selezione finale. Multi-stage.</td>
+        <td>Recall. Nessun candidato rilevante viene perso.</td>
+        <td>Selezione prodotti da catalogo, matching candidati a posizioni, screening documenti rispetto a criteri.</td>
+      </tr>
+      <tr>
+        <td>Retrieval agentico<br><span style="font-family:'DM Mono',monospace; font-size:10px; color:var(--ink4); font-weight:400;">self-directed search</span></td>
+        <td>Il modello decide autonomamente quando cercare, cosa cercare, e quante query eseguire in sequenza per rispondere a domande complesse.</td>
+        <td>Qualità su domande complesse multi-step. Il modello può riformulare la query se il primo risultato non basta.</td>
+        <td>Ricerca e analisi approfondita, domande che richiedono combinare informazioni da fonti diverse.</td>
+      </tr>
+      <tr>
+        <td>Retrieval ibrido<br><span style="font-family:'DM Mono',monospace; font-size:10px; color:var(--ink4); font-weight:400;">semantic + keyword</span></td>
+        <td>Due retrieval paralleli — semantico e keyword (BM25) — i cui risultati vengono fusi con RRF prima di essere passati al modello.</td>
+        <td>Copertura. Funziona bene sia per concetti sia per termini esatti (codici, nomi propri, valori numerici).</td>
+        <td>Cataloghi con codici prodotto, basi di conoscenza con terminologia tecnica specifica, sistemi dove la query può contenere sia concetti che identificatori.</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <p>Le varianti non si escludono — spesso le architetture reali le combinano. Per il caso del catalogo prodotti, la soluzione più robusta è tipicamente: <strong>retrieval ibrido</strong> (per gestire sia il linguaggio del brief che eventuali codici prodotto) applicato in modalità <strong>screening sistematico</strong> (con K alto e multi-stage per garantire il recall).</p>
+
+  <div class="callout callout-accent">
+    <div class="callout-title">Il retrieval agentico per il tuo caso — quando ha senso</div>
+    <p>Il retrieval agentico diventa rilevante quando il brief è ambiguo o incompleto e il modello ha bisogno di fare più ricerche per chiarire i criteri. Per esempio: "brief generico" → prima ricerca per capire le categorie candidate → seconda ricerca mirata su quelle categorie → terza ricerca su specifiche tecniche chiave.</p>
+    <p>Per briefs ben definiti su un catalogo noto, l'overhead del retrieval agentico non si giustifica. Diventa utile quando il sistema deve gestire brief molto variegati e non strutturati dove la prima query non è mai definitiva.</p>
+  </div>
+
+</div>
+</div>
+
+
+<!-- ══════════════════════════════════
+     S4 — COME SCEGLIERE
+══════════════════════════════════ -->
+<div class="sect" id="s4">
+<div class="cw">
+
+  <div class="s-eyebrow">La guida decisionale</div>
+  <div class="s-title">Come scegliere l'architettura giusta</div>
+
+  <p>La scelta tra retrieval classico e screening sistematico — e tra le varianti di ciascuno — dipende da quattro variabili: la dimensione del catalogo, la struttura dei dati disponibili, il costo accettabile per operazione, e la tolleranza ai falsi negativi.</p>
+
+  <div class="diagram">
+    <div class="diagram-title">Mappa di scelta — quale architettura per quale caso</div>
+
+    <div style="display:grid; grid-template-columns:1fr 1fr; gap:1px; background:var(--border2); border-radius:4px; overflow:hidden;">
+
+      <div style="background:var(--bg); padding:18px 20px;">
+        <div style="font-family:'DM Mono',monospace; font-size:9px; letter-spacing:2px; text-transform:uppercase; color:var(--ink4); margin-bottom:12px; padding-bottom:8px; border-bottom:1px solid var(--border);">Corpus piccolo (< 100 elementi) + query singola</div>
+        <div style="font-size:13.5px; color:var(--ink2); line-height:1.6; margin-bottom:10px;"><strong>Tutto nel contesto.</strong> Non serve RAG. Metti tutti i documenti nel prompt e lascia che il modello li elabori direttamente.</div>
+        <div style="font-family:'DM Mono',monospace; font-size:10px; color:var(--ink4);">→ Context stuffing, nessun vector store</div>
+      </div>
+
+      <div style="background:var(--teal-bg); padding:18px 20px;">
+        <div style="font-family:'DM Mono',monospace; font-size:9px; letter-spacing:2px; text-transform:uppercase; color:var(--teal); margin-bottom:12px; padding-bottom:8px; border-bottom:1px solid var(--teal-bd);">Corpus medio (100–500) + query risposta specifica</div>
+        <div style="font-size:13.5px; color:var(--ink2); line-height:1.6; margin-bottom:10px;"><strong>RAG classico.</strong> K=5–15, soglia 0.65–0.75. Semplice, veloce, efficace per Q&A e domande puntuali.</div>
+        <div style="font-family:'DM Mono',monospace; font-size:10px; color:var(--teal);">→ RAG standard, top-K retrieval</div>
+      </div>
+
+      <div style="background:var(--accent2); padding:18px 20px;">
+        <div style="font-family:'DM Mono',monospace; font-size:9px; letter-spacing:2px; text-transform:uppercase; color:var(--accent); margin-bottom:12px; padding-bottom:8px; border-bottom:1px solid var(--accent3);">Corpus medio (100–500) + screening completo</div>
+        <div style="font-size:13.5px; color:var(--ink2); line-height:1.6; margin-bottom:10px;"><strong>Architettura 1 o 2.</strong> Pre-filtro strutturato + RAG su sottoinsieme, oppure two-stage con scoring rapido. Recall alto senza saturare il contesto.</div>
+        <div style="font-family:'DM Mono',monospace; font-size:10px; color:var(--accent);">→ Screening sistematico · Il tuo caso</div>
+      </div>
+
+      <div style="background:var(--navy-bg); padding:18px 20px;">
+        <div style="font-family:'DM Mono',monospace; font-size:9px; letter-spacing:2px; text-transform:uppercase; color:var(--navy); margin-bottom:12px; padding-bottom:8px; border-bottom:1px solid rgba(42,72,120,.2);">Corpus grande (500+) + screening o analisi complessa</div>
+        <div style="font-size:13.5px; color:var(--ink2); line-height:1.6; margin-bottom:10px;"><strong>Architettura 3 + retrieval agentico.</strong> Embedding aggregato per prodotto + multi-query per copertura completa. Richiede più infrastruttura.</div>
+        <div style="font-family:'DM Mono',monospace; font-size:10px; color:var(--navy);">→ Screening avanzato, retrieval agentico</div>
+      </div>
+
+    </div>
+  </div>
+
+  <div class="callout callout-ok">
+    <div class="callout-title">Il percorso pratico per il tuo caso specifico</div>
+    <p>Parti dall'<strong>Architettura 1</strong> — è la più semplice da implementare e quella con il miglior rapporto impegno/risultato per un catalogo di qualche centinaio di prodotti:</p>
+    <p><strong>Passo 1:</strong> identifica le colonne strutturate della tua tabella che ti permettono di pre-filtrare il catalogo sulla base del brief (categoria merceologica, fascia di prezzo, stagione, tipo di utilizzo). Il filtro deve ridurre il catalogo a 80–120 candidati per brief tipico.</p>
+    <p><strong>Passo 2:</strong> indicizza i testi descrittivi come descritto nel Report 3 (structure-aware, 300–400 token, prepend nome prodotto). Esegui il retrieval solo sui candidati filtrati con K=30–40.</p>
+    <p><strong>Passo 3:</strong> costruisci il contesto per il modello con i chunk recuperati + i dati strutturati dei candidati + il brief. Aggiungi istruzioni di grounding esplicite.</p>
+    <p>Se dopo i primi test scopri che alcuni prodotti rilevanti vengono sistematicamente persi nonostante il filtro, passa all'<strong>Architettura 2</strong> aggiungendo lo scoring LLM rapido come stage intermedio.</p>
+  </div>
+
+  <div class="key-insight">
+    <div class="ki-label">La lezione centrale di questo report</div>
+    <div class="ki-text">Il retrieval non è una tecnologia — è una strategia. La stessa infrastruttura (embedding + vector store) può implementare architetture molto diverse. La scelta dell'architettura dipende da cosa stai cercando di garantire: la risposta migliore, o nessun candidato perso.</div>
+  </div>
+
+  <!-- NEXT REPORT -->
+  <div class="next-report">
+    <div>
+      <div class="nr-label">Prossimo report</div>
+      <div class="nr-title">RAG per lo screening sistematico:<br>il caso catalogo prodotti</div>
+      <div class="nr-sub">Implementazione pratica · Chunking delle schede · Costruzione del brief come query · Integrazione con i dati strutturati</div>
+    </div>
+    <div class="nr-arrow">→</div>
+  </div>
+
+</div>
+</div>
+
+<!-- FOOTER -->
+<div class="footer">
+  <span>Serie RAG Pratico · Report 5 · Retrieval classico vs. screening sistematico</span>
+  <span>2026</span>
+</div>
+
+<script>
+function show(n) {
+  document.querySelectorAll('.sect').forEach(s => s.classList.remove('active'));
+  document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('s'+n).classList.add('active');
+  document.querySelectorAll('.nav-btn')[n].classList.add('active');
+  window.scrollTo({top:0, behavior:'smooth'});
+}
+</script>
+</body>
+</html>

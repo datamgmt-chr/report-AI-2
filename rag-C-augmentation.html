@@ -1,0 +1,1118 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>RAG — C · Augmentation: come passare il contesto al modello</title>
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Outfit:wght@200;300;400;500;600;700;800;900&family=IBM+Plex+Mono:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg:     #faf8f5;
+  --bg2:    #f2efe9;
+  --bg3:    #e9e5dc;
+  --ink:    #1b1915;
+  --ink2:   #2e2b25;
+  --ink3:   #6d685c;
+  --ink4:   #a19c8f;
+  --border: #d9d4c8;
+  --border2:#cac4b6;
+
+  --accent:  #1a6b5a;
+  --accent2: #0f4a3e;
+  --accent-light: #ecf7f4;
+
+  --aug:  #b07d24;
+  --aug-l:#fdf6e8;
+  --aug2: #7d5618;
+
+  --ok:  #3d7a45;
+  --ok-l:#f4faf5;
+  --bad: #c0392b;
+  --bad-l:#fdf5f5;
+  --warn:#b07d24;
+  --warn-l:#fdf6e8;
+}
+
+* { margin:0; padding:0; box-sizing:border-box; }
+html { scroll-behavior:smooth; }
+body {
+  background:var(--bg); color:var(--ink);
+  font-family:'Outfit',sans-serif; font-weight:300;
+  font-size:14px; line-height:1.75;
+}
+
+.masthead {
+  background:var(--ink); color:rgba(255,255,255,.9);
+  padding:60px 56px 52px; position:relative; overflow:hidden;
+}
+.masthead::before {
+  content:''; position:absolute; inset:0;
+  background:
+    repeating-linear-gradient(90deg,rgba(255,255,255,.012) 0,rgba(255,255,255,.012) 1px,transparent 1px,transparent 64px),
+    repeating-linear-gradient(0deg,rgba(255,255,255,.012) 0,rgba(255,255,255,.012) 1px,transparent 1px,transparent 64px);
+  pointer-events:none;
+}
+.masthead::after {
+  content:'C'; position:absolute; right:44px; bottom:-28px;
+  font-family:'Instrument Serif',serif; font-size:280px; line-height:1;
+  color:rgba(255,255,255,.025); pointer-events:none;
+}
+.mh-eye {
+  font-family:'IBM Plex Mono',monospace; font-size:10px;
+  letter-spacing:3px; text-transform:uppercase;
+  color:rgba(255,255,255,.25); margin-bottom:18px; position:relative;
+}
+.mh-cluster {
+  display:inline-block; font-family:'IBM Plex Mono',monospace;
+  font-size:10px; letter-spacing:2px; text-transform:uppercase;
+  padding:4px 12px; border:1px solid var(--aug);
+  color:var(--aug); margin-bottom:20px; position:relative;
+}
+.masthead h1 {
+  font-family:'Instrument Serif',serif; font-weight:400;
+  font-size:clamp(30px,4.5vw,54px); line-height:1.08;
+  letter-spacing:-1px; max-width:700px; position:relative;
+}
+.mh-sub {
+  margin-top:20px; font-size:15px; font-weight:300;
+  color:rgba(255,255,255,.38); max-width:660px;
+  line-height:1.7; position:relative;
+}
+.mh-meta {
+  margin-top:32px; display:flex; gap:32px; flex-wrap:wrap; position:relative;
+}
+.mh-stat { display:flex; flex-direction:column; gap:4px; }
+.mh-stat-val {
+  font-family:'IBM Plex Mono',monospace; font-size:22px; font-weight:500;
+  color:rgba(255,255,255,.85);
+}
+.mh-stat-lbl {
+  font-size:10px; letter-spacing:2px; text-transform:uppercase;
+  color:rgba(255,255,255,.25);
+}
+
+.nav {
+  background:var(--ink2); position:sticky; top:0; z-index:100;
+  display:flex; overflow-x:auto;
+  border-bottom:1px solid rgba(255,255,255,.06);
+}
+.nav-btn {
+  flex:1; min-width:110px; padding:13px 12px;
+  border:none; background:transparent; cursor:pointer;
+  font-family:'Outfit',sans-serif; font-size:10.5px; font-weight:600;
+  text-transform:uppercase; letter-spacing:.4px;
+  color:rgba(255,255,255,.3);
+  border-right:1px solid rgba(255,255,255,.06);
+  transition:all .2s; white-space:nowrap;
+}
+.nav-btn:last-child { border-right:none; }
+.nav-btn:hover { color:rgba(255,255,255,.6); }
+.nav-btn.active { color:#fff; background:rgba(255,255,255,.05); }
+
+.sect { display:none; }
+.sect.active { display:block; animation:fadeIn .3s ease; }
+@keyframes fadeIn { from{opacity:0;transform:translateY(6px)} to{opacity:1;transform:translateY(0)} }
+
+.sect-head { padding:48px 56px 36px; border-bottom:1px solid var(--border); }
+.sect-num {
+  font-family:'IBM Plex Mono',monospace; font-size:10px;
+  letter-spacing:3px; text-transform:uppercase; color:var(--ink4); margin-bottom:10px;
+}
+.sect-head h2 {
+  font-family:'Instrument Serif',serif; font-weight:400;
+  font-size:clamp(26px,3.5vw,42px); line-height:1.1;
+  letter-spacing:-.5px; max-width:640px; margin-bottom:14px;
+}
+.sect-head p { color:var(--ink3); max-width:700px; font-size:14.5px; }
+.wrap { padding:0 56px 64px; }
+
+.prose { max-width:760px; }
+.prose p { font-size:14.5px; color:var(--ink3); line-height:1.85; margin-bottom:16px; }
+.prose p strong { color:var(--ink2); font-weight:500; }
+.prose p em { font-style:italic; color:var(--ink2); }
+
+/* ── GL CARD ── */
+.gl-group { margin-top:40px; }
+.gl-group-title {
+  font-family:'IBM Plex Mono',monospace; font-size:9px;
+  letter-spacing:3px; text-transform:uppercase;
+  color:var(--ink4); padding-bottom:10px; border-bottom:1px solid var(--border);
+}
+.gl-card { border:1px solid var(--border2); border-top:none; background:var(--bg); }
+.gl-header {
+  display:grid; grid-template-columns:5px 52px 1fr auto;
+  align-items:stretch; border-bottom:1px solid var(--border);
+}
+.gl-stripe { background:var(--aug); }
+.gl-num {
+  font-family:'Outfit',sans-serif; font-weight:800; font-size:20px; color:var(--bg3);
+  display:flex; align-items:center; justify-content:center;
+  border-right:1px solid var(--border);
+}
+.gl-title-wrap { padding:16px 20px; }
+.gl-title { font-family:'Instrument Serif',serif; font-size:20px; color:var(--ink2); line-height:1.2; }
+.gl-subtitle { font-size:12px; color:var(--ink4); margin-top:3px; }
+.gl-impact-wrap {
+  padding:14px 20px; display:flex; flex-direction:column;
+  align-items:flex-end; justify-content:center; gap:4px;
+}
+.gl-impact-stars { font-size:14px; }
+.gl-impact-lbl {
+  font-family:'IBM Plex Mono',monospace; font-size:8px;
+  letter-spacing:1px; text-transform:uppercase; color:var(--ink4);
+}
+.gl-body { padding:0; }
+.gl-section { padding:20px 24px; border-bottom:1px solid var(--border); }
+.gl-section:last-child { border-bottom:none; }
+.gl-section-lbl {
+  font-family:'IBM Plex Mono',monospace; font-size:9px;
+  letter-spacing:2px; text-transform:uppercase; color:var(--ink4);
+  margin-bottom:10px; padding-bottom:6px; border-bottom:1px solid var(--border);
+}
+.gl-section p { font-size:13.5px; color:var(--ink3); line-height:1.8; max-width:740px; }
+.gl-section p strong { color:var(--ink2); font-weight:500; }
+
+/* ── PROMPT TEMPLATE ── */
+.prompt-template {
+  margin-top:16px;
+  font-family:'IBM Plex Mono',monospace; font-size:12px; line-height:1.85;
+  padding:20px 24px; border:1px solid var(--border2);
+  background:var(--ink); color:rgba(255,255,255,.75);
+  white-space:pre-wrap; word-break:break-word;
+}
+.pt-comment  { color:rgba(255,255,255,.28); }
+.pt-section  { color:#f4a87a; font-weight:500; }
+.pt-var      { color:#93c5e8; }
+.pt-instr    { color:#7dd3a8; }
+.pt-label    { color:rgba(255,255,255,.85); }
+
+/* ── COMPARE GRID ── */
+.compare-grid { display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-top:12px; }
+.pex-lbl {
+  font-family:'IBM Plex Mono',monospace; font-size:9px;
+  letter-spacing:2px; text-transform:uppercase; margin-bottom:6px;
+}
+.pex-lbl.bad  { color:var(--bad); }
+.pex-lbl.good { color:var(--aug); }
+.pex-lbl.neutral { color:var(--ink4); }
+
+.prompt-box {
+  font-family:'IBM Plex Mono',monospace; font-size:11.5px; line-height:1.75;
+  padding:14px 18px; border:1px solid; white-space:pre-wrap; word-break:break-word;
+}
+.prompt-box.bad  { border-color:#e8c5c5; background:var(--bad-l); color:#6b3030; }
+.prompt-box.good { border-color:#e8d8a8; background:var(--aug-l); color:var(--aug2); }
+.prompt-box.neutral { border-color:var(--border2); background:var(--bg2); color:var(--ink3); }
+.prompt-box .hl { font-weight:500; color:var(--aug); text-decoration:underline; text-decoration-color:rgba(176,125,36,.3); }
+.prompt-box.bad .hl { color:#8b3030; text-decoration:none; }
+
+/* ── ANATOMY PANEL ── */
+.anatomy-panel {
+  margin-top:16px; border:1px solid var(--border2); overflow:hidden;
+}
+.ap-head {
+  padding:10px 16px; background:var(--ink);
+  border-bottom:1px solid rgba(255,255,255,.06);
+  font-family:'IBM Plex Mono',monospace; font-size:9px;
+  letter-spacing:2px; text-transform:uppercase; color:rgba(255,255,255,.4);
+}
+.ap-layer {
+  display:grid; grid-template-columns:5px 140px 1fr;
+  border-bottom:1px solid var(--border);
+}
+.ap-layer:last-child { border-bottom:none; }
+.ap-layer:hover { background:var(--bg2); }
+.ap-stripe {}
+.ap-label-col {
+  padding:14px 16px; border-right:1px solid var(--border); background:var(--bg2);
+}
+.ap-tag {
+  font-family:'IBM Plex Mono',monospace; font-size:8px;
+  letter-spacing:2px; text-transform:uppercase; margin-bottom:3px;
+}
+.ap-label-name { font-weight:600; font-size:13px; color:var(--ink2); }
+.ap-label-why { font-size:11px; color:var(--ink4); margin-top:2px; line-height:1.4; }
+.ap-content {
+  padding:14px 18px;
+  font-family:'IBM Plex Mono',monospace; font-size:11.5px;
+  line-height:1.7; color:var(--ink3); white-space:pre-wrap;
+}
+.ap-hl { color:var(--aug2); font-weight:500; }
+
+/* ── CONFLICT PANEL ── */
+.conflict-panel {
+  display:grid; grid-template-columns:1fr 1fr 1fr;
+  gap:1px; background:var(--border); margin-top:16px;
+}
+.cp-col { background:var(--bg); padding:18px; }
+.cp-label {
+  font-family:'IBM Plex Mono',monospace; font-size:8px;
+  letter-spacing:2px; text-transform:uppercase; margin-bottom:6px;
+}
+.cp-title { font-family:'Instrument Serif',serif; font-size:17px; color:var(--ink2); margin-bottom:8px; }
+.cp-body { font-size:13px; color:var(--ink3); line-height:1.6; }
+.cp-body strong { color:var(--ink2); font-weight:500; }
+.cp-rule {
+  margin-top:8px; padding:8px 10px;
+  font-size:12px; line-height:1.5;
+  border-left:3px solid;
+}
+
+/* ── CONTEXT WINDOW DIAGRAM ── */
+.cw-diagram {
+  margin-top:16px; border:1px solid var(--border2);
+}
+.cw-head {
+  padding:10px 16px; background:var(--ink);
+  border-bottom:1px solid rgba(255,255,255,.06);
+  font-family:'IBM Plex Mono',monospace; font-size:9px;
+  letter-spacing:2px; text-transform:uppercase; color:rgba(255,255,255,.4);
+}
+.cw-body { padding:16px 20px; }
+.cw-bar { display:flex; height:40px; border-radius:2px; overflow:hidden; margin-bottom:10px; }
+.cw-seg {
+  display:flex; align-items:center; justify-content:center;
+  font-family:'IBM Plex Mono',monospace; font-size:9px; font-weight:600;
+  letter-spacing:.5px; color:#fff; padding:0 4px; text-align:center;
+}
+.cw-legend { display:flex; flex-wrap:wrap; gap:12px; margin-top:8px; }
+.cw-legend-item { display:flex; align-items:center; gap:6px; font-size:11.5px; color:var(--ink3); }
+.cw-legend-dot { width:12px; height:12px; border-radius:2px; flex-shrink:0; }
+
+/* ── CITATION EXAMPLES ── */
+.citation-box {
+  margin-top:12px;
+  font-family:'IBM Plex Mono',monospace; font-size:11.5px; line-height:1.8;
+  padding:16px 20px; border:1px solid var(--border2);
+  background:var(--aug-l); color:var(--aug2); white-space:pre-wrap;
+}
+
+/* ── SPECTRUM ── */
+.spectrum { margin-top:16px; border:1px solid var(--border); overflow:hidden; }
+.spectrum-row { display:grid; border-bottom:1px solid var(--border); font-size:12.5px; }
+.spectrum-row:last-child { border-bottom:none; }
+.spectrum-row.head {
+  background:var(--ink); color:rgba(255,255,255,.7);
+  font-family:'IBM Plex Mono',monospace; font-size:9px;
+  letter-spacing:1px; text-transform:uppercase;
+}
+.spectrum-row.col3 { grid-template-columns:200px 1fr 1fr; }
+.spectrum-row.col4 { grid-template-columns:160px 1fr 1fr 1fr; }
+.s-cell {
+  padding:11px 14px; border-right:1px solid var(--border);
+  color:var(--ink3); line-height:1.5;
+}
+.s-cell:last-child { border-right:none; }
+.s-cell.lbl { font-weight:500; color:var(--ink2); background:var(--bg2); }
+.s-cell.hi  { background:var(--aug-l); color:var(--aug2); }
+.s-cell.ok  { background:var(--ok-l); color:#2e4a32; }
+.s-cell.lo  { background:var(--bad-l); color:#8b3030; }
+
+/* ── CHECKLIST ── */
+.checklist { margin-top:16px; }
+.check-item {
+  display:flex; gap:12px; align-items:flex-start;
+  padding:10px 0; border-bottom:1px solid var(--border);
+  font-size:13.5px; color:var(--ink3);
+}
+.check-item:last-child { border-bottom:none; }
+.check-icon {
+  width:20px; height:20px; border-radius:50%;
+  background:var(--aug); color:#fff;
+  display:flex; align-items:center; justify-content:center;
+  font-size:11px; font-weight:700; flex-shrink:0; margin-top:1px;
+}
+.check-item strong { color:var(--ink2); font-weight:500; }
+
+/* ── MECHANISM ── */
+.mechanism {
+  margin-top:14px; padding:14px 18px;
+  border-left:3px solid var(--aug); background:var(--aug-l);
+}
+.mech-lbl {
+  font-family:'IBM Plex Mono',monospace; font-size:9px;
+  letter-spacing:2px; text-transform:uppercase; color:var(--aug); margin-bottom:6px;
+}
+.mechanism p { font-size:13px; color:var(--ink3); line-height:1.65; }
+.mechanism p strong { color:var(--ink2); font-weight:500; }
+
+/* ── KEY POINT ── */
+.key-point {
+  margin-top:36px; padding:24px 28px;
+  border-left:4px solid var(--accent); background:var(--accent-light);
+}
+.kp-label {
+  font-family:'IBM Plex Mono',monospace; font-size:9px;
+  letter-spacing:2px; text-transform:uppercase; color:var(--accent); margin-bottom:8px;
+}
+.kp-text {
+  font-family:'Instrument Serif',serif; font-size:18px; line-height:1.45; color:var(--ink2);
+}
+.kp-sub { margin-top:10px; font-size:13px; color:var(--ink3); line-height:1.65; }
+
+/* ── INSIGHT ── */
+.insight {
+  margin:16px 0; padding:16px 20px;
+  border-left:4px solid var(--aug); background:var(--aug-l);
+}
+.insight-lbl {
+  font-family:'IBM Plex Mono',monospace; font-size:9px;
+  letter-spacing:2px; text-transform:uppercase; color:var(--aug); margin-bottom:6px;
+}
+.insight p { font-size:13.5px; color:var(--ink2); line-height:1.65; max-width:700px; }
+.insight p strong { font-weight:500; }
+
+/* ── FOOTER ── */
+.footer {
+  padding:24px 56px; border-top:1px solid var(--border);
+  display:flex; justify-content:space-between; align-items:center;
+  font-family:'IBM Plex Mono',monospace; font-size:10px;
+  letter-spacing:1px; text-transform:uppercase; color:var(--ink4);
+}
+
+@media (max-width:700px) {
+  .masthead,.sect-head,.wrap,.footer { padding-left:20px; padding-right:20px; }
+  .compare-grid,.conflict-panel { grid-template-columns:1fr; }
+  .spectrum-row.col3,.spectrum-row.col4 { grid-template-columns:1fr; }
+  .gl-header { grid-template-columns:5px 40px 1fr; }
+  .gl-impact-wrap { display:none; }
+  .ap-layer { grid-template-columns:5px 1fr; }
+  .ap-label-col { display:none; }
+}
+</style>
+</head>
+<body>
+
+<!-- HEADER -->
+<div class="masthead">
+  <div class="mh-eye">Serie Agenti AI · Leva 04 · Knowledge / RAG</div>
+  <div class="mh-cluster">Report C · Stadi 3+4</div>
+  <h1>Augmentation: come passare il contesto al modello</h1>
+  <p class="mh-sub">Il collegamento diretto tra la pipeline RAG e la leva 1 (prompt). Come strutturare i chunk nel prompt, come istruire il modello a usarli senza inventare, come gestire i conflitti con la conoscenza interna, e cosa fare quando il contesto è troppo grande.</p>
+  <div class="mh-meta">
+    <div class="mh-stat"><div class="mh-stat-val">5</div><div class="mh-stat-lbl">Linee guida</div></div>
+    <div class="mh-stat"><div class="mh-stat-val">Grounding</div><div class="mh-stat-lbl">Obiettivo principale</div></div>
+    <div class="mh-stat"><div class="mh-stat-val">Conflitti</div><div class="mh-stat-lbl">Problema critico</div></div>
+    <div class="mh-stat"><div class="mh-stat-val">Online</div><div class="mh-stat-lbl">Fase pipeline</div></div>
+  </div>
+</div>
+
+<!-- NAV -->
+<div class="nav">
+  <button class="nav-btn active" onclick="show(1)">Il problema</button>
+  <button class="nav-btn" onclick="show(2)">Struttura del prompt</button>
+  <button class="nav-btn" onclick="show(3)">Istruzioni di grounding</button>
+  <button class="nav-btn" onclick="show(4)">Gestire i conflitti</button>
+  <button class="nav-btn" onclick="show(5)">Context window</button>
+  <button class="nav-btn" onclick="show(6)">Citazioni e checklist</button>
+</div>
+
+
+<!-- ═══════════════════════════
+     S1 — IL PROBLEMA
+═══════════════════════════ -->
+<div class="sect active" id="s1">
+  <div class="sect-head">
+    <div class="sect-num">Introduzione</div>
+    <h2>Il terzo stadio — il collegamento con il prompt</h2>
+    <p>L'augmentation è dove la pipeline RAG incontra la leva del prompt engineering. I chunk recuperati devono essere inseriti nel prompt in modo che il modello li usi correttamente — non li ignori, non li mescoli con la propria conoscenza, non li interpreti male.</p>
+  </div>
+  <div class="wrap">
+
+    <div class="prose" style="margin-top:28px;">
+      <p>Una volta che il retrieval ha trovato i k chunk più rilevanti, questi devono essere <em>integrati nel prompt</em> che viene passato al modello per la generazione. Questo stadio, spesso trattato come banale, ha in realtà numerose decisioni non ovvie: dove mettere i chunk nel prompt, come separarli, come presentarli, come istruire il modello a usarli, come gestire il caso in cui non contengano la risposta, come comportarsi quando contraddicono la conoscenza interna del modello.</p>
+      <p>È il punto di contatto diretto tra la pipeline RAG e la leva 1 (prompt engineering). <strong>Tutte le tecniche del prompt engineering dei cluster A–G si applicano qui</strong> — con l'aggiunta di dimensioni specifiche del RAG: il grounding sul contesto, la gestione dei conflitti tra fonti esterne e conoscenza interna, e il context window management quando i chunk sono molti o grandi.</p>
+    </div>
+
+    <div class="insight" style="margin-top:24px;">
+      <div class="insight-lbl">Il default del modello senza istruzioni di grounding</div>
+      <p>Senza istruzioni esplicite, un modello riceve i chunk nel prompt e può fare tre cose: <strong>usarli correttamente</strong> (raro per default), <strong>integrarli con la propria conoscenza interna mescolando le fonti</strong> (frequente — produce risposte che sembrano plausibili ma sono parzialmente inventate), o <strong>ignorarli completamente e rispondere dalla propria conoscenza</strong> (raro, ma capita su domande dove il modello è molto sicuro di sé). Solo istruzioni esplicite di grounding portano il modello a usare sistematicamente il contesto recuperato.</p>
+    </div>
+
+    <div class="key-point" style="margin-top:24px;">
+      <div class="kp-label">Il principio dell'augmentation</div>
+      <div class="kp-text">Il prompt aumentato non è "prompt + chunk". È un sistema di istruzioni che dice al modello dove guardare, come interpretare, cosa dire quando non trova la risposta, e come segnalare l'incertezza.</div>
+      <div class="kp-sub">La qualità dell'augmentation determina se il retrieval viene effettivamente usato o ignorato. Un modello che riceve chunk rilevanti ma nessuna istruzione su come usarli produrrà output imprevedibili. Un modello con istruzioni precise di grounding, una struttura del prompt chiara e regole su come gestire i casi limite diventa uno strumento affidabile e tracciabile.</div>
+    </div>
+
+  </div>
+</div>
+
+
+<!-- ═══════════════════════════
+     S2 — STRUTTURA DEL PROMPT
+═══════════════════════════ -->
+<div class="sect" id="s2">
+  <div class="sect-head">
+    <div class="sect-num">Linea guida 01</div>
+    <h2>Strutturare il prompt aumentato</h2>
+    <p>Come organizzare i componenti del prompt: dove mettere le istruzioni di sistema, dove mettere i chunk, dove mettere la query. Scelte che hanno impatto diretto su quanto bene il modello usa il contesto.</p>
+  </div>
+  <div class="wrap">
+
+    <!-- GL 01 -->
+    <div class="gl-group" style="margin-top:28px;">
+      <div class="gl-group-title">Linea guida 01</div>
+      <div class="gl-card">
+        <div class="gl-header">
+          <div class="gl-stripe"></div>
+          <div class="gl-num">01</div>
+          <div class="gl-title-wrap">
+            <div class="gl-title">Segui la struttura in 5 layer per il prompt aumentato</div>
+            <div class="gl-subtitle">Ogni layer ha uno scopo preciso — ometterne uno degrada la qualità della risposta</div>
+          </div>
+          <div class="gl-impact-wrap">
+            <div class="gl-impact-stars" style="color:var(--aug)">★★★</div>
+            <div class="gl-impact-lbl">Impatto</div>
+          </div>
+        </div>
+        <div class="gl-body">
+
+          <div class="gl-section">
+            <div class="gl-section-lbl">La struttura ottimale del prompt aumentato — anatomia</div>
+            <div class="anatomy-panel">
+              <div class="ap-head">Struttura del prompt RAG — 5 layer nell'ordine corretto</div>
+
+              <div class="ap-layer">
+                <div class="ap-stripe" style="background:var(--aug)"></div>
+                <div class="ap-label-col">
+                  <div class="ap-tag" style="color:var(--aug)">Layer 1</div>
+                  <div class="ap-label-name">Identità e ruolo</div>
+                  <div class="ap-label-why">Chi è il modello nel contesto del sistema RAG</div>
+                </div>
+                <div class="ap-content">Sei un assistente esperto di <span class="ap-hl">[dominio]</span> che risponde a domande basandosi
+esclusivamente sui documenti forniti come riferimento.
+Il tuo scopo è fornire risposte accurate, tracciabili e grounded sui documenti.</div>
+              </div>
+
+              <div class="ap-layer">
+                <div class="ap-stripe" style="background:var(--aug)"></div>
+                <div class="ap-label-col">
+                  <div class="ap-tag" style="color:var(--aug)">Layer 2</div>
+                  <div class="ap-label-name">Istruzioni di grounding</div>
+                  <div class="ap-label-why">Come usare il contesto e cosa fare quando manca</div>
+                </div>
+                <div class="ap-content">Usa SOLO le informazioni contenute nei documenti di riferimento qui sotto.
+Non aggiungere informazioni dalla tua conoscenza interna.
+Se la risposta non è nei documenti, dì esplicitamente:
+"Le informazioni disponibili non contengono una risposta a questa domanda."
+Non rispondere per inferenza se non è supportata dal testo.</div>
+              </div>
+
+              <div class="ap-layer">
+                <div class="ap-stripe" style="background:var(--aug)"></div>
+                <div class="ap-label-col">
+                  <div class="ap-tag" style="color:var(--aug)">Layer 3</div>
+                  <div class="ap-label-name">Documenti di riferimento</div>
+                  <div class="ap-label-why">I chunk recuperati, separati e identificati</div>
+                </div>
+                <div class="ap-content">---DOCUMENTI DI RIFERIMENTO---
+
+[DOCUMENTO 1 — <span class="ap-hl">Contratto fornitura 2024, Sezione 4 — Clausole di penale</span>]
+[fonte: contratto_fornitore_042.pdf, pag.12]
+Le penali per ritardi di consegna superiori a 5 giorni lavorativi sono pari
+all'1% del valore dell'ordine per ogni giorno di ritardo...
+
+[DOCUMENTO 2 — <span class="ap-hl">Policy acquisti, Sezione 2 — Soglie di approvazione</span>]
+[fonte: policy_acquisti_v3.pdf, pag.4]
+Ordini superiori a €50.000 richiedono approvazione del responsabile acquisti
+e del CFO. Ordini superiori a €200.000 richiedono delibera del CdA...
+
+---FINE DOCUMENTI---</div>
+              </div>
+
+              <div class="ap-layer">
+                <div class="ap-stripe" style="background:var(--aug)"></div>
+                <div class="ap-label-col">
+                  <div class="ap-tag" style="color:var(--aug)">Layer 4</div>
+                  <div class="ap-label-name">Formato output</div>
+                  <div class="ap-label-why">Come deve presentarsi la risposta</div>
+                </div>
+                <div class="ap-content">Rispondi in modo conciso e diretto.
+Quando citi informazioni dai documenti, indica la fonte tra parentesi:
+(fonte: nome_documento, pagina N).
+Se usi più documenti, indica la fonte per ogni informazione.</div>
+              </div>
+
+              <div class="ap-layer">
+                <div class="ap-stripe" style="background:var(--aug)"></div>
+                <div class="ap-label-col">
+                  <div class="ap-tag" style="color:var(--aug)">Layer 5</div>
+                  <div class="ap-label-name">Query utente</div>
+                  <div class="ap-label-why">La domanda a cui rispondere, in ultima posizione</div>
+                </div>
+                <div class="ap-content">DOMANDA: <span class="ap-hl">{user_query}</span></div>
+              </div>
+
+            </div>
+          </div>
+
+          <div class="gl-section">
+            <div class="gl-section-lbl">Perché la query va in ultima posizione</div>
+            <p>Posizionare la query <em>dopo</em> i documenti di riferimento sfrutta il recency bias del modello (vedi Report B): la query è l'ultimo elemento letto prima della generazione, quindi riceve la massima attenzione. Il modello genera la risposta con la query fresca in "mente" mentre il contesto documentale è già presente. Se la query fosse prima dei documenti, il modello tenderebbe a iniziare a rispondere prima di aver "letto" tutto il contesto.</p>
+          </div>
+
+          <div class="gl-section">
+            <div class="gl-section-lbl">Come separare e identificare i chunk</div>
+            <div class="compare-grid">
+              <div>
+                <div class="pex-lbl bad">❌ Chunk non separati — il modello non sa dove finisce uno e inizia l'altro</div>
+                <div class="prompt-box bad">Le penali per ritardi sono dell'1% per giorno. Ordini superiori a €50.000 richiedono approvazione del CFO. La durata del contratto è di 24 mesi con rinnovo automatico. Il recesso anticipato richiede preavviso di 90 giorni.
+
+Domanda: quali sono le regole di approvazione degli ordini?</div>
+              </div>
+              <div>
+                <div class="pex-lbl good">✓ Chunk separati con intestazione e fonte</div>
+                <div class="prompt-box good">[DOC 1 — Policy acquisti, pag.4]
+Ordini superiori a €50.000 richiedono approvazione del responsabile acquisti e del CFO.
+
+[DOC 2 — Contratto fornitura, pag.12]
+Le penali per ritardi sono dell'1% per giorno di ritardo oltre i 5 giorni.
+
+[DOC 3 — Contratto fornitura, pag.18]
+La durata è di 24 mesi con rinnovo automatico salvo disdetta 90 giorni prima.
+
+DOMANDA: quali sono le regole di approvazione degli ordini?</div>
+              </div>
+            </div>
+          </div>
+
+          <div class="gl-section">
+            <div class="gl-section-lbl">Perché funziona — il meccanismo dell'attenzione strutturata</div>
+            <div class="mechanism">
+              <div class="mech-lbl">Struttura come scaffolding per l'attenzione</div>
+              <p>I delimitatori espliciti tra documenti ("[DOC 1]", "---FINE---") creano confini strutturali che il modello riconosce e usa per separare le informazioni delle diverse fonti. <strong>Senza questi confini, il modello tende a mescolare le informazioni come se provenissero da un unico flusso di testo</strong> — producendo risposte che combinano scorrettamente informazioni di documenti diversi. I titoli e le fonti nei layer aiutano anche il modello a segnalare correttamente le citazioni nell'output.</p>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+
+<!-- ═══════════════════════════
+     S3 — ISTRUZIONI DI GROUNDING
+═══════════════════════════ -->
+<div class="sect" id="s3">
+  <div class="sect-head">
+    <div class="sect-num">Linea guida 02</div>
+    <h2>Istruzioni di grounding</h2>
+    <p>Il cuore dell'augmentation. Come dire al modello di usare il contesto — non la propria conoscenza — e come gestire il caso in cui il contesto non contenga la risposta.</p>
+  </div>
+  <div class="wrap">
+
+    <!-- GL 02 -->
+    <div class="gl-group" style="margin-top:28px;">
+      <div class="gl-group-title">Linea guida 02</div>
+      <div class="gl-card">
+        <div class="gl-header">
+          <div class="gl-stripe"></div>
+          <div class="gl-num">02</div>
+          <div class="gl-title-wrap">
+            <div class="gl-title">Definisci esplicitamente tre comportamenti: usa il contesto, ammetti quando manca, segnala l'incertezza</div>
+            <div class="gl-subtitle">Senza questi tre casi esplicitamente coperti, il modello improvvisa — e quasi sempre male</div>
+          </div>
+          <div class="gl-impact-wrap">
+            <div class="gl-impact-stars" style="color:var(--aug)">★★★</div>
+            <div class="gl-impact-lbl">Impatto critico</div>
+          </div>
+        </div>
+        <div class="gl-body">
+
+          <div class="gl-section">
+            <div class="gl-section-lbl">I tre casi da coprire esplicitamente</div>
+
+            <div style="margin-top:12px;">
+              <div class="pex-lbl neutral">Caso 1 — Risposta nel contesto (il caso normale)</div>
+              <div class="prompt-box good" style="margin-top:6px;"><span class="hl">Basa la tua risposta esclusivamente sui documenti forniti.</span>
+Cita sempre la fonte specifica per ogni informazione usata.</div>
+            </div>
+
+            <div style="margin-top:12px;">
+              <div class="pex-lbl neutral">Caso 2 — Risposta NON nel contesto (critico — prevenire le allucinazioni)</div>
+              <div class="prompt-box good" style="margin-top:6px;">Se la risposta alla domanda <span class="hl">non è contenuta nei documenti forniti</span>,
+rispondi esattamente così:
+"Non ho trovato informazioni su questo argomento nei documenti disponibili.
+Per una risposta accurata, consultare [suggerisci la fonte appropriata]."
+
+<span class="hl">Non cercare di rispondere da solo.</span> Non inventare. Non inferire.
+La mancanza di informazione è una risposta valida.</div>
+            </div>
+
+            <div style="margin-top:12px;">
+              <div class="pex-lbl neutral">Caso 3 — Risposta parzialmente nel contesto (incertezza)</div>
+              <div class="prompt-box good" style="margin-top:6px;">Se i documenti contengono informazioni <span class="hl">parziali o insufficienti</span>
+per rispondere completamente, segnalalo esplicitamente:
+"In base ai documenti disponibili, [risposta parziale].
+Tuttavia, non ho informazioni su [aspetto mancante]."
+
+<span class="hl">Distingui sempre ciò che è nei documenti da ciò che stai inferendo.</span></div>
+            </div>
+          </div>
+
+          <div class="gl-section">
+            <div class="gl-section-lbl">Confronto — con e senza istruzioni di grounding</div>
+            <div class="compare-grid">
+              <div>
+                <div class="pex-lbl bad">❌ Senza grounding — il modello risponde dalla propria conoscenza</div>
+                <div class="prompt-box bad">DOCUMENTI: [documento su policy acquisti interni]
+
+Domanda: "Qual è l'IVA applicabile su forniture di servizi IT?"
+
+Risposta del modello (senza grounding):
+"L'IVA sui servizi IT in Italia è generalmente del 22%, applicata
+sul valore imponibile della fattura. In alcuni casi specifici..."
+
+<span class="hl">PROBLEMA:</span> il documento non contiene nulla sull'IVA.
+Il modello ha risposto dalla propria conoscenza generale
+mescolandola implicitamente con il "contesto aziendale".</div>
+              </div>
+              <div>
+                <div class="pex-lbl good">✓ Con grounding — risposta onesta e tracciabile</div>
+                <div class="prompt-box good">DOCUMENTI: [documento su policy acquisti interni]
+
+Domanda: "Qual è l'IVA applicabile su forniture di servizi IT?"
+
+Risposta del modello (con grounding):
+"Non ho trovato informazioni sull'IVA applicabile nei documenti
+disponibili. La policy acquisti non tratta questo argomento.
+
+Per questa informazione, consultare il team Finance o fare
+riferimento alla normativa fiscale vigente."</div>
+              </div>
+            </div>
+          </div>
+
+          <div class="gl-section">
+            <div class="gl-section-lbl">Perché funziona — il meccanismo del conflitto di prior</div>
+            <div class="mechanism">
+              <div class="mech-lbl">Conoscenza parametrica vs. conoscenza contestuale</div>
+              <p>Il modello ha due "fonti" di conoscenza: la <em>conoscenza parametrica</em> (incorporata nei pesi durante il training) e la <em>conoscenza contestuale</em> (il testo presente nel prompt). Senza istruzioni, il modello le integra liberamente — spesso preferendo la conoscenza parametrica quando è più "certa" anche se meno aggiornata o specifica. <strong>Le istruzioni di grounding creano una gerarchia esplicita: la conoscenza contestuale ha precedenza assoluta sulla conoscenza parametrica nel contesto RAG.</strong></p>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+
+<!-- ═══════════════════════════
+     S4 — GESTIRE I CONFLITTI
+═══════════════════════════ -->
+<div class="sect" id="s4">
+  <div class="sect-head">
+    <div class="sect-num">Linea guida 03</div>
+    <h2>Gestire i conflitti tra fonti</h2>
+    <p>Cosa fare quando i chunk recuperati si contraddicono tra loro, o quando contraddicono fatti certi nella conoscenza interna del modello. Tre scenari con strategie diverse.</p>
+  </div>
+  <div class="wrap">
+
+    <!-- GL 03 -->
+    <div class="gl-group" style="margin-top:28px;">
+      <div class="gl-group-title">Linea guida 03</div>
+      <div class="gl-card">
+        <div class="gl-header">
+          <div class="gl-stripe"></div>
+          <div class="gl-num">03</div>
+          <div class="gl-title-wrap">
+            <div class="gl-title">Definisci una strategia di risoluzione per ogni tipo di conflitto</div>
+            <div class="gl-subtitle">Conflitti tra documenti, conflitti con la conoscenza interna, e documenti obsoleti richiedono strategie diverse</div>
+          </div>
+          <div class="gl-impact-wrap">
+            <div class="gl-impact-stars" style="color:var(--aug)">★★★</div>
+            <div class="gl-impact-lbl">Impatto</div>
+          </div>
+        </div>
+        <div class="gl-body">
+
+          <div class="gl-section">
+            <div class="gl-section-lbl">I tre tipi di conflitto e come gestirli</div>
+            <div class="conflict-panel">
+
+              <div class="cp-col">
+                <div class="cp-label" style="color:var(--bad);">Conflitto tipo 1</div>
+                <div class="cp-title">Documenti che si contraddicono tra loro</div>
+                <div class="cp-body">Due chunk forniscono informazioni opposte sullo stesso fatto (es: due versioni di una policy con regole diverse).</div>
+                <div class="cp-rule" style="border-color:var(--ok); background:var(--ok-l); color:#2e4a32;">
+                  <strong style="color:var(--ok);">Strategia:</strong> segnala il conflitto esplicitamente, riporta entrambe le versioni, indica al modello di usare quella più recente (se c'è una data) o di chiedere all'utente quale usare.
+                </div>
+              </div>
+
+              <div class="cp-col">
+                <div class="cp-label" style="color:var(--warn);">Conflitto tipo 2</div>
+                <div class="cp-title">Documento contraddice la conoscenza interna del modello</div>
+                <div class="cp-body">Il documento dice qualcosa che il modello "sa" essere diverso dalla sua conoscenza generale (es: una percentuale diversa da quella standard del settore).</div>
+                <div class="cp-rule" style="border-color:var(--aug); background:var(--aug-l); color:#5a3a00;">
+                  <strong style="color:var(--aug);">Strategia:</strong> privilegia sempre il documento sul contesto aziendale specifico. Il documento è più recente e più specifico della conoscenza generale del modello. Segnala la discrepanza solo se è potenzialmente un errore nel documento.
+                </div>
+              </div>
+
+              <div class="cp-col">
+                <div class="cp-label" style="color:var(--bad);">Conflitto tipo 3</div>
+                <div class="cp-title">Documento potenzialmente obsoleto</div>
+                <div class="cp-body">Il documento ha una data vecchia e l'informazione potrebbe non essere più valida. L'indice contiene versioni precedenti di policy o procedure.</div>
+                <div class="cp-rule" style="border-color:var(--ok); background:var(--ok-l); color:#2e4a32;">
+                  <strong style="color:var(--ok);">Strategia:</strong> usa il campo "is_superseded" nei metadati per filtrare documenti obsoleti prima del retrieval. In alternativa, includi la data del documento nell'intestazione del chunk e istruisci il modello a segnalare se usa documenti datati.
+                </div>
+              </div>
+
+            </div>
+          </div>
+
+          <div class="gl-section">
+            <div class="gl-section-lbl">Istruzioni per la gestione dei conflitti nel prompt</div>
+            <div class="prompt-box good" style="margin-top:12px;">Se trovi informazioni contrastanti tra i documenti:
+1. <span class="hl">Segnala esplicitamente la contraddizione</span>: "Ho trovato informazioni contrastanti tra i documenti."
+2. Riporta entrambe le versioni indicando la fonte di ognuna.
+3. Se un documento è più recente dell'altro, indica che la versione più recente è probabilmente quella valida.
+4. <span class="hl">Non scegliere silenziosamente</span> una versione senza dichiararlo.
+
+Se un documento contraddice la tua conoscenza generale:
+<span class="hl">Privilegia sempre il documento</span>. Il documento riflette il contesto specifico
+dell'organizzazione, che può differire dalle pratiche generali del settore.</div>
+          </div>
+
+          <div class="gl-section">
+            <div class="gl-section-lbl">Perché funziona — trasparenza vs. scelta implicita</div>
+            <div class="mechanism">
+              <div class="mech-lbl">Il costo dell'ambiguità nascosta</div>
+              <p>Quando il modello risolve un conflitto silenziosamente, l'utente non sa che c'era un conflitto e non può valutare se la scelta era corretta. Questo produce false certezze — risposte che sembrano definitive ma si basano su una scelta arbitraria. <strong>Istruire il modello a segnalare i conflitti invece di risolverli autonomamente trasforma l'ambiguità da problema nascosto a informazione visibile</strong>, permettendo all'utente di intervenire con la conoscenza del contesto che il modello non ha.</p>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+
+<!-- ═══════════════════════════
+     S5 — CONTEXT WINDOW
+═══════════════════════════ -->
+<div class="sect" id="s5">
+  <div class="sect-head">
+    <div class="sect-num">Linee guida 04 – 05</div>
+    <h2>Context window management</h2>
+    <p>I modelli moderni hanno context window grandi (100k+ token), ma inserire troppo contesto non è sempre la scelta migliore. Qualità vs. quantità, e strategie per quando i chunk non ci stanno tutti.</p>
+  </div>
+  <div class="wrap">
+
+    <!-- GL 04 -->
+    <div class="gl-group" style="margin-top:28px;">
+      <div class="gl-group-title">Linea guida 04</div>
+      <div class="gl-card">
+        <div class="gl-header">
+          <div class="gl-stripe"></div>
+          <div class="gl-num">04</div>
+          <div class="gl-title-wrap">
+            <div class="gl-title">Più contesto non significa necessariamente risposte migliori</div>
+            <div class="gl-subtitle">Il "diluition effect" e il lost-in-the-middle penalizzano i prompt con molti chunk di bassa rilevanza</div>
+          </div>
+          <div class="gl-impact-wrap">
+            <div class="gl-impact-stars" style="color:var(--aug)">★★☆</div>
+            <div class="gl-impact-lbl">Impatto</div>
+          </div>
+        </div>
+        <div class="gl-body">
+
+          <div class="gl-section">
+            <div class="gl-section-lbl">Il diluition effect — quando il contesto extra fa danni</div>
+            <p>Passare al modello 20 chunk invece di 5 non raddoppia la qualità — spesso la riduce. Ogni chunk aggiuntivo di bassa rilevanza <strong>diluisce l'attenzione del modello sui chunk davvero importanti</strong> e aumenta la probabilità di lost-in-the-middle. Il costo aggiuntivo in token aumenta latenza e costo senza benefici proporzionali.</p>
+
+            <div class="cw-diagram" style="margin-top:12px;">
+              <div class="cw-head">Utilizzo del context window — componenti di un prompt RAG tipico</div>
+              <div class="cw-body">
+                <div style="font-size:11.5px; color:var(--ink4); font-family:'IBM Plex Mono',monospace; margin-bottom:8px;">Distribuzione token con k=5 chunk (scenario ottimale)</div>
+                <div class="cw-bar">
+                  <div class="cw-seg" style="background:#7b5ea7; width:8%">Istr.</div>
+                  <div class="cw-seg" style="background:#b07d24; width:60%">Chunk 1–5 (contesto recuperato)</div>
+                  <div class="cw-seg" style="background:#2e7d9c; width:5%">Query</div>
+                  <div class="cw-seg" style="background:var(--bg3); width:27%; color:var(--ink3)">Buffer disponibile</div>
+                </div>
+
+                <div style="font-size:11.5px; color:var(--ink4); font-family:'IBM Plex Mono',monospace; margin-bottom:8px; margin-top:16px;">Distribuzione token con k=20 chunk (scenario problematico)</div>
+                <div class="cw-bar">
+                  <div class="cw-seg" style="background:#7b5ea7; width:4%">Istr.</div>
+                  <div class="cw-seg" style="background:#b07d24; width:72%">Chunk 1–20 (molti con bassa rilevanza)</div>
+                  <div class="cw-seg" style="background:#2e5f8a; width:3%">Q</div>
+                  <div class="cw-seg" style="background:var(--bg3); width:21%; color:var(--ink3)">Buffer ridotto</div>
+                </div>
+
+                <div class="cw-legend">
+                  <div class="cw-legend-item"><div class="cw-legend-dot" style="background:#7b5ea7"></div>Istruzioni sistema</div>
+                  <div class="cw-legend-item"><div class="cw-legend-dot" style="background:#b07d24"></div>Chunk recuperati</div>
+                  <div class="cw-legend-item"><div class="cw-legend-dot" style="background:#2e7d9c"></div>Query utente</div>
+                  <div class="cw-legend-item"><div class="cw-legend-dot" style="background:var(--bg3)"></div>Buffer per risposta</div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="gl-section">
+            <div class="gl-section-lbl">La soglia di rilevanza — scarta i chunk inutili</div>
+            <p>Non tutti i k chunk recuperati devono essere passati al modello. Applica una <strong>soglia di rilevanza minima</strong>: se il chunk con rank più alto ha similarity score 0.90 e il k-esimo ha 0.45, includere quest'ultimo aggiunge rumore, non informazione. La soglia precisa dipende dal corpus e dalla distribuzione degli score — in genere, chunk con score inferiore al 60% dello score massimo sono candidati all'esclusione.</p>
+            <div class="prompt-box neutral" style="margin-top:12px; font-size:11.5px;">Pseudocodice — filtro per soglia di rilevanza:
+
+top_k_chunks = retrieve(query, k=10)
+max_score = top_k_chunks[0].score
+threshold = max_score * 0.60
+
+filtered_chunks = [c for c in top_k_chunks if c.score >= threshold]
+# Mantieni solo i chunk che superano il 60% dello score massimo
+# In pratica spesso riduce k da 10 a 3-5 chunk genuinamente rilevanti</div>
+          </div>
+
+        </div>
+      </div>
+    </div>
+
+    <!-- GL 05 -->
+    <div class="gl-group" style="margin-top:8px;">
+      <div class="gl-group-title">Linea guida 05</div>
+      <div class="gl-card">
+        <div class="gl-header">
+          <div class="gl-stripe"></div>
+          <div class="gl-num">05</div>
+          <div class="gl-title-wrap">
+            <div class="gl-title">Gestisci il context window overflow con strategie progressive</div>
+            <div class="gl-subtitle">Quando i chunk non ci stanno tutti, le strategie da applicare nell'ordine corretto</div>
+          </div>
+          <div class="gl-impact-wrap">
+            <div class="gl-impact-stars" style="color:var(--aug)">★★☆</div>
+            <div class="gl-impact-lbl">Impatto</div>
+          </div>
+        </div>
+        <div class="gl-body">
+          <div class="gl-section">
+            <div class="gl-section-lbl">Strategie per gestire troppo contesto — nell'ordine da provare</div>
+            <div class="spectrum">
+              <div class="spectrum-row head col3">
+                <div class="s-cell">Strategia</div>
+                <div class="s-cell">Come funziona</div>
+                <div class="s-cell">Quando usarla</div>
+              </div>
+              <div class="spectrum-row col3">
+                <div class="s-cell lbl">1. Ridurre k</div>
+                <div class="s-cell ok">La prima mossa: passa meno chunk. Se il retrieval è buono, 3–5 chunk ben scelti sono spesso sufficienti.</div>
+                <div class="s-cell">Sempre come primo tentativo. Spesso risolve il problema senza compromettere la qualità.</div>
+              </div>
+              <div class="spectrum-row col3">
+                <div class="s-cell lbl">2. Applicare soglia di rilevanza</div>
+                <div class="s-cell ok">Scarta i chunk sotto una soglia di score. Mantiene i più rilevanti indipendentemente da k.</div>
+                <div class="s-cell">Quando k è già basso ma i chunk hanno score molto diversi. Filtra automaticamente il rumore.</div>
+              </div>
+              <div class="spectrum-row col3">
+                <div class="s-cell lbl">3. Comprimere i chunk</div>
+                <div class="s-cell hi">Usa un LLM per estrarre da ogni chunk solo le frasi rilevanti per la query specifica prima di passarlo al modello principale.</div>
+                <div class="s-cell">Documenti lunghi con paragrafi rilevanti e irrilevanti mescolati. Riduce i token mantenendo le informazioni chiave.</div>
+              </div>
+              <div class="spectrum-row col3">
+                <div class="s-cell lbl">4. Iterative retrieval</div>
+                <div class="s-cell hi">Multi-step: recupera, genera una risposta parziale, usa quella per formulare una nuova query di retrieval. Itera finché la risposta è completa.</div>
+                <div class="s-cell">Query complesse che richiedono informazioni da molte sezioni diverse. Overhead computazionale elevato.</div>
+              </div>
+              <div class="spectrum-row col3">
+                <div class="s-cell lbl">5. Usare un modello con context window più grande</div>
+                <div class="s-cell hi">Modelli come Gemini 1.5 Pro (1M token) o Claude 3.5 (200k) possono ricevere corpus interi. Elimina il problema a valle.</div>
+                <div class="s-cell">Quando le altre strategie non bastano e il corpus è sufficientemente ristretto. Costo per token più alto.</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+
+<!-- ═══════════════════════════
+     S6 — CITAZIONI E CHECKLIST
+═══════════════════════════ -->
+<div class="sect" id="s6">
+  <div class="sect-head">
+    <div class="sect-num">Linea guida 05 + Sezione pratica</div>
+    <h2>Citazioni delle fonti e checklist finale</h2>
+    <p>Come strutturare le citazioni delle fonti nell'output — critico per la tracciabilità e la verifica delle risposte. Checklist completa dell'augmentation.</p>
+  </div>
+  <div class="wrap">
+
+    <!-- Citazioni -->
+    <div class="gl-group" style="margin-top:28px;">
+      <div class="gl-group-title">Linea guida 06</div>
+      <div class="gl-card">
+        <div class="gl-header">
+          <div class="gl-stripe"></div>
+          <div class="gl-num">06</div>
+          <div class="gl-title-wrap">
+            <div class="gl-title">Progetta il formato delle citazioni in base all'uso dell'output</div>
+            <div class="gl-subtitle">Le citazioni non sono decorazione — sono l'infrastruttura di verifica del sistema RAG</div>
+          </div>
+          <div class="gl-impact-wrap">
+            <div class="gl-impact-stars" style="color:var(--aug)">★★★</div>
+            <div class="gl-impact-lbl">Impatto</div>
+          </div>
+        </div>
+        <div class="gl-body">
+          <div class="gl-section">
+            <div class="gl-section-lbl">Tre formati di citazione e quando usarli</div>
+
+            <div style="margin-top:12px;">
+              <div class="pex-lbl neutral">Formato 1 — Citazione inline (output per umani, lettura diretta)</div>
+              <div class="citation-box">Le penali per ritardi di consegna sono pari all'1% del valore dell'ordine per ogni giorno
+di ritardo oltre i 5 giorni lavorativi <span style="color:#8b5c3a; font-weight:600;">(Contratto fornitura 2024, art.12.3, pag.15)</span>.
+
+Ordini superiori a €50.000 richiedono approvazione del responsabile acquisti e del CFO
+<span style="color:#8b5c3a; font-weight:600;">(Policy acquisti v3, Sezione 2, pag.4)</span>.</div>
+            </div>
+
+            <div style="margin-top:14px;">
+              <div class="pex-lbl neutral">Formato 2 — Citazione strutturata JSON (output per sistemi downstream)</div>
+              <div class="citation-box">{
+  "risposta": "Le penali per ritardi sono dell'1% per giorno oltre 5 giorni lavorativi.",
+  "fonti": [
+    {
+      "documento": "contratto_fornitore_042.pdf",
+      "sezione": "art.12.3",
+      "pagina": 15,
+      "chunk_id": "doc_042_chunk_07",
+      "testo_citato": "penali per ritardi di consegna superiori a 5 giorni..."
+    }
+  ],
+  "risposta_trovata_nel_contesto": true,
+  "confidenza": "alta"
+}</div>
+            </div>
+
+            <div style="margin-top:14px;">
+              <div class="pex-lbl neutral">Formato 3 — Note a piè di pagina numerate (output documentale formale)</div>
+              <div class="citation-box">Le penali per ritardi di consegna sono dell'1% per giorno di ritardo [1].
+Per ordini superiori a €50.000 è richiesta approvazione del CFO [2].
+
+[1] Contratto di fornitura 2024 — Articolo 12.3, Clausole di penale (pag.15)
+[2] Policy Acquisti Aziendale v3 — Sezione 2, Limiti di approvazione (pag.4)</div>
+            </div>
+          </div>
+
+          <div class="gl-section">
+            <div class="gl-section-lbl">Perché le citazioni sono infrastruttura critica</div>
+            <p>Le citazioni servono a tre funzioni distinte: permettono all'utente di <strong>verificare</strong> l'informazione sulla fonte primaria, permettono al sistema di <strong>debuggare</strong> il retrieval (se la risposta è sbagliata, la citazione rivela quale chunk ha prodotto l'errore), e permettono di <strong>tracciare</strong> quale versione di un documento era attiva al momento della risposta. In sistemi RAG critici (legale, medico, finanziario), le citazioni non sono opzionali.</p>
+          </div>
+
+        </div>
+      </div>
+    </div>
+
+    <!-- Template completo -->
+    <div class="prose" style="margin-top:36px;">
+      <p style="font-size:15px; font-weight:500; color:var(--ink2);">Template completo del prompt aumentato</p>
+    </div>
+
+    <div class="prompt-template" style="margin-top:16px;"><span class="pt-comment"># ── PROMPT RAG AUMENTATO — TEMPLATE COMPLETO ──────────────────</span>
+
+<span class="pt-section">SYSTEM PROMPT</span><span class="pt-label">:</span>
+<span class="pt-instr">Sei un assistente esperto di [dominio] che risponde a domande basandosi
+esclusivamente sui documenti forniti come riferimento.
+Il tuo scopo è fornire risposte accurate, tracciabili e grounded sui documenti.</span>
+
+<span class="pt-instr">Regole fondamentali:
+1. Usa SOLO le informazioni contenute nei documenti di riferimento.
+2. Non aggiungere informazioni dalla tua conoscenza interna.
+3. Per ogni informazione, indica la fonte specifica tra parentesi.
+4. Se la risposta non è nei documenti, rispondi:
+   "Non ho trovato informazioni su questo argomento nei documenti disponibili."
+5. Se ci sono informazioni contrastanti tra documenti, segnalale esplicitamente.
+6. Distingui ciò che è esplicitamente nel documento da ciò che inferisci.</span>
+
+<span class="pt-section">USER MESSAGE</span><span class="pt-label">:</span>
+<span class="pt-comment"># Layer 3 — Documenti di riferimento</span>
+<span class="pt-label">---DOCUMENTI DI RIFERIMENTO---
+
+[DOCUMENTO 1 — </span><span class="pt-var">{chunk_1_title}</span><span class="pt-label">]
+[fonte: </span><span class="pt-var">{chunk_1_source}</span><span class="pt-label">, pag.</span><span class="pt-var">{chunk_1_page}</span><span class="pt-label">]
+</span><span class="pt-var">{chunk_1_text}</span><span class="pt-label">
+
+[DOCUMENTO 2 — </span><span class="pt-var">{chunk_2_title}</span><span class="pt-label">]
+[fonte: </span><span class="pt-var">{chunk_2_source}</span><span class="pt-label">, pag.</span><span class="pt-var">{chunk_2_page}</span><span class="pt-label">]
+</span><span class="pt-var">{chunk_2_text}</span><span class="pt-label">
+
+[... ulteriori documenti se presenti ...]
+
+---FINE DOCUMENTI---
+
+</span><span class="pt-comment"># Layer 4 — Istruzioni di formato</span>
+<span class="pt-instr">Rispondi in modo conciso e diretto. Cita le fonti per ogni affermazione.</span><span class="pt-label">
+
+</span><span class="pt-comment"># Layer 5 — Query utente (sempre ultima)</span>
+<span class="pt-label">DOMANDA: </span><span class="pt-var">{user_query}</span></div>
+
+    <!-- Checklist -->
+    <div class="prose" style="margin-top:36px;">
+      <p style="font-size:15px; font-weight:500; color:var(--ink2);">Checklist — augmentation configurata correttamente?</p>
+    </div>
+
+    <div class="checklist" style="margin-top:12px;">
+      <div class="check-item">
+        <div class="check-icon">✓</div>
+        <div>Il prompt aumentato ha la <strong>struttura a 5 layer</strong>: identità, grounding, documenti separati, formato, query — con la query in ultima posizione.</div>
+      </div>
+      <div class="check-item">
+        <div class="check-icon">✓</div>
+        <div>I chunk sono <strong>separati con delimitatori espliciti</strong> e ogni chunk ha intestazione con fonte e pagina — il modello sa dove inizia e finisce ogni documento.</div>
+      </div>
+      <div class="check-item">
+        <div class="check-icon">✓</div>
+        <div>Le <strong>istruzioni di grounding</strong> coprono esplicitamente tre casi: risposta nel contesto (usa il documento), risposta non nel contesto (ammetti l'assenza), risposta parziale (segnala l'incertezza).</div>
+      </div>
+      <div class="check-item">
+        <div class="check-icon">✓</div>
+        <div>È definita una <strong>strategia di gestione dei conflitti</strong>: il modello sa cosa fare quando i documenti si contraddicono tra loro o con la propria conoscenza.</div>
+      </div>
+      <div class="check-item">
+        <div class="check-icon">✓</div>
+        <div>È applicata una <strong>soglia di rilevanza minima</strong> per scartare chunk con score troppo basso prima di includerli nel prompt — per evitare il diluition effect.</div>
+      </div>
+      <div class="check-item">
+        <div class="check-icon">✓</div>
+        <div>Il <strong>formato delle citazioni</strong> è scelto in base all'uso dell'output: inline per umani, JSON per sistemi, note a piè di pagina per documenti formali.</div>
+      </div>
+      <div class="check-item">
+        <div class="check-icon">✓</div>
+        <div>È definita una <strong>strategia di context window management</strong> per il caso in cui i chunk superino i limiti: riduzione di k → soglia di rilevanza → compressione → iterative retrieval.</div>
+      </div>
+    </div>
+
+    <div class="insight" style="margin-top:28px; border-color:#2e5f8a; background:#edf3f9;">
+      <div class="insight-lbl" style="color:#2e5f8a;">Prossimo — Report D</div>
+      <p>Con indicizzazione (A), retrieval (B) e augmentation (C) configurati, il prossimo report (D) affronta la <strong>valutazione del sistema RAG</strong>: come misurare la qualità separatamente per stadio — retrieval evaluation (i chunk giusti vengono recuperati?) e generation evaluation (il modello usa correttamente il contesto?) — e il framework RAGAS.</p>
+    </div>
+
+  </div>
+</div>
+
+
+<!-- FOOTER -->
+<div class="footer">
+  <span>Serie Agenti AI — Leva 04 · Knowledge / RAG · Report C · Augmentation</span>
+  <span>Marzo 2026</span>
+</div>
+
+<script>
+function show(n) {
+  document.querySelectorAll('.sect').forEach(s => s.classList.remove('active'));
+  document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('s'+n).classList.add('active');
+  document.querySelectorAll('.nav-btn')[n-1].classList.add('active');
+  window.scrollTo({top:0, behavior:'smooth'});
+}
+</script>
+</body>
+</html>

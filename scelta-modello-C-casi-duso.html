@@ -1,0 +1,649 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Scelta del modello — C · Casi d'uso tipo e segnali di warning</title>
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Outfit:wght@200;300;400;500;600;700;800;900&family=IBM+Plex+Mono:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg:     #faf8f5;
+  --bg2:    #f2efe9;
+  --bg3:    #e9e5dc;
+  --ink:    #1b1915;
+  --ink2:   #2e2b25;
+  --ink3:   #6d685c;
+  --ink4:   #a19c8f;
+  --border: #d9d4c8;
+  --border2:#cac4b6;
+
+  --accent:  #5a4a3a;
+  --accent2: #3a2e22;
+  --accent-light: #f5f0eb;
+
+  --ok:   #3d7a45; --ok-l:  #f4faf5;
+  --bad:  #c0392b; --bad-l: #fdf5f5;
+  --warn: #b07d24; --warn-l:#fdf6e8;
+
+  /* Profili modello */
+  --p1: #2e4a7a; --p1-l:#edf1f9;
+  --p2: #3d7a45; --p2-l:#f4faf5;
+  --p3: #7b5ea7; --p3-l:#f4f0fa;
+  --p4: #b07d24; --p4-l:#fdf6e8;
+}
+
+* { margin:0; padding:0; box-sizing:border-box; }
+html { scroll-behavior:smooth; }
+body { background:var(--bg); color:var(--ink); font-family:'Outfit',sans-serif; font-weight:300; font-size:14px; line-height:1.75; }
+
+.masthead { background:var(--ink); color:rgba(255,255,255,.9); padding:60px 56px 52px; position:relative; overflow:hidden; }
+.masthead::before { content:''; position:absolute; inset:0; background: repeating-linear-gradient(90deg,rgba(255,255,255,.012) 0,rgba(255,255,255,.012) 1px,transparent 1px,transparent 64px), repeating-linear-gradient(0deg,rgba(255,255,255,.012) 0,rgba(255,255,255,.012) 1px,transparent 1px,transparent 64px); pointer-events:none; }
+.masthead::after { content:'C'; position:absolute; right:44px; bottom:-28px; font-family:'Instrument Serif',serif; font-size:280px; line-height:1; color:rgba(255,255,255,.025); pointer-events:none; }
+.mh-eye { font-family:'IBM Plex Mono',monospace; font-size:10px; letter-spacing:3px; text-transform:uppercase; color:rgba(255,255,255,.25); margin-bottom:18px; position:relative; }
+.mh-cluster { display:inline-block; font-family:'IBM Plex Mono',monospace; font-size:10px; letter-spacing:2px; text-transform:uppercase; padding:4px 12px; border:1px solid var(--accent); color:var(--accent); margin-bottom:20px; position:relative; }
+.masthead h1 { font-family:'Instrument Serif',serif; font-weight:400; font-size:clamp(30px,4.5vw,54px); line-height:1.08; letter-spacing:-1px; max-width:700px; position:relative; }
+.mh-sub { margin-top:20px; font-size:15px; font-weight:300; color:rgba(255,255,255,.38); max-width:660px; line-height:1.7; position:relative; }
+.mh-meta { margin-top:32px; display:flex; gap:32px; flex-wrap:wrap; position:relative; }
+.mh-stat { display:flex; flex-direction:column; gap:4px; }
+.mh-stat-val { font-family:'IBM Plex Mono',monospace; font-size:22px; font-weight:500; color:rgba(255,255,255,.85); }
+.mh-stat-lbl { font-size:10px; letter-spacing:2px; text-transform:uppercase; color:rgba(255,255,255,.25); }
+
+.nav { background:var(--ink2); position:sticky; top:0; z-index:100; display:flex; overflow-x:auto; border-bottom:1px solid rgba(255,255,255,.06); }
+.nav-btn { flex:1; min-width:100px; padding:13px 12px; border:none; background:transparent; cursor:pointer; font-family:'Outfit',sans-serif; font-size:10.5px; font-weight:600; text-transform:uppercase; letter-spacing:.4px; color:rgba(255,255,255,.3); border-right:1px solid rgba(255,255,255,.06); transition:all .2s; white-space:nowrap; }
+.nav-btn:last-child { border-right:none; }
+.nav-btn:hover { color:rgba(255,255,255,.6); }
+.nav-btn.active { color:#fff; background:rgba(255,255,255,.05); }
+
+.sect { display:none; }
+.sect.active { display:block; animation:fadeIn .3s ease; }
+@keyframes fadeIn { from{opacity:0;transform:translateY(6px)} to{opacity:1;transform:translateY(0)} }
+.sect-head { padding:48px 56px 36px; border-bottom:1px solid var(--border); }
+.sect-num { font-family:'IBM Plex Mono',monospace; font-size:10px; letter-spacing:3px; text-transform:uppercase; color:var(--ink4); margin-bottom:10px; }
+.sect-head h2 { font-family:'Instrument Serif',serif; font-weight:400; font-size:clamp(26px,3.5vw,42px); line-height:1.1; letter-spacing:-.5px; max-width:640px; margin-bottom:14px; }
+.sect-head p { color:var(--ink3); max-width:700px; font-size:14.5px; }
+.wrap { padding:0 56px 64px; }
+
+.prose { max-width:760px; }
+.prose p { font-size:14.5px; color:var(--ink3); line-height:1.85; margin-bottom:16px; }
+.prose p strong { color:var(--ink2); font-weight:500; }
+.prose p em { font-style:italic; color:var(--ink2); }
+
+/* ── PROFILE CARD ── */
+.profile-card { border:1px solid var(--border2); background:var(--bg); overflow:hidden; margin-top:28px; }
+.prc-bar { height:5px; }
+.prc-head { padding:16px 22px; background:var(--bg2); border-bottom:1px solid var(--border); display:flex; align-items:flex-start; gap:12px; }
+.prc-badge { font-family:'IBM Plex Mono',monospace; font-size:10px; font-weight:700; letter-spacing:2px; padding:4px 10px; color:#fff; flex-shrink:0; }
+.prc-title-col {}
+.prc-label { font-family:'IBM Plex Mono',monospace; font-size:9px; letter-spacing:2px; text-transform:uppercase; color:var(--ink4); margin-bottom:3px; }
+.prc-title { font-family:'Instrument Serif',serif; font-size:22px; color:var(--ink2); }
+.prc-tagline { font-size:13px; color:var(--ink3); margin-top:2px; }
+
+.prc-body { display:grid; grid-template-columns:1fr 1fr; gap:0; }
+.prc-half { padding:18px 22px; }
+.prc-half:first-child { border-right:1px solid var(--border); }
+.prc-section-lbl { font-family:'IBM Plex Mono',monospace; font-size:9px; letter-spacing:2px; text-transform:uppercase; color:var(--ink4); margin-bottom:8px; padding-bottom:5px; border-bottom:1px solid var(--border); }
+.prc-half p { font-size:13px; color:var(--ink3); line-height:1.65; margin-bottom:6px; }
+.prc-half p strong { color:var(--ink2); font-weight:500; }
+
+.dim-bar-row { margin-top:10px; }
+.dbr-item { display:grid; grid-template-columns:130px 1fr 36px; align-items:center; gap:8px; margin-bottom:7px; font-size:12px; }
+.dbr-label { color:var(--ink3); }
+.dbr-track { height:8px; background:var(--bg3); border-radius:4px; overflow:hidden; }
+.dbr-fill { height:100%; border-radius:4px; }
+.dbr-val { font-family:'IBM Plex Mono',monospace; font-size:10px; color:var(--ink4); text-align:right; }
+
+.prc-footer { border-top:1px solid var(--border); padding:14px 22px; background:var(--bg2); }
+.prc-footer-lbl { font-family:'IBM Plex Mono',monospace; font-size:9px; letter-spacing:2px; text-transform:uppercase; color:var(--ink4); margin-bottom:6px; }
+.prc-red-flags { display:flex; flex-wrap:wrap; gap:6px; }
+.prc-flag { font-family:'IBM Plex Mono',monospace; font-size:10px; padding:2px 8px; border:1px solid var(--bad); background:var(--bad-l); color:#6b3030; }
+
+/* ── WARNING CARDS ── */
+.warning-grid { display:grid; grid-template-columns:1fr 1fr; gap:14px; margin-top:20px; }
+.wc { border:1px solid var(--border2); background:var(--bg); overflow:hidden; }
+.wc-head { padding:12px 16px; border-bottom:1px solid var(--border); background:var(--bg2); }
+.wc-source { font-family:'IBM Plex Mono',monospace; font-size:8px; letter-spacing:2px; text-transform:uppercase; color:var(--ink4); margin-bottom:3px; }
+.wc-title { font-weight:600; font-size:14px; color:var(--ink2); }
+.wc-body { padding:14px 16px; }
+.wc-symptom { font-size:13px; color:var(--ink3); line-height:1.6; margin-bottom:8px; }
+.wc-symptom strong { color:var(--ink2); font-weight:500; }
+.wc-check-lbl { font-family:'IBM Plex Mono',monospace; font-size:9px; letter-spacing:1px; text-transform:uppercase; color:var(--ok); margin-bottom:4px; }
+.wc-check { font-size:12.5px; color:var(--ink3); line-height:1.55; padding:6px 10px; background:var(--ok-l); border-left:3px solid var(--ok); }
+.wc-check strong { color:var(--ink2); font-weight:500; }
+
+/* ── SERIES RECAP ── */
+.series-grid { display:grid; grid-template-columns:repeat(4,1fr); gap:1px; background:var(--border); margin-top:24px; border:1px solid var(--border2); }
+.sg-cell { background:var(--bg); padding:14px 14px; }
+.sg-label { font-family:'IBM Plex Mono',monospace; font-size:8px; letter-spacing:2px; text-transform:uppercase; color:var(--ink4); margin-bottom:4px; }
+.sg-title { font-family:'Instrument Serif',serif; font-size:14px; color:var(--ink2); margin-bottom:3px; }
+.sg-desc { font-size:11px; color:var(--ink3); line-height:1.5; }
+
+/* ── CHECKLIST ── */
+.checklist { margin-top:16px; }
+.check-item { display:flex; gap:12px; align-items:flex-start; padding:10px 0; border-bottom:1px solid var(--border); font-size:13.5px; color:var(--ink3); }
+.check-item:last-child { border-bottom:none; }
+.check-icon { width:20px; height:20px; border-radius:50%; background:var(--accent); color:#fff; display:flex; align-items:center; justify-content:center; font-size:11px; font-weight:700; flex-shrink:0; margin-top:1px; }
+.check-item strong { color:var(--ink2); font-weight:500; }
+
+/* ── MECHANISM / KP / INSIGHT ── */
+.mechanism { margin-top:14px; padding:14px 18px; border-left:3px solid var(--accent); background:var(--accent-light); }
+.mech-lbl { font-family:'IBM Plex Mono',monospace; font-size:9px; letter-spacing:2px; text-transform:uppercase; color:var(--accent); margin-bottom:6px; }
+.mechanism p { font-size:13px; color:var(--ink3); line-height:1.65; }
+.mechanism p strong { color:var(--ink2); font-weight:500; }
+.key-point { margin-top:36px; padding:24px 28px; border-left:4px solid var(--accent); background:var(--accent-light); }
+.kp-label { font-family:'IBM Plex Mono',monospace; font-size:9px; letter-spacing:2px; text-transform:uppercase; color:var(--accent); margin-bottom:8px; }
+.kp-text { font-family:'Instrument Serif',serif; font-size:18px; line-height:1.45; color:var(--ink2); }
+.kp-sub { margin-top:10px; font-size:13px; color:var(--ink3); line-height:1.65; }
+.insight { margin:16px 0; padding:16px 20px; border-left:4px solid var(--accent); background:var(--accent-light); }
+.insight-lbl { font-family:'IBM Plex Mono',monospace; font-size:9px; letter-spacing:2px; text-transform:uppercase; color:var(--accent); margin-bottom:6px; }
+.insight p { font-size:13.5px; color:var(--ink2); line-height:1.65; max-width:700px; }
+.insight p strong { font-weight:500; }
+
+.footer { padding:24px 56px; border-top:1px solid var(--border); display:flex; justify-content:space-between; align-items:center; font-family:'IBM Plex Mono',monospace; font-size:10px; letter-spacing:1px; text-transform:uppercase; color:var(--ink4); }
+
+@media (max-width:700px) {
+  .masthead,.sect-head,.wrap,.footer { padding-left:20px; padding-right:20px; }
+  .prc-body,.warning-grid { grid-template-columns:1fr; }
+  .series-grid { grid-template-columns:1fr 1fr; }
+}
+</style>
+</head>
+<body>
+
+<div class="masthead">
+  <div class="mh-eye">Serie Agenti AI · Leva 02 · Scelta del modello</div>
+  <div class="mh-cluster">Report C — Finale</div>
+  <h1>Casi d'uso tipo e segnali di warning</h1>
+  <p class="mh-sub">Quattro profili di task con le dimensioni critiche già identificate e il profilo di modello corrispondente. I segnali che il modello è davvero il problema — e come distinguerli dai problemi di prompt, di architettura o di dati.</p>
+  <div class="mh-meta">
+    <div class="mh-stat"><div class="mh-stat-val">4</div><div class="mh-stat-lbl">Profili di caso d'uso</div></div>
+    <div class="mh-stat"><div class="mh-stat-val">Warning</div><div class="mh-stat-lbl">I segnali da riconoscere</div></div>
+    <div class="mh-stat"><div class="mh-stat-value">Diagnosi</div><div class="mh-stat-lbl">Modello vs. prompt vs. arch.</div></div>
+    <div class="mh-stat"><div class="mh-stat-val">Fine serie</div><div class="mh-stat-lbl">Report 4/4</div></div>
+  </div>
+</div>
+
+<div class="nav">
+  <button class="nav-btn active" onclick="show(1)">Profilo 1: Analisi complessa</button>
+  <button class="nav-btn" onclick="show(2)">Profilo 2: Supporto ad alto vol.</button>
+  <button class="nav-btn" onclick="show(3)">Profilo 3: Codice e struttura</button>
+  <button class="nav-btn" onclick="show(4)">Profilo 4: Classificazione</button>
+  <button class="nav-btn" onclick="show(5)">Segnali di warning</button>
+</div>
+
+
+<!-- ═══════════════════════════
+     S1 — PROFILO 1: ANALISI COMPLESSA
+═══════════════════════════ -->
+<div class="sect active" id="s1">
+  <div class="sect-head">
+    <div class="sect-num">Profilo 01</div>
+    <h2>Analisi documentale complessa</h2>
+    <p>Task che richiedono ragionamento profondo su documenti lunghi — analisi legali, due diligence, report di ricerca, valutazioni di rischio. Il costo è secondario rispetto alla qualità del ragionamento.</p>
+  </div>
+  <div class="wrap">
+
+    <div class="profile-card">
+      <div class="prc-bar" style="background:var(--p1)"></div>
+      <div class="prc-head">
+        <div class="prc-badge" style="background:var(--p1)">Profilo 01</div>
+        <div class="prc-title-col">
+          <div class="prc-label">Analisi documentale complessa — contratti, due diligence, ricerca</div>
+          <div class="prc-title">Ragionamento e instruction following dominano</div>
+          <div class="prc-tagline">Costo secondario. Latenza accettabile. Qualità del ragionamento critica.</div>
+        </div>
+      </div>
+      <div class="prc-body">
+        <div class="prc-half">
+          <div class="prc-section-lbl">Dimensioni critiche — in ordine di importanza</div>
+          <div class="dim-bar-row">
+            <div class="dbr-item">
+              <div class="dbr-label">Ragionamento</div>
+              <div class="dbr-track"><div class="dbr-fill" style="width:100%;background:var(--p1)"></div></div>
+              <div class="dbr-val">critica</div>
+            </div>
+            <div class="dbr-item">
+              <div class="dbr-label">Instruction following</div>
+              <div class="dbr-track"><div class="dbr-fill" style="width:95%;background:var(--p1)"></div></div>
+              <div class="dbr-val">critica</div>
+            </div>
+            <div class="dbr-item">
+              <div class="dbr-label">Context window</div>
+              <div class="dbr-track"><div class="dbr-fill" style="width:80%;background:var(--p1)"></div></div>
+              <div class="dbr-val">alta</div>
+            </div>
+            <div class="dbr-item">
+              <div class="dbr-label">Output strutturato</div>
+              <div class="dbr-track"><div class="dbr-fill" style="width:70%;background:var(--p1)"></div></div>
+              <div class="dbr-val">alta</div>
+            </div>
+            <div class="dbr-item">
+              <div class="dbr-label">Velocità</div>
+              <div class="dbr-track"><div class="dbr-fill" style="width:30%;background:var(--bg3)"></div></div>
+              <div class="dbr-val">bassa</div>
+            </div>
+            <div class="dbr-item">
+              <div class="dbr-label">Costo</div>
+              <div class="dbr-track"><div class="dbr-fill" style="width:20%;background:var(--bg3)"></div></div>
+              <div class="dbr-val">bassa</div>
+            </div>
+          </div>
+        </div>
+        <div class="prc-half">
+          <div class="prc-section-lbl">Profilo del modello adatto</div>
+          <p><strong>Modello frontier:</strong> questo è il profilo che giustifica il costo più alto. Il ragionamento complesso è difficilmente recuperabile con un prompt migliore — richiede capacità genuine del modello.</p>
+          <p><strong>Context window abbondante:</strong> documenti legali e report possono facilmente superare i 50.000 token. Verifica non solo il limite massimo ma l'accuratezza nella parte centrale e finale del documento — alcuni modelli degradano.</p>
+          <p><strong>Instruction following robusto sugli edge-case:</strong> questi sistemi spesso hanno guardrail critici (non fornire pareri legali, segnalare sempre le incertezze). Testa con input che cercano di aggirare le istruzioni.</p>
+          <p><strong>Considera l'uso batch:</strong> se le analisi non sono in tempo reale (es. analisi notturna di documenti), la latenza non è critica — puoi usare modelli più capaci anche se più lenti.</p>
+        </div>
+      </div>
+      <div class="prc-footer">
+        <div class="prc-footer-lbl">Red flag specifici di questo profilo</div>
+        <div class="prc-red-flags">
+          <span class="prc-flag">Il modello "inventa" clausole non presenti nel documento</span>
+          <span class="prc-flag">Il risk score non ha motivazione specifica</span>
+          <span class="prc-flag">Il modello ignora vincoli espliciti nel prompt su casi difficili</span>
+          <span class="prc-flag">L'analisi della parte finale di documenti lunghi è meno accurata</span>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+
+<!-- ═══════════════════════════
+     S2 — PROFILO 2: SUPPORTO AD ALTO VOLUME
+═══════════════════════════ -->
+<div class="sect" id="s2">
+  <div class="sect-head">
+    <div class="sect-num">Profilo 02</div>
+    <h2>Chatbot e supporto ad alto volume</h2>
+    <p>Task interattivi dove l'utente aspetta la risposta in tempo reale, con volume alto e margini di costo stretti. La qualità deve essere "abbastanza buona" — ma la velocità e il costo sono i vincoli operativi dominanti.</p>
+  </div>
+  <div class="wrap">
+
+    <div class="profile-card">
+      <div class="prc-bar" style="background:var(--p2)"></div>
+      <div class="prc-head">
+        <div class="prc-badge" style="background:var(--p2)">Profilo 02</div>
+        <div class="prc-title-col">
+          <div class="prc-label">Supporto ad alto volume — chatbot, FAQ, assistenza clienti</div>
+          <div class="prc-title">Velocità e costo dominano — qualità sufficiente</div>
+          <div class="prc-tagline">Latenza critica. Costo per operazione critico. Ragionamento secondario.</div>
+        </div>
+      </div>
+      <div class="prc-body">
+        <div class="prc-half">
+          <div class="prc-section-lbl">Dimensioni critiche — in ordine di importanza</div>
+          <div class="dim-bar-row">
+            <div class="dbr-item">
+              <div class="dbr-label">Velocità</div>
+              <div class="dbr-track"><div class="dbr-fill" style="width:100%;background:var(--p2)"></div></div>
+              <div class="dbr-val">critica</div>
+            </div>
+            <div class="dbr-item">
+              <div class="dbr-label">Costo</div>
+              <div class="dbr-track"><div class="dbr-fill" style="width:100%;background:var(--p2)"></div></div>
+              <div class="dbr-val">critica</div>
+            </div>
+            <div class="dbr-item">
+              <div class="dbr-label">Instruction following</div>
+              <div class="dbr-track"><div class="dbr-fill" style="width:75%;background:var(--p2)"></div></div>
+              <div class="dbr-val">alta</div>
+            </div>
+            <div class="dbr-item">
+              <div class="dbr-label">Output strutturato</div>
+              <div class="dbr-track"><div class="dbr-fill" style="width:50%;background:var(--p2)"></div></div>
+              <div class="dbr-val">media</div>
+            </div>
+            <div class="dbr-item">
+              <div class="dbr-label">Ragionamento</div>
+              <div class="dbr-track"><div class="dbr-fill" style="width:35%;background:var(--bg3)"></div></div>
+              <div class="dbr-val">bassa</div>
+            </div>
+            <div class="dbr-item">
+              <div class="dbr-label">Context window</div>
+              <div class="dbr-track"><div class="dbr-fill" style="width:25%;background:var(--bg3)"></div></div>
+              <div class="dbr-val">bassa</div>
+            </div>
+          </div>
+        </div>
+        <div class="prc-half">
+          <div class="prc-section-lbl">Profilo del modello adatto</div>
+          <p><strong>Modello small o mid ottimizzato per velocità:</strong> questo profilo non ha bisogno delle capacità di ragionamento dei modelli frontier. Un modello mid veloce che risponde in 500ms batte un modello large che risponde in 3 secondi — anche se il secondo è tecnicamente migliore.</p>
+          <p><strong>Calcola il costo a volume reale:</strong> a 100.000 interazioni/giorno, la differenza di costo tra un modello large e uno small è sostanziale. Calcola il breakeven: a quale volume il risparmio giustifica il costo di valutare e migrare?</p>
+          <p><strong>Testa la qualità sulla soglia "abbastanza buona":</strong> non testa se il modello produce la risposta migliore possibile — testa se produce risposte che non richiedono escalation a un agente umano. La barra è diversa.</p>
+          <p><strong>Il routing è particolarmente utile qui:</strong> la maggior parte delle query di supporto sono semplici (lookup di informazioni, FAQ). Il 10–15% di query complesse giustificano l'escalation al modello grande.</p>
+        </div>
+      </div>
+      <div class="prc-footer">
+        <div class="prc-footer-lbl">Red flag specifici di questo profilo</div>
+        <div class="prc-red-flags">
+          <span class="prc-flag">Tasso di escalation a agenti umani sopra aspettative</span>
+          <span class="prc-flag">TTFT sopra 800ms su device mobili</span>
+          <span class="prc-flag">Costo per conversazione supera il margine del prodotto</span>
+          <span class="prc-flag">Risposte corrette ma troppo generiche per il contesto specifico</span>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+
+<!-- ═══════════════════════════
+     S3 — PROFILO 3: CODICE E STRUTTURA
+═══════════════════════════ -->
+<div class="sect" id="s3">
+  <div class="sect-head">
+    <div class="sect-num">Profilo 03</div>
+    <h2>Generazione di codice e output strutturato</h2>
+    <p>Task che producono codice, query, configurazioni, o strutture dati che vengono eseguite o parsate da sistemi a valle. La correttezza sintattica e la fedeltà allo schema sono non negoziabili.</p>
+  </div>
+  <div class="wrap">
+
+    <div class="profile-card">
+      <div class="prc-bar" style="background:var(--p3)"></div>
+      <div class="prc-head">
+        <div class="prc-badge" style="background:var(--p3)">Profilo 03</div>
+        <div class="prc-title-col">
+          <div class="prc-label">Codice e output strutturato — SQL, Python, JSON, configurazioni</div>
+          <div class="prc-title">Correttezza tecnica e fedeltà allo schema dominano</div>
+          <div class="prc-tagline">Output strutturato critico. Coding capability specifica. Ragionamento medio-alto.</div>
+        </div>
+      </div>
+      <div class="prc-body">
+        <div class="prc-half">
+          <div class="prc-section-lbl">Dimensioni critiche — in ordine di importanza</div>
+          <div class="dim-bar-row">
+            <div class="dbr-item">
+              <div class="dbr-label">Output strutturato</div>
+              <div class="dbr-track"><div class="dbr-fill" style="width:100%;background:var(--p3)"></div></div>
+              <div class="dbr-val">critica</div>
+            </div>
+            <div class="dbr-item">
+              <div class="dbr-label">Coding capability</div>
+              <div class="dbr-track"><div class="dbr-fill" style="width:95%;background:var(--p3)"></div></div>
+              <div class="dbr-val">critica</div>
+            </div>
+            <div class="dbr-item">
+              <div class="dbr-label">Instruction following</div>
+              <div class="dbr-track"><div class="dbr-fill" style="width:80%;background:var(--p3)"></div></div>
+              <div class="dbr-val">alta</div>
+            </div>
+            <div class="dbr-item">
+              <div class="dbr-label">Ragionamento</div>
+              <div class="dbr-track"><div class="dbr-fill" style="width:70%;background:var(--p3)"></div></div>
+              <div class="dbr-val">alta</div>
+            </div>
+            <div class="dbr-item">
+              <div class="dbr-label">Velocità</div>
+              <div class="dbr-track"><div class="dbr-fill" style="width:45%;background:var(--bg3)"></div></div>
+              <div class="dbr-val">media</div>
+            </div>
+            <div class="dbr-item">
+              <div class="dbr-label">Costo</div>
+              <div class="dbr-track"><div class="dbr-fill" style="width:40%;background:var(--bg3)"></div></div>
+              <div class="dbr-val">media</div>
+            </div>
+          </div>
+        </div>
+        <div class="prc-half">
+          <div class="prc-section-lbl">Profilo del modello adatto</div>
+          <p><strong>Testa la coding capability sul proprio stack tecnologico:</strong> le performance sui benchmark di coding (HumanEval) non correlano perfettamente con le performance su SQL per il tuo schema specifico, o su Python con le tue librerie. Costruisci il golden dataset con casi reali del proprio stack.</p>
+          <p><strong>Testa la fedeltà allo schema specifico:</strong> la maggior parte dei modelli produce JSON valido in generale ma può fallire su schemi con nesting profondo, array di oggetti con vincoli, o enum con valori specifici. Testa con il tuo schema esatto — non con JSON generici.</p>
+          <p><strong>Considera i modelli specializzati per il codice:</strong> alcuni modelli sono ottimizzati specificamente per la generazione di codice e possono superare i modelli frontier generali su questo task specifico — a costo inferiore.</p>
+          <p><strong>Il retry rate è la metrica operativa chiave:</strong> ogni JSON invalido è un retry che aumenta latenza e costo. Misura il retry rate sullo schema specifico come metrica principale di scelta.</p>
+        </div>
+      </div>
+      <div class="prc-footer">
+        <div class="prc-footer-lbl">Red flag specifici di questo profilo</div>
+        <div class="prc-red-flags">
+          <span class="prc-flag">Retry rate JSON &gt;3% sul proprio schema</span>
+          <span class="prc-flag">Codice che non compila o query SQL con sintassi errata</span>
+          <span class="prc-flag">Hallucination di nomi di librerie o funzioni non esistenti</span>
+          <span class="prc-flag">Schema valido ma valori semanticamente sbagliati</span>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+
+<!-- ═══════════════════════════
+     S4 — PROFILO 4: CLASSIFICAZIONE
+═══════════════════════════ -->
+<div class="sect" id="s4">
+  <div class="sect-head">
+    <div class="sect-num">Profilo 04</div>
+    <h2>Pipeline di classificazione ed estrazione</h2>
+    <p>Task che processano grandi volumi di input uniformi — classificare richieste, estrarre campi da documenti standardizzati, etichettare dati. La velocità e il costo dominano; il ragionamento è minimo o assente.</p>
+  </div>
+  <div class="wrap">
+
+    <div class="profile-card">
+      <div class="prc-bar" style="background:var(--p4)"></div>
+      <div class="prc-head">
+        <div class="prc-badge" style="background:var(--p4)">Profilo 04</div>
+        <div class="prc-title-col">
+          <div class="prc-label">Classificazione ed estrazione — pipeline batch, elaborazione massiva</div>
+          <div class="prc-title">Velocità, costo e output strutturato dominano — ragionamento minimo</div>
+          <div class="prc-tagline">Il profilo dove i modelli small eccellono — spesso sovra-ingegnerizzato con modelli frontier.</div>
+        </div>
+      </div>
+      <div class="prc-body">
+        <div class="prc-half">
+          <div class="prc-section-lbl">Dimensioni critiche — in ordine di importanza</div>
+          <div class="dim-bar-row">
+            <div class="dbr-item">
+              <div class="dbr-label">Costo</div>
+              <div class="dbr-track"><div class="dbr-fill" style="width:100%;background:var(--p4)"></div></div>
+              <div class="dbr-val">critica</div>
+            </div>
+            <div class="dbr-item">
+              <div class="dbr-label">Velocità/throughput</div>
+              <div class="dbr-track"><div class="dbr-fill" style="width:100%;background:var(--p4)"></div></div>
+              <div class="dbr-val">critica</div>
+            </div>
+            <div class="dbr-item">
+              <div class="dbr-label">Output strutturato</div>
+              <div class="dbr-track"><div class="dbr-fill" style="width:85%;background:var(--p4)"></div></div>
+              <div class="dbr-val">alta</div>
+            </div>
+            <div class="dbr-item">
+              <div class="dbr-label">Instruction following</div>
+              <div class="dbr-track"><div class="dbr-fill" style="width:60%;background:var(--p4)"></div></div>
+              <div class="dbr-val">media</div>
+            </div>
+            <div class="dbr-item">
+              <div class="dbr-label">Ragionamento</div>
+              <div class="dbr-track"><div class="dbr-fill" style="width:20%;background:var(--bg3)"></div></div>
+              <div class="dbr-val">minima</div>
+            </div>
+            <div class="dbr-item">
+              <div class="dbr-label">Context window</div>
+              <div class="dbr-track"><div class="dbr-fill" style="width:15%;background:var(--bg3)"></div></div>
+              <div class="dbr-val">minima</div>
+            </div>
+          </div>
+        </div>
+        <div class="prc-half">
+          <div class="prc-section-lbl">Profilo del modello adatto</div>
+          <p><strong>Modello small specializzato:</strong> questo è il profilo dove i modelli piccoli vincono. La classificazione di testo e l'estrazione di campi da template standardizzati non richiedono le capacità di ragionamento dei modelli frontier. Un modello small fine-tuned per il dominio specifico può superare un modello frontier general-purpose a 1/10 del costo.</p>
+          <p><strong>Considera il fine-tuning (Leva 7):</strong> per pipeline con volume molto alto e pattern prevedibili, il fine-tuning su un modello small produce i migliori risultati su costo per operazione. Trattato in dettaglio nella Leva 7.</p>
+          <p><strong>La soglia di accuratezza definisce la scelta:</strong> se il task richiede 99%+ di accuratezza, potrebbe essere necessario un modello più grande nonostante il costo. Se il 95% è sufficiente con revisione umana del 5% borderline, un modello small è quasi sempre la scelta giusta.</p>
+          <p><strong>Batch processing ottimizzato:</strong> per questo profilo, il throughput conta più della latenza per singola chiamata. Usa le API batch quando disponibili — tipicamente più economiche per chiamate non in tempo reale.</p>
+        </div>
+      </div>
+      <div class="prc-footer">
+        <div class="prc-footer-lbl">Red flag specifici di questo profilo</div>
+        <div class="prc-red-flags">
+          <span class="prc-flag">Stai usando un modello frontier per classificazione binaria</span>
+          <span class="prc-flag">Accuratezza sotto soglia su categorie borderline</span>
+          <span class="prc-flag">Costo per operazione supera il valore dell'operazione stessa</span>
+          <span class="prc-flag">Il modello "ragiona" invece di classificare — output verbosi non necessari</span>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+
+<!-- ═══════════════════════════
+     S5 — SEGNALI DI WARNING
+═══════════════════════════ -->
+<div class="sect" id="s5">
+  <div class="sect-head">
+    <div class="sect-num">Sezione finale</div>
+    <h2>Segnali di warning — è davvero il modello il problema?</h2>
+    <p>Quando le performance del sistema sono deludenti, la colpa non è sempre del modello. Prima di cambiare modello, verificare che il problema non sia altrove — nel prompt, nell'architettura, nei dati.</p>
+  </div>
+  <div class="wrap">
+
+    <div class="prose" style="margin-top:28px;">
+      <p>Cambiare modello è costoso: richiede test, migrazione, rischio di regressioni su comportamenti già funzionanti. Prima di farlo, conviene escludere le altre cause. Il modello è l'ultima leva da toccare — solo dopo aver verificato che il problema non sia nel prompt, nell'architettura o nei dati.</p>
+    </div>
+
+    <div class="warning-grid" style="margin-top:20px;">
+
+      <div class="wc">
+        <div class="wc-head">
+          <div class="wc-source">Segnale di warning</div>
+          <div class="wc-title">Il sistema degrada su casi simili in modo imprevedibile</div>
+        </div>
+        <div class="wc-body">
+          <div class="wc-symptom">Il sistema funziona bene su alcuni input e fallisce su altri apparentemente simili, senza un pattern chiaro. La qualità sembra casuale.</div>
+          <div class="wc-check-lbl">Prima di cambiare modello, verifica</div>
+          <div class="wc-check"><strong>Il prompt è ambiguo?</strong> Istruzioni vaghe producono output inconsistenti non perché il modello è incapace, ma perché la richiesta è interpretabile in modi diversi. Rileggi il system prompt: ci sono istruzioni che si contraddicono? Vincoli che non coprono tutti i casi?</div>
+        </div>
+      </div>
+
+      <div class="wc">
+        <div class="wc-head">
+          <div class="wc-source">Segnale di warning</div>
+          <div class="wc-title">Il modello non segue le istruzioni sui casi difficili</div>
+        </div>
+        <div class="wc-body">
+          <div class="wc-symptom">Sul caso tipico il modello segue tutte le istruzioni. Su input ambigui o insoliti, ignora vincoli espliciti nel system prompt o produce comportamenti non attesi.</div>
+          <div class="wc-check-lbl">Prima di cambiare modello, verifica</div>
+          <div class="wc-check"><strong>Le istruzioni critiche sono in posizione prominente?</strong> Il modello tende a seguire meglio le istruzioni all'inizio del system prompt. Sposta i vincoli più critici in cima. Ripeti le istruzioni più importanti sia nel system prompt che nelle istruzioni del task.</div>
+        </div>
+      </div>
+
+      <div class="wc">
+        <div class="wc-head">
+          <div class="wc-source">Segnale di warning</div>
+          <div class="wc-title">La qualità dell'output cala progressivamente nelle sessioni lunghe</div>
+        </div>
+        <div class="wc-body">
+          <div class="wc-symptom">Le prime risposte di una sessione sono di alta qualità. Man mano che la sessione si allunga, la coerenza e la qualità diminuiscono — il modello sembra "dimenticare" le istruzioni precedenti.</div>
+          <div class="wc-check-lbl">Prima di cambiare modello, verifica</div>
+          <div class="wc-check"><strong>Il context window è gestito correttamente?</strong> Quasi sempre questo è un problema di gestione della memoria in-context (Leva Memoria, Report A), non di capacità del modello. Implementa la summarization progressiva — i modelli degradano quando il context è saturo, non per incapacità intrinseca.</div>
+        </div>
+      </div>
+
+      <div class="wc">
+        <div class="wc-head">
+          <div class="wc-source">Segnale di warning</div>
+          <div class="wc-title">Il modello produce hallucinations su fatti specifici del dominio</div>
+        </div>
+        <div class="wc-body">
+          <div class="wc-symptom">Il modello inventa nomi di clausole, articoli di legge, nomi di prodotti, o altri fatti specifici del dominio che non erano nell'input ma sembrano plausibili.</div>
+          <div class="wc-check-lbl">Prima di cambiare modello, verifica</div>
+          <div class="wc-check"><strong>Il contesto specifico è fornito?</strong> Le hallucination su fatti di dominio sono quasi sempre un problema di RAG o di contesto mancante — non di capacità del modello. Fornisci il documento di riferimento, la knowledge base pertinente, o la lista di termini corretti nel context. Il modello non inventa se ha le informazioni disponibili.</div>
+        </div>
+      </div>
+
+      <div class="wc">
+        <div class="wc-head">
+          <div class="wc-source">Segnale di warning</div>
+          <div class="wc-title">I task semplici producono buoni risultati ma i task complessi no</div>
+        </div>
+        <div class="wc-body">
+          <div class="wc-symptom">Il modello gestisce bene le domande dirette ma fallisce quando il task richiede più passi, più fonti di informazione, o ragionamento su più aspetti contemporaneamente.</div>
+          <div class="wc-check-lbl">Prima di cambiare modello, verifica</div>
+          <div class="wc-check"><strong>Il task è scomposto adeguatamente?</strong> Chiedere tutto in un unico prompt complesso produce risultati peggiori di scomporre il task in passi sequenziali (Leva 5, Orchestrazione). Prima di cambiare modello, prova la scomposizione del task: quasi sempre migliora i risultati senza cambiare il modello.</div>
+        </div>
+      </div>
+
+      <div class="wc">
+        <div class="wc-head">
+          <div class="wc-source">Segnale di warning — è davvero il modello</div>
+          <div class="wc-title">Il problema persiste dopo aver ottimizzato prompt e architettura</div>
+        </div>
+        <div class="wc-body">
+          <div class="wc-symptom">Hai ottimizzato il prompt, scomposto il task, gestito il context window, fornito il contesto necessario — e la qualità rimane sotto soglia in modo sistematico su una categoria specifica di input.</div>
+          <div class="wc-check-lbl">Ora valuta il modello</div>
+          <div class="wc-check"><strong>Se il problema persiste dopo queste verifiche, il modello potrebbe davvero essere il limite.</strong> Applica il protocollo di valutazione del Report B: costruisci un golden dataset che isola i casi problematici e confronta con un modello alternativo usando le metriche appropriate per il task.</div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- SERIE RECAP -->
+    <div class="prose" style="margin-top:36px;">
+      <p style="font-size:15px; font-weight:500; color:var(--ink2);">La serie completa — 4 report</p>
+    </div>
+    <div class="series-grid">
+      <div class="sg-cell">
+        <div class="sg-label">Quadro</div>
+        <div class="sg-title">Le dimensioni e il triangolo</div>
+        <div class="sg-desc">6 dimensioni operative, triangolo intelligenza/velocità/costo, approccio task-first.</div>
+      </div>
+      <div class="sg-cell">
+        <div class="sg-label">Report A</div>
+        <div class="sg-title">Routing intelligente</div>
+        <div class="sg-desc">3 pattern (cascata, esplicito, ensemble), matematica del risparmio, quando vale la pena.</div>
+      </div>
+      <div class="sg-cell">
+        <div class="sg-label">Report B</div>
+        <div class="sg-title">Valutare nella pratica</div>
+        <div class="sg-desc">Golden dataset, metriche per task, LLM-as-judge, protocollo in 6 passi.</div>
+      </div>
+      <div class="sg-cell">
+        <div class="sg-label">Report C ←</div>
+        <div class="sg-title">Casi d'uso e warning</div>
+        <div class="sg-desc">4 profili di task, red flag specifici, diagnosi modello vs. prompt vs. architettura.</div>
+      </div>
+    </div>
+
+    <div class="key-point" style="margin-top:28px;">
+      <div class="kp-label">I 4 principi trasversali della serie</div>
+      <div class="kp-text">Non si sceglie il modello migliore. Si sceglie il modello più adatto per il task specifico — che raramente è quello in testa alla classifica generale.</div>
+      <div class="kp-sub" style="margin-top:14px;">
+        <strong>1. Task-first, sempre.</strong> Identificare le due o tre dimensioni critiche per il task prima di guardare qualsiasi benchmark, prezzo o annuncio di vendor. Le dimensioni critiche cambiano lentamente; i modelli cambiano rapidamente.
+        <br><br>
+        <strong>2. Il triangolo è un vincolo strutturale, non temporaneo.</strong> Non si ottimizza su intelligenza, velocità e costo simultaneamente. Scegliere su quale ottimizzare è la decisione più importante — e il routing è la risposta quando le dimensioni critiche sono diverse per parti diverse del sistema.
+        <br><br>
+        <strong>3. Valuta sul tuo task, non sui benchmark pubblici.</strong> Un golden dataset di 50–100 casi reali e un protocollo rigoroso producono una decisione migliore di qualsiasi leaderboard. Il metodo è stabile anche quando i modelli cambiano.
+        <br><br>
+        <strong>4. Il modello è l'ultima leva da toccare.</strong> Prima di cambiare modello, verifica prompt, architettura, gestione del context e disponibilità del contesto specifico. Nella maggior parte dei casi, il problema è altrove.
+      </div>
+    </div>
+
+    <div class="prose" style="margin-top:28px; padding-top:24px; border-top:1px solid var(--border);">
+      <p style="color:var(--ink4); font-size:13px;">Serie Agenti AI · Leva 02 · Scelta del modello · 4 report (Quadro + A–C) · Marzo 2026</p>
+      <p style="font-size:13px; color:var(--ink4);">Quadro · A · B · <strong style="color:var(--ink2);">C ← questo report · Fine serie Leva 02</strong></p>
+    </div>
+
+  </div>
+</div>
+
+<div class="footer">
+  <span>Serie Agenti AI — Leva 02 · Scelta del modello · Report C · Casi d'uso e warning · Fine serie</span>
+  <span>Marzo 2026</span>
+</div>
+
+<script>
+function show(n) {
+  document.querySelectorAll('.sect').forEach(s => s.classList.remove('active'));
+  document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('s'+n).classList.add('active');
+  document.querySelectorAll('.nav-btn')[n-1].classList.add('active');
+  window.scrollTo({top:0, behavior:'smooth'});
+}
+</script>
+</body>
+</html>

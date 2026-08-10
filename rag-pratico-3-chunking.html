@@ -1,0 +1,929 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>RAG Pratico — Report 3 · Chunking</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:ital,wght@0,300;0,400;0,500;0,600;1,300;1,400&family=DM+Mono:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg:      #fafaf7;
+  --bg2:     #f2f1ec;
+  --bg3:     #e8e6df;
+  --ink:     #1a1916;
+  --ink2:    #2d2b26;
+  --ink3:    #5c5a52;
+  --ink4:    #9c9a90;
+  --border:  #dddbd2;
+  --border2: #cbc9bf;
+
+  --accent:  #6b3a1a;   /* warm brown — new color for this report */
+  --accent2: #f7efe8;
+  --accent3: #e8c8a8;
+
+  --teal:    #1a5f5f;
+  --teal-bg: #e5f3f3;
+  --teal-bd: #8ecece;
+
+  --warm:    #7a4a10;
+  --warm-bg: #fdf3e3;
+  --warm-bd: #e8c878;
+
+  --ok:      #2d6040;
+  --ok-bg:   #eaf4ee;
+  --ok-bd:   #a8d4b4;
+
+  --bad:     #8a1a1a;
+  --bad-bg:  #fdf0f0;
+  --bad-bd:  #e8a8a8;
+
+  --note:    #4a2d7a;
+  --note-bg: #f0ecfb;
+  --note-bd: #c4aef0;
+}
+
+* { margin:0; padding:0; box-sizing:border-box; }
+html { scroll-behavior:smooth; }
+body {
+  background: var(--bg);
+  color: var(--ink);
+  font-family: 'DM Sans', sans-serif;
+  font-weight: 300;
+  font-size: 15px;
+  line-height: 1.75;
+}
+
+/* ── MASTHEAD ── */
+.masthead {
+  background: var(--accent);
+  color: #fff;
+  padding: 56px 60px 52px;
+  position: relative;
+  overflow: hidden;
+}
+.masthead::before {
+  content: '';
+  position: absolute;
+  top: -80px; right: -80px;
+  width: 380px; height: 380px;
+  border-radius: 50%;
+  border: 1px solid rgba(255,255,255,.06);
+  pointer-events: none;
+}
+.mh-series {
+  font-family: 'DM Mono', monospace;
+  font-size: 10px; letter-spacing: 3px;
+  text-transform: uppercase; color: rgba(255,255,255,.35);
+  margin-bottom: 20px;
+}
+.mh-num {
+  font-family: 'DM Serif Display', serif;
+  font-size: 80px; line-height: 1;
+  color: rgba(255,255,255,.08);
+  position: absolute; right: 60px; top: 40px;
+  letter-spacing: -4px; user-select: none;
+}
+.masthead h1 {
+  font-family: 'DM Serif Display', serif;
+  font-size: clamp(28px, 4vw, 44px);
+  font-weight: 400; line-height: 1.1;
+  letter-spacing: -.5px; max-width: 720px; position: relative;
+}
+.masthead h1 em { font-style: italic; color: rgba(255,255,255,.7); }
+.mh-sub {
+  margin-top: 20px; font-size: 15px; font-weight: 300;
+  color: rgba(255,255,255,.45); max-width: 640px;
+  line-height: 1.7; position: relative;
+}
+.mh-pills {
+  margin-top: 28px; display: flex; gap: 8px;
+  flex-wrap: wrap; position: relative;
+}
+.mh-pill {
+  font-family: 'DM Mono', monospace; font-size: 10px;
+  letter-spacing: 1px; padding: 4px 12px;
+  border: 1px solid rgba(255,255,255,.2);
+  color: rgba(255,255,255,.5); border-radius: 20px;
+}
+
+/* ── NAV ── */
+.nav {
+  position: sticky; top: 0; z-index: 100;
+  background: var(--ink); display: flex; overflow-x: auto;
+  border-bottom: 1px solid rgba(255,255,255,.08);
+}
+.nav-btn {
+  flex-shrink: 0; padding: 14px 20px;
+  border: none; background: transparent; cursor: pointer;
+  font-family: 'DM Mono', monospace; font-size: 10px;
+  letter-spacing: 1px; text-transform: uppercase;
+  color: rgba(255,255,255,.3);
+  border-right: 1px solid rgba(255,255,255,.06);
+  transition: color .2s; white-space: nowrap;
+}
+.nav-btn:hover { color: rgba(255,255,255,.65); }
+.nav-btn.active { color: #fff; background: rgba(255,255,255,.06); }
+
+.sect { display: none; }
+.sect.active { display: block; animation: fadeUp .3s ease; }
+@keyframes fadeUp { from{opacity:0;transform:translateY(5px)} to{opacity:1;transform:translateY(0)} }
+
+/* ── CONTENT WRAP ── */
+.cw { max-width: 860px; margin: 0 auto; padding: 52px 60px 64px; }
+
+.s-eyebrow {
+  font-family: 'DM Mono', monospace; font-size: 10px;
+  letter-spacing: 3px; text-transform: uppercase;
+  color: var(--ink4); margin-bottom: 8px;
+}
+.s-title {
+  font-family: 'DM Serif Display', serif; font-size: 30px;
+  font-weight: 400; letter-spacing: -.3px; color: var(--ink);
+  line-height: 1.15; margin-bottom: 28px;
+}
+
+p { margin-bottom: 18px; color: var(--ink2); }
+p:last-child { margin-bottom: 0; }
+p strong { font-weight: 600; color: var(--ink); }
+code {
+  font-family: 'DM Mono', monospace;
+  background: var(--bg3); padding: 1px 6px;
+  border-radius: 3px; font-size: 13px; color: var(--ink2);
+}
+
+/* ── CALLOUT ── */
+.callout {
+  padding: 20px 24px; border-left: 3px solid;
+  margin: 28px 0; border-radius: 0 6px 6px 0;
+}
+.callout-warn { background: var(--warm-bg); border-color: var(--warm); }
+.callout-ok   { background: var(--ok-bg);   border-color: var(--ok);   }
+.callout-bad  { background: var(--bad-bg);  border-color: var(--bad);  }
+.callout-note { background: var(--note-bg); border-color: var(--note); }
+.callout-accent { background: var(--accent2); border-color: var(--accent); }
+.callout-teal { background: var(--teal-bg); border-color: var(--teal); }
+.callout-title {
+  font-family: 'DM Mono', monospace; font-size: 10px;
+  letter-spacing: 2px; text-transform: uppercase; margin-bottom: 8px;
+}
+.callout-warn .callout-title   { color: var(--warm);   }
+.callout-ok .callout-title     { color: var(--ok);     }
+.callout-bad .callout-title    { color: var(--bad);    }
+.callout-note .callout-title   { color: var(--note);   }
+.callout-accent .callout-title { color: var(--accent); }
+.callout-teal .callout-title   { color: var(--teal);   }
+.callout p { font-size: 14px; line-height: 1.65; margin-bottom: 8px; }
+.callout p:last-child { margin-bottom: 0; }
+
+/* ── DIAGRAM ── */
+.diagram {
+  background: var(--bg2); border: 1px solid var(--border2);
+  padding: 28px 32px; margin: 28px 0;
+}
+.diagram-title {
+  font-family: 'DM Mono', monospace; font-size: 10px;
+  letter-spacing: 2px; text-transform: uppercase; color: var(--ink4);
+  margin-bottom: 20px; padding-bottom: 12px; border-bottom: 1px solid var(--border);
+}
+
+/* ── CHUNK VISUAL ── */
+.chunk-visual {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin: 16px 0;
+  font-size: 12.5px;
+  line-height: 1.55;
+}
+.chunk-block {
+  padding: 10px 14px;
+  border-radius: 3px;
+  border: 1.5px solid;
+  position: relative;
+}
+.chunk-label {
+  font-family: 'DM Mono', monospace;
+  font-size: 9px;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  position: absolute;
+  top: -1px;
+  right: 8px;
+  padding: 0 4px;
+  line-height: 1;
+  transform: translateY(-50%);
+}
+.chunk-overlap {
+  height: 6px;
+  background: repeating-linear-gradient(
+    90deg,
+    transparent,
+    transparent 4px,
+    rgba(0,0,0,.08) 4px,
+    rgba(0,0,0,.08) 8px
+  );
+  border-radius: 1px;
+  margin: -3px 20px;
+  position: relative;
+  z-index: 1;
+}
+.overlap-label {
+  font-family: 'DM Mono', monospace;
+  font-size: 8.5px;
+  color: var(--ink4);
+  text-align: center;
+  margin: 0 0 2px;
+  letter-spacing: .5px;
+}
+
+/* ── STRATEGY CARD ── */
+.strategy-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  margin: 20px 0;
+}
+.strategy-card {
+  border: 1px solid var(--border2);
+  background: var(--bg);
+  overflow: hidden;
+}
+.sc-head {
+  padding: 10px 16px;
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.sc-num {
+  font-family: 'DM Mono', monospace;
+  font-size: 11px;
+  font-weight: 500;
+  width: 24px; height: 24px;
+  border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  color: #fff;
+  flex-shrink: 0;
+}
+.sc-name { font-size: 14px; font-weight: 600; color: var(--ink); }
+.sc-tag {
+  font-family: 'DM Mono', monospace;
+  font-size: 9px;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  padding: 1px 7px;
+  border-radius: 10px;
+  margin-left: auto;
+}
+.sc-body { padding: 14px 16px; font-size: 13px; color: var(--ink3); line-height: 1.6; }
+.sc-body p { font-size: 13px; margin-bottom: 8px; }
+.sc-body p:last-child { margin-bottom: 0; }
+.sc-pros-cons {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  margin-top: 10px;
+}
+.sc-pro, .sc-con {
+  padding: 6px 10px;
+  font-size: 12px;
+  border-radius: 3px;
+  line-height: 1.45;
+}
+.sc-pro { background: var(--ok-bg); color: var(--ok); }
+.sc-con { background: var(--bad-bg); color: var(--bad); }
+.sc-pro::before { content: '✓ '; font-weight: 700; }
+.sc-con::before { content: '✗ '; font-weight: 700; }
+
+/* ── SIZE SLIDER ── */
+.size-demo {
+  display: flex;
+  gap: 8px;
+  margin: 16px 0;
+  align-items: stretch;
+}
+.sd-col {
+  flex: 1;
+  border: 1.5px solid var(--border2);
+  border-radius: 4px;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+.sd-head {
+  padding: 8px 12px;
+  font-family: 'DM Mono', monospace;
+  font-size: 9.5px;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  color: rgba(255,255,255,.85);
+  border-bottom: 1px solid rgba(255,255,255,.1);
+}
+.sd-body {
+  padding: 10px 12px;
+  font-size: 12px;
+  color: var(--ink3);
+  line-height: 1.55;
+  flex: 1;
+}
+.sd-verdict {
+  padding: 8px 12px;
+  font-size: 11.5px;
+  font-weight: 500;
+  border-top: 1px solid var(--border);
+}
+
+/* ── TEXT SAMPLE ── */
+.text-sample {
+  background: var(--bg);
+  border: 1px solid var(--border2);
+  border-radius: 4px;
+  font-size: 13px;
+  color: var(--ink2);
+  line-height: 1.7;
+  padding: 16px 18px;
+  margin: 12px 0;
+  font-family: 'DM Sans', sans-serif;
+  font-weight: 300;
+}
+.text-sample .hl {
+  background: #fef3c7;
+  border-bottom: 2px solid #f59e0b;
+  padding: 0 2px;
+}
+.text-sample .hl-bad {
+  background: #fee2e2;
+  border-bottom: 2px solid #ef4444;
+  padding: 0 2px;
+  text-decoration: line-through;
+  opacity: .7;
+}
+.text-sample .chunk-marker {
+  display: inline-block;
+  font-family: 'DM Mono', monospace;
+  font-size: 9px;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  color: #fff;
+  padding: 1px 6px;
+  border-radius: 2px;
+  margin: 0 3px;
+  vertical-align: middle;
+}
+
+/* ── DECISION TREE ── */
+.decision-tree {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin: 20px 0;
+}
+.dt-question {
+  border: 1px solid var(--border2);
+  background: var(--bg);
+  border-radius: 4px;
+  overflow: hidden;
+}
+.dt-q {
+  padding: 12px 16px;
+  background: var(--bg3);
+  font-size: 13.5px;
+  font-weight: 600;
+  color: var(--ink);
+  border-bottom: 1px solid var(--border);
+}
+.dt-answers {
+  display: flex;
+  gap: 0;
+}
+.dt-ans {
+  flex: 1;
+  padding: 10px 16px;
+  font-size: 12.5px;
+  color: var(--ink3);
+  border-right: 1px solid var(--border);
+  line-height: 1.5;
+}
+.dt-ans:last-child { border-right: none; }
+.dt-ans strong { display: block; font-weight: 600; margin-bottom: 3px; font-size: 12px; }
+
+/* ── PRODUCT CASE ── */
+.product-case {
+  border: 1px solid var(--accent3);
+  background: var(--accent2);
+  border-radius: 6px;
+  overflow: hidden;
+  margin: 24px 0;
+}
+.pc-head {
+  padding: 12px 20px;
+  background: var(--accent);
+  color: rgba(255,255,255,.9);
+  font-family: 'DM Mono', monospace;
+  font-size: 10px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+}
+.pc-body {
+  padding: 18px 20px;
+  font-size: 13.5px;
+  color: var(--ink2);
+  line-height: 1.65;
+}
+.pc-body p { font-size: 13.5px; margin-bottom: 10px; }
+.pc-body p:last-child { margin-bottom: 0; }
+
+/* ── KEY INSIGHT ── */
+.key-insight {
+  background: var(--ink); color: #fff;
+  padding: 28px 32px; margin: 32px 0; border-radius: 6px;
+  position: relative; overflow: hidden;
+}
+.key-insight::before {
+  content: '"'; position: absolute; right: 24px; top: -10px;
+  font-family: 'DM Serif Display', serif; font-size: 100px;
+  color: rgba(255,255,255,.06); line-height: 1; pointer-events: none;
+}
+.ki-label {
+  font-family: 'DM Mono', monospace; font-size: 9px;
+  letter-spacing: 2.5px; text-transform: uppercase;
+  color: rgba(255,255,255,.3); margin-bottom: 12px;
+}
+.ki-text {
+  font-family: 'DM Serif Display', serif; font-size: 20px;
+  font-weight: 400; line-height: 1.4;
+  color: rgba(255,255,255,.9); max-width: 680px;
+}
+
+/* ── NEXT REPORT ── */
+.next-report {
+  border-top: 1px solid var(--border); margin-top: 52px;
+  padding-top: 32px; display: flex;
+  justify-content: space-between; align-items: center; gap: 20px;
+}
+.nr-label {
+  font-family: 'DM Mono', monospace; font-size: 9px;
+  letter-spacing: 2px; text-transform: uppercase;
+  color: var(--ink4); margin-bottom: 6px;
+}
+.nr-title { font-family: 'DM Serif Display', serif; font-size: 18px; color: var(--ink); line-height: 1.2; }
+.nr-sub { font-size: 13px; color: var(--ink4); margin-top: 4px; }
+.nr-arrow { font-family: 'DM Mono', monospace; font-size: 22px; color: var(--accent); flex-shrink: 0; }
+
+/* ── FOOTER ── */
+.footer {
+  padding: 22px 60px; border-top: 1px solid var(--border);
+  display: flex; justify-content: space-between; align-items: center;
+  font-family: 'DM Mono', monospace; font-size: 10px;
+  letter-spacing: 1px; text-transform: uppercase; color: var(--ink4);
+}
+
+@media (max-width: 720px) {
+  .masthead, .cw, .footer { padding-left: 24px; padding-right: 24px; }
+  .mh-num { display: none; }
+  .strategy-grid { grid-template-columns: 1fr; }
+  .size-demo { flex-direction: column; }
+  .sc-pros-cons { grid-template-columns: 1fr; }
+  .dt-answers { flex-direction: column; }
+}
+</style>
+</head>
+<body>
+
+<!-- ══ MASTHEAD ══ -->
+<div class="masthead">
+  <div class="mh-series">Serie RAG Pratico · Report 3 di 6</div>
+  <div class="mh-num">03</div>
+  <h1>Chunking:<br><em>il passaggio più critico</em></h1>
+  <p class="mh-sub">Come si spezza un testo di tre pagine in pezzi utili per il retrieval? La risposta non è ovvia — e sbagliare questo passaggio compromette l'intero sistema, indipendentemente dalla qualità del modello di embedding.</p>
+  <div class="mh-pills">
+    <span class="mh-pill">Dimensione del chunk</span>
+    <span class="mh-pill">Overlap</span>
+    <span class="mh-pill">Strategie di chunking</span>
+    <span class="mh-pill">Chunk autonomo</span>
+    <span class="mh-pill">Schede prodotto</span>
+  </div>
+</div>
+
+<!-- ══ NAV ══ -->
+<div class="nav">
+  <button class="nav-btn active" onclick="show(0)">1 · Cos'è un chunk</button>
+  <button class="nav-btn" onclick="show(1)">2 · Dimensione e overlap</button>
+  <button class="nav-btn" onclick="show(2)">3 · Quattro strategie</button>
+  <button class="nav-btn" onclick="show(3)">4 · Schede prodotto</button>
+  <button class="nav-btn" onclick="show(4)">5 · Come scegliere</button>
+</div>
+
+
+<!-- ══════════════════════════════════
+     S0 — COS'È UN CHUNK
+══════════════════════════════════ -->
+<div class="sect active" id="s0">
+<div class="cw">
+
+  <div class="s-eyebrow">Il punto di partenza</div>
+  <div class="s-title">Cos'è un chunk e perché è importante</div>
+
+  <p>Nel Report 2 abbiamo visto che il processo di indicizzazione comincia con il <em>chunking</em>: spezzare i documenti in porzioni più piccole prima di trasformarle in embedding. Ma perché? E quanto devono essere piccole queste porzioni?</p>
+
+  <p>La risposta a "perché" è tecnica: il modello di embedding ha un limite di token in input, tipicamente 512–8.000 token a seconda del modello. Una scheda prodotto di 3 pagine (~1.800 token) può superare questo limite, e anche se non lo superasse, embedding su testi molto lunghi perdono precisione — catturano un "media" del significato invece di catturare il significato specifico delle singole parti.</p>
+
+  <p>Ma la ragione più profonda è concettuale: <strong>il chunk è l'unità di recupero</strong>. Quando il retrieval trova i K testi più rilevanti per una query, recupera chunk — non documenti interi. Se il chunk è troppo grande, contiene informazioni irrilevanti che "diluiscono" l'embedding e peggiorano il matching. Se è troppo piccolo, perde il contesto necessario per essere comprensibile.</p>
+
+  <div class="key-insight">
+    <div class="ki-label">Il principio del chunk autonomo</div>
+    <div class="ki-text">Un chunk ben costruito risponde a questa domanda: "Questo testo, letto da solo senza il resto del documento, è comprensibile e utile?" Se la risposta è no, il chunk è mal costruito.</div>
+  </div>
+
+  <div class="diagram">
+    <div class="diagram-title">Il chunk come unità di recupero — cosa succede in pratica</div>
+
+    <div style="display:grid; grid-template-columns:1fr auto 1fr; gap:20px; align-items:start;">
+
+      <div>
+        <div style="font-family:'DM Mono',monospace; font-size:9px; letter-spacing:1.5px; text-transform:uppercase; color:var(--ink4); margin-bottom:10px;">Documento originale (3 pagine)</div>
+        <div style="border:1px solid var(--border2); border-radius:4px; overflow:hidden;">
+          <div style="height:8px; background:var(--teal); opacity:.6;"></div>
+          <div style="padding:8px 12px; font-size:12px; color:var(--ink3); line-height:1.5; border-bottom:1px solid var(--border);">Introduzione e overview del prodotto…</div>
+          <div style="height:8px; background:var(--accent); opacity:.6;"></div>
+          <div style="padding:8px 12px; font-size:12px; color:var(--ink3); line-height:1.5; border-bottom:1px solid var(--border);">Materiali e tecnologia costruttiva…</div>
+          <div style="height:8px; background:var(--teal); opacity:.4;"></div>
+          <div style="padding:8px 12px; font-size:12px; color:var(--ink3); line-height:1.5; border-bottom:1px solid var(--border);">Performance e casi d'uso…</div>
+          <div style="height:8px; background:var(--accent); opacity:.4;"></div>
+          <div style="padding:8px 12px; font-size:12px; color:var(--ink3); line-height:1.5;">Manutenzione e cura del prodotto…</div>
+        </div>
+      </div>
+
+      <div style="display:flex; align-items:center; padding-top:60px; color:var(--border2); font-size:24px; font-family:'DM Mono',monospace;">→</div>
+
+      <div>
+        <div style="font-family:'DM Mono',monospace; font-size:9px; letter-spacing:1.5px; text-transform:uppercase; color:var(--ink4); margin-bottom:10px;">4 chunk autonomi nel vector store</div>
+        <div style="display:flex; flex-direction:column; gap:6px;">
+          <div style="padding:8px 12px; border:1.5px solid var(--teal); border-radius:3px; font-size:12px; color:var(--ink3); background:var(--teal-bg);">Chunk 1 · Overview</div>
+          <div style="padding:8px 12px; border:1.5px solid var(--accent); border-radius:3px; font-size:12px; color:var(--ink3); background:var(--accent2);">Chunk 2 · Materiali</div>
+          <div style="padding:8px 12px; border:1.5px solid var(--teal); border-radius:3px; font-size:12px; color:var(--ink3); background:var(--teal-bg); opacity:.75;">Chunk 3 · Performance</div>
+          <div style="padding:8px 12px; border:1.5px solid var(--accent); border-radius:3px; font-size:12px; color:var(--ink3); background:var(--accent2); opacity:.75;">Chunk 4 · Manutenzione</div>
+        </div>
+        <div style="margin-top:10px; padding:8px 12px; background:var(--ok-bg); border:1px solid var(--ok-bd); border-radius:3px; font-size:11.5px; color:var(--ok);">
+          Query "materiali tecnici outdoor" → recupera solo Chunk 2
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <p>Il punto chiave di questo schema: una query specifica su "materiali tecnici" recupera solo il chunk 2, non l'intero documento. Questo è efficiente, preciso, e scalabile. Ma funziona solo se il chunk 2 è effettivamente comprensibile da solo — se contiene solo "LacraFlex® con trattamento DWR applicato a caldo" senza spiegare cos'è la giacca a cui si riferisce, il modello non saprà come usarlo.</p>
+
+</div>
+</div>
+
+
+<!-- ══════════════════════════════════
+     S1 — DIMENSIONE E OVERLAP
+══════════════════════════════════ -->
+<div class="sect" id="s1">
+<div class="cw">
+
+  <div class="s-eyebrow">Il trade-off fondamentale</div>
+  <div class="s-title">Dimensione e overlap: i due parametri chiave</div>
+
+  <p>La dimensione di un chunk si misura in <strong>token</strong> (non in parole o caratteri). La regola generale è: chunk piccoli → retrieval più preciso ma contesto scarso; chunk grandi → più contesto ma embedding meno preciso. Non esiste una dimensione giusta in assoluto — dipende dal tipo di testo e dal tipo di query.</p>
+
+  <div class="diagram">
+    <div class="diagram-title">Il trade-off dimensione chunk</div>
+    <div class="size-demo">
+      <div class="sd-col">
+        <div class="sd-head" style="background:#8a1a1a;">Chunk piccoli · 50–150 token</div>
+        <div class="sd-body">
+          <p>Equivale a 2–4 frasi. L'embedding è molto preciso — cattura il significato di una singola affermazione.</p>
+          <p><strong>Problema:</strong> quasi mai autonomo. "Resiste fino a -20°C" è preciso ma incomprensibile senza sapere di cosa sta parlando.</p>
+        </div>
+        <div class="sd-verdict" style="color:var(--bad); background:var(--bad-bg);">Troppo piccolo per testi descrittivi</div>
+      </div>
+      <div class="sd-col">
+        <div class="sd-head" style="background:#2d6040;">Chunk medi · 200–500 token</div>
+        <div class="sd-body">
+          <p>Equivale a 1–3 paragrafi. L'embedding cattura un concetto completo — un materiale, un caso d'uso, una caratteristica tecnica.</p>
+          <p><strong>Funziona bene per:</strong> schede prodotto strutturate per sezioni, documenti tecnici, descrizioni con paragrafi autonomi.</p>
+        </div>
+        <div class="sd-verdict" style="color:var(--ok); background:var(--ok-bg);">Ottimale per la maggior parte dei casi</div>
+      </div>
+      <div class="sd-col">
+        <div class="sd-head" style="background:#7a4a10;">Chunk grandi · 500–1200 token</div>
+        <div class="sd-body">
+          <p>Equivale a ½–1 pagina. L'embedding cattura il "tema generale" del blocco, ma perde le sfumature specifiche.</p>
+          <p><strong>Problema:</strong> query specifiche matchano male perché l'embedding è "diluito" da troppo contenuto eterogeneo.</p>
+        </div>
+        <div class="sd-verdict" style="color:var(--warm); background:var(--warm-bg);">Accettabile solo per testi molto coerenti</div>
+      </div>
+    </div>
+  </div>
+
+  <p>Oltre alla dimensione, c'è un secondo parametro fondamentale: <strong>l'overlap</strong>. L'overlap è la porzione di testo che si ripete tra un chunk e il successivo. Se il chunk 1 finisce a token 300 e l'overlap è di 50 token, il chunk 2 comincia a token 250.</p>
+
+  <div class="diagram">
+    <div class="diagram-title">Perché l'overlap — il problema del confine tra chunk</div>
+    <p style="font-size:13px; color:var(--ink3); margin-bottom:16px; margin-top:0;">Un testo di esempio su una scheda prodotto:</p>
+
+    <div class="text-sample" style="margin-bottom:16px;">
+      …il tessuto esterno in Gore-Tex Pro garantisce impermeabilità assoluta in condizioni di pioggia intensa.
+      <span class="chunk-marker" style="background:#8a1a1a;">fine chunk 1</span>
+      La fodera interna in pile tecnico Polartec®
+      <span class="chunk-marker" style="background:#8a1a1a;">inizio chunk 2</span>
+      mantiene il calore corporeo anche in condizioni di vento forte e umidità elevata…
+    </div>
+
+    <div style="background:var(--bad-bg); border:1px solid var(--bad-bd); border-radius:4px; padding:12px 16px; margin-bottom:12px;">
+      <div style="font-family:'DM Mono',monospace; font-size:9px; letter-spacing:1.5px; text-transform:uppercase; color:var(--bad); margin-bottom:6px;">Senza overlap — problema</div>
+      <div style="font-size:12.5px; color:var(--ink3); line-height:1.5;">Query "fodera termica" → il chunk 2 inizia con "La fodera interna in pile tecnico Polartec® mantiene il calore…" — senza dire che si tratta della fodera della <em>giacca</em> descritta nel chunk 1. Il modello può non capire il contesto.</div>
+    </div>
+
+    <div style="background:var(--ok-bg); border:1px solid var(--ok-bd); border-radius:4px; padding:12px 16px;">
+      <div style="font-family:'DM Mono',monospace; font-size:9px; letter-spacing:1.5px; text-transform:uppercase; color:var(--ok); margin-bottom:6px;">Con overlap 50 token — soluzione</div>
+      <div style="font-size:12.5px; color:var(--ink3); line-height:1.5;">Il chunk 2 inizia con "…garantisce impermeabilità assoluta in condizioni di pioggia intensa. La fodera interna in pile tecnico Polartec®…" — il contesto della giacca è preservato. Il retrieval è preciso e il testo è autonomo.</div>
+    </div>
+  </div>
+
+  <div class="callout callout-accent">
+    <div class="callout-title">Le linee guida pratiche</div>
+    <p><strong>Dimensione consigliata per schede prodotto:</strong> 300–400 token per chunk. Corrisponde a un paragrafo denso di 3–5 frasi — abbastanza per essere autonomo, abbastanza piccolo per essere preciso.</p>
+    <p><strong>Overlap consigliato:</strong> 10–15% della dimensione del chunk, quindi 30–60 token. Sufficiente per preservare il filo del discorso, non così tanto da duplicare inutilmente il contenuto.</p>
+    <p>Questi sono punti di partenza ragionevoli per la maggior parte dei casi. L'ideale è testare con casi reali dal proprio corpus — Report 4 mostra come valutare la qualità del retrieval.</p>
+  </div>
+
+</div>
+</div>
+
+
+<!-- ══════════════════════════════════
+     S2 — QUATTRO STRATEGIE
+══════════════════════════════════ -->
+<div class="sect" id="s2">
+<div class="cw">
+
+  <div class="s-eyebrow">Le opzioni disponibili</div>
+  <div class="s-title">Quattro strategie di chunking a confronto</div>
+
+  <p>Non esiste un solo modo di spezzare un documento. Le strategie principali differiscono per dove mettono il confine tra un chunk e il successivo — e ogni approccio ha caratteristiche diverse per diversi tipi di testo.</p>
+
+  <div class="strategy-grid">
+
+    <!-- Strategia 1: Fixed size -->
+    <div class="strategy-card">
+      <div class="sc-head">
+        <div class="sc-num" style="background:#5a5549;">1</div>
+        <div class="sc-name">Fixed-size</div>
+        <div class="sc-tag" style="background:var(--bg3); color:var(--ink3);">più semplice</div>
+      </div>
+      <div class="sc-body">
+        <p>Divide il testo ogni N token, indipendentemente dalla struttura. Il confine cade dove capita — nel mezzo di una frase, di un paragrafo, di un concetto.</p>
+        <p><strong>Come funziona:</strong> scorri il testo token per token; ogni N token, taglia. Con overlap: riparti N–overlap token prima del taglio precedente.</p>
+        <div class="sc-pros-cons">
+          <div class="sc-pro">Semplicissimo da implementare</div>
+          <div class="sc-con">Taglia nel mezzo dei concetti</div>
+          <div class="sc-pro">Chunk di dimensione uniforme</div>
+          <div class="sc-con">Chunk raramente autonomi</div>
+        </div>
+        <p style="margin-top:10px; font-size:12px; color:var(--ink4);">Adatto per: testi senza struttura, prosa narrativa continua, situazioni dove la semplicità è prioritaria. Sconsigliato per testi tecnici e schede prodotto.</p>
+      </div>
+    </div>
+
+    <!-- Strategia 2: Sentence/paragraph aware -->
+    <div class="strategy-card">
+      <div class="sc-head">
+        <div class="sc-num" style="background:var(--teal);">2</div>
+        <div class="sc-name">Structure-aware</div>
+        <div class="sc-tag" style="background:var(--teal-bg); color:var(--teal);">consigliata</div>
+      </div>
+      <div class="sc-body">
+        <p>Rispetta i confini naturali del testo: frasi, paragrafi, sezioni. Taglia solo ai punti di separazione logica già presenti nel documento.</p>
+        <p><strong>Come funziona:</strong> accumula frasi/paragrafi fino a raggiungere la dimensione target; taglia al confine naturale successivo.</p>
+        <div class="sc-pros-cons">
+          <div class="sc-pro">Chunk semanticamente coerenti</div>
+          <div class="sc-con">Dimensione variabile</div>
+          <div class="sc-pro">Spesso autonomi senza overlap</div>
+          <div class="sc-con">Richiede parsing del testo</div>
+        </div>
+        <p style="margin-top:10px; font-size:12px; color:var(--ink4);">Adatto per: la maggior parte dei testi descrittivi, schede prodotto, documenti con paragrafi ben strutturati. La scelta giusta per il caso catalogo prodotti.</p>
+      </div>
+    </div>
+
+    <!-- Strategia 3: Hierarchical parent-child -->
+    <div class="strategy-card">
+      <div class="sc-head">
+        <div class="sc-num" style="background:var(--note);">3</div>
+        <div class="sc-name">Parent-child</div>
+        <div class="sc-tag" style="background:var(--note-bg); color:var(--note);">avanzata</div>
+      </div>
+      <div class="sc-body">
+        <p>Crea due livelli di chunk: <em>parent</em> grandi (500–1000 token, per contesto) e <em>child</em> piccoli (50–150 token, per retrieval preciso). Si usa il child per cercare, ma si restituisce il parent al modello.</p>
+        <p><strong>Come funziona:</strong> il retrieval trova i child più simili alla query; si risale al parent corrispondente e si manda quello nel contesto.</p>
+        <div class="sc-pros-cons">
+          <div class="sc-pro">Precisione del chunk piccolo</div>
+          <div class="sc-con">Implementazione complessa</div>
+          <div class="sc-pro">Contesto del chunk grande</div>
+          <div class="sc-con">Più storage necessario</div>
+        </div>
+        <p style="margin-top:10px; font-size:12px; color:var(--ink4);">Adatto per: sistemi maturi dove la qualità del retrieval è critica, documenti con struttura gerarchica chiara (sezione → sottosezione → paragrafo).</p>
+      </div>
+    </div>
+
+    <!-- Strategia 4: Semantic -->
+    <div class="strategy-card">
+      <div class="sc-head">
+        <div class="sc-num" style="background:var(--accent);">4</div>
+        <div class="sc-name">Semantic chunking</div>
+        <div class="sc-tag" style="background:var(--accent2); color:var(--accent);">sperimentale</div>
+      </div>
+      <div class="sc-body">
+        <p>Calcola l'embedding di ogni frase e individua i punti dove il significato "salta" — dove la similarità tra frasi consecutive cala bruscamente. Taglia in quei punti.</p>
+        <p><strong>Come funziona:</strong> computa la similarità frase-per-frase; identifica i picchi negativi come confini semantici naturali.</p>
+        <div class="sc-pros-cons">
+          <div class="sc-pro">Confini semanticamente ottimali</div>
+          <div class="sc-con">Molto più costoso (embedding per ogni frase)</div>
+          <div class="sc-pro">Adattivo al contenuto</div>
+          <div class="sc-con">Risultati variabili e imprevedibili</div>
+        </div>
+        <p style="margin-top:10px; font-size:12px; color:var(--ink4);">Adatto per: testi senza struttura esplicita ma con transizioni tematiche chiare. Ancora sperimentale — i risultati non sono sempre migliori della strategia 2.</p>
+      </div>
+    </div>
+
+  </div>
+
+  <div class="callout callout-ok">
+    <div class="callout-title">La raccomandazione pratica</div>
+    <p>Per la grande maggioranza dei sistemi RAG su testi descrittivi, la <strong>strategia 2 (structure-aware)</strong> è il punto di partenza giusto. È implementabile in poche righe con librerie come LangChain o LlamaIndex, produce chunk coerenti e spesso autonomi, e funziona bene senza dover implementare logica complessa.</p>
+    <p>La strategia 3 (parent-child) vale la pena esplorarla quando la strategia 2 non basta — di solito quando le query sono molto specifiche ma richiedono comunque molto contesto per essere interpretate correttamente.</p>
+  </div>
+
+</div>
+</div>
+
+
+<!-- ══════════════════════════════════
+     S3 — SCHEDE PRODOTTO
+══════════════════════════════════ -->
+<div class="sect" id="s3">
+<div class="cw">
+
+  <div class="s-eyebrow">Il tuo caso specifico</div>
+  <div class="s-title">Come chunkare una scheda prodotto di 2–3 pagine</div>
+
+  <p>Una scheda prodotto da 2–3 pagine ha tipicamente una struttura interna riconoscibile: una sezione di overview, una sui materiali/tecnologia, una sull'uso previsto, una sulle prestazioni. Questa struttura è un vantaggio — i confini naturali tra sezioni sono esattamente dove i confini tra chunk dovrebbero cadere.</p>
+
+  <div class="product-case">
+    <div class="pc-head">Caso pratico — Anatomia di una scheda prodotto</div>
+    <div class="pc-body">
+      <p>Una scheda prodotto tipica da ~1.600 token si divide in circa 4–5 chunk da 300–400 token, corrispondenti alle sezioni naturali del testo. Ogni chunk è autonomo perché include il nome del prodotto (ripetuto all'inizio di ogni sezione) e il contesto sufficiente per capire di cosa si parla.</p>
+    </div>
+  </div>
+
+  <div class="diagram">
+    <div class="diagram-title">Chunking di una scheda prodotto — esempio annotato</div>
+
+    <!-- Chunk 1 -->
+    <div class="chunk-visual">
+      <div class="chunk-block" style="border-color:var(--teal); background:var(--teal-bg);">
+        <span class="chunk-label" style="background:var(--teal); color:#fff;">Chunk 1 · ~320 token</span>
+        <div style="font-family:'DM Mono',monospace; font-size:9px; letter-spacing:1.5px; text-transform:uppercase; color:var(--teal); margin-bottom:6px;">Overview del prodotto</div>
+        <div style="font-size:13px; color:var(--ink2); line-height:1.6;"><strong>Alpentech Pro Jacket</strong> è un capo tecnico progettato per alpinismo e trekking d'alta quota. Combina protezione dalle intemperie con leggerezza estrema, pensata per chi non vuole compromessi tra performance e comfort nelle condizioni più impegnative. Disponibile in tre colori e cinque taglie, è il riferimento della gamma outdoor premium del brand.</div>
+        <div style="margin-top:8px; font-size:11.5px; color:var(--teal); font-family:'DM Mono',monospace;">✓ Autonomo · Include nome prodotto · Definisce categoria e posizionamento</div>
+      </div>
+
+      <div class="overlap-label">overlap ~40 token</div>
+      <div class="chunk-overlap"></div>
+
+      <div class="chunk-block" style="border-color:var(--accent); background:var(--accent2);">
+        <span class="chunk-label" style="background:var(--accent); color:#fff;">Chunk 2 · ~380 token</span>
+        <div style="font-family:'DM Mono',monospace; font-size:9px; letter-spacing:1.5px; text-transform:uppercase; color:var(--accent); margin-bottom:6px;">Materiali e tecnologia</div>
+        <div style="font-size:13px; color:var(--ink2); line-height:1.6;"><em>[overlap da chunk 1]</em> …il riferimento della gamma outdoor premium. <strong>La giacca Alpentech Pro</strong> utilizza tessuto esterno Gore-Tex Pro 3L con trattamento DWR C6 rinnovato, che garantisce impermeabilità classe 20.000mm anche dopo 50 lavaggi. La membrana a tre strati elimina la fodera separata, riducendo il peso complessivo a 340g. La zip principale YKK Aquaguard da 80cm…</div>
+        <div style="margin-top:8px; font-size:11.5px; color:var(--accent); font-family:'DM Mono',monospace;">✓ Autonomo · Ripete nome prodotto · Overlap preserva il filo</div>
+      </div>
+
+      <div class="overlap-label">overlap ~40 token</div>
+      <div class="chunk-overlap"></div>
+
+      <div class="chunk-block" style="border-color:var(--teal); background:var(--teal-bg); opacity:.75;">
+        <span class="chunk-label" style="background:var(--teal); color:#fff;">Chunk 3 · ~350 token</span>
+        <div style="font-family:'DM Mono',monospace; font-size:9px; letter-spacing:1.5px; text-transform:uppercase; color:var(--teal); margin-bottom:6px;">Performance e uso previsto</div>
+        <div style="font-size:13px; color:var(--ink2); line-height:1.6;"><em>[overlap]</em> …zip YKK Aquaguard. <strong>Alpentech Pro</strong> è progettata per temperature da -15°C a +5°C con attività ad alta intensità. I test di campo hanno dimostrato traspirabilità MVTR 25.000 g/m²/24h, superiore alla media della categoria. L'aggiustamento cuffia a tre vie permette…</div>
+        <div style="margin-top:8px; font-size:11.5px; color:var(--ink4); font-family:'DM Mono',monospace; font-style:italic;">Continua con chunk 4 → Manutenzione e cura</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="callout callout-warn">
+    <div class="callout-title">Il problema del chunk "orfano"</div>
+    <p>L'errore più comune nel chunkare le schede prodotto è creare chunk che iniziano con pronomi o riferimenti impliciti: <em>"La sua struttura a tre strati…"</em> o <em>"Questo sistema garantisce…"</em>. Chi è "la sua"? Cosa è "questo sistema"? Il chunk è incomprensibile da solo.</p>
+    <p><strong>La soluzione:</strong> in fase di post-processing, aggiungi sempre il nome del prodotto all'inizio di ogni chunk che ne è privo. Molti framework di chunking hanno un'opzione di "context prepending" che fa questo automaticamente.</p>
+  </div>
+
+  <div class="callout callout-note">
+    <div class="callout-title">Come gestire la tabella con dati strutturati e testo descrittivo</div>
+    <p>Nel tuo caso hai già una tabella con dati strutturati (nome, categoria, prezzo, specifiche tecniche) e una colonna con il testo descrittivo lungo. La strategia più efficiente è <strong>non chunkare i dati strutturati</strong> — quelli vanno nel contesto come JSON o testo strutturato per tutti i prodotti candidati. Il chunking si applica solo alla colonna del testo descrittivo.</p>
+    <p>In fase di indicizzazione, includi nei metadati di ogni chunk il <code>prodotto_id</code>, il nome del prodotto e la categoria. Questo ti permette di combinare il retrieval semantico sul testo con filtri esatti sulle colonne strutturate: "trova i chunk semanticamente vicini al brief, ma solo per i prodotti nella categoria X e con prezzo sotto Y".</p>
+  </div>
+
+</div>
+</div>
+
+
+<!-- ══════════════════════════════════
+     S4 — COME SCEGLIERE
+══════════════════════════════════ -->
+<div class="sect" id="s4">
+<div class="cw">
+
+  <div class="s-eyebrow">La guida decisionale</div>
+  <div class="s-title">Come scegliere la strategia giusta per il tuo caso</div>
+
+  <p>Dopo aver visto le quattro strategie e i parametri chiave, la domanda è: come si decide cosa usare? Le variabili che contano davvero sono tre: la struttura del testo, il tipo di query attesa, e la disponibilità di tempo per implementare e testare.</p>
+
+  <div class="decision-tree">
+    <div class="dt-question">
+      <div class="dt-q">1. Il testo ha una struttura esplicita — paragrafi, sezioni, titoli?</div>
+      <div class="dt-answers">
+        <div class="dt-ans">
+          <strong>Sì → Strategia 2 (structure-aware)</strong>
+          Usa i confini naturali del testo come punti di taglio. Dimensione target: 300–400 token, overlap: 10–15%.
+        </div>
+        <div class="dt-ans">
+          <strong>No → Strategia 1 (fixed-size) come baseline</strong>
+          Comincia con fixed-size per avere qualcosa che funziona, poi valuta se i risultati sono sufficienti.
+        </div>
+      </div>
+    </div>
+    <div class="dt-question">
+      <div class="dt-q">2. Le query sono molto specifiche e richiedono anche molto contesto?</div>
+      <div class="dt-answers">
+        <div class="dt-ans">
+          <strong>Sì → Strategia 3 (parent-child)</strong>
+          Usa chunk piccoli per retrieval preciso (child), ma restituisci il chunk grande (parent) al modello per dare contesto sufficiente.
+        </div>
+        <div class="dt-ans">
+          <strong>No → Strategia 2 con chunk da 300–400 token</strong>
+          La dimensione media è di solito sufficiente per bilanciare precisione e contesto senza complessità aggiuntiva.
+        </div>
+      </div>
+    </div>
+    <div class="dt-question">
+      <div class="dt-q">3. Come testare se la dimensione dei chunk è giusta?</div>
+      <div class="dt-answers">
+        <div class="dt-ans">
+          <strong>Test qualitativo (semplice)</strong>
+          Prendi 10 query reali. Guarda i chunk recuperati per ognuna. Sono pertinenti? Sono comprensibili da soli? Se no, aggiusta la dimensione o la strategia.
+        </div>
+        <div class="dt-ans">
+          <strong>Test quantitativo (robusto)</strong>
+          Costruisci un golden dataset: 20–30 coppie query → documento atteso. Misura quante volte il chunk del documento atteso compare tra i top-5 risultati. Questo è il recall@5 del retrieval.
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="product-case">
+    <div class="pc-head">Raccomandazione specifica per il caso catalogo prodotti</div>
+    <div class="pc-body">
+      <p><strong>Strategia:</strong> Structure-aware (strategia 2) sui testi descrittivi. Le schede prodotto hanno quasi sempre una struttura a paragrafi che si presta a questa strategia.</p>
+      <p><strong>Dimensione:</strong> 300–400 token per chunk. Una scheda da 1.600 token produce 4–5 chunk — dimensione gestibile e chunk mediamente autonomi.</p>
+      <p><strong>Overlap:</strong> 40–60 token. Sufficiente per preservare il contesto tra sezioni adiacenti.</p>
+      <p><strong>Metadati obbligatori per chunk:</strong> <code>prodotto_id</code>, <code>nome_prodotto</code>, <code>categoria</code>, <code>chunk_index</code> (posizione nel documento), <code>chunk_totale</code> (quanti chunk ha questo prodotto). Con questi metadati puoi filtrare per categoria prima del retrieval semantico e ricostruire l'intero documento se necessario.</p>
+      <p><strong>Post-processing:</strong> prepend del nome prodotto all'inizio di ogni chunk. Trasforma "La sua struttura a tre strati…" in "Alpentech Pro — La sua struttura a tre strati…". Una riga di codice che migliora significativamente la qualità del retrieval.</p>
+    </div>
+  </div>
+
+  <div class="key-insight">
+    <div class="ki-label">La lezione più importante del chunking</div>
+    <div class="ki-text">Il chunk perfetto non esiste — esiste il chunk adatto al tuo testo e alle tue query. L'unico modo per sapere se stai chunkando bene è testare il retrieval su query reali e aggiustare in base ai risultati.</div>
+  </div>
+
+  <!-- NEXT REPORT -->
+  <div class="next-report">
+    <div>
+      <div class="nr-label">Prossimo report</div>
+      <div class="nr-title">RAG in pratica: dalla query al risultato</div>
+      <div class="nr-sub">Come si costruisce la query di retrieval · Matching semantico su casi reali · Dal chunk recuperato alla risposta finale</div>
+    </div>
+    <div class="nr-arrow">→</div>
+  </div>
+
+</div>
+</div>
+
+<!-- FOOTER -->
+<div class="footer">
+  <span>Serie RAG Pratico · Report 3 · Chunking</span>
+  <span>2026</span>
+</div>
+
+<script>
+function show(n) {
+  document.querySelectorAll('.sect').forEach(s => s.classList.remove('active'));
+  document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('s'+n).classList.add('active');
+  document.querySelectorAll('.nav-btn')[n].classList.add('active');
+  window.scrollTo({top:0, behavior:'smooth'});
+}
+</script>
+</body>
+</html>

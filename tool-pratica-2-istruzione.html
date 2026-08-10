@@ -1,0 +1,916 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Tool in pratica — Report 2 · Come si istruisce un agente</title>
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Outfit:wght@200;300;400;500;600;700;800;900&family=IBM+Plex+Mono:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg:     #faf8f5;
+  --bg2:    #f2efe9;
+  --bg3:    #e9e5dc;
+  --ink:    #1b1915;
+  --ink2:   #2e2b25;
+  --ink3:   #6d685c;
+  --ink4:   #a19c8f;
+  --border: #d9d4c8;
+  --border2:#cac4b6;
+
+  --accent:  #3a3a5c;
+  --accent2: #22223a;
+  --accent-light: #f0f0f8;
+
+  --m-schema: #2e4a7a; --m-schema-l: #edf1f9;
+  --m-system: #2e5a3a; --m-system-l: #eef5f0;
+  --m-context:#7b5ea7; --m-context-l:#f4f0fa;
+
+  --ok:   #3d7a45; --ok-l:  #f4faf5;
+  --bad:  #c0392b; --bad-l: #fdf5f5;
+  --warn: #b07d24; --warn-l:#fdf6e8;
+}
+
+* { margin:0; padding:0; box-sizing:border-box; }
+html { scroll-behavior:smooth; }
+body { background:var(--bg); color:var(--ink); font-family:'Outfit',sans-serif; font-weight:300; font-size:14px; line-height:1.75; }
+
+.masthead { background:var(--ink); color:rgba(255,255,255,.9); padding:60px 56px 52px; position:relative; overflow:hidden; }
+.masthead::before { content:''; position:absolute; inset:0; background: repeating-linear-gradient(90deg,rgba(255,255,255,.012) 0,rgba(255,255,255,.012) 1px,transparent 1px,transparent 64px), repeating-linear-gradient(0deg,rgba(255,255,255,.012) 0,rgba(255,255,255,.012) 1px,transparent 1px,transparent 64px); pointer-events:none; }
+.masthead::after { content:'✎'; position:absolute; right:56px; bottom:0; font-size:220px; line-height:1; color:rgba(255,255,255,.025); pointer-events:none; }
+.mh-eye { font-family:'IBM Plex Mono',monospace; font-size:10px; letter-spacing:3px; text-transform:uppercase; color:rgba(255,255,255,.25); margin-bottom:18px; position:relative; }
+.mh-cluster { display:inline-block; font-family:'IBM Plex Mono',monospace; font-size:10px; letter-spacing:2px; text-transform:uppercase; padding:4px 12px; border:1px solid var(--accent); color:var(--accent); margin-bottom:20px; position:relative; }
+.masthead h1 { font-family:'Instrument Serif',serif; font-weight:400; font-size:clamp(30px,4.5vw,54px); line-height:1.08; letter-spacing:-1px; max-width:720px; position:relative; }
+.mh-sub { margin-top:20px; font-size:15px; font-weight:300; color:rgba(255,255,255,.38); max-width:660px; line-height:1.7; position:relative; }
+.mh-meta { margin-top:32px; display:flex; gap:32px; flex-wrap:wrap; position:relative; }
+.mh-stat { display:flex; flex-direction:column; gap:4px; }
+.mh-stat-val { font-family:'IBM Plex Mono',monospace; font-size:22px; font-weight:500; color:rgba(255,255,255,.85); }
+.mh-stat-lbl { font-size:10px; letter-spacing:2px; text-transform:uppercase; color:rgba(255,255,255,.25); }
+
+.nav { background:var(--ink2); position:sticky; top:0; z-index:100; display:flex; overflow-x:auto; border-bottom:1px solid rgba(255,255,255,.06); }
+.nav-btn { flex:1; min-width:100px; padding:13px 12px; border:none; background:transparent; cursor:pointer; font-family:'Outfit',sans-serif; font-size:10.5px; font-weight:600; text-transform:uppercase; letter-spacing:.4px; color:rgba(255,255,255,.3); border-right:1px solid rgba(255,255,255,.06); transition:all .2s; white-space:nowrap; }
+.nav-btn:last-child { border-right:none; }
+.nav-btn:hover { color:rgba(255,255,255,.6); }
+.nav-btn.active { color:#fff; background:rgba(255,255,255,.05); }
+
+.sect { display:none; }
+.sect.active { display:block; animation:fadeIn .3s ease; }
+@keyframes fadeIn { from{opacity:0;transform:translateY(6px)} to{opacity:1;transform:translateY(0)} }
+.sect-head { padding:48px 56px 36px; border-bottom:1px solid var(--border); }
+.sect-num { font-family:'IBM Plex Mono',monospace; font-size:10px; letter-spacing:3px; text-transform:uppercase; color:var(--ink4); margin-bottom:10px; }
+.sect-head h2 { font-family:'Instrument Serif',serif; font-weight:400; font-size:clamp(26px,3.5vw,42px); line-height:1.1; letter-spacing:-.5px; max-width:640px; margin-bottom:14px; }
+.sect-head p { color:var(--ink3); max-width:700px; font-size:14.5px; }
+.wrap { padding:0 56px 64px; }
+
+.prose { max-width:760px; }
+.prose p { font-size:14.5px; color:var(--ink3); line-height:1.85; margin-bottom:16px; }
+.prose p strong { color:var(--ink2); font-weight:500; }
+.prose p em { font-style:italic; }
+
+/* ── LOCATION MAP ── */
+.loc-map { display:grid; grid-template-columns:1fr 1fr 1fr; gap:1px; background:var(--border); border:1px solid var(--border2); margin-top:20px; }
+.lm-cell { background:var(--bg); padding:16px 18px; }
+.lm-where { font-family:'IBM Plex Mono',monospace; font-size:9px; letter-spacing:2px; text-transform:uppercase; font-weight:700; margin-bottom:6px; padding:3px 8px; display:inline-block; }
+.lm-title { font-weight:600; font-size:14px; color:var(--ink2); margin-bottom:6px; }
+.lm-items { display:flex; flex-direction:column; gap:4px; }
+.lm-item { font-size:12.5px; color:var(--ink3); line-height:1.45; display:flex; gap:6px; }
+.lm-item::before { content:'→'; color:var(--ink4); flex-shrink:0; }
+.lm-note { margin-top:8px; font-size:12px; color:var(--ink4); font-style:italic; line-height:1.45; }
+
+/* ── CODE BLOCK ── */
+.code-block { margin-top:14px; border:1px solid var(--border2); }
+.cb-head { padding:8px 16px; background:var(--ink); border-bottom:1px solid rgba(255,255,255,.06); font-family:'IBM Plex Mono',monospace; font-size:9px; letter-spacing:2px; text-transform:uppercase; color:rgba(255,255,255,.4); display:flex; justify-content:space-between; align-items:center; }
+.cb-body { font-family:'IBM Plex Mono',monospace; font-size:11.5px; line-height:1.85; padding:16px 20px; background:var(--ink); color:rgba(255,255,255,.78); white-space:pre-wrap; overflow-x:auto; }
+.cb-body .k  { color:#93c5e8; }
+.cb-body .s  { color:#7dd3a8; }
+.cb-body .v  { color:#f4a87a; }
+.cb-body .cm { color:rgba(255,255,255,.28); }
+.cb-body .hl { color:#c4a8e8; font-weight:500; }
+.cb-body .er { color:#f4a8a8; }
+.cb-body .ok { color:#a8d4a8; }
+
+/* ── COMPARE ── */
+.compare-grid { display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-top:12px; }
+.pex-lbl { font-family:'IBM Plex Mono',monospace; font-size:9px; letter-spacing:2px; text-transform:uppercase; margin-bottom:6px; }
+.pex-lbl.bad     { color:var(--bad); }
+.pex-lbl.good    { color:var(--ok); }
+.pex-lbl.neutral { color:var(--ink4); }
+.prompt-box { font-family:'IBM Plex Mono',monospace; font-size:11.5px; line-height:1.75; padding:14px 18px; border:1px solid; white-space:pre-wrap; word-break:break-word; }
+.prompt-box.bad  { border-color:#e8c5c5; background:var(--bad-l); color:#6b3030; }
+.prompt-box.good { border-color:#a8c4a8; background:var(--ok-l); color:#2e4a32; }
+.prompt-box.neutral { border-color:var(--border2); background:var(--bg2); color:var(--ink3); }
+.prompt-box .hl { font-weight:500; }
+
+/* ── GL CARD ── */
+.gl-group { margin-top:36px; }
+.gl-group-title { font-family:'IBM Plex Mono',monospace; font-size:9px; letter-spacing:3px; text-transform:uppercase; color:var(--ink4); padding-bottom:10px; border-bottom:1px solid var(--border); }
+.gl-card { border:1px solid var(--border2); border-top:none; background:var(--bg); }
+.gl-header { display:grid; grid-template-columns:5px 52px 1fr auto; align-items:stretch; border-bottom:1px solid var(--border); }
+.gl-stripe { background:var(--accent); }
+.gl-num { font-family:'Outfit',sans-serif; font-weight:800; font-size:20px; color:var(--bg3); display:flex; align-items:center; justify-content:center; border-right:1px solid var(--border); }
+.gl-title-wrap { padding:16px 20px; }
+.gl-title { font-family:'Instrument Serif',serif; font-size:20px; color:var(--ink2); line-height:1.2; }
+.gl-subtitle { font-size:12px; color:var(--ink4); margin-top:3px; }
+.gl-impact-wrap { padding:14px 20px; display:flex; flex-direction:column; align-items:flex-end; justify-content:center; gap:4px; }
+.gl-impact-stars { font-size:14px; }
+.gl-impact-lbl { font-family:'IBM Plex Mono',monospace; font-size:8px; letter-spacing:1px; text-transform:uppercase; color:var(--ink4); }
+.gl-body { padding:0; }
+.gl-section { padding:20px 24px; border-bottom:1px solid var(--border); }
+.gl-section:last-child { border-bottom:none; }
+.gl-section-lbl { font-family:'IBM Plex Mono',monospace; font-size:9px; letter-spacing:2px; text-transform:uppercase; color:var(--ink4); margin-bottom:10px; padding-bottom:6px; border-bottom:1px solid var(--border); }
+.gl-section p { font-size:13.5px; color:var(--ink3); line-height:1.8; max-width:740px; }
+.gl-section p strong { color:var(--ink2); font-weight:500; }
+
+/* ── SKILL ANATOMY ── */
+.skill-anatomy { margin-top:16px; border:1px solid var(--border2); }
+.sa-head { padding:9px 16px; background:var(--ink); border-bottom:1px solid rgba(255,255,255,.06); font-family:'IBM Plex Mono',monospace; font-size:9px; letter-spacing:2px; text-transform:uppercase; color:rgba(255,255,255,.4); }
+.sa-layer { display:grid; grid-template-columns:120px 1fr; border-bottom:1px solid var(--border); }
+.sa-layer:last-child { border-bottom:none; }
+.sa-label { padding:12px 14px; background:var(--bg2); border-right:1px solid var(--border); display:flex; flex-direction:column; justify-content:center; }
+.sa-label-tag { font-family:'IBM Plex Mono',monospace; font-size:8px; letter-spacing:2px; text-transform:uppercase; color:var(--ink4); margin-bottom:2px; }
+.sa-label-name { font-weight:600; font-size:13px; color:var(--ink2); }
+.sa-content { padding:12px 16px; font-size:13px; color:var(--ink3); line-height:1.6; }
+.sa-content strong { color:var(--ink2); font-weight:500; }
+.sa-content code { font-family:'IBM Plex Mono',monospace; font-size:11.5px; background:var(--bg3); padding:1px 5px; }
+
+/* ── CHECKLIST ── */
+.checklist { margin-top:16px; }
+.check-item { display:flex; gap:12px; align-items:flex-start; padding:10px 0; border-bottom:1px solid var(--border); font-size:13.5px; color:var(--ink3); }
+.check-item:last-child { border-bottom:none; }
+.check-icon { width:20px; height:20px; border-radius:50%; background:var(--accent); color:#fff; display:flex; align-items:center; justify-content:center; font-size:11px; font-weight:700; flex-shrink:0; margin-top:1px; }
+.check-item strong { color:var(--ink2); font-weight:500; }
+
+/* ── KP / INSIGHT / MECHANISM ── */
+.key-point { margin-top:28px; padding:22px 26px; border-left:4px solid var(--accent); background:var(--accent-light); }
+.kp-label { font-family:'IBM Plex Mono',monospace; font-size:9px; letter-spacing:2px; text-transform:uppercase; color:var(--accent); margin-bottom:8px; }
+.kp-text { font-family:'Instrument Serif',serif; font-size:18px; line-height:1.45; color:var(--ink2); }
+.kp-sub { margin-top:10px; font-size:13px; color:var(--ink3); line-height:1.65; }
+.insight { margin:16px 0; padding:14px 18px; border-left:4px solid var(--accent); background:var(--accent-light); }
+.insight-lbl { font-family:'IBM Plex Mono',monospace; font-size:9px; letter-spacing:2px; text-transform:uppercase; color:var(--accent); margin-bottom:6px; }
+.insight p { font-size:13.5px; color:var(--ink2); line-height:1.65; }
+.insight p strong { font-weight:500; }
+.mechanism { margin-top:14px; padding:13px 17px; border-left:3px solid var(--accent); background:var(--accent-light); }
+.mech-lbl { font-family:'IBM Plex Mono',monospace; font-size:9px; letter-spacing:2px; text-transform:uppercase; color:var(--accent); margin-bottom:5px; }
+.mechanism p { font-size:13px; color:var(--ink3); line-height:1.65; }
+.mechanism p strong { color:var(--ink2); font-weight:500; }
+
+.footer { padding:24px 56px; border-top:1px solid var(--border); display:flex; justify-content:space-between; align-items:center; font-family:'IBM Plex Mono',monospace; font-size:10px; letter-spacing:1px; text-transform:uppercase; color:var(--ink4); }
+
+@media (max-width:700px) {
+  .masthead,.sect-head,.wrap,.footer { padding-left:20px; padding-right:20px; }
+  .loc-map,.compare-grid { grid-template-columns:1fr; }
+  .sa-layer { grid-template-columns:1fr; }
+  .sa-label { border-right:none; border-bottom:1px solid var(--border); }
+  .gl-header { grid-template-columns:5px 40px 1fr; }
+  .gl-impact-wrap { display:none; }
+}
+</style>
+</head>
+<body>
+
+<div class="masthead">
+  <div class="mh-eye">Tool &amp; Skill in pratica · Approfondimento operativo</div>
+  <div class="mh-cluster">Report 2 di 2</div>
+  <h1>Come si istruisce un agente a usare i tool</h1>
+  <p class="mh-sub">Dove va ogni tipo di istruzione, come si scrive una description che guida davvero il comportamento, come si istruisce su tool esterni complessi, come si configura un agente che esegue Python, e come si codificano skill composte che l'agente esegue in sequenza senza essere guidato passo dopo passo.</p>
+  <div class="mh-meta">
+    <div class="mh-stat"><div class="mh-stat-val">3 luoghi</div><div class="mh-stat-lbl">Dove vanno le istruzioni</div></div>
+    <div class="mh-stat"><div class="mh-stat-val">Description</div><div class="mh-stat-lbl">Il campo più critico</div></div>
+    <div class="mh-stat"><div class="mh-stat-value">Skill composte</div><div class="mh-stat-lbl">Sequenze latenti nel prompt</div></div>
+    <div class="mh-stat"><div class="mh-stat-val">Completo</div><div class="mh-stat-lbl">Fine dei 2 report</div></div>
+  </div>
+</div>
+
+<div class="nav">
+  <button class="nav-btn active" onclick="show(1)">La mappa delle istruzioni</button>
+  <button class="nav-btn" onclick="show(2)">Scrivere le description</button>
+  <button class="nav-btn" onclick="show(3)">Tool esterni e API</button>
+  <button class="nav-btn" onclick="show(4)">Code execution in pratica</button>
+  <button class="nav-btn" onclick="show(5)">Skill composte</button>
+</div>
+
+
+<!-- ═══════════════════════════
+     S1 — LA MAPPA DELLE ISTRUZIONI
+═══════════════════════════ -->
+<div class="sect active" id="s1">
+  <div class="sect-head">
+    <div class="sect-num">Sezione 01</div>
+    <h2>La mappa — ogni istruzione ha un posto preciso</h2>
+    <p>Le istruzioni su come usare i tool si distribuiscono in tre luoghi distinti, ognuno con uno scopo diverso. Mettere le istruzioni nel posto sbagliato funziona a volte — ma produce sistemi fragili e comportamento incoerente.</p>
+  </div>
+  <div class="wrap">
+
+    <div class="loc-map">
+
+      <div class="lm-cell">
+        <div class="lm-where" style="background:var(--m-schema-l); color:var(--m-schema);">Schema del tool</div>
+        <div class="lm-title">Cosa il tool fa e come si chiama</div>
+        <div class="lm-items">
+          <div class="lm-item">Nome e description operativa</div>
+          <div class="lm-item">Parametri con tipo e descrizione semantica</div>
+          <div class="lm-item">Valori obbligatori vs. opzionali</div>
+          <div class="lm-item">Vincoli di formato (enum, range, pattern)</div>
+          <div class="lm-item">Contesto dell'ambiente (per code execution)</div>
+        </div>
+        <div class="lm-note">Va nel campo <code>tools[]</code> della request API — non nel prompt.</div>
+      </div>
+
+      <div class="lm-cell">
+        <div class="lm-where" style="background:var(--m-system-l); color:var(--m-system);">System prompt</div>
+        <div class="lm-title">Quando usarlo e come comportarsi</div>
+        <div class="lm-items">
+          <div class="lm-item">Quando usare un tool vs. rispondere dalla conoscenza</div>
+          <div class="lm-item">Gerarchia tra tool che si sovrappongono</div>
+          <div class="lm-item">Sequenze obbligatorie (usa A prima di B)</div>
+          <div class="lm-item">Guardrail: cosa NON fare mai con i tool</div>
+          <div class="lm-item">Come gestire risultati vuoti o errori</div>
+          <div class="lm-item">Skill composte — sequenze da eseguire autonomamente</div>
+        </div>
+        <div class="lm-note">Comportamento d'uso, non definizione. Ridondare qui i guardrail più critici anche se già nello schema.</div>
+      </div>
+
+      <div class="lm-cell">
+        <div class="lm-where" style="background:var(--m-context-l); color:var(--m-context);">Context dinamico</div>
+        <div class="lm-title">Stato e dati del turno corrente</div>
+        <div class="lm-items">
+          <div class="lm-item">Dati di input dell'utente da processare</div>
+          <div class="lm-item">Risultati di passi precedenti nel workflow</div>
+          <div class="lm-item">Stato corrente del task (se gestito esternamente)</div>
+          <div class="lm-item">Limitazioni contingenti ("hai ancora 2 tool calls")</div>
+        </div>
+        <div class="lm-note">Iniettato nel messaggio user o come blocco separato prima del messaggio. Cambia ad ogni turno.</div>
+      </div>
+
+    </div>
+
+    <div class="key-point" style="margin-top:20px;">
+      <div class="kp-label">La regola della ridondanza deliberata</div>
+      <div class="kp-text">I guardrail critici vanno in entrambi i posti: nella description del tool ("NON inviare a destinatari esterni") e nel system prompt ("Prima di inviare qualsiasi email, mostra il destinatario e il contenuto e attendi conferma"). La ridondanza è deliberata — non fastidiosa.</div>
+      <div class="kp-sub">Lo schema del tool viene letto quando il modello considera quale tool usare. Il system prompt viene letto ad ogni generazione. Un guardrail solo nello schema può essere ignorato se il modello non lo consulta esplicitamente — un guardrail nel system prompt è sempre presente nel context. Per le azioni irreversibili, non scegliere: usali entrambi.</div>
+    </div>
+
+  </div>
+</div>
+
+
+<!-- ═══════════════════════════
+     S2 — SCRIVERE LE DESCRIPTION
+═══════════════════════════ -->
+<div class="sect" id="s2">
+  <div class="sect-head">
+    <div class="sect-num">Sezione 02</div>
+    <h2>Scrivere description che guidano davvero il comportamento</h2>
+    <p>La description del tool è il campo più critico dell'intero sistema di istruzioni. Non è documentazione — è l'istruzione che l'LLM legge per decidere se e come usare quel tool. Una description vaga produce invocazioni sbagliate.</p>
+  </div>
+  <div class="wrap">
+
+    <!-- GL 01 -->
+    <div class="gl-group" style="margin-top:28px;">
+      <div class="gl-group-title">Linea guida 01</div>
+      <div class="gl-card">
+        <div class="gl-header">
+          <div class="gl-stripe"></div>
+          <div class="gl-num">01</div>
+          <div class="gl-title-wrap">
+            <div class="gl-title">Ogni description risponde a tre domande: cosa fa, quando usarlo, quando NON usarlo</div>
+            <div class="gl-subtitle">La terza domanda è la più trascurata — e quella che previene gli usi sbagliati più costosi</div>
+          </div>
+          <div class="gl-impact-wrap">
+            <div class="gl-impact-stars" style="color:var(--accent)">★★★</div>
+            <div class="gl-impact-lbl">Critico</div>
+          </div>
+        </div>
+        <div class="gl-body">
+          <div class="gl-section">
+            <div class="gl-section-lbl">Description vaga vs. description operativa — confronto diretto</div>
+            <div class="compare-grid">
+              <div>
+                <div class="pex-lbl bad">❌ Vaga — l'LLM interpreta come vuole</div>
+                <div class="prompt-box bad">"name": "send_email",
+"description": "Invia un'email."
+
+→ L'LLM non sa:
+  - A chi può inviare
+  - Quando deve farlo vs. mostrare bozza
+  - Se serve conferma prima
+  - Cosa mettere nell'oggetto
+  → Invierà quando decide lui,
+    a chi decide lui</div>
+              </div>
+              <div>
+                <div class="pex-lbl good">✓ Operativa — guida il comportamento</div>
+                <div class="prompt-box good">"name": "send_email",
+"description": "Invia un'email al
+destinatario specificato.
+USARE quando: l'utente ha approvato
+esplicitamente il contenuto e il
+destinatario.
+NON USARE: se il destinatario non è
+stato confermato dall'utente, o se
+il contenuto contiene dati sensibili
+non approvati.
+PRIMA DI USARE: mostra sempre bozza
+con oggetto e destinatario."</div>
+              </div>
+            </div>
+          </div>
+
+          <div class="gl-section">
+            <div class="gl-section-lbl">La struttura completa di una description ben scritta</div>
+            <div class="skill-anatomy">
+              <div class="sa-head">Anatomia — description operativa</div>
+              <div class="sa-layer">
+                <div class="sa-label">
+                  <div class="sa-label-tag">Parte 1</div>
+                  <div class="sa-label-name">Cosa fa</div>
+                </div>
+                <div class="sa-content">
+                  Una frase concisa che descrive l'azione prodotta. Usa un verbo d'azione concreto. <strong>Evita "permette di", "consente di"</strong> — scrivi cosa fa il tool, non cosa permette all'utente di fare.<br>
+                  <em>Esempio: "Invia un'email tramite il server SMTP aziendale al destinatario specificato."</em>
+                </div>
+              </div>
+              <div class="sa-layer">
+                <div class="sa-label">
+                  <div class="sa-label-tag">Parte 2</div>
+                  <div class="sa-label-name">Quando usarlo</div>
+                </div>
+                <div class="sa-content">
+                  I trigger espliciti — le condizioni in cui questo tool è la scelta giusta. Sii specifico: "quando l'utente chiede di inviare" non è sufficiente se ci sono varianti (bozze, schedulazioni, forward). <strong>Distingui questo tool dagli altri simili disponibili.</strong><br>
+                  <em>Esempio: "Usare quando l'utente ha confermato esplicitamente il contenuto e il destinatario. Non usare per salvare bozze (usa save_draft) né per email schedulate (usa schedule_email)."</em>
+                </div>
+              </div>
+              <div class="sa-layer">
+                <div class="sa-label">
+                  <div class="sa-label-tag">Parte 3</div>
+                  <div class="sa-label-name">Quando NON usarlo</div>
+                </div>
+                <div class="sa-content">
+                  I casi di esclusione espliciti. <strong>Questa è la parte più importante per prevenire errori</strong> — un modello tende a usare il tool quando è incerto se sia opportuno. I casi di esclusione lo bloccano nei momenti ambigui.<br>
+                  <em>Esempio: "NON usare se: il destinatario non è nella whitelist aziendale, il messaggio contiene dati personali non anonimi, l'utente non ha approvato esplicitamente."</em>
+                </div>
+              </div>
+              <div class="sa-layer">
+                <div class="sa-label">
+                  <div class="sa-label-tag">Parte 4</div>
+                  <div class="sa-label-name">Vincoli operativi</div>
+                </div>
+                <div class="sa-content">
+                  Limiti tecnici o di policy da rispettare: rate limit, dimensioni massime, formati accettati, ambiente disponibile. <strong>Non duplicare questi nei parametri se già nella description</strong> — scegli uno dei due posti.<br>
+                  <em>Esempio: "Max 1 email per turno. Dimensione allegati: max 10MB. Solo testo plain o HTML — nessun allegato eseguibile."</em>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="gl-section">
+            <div class="gl-section-lbl">Le description dei parametri — non solo il tipo</div>
+            <div class="compare-grid">
+              <div>
+                <div class="pex-lbl bad">❌ Solo il tipo — l'LLM deve indovinare</div>
+                <div class="prompt-box bad">"parameters": {
+  "to": {"type": "string"},
+  "subject": {"type": "string"},
+  "body": {"type": "string"},
+  "cc": {"type": "array"}
+}
+
+→ L'LLM non sa:
+  - "to" deve essere un singolo indirizzo?
+  - "subject" ha una lunghezza max?
+  - "body" supporta HTML o solo plain?
+  - "cc" è facoltativo?</div>
+              </div>
+              <div>
+                <div class="pex-lbl good">✓ Con descrizione semantica — comportamento preciso</div>
+                <div class="prompt-box good">"parameters": {
+  "to": {
+    "type": "string",
+    "description": "Indirizzo email del
+      destinatario principale. Deve essere
+      nella whitelist aziendale. Un solo
+      indirizzo per chiamata."
+  },
+  "subject": {
+    "type": "string",
+    "description": "Oggetto email. Max 100
+      caratteri. Non usare maiuscole
+      eccessive."
+  },
+  "body": {
+    "type": "string",
+    "description": "Corpo in HTML o plain
+      text. Usa \\n per newline in plain."
+  },
+  "cc": {
+    "type": "array",
+    "description": "Facoltativo. Max 5
+      indirizzi. Tutti nella whitelist."
+  }
+}</div>
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+
+<!-- ═══════════════════════════
+     S3 — TOOL ESTERNI E API
+═══════════════════════════ -->
+<div class="sect" id="s3">
+  <div class="sect-head">
+    <div class="sect-num">Sezione 03</div>
+    <h2>Istruire su tool esterni — API, database, sistemi specifici</h2>
+    <p>Quando il tool wrappa un sistema esterno complesso (un CRM, un gestionale, un'API con decine di endpoint), il problema è filtrare: quali funzionalità esporre all'LLM, come mappare il "mondo dell'LLM" sul "mondo del sistema", e come gestire la complessità del sistema senza sommergere il modello.</p>
+  </div>
+  <div class="wrap">
+
+    <!-- GL 02 -->
+    <div class="gl-group" style="margin-top:28px;">
+      <div class="gl-group-title">Linea guida 02</div>
+      <div class="gl-card">
+        <div class="gl-header">
+          <div class="gl-stripe"></div>
+          <div class="gl-num">02</div>
+          <div class="gl-title-wrap">
+            <div class="gl-title">Esponi funzioni ad alto livello — non endpoint di API raw</div>
+            <div class="gl-subtitle">L'LLM opera meglio su tool che corrispondono a intenzioni, non a operazioni tecniche di basso livello</div>
+          </div>
+          <div class="gl-impact-wrap">
+            <div class="gl-impact-stars" style="color:var(--accent)">★★★</div>
+            <div class="gl-impact-lbl">Impatto</div>
+          </div>
+        </div>
+        <div class="gl-body">
+
+          <div class="gl-section">
+            <div class="gl-section-lbl">Esempio: wrappare Salesforce per un agente di supporto</div>
+            <div class="compare-grid">
+              <div>
+                <div class="pex-lbl bad">❌ Esporre gli endpoint raw — troppa complessità</div>
+                <div class="prompt-box bad">tools = [
+  "salesforce_query",      # SOQL generico
+  "salesforce_create",     # POST su qualsiasi oggetto
+  "salesforce_update",     # PATCH su qualsiasi record
+  "salesforce_delete",     # DELETE su qualsiasi record
+  "salesforce_describe",   # schema degli oggetti
+]
+
+→ L'LLM deve conoscere SOQL,
+  i nomi degli oggetti Salesforce
+  (Account, Contact, Opportunity...),
+  i field name esatti.
+→ 1 tool generico = 100 modi di usarlo
+  sbagliato.</div>
+              </div>
+              <div>
+                <div class="pex-lbl good">✓ Tool semantici specifici del caso d'uso</div>
+                <div class="prompt-box good">tools = [
+  "get_customer_info",     # cerca per nome/email/tel
+  "get_open_tickets",      # ticket aperti per customer
+  "create_support_ticket", # crea ticket con categoria
+  "update_ticket_status",  # aggiorna stato ticket
+  "get_order_history",     # storico ordini cliente
+]
+
+→ Ogni tool ha un'intenzione chiara.
+→ Il runtime traduce internamente
+  in chiamate SOQL corrette.
+→ L'LLM non ha bisogno di conoscere
+  il modello dati di Salesforce.</div>
+              </div>
+            </div>
+          </div>
+
+          <div class="gl-section">
+            <div class="gl-section-lbl">Come istruire su un tool esterno con molte funzionalità — il pattern "wrapper semantico"</div>
+            <p>Il pattern è: <strong>scrivi una funzione Python per ogni intenzione dell'agente</strong> (non per ogni endpoint dell'API), dagli un nome che corrisponde a quell'intenzione, e nascondi la complessità tecnica dentro la funzione.</p>
+
+            <div class="code-block">
+              <div class="cb-head"><span>Wrapper semantico — da API raw a tool intelligente</span></div>
+              <div class="cb-body"><span class="cm"># ── Il tool come l'LLM lo vede (schema semplice) ─────────────────────</span>
+{
+  <span class="s">"name"</span>: <span class="v">"get_customer_info"</span>,
+  <span class="s">"description"</span>: <span class="v">"Recupera le informazioni di un cliente.
+    Usare quando l'utente menziona il nome, email o numero di telefono
+    di un cliente e ha bisogno di dati del suo profilo.
+    NON usare per cercare ordini o ticket (usa get_order_history o
+    get_open_tickets)."</span>,
+  <span class="s">"input_schema"</span>: {
+    <span class="s">"properties"</span>: {
+      <span class="s">"search_term"</span>: {
+        <span class="s">"type"</span>: <span class="v">"string"</span>,
+        <span class="s">"description"</span>: <span class="v">"Nome, email o telefono del cliente."</span>
+      }
+    },
+    <span class="s">"required"</span>: [<span class="v">"search_term"</span>]
+  }
+}
+
+<span class="cm"># ── L'implementazione che il runtime chiama (nascosta all'LLM) ────────</span>
+<span class="k">def</span> get_customer_info(search_term: str) -> dict:
+  <span class="cm"># Qui c'è tutta la complessità: autenticazione, SOQL, gestione errori</span>
+  sf = Salesforce(username=<span class="v">os.getenv("SF_USER")</span>, ...)
+
+  <span class="cm"># Cerca su più campi — l'LLM non sa che esistono questi field name</span>
+  soql = <span class="v">f"""
+    SELECT Id, Name, Email, Phone, Account.Name
+    FROM Contact
+    WHERE Name LIKE '%{search_term}%'
+       OR Email = '{search_term}'
+       OR Phone = '{search_term}'
+    LIMIT 5
+  """</span>
+  results = sf.query(soql)
+
+  <span class="k">if not</span> results[<span class="v">"records"</span>]:
+    <span class="k">return</span> {<span class="s">"found"</span>: <span class="v">False</span>, <span class="s">"message"</span>: <span class="v">"Nessun cliente trovato."</span>}
+
+  <span class="cm"># Restituisce struttura pulita — nessun ID interno, nessun campo tecnico</span>
+  <span class="k">return</span> {
+    <span class="s">"found"</span>: <span class="v">True</span>,
+    <span class="s">"customers"</span>: [{
+      <span class="s">"name"</span>: r[<span class="v">"Name"</span>],
+      <span class="s">"email"</span>: r[<span class="v">"Email"</span>],
+      <span class="s">"phone"</span>: r[<span class="v">"Phone"</span>],
+      <span class="s">"company"</span>: r[<span class="v">"Account"</span>][<span class="v">"Name"</span>] <span class="k">if</span> r[<span class="v">"Account"</span>] <span class="k">else None</span>
+    } <span class="k">for</span> r <span class="k">in</span> results[<span class="v">"records"</span>]]
+  }</div>
+            </div>
+          </div>
+
+          <div class="gl-section">
+            <div class="gl-section-lbl">L'output del tool — pulito e denso di significato</div>
+            <p>Il risultato restituito dal tool diventa tool_result nel context window dell'LLM. <strong>L'LLM legge questo testo per produrre la risposta successiva</strong> — un output verboso e pieno di campi tecnici (ID interni, timestamp in epoch, codici di stato HTTP) degrada la qualità della risposta. Restituisci solo i dati semanticamente rilevanti, in un formato che un umano capirebbe.</p>
+            <p><strong>Regola pratica:</strong> rimuovi ID interni, converti timestamp in date leggibili, usa nomi di campo descrittivi, e includi un campo <code>message</code> esplicito quando il risultato è vuoto — il modello gestisce meglio "Nessun ticket aperto" di un array vuoto.</p>
+          </div>
+
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+
+<!-- ═══════════════════════════
+     S4 — CODE EXECUTION IN PRATICA
+═══════════════════════════ -->
+<div class="sect" id="s4">
+  <div class="sect-head">
+    <div class="sect-num">Sezione 04</div>
+    <h2>Istruire un agente che esegue codice Python</h2>
+    <p>L'agente data analyst: come si configura il system prompt, come si descrive l'ambiente, come si gestisce il ciclo errore→correzione, e come si passa un file/dataset all'agente.</p>
+  </div>
+  <div class="wrap">
+
+    <div class="prose" style="margin-top:28px;">
+      <p>L'agente che genera ed esegue codice ha peculiarità specifiche rispetto all'agente che usa API: il codice generato non è noto a design time, l'ambiente di esecuzione deve essere esplicitamente descritto, e il ciclo di errore-correzione è parte normale del flusso — non un caso eccezionale da gestire.</p>
+    </div>
+
+    <!-- GL 03 -->
+    <div class="gl-group">
+      <div class="gl-group-title">Linea guida 03</div>
+      <div class="gl-card">
+        <div class="gl-header">
+          <div class="gl-stripe"></div>
+          <div class="gl-num">03</div>
+          <div class="gl-title-wrap">
+            <div class="gl-title">Descrivi l'ambiente nella description del tool, non nel system prompt</div>
+            <div class="gl-subtitle">L'LLM deve sapere cosa può usare al momento di generare il codice — non prima, in modo generico</div>
+          </div>
+          <div class="gl-impact-wrap">
+            <div class="gl-impact-stars" style="color:var(--accent)">★★★</div>
+            <div class="gl-impact-lbl">Impatto</div>
+          </div>
+        </div>
+        <div class="gl-body">
+
+          <div class="gl-section">
+            <div class="gl-section-lbl">System prompt + tool schema per un agente data analyst</div>
+            <div class="code-block">
+              <div class="cb-head"><span>System prompt — agente data analyst</span></div>
+              <div class="cb-body"><span class="cm"># SYSTEM PROMPT ───────────────────────────────────────────────────────</span>
+<span class="v">"""
+Sei un assistente di analisi dati. Quando ricevi dati o dataset,
+usa il tool execute_python per analizzarli.
+
+APPROCCIO STANDARD:
+1. Prima esplora i dati (shape, dtypes, .head(), .describe())
+2. Poi esegui l'analisi richiesta
+3. Usa print() per ogni risultato intermedio che vuoi mostrare
+4. Se il codice produce un errore, leggilo e correggi — non chiedere
+   all'utente di farlo
+
+STILE DI OUTPUT:
+- Numeri: formatta con separatori di migliaia e 2 decimali dove utile
+- Tabelle: usa tabulate(df, headers='keys', tablefmt='simple')
+- Non stampare DataFrames raw (troppo verbosi) — usa .to_string() o
+  seleziona le colonne rilevanti
+
+LIMITI:
+- Max 3 tentativi per correggere lo stesso errore — poi segnala
+- Se un calcolo richiede dati che non hai, chiedi all'utente
+  invece di inventarli
+"""</span>
+
+<span class="cm"># SCHEMA DEL TOOL execute_python ──────────────────────────────────────</span>
+{
+  <span class="s">"name"</span>: <span class="v">"execute_python"</span>,
+  <span class="s">"description"</span>: <span class="v">"Esegue codice Python in un ambiente isolato.
+
+LIBRERIE DISPONIBILI: pandas, numpy, matplotlib, seaborn, scipy,
+sklearn, tabulate. NON disponibili: requests, openai, boto3, db libs.
+
+FILESYSTEM: puoi leggere file da /data/ (es. /data/dataset.csv).
+Non puoi scrivere file — usa print() per l'output.
+
+OUTPUT: tutto ciò che viene stampato con print() è il risultato.
+Matplotlib: usa plt.savefig('/tmp/plot.png') poi print('PLOT:/tmp/plot.png').
+
+TIMEOUT: 30 secondi. Per operazioni lente, testa prima su un
+campione (df.head(1000)) poi scala."</span>,
+  <span class="s">"input_schema"</span>: {
+    <span class="s">"properties"</span>: {
+      <span class="s">"code"</span>: {
+        <span class="s">"type"</span>: <span class="v">"string"</span>,
+        <span class="s">"description"</span>: <span class="v">"Codice Python completo da eseguire.
+          Inizia sempre con gli import necessari."</span>
+      }
+    },
+    <span class="s">"required"</span>: [<span class="v">"code"</span>]
+  }
+}</div>
+            </div>
+          </div>
+
+          <div class="gl-section">
+            <div class="gl-section-lbl">Come passare un dataset all'agente — il file nel context</div>
+            <p>Quando l'utente carica un file CSV, il modo corretto di passarlo all'agente è salvarlo nel filesystem accessibile al sandbox e informare l'LLM del path — non incorporare i dati raw nel prompt (che saturerebbe il context window).</p>
+
+            <div class="code-block">
+              <div class="cb-head"><span>Gestione upload file — salva nel sandbox, informa l'LLM</span></div>
+              <div class="cb-body"><span class="k">import</span> shutil, uuid, os
+
+<span class="k">def</span> handle_file_upload(uploaded_file, sandbox_data_dir: str = <span class="v">"/data"</span>):
+  <span class="cm"># 1. Salva il file in una posizione accessibile al sandbox</span>
+  file_id = str(uuid.uuid4())[:8]
+  safe_name = <span class="v">f"upload_{file_id}_{uploaded_file.filename}"</span>
+  dest_path = os.path.join(sandbox_data_dir, safe_name)
+  shutil.copy(uploaded_file.path, dest_path)
+
+  <span class="cm"># 2. Costruisci il messaggio che informa l'LLM del file disponibile</span>
+  <span class="k">return</span> {
+    <span class="s">"role"</span>: <span class="v">"user"</span>,
+    <span class="s">"content"</span>: <span class="v">f"""Ho caricato un file: {uploaded_file.filename}
+Path nel sandbox: /data/{safe_name}
+Dimensione: {uploaded_file.size:,} byte
+
+{user_message}"""</span>
+  }
+
+<span class="cm"># L'LLM riceve il messaggio e sa che può fare:</span>
+<span class="cm"># import pandas as pd</span>
+<span class="cm"># df = pd.read_csv('/data/upload_a3f2_sales.csv')</span>
+<span class="cm"># — invece di ricevere i dati raw nel prompt</span></div>
+            </div>
+          </div>
+
+          <div class="gl-section">
+            <div class="gl-section-lbl">Il ciclo errore→correzione — è normale, non gestirlo come eccezione</div>
+            <p>Un agente che genera codice sbaglia spesso al primo tentativo — un errore di import, un nome di colonna diverso da quello atteso, un metodo deprecato. Questo non è un failure dell'agente: è il normale processo di sviluppo. <strong>Il traceback completo deve tornare all'LLM come tool_result</strong>, e il modello deve avere l'istruzione esplicita di correggersi invece di chiedere all'utente.</p>
+
+            <div class="code-block">
+              <div class="cb-head"><span>Ciclo correzione automatica con contatore di tentativi</span></div>
+              <div class="cb-body"><span class="k">def</span> run_agent_with_code_execution(messages, max_attempts=3):
+  attempt_count = {}   <span class="cm"># traccia tentativi per nome-errore</span>
+
+  <span class="k">while True</span>:
+    response = client.messages.create(
+      model=<span class="v">"claude-sonnet-4-5"</span>,
+      system=system_prompt,
+      messages=messages,
+      tools=tools
+    )
+
+    <span class="k">if</span> response.stop_reason == <span class="v">"end_turn"</span>:
+      <span class="k">return</span> response   <span class="cm"># risposta finale, esci dal loop</span>
+
+    <span class="k">if</span> response.stop_reason == <span class="v">"tool_use"</span>:
+      tool_block = next(b <span class="k">for</span> b <span class="k">in</span> response.content <span class="k">if</span> b.type == <span class="v">"tool_use"</span>)
+
+      <span class="k">if</span> tool_block.name == <span class="v">"execute_python"</span>:
+        result = execute_python_sandbox(tool_block.input[<span class="v">"code"</span>])
+
+        <span class="cm"># Controlla se è un errore già visto troppe volte</span>
+        error_key = extract_error_type(result)   <span class="cm"># es. "NameError", "ImportError"</span>
+        <span class="k">if</span> error_key:
+          attempt_count[error_key] = attempt_count.get(error_key, 0) + 1
+          <span class="k">if</span> attempt_count[error_key] >= max_attempts:
+            result += <span class="v">f"\n\n[SISTEMA: {max_attempts} tentativi falliti su questo errore. Segnala il problema all'utente.]"</span>
+
+      <span class="cm"># Reinietta risultato (o errore) — il modello decide il passo successivo</span>
+      messages = messages + [
+        {<span class="s">"role"</span>: <span class="v">"assistant"</span>, <span class="s">"content"</span>: response.content},
+        {<span class="s">"role"</span>: <span class="v">"user"</span>, <span class="s">"content"</span>: [{
+          <span class="s">"type"</span>: <span class="v">"tool_result"</span>,
+          <span class="s">"tool_use_id"</span>: tool_block.id,
+          <span class="s">"content"</span>: result
+        }]}
+      ]</div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+
+<!-- ═══════════════════════════
+     S5 — SKILL COMPOSTE
+═══════════════════════════ -->
+<div class="sect" id="s5">
+  <div class="sect-head">
+    <div class="sect-num">Sezione 05</div>
+    <h2>Skill composte — sequenze che l'agente esegue autonomamente</h2>
+    <p>Una skill composta è una sequenza di passi che l'agente deve saper eseguire in modo coordinato quando riconosce il contesto giusto — senza che ogni passo venga richiesto esplicitamente dall'utente. Va codificata nel system prompt come pattern d'azione.</p>
+  </div>
+  <div class="wrap">
+
+    <div class="prose" style="margin-top:28px;">
+      <p>Le skill composte sono il ponte tra "l'agente usa tool singoli quando richiesto" e "l'agente sa come fare X" — dove X è un compito multi-step che richiede di coordinare tool diversi in sequenza. Non sono hard-coded nel codice applicativo: sono istruzioni nel system prompt che descrivono la sequenza che l'LLM deve seguire autonomamente quando riconosce il trigger.</p>
+    </div>
+
+    <!-- GL 04 -->
+    <div class="gl-group">
+      <div class="gl-group-title">Linea guida 04</div>
+      <div class="gl-card">
+        <div class="gl-header">
+          <div class="gl-stripe"></div>
+          <div class="gl-num">04</div>
+          <div class="gl-title-wrap">
+            <div class="gl-title">Una skill composta ha trigger, sequenza obbligatoria e criteri di completamento — tutto nel system prompt</div>
+            <div class="gl-subtitle">Senza i criteri di completamento, l'agente non sa quando ha finito — e continua a iterare</div>
+          </div>
+          <div class="gl-impact-wrap">
+            <div class="gl-impact-stars" style="color:var(--accent)">★★★</div>
+            <div class="gl-impact-lbl">Impatto</div>
+          </div>
+        </div>
+        <div class="gl-body">
+
+          <div class="gl-section">
+            <div class="gl-section-lbl">Esempio completo — skill "analisi e report contratto"</div>
+            <div class="code-block">
+              <div class="cb-head"><span>System prompt — skill composta per analisi contrattuale</span></div>
+              <div class="cb-body"><span class="v">"""
+SKILL: ANALISI CONTRATTO
+
+TRIGGER: Quando l'utente carica un documento contrattuale o chiede
+di "analizzare" / "revisionare" / "controllare" un contratto.
+
+SEQUENZA OBBLIGATORIA — esegui questi passi nell'ordine, senza
+chiedere conferma tra uno e l'altro:
+
+Passo 1 — ESTRAZIONE
+  Usa extract_text() sul documento per ottenere il testo grezzo.
+  Se extract_text() fallisce, usa execute_python con pdfplumber.
+
+Passo 2 — ANALISI STRUTTURATA
+  Usa execute_python per analizzare il testo estratto.
+  Il codice deve produrre un dict con:
+    - parties: lista delle parti contraenti
+    - value: valore economico (float, 0 se non presente)
+    - duration_months: durata in mesi (int)
+    - key_clauses: lista di {title, summary, risk_level}
+    - non_standard: lista di clausole insolite con motivazione
+
+Passo 3 — RISK SCORE
+  Calcola il risk score complessivo sulla base di:
+    - Clausole non standard (peso 40%)
+    - Valore economico relativo al settore (peso 30%)
+    - Durata e condizioni di uscita (peso 30%)
+  Classifica: BASSO / MEDIO / ALTO / CRITICO
+
+Passo 4 — REPORT FINALE
+  Produci il report in formato markdown con sezioni:
+  ## Sintesi esecutiva (3-5 righe)
+  ## Parti e oggetto
+  ## Analisi clausole chiave
+  ## Elementi non standard
+  ## Risk score: [LIVELLO] — motivazione
+
+CRITERI DI COMPLETAMENTO:
+- Il report è completo quando tutte e 4 le sezioni sono presenti
+- NON chiedere all'utente conferma tra i passi
+- SE un passo fallisce: riprova una volta, poi segnala il problema
+  e procedi con i dati disponibili (non bloccare l'intera analisi)
+"""</span></div>
+            </div>
+          </div>
+
+          <div class="gl-section">
+            <div class="gl-section-lbl">Il confine tra skill nel prompt e tool esplicito — quando scegliere cosa</div>
+            <p><strong>Skill nel prompt</strong> (sequenza latente): quando la sequenza è un pattern che l'agente deve riconoscere e applicare autonomamente in base al contesto — non una funzione richiamabile dall'esterno. La logica vive nel comportamento dell'agente, non nell'architettura del sistema.</p>
+            <p><strong>Tool esplicito</strong>: quando la sequenza deve essere invocabile in modo programmatico, riusabile da più agenti, o testa in isolamento. Si implementa come funzione Python nel runtime che orchestra i passi internamente — l'LLM vede solo il tool di alto livello (<code>analyze_contract</code>), non i passi interni.</p>
+            <p><strong>La regola pratica:</strong> se la sequenza cambia in base al contesto (l'agente deve adattarla), usala come skill nel prompt. Se la sequenza è sempre identica e deve essere affidabile e testabile, wrappala in un tool esplicito che la esegue deterministicamente.</p>
+
+            <div class="compare-grid">
+              <div>
+                <div class="pex-lbl neutral">Skill nel prompt — adattiva al contesto</div>
+                <div class="prompt-box neutral">SKILL: RICERCA INFORMAZIONI CLIENTE
+Trigger: quando l'utente menziona
+  un cliente per nome o codice.
+
+Sequenza:
+1. search_crm(nome o codice)
+2. Se non trovato: search_email(nome)
+3. Se trovato: get_recent_interactions()
+4. Sintetizza in risposta
+
+→ L'agente adatta la sequenza:
+  salta il passo 2 se il CRM
+  ha già trovato il cliente,
+  o aggiunge passi se il contesto
+  lo richiede.</div>
+              </div>
+              <div>
+                <div class="pex-lbl neutral">Tool esplicito — sempre identico e testabile</div>
+                <div class="prompt-box neutral">Tool: onboard_new_customer
+Description: "Esegue l'onboarding
+  completo di un nuovo cliente:
+  crea account CRM, invia email
+  di benvenuto, crea ticket di
+  setup, assegna account manager."
+
+→ La sequenza interna è fissa
+  nel codice Python del tool.
+→ Il runtime la esegue sempre
+  nello stesso modo.
+→ Si può testare in isolamento
+  senza coinvolgere l'LLM.</div>
+              </div>
+            </div>
+          </div>
+
+          <div class="gl-section">
+            <div class="gl-section-lbl">Checklist — agente con tool e skill configurato correttamente</div>
+            <div class="checklist" style="margin-top:8px;">
+              <div class="check-item">
+                <div class="check-icon">1</div>
+                <div><strong>Schema del tool:</strong> ogni tool ha description con cosa-fa / quando-usarlo / quando-NON-usarlo, parametri con descrizione semantica (non solo il tipo), e output contract definito.</div>
+              </div>
+              <div class="check-item">
+                <div class="check-icon">2</div>
+                <div><strong>System prompt:</strong> include gerarchia tra tool sovrapposti, guardrail critici ridondanti rispetto allo schema, e le skill composte con trigger, sequenza e criteri di completamento.</div>
+              </div>
+              <div class="check-item">
+                <div class="check-icon">3</div>
+                <div><strong>Wrapper semantici:</strong> i tool esposti all'LLM corrispondono a intenzioni (get_customer_info), non a endpoint tecnici (salesforce_query). La complessità tecnica è nascosta nell'implementazione Python.</div>
+              </div>
+              <div class="check-item">
+                <div class="check-icon">4</div>
+                <div><strong>Output pulito:</strong> i tool restituiscono dati semanticamente rilevanti in formato leggibile — nessun ID interno, nessun campo tecnico, messaggio esplicito per risultati vuoti.</div>
+              </div>
+              <div class="check-item">
+                <div class="check-icon">5</div>
+                <div><strong>Code execution configurato:</strong> la description di execute_python include librerie disponibili, filesystem accessibile e vincoli di timeout. Il ciclo errore→correzione è gestito nel runtime con un contatore di tentativi.</div>
+              </div>
+              <div class="check-item">
+                <div class="check-icon">✓</div>
+                <div><strong>Skill vs. tool scelto consapevolmente:</strong> le skill composte adattive vivono nel system prompt. Le sequenze fisse e testabili in isolamento sono tool espliciti nel runtime. La scelta è documentata.</div>
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<div class="footer">
+  <span>Tool &amp; Skill in pratica · Report 2 di 2 · Come si istruisce un agente</span>
+  <span>Marzo 2026</span>
+</div>
+
+<script>
+function show(n) {
+  document.querySelectorAll('.sect').forEach(s => s.classList.remove('active'));
+  document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('s'+n).classList.add('active');
+  document.querySelectorAll('.nav-btn')[n-1].classList.add('active');
+  window.scrollTo({top:0, behavior:'smooth'});
+}
+</script>
+</body>
+</html>

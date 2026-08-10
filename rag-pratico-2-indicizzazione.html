@@ -1,0 +1,849 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>RAG Pratico — Report 2 · Indicizzazione e vector store</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:ital,wght@0,300;0,400;0,500;0,600;1,300;1,400&family=DM+Mono:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg:      #fafaf7;
+  --bg2:     #f2f1ec;
+  --bg3:     #e8e6df;
+  --ink:     #1a1916;
+  --ink2:    #2d2b26;
+  --ink3:    #5c5a52;
+  --ink4:    #9c9a90;
+  --border:  #dddbd2;
+  --border2: #cbc9bf;
+
+  --accent:  #1a4a6b;
+  --accent2: #e8f0f7;
+  --accent3: #b8d0e8;
+
+  --teal:    #1a5f5f;
+  --teal-bg: #e5f3f3;
+  --teal-bd: #8ecece;
+
+  --warm:    #7a4a10;
+  --warm-bg: #fdf3e3;
+  --warm-bd: #e8c878;
+
+  --ok:      #2d6040;
+  --ok-bg:   #eaf4ee;
+  --ok-bd:   #a8d4b4;
+
+  --note:    #4a2d7a;
+  --note-bg: #f0ecfb;
+  --note-bd: #c4aef0;
+}
+
+* { margin:0; padding:0; box-sizing:border-box; }
+html { scroll-behavior: smooth; }
+body {
+  background: var(--bg);
+  color: var(--ink);
+  font-family: 'DM Sans', sans-serif;
+  font-weight: 300;
+  font-size: 15px;
+  line-height: 1.75;
+}
+
+/* ── MASTHEAD ── */
+.masthead {
+  background: var(--teal);
+  color: #fff;
+  padding: 56px 60px 52px;
+  position: relative;
+  overflow: hidden;
+}
+.masthead::before {
+  content: '';
+  position: absolute;
+  top: -60px; right: -60px;
+  width: 360px; height: 360px;
+  border-radius: 50%;
+  border: 1px solid rgba(255,255,255,.06);
+  pointer-events: none;
+}
+.mh-series {
+  font-family: 'DM Mono', monospace;
+  font-size: 10px;
+  letter-spacing: 3px;
+  text-transform: uppercase;
+  color: rgba(255,255,255,.35);
+  margin-bottom: 20px;
+}
+.mh-num {
+  font-family: 'DM Serif Display', serif;
+  font-size: 80px;
+  line-height: 1;
+  color: rgba(255,255,255,.08);
+  position: absolute;
+  right: 60px;
+  top: 40px;
+  letter-spacing: -4px;
+  user-select: none;
+}
+.masthead h1 {
+  font-family: 'DM Serif Display', serif;
+  font-size: clamp(28px, 4vw, 44px);
+  font-weight: 400;
+  line-height: 1.1;
+  letter-spacing: -.5px;
+  max-width: 720px;
+  position: relative;
+}
+.masthead h1 em { font-style: italic; color: rgba(255,255,255,.7); }
+.mh-sub {
+  margin-top: 20px;
+  font-size: 15px;
+  font-weight: 300;
+  color: rgba(255,255,255,.45);
+  max-width: 640px;
+  line-height: 1.7;
+  position: relative;
+}
+.mh-pills {
+  margin-top: 28px;
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  position: relative;
+}
+.mh-pill {
+  font-family: 'DM Mono', monospace;
+  font-size: 10px;
+  letter-spacing: 1px;
+  padding: 4px 12px;
+  border: 1px solid rgba(255,255,255,.2);
+  color: rgba(255,255,255,.5);
+  border-radius: 20px;
+}
+
+/* ── NAV ── */
+.nav {
+  position: sticky; top: 0; z-index: 100;
+  background: var(--ink);
+  display: flex; overflow-x: auto;
+  border-bottom: 1px solid rgba(255,255,255,.08);
+}
+.nav-btn {
+  flex-shrink: 0;
+  padding: 14px 20px;
+  border: none; background: transparent; cursor: pointer;
+  font-family: 'DM Mono', monospace; font-size: 10px;
+  letter-spacing: 1px; text-transform: uppercase;
+  color: rgba(255,255,255,.3);
+  border-right: 1px solid rgba(255,255,255,.06);
+  transition: color .2s; white-space: nowrap;
+}
+.nav-btn:hover { color: rgba(255,255,255,.65); }
+.nav-btn.active { color: #fff; background: rgba(255,255,255,.06); }
+
+.sect { display: none; }
+.sect.active { display: block; animation: fadeUp .3s ease; }
+@keyframes fadeUp { from{opacity:0;transform:translateY(5px)} to{opacity:1;transform:translateY(0)} }
+
+/* ── CONTENT WRAP ── */
+.cw { max-width: 860px; margin: 0 auto; padding: 52px 60px 64px; }
+
+.s-eyebrow {
+  font-family: 'DM Mono', monospace; font-size: 10px;
+  letter-spacing: 3px; text-transform: uppercase;
+  color: var(--ink4); margin-bottom: 8px;
+}
+.s-title {
+  font-family: 'DM Serif Display', serif; font-size: 30px;
+  font-weight: 400; letter-spacing: -.3px; color: var(--ink);
+  line-height: 1.15; margin-bottom: 28px;
+}
+
+p { margin-bottom: 18px; color: var(--ink2); }
+p:last-child { margin-bottom: 0; }
+p strong { font-weight: 600; color: var(--ink); }
+code {
+  font-family: 'DM Mono', monospace;
+  background: var(--bg3);
+  padding: 1px 6px;
+  border-radius: 3px;
+  font-size: 13px;
+  color: var(--ink2);
+}
+
+/* ── CALLOUT ── */
+.callout {
+  padding: 20px 24px; border-left: 3px solid;
+  margin: 28px 0; border-radius: 0 6px 6px 0;
+}
+.callout-warn { background: var(--warm-bg); border-color: var(--warm); }
+.callout-ok   { background: var(--ok-bg);   border-color: var(--ok);   }
+.callout-note { background: var(--note-bg); border-color: var(--note); }
+.callout-teal { background: var(--teal-bg); border-color: var(--teal); }
+.callout-accent { background: var(--accent2); border-color: var(--accent); }
+.callout-title {
+  font-family: 'DM Mono', monospace; font-size: 10px;
+  letter-spacing: 2px; text-transform: uppercase; margin-bottom: 8px;
+}
+.callout-warn .callout-title  { color: var(--warm);   }
+.callout-ok .callout-title    { color: var(--ok);     }
+.callout-note .callout-title  { color: var(--note);   }
+.callout-teal .callout-title  { color: var(--teal);   }
+.callout-accent .callout-title { color: var(--accent); }
+.callout p { font-size: 14px; line-height: 1.65; margin-bottom: 8px; }
+.callout p:last-child { margin-bottom: 0; }
+
+/* ── DIAGRAM ── */
+.diagram {
+  background: var(--bg2); border: 1px solid var(--border2);
+  padding: 28px 32px; margin: 28px 0;
+}
+.diagram-title {
+  font-family: 'DM Mono', monospace; font-size: 10px;
+  letter-spacing: 2px; text-transform: uppercase;
+  color: var(--ink4); margin-bottom: 20px;
+  padding-bottom: 12px; border-bottom: 1px solid var(--border);
+}
+
+/* ── PIPELINE STEPS ── */
+.pipeline {
+  display: flex;
+  align-items: stretch;
+  gap: 0;
+  margin: 8px 0;
+}
+.pipe-step {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  border: 1.5px solid var(--border2);
+  background: var(--bg);
+  overflow: hidden;
+}
+.pipe-connector {
+  display: flex;
+  align-items: center;
+  padding: 0 6px;
+  color: var(--border2);
+  font-size: 20px;
+  flex-shrink: 0;
+  font-family: 'DM Mono', monospace;
+}
+.pipe-head {
+  padding: 8px 12px;
+  background: var(--teal);
+  font-family: 'DM Mono', monospace;
+  font-size: 9px;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  color: rgba(255,255,255,.8);
+}
+.pipe-body {
+  padding: 10px 12px;
+  font-size: 12.5px;
+  color: var(--ink3);
+  line-height: 1.55;
+  flex: 1;
+}
+.pipe-body strong { font-weight: 600; color: var(--ink2); }
+
+/* ── VECTOR SPACE VISUAL ── */
+.vspace {
+  background: var(--ink);
+  border-radius: 6px;
+  padding: 28px;
+  margin: 20px 0;
+  position: relative;
+  overflow: hidden;
+  min-height: 260px;
+}
+.vspace-label {
+  font-family: 'DM Mono', monospace;
+  font-size: 9px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: rgba(255,255,255,.25);
+  margin-bottom: 16px;
+}
+.vdot {
+  position: absolute;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: 'DM Mono', monospace;
+  font-size: 9px;
+  color: rgba(255,255,255,.85);
+  transition: all .3s ease;
+}
+.vdot:hover { transform: scale(1.15); z-index: 10; }
+.vdot-label {
+  position: absolute;
+  font-family: 'DM Mono', monospace;
+  font-size: 8.5px;
+  white-space: nowrap;
+  pointer-events: none;
+}
+
+/* ── NUMBER LINE ── */
+.num-embed {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  flex-wrap: wrap;
+  margin: 8px 0;
+}
+.ne-val {
+  font-family: 'DM Mono', monospace;
+  font-size: 11px;
+  padding: 3px 7px;
+  border-radius: 3px;
+  background: var(--teal-bg);
+  color: var(--teal);
+  border: 1px solid var(--teal-bd);
+}
+.ne-comma {
+  font-family: 'DM Mono', monospace;
+  font-size: 11px;
+  color: var(--ink4);
+}
+
+/* ── COMPARISON ── */
+.two-col {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1px;
+  background: var(--border2);
+  border: 1px solid var(--border2);
+  border-radius: 6px;
+  overflow: hidden;
+  margin: 24px 0;
+}
+.tc-side { background: var(--bg); padding: 20px 22px; }
+.tc-label {
+  font-family: 'DM Mono', monospace; font-size: 9px;
+  letter-spacing: 2px; text-transform: uppercase;
+  color: var(--ink4); margin-bottom: 10px;
+}
+.tc-heading {
+  font-family: 'DM Serif Display', serif; font-size: 16px;
+  color: var(--ink); margin-bottom: 10px; line-height: 1.2;
+}
+.tc-body { font-size: 13px; color: var(--ink3); line-height: 1.6; }
+.tc-body p { font-size: 13px; margin-bottom: 8px; }
+
+/* ── KEY INSIGHT ── */
+.key-insight {
+  background: var(--ink); color: #fff;
+  padding: 28px 32px; margin: 32px 0; border-radius: 6px;
+  position: relative; overflow: hidden;
+}
+.key-insight::before {
+  content: '"';
+  position: absolute; right: 24px; top: -10px;
+  font-family: 'DM Serif Display', serif;
+  font-size: 100px; color: rgba(255,255,255,.06);
+  line-height: 1; pointer-events: none;
+}
+.ki-label {
+  font-family: 'DM Mono', monospace; font-size: 9px;
+  letter-spacing: 2.5px; text-transform: uppercase;
+  color: rgba(255,255,255,.3); margin-bottom: 12px;
+}
+.ki-text {
+  font-family: 'DM Serif Display', serif;
+  font-size: 20px; font-weight: 400; line-height: 1.4;
+  color: rgba(255,255,255,.9); max-width: 680px;
+}
+
+/* ── WHAT CHANGES TABLE ── */
+.change-table {
+  width: 100%; border-collapse: collapse; margin: 20px 0; font-size: 13.5px;
+}
+.change-table th {
+  background: var(--teal); color: rgba(255,255,255,.85);
+  font-family: 'DM Mono', monospace; font-size: 9.5px;
+  letter-spacing: 1.5px; text-transform: uppercase;
+  padding: 10px 14px; text-align: left; font-weight: 400;
+}
+.change-table td {
+  padding: 11px 14px; border: 1px solid var(--border);
+  vertical-align: top; line-height: 1.55; color: var(--ink2);
+}
+.change-table tr:nth-child(even) td { background: var(--bg2); }
+.change-table td:first-child { font-weight: 500; color: var(--ink); white-space: nowrap; }
+.td-before { color: var(--warm) !important; font-size: 13px; }
+.td-after  { color: var(--ok)   !important; font-size: 13px; }
+
+/* ── SIMILARITY DEMO ── */
+.sim-demo {
+  display: flex; flex-direction: column; gap: 8px; margin: 16px 0;
+}
+.sim-row {
+  display: grid;
+  grid-template-columns: 1fr 60px 80px;
+  gap: 12px; align-items: center;
+}
+.sim-text {
+  font-size: 12.5px; color: var(--ink2); line-height: 1.4;
+  padding: 8px 12px; border: 1px solid var(--border);
+  background: var(--bg); border-radius: 4px;
+}
+.sim-bar-wrap { display: flex; flex-direction: column; gap: 3px; }
+.sim-bar-track {
+  height: 8px; background: var(--bg3);
+  border-radius: 2px; overflow: hidden;
+}
+.sim-bar-fill { height: 100%; border-radius: 2px; }
+.sim-score {
+  font-family: 'DM Mono', monospace; font-size: 11px;
+  font-weight: 500; text-align: right;
+}
+
+/* ── NEXT REPORT ── */
+.next-report {
+  border-top: 1px solid var(--border); margin-top: 52px;
+  padding-top: 32px; display: flex;
+  justify-content: space-between; align-items: center; gap: 20px;
+}
+.nr-label {
+  font-family: 'DM Mono', monospace; font-size: 9px;
+  letter-spacing: 2px; text-transform: uppercase;
+  color: var(--ink4); margin-bottom: 6px;
+}
+.nr-title { font-family: 'DM Serif Display', serif; font-size: 18px; color: var(--ink); line-height: 1.2; }
+.nr-sub { font-size: 13px; color: var(--ink4); margin-top: 4px; }
+.nr-arrow { font-family: 'DM Mono', monospace; font-size: 22px; color: var(--teal); flex-shrink: 0; }
+
+/* ── FOOTER ── */
+.footer {
+  padding: 22px 60px; border-top: 1px solid var(--border);
+  display: flex; justify-content: space-between; align-items: center;
+  font-family: 'DM Mono', monospace; font-size: 10px;
+  letter-spacing: 1px; text-transform: uppercase; color: var(--ink4);
+}
+
+@media (max-width: 680px) {
+  .masthead, .cw, .footer { padding-left: 24px; padding-right: 24px; }
+  .mh-num { display: none; }
+  .two-col { grid-template-columns: 1fr; }
+  .pipeline { flex-direction: column; }
+  .pipe-connector { transform: rotate(90deg); padding: 4px 0; justify-content: center; }
+  .sim-row { grid-template-columns: 1fr; }
+}
+</style>
+</head>
+<body>
+
+<!-- ══ MASTHEAD ══ -->
+<div class="masthead">
+  <div class="mh-series">Serie RAG Pratico · Report 2 di 6</div>
+  <div class="mh-num">02</div>
+  <h1>Indicizzazione e vector store:<br><em>cosa succede praticamente</em></h1>
+  <p class="mh-sub">Quando si parla di "indicizzare un testo" o di "convertirlo in vettori", si usa un linguaggio tecnico che oscura qualcosa di concettualmente semplice. Questo report spiega cosa succede davvero — passo dopo passo.</p>
+  <div class="mh-pills">
+    <span class="mh-pill">Embedding</span>
+    <span class="mh-pill">Vettori e spazio semantico</span>
+    <span class="mh-pill">Similarità semantica</span>
+    <span class="mh-pill">Vector store</span>
+    <span class="mh-pill">Cosa cambia dopo</span>
+  </div>
+</div>
+
+<!-- ══ NAV ══ -->
+<div class="nav">
+  <button class="nav-btn active" onclick="show(0)">1 · Cosa significa indicizzare</button>
+  <button class="nav-btn" onclick="show(1)">2 · Cos'è un embedding</button>
+  <button class="nav-btn" onclick="show(2)">3 · Lo spazio semantico</button>
+  <button class="nav-btn" onclick="show(3)">4 · Il vector store</button>
+  <button class="nav-btn" onclick="show(4)">5 · Cosa cambia dopo</button>
+</div>
+
+
+<!-- ══════════════════════════════════
+     S0 — COSA SIGNIFICA INDICIZZARE
+══════════════════════════════════ -->
+<div class="sect active" id="s0">
+<div class="cw">
+
+  <div class="s-eyebrow">Il punto di partenza</div>
+  <div class="s-title">Cosa significa "indicizzare" un testo</div>
+
+  <p>La parola "indicizzare" viene dal mondo dei motori di ricerca e dei database — e porta con sé un'intuizione giusta ma incompleta. Quando Google indicizza una pagina web, crea un registro di tutte le parole che contiene, così da poterla ritrovare quando qualcuno cerca quelle parole. È un indice per parole chiave: veloce, meccanico, basato sulla presenza o assenza di termini esatti.</p>
+
+  <p>L'indicizzazione semantica per il RAG funziona in modo radicalmente diverso. Non registra le parole — <strong>registra il significato</strong>. E lo fa trasformando il testo in qualcosa di completamente diverso dal testo stesso: un vettore numerico.</p>
+
+  <div class="two-col">
+    <div class="tc-side">
+      <div class="tc-label">Indice tradizionale (keyword search)</div>
+      <div class="tc-heading">Registra le parole</div>
+      <div class="tc-body">
+        <p>Testo: <em>"Giacca in lana merino per uso outdoor"</em></p>
+        <p>Indice: <code>giacca</code>, <code>lana</code>, <code>merino</code>, <code>outdoor</code></p>
+        <p>Query "cappotto invernale" → <strong>nessun risultato</strong>, perché le parole non corrispondono.</p>
+      </div>
+    </div>
+    <div class="tc-side" style="background:var(--teal-bg);">
+      <div class="tc-label">Indice semantico (embedding)</div>
+      <div class="tc-heading">Registra il significato</div>
+      <div class="tc-body">
+        <p>Testo: <em>"Giacca in lana merino per uso outdoor"</em></p>
+        <p>Indice: vettore numerico che codifica "capo invernale, materiale pregiato, uso esterno"</p>
+        <p>Query "cappotto invernale" → <strong>match alto</strong>, perché i significati sono vicini.</p>
+      </div>
+    </div>
+  </div>
+
+  <p>Questa differenza è fondamentale per capire perché il RAG funziona su testi descrittivi complessi come le schede prodotto: il brief del cliente e la descrizione del prodotto possono usare parole completamente diverse eppure parlare della stessa cosa. L'indice semantico lo capisce; quello tradizionale no.</p>
+
+  <p>Indicizzare, in questo contesto, significa quindi compiere tre operazioni in sequenza:</p>
+
+  <div class="diagram">
+    <div class="diagram-title">Il processo di indicizzazione — tre fasi</div>
+    <div class="pipeline">
+      <div class="pipe-step">
+        <div class="pipe-head">Fase 1 · Preparazione</div>
+        <div class="pipe-body">Il testo viene <strong>spezzato in chunk</strong> — porzioni di dimensione gestibile. Una scheda di 3 pagine diventa 4–6 chunk sovrapposti. (Approfondito nel Report 3.)</div>
+      </div>
+      <div class="pipe-connector">›</div>
+      <div class="pipe-step">
+        <div class="pipe-head">Fase 2 · Embedding</div>
+        <div class="pipe-body">Ogni chunk viene passato a un <strong>modello di embedding</strong> che lo trasforma in un vettore — una lista di numeri che rappresenta il suo significato.</div>
+      </div>
+      <div class="pipe-connector">›</div>
+      <div class="pipe-step">
+        <div class="pipe-head">Fase 3 · Archiviazione</div>
+        <div class="pipe-body">I vettori vengono salvati in un <strong>vector store</strong> insieme al testo originale, pronti per essere cercati per similarità semantica.</div>
+      </div>
+    </div>
+  </div>
+
+  <p>Questo processo avviene <em>una volta sola</em> per ogni documento — o ogni volta che il documento viene aggiornato. Non avviene ad ogni query dell'utente. È il lavoro preparatorio che rende le query veloci ed efficaci.</p>
+
+  <div class="callout callout-teal">
+    <div class="callout-title">L'analogia giusta</div>
+    <p>Pensa all'indicizzazione come alla creazione di una <strong>mappa concettuale</strong> del tuo corpus. Ogni documento viene "letto" una volta e tradotto in una posizione su questa mappa. Quando arriva una query, non si rilegge ogni documento — si guarda dove si trova la query sulla mappa e si trovano i documenti vicini.</p>
+  </div>
+
+</div>
+</div>
+
+
+<!-- ══════════════════════════════════
+     S1 — COS'È UN EMBEDDING
+══════════════════════════════════ -->
+<div class="sect" id="s1">
+<div class="cw">
+
+  <div class="s-eyebrow">Il meccanismo centrale</div>
+  <div class="s-title">Cos'è un embedding: il testo tradotto in numeri</div>
+
+  <p>Un <strong>embedding</strong> è una rappresentazione numerica del significato di un testo. È una lista di numeri — tipicamente tra 768 e 3.072 numeri — ognuno dei quali cattura una sfumatura del significato del testo originale.</p>
+
+  <p>Per esempio, la frase <em>"giacca in lana merino per uso outdoor"</em> potrebbe essere rappresentata come un vettore di 1.536 numeri decimali. Questi numeri non corrispondono a parole specifiche — sono coordinate in uno spazio astratto dove posizioni vicine indicano significati simili.</p>
+
+  <div class="diagram">
+    <div class="diagram-title">Esempio semplificato — embedding di una frase (versione abbreviata)</div>
+    <p style="font-size:13px; color:var(--ink3); margin-bottom:16px; margin-top:0;">"Giacca in lana merino per uso outdoor" →</p>
+    <div class="num-embed">
+      <span class="ne-val">0.234</span><span class="ne-comma">,</span>
+      <span class="ne-val">-0.891</span><span class="ne-comma">,</span>
+      <span class="ne-val">0.445</span><span class="ne-comma">,</span>
+      <span class="ne-val">0.102</span><span class="ne-comma">,</span>
+      <span class="ne-val">-0.667</span><span class="ne-comma">,</span>
+      <span class="ne-val">0.789</span><span class="ne-comma">,</span>
+      <span class="ne-val">-0.123</span><span class="ne-comma">,</span>
+      <span class="ne-val">0.556</span><span class="ne-comma">,</span>
+      <span class="ne-val">0.034</span><span class="ne-comma">,</span>
+      <span class="ne-val">-0.445</span>
+      <span class="ne-comma" style="margin-left:4px;">... <span style="color:var(--ink4);">× 1526 altri valori</span></span>
+    </div>
+    <p style="font-size:12px; color:var(--ink4); margin-top:14px; margin-bottom:0;">Nella realtà, un embedding di qualità ha 1.536 o 3.072 dimensioni. Ogni valore cattura una sfumatura del significato — il "livello di formalità", la "categoria merceologica", il "contesto d'uso", ecc. — ma non in modo esplicito o leggibile dall'umano.</p>
+  </div>
+
+  <p>Come vengono prodotti questi numeri? Un modello di embedding — che è un modello di machine learning specializzato, diverso dal modello LLM che poi risponde — prende il testo in input e produce il vettore in output. Ha imparato a farlo leggendo miliardi di testi e capendo quali testi tendono ad apparire in contesti simili.</p>
+
+  <div class="callout callout-accent">
+    <div class="callout-title">Una distinzione importante</div>
+    <p>Il modello di embedding e il modello LLM sono <strong>due sistemi distinti</strong>. Il primo trasforma il testo in vettori (fase di indicizzazione e fase di retrieval). Il secondo legge i chunk recuperati e genera la risposta finale. Nella maggior parte dei sistemi RAG, si usano modelli diversi per i due compiti.</p>
+    <p>Esempi di modelli di embedding: <code>text-embedding-3-large</code> di OpenAI, <code>voyage-3</code> di Anthropic/Voyage, <code>multilingual-e5-large</code> per testi in italiano.</p>
+  </div>
+
+  <p>La proprietà chiave degli embedding è che <strong>testi con significato simile producono vettori simili</strong>. Questo non è programmato esplicitamente — emerge dall'addestramento del modello. "Cappotto invernale" e "giacca per il freddo" finiscono vicini nello spazio vettoriale perché sono stati usati in contesti simili in miliardi di testi.</p>
+
+  <div class="diagram">
+    <div class="diagram-title">Confronto di embedding — quanto sono "vicini" questi testi?</div>
+    <p style="font-size:13px; color:var(--ink3); margin-bottom:16px; margin-top:0;">Testo di riferimento: <strong>"Giacca in lana merino per uso outdoor, resistente al vento"</strong></p>
+    <div class="sim-demo">
+      <div class="sim-row">
+        <div class="sim-text">"Cappotto invernale in lana per attività all'aperto"</div>
+        <div class="sim-bar-wrap">
+          <div class="sim-bar-track"><div class="sim-bar-fill" style="width:92%; background:var(--ok)"></div></div>
+        </div>
+        <div class="sim-score" style="color:var(--ok)">0.92</div>
+      </div>
+      <div class="sim-row">
+        <div class="sim-text">"Indumento da montagna in fibra naturale"</div>
+        <div class="sim-bar-wrap">
+          <div class="sim-bar-track"><div class="sim-bar-fill" style="width:84%; background:var(--ok)"></div></div>
+        </div>
+        <div class="sim-score" style="color:var(--ok)">0.84</div>
+      </div>
+      <div class="sim-row">
+        <div class="sim-text">"Felpa tecnica leggera per trekking estivo"</div>
+        <div class="sim-bar-wrap">
+          <div class="sim-bar-track"><div class="sim-bar-fill" style="width:68%; background:#e8b84a"></div></div>
+        </div>
+        <div class="sim-score" style="color:#8a6a10">0.68</div>
+      </div>
+      <div class="sim-row">
+        <div class="sim-text">"Scarpe da corsa con ammortizzazione avanzata"</div>
+        <div class="sim-bar-wrap">
+          <div class="sim-bar-track"><div class="sim-bar-fill" style="width:34%; background:var(--border2)"></div></div>
+        </div>
+        <div class="sim-score" style="color:var(--ink4)">0.34</div>
+      </div>
+      <div class="sim-row">
+        <div class="sim-text">"Software di gestione contabilità aziendale"</div>
+        <div class="sim-bar-wrap">
+          <div class="sim-bar-track"><div class="sim-bar-fill" style="width:8%; background:var(--border)"></div></div>
+        </div>
+        <div class="sim-score" style="color:var(--ink4)">0.08</div>
+      </div>
+    </div>
+    <p style="font-size:12px; color:var(--ink4); margin-top:14px; margin-bottom:0;">Il punteggio di similarità (cosine similarity) va da 0 a 1. Sopra 0.75–0.80 è generalmente considerato rilevante. Nota come "cappotto invernale" — con zero parole in comune con il testo di riferimento — abbia uno score molto alto.</p>
+  </div>
+
+</div>
+</div>
+
+
+<!-- ══════════════════════════════════
+     S2 — LO SPAZIO SEMANTICO
+══════════════════════════════════ -->
+<div class="sect" id="s2">
+<div class="cw">
+
+  <div class="s-eyebrow">La geometria del significato</div>
+  <div class="s-title">Lo spazio semantico: dove il significato ha una posizione</div>
+
+  <p>L'idea chiave dietro gli embedding è che il significato può essere rappresentato come una <strong>posizione in uno spazio multidimensionale</strong>. Ogni testo ha le sue coordinate in questo spazio. Testi con significato simile stanno vicini; testi con significato diverso stanno lontani.</p>
+
+  <p>Ovviamente non possiamo visualizzare uno spazio a 1.536 dimensioni — ma possiamo capire il principio attraverso una proiezione bidimensionale semplificata.</p>
+
+  <!-- Visualizzazione interattiva dello spazio semantico -->
+  <div class="diagram" style="padding:20px;">
+    <div class="diagram-title">Spazio semantico — proiezione 2D semplificata (dati illustrativi)</div>
+    <div id="vspace-container" style="position:relative; width:100%; height:360px; background:var(--ink); border-radius:4px; overflow:hidden;">
+
+      <!-- Grid lines -->
+      <svg style="position:absolute;inset:0;width:100%;height:100%;pointer-events:none;" xmlns="http://www.w3.org/2000/svg">
+        <line x1="50%" y1="0" x2="50%" y2="100%" stroke="rgba(255,255,255,.05)" stroke-width="1"/>
+        <line x1="0" y1="50%" x2="100%" y2="50%" stroke="rgba(255,255,255,.05)" stroke-width="1"/>
+        <text x="8" y="20" font-family="DM Mono, monospace" font-size="8" fill="rgba(255,255,255,.2)" letter-spacing="1">ABBIGLIAMENTO OUTDOOR</text>
+        <text x="55%" y="20" font-family="DM Mono, monospace" font-size="8" fill="rgba(255,255,255,.2)" letter-spacing="1">ABBIGLIAMENTO FORMALE</text>
+        <text x="8" y="55%" font-family="DM Mono, monospace" font-size="8" fill="rgba(255,255,255,.2)" letter-spacing="1">SPORT / TECNICO</text>
+        <text x="55%" y="55%" font-family="DM Mono, monospace" font-size="8" fill="rgba(255,255,255,.2)" letter-spacing="1">ARREDAMENTO / ALTRO</text>
+
+        <!-- similarity circles around giacca merino -->
+        <circle cx="22%" cy="22%" r="60" stroke="rgba(30,160,100,.15)" stroke-width="1" fill="none" stroke-dasharray="4,3"/>
+        <circle cx="22%" cy="22%" r="100" stroke="rgba(30,160,100,.08)" stroke-width="1" fill="none" stroke-dasharray="4,3"/>
+      </svg>
+
+      <!-- Prodotti outdoor / abbigliamento -->
+      <div class="vdot" style="width:44px;height:44px;left:16%;top:14%;background:#1a6b52;font-size:8px;text-align:center;line-height:1.2;padding:4px;">Giacca<br>merino</div>
+      <div class="vdot" style="width:40px;height:40px;left:28%;top:10%;background:#1a6b52;opacity:.85;">Cap. inv.</div>
+      <div class="vdot" style="width:36px;height:36px;left:8%;top:24%;background:#1a6b52;opacity:.75;font-size:8px;">Parka</div>
+      <div class="vdot" style="width:34px;height:34px;left:20%;top:32%;background:#1a6b52;opacity:.7;font-size:8px;">Softshell</div>
+      <div class="vdot" style="width:30px;height:30px;left:36%;top:20%;background:#2d6040;opacity:.6;font-size:8px;">Fleece</div>
+
+      <!-- Sport / tecnico -->
+      <div class="vdot" style="width:38px;height:38px;left:12%;top:58%;background:#1a4a6b;opacity:.85;font-size:8px;">Scarpe<br>trail</div>
+      <div class="vdot" style="width:34px;height:34px;left:26%;top:66%;background:#1a4a6b;opacity:.75;font-size:8px;">T-shirt<br>tecnica</div>
+      <div class="vdot" style="width:30px;height:30px;left:6%;top:72%;background:#1a4a6b;opacity:.65;font-size:8px;">Zaino</div>
+
+      <!-- Formale -->
+      <div class="vdot" style="width:36px;height:36px;left:58%;top:16%;background:#5a4a3a;opacity:.8;font-size:8px;">Abito<br>uomo</div>
+      <div class="vdot" style="width:32px;height:32px;left:72%;top:22%;background:#5a4a3a;opacity:.7;font-size:8px;">Camicia</div>
+      <div class="vdot" style="width:30px;height:30px;left:66%;top:10%;background:#5a4a3a;opacity:.65;font-size:8px;">Blazer</div>
+
+      <!-- Arredamento -->
+      <div class="vdot" style="width:32px;height:32px;left:62%;top:62%;background:#7a3030;opacity:.7;font-size:7px;">Divano</div>
+      <div class="vdot" style="width:28px;height:28px;left:76%;top:70%;background:#7a3030;opacity:.6;font-size:7px;">Lampada</div>
+      <div class="vdot" style="width:28px;height:28px;left:84%;top:55%;background:#7a3030;opacity:.6;font-size:7px;">Tappeto</div>
+
+      <!-- Query marker -->
+      <div style="position:absolute;left:21%;top:9%;transform:translate(-50%,-50%);z-index:20;">
+        <div style="width:14px;height:14px;background:#fff;border-radius:50%;border:3px solid #e8b84a;box-shadow:0 0 0 3px rgba(232,184,74,.3);"></div>
+      </div>
+      <div style="position:absolute;left:24%;top:6%;font-family:'DM Mono',monospace;font-size:8.5px;color:#e8b84a;white-space:nowrap;">← QUERY: "capo caldo per hiking"</div>
+
+    </div>
+    <p style="font-size:12px; color:var(--ink4); margin-top:12px; margin-bottom:0;">La query "capo caldo per hiking" si posiziona vicino al cluster outdoor-abbigliamento. I cerchi tratteggiati indicano le soglie di similarità: dentro il cerchio interno, altissima rilevanza; fuori dal cerchio esterno, probabilmente irrilevante. Il retrieval recupera i punti più vicini alla query.</p>
+  </div>
+
+  <p>Questo è il modello mentale giusto per capire il retrieval semantico: <strong>non è una ricerca di parole chiave — è una ricerca di vicinanza nello spazio del significato</strong>. La query viene trasformata nello stesso tipo di vettore dei documenti, e si cercano i vettori più vicini.</p>
+
+  <div class="callout callout-note">
+    <div class="callout-title">Cosa sanno e cosa non sanno gli embedding</div>
+    <p><strong>Sanno:</strong> similarità semantica generale, sinonimi, concetti correlati, relazioni categoria-istanza ("veicolo" è vicino a "auto"), tonalità e registro.</p>
+    <p><strong>Non sanno:</strong> fatti specifici del tuo dominio non presenti nel training (nomi di prodotti proprietari, codici interni, terminologia molto specializzata), relazioni logiche precise ("maggiore di", "causa di"), numeri e calcoli.</p>
+    <p>Per codici prodotto, SKU e termini proprietari, il retrieval semantico va integrato con ricerca keyword tradizionale — questo è l'approccio ibrido che vedremo nel Report 4.</p>
+  </div>
+
+  <key-insight></key-insight>
+  <div class="key-insight">
+    <div class="ki-label">Il principio da ricordare</div>
+    <div class="ki-text">La similarità semantica non misura se due testi hanno le stesse parole — misura se descrivono cose concettualmente vicine. Questo è esattamente quello che serve per abbinare un brief scritto dal cliente con descrizioni prodotto scritte dal marketing.</div>
+  </div>
+
+</div>
+</div>
+
+
+<!-- ══════════════════════════════════
+     S3 — IL VECTOR STORE
+══════════════════════════════════ -->
+<div class="sect" id="s3">
+<div class="cw">
+
+  <div class="s-eyebrow">L'infrastruttura</div>
+  <div class="s-title">Il vector store: un database progettato per la vicinanza</div>
+
+  <p>Un <strong>vector store</strong> (o database vettoriale) è un sistema di archiviazione specializzato per vettori ad alta dimensionalità. Non è un database relazionale e non è un database a documenti — è ottimizzato per un'operazione specifica: <em>"dammi i vettori più simili a questo vettore query"</em>.</p>
+
+  <p>Nella pratica, il vector store archivia per ogni chunk tre cose: il vettore (le coordinate nello spazio semantico), il testo originale (quello che verrà restituito al modello), e i metadati (informazioni strutturate associate — per esempio l'ID del prodotto, la categoria, la data di aggiornamento).</p>
+
+  <div class="diagram">
+    <div class="diagram-title">Struttura di un record nel vector store</div>
+    <div style="background:var(--bg); border:1px solid var(--border2); border-radius:4px; overflow:hidden; font-family:'DM Mono',monospace; font-size:12px;">
+      <div style="padding:10px 16px; background:var(--teal); color:rgba(255,255,255,.8); font-size:10px; letter-spacing:1px;">RECORD #00847 — chunk di scheda prodotto</div>
+      <div style="display:grid; grid-template-columns:140px 1fr; gap:0;">
+        <div style="padding:10px 16px; border-right:1px solid var(--border); border-bottom:1px solid var(--border); color:var(--ink4); font-size:11px;">vettore</div>
+        <div style="padding:10px 16px; border-bottom:1px solid var(--border); color:var(--teal); font-size:11px;">[0.234, -0.891, 0.445, 0.102, ... × 1536]</div>
+        <div style="padding:10px 16px; border-right:1px solid var(--border); border-bottom:1px solid var(--border); color:var(--ink4); font-size:11px;">testo_originale</div>
+        <div style="padding:10px 16px; border-bottom:1px solid var(--border); color:var(--ink2); font-size:11px; line-height:1.5;">"La giacca Alpentech è costruita in lana merino 100% con trattamento idrorepellente DWR. Pensata per le attività ad alta quota, combina..."</div>
+        <div style="padding:10px 16px; border-right:1px solid var(--border); border-bottom:1px solid var(--border); color:var(--ink4); font-size:11px;">metadati</div>
+        <div style="padding:10px 16px; border-bottom:1px solid var(--border); color:var(--ink2); font-size:11px; line-height:1.7;">
+          prodotto_id: <span style="color:var(--accent)">PRD-2847</span><br>
+          categoria: <span style="color:var(--accent)">abbigliamento-outdoor</span><br>
+          chunk_index: <span style="color:var(--accent)">2 di 4</span><br>
+          aggiornato: <span style="color:var(--accent)">2025-11-14</span>
+        </div>
+        <div style="padding:10px 16px; border-right:1px solid var(--border); color:var(--ink4); font-size:11px;">chunk_id</div>
+        <div style="padding:10px 16px; color:var(--ink2); font-size:11px;">PRD-2847-chunk-2</div>
+      </div>
+    </div>
+  </div>
+
+  <p>Quando arriva una query di retrieval, il vector store esegue una <strong>ricerca per prossimità</strong>: converte la query in un vettore (usando lo stesso modello di embedding usato per i documenti), poi trova i K vettori più vicini nel database. Questa operazione è molto più veloce di confrontare il testo della query con ogni documento — confrontare vettori numerici è computazionalmente efficiente anche su milioni di record.</p>
+
+  <div class="callout callout-accent">
+    <div class="callout-title">Quali vector store esistono nella pratica</div>
+    <p>Ci sono tre categorie principali:</p>
+    <p><strong>Database vettoriali dedicati:</strong> Pinecone, Qdrant, Weaviate, Chroma. Ottimizzati esclusivamente per la ricerca vettoriale, ottimi per sistemi ad alto volume.</p>
+    <p><strong>Estensioni per database relazionali:</strong> pgvector (PostgreSQL), sqlite-vec. Permettono di aggiungere capacità vettoriali a un database già esistente. Spesso la scelta più pragmatica se hai già un'infrastruttura Postgres.</p>
+    <p><strong>Soluzioni cloud integrate:</strong> OpenAI embeddings + Pinecone, Supabase (che include pgvector), servizi cloud di AWS/Azure/GCP. Riducono la complessità operativa.</p>
+    <p>Per il caso del catalogo prodotti con qualche centinaio o migliaio di prodotti, <strong>pgvector su PostgreSQL è quasi sempre la scelta più semplice</strong> — soprattutto se i dati strutturati sono già in Postgres.</p>
+  </div>
+
+  <p>Un aspetto importante: il vector store non sostituisce il database relazionale esistente. I due sistemi coesistono. Il database relazionale continua a contenere tutti i dati strutturati (prezzi, disponibilità, categorie). Il vector store contiene gli embedding dei testi descrittivi con i metadati necessari per ricondurre ogni chunk al prodotto originale nel database relazionale.</p>
+
+</div>
+</div>
+
+
+<!-- ══════════════════════════════════
+     S4 — COSA CAMBIA DOPO
+══════════════════════════════════ -->
+<div class="sect" id="s4">
+<div class="cw">
+
+  <div class="s-eyebrow">Il cambiamento concreto</div>
+  <div class="s-title">Cosa cambia dopo l'indicizzazione</div>
+
+  <p>Una volta completata l'indicizzazione — testi spezzati in chunk, chunk trasformati in vettori, vettori archiviati nel vector store — il modo in cui l'agente accede alle informazioni cambia completamente.</p>
+
+  <table class="change-table">
+    <thead>
+      <tr>
+        <th>Dimensione</th>
+        <th>Prima (senza indicizzazione)</th>
+        <th>Dopo (con vector store)</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>Come si accede alle info</td>
+        <td class="td-before">Si recuperano tutti i prodotti dal DB e si inseriscono nel contesto, o si escludono i testi lunghi perché non ci stanno</td>
+        <td class="td-after">Si converte il brief in un vettore e si recuperano solo i chunk semanticamente più vicini — di solito 5–15 su centinaia</td>
+      </tr>
+      <tr>
+        <td>Quantità di testo nel contesto</td>
+        <td class="td-before">O tutto (insostenibile con cataloghi grandi) o niente dei testi descrittivi</td>
+        <td class="td-after">Solo i testi rilevanti per questo brief specifico — proporzionale alla complessità della query, non alla dimensione del catalogo</td>
+      </tr>
+      <tr>
+        <td>Criteri di selezione</td>
+        <td class="td-before">Regole fisse decise dallo sviluppatore, indipendenti dalla query</td>
+        <td class="td-after">Similarità semantica con la query corrente — diversa per ogni brief</td>
+      </tr>
+      <tr>
+        <td>Costo per chiamata</td>
+        <td class="td-before">Proporzionale alla dimensione del catalogo — cresce linearmente con i prodotti</td>
+        <td class="td-after">Quasi costante — recuperi sempre un numero simile di chunk indipendentemente da quanto è grande il catalogo</td>
+      </tr>
+      <tr>
+        <td>Qualità del matching</td>
+        <td class="td-before">Zero matching semantico — il modello risponde solo sui dati strutturati</td>
+        <td class="td-after">Matching sul significato — "cappotto per il freddo" trova "giacca termoisolante per basse temperature"</td>
+      </tr>
+      <tr>
+        <td>Aggiornamento del catalogo</td>
+        <td class="td-before">Aggiornare il database è sufficiente</td>
+        <td class="td-after">Aggiornare il database + reindicizzare i documenti modificati (operazione veloce se fatta in modo incrementale)</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <div class="callout callout-ok">
+    <div class="callout-title">Cosa cambia per il tuo agente di selezione prodotti</div>
+    <p>Oggi l'agente vede i dati strutturati di tutti i prodotti e non vede i testi descrittivi. Dopo l'indicizzazione, l'agente potrà ricevere nel contesto i chunk descrittivi dei 10–20 prodotti più semanticamente vicini al brief — e usarli per la selezione.</p>
+    <p>La differenza pratica: oggi l'agente può dire "questa categoria corrisponde al brief". Dopo il RAG, potrà dire "questa specifica descrizione del materiale, dell'uso previsto e delle caratteristiche tecniche corrisponde a quello che il brief sta cercando".</p>
+  </div>
+
+  <div class="key-insight">
+    <div class="ki-label">Il cambiamento fondamentale</div>
+    <div class="ki-text">Prima dell'indicizzazione, il modello risponde alle domande che gli poni. Dopo l'indicizzazione, il modello può rispondere alle domande usando la conoscenza specifica del tuo corpus — trovata dinamicamente in base alla domanda.</div>
+  </div>
+
+  <!-- NEXT REPORT -->
+  <div class="next-report">
+    <div>
+      <div class="nr-label">Prossimo report</div>
+      <div class="nr-title">Chunking: il passaggio più critico</div>
+      <div class="nr-sub">Come spezzare i testi descrittivi · Strategie per schede prodotto · Cosa succede se il chunk è troppo grande o troppo piccolo</div>
+    </div>
+    <div class="nr-arrow">→</div>
+  </div>
+
+</div>
+</div>
+
+<!-- FOOTER -->
+<div class="footer">
+  <span>Serie RAG Pratico · Report 2 · Indicizzazione e vector store</span>
+  <span>2026</span>
+</div>
+
+<script>
+function show(n) {
+  document.querySelectorAll('.sect').forEach(s => s.classList.remove('active'));
+  document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('s'+n).classList.add('active');
+  document.querySelectorAll('.nav-btn')[n].classList.add('active');
+  window.scrollTo({top:0, behavior:'smooth'});
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,604 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Scelta del modello — B · Valutare nella pratica</title>
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Outfit:wght@200;300;400;500;600;700;800;900&family=IBM+Plex+Mono:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg:     #faf8f5;
+  --bg2:    #f2efe9;
+  --bg3:    #e9e5dc;
+  --ink:    #1b1915;
+  --ink2:   #2e2b25;
+  --ink3:   #6d685c;
+  --ink4:   #a19c8f;
+  --border: #d9d4c8;
+  --border2:#cac4b6;
+
+  --accent:  #5a4a3a;
+  --accent2: #3a2e22;
+  --accent-light: #f5f0eb;
+
+  --ok:   #3d7a45; --ok-l:  #f4faf5;
+  --bad:  #c0392b; --bad-l: #fdf5f5;
+  --warn: #b07d24; --warn-l:#fdf6e8;
+}
+
+* { margin:0; padding:0; box-sizing:border-box; }
+html { scroll-behavior:smooth; }
+body { background:var(--bg); color:var(--ink); font-family:'Outfit',sans-serif; font-weight:300; font-size:14px; line-height:1.75; }
+
+.masthead { background:var(--ink); color:rgba(255,255,255,.9); padding:60px 56px 52px; position:relative; overflow:hidden; }
+.masthead::before { content:''; position:absolute; inset:0; background: repeating-linear-gradient(90deg,rgba(255,255,255,.012) 0,rgba(255,255,255,.012) 1px,transparent 1px,transparent 64px), repeating-linear-gradient(0deg,rgba(255,255,255,.012) 0,rgba(255,255,255,.012) 1px,transparent 1px,transparent 64px); pointer-events:none; }
+.masthead::after { content:'B'; position:absolute; right:44px; bottom:-28px; font-family:'Instrument Serif',serif; font-size:280px; line-height:1; color:rgba(255,255,255,.025); pointer-events:none; }
+.mh-eye { font-family:'IBM Plex Mono',monospace; font-size:10px; letter-spacing:3px; text-transform:uppercase; color:rgba(255,255,255,.25); margin-bottom:18px; position:relative; }
+.mh-cluster { display:inline-block; font-family:'IBM Plex Mono',monospace; font-size:10px; letter-spacing:2px; text-transform:uppercase; padding:4px 12px; border:1px solid var(--accent); color:var(--accent); margin-bottom:20px; position:relative; }
+.masthead h1 { font-family:'Instrument Serif',serif; font-weight:400; font-size:clamp(30px,4.5vw,54px); line-height:1.08; letter-spacing:-1px; max-width:700px; position:relative; }
+.mh-sub { margin-top:20px; font-size:15px; font-weight:300; color:rgba(255,255,255,.38); max-width:660px; line-height:1.7; position:relative; }
+.mh-meta { margin-top:32px; display:flex; gap:32px; flex-wrap:wrap; position:relative; }
+.mh-stat { display:flex; flex-direction:column; gap:4px; }
+.mh-stat-val { font-family:'IBM Plex Mono',monospace; font-size:22px; font-weight:500; color:rgba(255,255,255,.85); }
+.mh-stat-lbl { font-size:10px; letter-spacing:2px; text-transform:uppercase; color:rgba(255,255,255,.25); }
+
+.nav { background:var(--ink2); position:sticky; top:0; z-index:100; display:flex; overflow-x:auto; border-bottom:1px solid rgba(255,255,255,.06); }
+.nav-btn { flex:1; min-width:100px; padding:13px 12px; border:none; background:transparent; cursor:pointer; font-family:'Outfit',sans-serif; font-size:10.5px; font-weight:600; text-transform:uppercase; letter-spacing:.4px; color:rgba(255,255,255,.3); border-right:1px solid rgba(255,255,255,.06); transition:all .2s; white-space:nowrap; }
+.nav-btn:last-child { border-right:none; }
+.nav-btn:hover { color:rgba(255,255,255,.6); }
+.nav-btn.active { color:#fff; background:rgba(255,255,255,.05); }
+
+.sect { display:none; }
+.sect.active { display:block; animation:fadeIn .3s ease; }
+@keyframes fadeIn { from{opacity:0;transform:translateY(6px)} to{opacity:1;transform:translateY(0)} }
+.sect-head { padding:48px 56px 36px; border-bottom:1px solid var(--border); }
+.sect-num { font-family:'IBM Plex Mono',monospace; font-size:10px; letter-spacing:3px; text-transform:uppercase; color:var(--ink4); margin-bottom:10px; }
+.sect-head h2 { font-family:'Instrument Serif',serif; font-weight:400; font-size:clamp(26px,3.5vw,42px); line-height:1.1; letter-spacing:-.5px; max-width:640px; margin-bottom:14px; }
+.sect-head p { color:var(--ink3); max-width:700px; font-size:14.5px; }
+.wrap { padding:0 56px 64px; }
+
+.prose { max-width:760px; }
+.prose p { font-size:14.5px; color:var(--ink3); line-height:1.85; margin-bottom:16px; }
+.prose p strong { color:var(--ink2); font-weight:500; }
+.prose p em { font-style:italic; color:var(--ink2); }
+
+/* ── GL CARD ── */
+.gl-group { margin-top:36px; }
+.gl-group-title { font-family:'IBM Plex Mono',monospace; font-size:9px; letter-spacing:3px; text-transform:uppercase; color:var(--ink4); padding-bottom:10px; border-bottom:1px solid var(--border); }
+.gl-card { border:1px solid var(--border2); border-top:none; background:var(--bg); }
+.gl-header { display:grid; grid-template-columns:5px 52px 1fr auto; align-items:stretch; border-bottom:1px solid var(--border); }
+.gl-stripe { background:var(--accent); }
+.gl-num { font-family:'Outfit',sans-serif; font-weight:800; font-size:20px; color:var(--bg3); display:flex; align-items:center; justify-content:center; border-right:1px solid var(--border); }
+.gl-title-wrap { padding:16px 20px; }
+.gl-title { font-family:'Instrument Serif',serif; font-size:20px; color:var(--ink2); line-height:1.2; }
+.gl-subtitle { font-size:12px; color:var(--ink4); margin-top:3px; }
+.gl-impact-wrap { padding:14px 20px; display:flex; flex-direction:column; align-items:flex-end; justify-content:center; gap:4px; }
+.gl-impact-stars { font-size:14px; }
+.gl-impact-lbl { font-family:'IBM Plex Mono',monospace; font-size:8px; letter-spacing:1px; text-transform:uppercase; color:var(--ink4); }
+.gl-body { padding:0; }
+.gl-section { padding:20px 24px; border-bottom:1px solid var(--border); }
+.gl-section:last-child { border-bottom:none; }
+.gl-section-lbl { font-family:'IBM Plex Mono',monospace; font-size:9px; letter-spacing:2px; text-transform:uppercase; color:var(--ink4); margin-bottom:10px; padding-bottom:6px; border-bottom:1px solid var(--border); }
+.gl-section p { font-size:13.5px; color:var(--ink3); line-height:1.8; max-width:740px; }
+.gl-section p strong { color:var(--ink2); font-weight:500; }
+
+/* ── PROTOCOL STEPS ── */
+.protocol { margin-top:16px; }
+.proto-step { display:grid; grid-template-columns:44px 1fr; margin-bottom:2px; }
+.ps-num { background:var(--accent); color:#fff; font-family:'IBM Plex Mono',monospace; font-size:12px; font-weight:700; display:flex; align-items:flex-start; justify-content:center; padding-top:14px; }
+.ps-content { border:1px solid var(--border2); background:var(--bg); padding:16px 20px; border-left:none; }
+.ps-label { font-family:'IBM Plex Mono',monospace; font-size:9px; letter-spacing:2px; text-transform:uppercase; color:var(--accent); margin-bottom:4px; }
+.ps-title { font-weight:600; font-size:14px; color:var(--ink2); margin-bottom:6px; }
+.ps-body { font-size:13px; color:var(--ink3); line-height:1.65; }
+.ps-body strong { color:var(--ink2); font-weight:500; }
+
+/* ── METRIC TABLE ── */
+.metric-table { width:100%; border-collapse:collapse; margin-top:16px; border:1px solid var(--border2); }
+.metric-table th, .metric-table td { padding:11px 14px; border:1px solid var(--border); font-size:12.5px; line-height:1.5; vertical-align:top; text-align:left; }
+.metric-table thead th { background:var(--ink); color:rgba(255,255,255,.82); font-family:'IBM Plex Mono',monospace; font-size:9px; letter-spacing:.5px; text-transform:uppercase; }
+.metric-table tbody tr:nth-child(even) { background:var(--bg2); }
+.metric-table td:first-child { font-weight:500; color:var(--ink2); width:170px; }
+.m-ok  { background:var(--ok-l);   color:#2e4a32; font-family:'IBM Plex Mono',monospace; font-size:11px; font-weight:600; }
+.m-warn{ background:var(--warn-l); color:#5a3a00; font-family:'IBM Plex Mono',monospace; font-size:11px; font-weight:600; }
+.m-bad { background:var(--bad-l);  color:#6b3030; font-family:'IBM Plex Mono',monospace; font-size:11px; font-weight:600; }
+
+/* ── JUDGE PANEL ── */
+.judge-panel { margin-top:16px; border:1px solid var(--border2); }
+.jp-head { padding:10px 16px; background:var(--ink); border-bottom:1px solid rgba(255,255,255,.06); font-family:'IBM Plex Mono',monospace; font-size:9px; letter-spacing:2px; text-transform:uppercase; color:rgba(255,255,255,.4); }
+.jp-body { font-family:'IBM Plex Mono',monospace; font-size:11.5px; line-height:1.85; padding:16px 20px; background:var(--ink); color:rgba(255,255,255,.75); white-space:pre-wrap; }
+.jp-body .sec { color:#f4a87a; font-weight:500; }
+.jp-body .ins { color:#7dd3a8; }
+.jp-body .var { color:#93c5e8; }
+.jp-body .out { color:#c4a8e8; }
+.jp-body .cm  { color:rgba(255,255,255,.28); }
+
+/* ── COMPARE ── */
+.compare-grid { display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-top:12px; }
+.pex-lbl { font-family:'IBM Plex Mono',monospace; font-size:9px; letter-spacing:2px; text-transform:uppercase; margin-bottom:6px; }
+.pex-lbl.bad  { color:var(--bad); }
+.pex-lbl.good { color:var(--ok); }
+.pex-lbl.neutral { color:var(--ink4); }
+.prompt-box { font-family:'IBM Plex Mono',monospace; font-size:11.5px; line-height:1.75; padding:14px 18px; border:1px solid; white-space:pre-wrap; word-break:break-word; }
+.prompt-box.bad  { border-color:#e8c5c5; background:var(--bad-l); color:#6b3030; }
+.prompt-box.good { border-color:#a8d4b0; background:var(--ok-l); color:#2e4a32; }
+.prompt-box.neutral { border-color:var(--border2); background:var(--bg2); color:var(--ink3); }
+
+/* ── BIAS TABLE ── */
+.bias-table { width:100%; border-collapse:collapse; margin-top:16px; border:1px solid var(--border2); }
+.bias-table th, .bias-table td { padding:11px 14px; border:1px solid var(--border); font-size:12.5px; line-height:1.5; vertical-align:top; text-align:left; }
+.bias-table thead th { background:var(--ink); color:rgba(255,255,255,.82); font-family:'IBM Plex Mono',monospace; font-size:9px; letter-spacing:.5px; text-transform:uppercase; }
+.bias-table tbody tr:nth-child(even) { background:var(--bg2); }
+.bias-table td:first-child { font-weight:500; color:var(--ink2); width:180px; }
+
+/* ── CHECKLIST ── */
+.checklist { margin-top:16px; }
+.check-item { display:flex; gap:12px; align-items:flex-start; padding:10px 0; border-bottom:1px solid var(--border); font-size:13.5px; color:var(--ink3); }
+.check-item:last-child { border-bottom:none; }
+.check-icon { width:20px; height:20px; border-radius:50%; background:var(--accent); color:#fff; display:flex; align-items:center; justify-content:center; font-size:11px; font-weight:700; flex-shrink:0; margin-top:1px; }
+.check-item strong { color:var(--ink2); font-weight:500; }
+
+/* ── MECHANISM / KP / INSIGHT ── */
+.mechanism { margin-top:14px; padding:14px 18px; border-left:3px solid var(--accent); background:var(--accent-light); }
+.mech-lbl { font-family:'IBM Plex Mono',monospace; font-size:9px; letter-spacing:2px; text-transform:uppercase; color:var(--accent); margin-bottom:6px; }
+.mechanism p { font-size:13px; color:var(--ink3); line-height:1.65; }
+.mechanism p strong { color:var(--ink2); font-weight:500; }
+.key-point { margin-top:36px; padding:24px 28px; border-left:4px solid var(--accent); background:var(--accent-light); }
+.kp-label { font-family:'IBM Plex Mono',monospace; font-size:9px; letter-spacing:2px; text-transform:uppercase; color:var(--accent); margin-bottom:8px; }
+.kp-text { font-family:'Instrument Serif',serif; font-size:18px; line-height:1.45; color:var(--ink2); }
+.kp-sub { margin-top:10px; font-size:13px; color:var(--ink3); line-height:1.65; }
+.insight { margin:16px 0; padding:16px 20px; border-left:4px solid var(--accent); background:var(--accent-light); }
+.insight-lbl { font-family:'IBM Plex Mono',monospace; font-size:9px; letter-spacing:2px; text-transform:uppercase; color:var(--accent); margin-bottom:6px; }
+.insight p { font-size:13.5px; color:var(--ink2); line-height:1.65; max-width:700px; }
+.insight p strong { font-weight:500; }
+
+.footer { padding:24px 56px; border-top:1px solid var(--border); display:flex; justify-content:space-between; align-items:center; font-family:'IBM Plex Mono',monospace; font-size:10px; letter-spacing:1px; text-transform:uppercase; color:var(--ink4); }
+
+@media (max-width:700px) {
+  .masthead,.sect-head,.wrap,.footer { padding-left:20px; padding-right:20px; }
+  .compare-grid { grid-template-columns:1fr; }
+  .proto-step { grid-template-columns:1fr; }
+  .ps-num { display:none; }
+  .ps-content { border-left:1px solid var(--border2); }
+  .gl-header { grid-template-columns:5px 40px 1fr; }
+  .gl-impact-wrap { display:none; }
+}
+</style>
+</head>
+<body>
+
+<div class="masthead">
+  <div class="mh-eye">Serie Agenti AI · Leva 02 · Scelta del modello</div>
+  <div class="mh-cluster">Report B</div>
+  <h1>Valutare nella pratica</h1>
+  <p class="mh-sub">Perché i benchmark pubblici non predicono le prestazioni sul tuo task. Come costruire un golden dataset dai propri casi reali. Come scegliere le metriche giuste. Come usare un LLM come giudice. E il protocollo completo per confrontare due modelli in modo rigoroso e ripetibile.</p>
+  <div class="mh-meta">
+    <div class="mh-stat"><div class="mh-stat-val">Golden dataset</div><div class="mh-stat-lbl">Il prerequisito</div></div>
+    <div class="mh-stat"><div class="mh-stat-val">LLM-as-judge</div><div class="mh-stat-lbl">Il meccanismo chiave</div></div>
+    <div class="mh-stat"><div class="mh-stat-value">Bias</div><div class="mh-stat-lbl">Il rischio principale</div></div>
+    <div class="mh-stat"><div class="mh-stat-val">Protocollo</div><div class="mh-stat-lbl">Il risultato finale</div></div>
+  </div>
+</div>
+
+<div class="nav">
+  <button class="nav-btn active" onclick="show(1)">Perché non i benchmark</button>
+  <button class="nav-btn" onclick="show(2)">Il golden dataset</button>
+  <button class="nav-btn" onclick="show(3)">Le metriche giuste</button>
+  <button class="nav-btn" onclick="show(4)">LLM-as-judge</button>
+  <button class="nav-btn" onclick="show(5)">Il protocollo completo</button>
+</div>
+
+
+<!-- ═══════════════════════════
+     S1 — PERCHÉ NON I BENCHMARK
+═══════════════════════════ -->
+<div class="sect active" id="s1">
+  <div class="sect-head">
+    <div class="sect-num">Introduzione</div>
+    <h2>Perché i benchmark pubblici non bastano</h2>
+    <p>MMLU, HumanEval, GPQA, GSM8K — sono benchmark utili per confrontare le capacità generali dei modelli, ma misurano task standardizzati su dati standardizzati. Il tuo task non è standardizzato.</p>
+  </div>
+  <div class="wrap">
+
+    <div class="prose" style="margin-top:28px;">
+      <p>I benchmark pubblici hanno un problema strutturale: sono costruiti per essere riproducibili e comparabili — il che significa che usano task generici e dati neutrali che non riflettono le peculiarità di nessun caso d'uso specifico. Un modello che ragiona bene su problemi di logica astratta potrebbe performare male sull'analisi di contratti nel settore edile italiano. Un modello che scrive codice Python eccellente potrebbe produrre JSON malformato nel 3% dei casi con il tuo schema specifico.</p>
+      <p>C'è anche il problema del <em>benchmark contamination</em>: alcuni modelli vengono addestrati su dati che includono (volontariamente o no) le risposte ai benchmark pubblici — il che gonfia artificialmente i loro score senza riflettere le capacità reali su task nuovi. <strong>La correlazione tra score su benchmark pubblici e prestazioni sul tuo task specifico è modesta nella migliore delle ipotesi.</strong></p>
+      <p>La risposta non è ignorare i benchmark pubblici — sono utili per una prima scrematura — ma non fermarsi a loro. Il vero test è sulla propria distribuzione di task, con i propri dati, valutato con le proprie metriche.</p>
+    </div>
+
+    <div class="key-point" style="margin-top:24px;">
+      <div class="kp-label">Il principio guida</div>
+      <div class="kp-text">Un benchmark pubblico dice "questo modello è bravo in generale". La tua evaluation dice "questo modello è bravo per il mio task specifico". Solo la seconda è actionable per la tua decisione.</div>
+      <div class="kp-sub">Il costo di una evaluation propria è reale — raccogliere i casi, definire le metriche, eseguire i test, analizzare i risultati. Ma è un investimento che si ammortizza rapidamente: ogni volta che un nuovo modello viene rilasciato, o ogni volta che una versione aggiornata cambia il comportamento, puoi rieseguire la tua eval in poche ore e avere una risposta concreta invece di leggere i comunicati del vendor.</div>
+    </div>
+
+  </div>
+</div>
+
+
+<!-- ═══════════════════════════
+     S2 — IL GOLDEN DATASET
+═══════════════════════════ -->
+<div class="sect" id="s2">
+  <div class="sect-head">
+    <div class="sect-num">Sezione 02</div>
+    <h2>Il golden dataset — come costruirlo dai casi reali</h2>
+    <p>Il golden dataset è la collezione di casi di test con input e output atteso verificati manualmente. È il fondamento di qualsiasi evaluation: senza dati rappresentativi, le metriche misurano qualcosa ma non ciò che ti interessa.</p>
+  </div>
+  <div class="wrap">
+
+    <!-- GL 01 -->
+    <div class="gl-group" style="margin-top:28px;">
+      <div class="gl-group-title">Linea guida 01</div>
+      <div class="gl-card">
+        <div class="gl-header">
+          <div class="gl-stripe"></div>
+          <div class="gl-num">01</div>
+          <div class="gl-title-wrap">
+            <div class="gl-title">Un golden dataset di 50–100 casi ben scelti batte 1.000 casi generici</div>
+            <div class="gl-subtitle">La rappresentatività conta più della dimensione — coprire le categorie critiche vale più che avere molti esempi simili</div>
+          </div>
+          <div class="gl-impact-wrap">
+            <div class="gl-impact-stars" style="color:var(--accent)">★★★</div>
+            <div class="gl-impact-lbl">Impatto</div>
+          </div>
+        </div>
+        <div class="gl-body">
+
+          <div class="gl-section">
+            <div class="gl-section-lbl">Come selezionare i casi — la distribuzione che conta</div>
+            <p>Un golden dataset efficace copre tre categorie in proporzione diversa da quella del traffico reale:</p>
+            <p><strong>Casi tipici (40–50%):</strong> i task più comuni nel traffico reale. Misurano la performance media — dove il modello passerà la maggior parte del suo tempo.</p>
+            <p><strong>Casi difficili (30–40%):</strong> task ambi­gui, con input borderline, con istruzioni conflittuali, con formati inattesi. Questi sono soprarappresentati rispetto al traffico reale perché sono i casi dove i modelli divergono maggiormente — e dove la scelta del modello fa la differenza più grande.</p>
+            <p><strong>Casi limite / edge case (20–30%):</strong> input estremi, documenti molto lunghi, dati mancanti, lingue miste, formattazione non standard. Misurano la robustezza — la capacità del modello di non collassare su input fuori distribuzione.</p>
+          </div>
+
+          <div class="gl-section">
+            <div class="gl-section-lbl">Come ottenere i casi — tre fonti</div>
+            <p><strong>1. Log del sistema in produzione (fonte migliore):</strong> se il sistema è già in produzione, campiona i log delle ultime settimane. Seleziona manualmente i casi rappresentativi per ogni categoria. Questo garantisce che il dataset riflette il traffico reale. Attenzione alla privacy: anonimizza i dati sensibili prima di usarli come dati di test.</p>
+            <p><strong>2. Costruzione manuale (per sistemi nuovi):</strong> scrivi i casi direttamente, cercando di coprire le categorie sopra. Chiedi ai domain expert di contribuire i casi più difficili — sono quelli dove la conoscenza del dominio è necessaria per sapere qual è la risposta giusta.</p>
+            <p><strong>3. Generazione con LLM (per aumentare il volume):</strong> usa un LLM per generare varianti dei casi già scritti — stessa struttura, parametri diversi. Utile per aumentare la copertura degli edge case. I casi generati vanno verificati manualmente prima di entrare nel golden dataset.</p>
+          </div>
+
+          <div class="gl-section">
+            <div class="gl-section-lbl">L'output atteso — come annotarlo</div>
+            <p>Ogni caso nel golden dataset ha un output atteso che funge da ground truth. L'annotazione dell'output atteso è il passo più costoso — e il più importante. <strong>Due approcci:</strong></p>
+            <p><strong>Output esatto (per task strutturati):</strong> la risposta corretta è deterministica — il campo "data_scadenza" deve essere "2026-12-31", il risk_score deve essere "ALTO". Facile da validare automaticamente, ma applicabile solo a task con output oggettivi.</p>
+            <p><strong>Rubrica di qualità (per task soggettivi):</strong> invece di un output esatto, definisci i criteri che una buona risposta deve soddisfare: "deve citare almeno 2 clausole specifiche", "deve includere una motivazione di almeno 50 parole", "il tono deve essere professionale". La validazione richiede un giudice (umano o LLM).</p>
+          </div>
+
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+
+<!-- ═══════════════════════════
+     S3 — LE METRICHE GIUSTE
+═══════════════════════════ -->
+<div class="sect" id="s3">
+  <div class="sect-head">
+    <div class="sect-num">Sezione 03</div>
+    <h2>Le metriche giuste per il task — non le metriche standard</h2>
+    <p>La scelta delle metriche è la decisione più sottovalutata della valutazione. Una metrica sbagliata può portare a scegliere il modello con il punteggio più alto su qualcosa che non importa — e ignorare il modello migliore per ciò che conta davvero.</p>
+  </div>
+  <div class="wrap">
+
+    <div class="prose" style="margin-top:28px;">
+      <p>Ogni tipo di task ha le sue metriche naturali. La metrica giusta misura direttamente la qualità dell'output per il task — non una proprietà generica dell'output.</p>
+    </div>
+
+    <table class="metric-table" style="margin-top:20px;">
+      <thead>
+        <tr><th>Tipo di task</th><th>Metriche appropriate</th><th>Metriche da evitare</th><th>Perché</th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>Estrazione strutturata<br><small style="font-weight:300;color:var(--ink4)">(entità, campi, dati)</small></td>
+          <td class="m-ok">Precision/Recall sui campi estratti. F1 per entità. Schema validity rate. Null rate per campi obbligatori.</td>
+          <td class="m-bad">BLEU, ROUGE, similarità semantica</td>
+          <td>L'output è strutturato — o il campo è corretto o non lo è. La similarità testuale non cattura errori di valore.</td>
+        </tr>
+        <tr>
+          <td>Classificazione<br><small style="font-weight:300;color:var(--ink4)">(categorizzare, etichettare)</small></td>
+          <td class="m-ok">Accuracy, Precision, Recall, F1 per classe. Confusion matrix per capire quali classi si confondono.</td>
+          <td class="m-bad">Valutazione qualitativa generica</td>
+          <td>La classificazione ha una risposta corretta deterministica — misura direttamente quante volte il modello la trova.</td>
+        </tr>
+        <tr>
+          <td>Generazione di testo<br><small style="font-weight:300;color:var(--ink4)">(report, analisi, spiegazioni)</small></td>
+          <td class="m-ok">Rubrica di qualità (LLM-as-judge). Copertura dei punti chiave attesi. Assenza di informazioni false.</td>
+          <td class="m-bad">BLEU/ROUGE (misurano sovrapposizione lessicale, non qualità)</td>
+          <td>Due risposte ugualmente buone possono usare parole completamente diverse. BLEU penalizzerebbe quella più originale.</td>
+        </tr>
+        <tr>
+          <td>Ragionamento multi-step<br><small style="font-weight:300;color:var(--ink4)">(analisi, decisioni)</small></td>
+          <td class="m-ok">Correttezza della conclusione. Qualità del ragionamento intermedio. Citazione delle evidenze. Riconoscimento delle incertezze.</td>
+          <td class="m-bad">Solo correttezza della risposta finale</td>
+          <td>Un modello può arrivare alla risposta giusta per ragioni sbagliate. Il ragionamento sbagliato produce risposte sbagliate su varianti del task.</td>
+        </tr>
+        <tr>
+          <td>Following di istruzioni<br><small style="font-weight:300;color:var(--ink4)">(rispettare vincoli, formato)</small></td>
+          <td class="m-ok">Constraint satisfaction rate (quanti vincoli del prompt sono rispettati). Format compliance. Lunghezza rispettata.</td>
+          <td class="m-bad">Qualità dell'output in assoluto</td>
+          <td>Un'ottima risposta che non rispetta il formato richiesto è inutilizzabile nel sistema. Il vincolo è binario: rispettato o no.</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <div class="mechanism" style="margin-top:16px;">
+      <div class="mech-lbl">La metrica composita — quando un numero solo non basta</div>
+      <p>Per molti task, non c'è una singola metrica che cattura tutta la qualità rilevante. La soluzione è una <strong>metrica composita pesata</strong>: una media ponderata di due o tre metriche, con pesi che riflettono l'importanza relativa di ogni dimensione per il tuo caso d'uso. Esempio per un task di analisi contrattuale: 40% correttezza dei campi estratti + 35% qualità del ragionamento (LLM judge) + 25% format compliance. Il modello che vince su questa metrica composita è quello più adatto per il task — anche se potrebbe perdere su una singola dimensione.</p>
+    </div>
+
+  </div>
+</div>
+
+
+<!-- ═══════════════════════════
+     S4 — LLM-AS-JUDGE
+═══════════════════════════ -->
+<div class="sect" id="s4">
+  <div class="sect-head">
+    <div class="sect-num">Sezione 04</div>
+    <h2>LLM-as-judge — usare un modello per valutare un modello</h2>
+    <p>Per i task dove la qualità non è misurabile deterministicamente, un LLM può fungere da giudice. È un meccanismo potente ma con bias specifici che devono essere gestiti esplicitamente.</p>
+  </div>
+  <div class="wrap">
+
+    <div class="prose" style="margin-top:28px;">
+      <p>L'idea è semplice: invece di valutare manualmente ogni output del modello sotto test, si usa un LLM più capace (il "giudice") per valutare la qualità delle risposte su una scala o una rubrica definita. Questo permette di valutare automaticamente centinaia di casi in pochi minuti — invece di ore di revisione manuale.</p>
+    </div>
+
+    <!-- GL 02 -->
+    <div class="gl-group">
+      <div class="gl-group-title">Linea guida 02</div>
+      <div class="gl-card">
+        <div class="gl-header">
+          <div class="gl-stripe"></div>
+          <div class="gl-num">02</div>
+          <div class="gl-title-wrap">
+            <div class="gl-title">Il prompt del giudice determina la qualità dell'evaluation — non il modello giudice</div>
+            <div class="gl-subtitle">Un prompt di valutazione vago produce giudizi vaghi — anche con il modello più capace disponibile</div>
+          </div>
+          <div class="gl-impact-wrap">
+            <div class="gl-impact-stars" style="color:var(--accent)">★★★</div>
+            <div class="gl-impact-lbl">Impatto</div>
+          </div>
+        </div>
+        <div class="gl-body">
+
+          <div class="gl-section">
+            <div class="gl-section-lbl">Il prompt del giudice — struttura completa</div>
+            <div class="judge-panel">
+              <div class="jp-head">Prompt LLM-as-judge per analisi contrattuale</div>
+              <div class="jp-body"><span class="sec">RUOLO</span>
+<span class="ins">Sei un esperto valutatore di output di sistemi AI per l'analisi
+contrattuale. Valuta la risposta del modello secondo la rubrica
+fornita. Sii preciso e critico — non deflazionare i punteggi.</span>
+
+<span class="sec">INPUT DEL TASK</span>
+<span class="var">{testo_contratto}</span>
+
+<span class="sec">ISTRUZIONE ORIGINALE AL MODELLO</span>
+<span class="var">{istruzione_originale}</span>
+
+<span class="sec">RISPOSTA DA VALUTARE</span>
+<span class="var">{risposta_modello}</span>
+
+<span class="sec">RUBRICA DI VALUTAZIONE</span>
+<span class="ins">Valuta su 4 dimensioni, ognuna da 1 a 5:
+
+1. COMPLETEZZA (1-5):
+   5 = tutti i campi richiesti presenti e corretti
+   3 = campi principali presenti, mancano dettagli
+   1 = risposta incompleta, mancano campi critici
+
+2. ACCURATEZZA (1-5):
+   5 = tutti i valori estratti sono corretti
+   3 = qualche imprecisione ma niente di critico
+   1 = errori significativi su valori importanti
+
+3. RAGIONAMENTO (1-5):
+   5 = motivazioni chiare, citazione di clausole specifiche
+   3 = ragionamento generico ma logicamente corretto
+   1 = nessuna motivazione o motivazione errata
+
+4. FORMAT COMPLIANCE (1-5):
+   5 = JSON valido, tutti i campi nel formato corretto
+   3 = formato quasi corretto, piccole deviazioni
+   1 = JSON invalido o formato completamente diverso</span>
+
+<span class="sec">OUTPUT RICHIESTO — JSON, nessun testo aggiuntivo</span>
+<span class="out">{
+  "completezza": N,
+  "accuratezza": N,
+  "ragionamento": N,
+  "format_compliance": N,
+  "score_totale": media_pesata,
+  "note_critiche": "max 2 frasi sulle debolezze principali"
+}</span></div>
+            </div>
+          </div>
+
+          <div class="gl-section">
+            <div class="gl-section-lbl">I bias del LLM-as-judge — e come mitigarli</div>
+            <table class="bias-table">
+              <thead>
+                <tr><th>Bias</th><th>Descrizione</th><th>Mitigazione</th></tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>Position bias</td>
+                  <td>Il giudice tende a preferire la prima risposta presentata in un confronto A/B, indipendentemente dalla qualità.</td>
+                  <td>Randomizza l'ordine di presentazione. Esegui ogni confronto due volte con ordine invertito e media i risultati.</td>
+                </tr>
+                <tr>
+                  <td>Verbosity bias</td>
+                  <td>Il giudice tende a preferire risposte più lunghe e più elaborate, anche quando quelle concise sono più appropriate.</td>
+                  <td>Includi nella rubrica un criterio esplicito di proporzionalità — una risposta concisa e corretta deve battere una risposta lunga ma ridondante.</td>
+                </tr>
+                <tr>
+                  <td>Self-preference bias</td>
+                  <td>Un modello tende a preferire risposte nello stesso stile delle proprie — se usi Claude come giudice per valutare Claude vs. GPT, il bias favorisce Claude.</td>
+                  <td>Usa un modello diverso da quello che stai valutando come giudice. Oppure usa più giudici diversi e media i risultati.</td>
+                </tr>
+                <tr>
+                  <td>Anchoring bias</td>
+                  <td>Il giudice è influenzato dalla risposta di riferimento (golden answer) se la vede prima di valutare — tende a premiare le risposte più simili alla reference anche se non sono le migliori in assoluto.</td>
+                  <td>Mostra la reference solo dopo che il giudice ha dato un giudizio iniziale, o usala solo come controllo finale invece che come ancora.</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <div class="gl-section">
+            <div class="gl-section-lbl">Calibrazione del giudice — verificare che sia affidabile</div>
+            <p>Prima di usare il LLM-as-judge su larga scala, calibralo su un campione piccolo (20–30 casi) con valutazione umana parallela. Calcola la correlazione tra i giudizi del LLM e quelli dell'umano. <strong>Se la correlazione è sotto 0.7, il prompt del giudice è troppo vago o il task è troppo soggettivo per l'automazione</strong> — rivedi la rubrica o aumenta la valutazione umana. Una correlazione sopra 0.85 indica che il giudice è affidabile per l'automazione.</p>
+          </div>
+
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+
+<!-- ═══════════════════════════
+     S5 — IL PROTOCOLLO COMPLETO
+═══════════════════════════ -->
+<div class="sect" id="s5">
+  <div class="sect-head">
+    <div class="sect-num">Sezione finale</div>
+    <h2>Il protocollo completo per confrontare due modelli</h2>
+    <p>Dalla raccolta dei dati all'interpretazione dei risultati: un protocollo rigoroso e ripetibile che si può eseguire in 1–2 giorni lavorativi e che produce una decisione documentata invece di un'opinione.</p>
+  </div>
+  <div class="wrap">
+
+    <div class="protocol" style="margin-top:28px;">
+
+      <div class="proto-step">
+        <div class="ps-num">1</div>
+        <div class="ps-content">
+          <div class="ps-label">Fase 1 — Preparazione (2–4 ore)</div>
+          <div class="ps-title">Definisci il task, la distribuzione dei casi e le metriche</div>
+          <div class="ps-body">
+            Scrivi la definizione precisa del task che stai valutando (es. "estrazione di parti contraenti, importo e data scadenza da contratti di fornitura"). Definisci le metriche appropriate per questo task (non le metriche standard). Seleziona o costruisci il golden dataset con la distribuzione 40/30/20 tra casi tipici/difficili/edge. <strong>Verifica che ogni caso abbia un output atteso annotato manualmente da un domain expert.</strong>
+          </div>
+        </div>
+      </div>
+
+      <div class="proto-step">
+        <div class="ps-num">2</div>
+        <div class="ps-content">
+          <div class="ps-label">Fase 2 — Setup (1–2 ore)</div>
+          <div class="ps-title">Configura i modelli con lo stesso sistema prompt</div>
+          <div class="ps-body">
+            Entrambi i modelli ricevono il <strong>medesimo sistema prompt</strong> — non ottimizzato per nessuno dei due. Questo è un blind test: stai valutando le capacità del modello, non la qualità del prompting su quel modello specifico. Se ottimizzi il prompt per uno solo, stai misurando l'ottimizzazione, non il modello. <strong>Una valutazione con prompt ottimizzati separatamente per ogni modello misura il prompt engineering, non il modello.</strong>
+          </div>
+        </div>
+      </div>
+
+      <div class="proto-step">
+        <div class="ps-num">3</div>
+        <div class="ps-content">
+          <div class="ps-label">Fase 3 — Esecuzione (automatizzabile)</div>
+          <div class="ps-title">Esegui ogni caso su entrambi i modelli, raccogli tutti gli output</div>
+          <div class="ps-body">
+            Esegui ogni caso del golden dataset su entrambi i modelli. Raccogli: l'output completo, il tempo di risposta, il numero di token usati, l'eventuale necessità di retry (JSON invalido). <strong>Ripeti ogni caso almeno 3 volte</strong> — i modelli sono non deterministici, un singolo run per caso può produrre un'anomalia. Usa la mediana dei 3 run come score del caso.
+          </div>
+        </div>
+      </div>
+
+      <div class="proto-step">
+        <div class="ps-num">4</div>
+        <div class="ps-content">
+          <div class="ps-label">Fase 4 — Valutazione</div>
+          <div class="ps-title">Applica le metriche — automatiche e LLM-as-judge</div>
+          <div class="ps-body">
+            Per i task con output deterministico (estrazione strutturata, classificazione): applica le metriche automatiche sul golden dataset. Per i task soggettivi: usa il LLM-as-judge con il prompt calibrato. <strong>Non guardare i risultati finali finché non hai valutato tutti i casi</strong> — il confirmation bias influenza la valutazione se sai già chi stai "tifo" per.
+          </div>
+        </div>
+      </div>
+
+      <div class="proto-step">
+        <div class="ps-num">5</div>
+        <div class="ps-content">
+          <div class="ps-label">Fase 5 — Analisi</div>
+          <div class="ps-title">Non guardare solo lo score medio — analizza i pattern di fallimento</div>
+          <div class="ps-body">
+            Lo score medio nasconde i pattern importanti. Analizza: quale modello fallisce di più sui casi difficili? Quale produce più spesso JSON invalido? Quale sbaglia sistematicamente su una categoria di casi (es. contratti in inglese vs. italiano)? <strong>Un modello con score medio inferiore ma fallimenti meno gravi potrebbe essere la scelta migliore</strong> — dipende da quanto costosi sono gli errori tipici di ognuno nel tuo contesto operativo.
+          </div>
+        </div>
+      </div>
+
+      <div class="proto-step">
+        <div class="ps-num">6</div>
+        <div class="ps-content">
+          <div class="ps-label">Fase 6 — Decisione</div>
+          <div class="ps-title">Documenta la decisione con i dati — non come opinione</div>
+          <div class="ps-body">
+            La decisione finale include: i risultati delle metriche per entrambi i modelli, il costo per operazione stimato a volume, la latenza mediana, e una sintesi dei pattern di fallimento differenti. <strong>La scelta del modello è giustificata con dati misurati, non con percezioni.</strong> Conserva il golden dataset e i risultati — quando un modello viene aggiornato o un nuovo modello viene rilasciato, rieseguire il confronto richiede poche ore invece di ricominciare da capo.
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+    <div class="prose" style="margin-top:28px;">
+      <p style="font-size:15px; font-weight:500; color:var(--ink2);">Checklist — evaluation progettata correttamente?</p>
+    </div>
+
+    <div class="checklist" style="margin-top:12px;">
+      <div class="check-item">
+        <div class="check-icon">1</div>
+        <div><strong>Golden dataset rappresentativo:</strong> 50–100 casi con distribuzione 40/30/20 tra tipici, difficili, edge. Output atteso annotato da domain expert per ogni caso.</div>
+      </div>
+      <div class="check-item">
+        <div class="check-icon">2</div>
+        <div><strong>Metriche appropriate per il task:</strong> non le metriche standard (BLEU, ROUGE) ma quelle che misurano direttamente la qualità rilevante per il caso d'uso — con rubrica esplicita per i task soggettivi.</div>
+      </div>
+      <div class="check-item">
+        <div class="check-icon">3</div>
+        <div><strong>Stesso sistema prompt per entrambi i modelli:</strong> il test misura le capacità del modello, non l'ottimizzazione del prompt. Nessun vantaggio per nessuno dei due.</div>
+      </div>
+      <div class="check-item">
+        <div class="check-icon">4</div>
+        <div><strong>LLM-as-judge calibrato:</strong> se usi un LLM come giudice, il prompt ha una rubrica esplicita con criteri operazionalizzati, il giudice è calibrato su un campione con valutazione umana parallela, e i 4 bias principali sono mitigati.</div>
+      </div>
+      <div class="check-item">
+        <div class="check-icon">5</div>
+        <div><strong>Almeno 3 run per caso:</strong> i modelli non sono deterministici. La mediana di 3 run per caso è più affidabile di un singolo run.</div>
+      </div>
+      <div class="check-item">
+        <div class="check-icon">✓</div>
+        <div><strong>Analisi dei pattern di fallimento:</strong> la decisione non è basata solo sullo score medio — include un'analisi di quali errori fa ogni modello e quanto costano nel contesto operativo specifico.</div>
+      </div>
+    </div>
+
+    <div class="insight" style="margin-top:28px; border-color:var(--warn); background:var(--warn-l);">
+      <div class="insight-lbl" style="color:var(--warn);">Prossimo — Report C</div>
+      <p>Con il metodo di valutazione in mano, il Report C chiude la serie con i <strong>casi d'uso tipo</strong>: quattro profili di task con le dimensioni critiche già identificate e i segnali che il modello — non il prompt o l'architettura — è il collo di bottiglia.</p>
+    </div>
+
+  </div>
+</div>
+
+<div class="footer">
+  <span>Serie Agenti AI — Leva 02 · Scelta del modello · Report B · Valutare nella pratica</span>
+  <span>Marzo 2026</span>
+</div>
+
+<script>
+function show(n) {
+  document.querySelectorAll('.sect').forEach(s => s.classList.remove('active'));
+  document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('s'+n).classList.add('active');
+  document.querySelectorAll('.nav-btn')[n-1].classList.add('active');
+  window.scrollTo({top:0, behavior:'smooth'});
+}
+</script>
+</body>
+</html>

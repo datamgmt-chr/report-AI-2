@@ -1,0 +1,1030 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Testing e Valutazione — B · I Metodi di Valutazione</title>
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Outfit:wght@200;300;400;500;600;700;800;900&family=IBM+Plex+Mono:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg:     #faf8f5;
+  --bg2:    #f2efe9;
+  --bg3:    #e9e5dc;
+  --ink:    #1b1915;
+  --ink2:   #2e2b25;
+  --ink3:   #6d685c;
+  --ink4:   #a19c8f;
+  --border: #d9d4c8;
+  --border2:#cac4b6;
+
+  --accent:  #2e5f8a;
+  --accent2: #1d3f5e;
+  --accent-light: #edf3f9;
+
+  /* Method colors */
+  --m-prog:  #3d7a45;
+  --m-prog-l:#f4faf5;
+  --m-llm:   #7b5ea7;
+  --m-llm-l: #f4f0fa;
+  --m-human: #b07d24;
+  --m-human-l:#fdf6e8;
+
+  --ok:    #3d7a45;
+  --ok-l:  #f4faf5;
+  --bad:   #c0392b;
+  --bad-l: #fdf5f5;
+}
+
+* { margin:0; padding:0; box-sizing:border-box; }
+html { scroll-behavior:smooth; }
+body {
+  background:var(--bg); color:var(--ink);
+  font-family:'Outfit',sans-serif; font-weight:300;
+  font-size:14px; line-height:1.75;
+}
+
+/* ── HEADER ── */
+.masthead {
+  background:var(--ink); color:rgba(255,255,255,.9);
+  padding:60px 56px 52px; position:relative; overflow:hidden;
+}
+.masthead::before {
+  content:''; position:absolute; inset:0;
+  background:
+    repeating-linear-gradient(90deg,rgba(255,255,255,.012) 0,rgba(255,255,255,.012) 1px,transparent 1px,transparent 64px),
+    repeating-linear-gradient(0deg,rgba(255,255,255,.012) 0,rgba(255,255,255,.012) 1px,transparent 1px,transparent 64px);
+  pointer-events:none;
+}
+.masthead::after {
+  content:'B'; position:absolute; right:44px; bottom:-28px;
+  font-family:'Instrument Serif',serif; font-size:280px; line-height:1;
+  color:rgba(255,255,255,.025); pointer-events:none;
+}
+.mh-eye {
+  font-family:'IBM Plex Mono',monospace; font-size:10px;
+  letter-spacing:3px; text-transform:uppercase;
+  color:rgba(255,255,255,.25); margin-bottom:18px; position:relative;
+}
+.mh-cluster {
+  display:inline-block; font-family:'IBM Plex Mono',monospace;
+  font-size:10px; letter-spacing:2px; text-transform:uppercase;
+  padding:4px 12px; border:1px solid var(--accent);
+  color:var(--accent); margin-bottom:20px; position:relative;
+}
+.masthead h1 {
+  font-family:'Instrument Serif',serif; font-weight:400;
+  font-size:clamp(30px,4.5vw,54px); line-height:1.08;
+  letter-spacing:-1px; max-width:700px; position:relative;
+}
+.mh-sub {
+  margin-top:20px; font-size:15px; font-weight:300;
+  color:rgba(255,255,255,.38); max-width:660px;
+  line-height:1.7; position:relative;
+}
+.mh-meta {
+  margin-top:32px; display:flex; gap:32px; flex-wrap:wrap; position:relative;
+}
+.mh-stat { display:flex; flex-direction:column; gap:4px; }
+.mh-stat-val {
+  font-family:'IBM Plex Mono',monospace; font-size:22px; font-weight:500;
+  color:rgba(255,255,255,.85);
+}
+.mh-stat-lbl {
+  font-size:10px; letter-spacing:2px; text-transform:uppercase;
+  color:rgba(255,255,255,.25);
+}
+
+/* ── NAV ── */
+.nav {
+  background:var(--ink2); position:sticky; top:0; z-index:100;
+  display:flex; overflow-x:auto;
+  border-bottom:1px solid rgba(255,255,255,.06);
+}
+.nav-btn {
+  flex:1; min-width:120px; padding:13px 12px;
+  border:none; background:transparent; cursor:pointer;
+  font-family:'Outfit',sans-serif; font-size:10.5px; font-weight:600;
+  text-transform:uppercase; letter-spacing:.4px;
+  color:rgba(255,255,255,.3);
+  border-right:1px solid rgba(255,255,255,.06);
+  transition:all .2s; white-space:nowrap;
+}
+.nav-btn:last-child { border-right:none; }
+.nav-btn:hover { color:rgba(255,255,255,.6); }
+.nav-btn.active { color:#fff; background:rgba(255,255,255,.05); }
+
+/* ── SECTIONS ── */
+.sect { display:none; }
+.sect.active { display:block; animation:fadeIn .3s ease; }
+@keyframes fadeIn { from{opacity:0;transform:translateY(6px)} to{opacity:1;transform:translateY(0)} }
+
+.sect-head { padding:48px 56px 36px; border-bottom:1px solid var(--border); }
+.sect-num {
+  font-family:'IBM Plex Mono',monospace; font-size:10px;
+  letter-spacing:3px; text-transform:uppercase; color:var(--ink4); margin-bottom:10px;
+}
+.sect-head h2 {
+  font-family:'Instrument Serif',serif; font-weight:400;
+  font-size:clamp(26px,3.5vw,42px); line-height:1.1;
+  letter-spacing:-.5px; max-width:640px; margin-bottom:14px;
+}
+.sect-head p { color:var(--ink3); max-width:700px; font-size:14.5px; }
+.wrap { padding:0 56px 64px; }
+
+/* ── PROSE ── */
+.prose { max-width:760px; }
+.prose p { font-size:14.5px; color:var(--ink3); line-height:1.85; margin-bottom:16px; }
+.prose p strong { color:var(--ink2); font-weight:500; }
+.prose p em { font-style:italic; color:var(--ink2); }
+
+/* ── METHOD HERO ── */
+.method-hero {
+  margin-top:28px; border:1px solid var(--border2); overflow:hidden;
+}
+.mh-bar { height:6px; }
+.mh-head {
+  padding:20px 24px; border-bottom:1px solid var(--border);
+  display:flex; align-items:center; gap:16px;
+}
+.mh-number {
+  font-family:'Outfit',sans-serif; font-weight:900;
+  font-size:40px; line-height:1; color:var(--bg3); flex-shrink:0;
+}
+.mh-name-wrap {}
+.mh-label {
+  font-family:'IBM Plex Mono',monospace; font-size:9px;
+  letter-spacing:2px; text-transform:uppercase; color:var(--ink4); margin-bottom:3px;
+}
+.mh-name {
+  font-family:'Instrument Serif',serif; font-size:26px; color:var(--ink2); line-height:1.1;
+}
+.mh-tagline { font-size:13px; color:var(--ink3); margin-top:3px; }
+.mh-body { display:grid; grid-template-columns:1fr 1fr; gap:1px; background:var(--border); }
+.mh-col { background:var(--bg); padding:18px 22px; }
+.mh-col-title {
+  font-family:'IBM Plex Mono',monospace; font-size:9px;
+  letter-spacing:2px; text-transform:uppercase; color:var(--ink4);
+  margin-bottom:10px; padding-bottom:8px; border-bottom:1px solid var(--border);
+}
+.mh-list { list-style:none; display:flex; flex-direction:column; gap:5px; }
+.mh-list li { font-size:13px; color:var(--ink3); line-height:1.5; display:flex; gap:8px; align-items:flex-start; }
+.mh-list .dot { flex-shrink:0; margin-top:6px; width:6px; height:6px; border-radius:50%; }
+.mh-list li strong { color:var(--ink2); font-weight:500; }
+
+/* ── IMPLEMENTATION BOX ── */
+.impl-box {
+  padding:18px 22px; border-top:1px solid var(--border);
+  background:var(--bg2);
+}
+.impl-label {
+  font-family:'IBM Plex Mono',monospace; font-size:9px;
+  letter-spacing:2px; text-transform:uppercase; margin-bottom:10px;
+}
+.impl-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(200px,1fr)); gap:10px; }
+.impl-item { padding:10px 14px; border:1px solid var(--border2); background:var(--bg); }
+.impl-item-title { font-weight:600; font-size:12.5px; color:var(--ink2); margin-bottom:4px; }
+.impl-item-body { font-size:12px; color:var(--ink3); line-height:1.55; }
+.impl-item-body strong { color:var(--ink2); font-weight:500; }
+
+/* ── CODE BOX ── */
+.code-box {
+  margin-top:14px;
+  font-family:'IBM Plex Mono',monospace; font-size:11.5px; line-height:1.75;
+  padding:16px 20px; border:1px solid var(--border2);
+  background:var(--ink); color:rgba(255,255,255,.75);
+  white-space:pre-wrap; word-break:break-word;
+}
+.code-box .kw  { color:#93c5e8; font-weight:500; }
+.code-box .str { color:#7dd3a8; }
+.code-box .cm  { color:rgba(255,255,255,.28); }
+.code-box .num { color:#f4a87a; }
+
+/* ── COMPARISON MATRIX ── */
+.comp-matrix {
+  width:100%; border-collapse:collapse; margin-top:20px; border:1px solid var(--border2);
+}
+.comp-matrix th, .comp-matrix td {
+  padding:11px 14px; border:1px solid var(--border);
+  text-align:left; vertical-align:top; font-size:12.5px; line-height:1.5;
+}
+.comp-matrix thead tr:first-child th {
+  background:var(--ink); color:rgba(255,255,255,.82);
+  font-family:'IBM Plex Mono',monospace; font-size:9px;
+  letter-spacing:.5px; text-transform:uppercase; font-weight:600;
+}
+.comp-matrix .th-prog { border-bottom:3px solid var(--m-prog) !important; }
+.comp-matrix .th-llm  { border-bottom:3px solid var(--m-llm) !important; }
+.comp-matrix .th-hum  { border-bottom:3px solid var(--m-human) !important; }
+.comp-matrix tbody tr:nth-child(even) { background:var(--bg2); }
+.comp-matrix td:first-child { font-weight:500; color:var(--ink2); background:var(--bg2); white-space:nowrap; }
+.cell-prog { background:var(--m-prog-l); color:#2e4a32; }
+.cell-llm  { background:var(--m-llm-l);  color:#3a2e52; }
+.cell-hum  { background:var(--m-human-l);color:#5a3a00; }
+.cell-bad  { background:var(--bad-l);    color:#6b3030; font-size:11.5px; }
+
+/* ── DECISION GUIDE ── */
+.decision-guide { margin-top:20px; }
+.dg-question {
+  padding:14px 18px; background:var(--accent-light);
+  border:1px solid rgba(46,95,138,.2);
+  font-family:'IBM Plex Mono',monospace; font-size:11px;
+  color:var(--accent2); line-height:1.6; margin-bottom:2px;
+}
+.dg-answers {
+  display:grid; grid-template-columns:repeat(3,1fr);
+  gap:1px; background:var(--border); margin-bottom:16px;
+}
+.dg-answer { background:var(--bg); padding:12px 14px; }
+.dg-answer-label {
+  font-family:'IBM Plex Mono',monospace; font-size:8px;
+  letter-spacing:1.5px; text-transform:uppercase; margin-bottom:4px;
+}
+.dg-answer-text { font-size:12.5px; color:var(--ink3); line-height:1.5; }
+.dg-answer-text strong { color:var(--ink2); font-weight:500; }
+
+/* ── COMBINATION PATTERNS ── */
+.combo-grid {
+  display:grid; grid-template-columns:repeat(auto-fill,minmax(280px,1fr));
+  gap:14px; margin-top:20px;
+}
+.combo-card { border:1px solid var(--border2); background:var(--bg); overflow:hidden; }
+.cc-head {
+  padding:12px 16px; border-bottom:1px solid var(--border); background:var(--bg2);
+  display:flex; align-items:center; gap:10px;
+}
+.cc-badges { display:flex; gap:6px; flex-shrink:0; }
+.cc-badge {
+  width:28px; height:28px; border-radius:50%;
+  display:flex; align-items:center; justify-content:center;
+  font-family:'IBM Plex Mono',monospace; font-size:9px; font-weight:700; color:#fff;
+}
+.cc-title { font-weight:600; font-size:13px; color:var(--ink2); }
+.cc-body { padding:14px 16px; }
+.cc-desc { font-size:13px; color:var(--ink3); line-height:1.6; }
+.cc-desc strong { color:var(--ink2); font-weight:500; }
+.cc-when {
+  margin-top:8px; padding:8px 10px;
+  border-left:3px solid var(--accent); background:var(--accent-light);
+  font-size:12px; color:var(--accent2); line-height:1.45;
+}
+
+/* ── SPECTRUM ── */
+.spectrum { margin-top:16px; border:1px solid var(--border); overflow:hidden; }
+.spectrum-row { display:grid; border-bottom:1px solid var(--border); font-size:12.5px; }
+.spectrum-row:last-child { border-bottom:none; }
+.spectrum-row.head {
+  background:var(--ink); color:rgba(255,255,255,.7);
+  font-family:'IBM Plex Mono',monospace; font-size:9px;
+  letter-spacing:1px; text-transform:uppercase;
+}
+.spectrum-row.col3 { grid-template-columns:200px 1fr 1fr; }
+.spectrum-row.col4 { grid-template-columns:160px 1fr 1fr 1fr; }
+.s-cell {
+  padding:11px 14px; border-right:1px solid var(--border);
+  color:var(--ink3); line-height:1.5;
+}
+.s-cell:last-child { border-right:none; }
+.s-cell.lbl { font-weight:500; color:var(--ink2); background:var(--bg2); }
+.s-cell.hi  { background:var(--accent-light); color:var(--accent2); }
+.s-cell.lo  { background:var(--bad-l); color:#8b3030; }
+.s-cell.mid { background:#fdf6e8; color:#5a3a00; }
+
+/* ── CHECKLIST ── */
+.checklist { margin-top:16px; }
+.check-item {
+  display:flex; gap:12px; align-items:flex-start;
+  padding:10px 0; border-bottom:1px solid var(--border);
+  font-size:13.5px; color:var(--ink3);
+}
+.check-item:last-child { border-bottom:none; }
+.check-icon {
+  width:20px; height:20px; border-radius:50%;
+  background:var(--accent); color:#fff;
+  display:flex; align-items:center; justify-content:center;
+  font-size:11px; font-weight:700; flex-shrink:0; margin-top:1px;
+}
+.check-item strong { color:var(--ink2); font-weight:500; }
+
+/* ── KEY POINT ── */
+.key-point {
+  margin-top:36px; padding:24px 28px;
+  border-left:4px solid var(--accent); background:var(--accent-light);
+}
+.kp-label {
+  font-family:'IBM Plex Mono',monospace; font-size:9px;
+  letter-spacing:2px; text-transform:uppercase; color:var(--accent); margin-bottom:8px;
+}
+.kp-text {
+  font-family:'Instrument Serif',serif; font-size:18px; line-height:1.45; color:var(--ink2);
+}
+.kp-sub { margin-top:10px; font-size:13px; color:var(--ink3); line-height:1.65; }
+
+/* ── INSIGHT ── */
+.insight {
+  margin:16px 0; padding:16px 20px;
+  border-left:4px solid var(--accent); background:var(--accent-light);
+}
+.insight-lbl {
+  font-family:'IBM Plex Mono',monospace; font-size:9px;
+  letter-spacing:2px; text-transform:uppercase; color:var(--accent); margin-bottom:6px;
+}
+.insight p { font-size:13.5px; color:var(--ink2); line-height:1.65; max-width:700px; }
+.insight p strong { font-weight:500; }
+
+/* ── FOOTER ── */
+.footer {
+  padding:24px 56px; border-top:1px solid var(--border);
+  display:flex; justify-content:space-between; align-items:center;
+  font-family:'IBM Plex Mono',monospace; font-size:10px;
+  letter-spacing:1px; text-transform:uppercase; color:var(--ink4);
+}
+
+@media (max-width:700px) {
+  .masthead,.sect-head,.wrap,.footer { padding-left:20px; padding-right:20px; }
+  .mh-body { grid-template-columns:1fr; }
+  .dg-answers { grid-template-columns:1fr; }
+  .spectrum-row.col3,.spectrum-row.col4 { grid-template-columns:1fr; }
+  .combo-grid { grid-template-columns:1fr; }
+  .impl-grid { grid-template-columns:1fr; }
+}
+</style>
+</head>
+<body>
+
+<!-- HEADER -->
+<div class="masthead">
+  <div class="mh-eye">Serie Agenti AI · Leva 06 · Testing e Valutazione</div>
+  <div class="mh-cluster">Report B</div>
+  <h1>I Metodi di Valutazione</h1>
+  <p class="mh-sub">Tre approcci radicalmente diversi per rispondere alla stessa domanda: quest'output è buono? Valutazione programmatica, LLM-as-judge, valutazione umana — punti di forza, limiti, contesti d'uso e come combinarli.</p>
+  <div class="mh-meta">
+    <div class="mh-stat"><div class="mh-stat-val">3</div><div class="mh-stat-lbl">Metodi principali</div></div>
+    <div class="mh-stat"><div class="mh-stat-val">4</div><div class="mh-stat-lbl">Pattern di combinazione</div></div>
+    <div class="mh-stat"><div class="mh-stat-val">Nessuno</div><div class="mh-stat-lbl">Metodo universale</div></div>
+    <div class="mh-stat"><div class="mh-stat-val">Sempre</div><div class="mh-stat-lbl">Serve combinare</div></div>
+  </div>
+</div>
+
+<!-- NAV -->
+<div class="nav">
+  <button class="nav-btn active" onclick="show(1)">Panoramica</button>
+  <button class="nav-btn" onclick="show(2)">Programmatico</button>
+  <button class="nav-btn" onclick="show(3)">LLM-as-judge</button>
+  <button class="nav-btn" onclick="show(4)">Valutazione umana</button>
+  <button class="nav-btn" onclick="show(5)">Confronto e scelta</button>
+  <button class="nav-btn" onclick="show(6)">Come combinarli</button>
+</div>
+
+
+<!-- ═══════════════════════════
+     S1 — PANORAMICA
+═══════════════════════════ -->
+<div class="sect active" id="s1">
+  <div class="sect-head">
+    <div class="sect-num">Introduzione</div>
+    <h2>Tre metodi, tre trade-off fondamentali</h2>
+    <p>Ogni metodo di valutazione è un punto diverso nello spazio scalabilità / accuratezza / costo. Nessuno è superiore agli altri in assoluto — ognuno è superiore in un contesto specifico.</p>
+  </div>
+  <div class="wrap">
+
+    <div class="prose" style="margin-top:28px;">
+      <p>Costruita la suite di test, la domanda successiva è: come si valuta se ogni output è buono? La risposta non è unica. Esistono tre approcci con caratteristiche radicalmente diverse, e la scelta tra loro — o la loro combinazione — è una delle decisioni più importanti nel progettare un sistema di eval.</p>
+    </div>
+
+    <div class="spectrum" style="margin-top:24px;">
+      <div class="spectrum-row head col4">
+        <div class="s-cell">Metodo</div>
+        <div class="s-cell">Scalabilità</div>
+        <div class="s-cell">Accuratezza</div>
+        <div class="s-cell">Costo</div>
+      </div>
+      <div class="spectrum-row col4">
+        <div class="s-cell lbl" style="color:var(--m-prog);">Programmatico</div>
+        <div class="s-cell hi">Illimitata — automatizzabile al 100%</div>
+        <div class="s-cell mid">Alta per metriche formali, nulla per qualità semantica</div>
+        <div class="s-cell hi">Quasi zero a regime</div>
+      </div>
+      <div class="spectrum-row col4">
+        <div class="s-cell lbl" style="color:var(--m-llm);">LLM-as-judge</div>
+        <div class="s-cell hi">Alta — costo per token, ma automatizzabile</div>
+        <div class="s-cell mid">Buona se il giudice è ben calibrato, variabile se no</div>
+        <div class="s-cell mid">Medio — dipende dal volume e dal modello usato</div>
+      </div>
+      <div class="spectrum-row col4">
+        <div class="s-cell lbl" style="color:var(--m-human);">Valutazione umana</div>
+        <div class="s-cell lo">Bassa — non scala oltre qualche centinaio di casi</div>
+        <div class="s-cell hi">Massima — gold standard per qualità semantica</div>
+        <div class="s-cell lo">Alto — tempo di esperti difficilmente scalabile</div>
+      </div>
+    </div>
+
+    <div class="prose" style="margin-top:28px;">
+      <p>Il pattern ottimale per la quasi totalità dei progetti è una <strong>combinazione stratificata</strong>: il metodo programmatico filtra i casi formalmente sbagliati (formato, lunghezza, schema), il LLM-as-judge valuta la qualità semantica sui casi che passano il filtro formale, e la valutazione umana viene usata per calibrare il giudice e per casi strategicamente selezionati. Ognuno fa ciò per cui è meglio — nessuno viene usato dove è debole.</p>
+    </div>
+
+    <div class="key-point" style="margin-top:24px;">
+      <div class="kp-label">Il principio del report B</div>
+      <div class="kp-text">Non scegliere un metodo. Progetta un sistema di valutazione che usa ogni metodo dove è forte e lo evita dove è debole.</div>
+      <div class="kp-sub">La tentazione è scegliere il metodo "migliore" e usarlo per tutto. Non funziona: il metodo programmatico non può valutare la qualità del ragionamento, il LLM-as-judge ha bias sistematici sui casi estremi, la valutazione umana non scala. Il sistema efficace è quello che stratifica i tre metodi in modo che i limiti di uno siano coperti dai punti di forza degli altri.</div>
+    </div>
+
+  </div>
+</div>
+
+
+<!-- ═══════════════════════════
+     S2 — PROGRAMMATICO
+═══════════════════════════ -->
+<div class="sect" id="s2">
+  <div class="sect-head">
+    <div class="sect-num">Metodo 01</div>
+    <h2>Valutazione programmatica</h2>
+    <p>Parser, regex, confronto strutturale. Il metodo più affidabile, più scalabile e meno costoso — ma limitato a ciò che si può verificare meccanicamente.</p>
+  </div>
+  <div class="wrap">
+
+    <div class="method-hero" style="margin-top:28px;">
+      <div class="mh-bar" style="background:var(--m-prog)"></div>
+      <div class="mh-head">
+        <div class="mh-number" style="color:rgba(61,122,69,.2);">01</div>
+        <div class="mh-name-wrap">
+          <div class="mh-label">Metodo 01</div>
+          <div class="mh-name">Valutazione programmatica</div>
+          <div class="mh-tagline">Codice che verifica l'output meccanicamente — deterministico, istantaneo, infinitamente scalabile.</div>
+        </div>
+      </div>
+      <div class="mh-body">
+        <div class="mh-col">
+          <div class="mh-col-title">Punti di forza</div>
+          <ul class="mh-list">
+            <li><div class="mh-dot" style="background:var(--m-prog)"></div><strong>Deterministico:</strong> stesso input, stesso risultato ogni volta. Nessuna varianza.</li>
+            <li><div class="mh-dot" style="background:var(--m-prog)"></div><strong>Scalabile:</strong> valuta 10.000 casi in secondi. Il costo è fisso.</li>
+            <li><div class="mh-dot" style="background:var(--m-prog)"></div><strong>Zero ambiguità:</strong> il risultato è binario e verificabile. Non c'è dibattito su cosa significhi.</li>
+            <li><div class="mh-dot" style="background:var(--m-prog)"></div><strong>Integrabile in CI/CD:</strong> può bloccare il deployment se lo score scende sotto soglia.</li>
+          </ul>
+        </div>
+        <div class="mh-col">
+          <div class="mh-col-title">Limiti</div>
+          <ul class="mh-list">
+            <li><div class="mh-dot" style="background:var(--bad)"></div><strong>Cieco alla semantica:</strong> "il cane morde l'uomo" e "l'uomo morde il cane" passano gli stessi check formali.</li>
+            <li><div class="mh-dot" style="background:var(--bad)"></div><strong>Falsi negativi su varianti:</strong> output semanticamente corretto ma con formulazione diversa → fail.</li>
+            <li><div class="mh-dot" style="background:var(--bad)"></div><strong>Non valuta la qualità:</strong> un testo ben formato ma completamente sbagliato nel contenuto supera tutti i check.</li>
+            <li><div class="mh-dot" style="background:var(--bad)"></div><strong>Richiede output strutturati:</strong> difficile applicarlo a testo libero senza criteri formali precisi.</li>
+          </ul>
+        </div>
+      </div>
+      <div class="impl-box">
+        <div class="impl-label" style="color:var(--m-prog);">Cosa si può verificare programmaticamente</div>
+        <div class="impl-grid">
+          <div class="impl-item">
+            <div class="impl-item-title">Formato e struttura</div>
+            <div class="impl-item-body">JSON valido, schema rispettato, sezioni presenti, markdown corretto o assente, lingua rilevata.</div>
+          </div>
+          <div class="impl-item">
+            <div class="impl-item-title">Vincoli numerici</div>
+            <div class="impl-item-body">Conteggio parole/token entro limiti, numero di elementi in lista, lunghezza di campi specifici.</div>
+          </div>
+          <div class="impl-item">
+            <div class="impl-item-title">Valori da enum</div>
+            <div class="impl-item-body">Il campo "sentiment" contiene uno dei valori ammessi? Il codice categoria è valido? Il valore booleano è effettivamente booleano?</div>
+          </div>
+          <div class="impl-item">
+            <div class="impl-item-title">Presenza/assenza di pattern</div>
+            <div class="impl-item-body">L'output non contiene testo fuori dal JSON atteso? Non include frasi proibite? Contiene le keyword obbligatorie?</div>
+          </div>
+          <div class="impl-item">
+            <div class="impl-item-title">Confronto con ground truth</div>
+            <div class="impl-item-body">Per classificazioni con risposta univoca: il valore estratto corrisponde al valore atteso nel caso di test? Distanza di edit per valori approssimativi.</div>
+          </div>
+          <div class="impl-item">
+            <div class="impl-item-title">Regole logiche</div>
+            <div class="impl-item-body">Se priorità = "Alta" allora richiede_escalation deve essere true. Invarianti che devono sempre valere indipendentemente dall'input.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="prose" style="margin-top:28px;">
+      <p style="font-size:14px; font-weight:500; color:var(--ink2);">Esempio: un checker programmatico per output JSON</p>
+    </div>
+
+    <div class="code-box" style="margin-top:12px;"><span class="cm"># Valutazione programmatica — classificazione ticket di supporto</span>
+
+<span class="kw">def</span> eval_ticket_output(output_str, test_case):
+    results = {}
+
+    <span class="cm"># 1. JSON valido e parsabile</span>
+    <span class="kw">try</span>:
+        output = json.loads(output_str)
+        results[<span class="str">"json_valid"</span>] = <span class="num">True</span>
+    <span class="kw">except</span>:
+        <span class="kw">return</span> {<span class="str">"json_valid"</span>: <span class="num">False</span>, <span class="str">"score"</span>: <span class="num">0</span>}  <span class="cm"># fail immediato</span>
+
+    <span class="cm"># 2. Campi obbligatori presenti</span>
+    required = [<span class="str">"categoria"</span>, <span class="str">"priorita"</span>, <span class="str">"sentiment"</span>, <span class="str">"richiede_escalation"</span>]
+    results[<span class="str">"fields_present"</span>] = all(f <span class="kw">in</span> output <span class="kw">for</span> f <span class="kw">in</span> required)
+
+    <span class="cm"># 3. Valori da enum</span>
+    valid_priorita = {<span class="str">"Alta"</span>, <span class="str">"Media"</span>, <span class="str">"Bassa"</span>}
+    results[<span class="str">"priorita_valid"</span>] = output.get(<span class="str">"priorita"</span>) <span class="kw">in</span> valid_priorita
+
+    <span class="cm"># 4. Categoria nell'insieme accettabile (criteri del test case)</span>
+    results[<span class="str">"categoria_ok"</span>] = output.get(<span class="str">"categoria"</span>) <span class="kw">in</span> test_case[<span class="str">"criteri"</span>][<span class="str">"categorie_ok"</span>]
+
+    <span class="cm"># 5. Regola logica: priorità Alta → escalation true</span>
+    <span class="kw">if</span> output.get(<span class="str">"priorita"</span>) == <span class="str">"Alta"</span>:
+        results[<span class="str">"logic_ok"</span>] = output.get(<span class="str">"richiede_escalation"</span>) == <span class="num">True</span>
+    <span class="kw">else</span>:
+        results[<span class="str">"logic_ok"</span>] = <span class="num">True</span>  <span class="cm"># non vincolata</span>
+
+    score = sum(results.values()) / len(results)
+    <span class="kw">return</span> {**results, <span class="str">"score"</span>: score}</div>
+
+    <div class="insight" style="margin-top:20px;">
+      <div class="insight-lbl">Quando il metodo programmatico non basta</div>
+      <p>Il check programmatico verifica che l'output sia <em>formalmente</em> corretto. Non verifica che sia <em>sostanzialmente</em> corretto. Un agente che classifica ogni ticket come "Media priorità" con JSON perfettamente valido supera tutti i check programmatici — ma è completamente inutile. <strong>Il metodo programmatico è sempre necessario ma quasi mai sufficiente da solo.</strong></p>
+    </div>
+
+  </div>
+</div>
+
+
+<!-- ═══════════════════════════
+     S3 — LLM-AS-JUDGE
+═══════════════════════════ -->
+<div class="sect" id="s3">
+  <div class="sect-head">
+    <div class="sect-num">Metodo 02</div>
+    <h2>LLM-as-judge</h2>
+    <p>Usare un secondo modello LLM per valutare l'output del primo. Il metodo più scalabile per valutare la qualità semantica — e il più insidioso se non usato con consapevolezza dei suoi bias.</p>
+  </div>
+  <div class="wrap">
+
+    <div class="method-hero" style="margin-top:28px;">
+      <div class="mh-bar" style="background:var(--m-llm)"></div>
+      <div class="mh-head">
+        <div class="mh-number" style="color:rgba(123,94,167,.2);">02</div>
+        <div class="mh-name-wrap">
+          <div class="mh-label">Metodo 02</div>
+          <div class="mh-name">LLM-as-judge</div>
+          <div class="mh-tagline">Un secondo modello valuta l'output del primo — comprende il linguaggio naturale, scala, ma ha i propri bias.</div>
+        </div>
+      </div>
+      <div class="mh-body">
+        <div class="mh-col">
+          <div class="mh-col-title">Punti di forza</div>
+          <ul class="mh-list">
+            <li><div class="mh-dot" style="background:var(--m-llm)"></div><strong>Valuta la semantica:</strong> capisce cosa dice l'output, non solo com'è strutturato.</li>
+            <li><div class="mh-dot" style="background:var(--m-llm)"></div><strong>Scalabile:</strong> automatizzabile come il metodo programmatico, a costo per token.</li>
+            <li><div class="mh-dot" style="background:var(--m-llm)"></div><strong>Flessibile:</strong> valuta criteri arbitrari descritti in linguaggio naturale.</li>
+            <li><div class="mh-dot" style="background:var(--m-llm)"></div><strong>Approssima il giudizio umano</strong> su molti task abbastanza bene da essere utile.</li>
+          </ul>
+        </div>
+        <div class="mh-col">
+          <div class="mh-col-title">Limiti e bias noti</div>
+          <ul class="mh-list">
+            <li><div class="mh-dot" style="background:var(--bad)"></div><strong>Verbosity bias:</strong> preferisce output più lunghi, anche se più brevi sarebbero migliori.</li>
+            <li><div class="mh-dot" style="background:var(--bad)"></div><strong>Self-enhancement bias:</strong> preferisce output prodotti da modelli simili a sé.</li>
+            <li><div class="mh-dot" style="background:var(--bad)"></div><strong>Position bias:</strong> in valutazioni comparative, favorisce sistematicamente il primo o l'ultimo elemento presentato.</li>
+            <li><div class="mh-dot" style="background:var(--bad)"></div><strong>Punteggi compressi:</strong> tende ad evitare i valori estremi della scala — raramente dà 1/5 o 5/5.</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    <div class="prose" style="margin-top:28px;">
+      <p style="font-size:15px; font-weight:500; color:var(--ink2);">Come costruire un prompt efficace per il giudice</p>
+      <p>Il giudice LLM è a sua volta un agente — e la qualità della sua valutazione dipende dal suo prompt. Un prompt di giudice mal scritto produce valutazioni incoerenti, poco utili e con bias amplificati. La struttura ottimale ha quattro elementi.</p>
+    </div>
+
+    <div class="code-box" style="margin-top:16px;"><span class="cm"># PROMPT DEL GIUDICE — struttura ottimale</span>
+
+<span class="cm"># 1. RUOLO — chi è il giudice e cosa valuta</span>
+Sei un esperto valutatore di output di sistemi AI di classificazione ticket di supporto.
+Il tuo compito è valutare se l'output prodotto da un agente è corretto e utile
+per il team di supporto che deve gestire il ticket.
+
+<span class="cm"># 2. CRITERI ESPLICITI — cosa valutare e come</span>
+Valuta l'output su questi criteri nell'ordine:
+
+<span class="kw">CORRETTEZZA CATEGORIA</span> (peso: 40%)
+La categoria assegnata corrisponde al problema descritto nel ticket?
+Considera accettabili anche categorie sinonime o strettamente correlate.
+
+<span class="kw">APPROPRIATEZZA PRIORITÀ</span> (peso: 35%)
+La priorità assegnata è giustificata dal contenuto del ticket?
+Alta = situazione urgente o cliente chiaramente frustrato.
+Media = problema reale ma non urgente.
+Bassa = domanda informativa o richiesta generica.
+
+<span class="kw">COERENZA LOGICA</span> (peso: 25%)
+Se priorità = Alta, richiede_escalation deve essere true.
+Se sentiment = Negativo + problema non risolto, priorità non può essere Bassa.
+
+<span class="cm"># 3. SCALA E FORMATO OUTPUT — precisi e verificabili</span>
+Per ogni criterio assegna un punteggio: 1 (sbagliato) / 2 (parziale) / 3 (corretto).
+Produci SOLO questo JSON:
+{"correttezza_categoria": 1|2|3, "priorita": 1|2|3, "coerenza": 1|2|3,
+ "score_totale": float, "motivazione": "max 30 parole"}
+
+<span class="cm"># 4. CALIBRAZIONE — ancora il giudice su esempi</span>
+Esempi di valutazione corretta:
+Input: "Ordine non ricevuto da 10 giorni"
+Output agente: categoria=Ritardo_consegna, priorità=Alta, escalation=true
+→ {"correttezza_categoria": 3, "priorita": 3, "coerenza": 3, "score_totale": 3.0}</div>
+
+    <div class="prose" style="margin-top:24px;">
+      <p style="font-size:14px; font-weight:500; color:var(--ink2);">Come mitigare i bias del giudice</p>
+    </div>
+
+    <div class="spectrum" style="margin-top:12px;">
+      <div class="spectrum-row head col3">
+        <div class="s-cell">Bias</div>
+        <div class="s-cell">Mitigazione nel prompt del giudice</div>
+        <div class="s-cell">Mitigazione nel processo</div>
+      </div>
+      <div class="spectrum-row col3">
+        <div class="s-cell lbl">Verbosity bias</div>
+        <div class="s-cell hi">Includi nel criterio: "Non considerare la lunghezza come indicatore di qualità. Un output conciso e corretto vale quanto uno lungo e corretto."</div>
+        <div class="s-cell hi">Normalizza la lunghezza degli output prima di passarli al giudice, o includi la lunghezza attesa come contesto esplicito.</div>
+      </div>
+      <div class="spectrum-row col3">
+        <div class="s-cell lbl">Self-enhancement bias</div>
+        <div class="s-cell hi">Usa un modello diverso da quello produttivo come giudice — es. GPT-4 come giudice di un agente basato su Claude, o viceversa.</div>
+        <div class="s-cell hi">Valida il giudice su un campione con valutazione umana per verificare che il bias non sia sistematico.</div>
+      </div>
+      <div class="spectrum-row col3">
+        <div class="s-cell lbl">Position bias</div>
+        <div class="s-cell hi">In confronti A/B, presenta le due versioni in ordine casuale e media i risultati di entrambi gli ordini.</div>
+        <div class="s-cell hi">Usa valutazione assoluta (score su scala) invece di comparativa (A è meglio di B) quando possibile.</div>
+      </div>
+      <div class="spectrum-row col3">
+        <div class="s-cell lbl">Punteggi compressi</div>
+        <div class="s-cell hi">Usa scale piccole (1–3 o 1–5) invece di 1–10. Le scale grandi amplificano la tendenza al centro.</div>
+        <div class="s-cell hi">Includi esempi di punteggi estremi nella calibrazione: mostra cosa merita 1/3 e cosa merita 3/3.</div>
+      </div>
+    </div>
+
+    <div class="insight" style="margin-top:20px;">
+      <div class="insight-lbl">La validazione del giudice — passaggio obbligatorio</div>
+      <p>Prima di usare un LLM-as-judge in produzione, <strong>validalo su un campione con valutazione umana</strong>. Prendi 50–100 casi della suite, fai valutare il giudice e fai valutare un esperto umano, confronta i risultati. Se la correlazione è alta (>0.8), il giudice è affidabile. Se è bassa, il prompt del giudice va raffinato. Questo passaggio è non negoziabile — un giudice non validato produce misure che sembrano accurate ma non lo sono.</p>
+    </div>
+
+  </div>
+</div>
+
+
+<!-- ═══════════════════════════
+     S4 — VALUTAZIONE UMANA
+═══════════════════════════ -->
+<div class="sect" id="s4">
+  <div class="sect-head">
+    <div class="sect-num">Metodo 03</div>
+    <h2>Valutazione umana</h2>
+    <p>Il gold standard. L'unico metodo che può valutare sfumature sottili, giudicare il valore reale dell'output nel contesto d'uso, e fungere da fonte di verità per calibrare gli altri metodi.</p>
+  </div>
+  <div class="wrap">
+
+    <div class="method-hero" style="margin-top:28px;">
+      <div class="mh-bar" style="background:var(--m-human)"></div>
+      <div class="mh-head">
+        <div class="mh-number" style="color:rgba(176,125,36,.2);">03</div>
+        <div class="mh-name-wrap">
+          <div class="mh-label">Metodo 03</div>
+          <div class="mh-name">Valutazione umana</div>
+          <div class="mh-tagline">Un esperto valuta l'output direttamente — lento e costoso, ma l'unico gold standard affidabile per la qualità semantica.</div>
+        </div>
+      </div>
+      <div class="mh-body">
+        <div class="mh-col">
+          <div class="mh-col-title">Quando è indispensabile</div>
+          <ul class="mh-list">
+            <li><div class="mh-dot" style="background:var(--m-human)"></div><strong>Calibrare il LLM-as-judge:</strong> la validazione del giudice richiede verità umana su un campione.</li>
+            <li><div class="mh-dot" style="background:var(--m-human)"></div><strong>Costruire il held-out set:</strong> l'output atteso di ogni caso deve essere verificato da un esperto.</li>
+            <li><div class="mh-dot" style="background:var(--m-human)"></div><strong>Task con valore soggettivo elevato:</strong> qualità creativa, appropriatezza del tono, impatto percepito.</li>
+            <li><div class="mh-dot" style="background:var(--m-human)"></div><strong>Decisioni ad alto rischio:</strong> deployment di nuove versioni in contesti critici.</li>
+          </ul>
+        </div>
+        <div class="mh-col">
+          <div class="mh-col-title">Come renderla efficiente</div>
+          <ul class="mh-list">
+            <li><div class="mh-dot" style="background:var(--m-human)"></div><strong>Rubrica di valutazione:</strong> linee guida scritte con esempi di ogni livello di punteggio per ridurre la varianza tra valutatori.</li>
+            <li><div class="mh-dot" style="background:var(--m-human)"></div><strong>Campionamento strategico:</strong> valutare umano solo i casi che il LLM-as-judge giudica incerti (score intermedio), non tutti.</li>
+            <li><div class="mh-dot" style="background:var(--m-human)"></div><strong>Sessioni brevi:</strong> la qualità della valutazione cala dopo 30–45 minuti di valutazione continua.</li>
+            <li><div class="mh-dot" style="background:var(--m-human)"></div><strong>Inter-rater agreement:</strong> misura la coerenza tra valutatori diversi per verificare che la rubrica funzioni.</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    <div class="prose" style="margin-top:28px;">
+      <p style="font-size:14px; font-weight:500; color:var(--ink2);">La rubrica di valutazione — come ridurre la varianza umana</p>
+      <p>La varianza tra valutatori diversi è il problema principale della valutazione umana. Un valutatore dà 4/5, un altro dà 2/5 allo stesso output — e nessuno dei due ha torto secondo i propri criteri impliciti. La rubrica di valutazione risolve questo problema rendendo i criteri espliciti e condivisi.</p>
+    </div>
+
+    <div class="code-box" style="margin-top:16px;"><span class="cm"># RUBRICA DI VALUTAZIONE — esempio per task di analisi contrattuale</span>
+
+<span class="kw">DIMENSIONE: Correttezza dell'analisi del rischio</span>
+
+5 — ECCELLENTE
+Tutti i rischi rilevanti identificati (inclusi quelli non ovvi).
+Ogni rischio è ancorato alla clausola specifica con numero articolo.
+Severità coerente con l'impatto reale per il tipo di cliente.
+La raccomandazione finale è direttamente azionabile.
+
+4 — BUONO
+Rischi principali identificati, forse manca qualche rischio secondario.
+La maggior parte dei rischi ha riferimento alla clausola.
+Severità generalmente corretta con qualche imprecisione minore.
+
+3 — SUFFICIENTE
+Rischi identificati ma descrizione generica, non specifica del contratto.
+Riferimenti alle clausole assenti o imprecisi.
+Severità plausibile ma non ben motivata.
+
+2 — INSUFFICIENTE
+Solo i rischi più ovvi identificati. Mancano rischi importanti.
+Output sembra generico, applicabile a qualsiasi contratto.
+
+1 — SBAGLIATO
+Rischi identificati incorretti o non applicabili al contratto.
+Affermazioni fattualmente errate rispetto al testo del contratto.
+Output fuorviante per il lettore.
+
+<span class="cm"># Per ogni livello: includi 1-2 esempi concreti di output che lo raggiungono.</span></div>
+
+    <div class="prose" style="margin-top:24px;">
+      <p>La rubrica non elimina la soggettività — la calibra. L'obiettivo non è che tutti i valutatori diano lo stesso punteggio esatto, ma che il <strong>delta tra valutatori sia entro 1 punto sulla scala</strong>. Se il delta è sistematicamente maggiore su una dimensione, la rubrica per quella dimensione va riscritta con criteri più precisi.</p>
+    </div>
+
+  </div>
+</div>
+
+
+<!-- ═══════════════════════════
+     S5 — CONFRONTO E SCELTA
+═══════════════════════════ -->
+<div class="sect" id="s5">
+  <div class="sect-head">
+    <div class="sect-num">Sezione trasversale</div>
+    <h2>Come scegliere il metodo giusto</h2>
+    <p>La scelta non è tra i tre metodi — è tra diverse combinazioni. Questa sezione fornisce le domande giuste per arrivare alla combinazione ottimale per il tuo caso.</p>
+  </div>
+  <div class="wrap">
+
+    <div class="prose" style="margin-top:28px;">
+      <p>La matrice comparativa completa mostra dove ogni metodo eccelle e dove fallisce. Usala come punto di partenza per progettare la combinazione giusta — non come guida a scegliere un metodo unico.</p>
+    </div>
+
+    <table class="comp-matrix">
+      <thead>
+        <tr>
+          <th style="text-align:left; background:var(--ink2); width:180px;">Dimensione</th>
+          <th class="th-prog">Programmatico</th>
+          <th class="th-llm">LLM-as-judge</th>
+          <th class="th-hum">Valutazione umana</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>Scalabilità</td>
+          <td class="cell-prog">Illimitata — zero overhead a regime</td>
+          <td class="cell-llm">Alta — proporzionale al volume × costo token</td>
+          <td class="cell-bad">Bassa — bottleneck umano invalicabile</td>
+        </tr>
+        <tr>
+          <td>Qualità semantica</td>
+          <td class="cell-bad">Nulla — completamente cieco al significato</td>
+          <td class="cell-llm">Buona — approssima bene il giudizio umano</td>
+          <td class="cell-hum">Massima — gold standard</td>
+        </tr>
+        <tr>
+          <td>Qualità formale</td>
+          <td class="cell-prog">Massima — deterministico e preciso</td>
+          <td class="cell-llm">Buona ma non affidabile al 100%</td>
+          <td class="cell-hum">Buona ma spesso trascurata</td>
+        </tr>
+        <tr>
+          <td>Costo per caso</td>
+          <td class="cell-prog">Quasi zero</td>
+          <td class="cell-llm">$0.001–$0.01 (dipende da modello e lunghezza)</td>
+          <td class="cell-bad">$1–$10+ (tempo di esperto)</td>
+        </tr>
+        <tr>
+          <td>Setup iniziale</td>
+          <td class="cell-llm">Medio — scrivere i checker richiede tempo</td>
+          <td class="cell-llm">Medio — scrivere e validare il prompt del giudice</td>
+          <td class="cell-hum">Alto — reclutare, formare, calibrare i valutatori</td>
+        </tr>
+        <tr>
+          <td>Bias / errori sistematici</td>
+          <td class="cell-prog">Nessuno — deterministico</td>
+          <td class="cell-bad">Verbosity, self-enhancement, position (mitigabili)</td>
+          <td class="cell-llm">Varianza tra valutatori (mitigabile con rubrica)</td>
+        </tr>
+        <tr>
+          <td>Affidabilità su output edge</td>
+          <td class="cell-prog">Alta — regole sono regole</td>
+          <td class="cell-bad">Bassa — il giudice è meno affidabile sui casi estremi</td>
+          <td class="cell-hum">Alta — l'esperto riconosce i casi insoliti</td>
+        </tr>
+        <tr>
+          <td>Rilevamento regressioni</td>
+          <td class="cell-prog">Ottimo — ideale in CI/CD</td>
+          <td class="cell-llm">Buono — ma varianza introduce rumore</td>
+          <td class="cell-bad">Difficile — troppo lento per ogni deployment</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <div class="prose" style="margin-top:28px;">
+      <p style="font-size:15px; font-weight:500; color:var(--ink2);">Le 3 domande per scegliere</p>
+    </div>
+
+    <div class="decision-guide">
+
+      <div class="dg-question">Domanda 1 — L'output ha proprietà formali verificabili (formato, schema, enum, lunghezza)?</div>
+      <div class="dg-answers">
+        <div class="dg-answer">
+          <div class="dg-answer-label" style="color:var(--m-prog);">Sì → usa sempre il programmatico</div>
+          <div class="dg-answer-text">Aggiungi checker programmatici per <strong>tutte</strong> le proprietà formali. È il layer più affidabile e costa quasi nulla.</div>
+        </div>
+        <div class="dg-answer">
+          <div class="dg-answer-label" style="color:var(--ink4);">No → passa alla domanda 2</div>
+          <div class="dg-answer-text">Output in prosa libera senza vincoli formali — il programmatico non aggiunge valore.</div>
+        </div>
+        <div class="dg-answer">
+          <div class="dg-answer-label" style="color:var(--ink4);">Parzialmente</div>
+          <div class="dg-answer-text">Usa il programmatico per le proprietà formali presenti, integra con altri metodi per il contenuto.</div>
+        </div>
+      </div>
+
+      <div class="dg-question">Domanda 2 — Il task richiede valutazione della qualità semantica (correttezza, pertinenza, ragionamento)?</div>
+      <div class="dg-answers">
+        <div class="dg-answer">
+          <div class="dg-answer-label" style="color:var(--m-llm);">Sì + volume alto → LLM-as-judge</div>
+          <div class="dg-answer-text">Progetta il prompt del giudice con criteri espliciti. <strong>Valida su campione umano prima</strong> di usarlo sistematicamente.</div>
+        </div>
+        <div class="dg-answer">
+          <div class="dg-answer-label" style="color:var(--m-human);">Sì + volume basso / alta criticità → umano</div>
+          <div class="dg-answer-text">Usa la valutazione umana direttamente se il volume è gestibile o se gli errori del giudice sono inaccettabili.</div>
+        </div>
+        <div class="dg-answer">
+          <div class="dg-answer-label" style="color:var(--ink4);">No → il programmatico è sufficiente</div>
+          <div class="dg-answer-text">Se le proprietà formali sono le uniche rilevanti (es. parsing puro), il programmatico basta.</div>
+        </div>
+      </div>
+
+      <div class="dg-question">Domanda 3 — Il LLM-as-judge è abbastanza affidabile per il tuo task?</div>
+      <div class="dg-answers">
+        <div class="dg-answer">
+          <div class="dg-answer-label" style="color:var(--m-llm);">Sì (validato su campione umano)</div>
+          <div class="dg-answer-text">Usa il giudice per il volume principale. <strong>Mantieni la validazione periodica</strong> (ogni 2–3 mesi o dopo aggiornamenti del modello).</div>
+        </div>
+        <div class="dg-answer">
+          <div class="dg-answer-label" style="color:var(--m-human);">No (correlazione con umano < 0.7)</div>
+          <div class="dg-answer-text">Raffina il prompt del giudice o usa la valutazione umana come metodo principale per questo task.</div>
+        </div>
+        <div class="dg-answer">
+          <div class="dg-answer-label" style="color:var(--ink4);">Non ancora validato</div>
+          <div class="dg-answer-text">Non usare il giudice sistematicamente prima della validazione. Inizia con valutazione umana su campione.</div>
+        </div>
+      </div>
+
+    </div>
+
+  </div>
+</div>
+
+
+<!-- ═══════════════════════════
+     S6 — COME COMBINARLI
+═══════════════════════════ -->
+<div class="sect" id="s6">
+  <div class="sect-head">
+    <div class="sect-num">Sezione pratica</div>
+    <h2>I 4 pattern di combinazione</h2>
+    <p>Come i tre metodi si combinano in pratica. Quattro pattern ricorrenti per quattro contesti diversi.</p>
+  </div>
+  <div class="wrap">
+
+    <div class="combo-grid" style="margin-top:28px;">
+
+      <div class="combo-card">
+        <div class="cc-head">
+          <div class="cc-badges">
+            <div class="cc-badge" style="background:var(--m-prog);">P</div>
+          </div>
+          <div class="cc-title">Solo programmatico</div>
+        </div>
+        <div class="cc-body">
+          <div class="cc-desc">Usato per task di estrazione e classificazione con output completamente strutturato e ground truth disponibile. <strong>Il checker verifica la correttezza formale e la coerenza dei valori</strong> — nessuna valutazione semantica necessaria perché il task è binario.</div>
+          <div class="cc-when">Quando: classificazione con enum, estrazione di valori da schema fisso, parsing di documenti con formato definito. Ground truth sempre disponibile.</div>
+        </div>
+      </div>
+
+      <div class="combo-card">
+        <div class="cc-head">
+          <div class="cc-badges">
+            <div class="cc-badge" style="background:var(--m-prog);">P</div>
+            <div class="cc-badge" style="background:var(--m-llm);">L</div>
+          </div>
+          <div class="cc-title">Programmatico + LLM-judge</div>
+        </div>
+        <div class="cc-body">
+          <div class="cc-desc">Il pattern più comune. Il checker filtra i fallimenti formali (JSON malformato, enum sbagliato, lunghezza fuori limite). <strong>Il giudice valuta la qualità semantica solo sui casi che passano il filtro formale</strong> — evitando di sprecare token su output già chiaramente sbagliati.</div>
+          <div class="cc-when">Quando: la maggior parte dei task con output semi-strutturato. Il giudice è stato validato su campione umano. Volume medio-alto.</div>
+        </div>
+      </div>
+
+      <div class="combo-card">
+        <div class="cc-head">
+          <div class="cc-badges">
+            <div class="cc-badge" style="background:var(--m-prog);">P</div>
+            <div class="cc-badge" style="background:var(--m-llm);">L</div>
+            <div class="cc-badge" style="background:var(--m-human);">H</div>
+          </div>
+          <div class="cc-title">Stack completo stratificato</div>
+        </div>
+        <div class="cc-body">
+          <div class="cc-desc">Il sistema completo. Checker per il formale, giudice per il semantico, umano per i casi incerti (score del giudice nella zona grigia 40–60%) e per la validazione periodica del giudice. <strong>Ogni layer gestisce ciò per cui è ottimale.</strong></div>
+          <div class="cc-when">Quando: agenti critici in produzione, task ad alto rischio, elevato volume con requisiti di qualità stringenti. Budget disponibile per il layer umano.</div>
+        </div>
+      </div>
+
+      <div class="combo-card">
+        <div class="cc-head">
+          <div class="cc-badges">
+            <div class="cc-badge" style="background:var(--m-human);">H</div>
+            <div class="cc-badge" style="background:var(--m-llm);">L</div>
+          </div>
+          <div class="cc-title">Umano per calibrare, giudice per scalare</div>
+        </div>
+        <div class="cc-body">
+          <div class="cc-desc">La valutazione umana viene usata intensivamente all'inizio (costruire il held-out set, validare il giudice, calibrare la rubrica), poi ridotta a campionamento periodico. <strong>Il giudice scala il lavoro; l'umano mantiene la calibrazione nel tempo.</strong></div>
+          <div class="cc-when">Quando: fase di lancio di un nuovo agente. Output principalmente in testo libero. Budget limitato per la valutazione umana continuativa.</div>
+        </div>
+      </div>
+
+    </div>
+
+    <div class="key-point" style="margin-top:32px;">
+      <div class="kp-label">Il principio della combinazione</div>
+      <div class="kp-text">Progetta il sistema di valutazione come una pipeline, non come una scelta.</div>
+      <div class="kp-sub">Il metodo programmatico non sostituisce il LLM-as-judge — lo precede e lo filtra. Il LLM-as-judge non sostituisce la valutazione umana — la approssima e la scala. La valutazione umana non è un'alternativa agli altri — è la fonte di verità che li calibra. Il sistema funziona perché i tre metodi sono complementari, non competitivi.</div>
+    </div>
+
+    <div class="checklist" style="margin-top:28px;">
+      <div style="font-family:'IBM Plex Mono',monospace; font-size:9px; letter-spacing:3px; text-transform:uppercase; color:var(--ink4); padding-bottom:10px; border-bottom:1px solid var(--border); margin-bottom:0;">Checklist — sistema di valutazione configurato?</div>
+      <div class="check-item">
+        <div class="check-icon" style="background:var(--m-prog)">P</div>
+        <div><strong>Checker programmatico</strong> configurato per tutte le proprietà formali verificabili dell'output (formato, schema, enum, lunghezza, regole logiche).</div>
+      </div>
+      <div class="check-item">
+        <div class="check-icon" style="background:var(--m-llm)">L</div>
+        <div><strong>Prompt del giudice LLM</strong> scritto con criteri espliciti, scala precisa (1–3 o 1–5), esempi di calibrazione, e istruzioni anti-bias per verbosity e lunghezza.</div>
+      </div>
+      <div class="check-item">
+        <div class="check-icon" style="background:var(--m-llm)">✓</div>
+        <div>Il giudice è stato <strong>validato su campione umano</strong> (50–100 casi) con correlazione ≥ 0.75 prima di essere usato sistematicamente.</div>
+      </div>
+      <div class="check-item">
+        <div class="check-icon" style="background:var(--m-human)">H</div>
+        <div><strong>Rubrica di valutazione umana</strong> scritta con criteri espliciti e esempi per ogni livello. Inter-rater agreement verificato (delta ≤ 1 punto tra valutatori).</div>
+      </div>
+      <div class="check-item">
+        <div class="check-icon" style="background:var(--accent)">✓</div>
+        <div>Il <strong>pattern di combinazione</strong> è scelto e documentato: quale metodo si applica a quale tipo di caso, in quale ordine.</div>
+      </div>
+      <div class="check-item">
+        <div class="check-icon" style="background:var(--accent)">✓</div>
+        <div>La <strong>validazione periodica del giudice</strong> è pianificata (ogni 2–3 mesi o dopo aggiornamenti del modello sottostante).</div>
+      </div>
+    </div>
+
+    <div class="insight" style="margin-top:28px; border-color:var(--m-llm); background:var(--m-llm-l);">
+      <div class="insight-lbl" style="color:var(--m-llm);">Prossimo — Report C</div>
+      <p>Il Report B ha introdotto il LLM-as-judge come metodo. Il Report C lo approfondisce completamente: i bias in dettaglio, come progettare il prompt del giudice per contesti diversi, come validarlo sistematicamente, e — la domanda più difficile — <strong>quando fidarsi del giudice e quando no</strong>.</p>
+    </div>
+
+  </div>
+</div>
+
+
+<!-- FOOTER -->
+<div class="footer">
+  <span>Serie Agenti AI — Leva 06 · Testing e Valutazione · Report B · I Metodi di Valutazione</span>
+  <span>Marzo 2026</span>
+</div>
+
+<script>
+function show(n) {
+  document.querySelectorAll('.sect').forEach(s => s.classList.remove('active'));
+  document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('s'+n).classList.add('active');
+  document.querySelectorAll('.nav-btn')[n-1].classList.add('active');
+  window.scrollTo({top:0, behavior:'smooth'});
+}
+</script>
+</body>
+</html>

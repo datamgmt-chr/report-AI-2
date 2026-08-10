@@ -1,0 +1,1108 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Testing e Valutazione — C · LLM-as-judge in profondità</title>
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Outfit:wght@200;300;400;500;600;700;800;900&family=IBM+Plex+Mono:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg:     #faf8f5;
+  --bg2:    #f2efe9;
+  --bg3:    #e9e5dc;
+  --ink:    #1b1915;
+  --ink2:   #2e2b25;
+  --ink3:   #6d685c;
+  --ink4:   #a19c8f;
+  --border: #d9d4c8;
+  --border2:#cac4b6;
+
+  --accent:  #7b5ea7;
+  --accent2: #5a4080;
+  --accent-light: #f4f0fa;
+
+  --ok:    #3d7a45;
+  --ok-l:  #f4faf5;
+  --warn:  #b07d24;
+  --warn-l:#fdf6e8;
+  --bad:   #c0392b;
+  --bad-l: #fdf5f5;
+}
+
+* { margin:0; padding:0; box-sizing:border-box; }
+html { scroll-behavior:smooth; }
+body {
+  background:var(--bg); color:var(--ink);
+  font-family:'Outfit',sans-serif; font-weight:300;
+  font-size:14px; line-height:1.75;
+}
+
+.masthead {
+  background:var(--ink); color:rgba(255,255,255,.9);
+  padding:60px 56px 52px; position:relative; overflow:hidden;
+}
+.masthead::before {
+  content:''; position:absolute; inset:0;
+  background:
+    repeating-linear-gradient(90deg,rgba(255,255,255,.012) 0,rgba(255,255,255,.012) 1px,transparent 1px,transparent 64px),
+    repeating-linear-gradient(0deg,rgba(255,255,255,.012) 0,rgba(255,255,255,.012) 1px,transparent 1px,transparent 64px);
+  pointer-events:none;
+}
+.masthead::after {
+  content:'C'; position:absolute; right:44px; bottom:-28px;
+  font-family:'Instrument Serif',serif; font-size:280px; line-height:1;
+  color:rgba(255,255,255,.025); pointer-events:none;
+}
+.mh-eye {
+  font-family:'IBM Plex Mono',monospace; font-size:10px;
+  letter-spacing:3px; text-transform:uppercase;
+  color:rgba(255,255,255,.25); margin-bottom:18px; position:relative;
+}
+.mh-cluster {
+  display:inline-block; font-family:'IBM Plex Mono',monospace;
+  font-size:10px; letter-spacing:2px; text-transform:uppercase;
+  padding:4px 12px; border:1px solid var(--accent);
+  color:var(--accent); margin-bottom:20px; position:relative;
+}
+.masthead h1 {
+  font-family:'Instrument Serif',serif; font-weight:400;
+  font-size:clamp(30px,4.5vw,54px); line-height:1.08;
+  letter-spacing:-1px; max-width:700px; position:relative;
+}
+.mh-sub {
+  margin-top:20px; font-size:15px; font-weight:300;
+  color:rgba(255,255,255,.38); max-width:660px;
+  line-height:1.7; position:relative;
+}
+.mh-meta {
+  margin-top:32px; display:flex; gap:32px; flex-wrap:wrap; position:relative;
+}
+.mh-stat { display:flex; flex-direction:column; gap:4px; }
+.mh-stat-val {
+  font-family:'IBM Plex Mono',monospace; font-size:22px; font-weight:500;
+  color:rgba(255,255,255,.85);
+}
+.mh-stat-lbl {
+  font-size:10px; letter-spacing:2px; text-transform:uppercase;
+  color:rgba(255,255,255,.25);
+}
+
+.nav {
+  background:var(--ink2); position:sticky; top:0; z-index:100;
+  display:flex; overflow-x:auto;
+  border-bottom:1px solid rgba(255,255,255,.06);
+}
+.nav-btn {
+  flex:1; min-width:120px; padding:13px 12px;
+  border:none; background:transparent; cursor:pointer;
+  font-family:'Outfit',sans-serif; font-size:10.5px; font-weight:600;
+  text-transform:uppercase; letter-spacing:.4px;
+  color:rgba(255,255,255,.3);
+  border-right:1px solid rgba(255,255,255,.06);
+  transition:all .2s; white-space:nowrap;
+}
+.nav-btn:last-child { border-right:none; }
+.nav-btn:hover { color:rgba(255,255,255,.6); }
+.nav-btn.active { color:#fff; background:rgba(255,255,255,.05); }
+
+.sect { display:none; }
+.sect.active { display:block; animation:fadeIn .3s ease; }
+@keyframes fadeIn { from{opacity:0;transform:translateY(6px)} to{opacity:1;transform:translateY(0)} }
+
+.sect-head { padding:48px 56px 36px; border-bottom:1px solid var(--border); }
+.sect-num {
+  font-family:'IBM Plex Mono',monospace; font-size:10px;
+  letter-spacing:3px; text-transform:uppercase; color:var(--ink4); margin-bottom:10px;
+}
+.sect-head h2 {
+  font-family:'Instrument Serif',serif; font-weight:400;
+  font-size:clamp(26px,3.5vw,42px); line-height:1.1;
+  letter-spacing:-.5px; max-width:640px; margin-bottom:14px;
+}
+.sect-head p { color:var(--ink3); max-width:700px; font-size:14.5px; }
+.wrap { padding:0 56px 64px; }
+
+.prose { max-width:760px; }
+.prose p { font-size:14.5px; color:var(--ink3); line-height:1.85; margin-bottom:16px; }
+.prose p strong { color:var(--ink2); font-weight:500; }
+.prose p em { font-style:italic; color:var(--ink2); }
+
+/* ── GL CARD ── */
+.gl-group { margin-top:40px; }
+.gl-group-title {
+  font-family:'IBM Plex Mono',monospace; font-size:9px;
+  letter-spacing:3px; text-transform:uppercase;
+  color:var(--ink4); padding-bottom:10px; border-bottom:1px solid var(--border);
+}
+.gl-card { border:1px solid var(--border2); border-top:none; background:var(--bg); }
+.gl-header {
+  display:grid; grid-template-columns:5px 52px 1fr auto;
+  align-items:stretch; border-bottom:1px solid var(--border);
+}
+.gl-stripe { background:var(--accent); }
+.gl-num {
+  font-family:'Outfit',sans-serif; font-weight:800; font-size:20px; color:var(--bg3);
+  display:flex; align-items:center; justify-content:center;
+  border-right:1px solid var(--border);
+}
+.gl-title-wrap { padding:16px 20px; }
+.gl-title { font-family:'Instrument Serif',serif; font-size:20px; color:var(--ink2); line-height:1.2; }
+.gl-subtitle { font-size:12px; color:var(--ink4); margin-top:3px; }
+.gl-impact-wrap {
+  padding:14px 20px; display:flex; flex-direction:column;
+  align-items:flex-end; justify-content:center; gap:4px;
+}
+.gl-impact-stars { font-size:14px; }
+.gl-impact-lbl {
+  font-family:'IBM Plex Mono',monospace; font-size:8px;
+  letter-spacing:1px; text-transform:uppercase; color:var(--ink4);
+}
+.gl-body { padding:0; }
+.gl-section { padding:20px 24px; border-bottom:1px solid var(--border); }
+.gl-section:last-child { border-bottom:none; }
+.gl-section-lbl {
+  font-family:'IBM Plex Mono',monospace; font-size:9px;
+  letter-spacing:2px; text-transform:uppercase; color:var(--ink4);
+  margin-bottom:10px; padding-bottom:6px; border-bottom:1px solid var(--border);
+}
+.gl-section p { font-size:13.5px; color:var(--ink3); line-height:1.8; max-width:740px; }
+.gl-section p strong { color:var(--ink2); font-weight:500; }
+
+/* ── BIAS CARDS ── */
+.bias-grid {
+  display:grid; grid-template-columns:repeat(auto-fill,minmax(300px,1fr));
+  gap:14px; margin-top:20px;
+}
+.bias-card { border:1px solid var(--border2); background:var(--bg); overflow:hidden; }
+.bc-bar { height:4px; background:var(--bad); }
+.bc-head { padding:12px 16px; background:var(--bg2); border-bottom:1px solid var(--border); }
+.bc-label {
+  font-family:'IBM Plex Mono',monospace; font-size:9px;
+  letter-spacing:2px; text-transform:uppercase; color:var(--bad); margin-bottom:3px;
+}
+.bc-title { font-weight:600; font-size:14px; color:var(--ink2); }
+.bc-body { padding:14px 16px; }
+.bc-mechanism { font-size:13px; color:var(--ink3); line-height:1.65; margin-bottom:10px; }
+.bc-mechanism strong { color:var(--ink2); font-weight:500; }
+.bc-evidence {
+  padding:10px 12px; background:var(--bad-l);
+  border-left:3px solid var(--bad);
+  font-size:12px; color:#6b3030; line-height:1.55; margin-bottom:8px;
+}
+.bc-mitigation {
+  padding:10px 12px; background:var(--ok-l);
+  border-left:3px solid var(--ok);
+  font-size:12px; color:#2e4a32; line-height:1.55;
+}
+.bc-mitigation strong { color:var(--ok); font-weight:600; }
+
+/* ── PROMPT ANATOMY ── */
+.prompt-anatomy { margin-top:20px; }
+.pa-layer {
+  display:grid; grid-template-columns:4px 140px 1fr;
+  border:1px solid var(--border2); border-top:none; background:var(--bg);
+}
+.pa-layer:first-child { border-top:1px solid var(--border2); }
+.pa-layer:hover { background:var(--bg2); }
+.pa-stripe { background:var(--accent); }
+.pa-label-col {
+  padding:14px 16px; border-right:1px solid var(--border);
+  background:var(--bg2);
+}
+.pa-tag {
+  font-family:'IBM Plex Mono',monospace; font-size:8px;
+  letter-spacing:2px; text-transform:uppercase; color:var(--accent); margin-bottom:3px;
+}
+.pa-label-name { font-weight:600; font-size:13px; color:var(--ink2); }
+.pa-label-why { font-size:11px; color:var(--ink4); margin-top:2px; line-height:1.4; }
+.pa-content { padding:14px 18px; font-family:'IBM Plex Mono',monospace; font-size:11.5px; line-height:1.7; color:var(--ink3); white-space:pre-wrap; }
+.pa-content .hl { color:var(--accent2); font-weight:500; }
+.pa-content .bad { color:#8b3030; text-decoration:line-through; }
+
+/* ── COMPARISON PANEL ── */
+.compare-grid { display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-top:12px; }
+.pex-lbl {
+  font-family:'IBM Plex Mono',monospace; font-size:9px;
+  letter-spacing:2px; text-transform:uppercase; margin-bottom:6px;
+}
+.pex-lbl.bad  { color:var(--bad); }
+.pex-lbl.good { color:var(--accent); }
+.pex-lbl.neutral { color:var(--ink4); }
+.prompt-box {
+  font-family:'IBM Plex Mono',monospace; font-size:11.5px; line-height:1.75;
+  padding:14px 18px; border:1px solid; white-space:pre-wrap; word-break:break-word;
+}
+.prompt-box.bad  { border-color:#e8c5c5; background:var(--bad-l); color:#6b3030; }
+.prompt-box.good { border-color:#cfc0e8; background:var(--accent-light); color:var(--accent2); }
+.prompt-box.neutral { border-color:var(--border2); background:var(--bg2); color:var(--ink3); }
+.prompt-box .hl { font-weight:500; text-decoration:underline; text-decoration-color:rgba(123,94,167,.3); }
+
+/* ── VALIDATION PROTOCOL ── */
+.validation-steps { margin-top:16px; display:flex; flex-direction:column; gap:2px; }
+.vs-step {
+  display:grid; grid-template-columns:36px 1fr;
+  border:1px solid var(--border2); background:var(--bg);
+}
+.vs-num {
+  background:var(--accent); color:#fff;
+  font-family:'IBM Plex Mono',monospace; font-size:12px; font-weight:500;
+  display:flex; align-items:center; justify-content:center; flex-shrink:0;
+}
+.vs-body { padding:13px 17px; }
+.vs-title { font-weight:600; font-size:13.5px; color:var(--ink2); margin-bottom:3px; }
+.vs-desc { font-size:13px; color:var(--ink3); line-height:1.6; }
+.vs-desc strong { color:var(--ink2); font-weight:500; }
+.vs-metric {
+  margin-top:6px; padding:7px 10px;
+  background:var(--accent-light); border-left:3px solid var(--accent);
+  font-family:'IBM Plex Mono',monospace; font-size:11px;
+  color:var(--accent2); line-height:1.5;
+}
+
+/* ── TRUST MATRIX ── */
+.trust-table {
+  width:100%; border-collapse:collapse; margin-top:16px; border:1px solid var(--border2);
+}
+.trust-table th, .trust-table td {
+  padding:11px 14px; border:1px solid var(--border);
+  font-size:12.5px; line-height:1.5; vertical-align:top;
+}
+.trust-table thead th {
+  background:var(--ink); color:rgba(255,255,255,.82);
+  font-family:'IBM Plex Mono',monospace; font-size:9px;
+  letter-spacing:.5px; text-transform:uppercase; text-align:left;
+}
+.trust-table tbody tr:nth-child(even) { background:var(--bg2); }
+.trust-table td:first-child { font-weight:500; color:var(--ink2); }
+.trust-high   { background:var(--ok-l);   color:#2e4a32; font-weight:500; }
+.trust-med    { background:var(--warn-l); color:#5a3a00; font-weight:500; }
+.trust-low    { background:var(--bad-l);  color:#6b3030; font-weight:500; }
+
+/* ── JUDGE TYPES ── */
+.judge-types {
+  display:grid; grid-template-columns:repeat(auto-fill,minmax(280px,1fr));
+  gap:14px; margin-top:20px;
+}
+.jt-card { border:1px solid var(--border2); background:var(--bg); overflow:hidden; }
+.jt-head {
+  padding:12px 16px; border-bottom:1px solid var(--border); background:var(--bg2);
+  display:flex; align-items:center; gap:10px;
+}
+.jt-badge {
+  font-family:'IBM Plex Mono',monospace; font-size:9px; font-weight:700;
+  letter-spacing:1px; padding:3px 8px; background:var(--accent); color:#fff;
+}
+.jt-name { font-weight:600; font-size:13.5px; color:var(--ink2); }
+.jt-body { padding:14px 16px; }
+.jt-desc { font-size:13px; color:var(--ink3); line-height:1.65; }
+.jt-desc strong { color:var(--ink2); font-weight:500; }
+.jt-prompt-pattern {
+  margin-top:10px; padding:10px 12px;
+  background:var(--accent-light); border-left:3px solid var(--accent);
+  font-size:12px; color:var(--accent2); line-height:1.5;
+}
+.jt-when {
+  margin-top:8px; padding:8px 10px;
+  border:1px solid var(--border); background:var(--bg);
+  font-family:'IBM Plex Mono',monospace; font-size:11px;
+  color:var(--ink4); line-height:1.5;
+}
+
+/* ── SPECTRUM ── */
+.spectrum { margin-top:16px; border:1px solid var(--border); overflow:hidden; }
+.spectrum-row { display:grid; border-bottom:1px solid var(--border); font-size:12.5px; }
+.spectrum-row:last-child { border-bottom:none; }
+.spectrum-row.head {
+  background:var(--ink); color:rgba(255,255,255,.7);
+  font-family:'IBM Plex Mono',monospace; font-size:9px;
+  letter-spacing:1px; text-transform:uppercase;
+}
+.spectrum-row.col3 { grid-template-columns:200px 1fr 1fr; }
+.spectrum-row.col4 { grid-template-columns:160px 1fr 1fr 1fr; }
+.s-cell {
+  padding:11px 14px; border-right:1px solid var(--border);
+  color:var(--ink3); line-height:1.5;
+}
+.s-cell:last-child { border-right:none; }
+.s-cell.lbl { font-weight:500; color:var(--ink2); background:var(--bg2); }
+.s-cell.hi  { background:var(--accent-light); color:var(--accent2); }
+.s-cell.ok  { background:var(--ok-l); color:#2e4a32; }
+.s-cell.lo  { background:var(--bad-l); color:#8b3030; }
+.s-cell.mid { background:var(--warn-l); color:#5a3a00; }
+
+/* ── CHECKLIST ── */
+.checklist { margin-top:16px; }
+.check-item {
+  display:flex; gap:12px; align-items:flex-start;
+  padding:10px 0; border-bottom:1px solid var(--border);
+  font-size:13.5px; color:var(--ink3);
+}
+.check-item:last-child { border-bottom:none; }
+.check-icon {
+  width:20px; height:20px; border-radius:50%;
+  background:var(--accent); color:#fff;
+  display:flex; align-items:center; justify-content:center;
+  font-size:11px; font-weight:700; flex-shrink:0; margin-top:1px;
+}
+.check-item strong { color:var(--ink2); font-weight:500; }
+
+/* ── MECHANISM ── */
+.mechanism {
+  margin-top:14px; padding:14px 18px;
+  border-left:3px solid var(--accent); background:var(--accent-light);
+}
+.mech-lbl {
+  font-family:'IBM Plex Mono',monospace; font-size:9px;
+  letter-spacing:2px; text-transform:uppercase; color:var(--accent); margin-bottom:6px;
+}
+.mechanism p { font-size:13px; color:var(--ink3); line-height:1.65; }
+.mechanism p strong { color:var(--ink2); font-weight:500; }
+
+/* ── KEY POINT ── */
+.key-point {
+  margin-top:36px; padding:24px 28px;
+  border-left:4px solid var(--accent); background:var(--accent-light);
+}
+.kp-label {
+  font-family:'IBM Plex Mono',monospace; font-size:9px;
+  letter-spacing:2px; text-transform:uppercase; color:var(--accent); margin-bottom:8px;
+}
+.kp-text {
+  font-family:'Instrument Serif',serif; font-size:18px; line-height:1.45; color:var(--ink2);
+}
+.kp-sub { margin-top:10px; font-size:13px; color:var(--ink3); line-height:1.65; }
+
+/* ── INSIGHT ── */
+.insight {
+  margin:16px 0; padding:16px 20px;
+  border-left:4px solid var(--accent); background:var(--accent-light);
+}
+.insight-lbl {
+  font-family:'IBM Plex Mono',monospace; font-size:9px;
+  letter-spacing:2px; text-transform:uppercase; color:var(--accent); margin-bottom:6px;
+}
+.insight p { font-size:13.5px; color:var(--ink2); line-height:1.65; max-width:700px; }
+.insight p strong { font-weight:500; }
+
+/* ── CODE BOX ── */
+.code-box {
+  margin-top:14px;
+  font-family:'IBM Plex Mono',monospace; font-size:11.5px; line-height:1.75;
+  padding:16px 20px; border:1px solid var(--border2);
+  background:var(--ink); color:rgba(255,255,255,.75);
+  white-space:pre-wrap; word-break:break-word;
+}
+.code-box .kw  { color:#c4a8e8; font-weight:500; }
+.code-box .str { color:#7dd3a8; }
+.code-box .cm  { color:rgba(255,255,255,.28); }
+.code-box .num { color:#f4a87a; }
+
+/* ── FOOTER ── */
+.footer {
+  padding:24px 56px; border-top:1px solid var(--border);
+  display:flex; justify-content:space-between; align-items:center;
+  font-family:'IBM Plex Mono',monospace; font-size:10px;
+  letter-spacing:1px; text-transform:uppercase; color:var(--ink4);
+}
+
+@media (max-width:700px) {
+  .masthead,.sect-head,.wrap,.footer { padding-left:20px; padding-right:20px; }
+  .compare-grid { grid-template-columns:1fr; }
+  .bias-grid,.judge-types { grid-template-columns:1fr; }
+  .spectrum-row.col3,.spectrum-row.col4 { grid-template-columns:1fr; }
+  .gl-header { grid-template-columns:5px 40px 1fr; }
+  .gl-impact-wrap { display:none; }
+  .pa-layer { grid-template-columns:4px 1fr; }
+  .pa-label-col { display:none; }
+  .vs-step { grid-template-columns:1fr; }
+}
+</style>
+</head>
+<body>
+
+<!-- HEADER -->
+<div class="masthead">
+  <div class="mh-eye">Serie Agenti AI · Leva 06 · Testing e Valutazione</div>
+  <div class="mh-cluster">Report C</div>
+  <h1>LLM-as-judge in profondità</h1>
+  <p class="mh-sub">Il metodo più scalabile per valutare la qualità semantica — e il più insidioso se non capito davvero. I bias, come progettare il giudice per contesti diversi, come validarlo, e la domanda più difficile: quando fidarsi e quando no.</p>
+  <div class="mh-meta">
+    <div class="mh-stat"><div class="mh-stat-val">4</div><div class="mh-stat-lbl">Bias sistematici</div></div>
+    <div class="mh-stat"><div class="mh-stat-val">3</div><div class="mh-stat-lbl">Tipi di giudice</div></div>
+    <div class="mh-stat"><div class="mh-stat-val">5</div><div class="mh-stat-lbl">Passi validazione</div></div>
+    <div class="mh-stat"><div class="mh-stat-val">0.75+</div><div class="mh-stat-lbl">Soglia correlazione</div></div>
+  </div>
+</div>
+
+<!-- NAV -->
+<div class="nav">
+  <button class="nav-btn active" onclick="show(1)">Come funziona</button>
+  <button class="nav-btn" onclick="show(2)">I bias in dettaglio</button>
+  <button class="nav-btn" onclick="show(3)">I 3 tipi di giudice</button>
+  <button class="nav-btn" onclick="show(4)">Progettare il prompt</button>
+  <button class="nav-btn" onclick="show(5)">Validare il giudice</button>
+  <button class="nav-btn" onclick="show(6)">Quando fidarsi</button>
+</div>
+
+
+<!-- ═══════════════════════════
+     S1 — COME FUNZIONA
+═══════════════════════════ -->
+<div class="sect active" id="s1">
+  <div class="sect-head">
+    <div class="sect-num">Introduzione</div>
+    <h2>Come funziona LLM-as-judge — e perché è promettente e pericoloso insieme</h2>
+    <p>Il meccanismo è semplice. Le implicazioni non lo sono. Capire cosa fa davvero il giudice è il prerequisito per usarlo bene.</p>
+  </div>
+  <div class="wrap">
+
+    <div class="prose" style="margin-top:28px;">
+      <p>LLM-as-judge è l'utilizzo di un modello linguistico per valutare l'output di un altro modello (o dello stesso). Il giudice riceve come input: il contesto del task (il prompt del sistema valutato), l'input che era stato fornito, l'output prodotto, e i criteri di valutazione. Produce come output un punteggio, un giudizio, o entrambi.</p>
+      <p>La promessa è concreta: <strong>scalabilità quasi illimitata a costo relativamente basso, con una capacità di comprensione semantica che nessun checker programmatico potrà mai avere</strong>. Il pericolo è altrettanto concreto: il giudice è lui stesso un LLM con bias, limiti e comportamenti imprevedibili — e se lo usi senza comprenderli, stai misurando qualcosa, ma non necessariamente la qualità dell'output che ti interessa.</p>
+    </div>
+
+    <div class="code-box" style="margin-top:24px;"><span class="cm"># Il loop di valutazione LLM-as-judge — struttura di base</span>
+
+<span class="kw">def</span> evaluate_with_judge(system_prompt, user_input, agent_output, judge_criteria):
+
+    judge_prompt = f<span class="str">"""
+    {JUDGE_SYSTEM_PROMPT}  # Chi è il giudice e cosa fa
+
+    # Input che il sistema valutato ha ricevuto:
+    TASK: {system_prompt}
+    INPUT: {user_input}
+
+    # Output che il sistema ha prodotto:
+    OUTPUT: {agent_output}
+
+    # Criteri di valutazione:
+    {judge_criteria}
+
+    # Produci la tua valutazione nel formato specificato.
+    """</span>
+
+    judge_response = call_llm(
+        model=<span class="str">"claude-opus-4-6"</span>,  <span class="cm"># modello diverso da quello valutato</span>
+        prompt=judge_prompt
+    )
+
+    <span class="kw">return</span> parse_judgment(judge_response)  <span class="cm"># estrai score strutturato</span></div>
+
+    <div class="insight" style="margin-top:24px;">
+      <div class="insight-lbl">Il problema fondamentale</div>
+      <p>Un giudice LLM non ha una nozione oggettiva di "buono". Ha una distribuzione di probabilità su cosa considera buono — costruita durante il training su testi umani, influenzata dall'RLHF, e non necessariamente allineata con i tuoi criteri specifici. <strong>Ogni valutazione del giudice è una stima probabilistica, non una misura assoluta.</strong> Questo non lo rende inutile — lo rende uno strumento da usare con consapevolezza delle sue limitazioni.</p>
+    </div>
+
+    <div class="key-point" style="margin-top:24px;">
+      <div class="kp-label">Il principio del report C</div>
+      <div class="kp-text">Un giudice LLM non-validato è peggio di nessun giudice — perché produce false certezze invece di nessuna informazione.</div>
+      <div class="kp-sub">La tentazione è usare LLM-as-judge come sostituto rapido della valutazione umana, senza investire nella validazione. Il risultato è un sistema di eval che sembra funzionare ma misura i pregiudizi del giudice invece della qualità dell'agente valutato. Validare il giudice non è un'opzione — è il prerequisito per cui qualsiasi numero produca abbia significato.</div>
+    </div>
+
+  </div>
+</div>
+
+
+<!-- ═══════════════════════════
+     S2 — I BIAS IN DETTAGLIO
+═══════════════════════════ -->
+<div class="sect" id="s2">
+  <div class="sect-head">
+    <div class="sect-num">Sezione critica</div>
+    <h2>I 4 bias sistematici del giudice LLM</h2>
+    <p>Ogni bias ha un meccanismo preciso, evidenze empiriche, e contromisure specifiche. Conoscerli non significa eliminarli — significa progettare il sistema per non esserne ingannati.</p>
+  </div>
+  <div class="wrap">
+
+    <div class="bias-grid" style="margin-top:28px;">
+
+      <!-- BIAS 1: VERBOSITY -->
+      <div class="bias-card">
+        <div class="bc-bar"></div>
+        <div class="bc-head">
+          <div class="bc-label">Bias 01</div>
+          <div class="bc-title">Verbosity bias</div>
+        </div>
+        <div class="bc-body">
+          <div class="bc-mechanism">Il giudice tende a dare punteggi più alti agli output più lunghi, <strong>anche quando la lunghezza non è correlata alla qualità</strong>. Un output di 400 parole mediocre riceve punteggi simili a uno di 100 parole eccellente.</div>
+          <div class="bc-evidence">Evidenza: studi mostrano che aggiungere contenuto ridondante e irrilevante in fondo a un output migliora il punteggio del giudice di 0.3–0.8 punti su scala 1–5, senza migliorare la qualità reale.</div>
+          <div class="bc-mitigation"><strong>Contromisura:</strong> includi esplicitamente nel prompt del giudice "La lunghezza dell'output non è un criterio di qualità. Un output conciso e completo vale quanto uno lungo. Non penalizzare la brevità." E normalizza la lunghezza prima di passare al giudice quando possibile.</div>
+        </div>
+      </div>
+
+      <!-- BIAS 2: SELF-ENHANCEMENT -->
+      <div class="bias-card">
+        <div class="bc-bar"></div>
+        <div class="bc-head">
+          <div class="bc-label">Bias 02</div>
+          <div class="bc-title">Self-enhancement bias</div>
+        </div>
+        <div class="bc-body">
+          <div class="bc-mechanism">Il giudice tende a preferire output stilisticamente simili a quelli che produrrebbe lui stesso — <strong>favorendo output generati dallo stesso modello o da modelli della stessa famiglia</strong>. Non valuta la qualità oggettiva, valuta la familiarità.</div>
+          <div class="bc-evidence">Evidenza: Claude tende a preferire output prodotti da Claude; GPT-4 tende a preferire output prodotti da GPT-4. Questo bias è riproducibile e stabile — non è rumore casuale.</div>
+          <div class="bc-mitigation"><strong>Contromisura primaria:</strong> usa un modello diverso da quello produttivo come giudice (GPT come giudice di Claude, o viceversa). <strong>Contromisura secondaria:</strong> valida il giudice comparando le sue valutazioni su output prodotti da modelli diversi — il bias è presente se valuta sistematicamente meglio i propri output.</div>
+        </div>
+      </div>
+
+      <!-- BIAS 3: POSITION -->
+      <div class="bias-card">
+        <div class="bc-bar"></div>
+        <div class="bc-head">
+          <div class="bc-label">Bias 03</div>
+          <div class="bc-title">Position bias</div>
+        </div>
+        <div class="bc-body">
+          <div class="bc-mechanism">Nelle valutazioni comparative (A vs B), il giudice tende a favorire sistematicamente il <strong>primo o l'ultimo elemento presentato</strong> — indipendentemente dalla qualità relativa. Questo bias non è stabile: alcuni modelli preferiscono il primo (primacy), altri l'ultimo (recency).</div>
+          <div class="bc-evidence">Evidenza: lo stesso giudice può cambiare verdetto su una comparazione A/B semplicemente invertendo l'ordine di presentazione. Il bias è riproducibile e può raggiungere il 20–30% di discordanza.</div>
+          <div class="bc-mitigation"><strong>Contromisura:</strong> per valutazioni comparative, esegui sempre due valutazioni con ordine invertito (A poi B, e B poi A) e media i risultati. Se il verdetto cambia invertendo l'ordine, il risultato è inaffidabile. <strong>Alternativa:</strong> usa valutazione assoluta invece di comparativa.</div>
+        </div>
+      </div>
+
+      <!-- BIAS 4: SCORES COMPRESSION -->
+      <div class="bias-card">
+        <div class="bc-bar"></div>
+        <div class="bc-head">
+          <div class="bc-label">Bias 04</div>
+          <div class="bc-title">Score compression bias</div>
+        </div>
+        <div class="bc-body">
+          <div class="bc-mechanism">Il giudice tende a evitare i valori estremi della scala — raramente assegna 1/5 o 5/5. Si concentra nella fascia centrale (3–4 su una scala 1–5), <strong>riducendo la sensibilità del sistema a differenze di qualità reali</strong>. Output molto buoni e output mediocri ricevono punteggi simili.</div>
+          <div class="bc-evidence">Evidenza: su scale 1–10, la distribuzione dei punteggi di un giudice non calibrato si concentra nell'intervallo 6–8, rendendo inefficace qualsiasi soglia di accettabilità che non sia in quella fascia.</div>
+          <div class="bc-mitigation"><strong>Contromisura 1:</strong> usa scale piccole (1–3) invece di scale grandi (1–10). <strong>Contromisura 2:</strong> includi esempi espliciti di output che meritano il punteggio minimo e massimo nel prompt del giudice (calibrazione). <strong>Contromisura 3:</strong> usa classificazione categorica (corretto/parziale/sbagliato) invece di scala numerica continua per task binari.</div>
+        </div>
+      </div>
+
+    </div>
+
+    <div class="key-point" style="margin-top:32px;">
+      <div class="kp-label">Il pattern comune dei 4 bias</div>
+      <div class="kp-text">Tutti e 4 i bias derivano dallo stesso meccanismo: il giudice usa euristiche implicite invece di applicare i criteri espliciti che gli hai fornito.</div>
+      <div class="kp-sub">Il verbosity bias usa "è lungo" come proxy di "è completo". Il self-enhancement usa "è familiare" come proxy di "è buono". Il position bias usa "è presentato prima/dopo" come proxy di "è migliore". Lo score compression usa "evita gli estremi" come euristiche di cautela. Tutti e quattro si mitigano nella stessa direzione: criteri espliciti, esempi di calibrazione, e design del processo che non lascia spazio alle euristiche implicite.</div>
+    </div>
+
+  </div>
+</div>
+
+
+<!-- ═══════════════════════════
+     S3 — I 3 TIPI DI GIUDICE
+═══════════════════════════ -->
+<div class="sect" id="s3">
+  <div class="sect-head">
+    <div class="sect-num">Sezione strutturale</div>
+    <h2>I 3 tipi di giudice — architetture diverse per usi diversi</h2>
+    <p>Non tutti i giudici LLM funzionano allo stesso modo. Tre architetture distinte, ognuna con il suo punto di forza e il suo caso d'uso ottimale.</p>
+  </div>
+  <div class="wrap">
+
+    <div class="judge-types" style="margin-top:28px;">
+
+      <div class="jt-card">
+        <div class="jt-head">
+          <div class="jt-badge">Tipo 1</div>
+          <div class="jt-name">Giudice diretto (absolute scoring)</div>
+        </div>
+        <div class="jt-body">
+          <div class="jt-desc">Il giudice riceve un singolo output e assegna un punteggio su scala. <strong>Nessun confronto con altri output</strong> — la valutazione è assoluta rispetto ai criteri. Il tipo più semplice e il più usato.</div>
+          <div class="jt-prompt-pattern">Struttura prompt:
+"Valuta questo output su scala 1–3 rispetto a questi criteri: [criteri]. Restituisci solo JSON: {'score': int, 'motivazione': str}"</div>
+          <div class="jt-when">Migliore quando: volume alto, output indipendenti, criteri ben definiti. Soffre di: score compression, verbosity bias.</div>
+        </div>
+      </div>
+
+      <div class="jt-card">
+        <div class="jt-head">
+          <div class="jt-badge">Tipo 2</div>
+          <div class="jt-name">Giudice comparativo (pairwise)</div>
+        </div>
+        <div class="jt-body">
+          <div class="jt-desc">Il giudice riceve due output (A e B) e decide quale è migliore, o se sono equivalenti. <strong>Più affidabile del diretto per rilevare differenze sottili</strong> — confrontare è più facile che assegnare un punteggio assoluto. Ma soffre di position bias.</div>
+          <div class="jt-prompt-pattern">Struttura prompt:
+"Tra questi due output (A e B), quale risponde meglio ai criteri? Rispondi: 'A', 'B', o 'Equivalenti'. Motivazione in max 20 parole."</div>
+          <div class="jt-when">Migliore quando: confrontare due versioni del prompt (A/B test), scegliere tra output candidati. Richiede: doppia valutazione con ordine invertito per mitigare position bias.</div>
+        </div>
+      </div>
+
+      <div class="jt-card">
+        <div class="jt-head">
+          <div class="jt-badge">Tipo 3</div>
+          <div class="jt-name">Giudice con reference (grounded)</div>
+        </div>
+        <div class="jt-body">
+          <div class="jt-desc">Il giudice riceve l'output <em>e</em> un output di riferimento (il gold standard) e valuta quanto il primo si avvicina al secondo. <strong>Riduce drasticamente la varianza e i bias</strong> perché il confronto è con un'ancora concreta, non con criteri astratti.</div>
+          <div class="jt-prompt-pattern">Struttura prompt:
+"Confronta l'output prodotto con l'output di riferimento (gold standard). Quanto l'output prodotto soddisfa gli stessi criteri del riferimento? Scala 1–3."</div>
+          <div class="jt-when">Migliore quando: hai un held-out set con output gold. Più affidabile degli altri due. Richiede: output di riferimento di alta qualità nel test case.</div>
+        </div>
+      </div>
+
+    </div>
+
+    <div class="prose" style="margin-top:28px;">
+      <p>Il giudice con reference è il più affidabile dei tre perché dà al modello un'ancora concreta invece di criteri astratti. Il problema è che richiede output di riferimento di qualità per ogni caso di test — un investimento non sempre disponibile. In assenza di reference, il giudice diretto con buona calibrazione è il compromesso pratico più comune.</p>
+    </div>
+
+    <div class="spectrum" style="margin-top:20px;">
+      <div class="spectrum-row head col4">
+        <div class="s-cell">Tipo</div>
+        <div class="s-cell">Affidabilità</div>
+        <div class="s-cell">Bias principali</div>
+        <div class="s-cell">Requisito aggiuntivo</div>
+      </div>
+      <div class="spectrum-row col4">
+        <div class="s-cell lbl">Diretto</div>
+        <div class="s-cell mid">Media — varianza moderata</div>
+        <div class="s-cell lo">Verbosity, score compression</div>
+        <div class="s-cell ok">Nessuno — il più semplice</div>
+      </div>
+      <div class="spectrum-row col4">
+        <div class="s-cell lbl">Comparativo</div>
+        <div class="s-cell ok">Buona su differenze fine-grained</div>
+        <div class="s-cell mid">Position bias (mitigabile)</div>
+        <div class="s-cell mid">Doppia valutazione, 2× costo</div>
+      </div>
+      <div class="spectrum-row col4">
+        <div class="s-cell lbl">Con reference</div>
+        <div class="s-cell ok">Alta — il più affidabile</div>
+        <div class="s-cell ok">Minimi se reference è buono</div>
+        <div class="s-cell lo">Output di riferimento per ogni caso</div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+
+<!-- ═══════════════════════════
+     S4 — PROGETTARE IL PROMPT
+═══════════════════════════ -->
+<div class="sect" id="s4">
+  <div class="sect-head">
+    <div class="sect-num">Linee guida 01 – 03</div>
+    <h2>Progettare il prompt del giudice</h2>
+    <p>Il giudice è un agente — e la qualità del suo prompt determina la qualità delle sue valutazioni. Le linee guida per costruire un prompt di giudice affidabile.</p>
+  </div>
+  <div class="wrap">
+
+    <!-- GL 01 -->
+    <div class="gl-group" style="margin-top:28px;">
+      <div class="gl-group-title">Linea guida 01</div>
+      <div class="gl-card">
+        <div class="gl-header">
+          <div class="gl-stripe"></div>
+          <div class="gl-num">01</div>
+          <div class="gl-title-wrap">
+            <div class="gl-title">Struttura il prompt del giudice in 5 layer obbligatori</div>
+            <div class="gl-subtitle">Ogni layer serve a un bias specifico — ometterne uno degrada la qualità della valutazione</div>
+          </div>
+          <div class="gl-impact-wrap">
+            <div class="gl-impact-stars" style="color:var(--accent)">★★★</div>
+            <div class="gl-impact-lbl">Impatto</div>
+          </div>
+        </div>
+        <div class="gl-body">
+          <div class="gl-section">
+            <div class="gl-section-lbl">Anatomia del prompt del giudice — 5 layer</div>
+            <div class="prompt-anatomy">
+
+              <div class="pa-layer">
+                <div class="pa-stripe"></div>
+                <div class="pa-label-col">
+                  <div class="pa-tag">Layer 1</div>
+                  <div class="pa-label-name">Ruolo e contesto</div>
+                  <div class="pa-label-why">Attiva i pattern giusti; contestualizza il task</div>
+                </div>
+                <div class="pa-content">Sei un valutatore esperto di <span class="hl">[dominio specifico]</span>.
+Il tuo compito è valutare la qualità degli output prodotti da un agente AI
+nel contesto di <span class="hl">[descrizione del sistema valutato]</span>.
+Valuta come valuterebbe <span class="hl">[tipo di utente finale]</span> che usa questo output.</div>
+              </div>
+
+              <div class="pa-layer">
+                <div class="pa-stripe"></div>
+                <div class="pa-label-col">
+                  <div class="pa-tag">Layer 2</div>
+                  <div class="pa-label-name">Criteri espliciti</div>
+                  <div class="pa-label-why">Riduce l'uso di euristiche implicite</div>
+                </div>
+                <div class="pa-content">Valuta l'output <span class="hl">esclusivamente</span> su questi criteri:
+
+CRITERIO 1 — <span class="hl">[Nome]</span> (peso <span class="hl">[N]</span>%):
+<span class="hl">[Definizione precisa. Cosa conta, cosa non conta.]</span>
+
+CRITERIO 2 — <span class="hl">[Nome]</span> (peso <span class="hl">[N]</span>%):
+<span class="hl">[Definizione precisa.]</span>
+
+Non considerare altri aspetti al di fuori di questi criteri.</div>
+              </div>
+
+              <div class="pa-layer">
+                <div class="pa-stripe"></div>
+                <div class="pa-label-col">
+                  <div class="pa-tag">Layer 3</div>
+                  <div class="pa-label-name">Anti-bias espliciti</div>
+                  <div class="pa-label-why">Contromisure dirette ai 4 bias noti</div>
+                </div>
+                <div class="pa-content">Istruzioni importanti:
+- <span class="hl">La lunghezza NON è un criterio</span>. Un output conciso e corretto vale quanto uno lungo.
+- Valuta il <span class="hl">contenuto e la correttezza</span>, non la quantità di testo.
+- Se hai dubbi, assegna il punteggio <span class="hl">più basso che è giustificato dai criteri</span>, non quello medio.</div>
+              </div>
+
+              <div class="pa-layer">
+                <div class="pa-stripe"></div>
+                <div class="pa-label-col">
+                  <div class="pa-tag">Layer 4</div>
+                  <div class="pa-label-name">Scala e formato output</div>
+                  <div class="pa-label-why">Previene score compression e testo libero non parsabile</div>
+                </div>
+                <div class="pa-content">Scala di valutazione per ogni criterio:
+1 = <span class="hl">Sbagliato o mancante</span>: il criterio non è soddisfatto
+2 = <span class="hl">Parziale</span>: soddisfatto in parte con lacune significative
+3 = <span class="hl">Corretto</span>: il criterio è pienamente soddisfatto
+
+Rispondi SOLO con JSON valido:
+{"c1": 1|2|3, "c2": 1|2|3, "score": float, "motivazione": "max 25 parole"}</div>
+              </div>
+
+              <div class="pa-layer">
+                <div class="pa-stripe"></div>
+                <div class="pa-label-col">
+                  <div class="pa-tag">Layer 5</div>
+                  <div class="pa-label-name">Esempi di calibrazione</div>
+                  <div class="pa-label-why">Ancora il giudice su casi concreti; riduce tutti i bias</div>
+                </div>
+                <div class="pa-content">Esempi di valutazione corretta:
+
+INPUT: <span class="hl">[esempio 1 — caso con score 3/3]</span>
+OUTPUT: <span class="hl">[output eccellente]</span>
+VALUTAZIONE: {"c1": 3, "c2": 3, "score": 3.0, "motivazione": "..."}
+
+INPUT: <span class="hl">[esempio 2 — caso con score 1/3]</span>
+OUTPUT: <span class="hl">[output sbagliato]</span>
+VALUTAZIONE: {"c1": 1, "c2": 1, "score": 1.0, "motivazione": "..."}</div>
+              </div>
+
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- GL 02 -->
+    <div class="gl-group" style="margin-top:8px;">
+      <div class="gl-group-title">Linea guida 02</div>
+      <div class="gl-card">
+        <div class="gl-header">
+          <div class="gl-stripe"></div>
+          <div class="gl-num">02</div>
+          <div class="gl-title-wrap">
+            <div class="gl-title">Includi il ragionamento esplicito prima del punteggio</div>
+            <div class="gl-subtitle">Il chain-of-thought migliora la qualità della valutazione — e la rende diagnosticabile</div>
+          </div>
+          <div class="gl-impact-wrap">
+            <div class="gl-impact-stars" style="color:var(--accent)">★★☆</div>
+            <div class="gl-impact-lbl">Impatto</div>
+          </div>
+        </div>
+        <div class="gl-body">
+          <div class="gl-section">
+            <div class="gl-section-lbl">La linea guida</div>
+            <p>Chiedere al giudice di ragionare prima di assegnare il punteggio produce valutazioni più coerenti e più utili — il ragionamento esplicito funge da catena che vincola il punteggio finale, riducendo la varianza. Come ulteriore vantaggio, il ragionamento è leggibile: quando il giudice sbaglia, il perché è diagnosticabile.</p>
+          </div>
+          <div class="gl-section">
+            <div class="gl-section-lbl">Confronto — con e senza ragionamento</div>
+            <div class="compare-grid">
+              <div>
+                <div class="pex-lbl bad">❌ Punteggio diretto (no CoT)</div>
+                <div class="prompt-box bad">Valuta l'output e restituisci il JSON con il punteggio.
+
+→ {"c1": 2, "score": 2.0, "motivazione": "risposta incompleta"}
+[Poco diagnosticabile. Perché è incompleta? In che senso?]</div>
+              </div>
+              <div>
+                <div class="pex-lbl good">✓ Ragionamento + punteggio</div>
+                <div class="prompt-box good">Prima analizza l'output criterio per criterio. Poi assegna il punteggio.
+
+RAGIONAMENTO:
+- C1 (correttezza): <span class="hl">il rischio principale è identificato correttamente</span> ma manca l'articolo di riferimento → parziale
+- C2 (actionability): <span class="hl">la raccomandazione è generica</span>, non specifica del contratto → insufficiente
+
+→ {"c1": 2, "c2": 1, "score": 1.5, "motivazione": "manca riferimento clausola e raccomandazione troppo generica"}</div>
+              </div>
+            </div>
+          </div>
+          <div class="gl-section">
+            <div class="gl-section-lbl">Perché funziona — il meccanismo LLM</div>
+            <div class="mechanism">
+              <div class="mech-lbl">CoT come auto-check implicito</div>
+              <p>Quando il giudice ragiona esplicitamente prima di punteggiare, il ragionamento prodotto diventa contesto per il punteggio finale. <strong>Un ragionamento che descrive problemi porta naturalmente a un punteggio basso</strong> — il modello non può scrivere "il rischio non è identificato correttamente" e poi assegnare 3/3. Il CoT crea una coerenza interna che riduce la varianza e i falsi positivi.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- GL 03 -->
+    <div class="gl-group" style="margin-top:8px;">
+      <div class="gl-group-title">Linea guida 03</div>
+      <div class="gl-card">
+        <div class="gl-header">
+          <div class="gl-stripe"></div>
+          <div class="gl-num">03</div>
+          <div class="gl-title-wrap">
+            <div class="gl-title">Separa il giudice dal sistema valutato — modello diverso, prompt diverso</div>
+            <div class="gl-subtitle">Un giudice che usa lo stesso modello del sistema valutato introduce self-enhancement bias strutturale</div>
+          </div>
+          <div class="gl-impact-wrap">
+            <div class="gl-impact-stars" style="color:var(--accent)">★★★</div>
+            <div class="gl-impact-lbl">Impatto critico</div>
+          </div>
+        </div>
+        <div class="gl-body">
+          <div class="gl-section">
+            <div class="gl-section-lbl">La linea guida</div>
+            <p>Quando possibile, usa un modello diverso da quello produttivo come giudice. Se il budget non permette due modelli distinti, usa almeno la stessa famiglia di modelli ma <strong>una versione di capacità superiore</strong> (es. il sistema usa Claude Sonnet, il giudice usa Claude Opus). Mai usare lo stesso modello con lo stesso prompt sia per produrre che per valutare — è il caso di self-enhancement più estremo.</p>
+          </div>
+          <div class="gl-section">
+            <div class="gl-section-lbl">La gerarchia delle scelte</div>
+            <div class="spectrum">
+              <div class="spectrum-row head col3">
+                <div class="s-cell">Configurazione</div>
+                <div class="s-cell">Self-enhancement risk</div>
+                <div class="s-cell">Consiglio</div>
+              </div>
+              <div class="spectrum-row col3">
+                <div class="s-cell lbl">Stesso modello, stesso prompt</div>
+                <div class="s-cell lo">Massimo — il giudice si comporta come il sistema</div>
+                <div class="s-cell lo">Mai usare</div>
+              </div>
+              <div class="spectrum-row col3">
+                <div class="s-cell lbl">Stesso modello, prompt diverso</div>
+                <div class="s-cell lo">Alto — bias stilistico persiste</div>
+                <div class="s-cell lo">Evitare se possibile</div>
+              </div>
+              <div class="spectrum-row col3">
+                <div class="s-cell lbl">Stessa famiglia, versione più capace</div>
+                <div class="s-cell mid">Moderato — ridotto ma non eliminato</div>
+                <div class="s-cell mid">Accettabile se validato</div>
+              </div>
+              <div class="spectrum-row col3">
+                <div class="s-cell lbl">Famiglia diversa (es. GPT giudica Claude)</div>
+                <div class="s-cell hi">Minimo — bias stilistico quasi assente</div>
+                <div class="s-cell hi">Preferibile</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+
+<!-- ═══════════════════════════
+     S5 — VALIDARE IL GIUDICE
+═══════════════════════════ -->
+<div class="sect" id="s5">
+  <div class="sect-head">
+    <div class="sect-num">Processo obbligatorio</div>
+    <h2>Il protocollo di validazione del giudice</h2>
+    <p>Prima di usare un giudice LLM sistematicamente, devi sapere quanto è affidabile. La validazione non è un'opzione — è il prerequisito per cui i numeri prodotti abbiano significato.</p>
+  </div>
+  <div class="wrap">
+
+    <div class="prose" style="margin-top:28px;">
+      <p>Validare il giudice significa misurare quanto le sue valutazioni correlano con quelle umane su un campione rappresentativo. Il processo ha 5 passi obbligatori, nell'ordine.</p>
+    </div>
+
+    <div class="validation-steps" style="margin-top:20px;">
+
+      <div class="vs-step">
+        <div class="vs-num">1</div>
+        <div class="vs-body">
+          <div class="vs-title">Seleziona il campione di validazione</div>
+          <div class="vs-desc">Scegli <strong>50–100 casi dalla suite di test</strong>, bilanciati per categoria (tipici, limite, anomali). Il campione deve coprire tutta la variabilità dei task — non solo i casi facili o quelli difficili. Più il campione è rappresentativo, più la validazione è affidabile.</div>
+          <div class="vs-metric">Dimensione minima: 50 casi. Sotto questa soglia la correlazione stimata non è statisticamente affidabile.</div>
+        </div>
+      </div>
+
+      <div class="vs-step">
+        <div class="vs-num">2</div>
+        <div class="vs-body">
+          <div class="vs-title">Raccogli la valutazione umana di riferimento</div>
+          <div class="vs-desc">Un esperto del dominio valuta tutti i 50–100 casi usando la stessa rubrica che userà il giudice. <strong>La valutazione umana deve essere fatta prima</strong> di vedere i risultati del giudice — per evitare che il valutatore sia influenzato dalle valutazioni automatiche.</div>
+          <div class="vs-metric">Best practice: due valutatori indipendenti su un sotto-campione per misurare inter-rater agreement. Se il delta umano-umano è alto, la rubrica è ambigua — riscrivila prima di validare il giudice.</div>
+        </div>
+      </div>
+
+      <div class="vs-step">
+        <div class="vs-num">3</div>
+        <div class="vs-body">
+          <div class="vs-title">Esegui il giudice su tutto il campione</div>
+          <div class="vs-desc">Passa tutti i 50–100 casi al giudice e raccogli i punteggi. <strong>Esegui ogni caso due volte</strong> con temperature > 0 per stimare anche la varianza interna del giudice — se su stesso caso dà 1/3 e 3/3 in due run, è instabile indipendentemente dalla correlazione con l'umano.</div>
+          <div class="vs-metric">Temperatura consigliata per il giudice: 0.1–0.3. Bassa ma non zero — un po' di varianza è normale e diagnosticabile; zero varianza potrebbe mascherare instabilità.</div>
+        </div>
+      </div>
+
+      <div class="vs-step">
+        <div class="vs-num">4</div>
+        <div class="vs-body">
+          <div class="vs-title">Calcola la correlazione e identifica i pattern di errore</div>
+          <div class="vs-desc">Calcola la correlazione di Spearman (o Pearson) tra i punteggi del giudice e quelli umani. <strong>Soglia minima di accettabilità: 0.75</strong>. Sotto questa soglia il giudice non è affidabile per uso sistematico. Oltre la correlazione aggregata, analizza dove il giudice sbaglia: sui casi limite? Su un certo tipo di output? In una direzione specifica (sempre troppo alto o sempre troppo basso)?</div>
+          <div class="vs-metric">Correlazione ≥ 0.85 → ottimo. 0.75–0.84 → accettabile con monitoraggio. 0.60–0.74 → raffinare il prompt. < 0.60 → il giudice non è affidabile per questo task.</div>
+        </div>
+      </div>
+
+      <div class="vs-step">
+        <div class="vs-num">5</div>
+        <div class="vs-body">
+          <div class="vs-title">Validazione periodica e re-calibrazione</div>
+          <div class="vs-desc">La validazione non è un evento una tantum. Ogni aggiornamento del modello giudice (o del modello valutato), ogni cambio significativo nel tipo di input, ogni evoluzione del task può cambiare l'affidabilità del giudice. <strong>Pianifica una ri-validazione ogni 2–3 mesi</strong> in produzione — un campionamento di 30–50 casi con valutazione umana è sufficiente per rilevare derive significative.</div>
+          <div class="vs-metric">Segnale di drift: la correlazione scende di più di 0.05 rispetto alla baseline. Azione: ri-calibrare il prompt del giudice con nuovi esempi rappresentativi del comportamento corrente.</div>
+        </div>
+      </div>
+
+    </div>
+
+  </div>
+</div>
+
+
+<!-- ═══════════════════════════
+     S6 — QUANDO FIDARSI
+═══════════════════════════ -->
+<div class="sect" id="s6">
+  <div class="sect-head">
+    <div class="sect-num">Guida operativa finale</div>
+    <h2>Quando fidarsi del giudice — e quando no</h2>
+    <p>La domanda più importante di tutto il report. Non esiste una risposta assoluta — dipende dal task, dalla validazione e dalle conseguenze degli errori.</p>
+  </div>
+  <div class="wrap">
+
+    <div class="prose" style="margin-top:28px;">
+      <p>Un giudice ben progettato e validato è uno strumento affidabile per la maggior parte dei task di valutazione. Ma esistono situazioni in cui anche un giudice eccellente non è adatto — e usarlo comunque produce misure che sembrano precise ma non lo sono. La tabella qui sotto è la guida operativa per decidere caso per caso.</p>
+    </div>
+
+    <table class="trust-table" style="margin-top:20px;">
+      <thead>
+        <tr>
+          <th style="width:200px;">Situazione</th>
+          <th>Livello di fiducia nel giudice</th>
+          <th>Motivazione</th>
+          <th>Alternativa se non ti fidi</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>Giudice validato (correlazione ≥ 0.80), task tipici</td>
+          <td class="trust-high">Alta</td>
+          <td>Il giudice approssima bene il giudizio umano sui casi che ha visto durante la validazione</td>
+          <td>—</td>
+        </tr>
+        <tr>
+          <td>Giudice validato, ma input molto diversi da quelli del campione di validazione</td>
+          <td class="trust-med">Media</td>
+          <td>La validazione non copre questo tipo di input — la correlazione potrebbe essere diversa</td>
+          <td>Ri-valida su un campione del nuovo tipo di input</td>
+        </tr>
+        <tr>
+          <td>Giudice non ancora validato</td>
+          <td class="trust-low">Bassa — non usare sistematicamente</td>
+          <td>Non si sa quanto le sue valutazioni correlano con quelle umane</td>
+          <td>Valutazione umana finché non è validato</td>
+        </tr>
+        <tr>
+          <td>Task con forte componente soggettiva (creatività, tono, appropriatezza culturale)</td>
+          <td class="trust-low">Bassa anche se validato</td>
+          <td>Il giudice non ha esperienza soggettiva — approssima male ciò che dipende da contesto culturale e preferenze</td>
+          <td>Valutazione umana con panel diversificato</td>
+        </tr>
+        <tr>
+          <td>Task ad alto rischio (medico, legale, finanziario)</td>
+          <td class="trust-med">Media — usare solo per screening</td>
+          <td>Errori del giudice hanno conseguenze reali — usarlo solo per filtrare i casi chiaramente sbagliati</td>
+          <td>Valutazione umana esperta per tutti i casi che passano il filtro del giudice</td>
+        </tr>
+        <tr>
+          <td>Valutazione comparativa A/B con ordine fisso</td>
+          <td class="trust-low">Bassa — position bias</td>
+          <td>Il position bias contamina sistematicamente i risultati delle comparazioni con ordine fisso</td>
+          <td>Doppia valutazione con ordine invertito + media</td>
+        </tr>
+        <tr>
+          <td>Output molto brevi (< 30 token)</td>
+          <td class="trust-med">Media</td>
+          <td>Il giudice ha meno contesto su cui ragionare — maggiore varianza nelle valutazioni</td>
+          <td>Checker programmatico + valutazione umana su campione</td>
+        </tr>
+        <tr>
+          <td>Giudice con correlazione ≥ 0.85, task ben definiti, valutazione in CI/CD</td>
+          <td class="trust-high">Alta — ideale per automazione</td>
+          <td>Il caso d'uso ottimale: task stabile, giudice calibrato, uso come gate automatico pre-deployment</td>
+          <td>—</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <div class="key-point" style="margin-top:32px;">
+      <div class="kp-label">Il principio operativo</div>
+      <div class="kp-text">Fidati del giudice in proporzione alla qualità della sua validazione — non alla fiducia che hai nel modello che lo fa girare.</div>
+      <div class="kp-sub">Il modello più potente non produce automaticamente il giudice più affidabile. L'affidabilità del giudice dipende dalla qualità del suo prompt, dalla sua validazione su casi rappresentativi, e dall'allineamento tra i criteri del giudice e i criteri che ti interessano davvero. Un giudice più semplice ben validato è più utile di un giudice sofisticato non validato.</div>
+    </div>
+
+    <div class="checklist" style="margin-top:28px;">
+      <div style="font-family:'IBM Plex Mono',monospace; font-size:9px; letter-spacing:3px; text-transform:uppercase; color:var(--ink4); padding-bottom:10px; border-bottom:1px solid var(--border); margin-bottom:0;">Checklist — giudice pronto per uso sistematico?</div>
+      <div class="check-item">
+        <div class="check-icon" style="background:var(--accent)">✓</div>
+        <div>Il prompt del giudice ha i <strong>5 layer</strong>: ruolo, criteri espliciti con pesi, istruzioni anti-bias, scala precisa con formato output, esempi di calibrazione agli estremi.</div>
+      </div>
+      <div class="check-item">
+        <div class="check-icon" style="background:var(--accent)">✓</div>
+        <div>Il giudice usa un <strong>modello diverso</strong> (o almeno una versione superiore) rispetto al sistema valutato per minimizzare il self-enhancement bias.</div>
+      </div>
+      <div class="check-item">
+        <div class="check-icon" style="background:var(--accent)">✓</div>
+        <div>È stato incluso il <strong>ragionamento esplicito</strong> (CoT) prima del punteggio — la motivazione è diagnosticabile quando il giudice sbaglia.</div>
+      </div>
+      <div class="check-item">
+        <div class="check-icon" style="background:var(--accent)">✓</div>
+        <div>Il giudice è stato <strong>validato su campione umano</strong> (≥ 50 casi) con correlazione ≥ 0.75 prima dell'uso sistematico.</div>
+      </div>
+      <div class="check-item">
+        <div class="check-icon" style="background:var(--accent)">✓</div>
+        <div>È pianificata la <strong>ri-validazione periodica</strong> (ogni 2–3 mesi) per rilevare derive di affidabilità nel tempo.</div>
+      </div>
+      <div class="check-item">
+        <div class="check-icon" style="background:var(--accent)">✓</div>
+        <div>Ho verificato che il <strong>task non è in una zona di bassa fiducia</strong> (forte soggettività, alto rischio, output molto brevi, comparazione con ordine fisso).</div>
+      </div>
+    </div>
+
+    <div class="insight" style="margin-top:28px; border-color:#2e5f8a; background:#edf3f9;">
+      <div class="insight-lbl" style="color:#2e5f8a;">Ultimo — Report D</div>
+      <p>Con i metodi di valutazione coperti (B) e il giudice approfondito (C), il Report D chiude la serie affrontando le due dimensioni più avanzate: <strong>come valutare un agente in loop</strong> (non il singolo output ma la sequenza di azioni — trajectory evaluation) e <strong>come usare i risultati dell'eval per migliorare sistematicamente</strong> il prompt senza overfittare sul test set.</p>
+    </div>
+
+  </div>
+</div>
+
+
+<!-- FOOTER -->
+<div class="footer">
+  <span>Serie Agenti AI — Leva 06 · Testing e Valutazione · Report C · LLM-as-judge</span>
+  <span>Marzo 2026</span>
+</div>
+
+<script>
+function show(n) {
+  document.querySelectorAll('.sect').forEach(s => s.classList.remove('active'));
+  document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('s'+n).classList.add('active');
+  document.querySelectorAll('.nav-btn')[n-1].classList.add('active');
+  window.scrollTo({top:0, behavior:'smooth'});
+}
+</script>
+</body>
+</html>

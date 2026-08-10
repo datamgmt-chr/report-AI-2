@@ -1,0 +1,1103 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Testing e Valutazione — A · La Suite di Test</title>
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Outfit:wght@200;300;400;500;600;700;800;900&family=IBM+Plex+Mono:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg:     #faf8f5;
+  --bg2:    #f2efe9;
+  --bg3:    #e9e5dc;
+  --ink:    #1b1915;
+  --ink2:   #2e2b25;
+  --ink3:   #6d685c;
+  --ink4:   #a19c8f;
+  --border: #d9d4c8;
+  --border2:#cac4b6;
+
+  --accent:  #2e5f8a;
+  --accent2: #1d3f5e;
+  --accent-light: #edf3f9;
+
+  --ok:    #3d7a45;
+  --ok-l:  #f4faf5;
+  --warn:  #b07d24;
+  --warn-l:#fdf6e8;
+  --bad:   #c0392b;
+  --bad-l: #fdf5f5;
+}
+
+* { margin:0; padding:0; box-sizing:border-box; }
+html { scroll-behavior:smooth; }
+body {
+  background:var(--bg); color:var(--ink);
+  font-family:'Outfit',sans-serif; font-weight:300;
+  font-size:14px; line-height:1.75;
+}
+
+/* ── HEADER ── */
+.masthead {
+  background:var(--ink); color:rgba(255,255,255,.9);
+  padding:60px 56px 52px; position:relative; overflow:hidden;
+}
+.masthead::before {
+  content:''; position:absolute; inset:0;
+  background:
+    repeating-linear-gradient(90deg,rgba(255,255,255,.012) 0,rgba(255,255,255,.012) 1px,transparent 1px,transparent 64px),
+    repeating-linear-gradient(0deg,rgba(255,255,255,.012) 0,rgba(255,255,255,.012) 1px,transparent 1px,transparent 64px);
+  pointer-events:none;
+}
+.masthead::after {
+  content:'A'; position:absolute; right:44px; bottom:-28px;
+  font-family:'Instrument Serif',serif; font-size:280px; line-height:1;
+  color:rgba(255,255,255,.025); pointer-events:none;
+}
+.mh-eye {
+  font-family:'IBM Plex Mono',monospace; font-size:10px;
+  letter-spacing:3px; text-transform:uppercase;
+  color:rgba(255,255,255,.25); margin-bottom:18px; position:relative;
+}
+.mh-cluster {
+  display:inline-block; font-family:'IBM Plex Mono',monospace;
+  font-size:10px; letter-spacing:2px; text-transform:uppercase;
+  padding:4px 12px; border:1px solid var(--accent);
+  color:var(--accent); margin-bottom:20px; position:relative;
+}
+.masthead h1 {
+  font-family:'Instrument Serif',serif; font-weight:400;
+  font-size:clamp(30px,4.5vw,54px); line-height:1.08;
+  letter-spacing:-1px; max-width:700px; position:relative;
+}
+.mh-sub {
+  margin-top:20px; font-size:15px; font-weight:300;
+  color:rgba(255,255,255,.38); max-width:660px;
+  line-height:1.7; position:relative;
+}
+.mh-meta {
+  margin-top:32px; display:flex; gap:32px; flex-wrap:wrap; position:relative;
+}
+.mh-stat { display:flex; flex-direction:column; gap:4px; }
+.mh-stat-val {
+  font-family:'IBM Plex Mono',monospace; font-size:22px; font-weight:500;
+  color:rgba(255,255,255,.85);
+}
+.mh-stat-lbl {
+  font-size:10px; letter-spacing:2px; text-transform:uppercase;
+  color:rgba(255,255,255,.25);
+}
+
+/* ── NAV ── */
+.nav {
+  background:var(--ink2); position:sticky; top:0; z-index:100;
+  display:flex; overflow-x:auto;
+  border-bottom:1px solid rgba(255,255,255,.06);
+}
+.nav-btn {
+  flex:1; min-width:120px; padding:13px 12px;
+  border:none; background:transparent; cursor:pointer;
+  font-family:'Outfit',sans-serif; font-size:10.5px; font-weight:600;
+  text-transform:uppercase; letter-spacing:.4px;
+  color:rgba(255,255,255,.3);
+  border-right:1px solid rgba(255,255,255,.06);
+  transition:all .2s; white-space:nowrap;
+}
+.nav-btn:last-child { border-right:none; }
+.nav-btn:hover { color:rgba(255,255,255,.6); }
+.nav-btn.active { color:#fff; background:rgba(255,255,255,.05); }
+
+/* ── SECTIONS ── */
+.sect { display:none; }
+.sect.active { display:block; animation:fadeIn .3s ease; }
+@keyframes fadeIn { from{opacity:0;transform:translateY(6px)} to{opacity:1;transform:translateY(0)} }
+
+.sect-head { padding:48px 56px 36px; border-bottom:1px solid var(--border); }
+.sect-num {
+  font-family:'IBM Plex Mono',monospace; font-size:10px;
+  letter-spacing:3px; text-transform:uppercase; color:var(--ink4); margin-bottom:10px;
+}
+.sect-head h2 {
+  font-family:'Instrument Serif',serif; font-weight:400;
+  font-size:clamp(26px,3.5vw,42px); line-height:1.1;
+  letter-spacing:-.5px; max-width:640px; margin-bottom:14px;
+}
+.sect-head p { color:var(--ink3); max-width:700px; font-size:14.5px; }
+.wrap { padding:0 56px 64px; }
+
+/* ── PROSE ── */
+.prose { max-width:760px; }
+.prose p { font-size:14.5px; color:var(--ink3); line-height:1.85; margin-bottom:16px; }
+.prose p strong { color:var(--ink2); font-weight:500; }
+.prose p em { font-style:italic; color:var(--ink2); }
+
+/* ── GL CARD ── */
+.gl-group { margin-top:40px; }
+.gl-group-title {
+  font-family:'IBM Plex Mono',monospace; font-size:9px;
+  letter-spacing:3px; text-transform:uppercase;
+  color:var(--ink4); padding-bottom:10px; border-bottom:1px solid var(--border);
+}
+.gl-card { border:1px solid var(--border2); border-top:none; background:var(--bg); }
+.gl-header {
+  display:grid; grid-template-columns:5px 52px 1fr auto;
+  align-items:stretch; border-bottom:1px solid var(--border);
+}
+.gl-stripe { background:var(--accent); }
+.gl-num {
+  font-family:'Outfit',sans-serif; font-weight:800; font-size:20px; color:var(--bg3);
+  display:flex; align-items:center; justify-content:center;
+  border-right:1px solid var(--border);
+}
+.gl-title-wrap { padding:16px 20px; }
+.gl-title { font-family:'Instrument Serif',serif; font-size:20px; color:var(--ink2); line-height:1.2; }
+.gl-subtitle { font-size:12px; color:var(--ink4); margin-top:3px; }
+.gl-impact-wrap {
+  padding:14px 20px; display:flex; flex-direction:column;
+  align-items:flex-end; justify-content:center; gap:4px;
+}
+.gl-impact-stars { font-size:14px; }
+.gl-impact-lbl {
+  font-family:'IBM Plex Mono',monospace; font-size:8px;
+  letter-spacing:1px; text-transform:uppercase; color:var(--ink4);
+}
+.gl-body { padding:0; }
+.gl-section { padding:20px 24px; border-bottom:1px solid var(--border); }
+.gl-section:last-child { border-bottom:none; }
+.gl-section-lbl {
+  font-family:'IBM Plex Mono',monospace; font-size:9px;
+  letter-spacing:2px; text-transform:uppercase; color:var(--ink4);
+  margin-bottom:10px; padding-bottom:6px; border-bottom:1px solid var(--border);
+}
+.gl-section p { font-size:13.5px; color:var(--ink3); line-height:1.8; max-width:740px; }
+.gl-section p strong { color:var(--ink2); font-weight:500; }
+.gl-section p em { font-style:italic; color:var(--ink2); }
+
+/* ── CASE ANATOMY ── */
+.case-anatomy { margin-top:16px; border:1px solid var(--border2); }
+.ca-head {
+  padding:10px 16px; background:var(--ink);
+  border-bottom:1px solid rgba(255,255,255,.06);
+  font-family:'IBM Plex Mono',monospace; font-size:9px;
+  letter-spacing:2px; text-transform:uppercase; color:rgba(255,255,255,.4);
+}
+.ca-row {
+  display:grid; grid-template-columns:120px 1fr;
+  border-bottom:1px solid var(--border);
+}
+.ca-row:last-child { border-bottom:none; }
+.ca-label {
+  padding:14px 16px; background:var(--bg2);
+  border-right:1px solid var(--border);
+  font-family:'IBM Plex Mono',monospace; font-size:9px;
+  letter-spacing:1.5px; text-transform:uppercase;
+  color:var(--accent); display:flex; align-items:flex-start;
+  padding-top:16px;
+}
+.ca-content {
+  padding:14px 18px;
+  font-family:'IBM Plex Mono',monospace; font-size:11.5px;
+  line-height:1.7; color:var(--ink3); background:var(--bg);
+  white-space:pre-wrap;
+}
+.ca-content .ann {
+  display:inline-block;
+  background:var(--accent-light); color:var(--accent2);
+  font-size:10px; padding:1px 6px; margin-left:6px;
+  border:1px solid rgba(46,95,138,.2); white-space:normal;
+}
+
+/* ── CATEGORY TILES ── */
+.cat-grid {
+  display:grid; grid-template-columns:repeat(auto-fill,minmax(240px,1fr));
+  gap:12px; margin-top:16px;
+}
+.cat-tile { border:1px solid var(--border2); background:var(--bg); overflow:hidden; }
+.ct-head {
+  padding:10px 14px; background:var(--bg2);
+  border-bottom:1px solid var(--border);
+  display:flex; align-items:center; gap:10px;
+}
+.ct-pct {
+  font-family:'IBM Plex Mono',monospace; font-size:18px; font-weight:500;
+  color:var(--accent); flex-shrink:0; min-width:44px;
+}
+.ct-name { font-weight:600; font-size:13px; color:var(--ink2); }
+.ct-body { padding:12px 14px; }
+.ct-body p { font-size:12.5px; color:var(--ink3); line-height:1.6; }
+.ct-body p strong { color:var(--ink2); font-weight:500; }
+.ct-example {
+  margin-top:8px; padding:8px 10px;
+  background:var(--accent-light); border-left:3px solid var(--accent);
+  font-family:'IBM Plex Mono',monospace; font-size:11px;
+  line-height:1.55; color:var(--accent2);
+}
+
+/* ── SIZE GUIDE TABLE ── */
+.size-table { width:100%; border-collapse:collapse; margin-top:16px; border:1px solid var(--border2); }
+.size-table th, .size-table td {
+  padding:11px 14px; border:1px solid var(--border);
+  text-align:left; vertical-align:top; font-size:12.5px; line-height:1.5;
+}
+.size-table thead th {
+  background:var(--ink); color:rgba(255,255,255,.82);
+  font-family:'IBM Plex Mono',monospace; font-size:9px;
+  letter-spacing:.5px; text-transform:uppercase; font-weight:600;
+}
+.size-table tbody tr:nth-child(even) { background:var(--bg2); }
+.size-table td:first-child { font-weight:500; color:var(--ink2); }
+.size-table .rec { color:var(--accent2); font-weight:600; font-family:'IBM Plex Mono',monospace; font-size:11px; }
+
+/* ── DEV / HELD-OUT SPLIT ── */
+.split-panel {
+  margin-top:20px; display:grid; grid-template-columns:1fr 1fr;
+  gap:1px; background:var(--border);
+}
+.sp-col { background:var(--bg); padding:20px 22px; }
+.sp-label {
+  font-family:'IBM Plex Mono',monospace; font-size:9px;
+  letter-spacing:2px; text-transform:uppercase; margin-bottom:8px;
+  padding-bottom:8px; border-bottom:1px solid var(--border);
+}
+.sp-col:first-child .sp-label { color:var(--accent); }
+.sp-col:last-child  .sp-label { color:var(--ok); }
+.sp-title { font-family:'Instrument Serif',serif; font-size:18px; color:var(--ink2); margin-bottom:8px; }
+.sp-body { font-size:13px; color:var(--ink3); line-height:1.65; }
+.sp-body strong { color:var(--ink2); font-weight:500; }
+.sp-rule {
+  margin-top:10px; padding:8px 12px;
+  border-left:3px solid; font-size:12px; color:var(--ink3); line-height:1.5;
+}
+
+/* ── COLLECTION METHODS ── */
+.method-list { margin-top:16px; display:flex; flex-direction:column; gap:2px; }
+.method-item {
+  display:grid; grid-template-columns:32px 1fr;
+  border:1px solid var(--border2); background:var(--bg);
+}
+.method-num {
+  background:var(--accent); color:#fff;
+  font-family:'IBM Plex Mono',monospace; font-size:12px; font-weight:500;
+  display:flex; align-items:center; justify-content:center; flex-shrink:0;
+}
+.method-body { padding:13px 17px; }
+.method-title { font-weight:600; font-size:13.5px; color:var(--ink2); margin-bottom:3px; }
+.method-desc { font-size:13px; color:var(--ink3); line-height:1.6; }
+.method-desc strong { color:var(--ink2); font-weight:500; }
+.method-when {
+  margin-top:6px; padding:6px 10px;
+  background:var(--accent-light); border-left:3px solid var(--accent);
+  font-size:11.5px; color:var(--accent2); line-height:1.45;
+}
+
+/* ── MAINTENANCE CYCLE ── */
+.maint-grid {
+  display:grid; grid-template-columns:repeat(auto-fill,minmax(220px,1fr));
+  gap:12px; margin-top:16px;
+}
+.maint-card { border:1px solid var(--border2); background:var(--bg); padding:16px 18px; }
+.mc-trigger {
+  font-family:'IBM Plex Mono',monospace; font-size:9px;
+  letter-spacing:2px; text-transform:uppercase; color:var(--accent); margin-bottom:6px;
+}
+.mc-title { font-weight:600; font-size:13px; color:var(--ink2); margin-bottom:8px; }
+.mc-body { font-size:12.5px; color:var(--ink3); line-height:1.6; }
+.mc-body strong { color:var(--ink2); font-weight:500; }
+
+/* ── ANTI-PATTERNS ── */
+.ap-grid {
+  display:grid; grid-template-columns:repeat(auto-fill,minmax(270px,1fr));
+  gap:14px; margin-top:20px;
+}
+.ap-card {
+  border:1px solid var(--border2);
+  border-top:3px solid var(--bad);
+  background:var(--bg); padding:16px 18px;
+}
+.ap-num {
+  font-family:'IBM Plex Mono',monospace; font-size:10px;
+  letter-spacing:2px; text-transform:uppercase;
+  color:var(--bad); margin-bottom:6px;
+}
+.ap-title { font-weight:600; font-size:13.5px; color:var(--ink2); margin-bottom:8px; }
+.ap-desc { font-size:13px; color:var(--ink3); line-height:1.6; }
+.ap-desc strong { color:var(--ink2); font-weight:500; }
+.ap-fix {
+  margin-top:10px; padding:9px 12px;
+  background:var(--ok-l); border-left:3px solid var(--ok);
+  font-size:12px; color:var(--ink3); line-height:1.55;
+}
+.ap-fix strong { color:var(--ok); font-weight:600; }
+
+/* ── SPECTRUM ── */
+.spectrum { margin-top:16px; border:1px solid var(--border); overflow:hidden; }
+.spectrum-row { display:grid; border-bottom:1px solid var(--border); font-size:12.5px; }
+.spectrum-row:last-child { border-bottom:none; }
+.spectrum-row.head {
+  background:var(--ink); color:rgba(255,255,255,.7);
+  font-family:'IBM Plex Mono',monospace; font-size:9px;
+  letter-spacing:1px; text-transform:uppercase;
+}
+.spectrum-row.col3 { grid-template-columns:200px 1fr 1fr; }
+.spectrum-row.col4 { grid-template-columns:160px 1fr 1fr 1fr; }
+.s-cell {
+  padding:11px 14px; border-right:1px solid var(--border);
+  color:var(--ink3); line-height:1.5;
+}
+.s-cell:last-child { border-right:none; }
+.s-cell.lbl { font-weight:500; color:var(--ink2); background:var(--bg2); }
+.s-cell.hi  { background:var(--accent-light); color:var(--accent2); }
+.s-cell.lo  { background:var(--bad-l); color:#8b3030; }
+
+/* ── CHECKLIST ── */
+.checklist { margin-top:16px; }
+.check-item {
+  display:flex; gap:12px; align-items:flex-start;
+  padding:10px 0; border-bottom:1px solid var(--border);
+  font-size:13.5px; color:var(--ink3);
+}
+.check-item:last-child { border-bottom:none; }
+.check-icon {
+  width:20px; height:20px; border-radius:50%;
+  background:var(--accent); color:#fff;
+  display:flex; align-items:center; justify-content:center;
+  font-size:11px; font-weight:700; flex-shrink:0; margin-top:1px;
+}
+.check-item strong { color:var(--ink2); font-weight:500; }
+
+/* ── MECHANISM ── */
+.mechanism {
+  margin-top:14px; padding:14px 18px;
+  border-left:3px solid var(--accent); background:var(--accent-light);
+}
+.mech-lbl {
+  font-family:'IBM Plex Mono',monospace; font-size:9px;
+  letter-spacing:2px; text-transform:uppercase; color:var(--accent); margin-bottom:6px;
+}
+.mechanism p { font-size:13px; color:var(--ink3); line-height:1.65; }
+.mechanism p strong { color:var(--ink2); font-weight:500; }
+
+/* ── KEY POINT ── */
+.key-point {
+  margin-top:36px; padding:24px 28px;
+  border-left:4px solid var(--accent); background:var(--accent-light);
+}
+.kp-label {
+  font-family:'IBM Plex Mono',monospace; font-size:9px;
+  letter-spacing:2px; text-transform:uppercase; color:var(--accent); margin-bottom:8px;
+}
+.kp-text {
+  font-family:'Instrument Serif',serif; font-size:18px; line-height:1.45; color:var(--ink2);
+}
+.kp-sub { margin-top:10px; font-size:13px; color:var(--ink3); line-height:1.65; }
+
+/* ── INSIGHT ── */
+.insight {
+  margin:16px 0; padding:16px 20px;
+  border-left:4px solid var(--accent); background:var(--accent-light);
+}
+.insight-lbl {
+  font-family:'IBM Plex Mono',monospace; font-size:9px;
+  letter-spacing:2px; text-transform:uppercase; color:var(--accent); margin-bottom:6px;
+}
+.insight p { font-size:13.5px; color:var(--ink2); line-height:1.65; max-width:700px; }
+.insight p strong { font-weight:500; }
+
+/* ── TEMPLATE BOX ── */
+.template-box {
+  margin-top:20px; border:1px solid var(--border2); background:var(--ink);
+  padding:28px 32px; font-family:'IBM Plex Mono',monospace;
+  font-size:12.5px; line-height:1.9; color:rgba(255,255,255,.75);
+  white-space:pre-wrap; word-break:break-word;
+}
+.template-box .t-comment { color:rgba(255,255,255,.28); }
+.template-box .t-hl      { color:#93c5e8; }
+.template-box .t-bracket { color:rgba(255,255,255,.35); }
+.template-box .t-val     { color:rgba(255,255,255,.85); }
+.template-box .t-str     { color:#7dd3a8; }
+
+/* ── FOOTER ── */
+.footer {
+  padding:24px 56px; border-top:1px solid var(--border);
+  display:flex; justify-content:space-between; align-items:center;
+  font-family:'IBM Plex Mono',monospace; font-size:10px;
+  letter-spacing:1px; text-transform:uppercase; color:var(--ink4);
+}
+
+@media (max-width:700px) {
+  .masthead,.sect-head,.wrap,.footer { padding-left:20px; padding-right:20px; }
+  .split-panel { grid-template-columns:1fr; }
+  .spectrum-row.col3,.spectrum-row.col4 { grid-template-columns:1fr; }
+  .gl-header { grid-template-columns:5px 40px 1fr; }
+  .gl-impact-wrap { display:none; }
+  .cat-grid,.maint-grid,.ap-grid { grid-template-columns:1fr; }
+  .ca-row { grid-template-columns:1fr; }
+  .method-item { grid-template-columns:1fr; }
+}
+</style>
+</head>
+<body>
+
+<!-- HEADER -->
+<div class="masthead">
+  <div class="mh-eye">Serie Agenti AI · Leva 06 · Testing e Valutazione</div>
+  <div class="mh-cluster">Report A</div>
+  <h1>La Suite di Test</h1>
+  <p class="mh-sub">L'artefatto più importante del ciclo di valutazione — più del prompt stesso. Come raccogliere i casi, bilanciarli, dimensionarli, e mantenerli nel tempo. Su cosa si valuta.</p>
+  <div class="mh-meta">
+    <div class="mh-stat"><div class="mh-stat-val">5</div><div class="mh-stat-lbl">Linee guida</div></div>
+    <div class="mh-stat"><div class="mh-stat-val">4</div><div class="mh-stat-lbl">Categorie di casi</div></div>
+    <div class="mh-stat"><div class="mh-stat-val">2</div><div class="mh-stat-lbl">Partition: dev / held-out</div></div>
+    <div class="mh-stat"><div class="mh-stat-val">Vivo</div><div class="mh-stat-lbl">Artefatto evolutivo</div></div>
+  </div>
+</div>
+
+<!-- NAV -->
+<div class="nav">
+  <button class="nav-btn active" onclick="show(1)">Cos'è e perché conta</button>
+  <button class="nav-btn" onclick="show(2)">Anatomia di un caso</button>
+  <button class="nav-btn" onclick="show(3)">Le 4 categorie</button>
+  <button class="nav-btn" onclick="show(4)">Dimensionamento</button>
+  <button class="nav-btn" onclick="show(5)">Dev vs Held-out</button>
+  <button class="nav-btn" onclick="show(6)">Raccolta e manutenzione</button>
+  <button class="nav-btn" onclick="show(7)">Anti-pattern</button>
+</div>
+
+
+<!-- ═══════════════════════════
+     S1 — COS'È E PERCHÉ CONTA
+═══════════════════════════ -->
+<div class="sect active" id="s1">
+  <div class="sect-head">
+    <div class="sect-num">Introduzione</div>
+    <h2>La suite di test — l'artefatto più importante</h2>
+    <p>Non il prompt, non il modello: la suite di test è l'artefatto che definisce quanto bene puoi migliorare il tuo agente nel tempo.</p>
+  </div>
+  <div class="wrap">
+
+    <div class="prose" style="margin-top:28px;">
+      <p>Una suite di test è una collezione curata di coppie input/output-atteso (o input/criteri-di-valutazione) che rappresentano il comportamento desiderato dell'agente attraverso una varietà di situazioni. Non è un insieme casuale di esempi — è una <strong>rappresentazione deliberata dello spazio degli input rilevanti</strong>, costruita per coprire tanto i casi tipici quanto quelli difficili.</p>
+      <p>Perché è l'artefatto più importante? Perché senza di essa, ogni miglioramento al prompt è cieco. Puoi ottimizzare per una settimana, produrre un prompt più sofisticato e più lungo — e non sapere se l'agente è effettivamente migliorato su ciò che conta. <strong>La suite di test trasforma il prompt engineering da attività soggettiva a ciclo empirico</strong>: ogni modifica ha un risultato misurabile.</p>
+    </div>
+
+    <div class="insight" style="margin-top:24px;">
+      <div class="insight-lbl">La suite di test come artefatto vivente</div>
+      <p>A differenza del prompt — che cambia ad ogni iterazione — la suite di test è relativamente stabile. Cresce nel tempo (ogni failure in produzione diventa un nuovo caso di test) ma raramente viene ridotta. <strong>È la memoria empirica del progetto</strong>: incorpora tutto ciò che si è imparato su come l'agente fallisce, su quali input sono difficili, su quali comportamenti erano stati dati per scontati ma non lo erano.</p>
+    </div>
+
+    <div class="key-point" style="margin-top:24px;">
+      <div class="kp-label">Il principio fondamentale</div>
+      <div class="kp-text">La qualità della suite di test determina la qualità massima raggiungibile dall'agente — indipendentemente da quanto è buono il prompt.</div>
+      <div class="kp-sub">Un prompt eccellente valutato su una suite di test povera sembra funzionare bene — finché non va in produzione e incontra i casi che la suite non copriva. Una suite di test ricca e rappresentativa forza il prompt a essere robusto davvero, non solo sui casi facili. L'investimento nella suite non è mai sprecato: dura per l'intera vita del progetto.</div>
+    </div>
+
+  </div>
+</div>
+
+
+<!-- ═══════════════════════════
+     S2 — ANATOMIA DI UN CASO
+═══════════════════════════ -->
+<div class="sect" id="s2">
+  <div class="sect-head">
+    <div class="sect-num">Linea guida 01</div>
+    <h2>Anatomia di un caso di test</h2>
+    <p>Un caso di test non è solo un input. È una struttura completa che specifica l'input, il comportamento atteso, i criteri di valutazione e i metadati che permettono di capire dove e perché l'agente fallisce.</p>
+  </div>
+  <div class="wrap">
+
+    <!-- GL 01 -->
+    <div class="gl-group" style="margin-top:28px;">
+      <div class="gl-group-title">Linea guida 01</div>
+      <div class="gl-card">
+        <div class="gl-header">
+          <div class="gl-stripe"></div>
+          <div class="gl-num">01</div>
+          <div class="gl-title-wrap">
+            <div class="gl-title">Ogni caso di test ha 5 componenti — non solo input e output atteso</div>
+            <div class="gl-subtitle">Le componenti mancanti rendono il caso difficile da valutare e impossibile da diagnosticare</div>
+          </div>
+          <div class="gl-impact-wrap">
+            <div class="gl-impact-stars" style="color:var(--accent)">★★★</div>
+            <div class="gl-impact-lbl">Impatto</div>
+          </div>
+        </div>
+        <div class="gl-body">
+
+          <div class="gl-section">
+            <div class="gl-section-lbl">La struttura completa di un caso di test</div>
+            <div class="case-anatomy">
+              <div class="ca-head">Struttura — caso di test per agente di classificazione ticket</div>
+              <div class="ca-row">
+                <div class="ca-label">Input</div>
+                <div class="ca-content">"Salve, ho acquistato una sedia da ufficio 3 settimane fa ma non ho ancora ricevuto nulla. Ho scritto 2 volte all'assistenza senza risposta. Quando arriva?"
+<span class="ann">→ testo realistico, simile a ciò che arriverà in produzione</span></div>
+              </div>
+              <div class="ca-row">
+                <div class="ca-label">Output atteso</div>
+                <div class="ca-content">{"categoria": "Ritardo consegna", "priorita": "Alta", "sentiment": "Frustrato", "richiede_escalation": true}
+<span class="ann">→ il gold standard — esattamente cosa deve produrre l'agente</span></div>
+              </div>
+              <div class="ca-row">
+                <div class="ca-label">Criteri valutaz.</div>
+                <div class="ca-content">1. categoria ∈ {"Ritardo consegna", "Problema spedizione"} — entrambe accettabili
+2. priorita = "Alta" — non negoziabile: 3+ settimane + nessuna risposta
+3. richiede_escalation = true — 2 tentativi senza risposta → sempre true
+4. JSON valido e schema rispettato
+<span class="ann">→ specifica cosa è corretto, cosa è accettabile, cosa non lo è</span></div>
+              </div>
+              <div class="ca-row">
+                <div class="ca-label">Categoria</div>
+                <div class="ca-content">caso_limite — cliente frustrato + mancata risposta assistenza
+<span class="ann">→ dice a quale categoria appartiene questo caso nella suite</span></div>
+              </div>
+              <div class="ca-row">
+                <div class="ca-label">Note</div>
+                <div class="ca-content">Aggiunto dopo failure in produzione 2026-02-14. Il modello classificava come "Domanda generica" invece di "Ritardo consegna". Causa: nessun dato esplicito sul numero d'ordine.
+<span class="ann">→ storia del caso: quando è stato aggiunto e perché</span></div>
+              </div>
+            </div>
+          </div>
+
+          <div class="gl-section">
+            <div class="gl-section-lbl">Perché i criteri di valutazione sono diversi dall'output atteso</div>
+            <p>L'output atteso è il gold standard ideale — quello che il modello produrrebbe se funzionasse perfettamente. I criteri di valutazione specificano <strong>cosa è accettabile</strong> nella pratica: spesso ci sono più output corretti (categorie sinonime, formulazioni diverse), e la rigidità eccessiva nel confronto porta a falsi negativi. I criteri permettono di distinguere "sbagliato" da "diverso ma accettabile".</p>
+          </div>
+
+          <div class="gl-section">
+            <div class="gl-section-lbl">Perché i metadati (categoria e note) sono necessari</div>
+            <p>Quando un caso di test fallisce, la domanda non è solo "è sbagliato?" ma <strong>"perché è sbagliato e cosa ci dice?"</strong>. I metadati permettono di aggregare i fallimenti per categoria (es: "il modello fallisce il 40% dei casi limite ma solo il 5% dei casi tipici"), identificare pattern, e capire quale parte del prompt rafforzare. Senza metadati, ogni fallimento è un caso isolato invece di un dato diagnostico.</p>
+          </div>
+
+          <div class="gl-section">
+            <div class="gl-section-lbl">Perché funziona — il meccanismo dell'eval</div>
+            <div class="mechanism">
+              <div class="mech-lbl">Granularità della diagnosi</div>
+              <p>La valutazione su criteri invece che su output esatti riduce i falsi negativi. I metadati trasformano i risultati individuali in pattern aggregati. <strong>La combinazione produce una diagnosi invece di un semplice punteggio</strong>: non solo "l'agente è all'85%" ma "l'agente fallisce principalmente sui casi limite con input brevi e sentiment ambiguo — il prompt di cluster F è underspecified".</p>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+
+<!-- ═══════════════════════════
+     S3 — LE 4 CATEGORIE
+═══════════════════════════ -->
+<div class="sect" id="s3">
+  <div class="sect-head">
+    <div class="sect-num">Linea guida 02</div>
+    <h2>Le 4 categorie di casi di test</h2>
+    <p>Una suite bilanciata non è una collezione casuale di input. È composta da quattro categorie distinte, ognuna con uno scopo preciso nel ciclo di valutazione.</p>
+  </div>
+  <div class="wrap">
+
+    <!-- GL 02 -->
+    <div class="gl-group" style="margin-top:28px;">
+      <div class="gl-group-title">Linea guida 02</div>
+      <div class="gl-card">
+        <div class="gl-header">
+          <div class="gl-stripe"></div>
+          <div class="gl-num">02</div>
+          <div class="gl-title-wrap">
+            <div class="gl-title">Bilancia le 4 categorie — non ottimizzare solo per i casi tipici</div>
+            <div class="gl-subtitle">Una suite con soli casi tipici misura le prestazioni sul migliore dei casi — non sulla realtà</div>
+          </div>
+          <div class="gl-impact-wrap">
+            <div class="gl-impact-stars" style="color:var(--accent)">★★★</div>
+            <div class="gl-impact-lbl">Impatto</div>
+          </div>
+        </div>
+        <div class="gl-body">
+
+          <div class="gl-section">
+            <div class="gl-section-lbl">Le 4 categorie e il loro scopo</div>
+            <div class="cat-grid" style="margin-top:12px;">
+
+              <div class="cat-tile">
+                <div class="ct-head">
+                  <div class="ct-pct">40%</div>
+                  <div class="ct-name">Casi tipici</div>
+                </div>
+                <div class="ct-body">
+                  <p>Input <strong>rappresentativi del 90% del traffico reale</strong>. Chiari, ben formati, nel centro delle categorie. Servono a verificare il comportamento di base — se l'agente fallisce qui, tutto il resto è irrilevante.</p>
+                  <div class="ct-example">ticket: "Come faccio il reso di un prodotto?" → categoria: Reso, priorità: Media</div>
+                </div>
+              </div>
+
+              <div class="cat-tile">
+                <div class="ct-head">
+                  <div class="ct-pct">30%</div>
+                  <div class="ct-name">Casi limite</div>
+                </div>
+                <div class="ct-body">
+                  <p>Input <strong>ai confini delle categorie o del task</strong>: ambigui, con informazioni miste, che potrebbero appartenere a più categorie. Il 60% degli errori in produzione viene da qui.</p>
+                  <div class="ct-example">ticket: "Ho ricevuto la consegna ma manca un pezzo" → Reso? Prodotto difettoso? Entrambi?</div>
+                </div>
+              </div>
+
+              <div class="cat-tile">
+                <div class="ct-head">
+                  <div class="ct-pct">20%</div>
+                  <div class="ct-name">Casi anomali</div>
+                </div>
+                <div class="ct-body">
+                  <p>Input <strong>fuori dal normale</strong>: troppo corti, troppo lunghi, in lingua sbagliata, corrotti, completamente fuori scope. Testano la robustezza definita nel cluster F del prompt.</p>
+                  <div class="ct-example">ticket: "asdfgh" → non classificabile, richiede fallback esplicito</div>
+                </div>
+              </div>
+
+              <div class="cat-tile">
+                <div class="ct-head">
+                  <div class="ct-pct">10%</div>
+                  <div class="ct-name">Casi di regressione</div>
+                </div>
+                <div class="ct-body">
+                  <p>Input <strong>su cui il modello ha già fallito in passato</strong> e che sono stati corretti. Servono a verificare che le correzioni tengano nel tempo e che nuove modifiche non rompano ciò che già funzionava.</p>
+                  <div class="ct-example">caso aggiunto dopo failure 2026-02-14: input con frustrazione implicita ma linguaggio formale</div>
+                </div>
+              </div>
+
+            </div>
+          </div>
+
+          <div class="gl-section">
+            <div class="gl-section-lbl">Come le proporzioni cambiano nel tempo</div>
+            <p>Le percentuali indicate sono un punto di partenza — non una regola fissa. <strong>Con il deployment in produzione, la quota di casi di regressione cresce</strong> (ogni failure diventa un nuovo caso) e la quota di casi anomali può essere ricalibrata in base alla frequenza reale degli input anomali. La quota dei casi tipici non dovrebbe mai scendere sotto il 35% — sono l'ancora del comportamento base.</p>
+          </div>
+
+          <div class="gl-section">
+            <div class="gl-section-lbl">Perché i casi limite contano più dei casi tipici</div>
+            <div class="mechanism">
+              <div class="mech-lbl">La distribuzione degli errori reali</div>
+              <p>I modelli LLM ben promptati gestiscono i casi tipici con alta affidabilità — sono quelli per cui il prompt è stato ottimizzato. I casi limite e anomali sono quelli che il progettista del prompt non aveva in mente durante lo sviluppo. <strong>Se la suite è composta al 90% da casi tipici, lo score aggregato sovrastima sistematicamente la qualità reale</strong> — perché nasconde i problemi proprio dove sono più frequenti.</p>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+
+<!-- ═══════════════════════════
+     S4 — DIMENSIONAMENTO
+═══════════════════════════ -->
+<div class="sect" id="s4">
+  <div class="sect-head">
+    <div class="sect-num">Linea guida 03</div>
+    <h2>Quanti casi servono</h2>
+    <p>Né troppo pochi (misure inaffidabili) né troppo tanti (overhead di costruzione e manutenzione inutile). Come dimensionare la suite in base al tipo di task e alla fase di sviluppo.</p>
+  </div>
+  <div class="wrap">
+
+    <!-- GL 03 -->
+    <div class="gl-group" style="margin-top:28px;">
+      <div class="gl-group-title">Linea guida 03</div>
+      <div class="gl-card">
+        <div class="gl-header">
+          <div class="gl-stripe"></div>
+          <div class="gl-num">03</div>
+          <div class="gl-title-wrap">
+            <div class="gl-title">Parti piccolo e cresce con il deployment — non aspettare di avere la suite perfetta</div>
+            <div class="gl-subtitle">Una suite di 20 casi ben scelti vale più di 200 casi casuali e di 0 casi mentre aspetti i dati reali</div>
+          </div>
+          <div class="gl-impact-wrap">
+            <div class="gl-impact-stars" style="color:var(--accent)">★★★</div>
+            <div class="gl-impact-lbl">Impatto</div>
+          </div>
+        </div>
+        <div class="gl-body">
+
+          <div class="gl-section">
+            <div class="gl-section-lbl">Guida al dimensionamento per fase</div>
+            <table class="size-table">
+              <thead>
+                <tr>
+                  <th>Fase</th>
+                  <th>N. casi consigliato</th>
+                  <th>Composizione</th>
+                  <th>Obiettivo</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>Sviluppo iniziale</td>
+                  <td class="rec">20–50</td>
+                  <td>70% tipici, 20% limite, 10% anomali</td>
+                  <td>Verificare che il prompt funziona sui casi principali. Abbastanza per iterare velocemente.</td>
+                </tr>
+                <tr>
+                  <td>Pre-deployment</td>
+                  <td class="rec">100–200</td>
+                  <td>40% tipici, 35% limite, 15% anomali, 10% regressione</td>
+                  <td>Misurare la qualità reale prima di andare live. Abbastanza per rilevare problemi statisticamente significativi.</td>
+                </tr>
+                <tr>
+                  <td>Post-deployment</td>
+                  <td class="rec">200–500+</td>
+                  <td>Bilanciamento ricalibrato su dati reali + regressioni accumulate</td>
+                  <td>Monitoraggio continuo. Ogni failure in produzione diventa un caso. La suite cresce organicamente.</td>
+                </tr>
+                <tr>
+                  <td>Task con output continuo (generazione testo)</td>
+                  <td class="rec">50–150</td>
+                  <td>Più casi tipici, meno anomali — la variabilità dell'output riduce il valore dei casi borderline</td>
+                  <td>Baseline di qualità stabile. La valutazione umana su campione è sempre necessaria per questi task.</td>
+                </tr>
+                <tr>
+                  <td>Task critico ad alto rischio</td>
+                  <td class="rec">500+</td>
+                  <td>Distribuzione proporzionale al traffico reale + tutti i casi limite documentati</td>
+                  <td>Confidenza statistica alta prima di ogni deployment. L'overhead è giustificato dall'impatto potenziale degli errori.</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <div class="gl-section">
+            <div class="gl-section-lbl">Il test di affidabilità statistica — quanti ne servono davvero?</div>
+            <p>Una regola pratica: per rilevare con confidenza una differenza di <strong>5 punti percentuali</strong> nello score (es. da 87% a 92%), servono circa <strong>200–300 casi</strong>. Per rilevare una differenza di 2 punti percentuali, servono ~1000. Se non hai abbastanza casi per rilevare la differenza che ti interessa, i tuoi risultati di eval non sono statisticamente significativi.</p>
+            <div class="insight" style="margin-top:12px; margin-bottom:0;">
+              <div class="insight-lbl">La conseguenza pratica</div>
+              <p>Con 20 casi, una differenza di 1 caso (5 punti percentuali) potrebbe essere rumore casuale. Con 200 casi, la stessa differenza in percentuale (10 casi) è statisticamente significativa. <strong>Dimensiona la suite in base alla granularità della differenza che vuoi rilevare — non in base a quanto è facile costruirla.</strong></p>
+            </div>
+          </div>
+
+          <div class="gl-section">
+            <div class="gl-section-lbl">Perché funziona — il meccanismo statistico</div>
+            <div class="mechanism">
+              <div class="mech-lbl">Varianza delle stime su campioni piccoli</div>
+              <p>Su una suite di 20 casi, lo score osservato ha un intervallo di confidenza molto ampio — la "vera" qualità del modello potrebbe essere molti punti sopra o sotto. Su 200 casi, l'intervallo si stringe drasticamente. <strong>Questo significa che con suite piccole si rischia di ottimizzare per il rumore casuale invece che per un miglioramento reale</strong> — e di credere che una variazione nello score sia un miglioramento quando è solo fluttuazione statistica.</p>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+
+<!-- ═══════════════════════════
+     S5 — DEV VS HELD-OUT
+═══════════════════════════ -->
+<div class="sect" id="s5">
+  <div class="sect-head">
+    <div class="sect-num">Linea guida 04</div>
+    <h2>Development set vs. held-out set</h2>
+    <p>La distinzione più importante nella gestione della suite — e quella più frequentemente ignorata. Usare gli stessi casi per sviluppare e per valutare produce ottimismo sistematico.</p>
+  </div>
+  <div class="wrap">
+
+    <!-- GL 04 -->
+    <div class="gl-group" style="margin-top:28px;">
+      <div class="gl-group-title">Linea guida 04</div>
+      <div class="gl-card">
+        <div class="gl-header">
+          <div class="gl-stripe"></div>
+          <div class="gl-num">04</div>
+          <div class="gl-title-wrap">
+            <div class="gl-title">Mantieni separati il set di sviluppo e il set di valutazione finale</div>
+            <div class="gl-subtitle">Il prompt ottimizzato sul dev set è sempre migliore sul dev set — non necessariamente sul held-out</div>
+          </div>
+          <div class="gl-impact-wrap">
+            <div class="gl-impact-stars" style="color:var(--accent)">★★★</div>
+            <div class="gl-impact-lbl">Impatto critico</div>
+          </div>
+        </div>
+        <div class="gl-body">
+
+          <div class="gl-section">
+            <div class="gl-section-lbl">I due set e i loro ruoli</div>
+            <div class="split-panel">
+              <div class="sp-col">
+                <div class="sp-label">Development Set (70–80%)</div>
+                <div class="sp-title">Per iterare il prompt</div>
+                <div class="sp-body">
+                  Usato durante lo sviluppo per misurare l'impatto di ogni modifica al prompt. <strong>Lo vedi spesso</strong> — tante volte durante l'iterazione. Il modello (e il progettista) finiscono per "conoscerlo" implicitamente.
+                  <div class="sp-rule" style="border-color:var(--accent);">Regola: puoi usarlo tutte le volte che vuoi durante lo sviluppo. È il tuo banco di prova.</div>
+                </div>
+              </div>
+              <div class="sp-col">
+                <div class="sp-label">Held-out Set (20–30%)</div>
+                <div class="sp-title">Per la valutazione finale</div>
+                <div class="sp-body">
+                  Usato solo per misurare la qualità finale prima del deployment — o per confrontare due versioni del prompt in modo imparziale. <strong>Lo usi raramente</strong> — idealmente una sola volta per ogni decisione di deployment.
+                  <div class="sp-rule" style="border-color:var(--ok);">Regola: non iterare mai il prompt guardando i risultati sul held-out. Se lo fai, il held-out smette di essere imparziale.</div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="gl-section">
+            <div class="gl-section-lbl">Il problema del prompt overfitting</div>
+            <p>Il prompt overfitting è il fenomeno per cui un prompt ottimizzato su un set specifico di casi funziona eccezionalmente bene su quei casi e peggio su input nuovi. Succede in modo inconsapevole: <strong>ogni volta che guardi il risultato su un caso di test e modifichi il prompt di conseguenza, stai implicitamente ottimizzando per quel caso</strong>. Con molte iterazioni, il prompt diventa sempre più preciso sui casi noti e sempre meno robusto sui casi non visti.</p>
+
+            <div style="margin-top:14px;">
+              <div style="font-family:'IBM Plex Mono',monospace; font-size:9px; letter-spacing:2px; text-transform:uppercase; color:var(--bad); margin-bottom:6px;">Il segnale di overfitting</div>
+              <div style="font-family:'IBM Plex Mono',monospace; font-size:11.5px; padding:14px 18px; background:var(--bad-l); border:1px solid rgba(192,57,43,.2); color:#6b3030; line-height:1.7;">Dev set score:    94% ← alto dopo molte iterazioni
+Held-out score:   81% ← significativamente più basso
+
+Gap > 5–8 punti = segnale forte di overfitting sul dev set.
+Il prompt funziona bene sui casi che conosci,
+male su quelli che non conosci.</div>
+            </div>
+          </div>
+
+          <div class="gl-section">
+            <div class="gl-section-lbl">Come gestire il held-out set in pratica</div>
+            <p>Nella pratica, il held-out set va costruito prima di iniziare il ciclo di sviluppo — separandolo dal resto della suite — e poi <strong>non toccato fino alla valutazione finale</strong>. Se usi i risultati sul held-out per modificare il prompt, contaminalo e deve essere sostituito. Nel lungo periodo, il held-out va rinnovato periodicamente aggiungendo nuovi casi mai visti.</p>
+          </div>
+
+          <div class="gl-section">
+            <div class="gl-section-lbl">Perché funziona — il meccanismo del bias di selezione</div>
+            <div class="mechanism">
+              <div class="mech-lbl">Overfitting implicito nel ciclo di iterazione</div>
+              <p>Ogni ciclo di ottimizzazione "vede" i casi del dev set — anche se non li modifica direttamente. Nel tempo, le decisioni di modifica del prompt vengono inconsciamente influenzate dalla conoscenza dei casi specifici. <strong>Il held-out set rompe questo ciclo di feedback fornendo una misura della qualità su casi effettivamente non visti</strong>, che è la metrica che conta davvero per il comportamento in produzione.</p>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+
+<!-- ═══════════════════════════
+     S6 — RACCOLTA E MANUTENZIONE
+═══════════════════════════ -->
+<div class="sect" id="s6">
+  <div class="sect-head">
+    <div class="sect-num">Linea guida 05</div>
+    <h2>Come raccogliere i casi e mantenere la suite</h2>
+    <p>Da dove vengono i casi di test e come si tiene la suite aggiornata e rilevante nel tempo.</p>
+  </div>
+  <div class="wrap">
+
+    <!-- GL 05 -->
+    <div class="gl-group" style="margin-top:28px;">
+      <div class="gl-group-title">Linea guida 05</div>
+      <div class="gl-card">
+        <div class="gl-header">
+          <div class="gl-stripe"></div>
+          <div class="gl-num">05</div>
+          <div class="gl-title-wrap">
+            <div class="gl-title">Usa 4 fonti di raccolta e un processo sistematico di aggiornamento</div>
+            <div class="gl-subtitle">I casi migliori non si inventano — si trovano nel traffico reale e nei failure in produzione</div>
+          </div>
+          <div class="gl-impact-wrap">
+            <div class="gl-impact-stars" style="color:var(--accent)">★★★</div>
+            <div class="gl-impact-lbl">Impatto</div>
+          </div>
+        </div>
+        <div class="gl-body">
+
+          <div class="gl-section">
+            <div class="gl-section-lbl">Le 4 fonti di raccolta</div>
+            <div class="method-list" style="margin-top:12px;">
+
+              <div class="method-item">
+                <div class="method-num">1</div>
+                <div class="method-body">
+                  <div class="method-title">Costruzione manuale a priori</div>
+                  <div class="method-desc">Prima del deployment, un domani esperto costruisce casi che rappresentano il comportamento atteso. Lenta e laboriosa, ma l'unica fonte disponibile all'inizio. <strong>Focus sui casi che sembrano difficili</strong> — non sui casi ovvi. Il domani esperto sa dove si nascondono le ambiguità.</div>
+                  <div class="method-when">Quando: fase di sviluppo iniziale. Produce: casi tipici, casi limite, e qualche caso anomalo prevedibile.</div>
+                </div>
+              </div>
+
+              <div class="method-item">
+                <div class="method-num">2</div>
+                <div class="method-body">
+                  <div class="method-title">Campionamento dal traffico reale</div>
+                  <div class="method-desc">Una volta in produzione, campionare input reali è la fonte più preziosa. Gli input reali hanno una distribuzione che nessun domani esperto può prevedere perfettamente. <strong>Campionare in modo stratificato</strong>: non solo gli input più frequenti ma anche quelli rari e quelli che l'agente gestisce con bassa confidenza.</div>
+                  <div class="method-when">Quando: dopo il primo deployment. Produce: casi tipici reali, distribuzione reale del traffico.</div>
+                </div>
+              </div>
+
+              <div class="method-item">
+                <div class="method-num">3</div>
+                <div class="method-body">
+                  <div class="method-title">Failure in produzione</div>
+                  <div class="method-desc">Ogni caso in cui l'agente produce un output sbagliato o inatteso in produzione è un caso di test potenziale. <strong>È la fonte più preziosa per i casi di regressione</strong>. Il processo: rilevi il failure → annoti input, output sbagliato, output corretto → aggiungi alla suite con metadati.</div>
+                  <div class="method-when">Quando: sempre, continuativamente. Produce: casi di regressione, casi anomali non previsti, casi limite reali.</div>
+                </div>
+              </div>
+
+              <div class="method-item">
+                <div class="method-num">4</div>
+                <div class="method-body">
+                  <div class="method-title">Generazione sintetica con LLM</div>
+                  <div class="method-desc">Usare un LLM per generare varianti di casi esistenti — stessa categoria ma formulazione diversa, stesso tipo di input ma con complessità aggiuntiva. Utile per aumentare la copertura a basso costo. <strong>I casi sintetici vanno sempre validati da un esperto umano prima di essere aggiunti alla suite</strong> — il LLM può generare casi plausibili ma con output attesi sbagliati.</div>
+                  <div class="method-when">Quando: quando la suite è piccola e mancano casi in una categoria specifica. Produce: variazioni di casi esistenti, non casi genuinamente nuovi.</div>
+                </div>
+              </div>
+
+            </div>
+          </div>
+
+          <div class="gl-section">
+            <div class="gl-section-lbl">Il ciclo di manutenzione</div>
+            <div class="maint-grid" style="margin-top:12px;">
+
+              <div class="maint-card">
+                <div class="mc-trigger">Trigger: ogni failure in produzione</div>
+                <div class="mc-title">Aggiungi alla suite</div>
+                <div class="mc-body">Input → suite come caso di regressione. Output corretto annotato dall'esperto. Non aspettare di raccogliere molti failure — aggiungili uno alla volta.</div>
+              </div>
+
+              <div class="maint-card">
+                <div class="mc-trigger">Trigger: ogni modifica al prompt</div>
+                <div class="mc-title">Verifica le regressioni</div>
+                <div class="mc-body">Riesegui la suite completa dopo ogni modifica significativa al prompt. I casi di regressione devono rimanere verdi — se una modifica ne rompe uno già risolto, è una regressione.</div>
+              </div>
+
+              <div class="maint-card">
+                <div class="mc-trigger">Trigger: cambio del modello base</div>
+                <div class="mc-title">Riesegui e confronta</div>
+                <div class="mc-body">Un aggiornamento del modello sottostante può cambiare il comportamento su casi che prima funzionavano. La suite è l'unico modo per rilevare queste regressioni silenti prima che vadano in produzione.</div>
+              </div>
+
+              <div class="maint-card">
+                <div class="mc-trigger">Trigger: ogni 3–6 mesi</div>
+                <div class="mc-title">Revisione della rilevanza</div>
+                <div class="mc-body">Casi costruiti mesi fa possono non essere più rappresentativi del traffico attuale. Rivedi la suite, rimuovi i casi obsoleti, aggiungi casi che riflettono i nuovi pattern di utilizzo.</div>
+              </div>
+
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+
+<!-- ═══════════════════════════
+     S7 — ANTI-PATTERN
+═══════════════════════════ -->
+<div class="sect" id="s7">
+  <div class="sect-head">
+    <div class="sect-num">Sezione finale</div>
+    <h2>Anti-pattern comuni nella costruzione della suite</h2>
+    <p>I 6 errori più frequenti che producono suite di test che sembrano funzionare ma misurano la cosa sbagliata.</p>
+  </div>
+  <div class="wrap">
+
+    <div class="ap-grid" style="margin-top:28px;">
+
+      <div class="ap-card">
+        <div class="ap-num">Anti-pattern 01</div>
+        <div class="ap-title">Suite composta solo da casi tipici</div>
+        <div class="ap-desc">Il 90% dei casi è nel centro delle categorie — casi chiari, ben formati, non ambigui. Lo score aggregato è alto (95%+) ma <strong>nasconde problemi gravi sui casi limite</strong> che rappresentano il 30% del traffico reale e il 60% degli errori.</div>
+        <div class="ap-fix"><strong>Fix:</strong> applica la distribuzione 40/30/20/10. Se hai dubbi, sbaglia nella direzione di troppi casi limite, non troppo pochi.</div>
+      </div>
+
+      <div class="ap-card">
+        <div class="ap-num">Anti-pattern 02</div>
+        <div class="ap-title">Nessuna separazione dev / held-out</div>
+        <div class="ap-desc">Si usa l'intera suite sia per ottimizzare il prompt sia per misurare la qualità finale. Lo score sembra alto ma è inflato dall'overfitting implicito. <strong>La qualità reale in produzione è sistematicamente più bassa di quanto misurato.</strong></div>
+        <div class="ap-fix"><strong>Fix:</strong> separa 20–30% dei casi in un held-out set prima di iniziare lo sviluppo. Non toccarli durante l'iterazione.</div>
+      </div>
+
+      <div class="ap-card">
+        <div class="ap-num">Anti-pattern 03</div>
+        <div class="ap-title">Casi senza criteri di valutazione</div>
+        <div class="ap-desc">Ogni caso ha input e output atteso, ma nessun criterio che specifica cosa è "abbastanza buono". Il valutatore deve decidere caso per caso — <strong>producendo giudizi inconsistenti e non comparabili tra run diverse</strong>.</div>
+        <div class="ap-fix"><strong>Fix:</strong> per ogni caso aggiungi i criteri: cosa è esattamente corretto, cosa è accettabile, cosa è sbagliato. Specialmente per i casi limite.</div>
+      </div>
+
+      <div class="ap-card">
+        <div class="ap-num">Anti-pattern 04</div>
+        <div class="ap-title">Suite costruita tutta prima del deployment</div>
+        <div class="ap-desc">Si investe settimane nel costruire 500 casi prima di andare in produzione. Risultato: molti casi ipotetica­mente difficili che non corrispondono a ciò che succede davvero, e nessun caso che riflette i pattern reali. <strong>Il traffico reale è sempre sorprendente.</strong></div>
+        <div class="ap-fix"><strong>Fix:</strong> parti con 50–100 casi e pianifica di espandere con il traffico reale. L'investimento maggiore nella suite deve venire dopo il deployment, non prima.</div>
+      </div>
+
+      <div class="ap-card">
+        <div class="ap-num">Anti-pattern 05</div>
+        <div class="ap-title">Failure in produzione non aggiunti alla suite</div>
+        <div class="ap-desc">L'agente produce output sbagliato in produzione. Il problema viene corretto nel prompt. Ma il caso non viene aggiunto alla suite. <strong>Il successivo aggiornamento del prompt potrebbe rompere di nuovo quel comportamento senza che nessuno se ne accorga.</strong></div>
+        <div class="ap-fix"><strong>Fix:</strong> ogni failure in produzione deve diventare automaticamente un caso di regressione nella suite. È il processo più importante della manutenzione.</div>
+      </div>
+
+      <div class="ap-card">
+        <div class="ap-num">Anti-pattern 06</div>
+        <div class="ap-title">Output atteso troppo rigido</div>
+        <div class="ap-desc">L'output atteso è una stringa esatta — il confronto è letterale. Ma il modello produce una risposta semanticamente identica con parole diverse, e viene contato come fallimento. <strong>Alta percentuale di falsi negativi che mascherano la vera qualità.</strong></div>
+        <div class="ap-fix"><strong>Fix:</strong> usa criteri di valutazione invece di confronto esatto. Specifica quali proprietà deve avere l'output (semantica, formato, valori), non la stringa letterale.</div>
+      </div>
+
+    </div>
+
+    <div class="key-point" style="margin-top:32px;">
+      <div class="kp-label">Il principio della suite di test</div>
+      <div class="kp-text">Una suite piccola e ben costruita è più utile di una grande e casuale. Una suite che cresce con i failure è più utile di una progettata a tavolino.</div>
+      <div class="kp-sub">La suite di test non si costruisce una volta — è un artefatto che cresce con la vita del progetto. La sua qualità non dipende dalla sua dimensione ma dalla sua rappresentatività: copre i casi che contano davvero, include i failure reali, e viene mantenuta aggiornata man mano che il prodotto evolve. L'investimento nella manutenzione continua è quello con il ritorno più alto nel lungo periodo.</div>
+    </div>
+
+    <div class="checklist" style="margin-top:28px;">
+      <div style="font-family:'IBM Plex Mono',monospace; font-size:9px; letter-spacing:3px; text-transform:uppercase; color:var(--ink4); padding-bottom:10px; border-bottom:1px solid var(--border); margin-bottom:0;">Checklist — suite di test pronta?</div>
+      <div class="check-item">
+        <div class="check-icon" style="background:var(--accent)">✓</div>
+        <div>Ogni caso ha le <strong>5 componenti</strong>: input, output atteso, criteri di valutazione, categoria, note.</div>
+      </div>
+      <div class="check-item">
+        <div class="check-icon" style="background:var(--accent)">✓</div>
+        <div>La distribuzione è bilanciata: <strong>~40% tipici, ~30% limite, ~20% anomali, ~10% regressione</strong> (o proporzioni calibrate sul traffico reale).</div>
+      </div>
+      <div class="check-item">
+        <div class="check-icon" style="background:var(--accent)">✓</div>
+        <div>Il <strong>held-out set è separato</strong> (20–30%) e non è stato usato durante lo sviluppo del prompt.</div>
+      </div>
+      <div class="check-item">
+        <div class="check-icon" style="background:var(--accent)">✓</div>
+        <div>La dimensione è adeguata alla <strong>granularità di differenza</strong> che vuoi rilevare (≥200 casi per rilevare differenze di 5 punti percentuali con confidenza).</div>
+      </div>
+      <div class="check-item">
+        <div class="check-icon" style="background:var(--accent)">✓</div>
+        <div>C'è un <strong>processo definito</strong> per aggiungere i failure in produzione alla suite come casi di regressione.</div>
+      </div>
+      <div class="check-item">
+        <div class="check-icon" style="background:var(--accent)">✓</div>
+        <div>È pianificata una <strong>revisione periodica</strong> della rilevanza dei casi (ogni 3–6 mesi per agenti in produzione attiva).</div>
+      </div>
+    </div>
+
+    <div class="insight" style="margin-top:28px; border-color:#3d7a45; background:#f4faf5;">
+      <div class="insight-lbl" style="color:#3d7a45;">Prossimo — Report B</div>
+      <p>Con la suite di test costruita, il prossimo passo è scegliere <strong>come valutare</strong> i casi. Il Report B affronta i tre metodi di valutazione — programmatico, LLM-as-judge, umano — con i rispettivi punti di forza, limiti, e come combinarli in modo efficiente per il tuo contesto specifico.</p>
+    </div>
+
+  </div>
+</div>
+
+
+<!-- FOOTER -->
+<div class="footer">
+  <span>Serie Agenti AI — Leva 06 · Testing e Valutazione · Report A · La Suite di Test</span>
+  <span>Marzo 2026</span>
+</div>
+
+<script>
+function show(n) {
+  document.querySelectorAll('.sect').forEach(s => s.classList.remove('active'));
+  document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('s'+n).classList.add('active');
+  document.querySelectorAll('.nav-btn')[n-1].classList.add('active');
+  window.scrollTo({top:0, behavior:'smooth'});
+}
+</script>
+</body>
+</html>

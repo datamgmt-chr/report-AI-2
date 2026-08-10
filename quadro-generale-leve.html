@@ -1,0 +1,783 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Agenti AI — Report Quadro · Le leve per migliorare un agente</title>
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Outfit:wght@200;300;400;500;600;700;800;900&family=IBM+Plex+Mono:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg:     #faf8f5;
+  --bg2:    #f2efe9;
+  --bg3:    #e9e5dc;
+  --ink:    #1b1915;
+  --ink2:   #2e2b25;
+  --ink3:   #6d685c;
+  --ink4:   #a19c8f;
+  --border: #d9d4c8;
+  --border2:#cac4b6;
+  --accent: #1b1915;
+  --accent-light: #f2efe9;
+
+  /* Colori leve — stessi della serie */
+  --l01: #3d7a45;   /* prompt — verde */
+  --l02: #5a4a3a;   /* modello — ardesia */
+  --l03: #4a7c59;   /* tool — verde scuro */
+  --l04: #1a6b5a;   /* rag — teal scuro */
+  --l05: #2e4a7a;   /* orchestrazione — blu */
+  --l06: #2e5f8a;   /* testing — blu acciaio */
+  --lm:  #6b4fa0;   /* memoria — viola */
+  --l07: #2e5a3a;   /* fine-tuning — verde */
+  --ltool: #3a3a5c; /* tool pratica — ardesia scura */
+
+  --ok:   #3d7a45; --ok-l:  #f4faf5;
+  --bad:  #c0392b; --bad-l: #fdf5f5;
+  --warn: #b07d24; --warn-l:#fdf6e8;
+}
+
+* { margin:0; padding:0; box-sizing:border-box; }
+html { scroll-behavior:smooth; }
+body { background:var(--bg); color:var(--ink); font-family:'Outfit',sans-serif; font-weight:300; font-size:14px; line-height:1.75; }
+
+/* ── MASTHEAD ── */
+.masthead { background:var(--ink); color:rgba(255,255,255,.9); padding:64px 56px 56px; position:relative; overflow:hidden; }
+.masthead::before { content:''; position:absolute; inset:0; background: repeating-linear-gradient(90deg,rgba(255,255,255,.012) 0,rgba(255,255,255,.012) 1px,transparent 1px,transparent 64px), repeating-linear-gradient(0deg,rgba(255,255,255,.012) 0,rgba(255,255,255,.012) 1px,transparent 1px,transparent 64px); pointer-events:none; }
+.mh-eye { font-family:'IBM Plex Mono',monospace; font-size:10px; letter-spacing:3px; text-transform:uppercase; color:rgba(255,255,255,.25); margin-bottom:18px; position:relative; }
+.masthead h1 { font-family:'Instrument Serif',serif; font-weight:400; font-size:clamp(32px,5vw,60px); line-height:1.05; letter-spacing:-1.5px; max-width:780px; position:relative; }
+.mh-sub { margin-top:22px; font-size:15.5px; font-weight:300; color:rgba(255,255,255,.4); max-width:680px; line-height:1.7; position:relative; }
+.mh-note { margin-top:28px; padding:14px 18px; border-left:3px solid rgba(255,255,255,.15); font-size:13px; color:rgba(255,255,255,.3); line-height:1.65; max-width:640px; position:relative; }
+.mh-note strong { color:rgba(255,255,255,.5); font-weight:500; }
+
+/* ── NAV ── */
+.nav { background:var(--ink2); position:sticky; top:0; z-index:100; display:flex; overflow-x:auto; border-bottom:1px solid rgba(255,255,255,.06); }
+.nav-btn { flex:1; min-width:80px; padding:13px 10px; border:none; background:transparent; cursor:pointer; font-family:'Outfit',sans-serif; font-size:10px; font-weight:600; text-transform:uppercase; letter-spacing:.4px; color:rgba(255,255,255,.3); border-right:1px solid rgba(255,255,255,.06); transition:all .2s; white-space:nowrap; }
+.nav-btn:last-child { border-right:none; }
+.nav-btn:hover { color:rgba(255,255,255,.6); }
+.nav-btn.active { color:#fff; background:rgba(255,255,255,.06); }
+
+.sect { display:none; }
+.sect.active { display:block; animation:fadeIn .3s ease; }
+@keyframes fadeIn { from{opacity:0;transform:translateY(6px)} to{opacity:1;transform:translateY(0)} }
+
+/* ── ORDINE / INTRO ── */
+.intro-wrap { padding:44px 56px 52px; }
+
+/* ── SCALA IMPORTANZA / COSTO ── */
+.order-track { margin-top:28px; position:relative; }
+.ot-label-row { display:flex; justify-content:space-between; font-family:'IBM Plex Mono',monospace; font-size:9px; letter-spacing:2px; text-transform:uppercase; color:var(--ink4); margin-bottom:10px; }
+.ot-bar { height:8px; background:linear-gradient(to right, var(--l01), var(--l07)); border-radius:4px; margin-bottom:12px; }
+.ot-items { display:grid; grid-template-columns: repeat(9, 1fr); gap:6px; }
+.ot-item { display:flex; flex-direction:column; align-items:center; gap:5px; }
+.ot-dot { width:28px; height:28px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-family:'IBM Plex Mono',monospace; font-size:9px; font-weight:700; color:#fff; }
+.ot-name { font-size:9px; color:var(--ink4); text-align:center; line-height:1.3; font-family:'IBM Plex Mono',monospace; }
+
+/* ── LEVA CARD ── */
+.leva-card { border:1px solid var(--border2); background:var(--bg); overflow:hidden; margin:0 56px 16px; }
+.lc-header { display:grid; grid-template-columns:6px 64px 1fr auto; align-items:stretch; border-bottom:1px solid var(--border); }
+.lc-stripe { }
+.lc-num-wrap { display:flex; flex-direction:column; align-items:center; justify-content:center; padding:0 4px; border-right:1px solid var(--border); background:var(--bg2); }
+.lc-num { font-family:'IBM Plex Mono',monospace; font-size:18px; font-weight:700; }
+.lc-num-label { font-family:'IBM Plex Mono',monospace; font-size:7px; letter-spacing:1px; text-transform:uppercase; color:var(--ink4); margin-top:2px; }
+.lc-title-wrap { padding:14px 18px; }
+.lc-label { font-family:'IBM Plex Mono',monospace; font-size:9px; letter-spacing:2px; text-transform:uppercase; color:var(--ink4); margin-bottom:3px; }
+.lc-title { font-family:'Instrument Serif',serif; font-size:22px; color:var(--ink2); line-height:1.1; }
+.lc-tagline { font-size:12.5px; color:var(--ink3); margin-top:3px; }
+.lc-meta { padding:14px 18px; display:flex; flex-direction:column; align-items:flex-end; justify-content:center; gap:5px; }
+.lc-importance { display:flex; gap:2px; }
+.lc-importance span { width:10px; height:10px; border-radius:2px; }
+.lc-importance-lbl { font-family:'IBM Plex Mono',monospace; font-size:8px; letter-spacing:1px; text-transform:uppercase; color:var(--ink4); }
+.lc-rev { font-family:'IBM Plex Mono',monospace; font-size:8px; letter-spacing:1px; text-transform:uppercase; padding:2px 7px; border:1px solid; }
+
+.lc-body { display:grid; grid-template-columns:1fr 1fr 1fr; gap:1px; background:var(--border); }
+.lc-col { background:var(--bg); padding:16px 20px; }
+.lc-col-lbl { font-family:'IBM Plex Mono',monospace; font-size:8px; letter-spacing:2px; text-transform:uppercase; color:var(--ink4); margin-bottom:9px; padding-bottom:5px; border-bottom:1px solid var(--border); }
+.lc-col p { font-size:13px; color:var(--ink3); line-height:1.65; margin-bottom:6px; }
+.lc-col p:last-child { margin-bottom:0; }
+.lc-col p strong { color:var(--ink2); font-weight:500; }
+
+/* ── MASSIMA ── */
+.massima { margin-top:10px; padding:10px 14px; border-left:3px solid; font-family:'Instrument Serif',serif; font-size:15px; line-height:1.4; }
+
+/* ── GOLDEN RULES ── */
+.rules-list { margin-top:8px; display:flex; flex-direction:column; gap:5px; }
+.rule-item { display:grid; grid-template-columns:16px 1fr; gap:7px; font-size:12.5px; color:var(--ink3); line-height:1.5; }
+.rule-dot { width:6px; height:6px; border-radius:50%; margin-top:5px; flex-shrink:0; }
+
+/* ── NEXT-LEVA ── */
+.next-leva { margin-top:10px; padding:8px 12px; border:1px solid; font-size:12px; color:var(--ink3); line-height:1.5; }
+.next-leva strong { color:var(--ink2); font-weight:500; }
+.next-leva .arrow { font-family:'IBM Plex Mono',monospace; font-size:10px; color:var(--ink4); }
+
+/* ── SEZIONE FINALE ── */
+.final-wrap { padding:44px 56px 56px; }
+.principles-grid { display:grid; grid-template-columns:1fr 1fr; gap:14px; margin-top:20px; }
+.principle-card { border:1px solid var(--border2); padding:18px 20px; background:var(--bg); }
+.pc-num { font-family:'IBM Plex Mono',monospace; font-size:10px; font-weight:700; color:var(--ink4); margin-bottom:6px; }
+.pc-principle { font-family:'Instrument Serif',serif; font-size:17px; color:var(--ink2); margin-bottom:6px; line-height:1.3; }
+.pc-detail { font-size:13px; color:var(--ink3); line-height:1.6; }
+.pc-detail strong { color:var(--ink2); font-weight:500; }
+
+/* ── QUICK REF TABLE ── */
+.qr-table { width:100%; border-collapse:collapse; margin-top:20px; border:1px solid var(--border2); }
+.qr-table th, .qr-table td { padding:9px 13px; border:1px solid var(--border); font-size:12px; vertical-align:top; text-align:left; line-height:1.4; }
+.qr-table thead th { background:var(--ink); color:rgba(255,255,255,.78); font-family:'IBM Plex Mono',monospace; font-size:8px; letter-spacing:.5px; text-transform:uppercase; }
+.qr-table td:first-child { font-weight:600; font-size:13px; white-space:nowrap; }
+.qr-table tbody tr:nth-child(even) { background:var(--bg2); }
+.imp-pip { display:flex; gap:2px; }
+.imp-pip span { width:9px; height:9px; border-radius:2px; display:inline-block; }
+.rev-ok  { font-family:'IBM Plex Mono',monospace; font-size:10px; font-weight:700; color:var(--ok); }
+.rev-mid { font-family:'IBM Plex Mono',monospace; font-size:10px; font-weight:700; color:var(--warn); }
+.rev-bad { font-family:'IBM Plex Mono',monospace; font-size:10px; font-weight:700; color:var(--bad); }
+
+.footer { padding:24px 56px; border-top:1px solid var(--border); display:flex; justify-content:space-between; align-items:center; font-family:'IBM Plex Mono',monospace; font-size:10px; letter-spacing:1px; text-transform:uppercase; color:var(--ink4); }
+
+@media (max-width:720px) {
+  .masthead,.intro-wrap,.final-wrap,.footer { padding-left:20px; padding-right:20px; }
+  .leva-card { margin-left:20px; margin-right:20px; }
+  .lc-body,.principles-grid { grid-template-columns:1fr; }
+  .lc-header { grid-template-columns:6px 52px 1fr; }
+  .lc-meta { display:none; }
+  .ot-items { grid-template-columns:repeat(3,1fr); }
+}
+</style>
+</head>
+<body>
+
+<!-- ═══════════ MASTHEAD ═══════════ -->
+<div class="masthead">
+  <div class="mh-eye">Serie Agenti AI · Report Quadro Generale</div>
+  <h1>Le leve per migliorare un agente AI</h1>
+  <p class="mh-sub">Un agente non si migliora con una sola leva. Si migliora sapendo quale leva agire, in quale ordine, con quale aspettativa di risultato. Questo report è la mappa — da consultare prima di qualsiasi intervento.</p>
+  <div class="mh-note">
+    <strong>Come usare questo report:</strong> identifica il problema del tuo agente. Trova la leva corrispondente. Leggi la massima e le regole d'oro. Poi consulta i report specifici di quella leva per l'approfondimento. Non è un documento da leggere dall'inizio alla fine — è una guida di navigazione.
+  </div>
+</div>
+
+<!-- ═══════════ NAV ═══════════ -->
+<div class="nav">
+  <button class="nav-btn active" onclick="show(0)">L'ordine delle leve</button>
+  <button class="nav-btn" onclick="show(1)">① Prompt</button>
+  <button class="nav-btn" onclick="show(2)">② Modello</button>
+  <button class="nav-btn" onclick="show(3)">③ Tool</button>
+  <button class="nav-btn" onclick="show(4)">④ RAG</button>
+  <button class="nav-btn" onclick="show(5)">⑤ Orchestrazione</button>
+  <button class="nav-btn" onclick="show(6)">⑥ Testing</button>
+  <button class="nav-btn" onclick="show(7)">⑦ Memoria</button>
+  <button class="nav-btn" onclick="show(8)">⑧ Fine-tuning</button>
+  <button class="nav-btn" onclick="show(9)">Principi trasversali</button>
+</div>
+
+
+<!-- ═══════════════════════════
+     S0 — L'ORDINE DELLE LEVE
+═══════════════════════════ -->
+<div class="sect active" id="s0">
+  <div class="intro-wrap">
+
+    <div class="order-track">
+      <div class="ot-label-row">
+        <span>← Più reversibile · Meno costoso · Agisci prima</span>
+        <span>Meno reversibile · Più costoso · Agisci dopo →</span>
+      </div>
+      <div class="ot-bar"></div>
+      <div class="ot-items">
+        <div class="ot-item"><div class="ot-dot" style="background:var(--l01)">01</div><div class="ot-name">Prompt Eng.</div></div>
+        <div class="ot-item"><div class="ot-dot" style="background:var(--l02)">02</div><div class="ot-name">Scelta Modello</div></div>
+        <div class="ot-item"><div class="ot-dot" style="background:var(--l03)">03</div><div class="ot-name">Tool Design</div></div>
+        <div class="ot-item"><div class="ot-dot" style="background:var(--l04)">04</div><div class="ot-name">RAG</div></div>
+        <div class="ot-item"><div class="ot-dot" style="background:var(--l05)">05</div><div class="ot-name">Orchestrazione</div></div>
+        <div class="ot-item"><div class="ot-dot" style="background:var(--l06)">06</div><div class="ot-name">Testing</div></div>
+        <div class="ot-item"><div class="ot-dot" style="background:var(--lm)">M</div><div class="ot-name">Memoria</div></div>
+        <div class="ot-item"><div class="ot-dot" style="background:var(--l07)">07</div><div class="ot-name">Fine-tuning</div></div>
+        <div class="ot-item"><div class="ot-dot" style="background:var(--ltool)">T</div><div class="ot-name">Tool in pratica</div></div>
+      </div>
+    </div>
+
+    <div style="margin-top:32px; display:grid; grid-template-columns:1fr 1fr; gap:16px;">
+      <div style="border:1px solid var(--border2); padding:18px 20px; background:var(--bg);">
+        <div style="font-family:'IBM Plex Mono',monospace; font-size:9px; letter-spacing:2px; text-transform:uppercase; color:var(--ink4); margin-bottom:10px; padding-bottom:6px; border-bottom:1px solid var(--border);">Perché l'ordine conta</div>
+        <p style="font-size:13.5px; color:var(--ink3); line-height:1.75;">Le leve hanno un <strong style="color:var(--ink2);">costo di applicazione crescente</strong> e una reversibilità decrescente. Il prompt engineering si cambia in un'ora e senza infrastruttura. Il fine-tuning richiede settimane e produce un sistema da mantenere indefinitamente. Agire in ordine inverso significa pagare il costo più alto per un problema che avrebbe potuto essere risolto con quello più basso.</p>
+        <p style="font-size:13.5px; color:var(--ink3); line-height:1.75; margin-top:8px;">L'ordine non è rigido — alcune leve si attivano in parallelo (testing va attivato subito, non per ultimo). Ma la logica di base è: <strong style="color:var(--ink2);">esaurisci la leva meno costosa prima di passare alla successiva.</strong></p>
+      </div>
+      <div style="border:1px solid var(--border2); padding:18px 20px; background:var(--bg);">
+        <div style="font-family:'IBM Plex Mono',monospace; font-size:9px; letter-spacing:2px; text-transform:uppercase; color:var(--ink4); margin-bottom:10px; padding-bottom:6px; border-bottom:1px solid var(--border);">Come leggere ogni scheda</div>
+        <div style="font-size:13px; color:var(--ink3); line-height:1.7;">
+          <div style="display:grid; grid-template-columns:24px 1fr; gap:6px; margin-bottom:5px;"><div style="font-family:'IBM Plex Mono',monospace; font-size:10px; font-weight:700; color:var(--ink4);">①</div><div><strong style="color:var(--ink2);">Descrizione</strong> — cos'è la leva e cosa modifica nel sistema</div></div>
+          <div style="display:grid; grid-template-columns:24px 1fr; gap:6px; margin-bottom:5px;"><div style="font-family:'IBM Plex Mono',monospace; font-size:10px; font-weight:700; color:var(--ink4);">②</div><div><strong style="color:var(--ink2);">Importanza</strong> — quanto impatta sulla qualità dell'agente e perché</div></div>
+          <div style="display:grid; grid-template-columns:24px 1fr; gap:6px; margin-bottom:5px;"><div style="font-family:'IBM Plex Mono',monospace; font-size:10px; font-weight:700; color:var(--ink4);">③</div><div><strong style="color:var(--ink2);">Massima</strong> — il principio guida in una frase</div></div>
+          <div style="display:grid; grid-template-columns:24px 1fr; gap:6px; margin-bottom:5px;"><div style="font-family:'IBM Plex Mono',monospace; font-size:10px; font-weight:700; color:var(--ink4);">④</div><div><strong style="color:var(--ink2);">Regole d'oro</strong> — le 3 scelte fondamentali che contano davvero</div></div>
+          <div style="display:grid; grid-template-columns:24px 1fr; gap:6px;"><div style="font-family:'IBM Plex Mono',monospace; font-size:10px; font-weight:700; color:var(--ink4);">⑤</div><div><strong style="color:var(--ink2);">Quando passare alla leva successiva</strong> — il segnale che questa leva è esaurita</div></div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+
+<!-- ═══════════════════════════ HELPER per generare le leve ═════════════════ -->
+<!-- Ogni leva ha la stessa struttura: header + 3 colonne (descrizione / importanza / regole) -->
+
+
+<!-- ═══════════════════════════
+     S1 — PROMPT ENGINEERING
+═══════════════════════════ -->
+<div class="sect" id="s1">
+  <div style="padding:36px 56px 12px;"><div style="font-family:'Instrument Serif',serif; font-size:13px; color:var(--ink4); letter-spacing:.5px;">La prima leva da attivare — e quella da non abbandonare mai</div></div>
+  <div class="leva-card">
+    <div class="lc-header">
+      <div class="lc-stripe" style="background:var(--l01)"></div>
+      <div class="lc-num-wrap">
+        <div class="lc-num" style="color:var(--l01);">01</div>
+        <div class="lc-num-label">Leva</div>
+      </div>
+      <div class="lc-title-wrap">
+        <div class="lc-label">Sempre attiva — costo minimo — massima reversibilità</div>
+        <div class="lc-title">Prompt Engineering</div>
+        <div class="lc-tagline">Come si istruisce il modello: identità, obiettivi, vincoli, ragionamento, formato, esempi</div>
+      </div>
+      <div class="lc-meta">
+        <div class="lc-importance">
+          <span style="background:var(--l01)"></span><span style="background:var(--l01)"></span><span style="background:var(--l01)"></span><span style="background:var(--l01)"></span><span style="background:var(--l01)"></span>
+        </div>
+        <div class="lc-importance-lbl">Importanza massima</div>
+        <div class="lc-rev" style="color:var(--ok); border-color:var(--ok);">Reversibile in minuti</div>
+      </div>
+    </div>
+    <div class="lc-body">
+      <div class="lc-col">
+        <div class="lc-col-lbl">Descrizione</div>
+        <p>Il prompt è l'interfaccia primaria tra l'intenzione dello sviluppatore e il comportamento del modello. Include il system prompt (identità, vincoli, comportamenti), le istruzioni del task, gli esempi few-shot, e il formato dell'output.</p>
+        <p>È la leva più accessibile: nessuna infrastruttura, nessun costo di training, modificabile in tempo reale. Non si "finisce" — si raffina continuamente man mano che emergono nuovi casi d'uso e nuovi edge case.</p>
+      </div>
+      <div class="lc-col">
+        <div class="lc-col-lbl">Perché è importante</div>
+        <p>La differenza tra un prompt mediocre e uno ben progettato è spesso la differenza tra un agente inutilizzabile e uno che funziona. <strong>La maggior parte dei problemi di comportamento che sembrano richiedere fine-tuning si risolvono con un prompt migliore.</strong></p>
+        <p>La complessità del prompt non è un problema — è un investimento. Un system prompt di 2.000 token che produce il comportamento corretto vale molto più di 200 token che producono output inconsistenti.</p>
+        <div class="massima" style="border-color:var(--l01); background:#f4faf5; color:#2e4a32; margin-top:10px;">
+          "Descrivi il comportamento che vuoi, non il comportamento che non vuoi."
+        </div>
+      </div>
+      <div class="lc-col">
+        <div class="lc-col-lbl">Regole d'oro</div>
+        <div class="rules-list">
+          <div class="rule-item"><div class="rule-dot" style="background:var(--l01)"></div><div><strong>Identità prima di tutto.</strong> Il ruolo e il contesto nel system prompt guidano ogni risposta successiva — definiscili con precisione prima di qualsiasi altra istruzione.</div></div>
+          <div class="rule-item"><div class="rule-dot" style="background:var(--l01)"></div><div><strong>Mostra, non descrivere.</strong> Un esempio concreto di input→output atteso vale dieci istruzioni astratte. I few-shot examples sono il modo più efficiente per trasmettere il pattern.</div></div>
+          <div class="rule-item"><div class="rule-dot" style="background:var(--l01)"></div><div><strong>Istruzione esplicita per ogni edge case.</strong> Il modello non inferisce le eccezioni — le deve trovare nel prompt. Se un comportamento specifico è critico, scrivilo in modo esplicito.</div></div>
+        </div>
+        <div class="next-leva" style="border-color:var(--border2); margin-top:12px;">
+          <span class="arrow">→ Passa alla leva successiva quando:</span> il comportamento non migliora nonostante prompt ottimizzato e diversi esempi few-shot, oppure il prompt diventa così lungo (>5.000 token) che il costo e la latenza diventano un problema strutturale.
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+<!-- ═══════════════════════════
+     S2 — SCELTA DEL MODELLO
+═══════════════════════════ -->
+<div class="sect" id="s2">
+  <div style="padding:36px 56px 12px;"><div style="font-family:'Instrument Serif',serif; font-size:13px; color:var(--ink4);">Non si sceglie il modello migliore — si sceglie il più adatto per il task specifico</div></div>
+  <div class="leva-card">
+    <div class="lc-header">
+      <div class="lc-stripe" style="background:var(--l02)"></div>
+      <div class="lc-num-wrap">
+        <div class="lc-num" style="color:var(--l02);">02</div>
+        <div class="lc-num-label">Leva</div>
+      </div>
+      <div class="lc-title-wrap">
+        <div class="lc-label">Decisione strutturale — impatta costo, latenza e qualità</div>
+        <div class="lc-title">Scelta del modello</div>
+        <div class="lc-tagline">Quale modello per quale task: il triangolo intelligenza / velocità / costo</div>
+      </div>
+      <div class="lc-meta">
+        <div class="lc-importance">
+          <span style="background:var(--l02)"></span><span style="background:var(--l02)"></span><span style="background:var(--l02)"></span><span style="background:var(--l02)"></span><span style="background:var(--bg3)"></span>
+        </div>
+        <div class="lc-importance-lbl">Importanza alta</div>
+        <div class="lc-rev" style="color:var(--warn); border-color:var(--warn);">Reversibile in ore/giorni</div>
+      </div>
+    </div>
+    <div class="lc-body">
+      <div class="lc-col">
+        <div class="lc-col-lbl">Descrizione</div>
+        <p>La scelta del modello determina il profilo base di capacità, velocità e costo di ogni operazione del sistema. Non è una decisione una-tantum: va rivalutata ogni volta che cambiano i requisiti o il panorama dei modelli disponibili.</p>
+        <p>La strategia di routing — usare modelli diversi per task diversi nello stesso sistema — è spesso più efficace di cercare un singolo modello ottimale per tutto.</p>
+      </div>
+      <div class="lc-col">
+        <div class="lc-col-lbl">Perché è importante</div>
+        <p>Un modello sovradimensionato per il task produce latenza e costi inutili. Un modello sottodimensionato produce qualità insufficiente che nessun prompt può compensare. <strong>Il matching corretto tra task e modello è la leva con il miglior rapporto qualità/costo dell'intero sistema.</strong></p>
+        <p>Il routing intelligente (70% small + 30% large) può ridurre i costi del sistema del 80% rispetto all'uso uniforme del modello più capace.</p>
+        <div class="massima" style="border-color:var(--l02); background:#f5f0eb; color:#3a2e22; margin-top:10px;">
+          "Identifica le 2–3 dimensioni critiche per il task, poi scegli il modello."
+        </div>
+      </div>
+      <div class="lc-col">
+        <div class="lc-col-lbl">Regole d'oro</div>
+        <div class="rules-list">
+          <div class="rule-item"><div class="rule-dot" style="background:var(--l02)"></div><div><strong>Task-first sempre.</strong> Le dimensioni critiche variano per task: ragionamento per l'analisi complessa, velocità e costo per il supporto ad alto volume. Identificale prima di guardare i benchmark.</div></div>
+          <div class="rule-item"><div class="rule-dot" style="background:var(--l02)"></div><div><strong>Valuta sul tuo task, non sui benchmark pubblici.</strong> MMLU e HumanEval non predicono le performance sul tuo caso d'uso specifico. Un golden dataset di 50–100 casi reali è più affidabile di qualsiasi leaderboard.</div></div>
+          <div class="rule-item"><div class="rule-dot" style="background:var(--l02)"></div><div><strong>Il routing è la risposta al triangolo.</strong> Non si ottimizza su intelligenza, velocità e costo simultaneamente. Il routing distribuisce ogni task al modello adatto invece di cercare un compromesso unico.</div></div>
+        </div>
+        <div class="next-leva" style="border-color:var(--border2); margin-top:12px;">
+          <span class="arrow">→ Passa alla leva successiva quando:</span> il modello ha già il profilo giusto per il task e il problema di qualità persiste — non è il modello il collo di bottiglia, è qualcos'altro (prompt, architettura, dati).
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+<!-- ═══════════════════════════
+     S3 — TOOL DESIGN
+═══════════════════════════ -->
+<div class="sect" id="s3">
+  <div style="padding:36px 56px 12px;"><div style="font-family:'Instrument Serif',serif; font-size:13px; color:var(--ink4);">Come l'agente interagisce con il mondo esterno — la leva che definisce cosa può fare</div></div>
+  <div class="leva-card">
+    <div class="lc-header">
+      <div class="lc-stripe" style="background:var(--l03)"></div>
+      <div class="lc-num-wrap">
+        <div class="lc-num" style="color:var(--l03);">03</div>
+        <div class="lc-num-label">Leva</div>
+      </div>
+      <div class="lc-title-wrap">
+        <div class="lc-label">Estende le capacità dell'agente — richiede design deliberato</div>
+        <div class="lc-title">Tool Design</div>
+        <div class="lc-tagline">Progettare l'interfaccia tra l'LLM e il mondo: nome, description, parametri, output</div>
+      </div>
+      <div class="lc-meta">
+        <div class="lc-importance">
+          <span style="background:var(--l03)"></span><span style="background:var(--l03)"></span><span style="background:var(--l03)"></span><span style="background:var(--l03)"></span><span style="background:var(--l03)"></span>
+        </div>
+        <div class="lc-importance-lbl">Importanza massima</div>
+        <div class="lc-rev" style="color:var(--ok); border-color:var(--ok);">Reversibile facilmente</div>
+      </div>
+    </div>
+    <div class="lc-body">
+      <div class="lc-col">
+        <div class="lc-col-lbl">Descrizione</div>
+        <p>I tool definiscono cosa l'agente può fare nel mondo: cercare informazioni, creare record, inviare comunicazioni, eseguire codice, interagire con sistemi esterni. Il design del tool — come si chiama, cosa dice la description, come è strutturato l'output — determina se e come l'LLM li usa correttamente.</p>
+        <p>Include la scelta del meccanismo di connessione (tool calling nativo, code execution, MCP) e il design delle istruzioni d'uso (schema, system prompt, context dinamico).</p>
+      </div>
+      <div class="lc-col">
+        <div class="lc-col-lbl">Perché è importante</div>
+        <p>Un tool mal progettato — nome ambiguo, description vaga, output verboso — viene invocato nel momento sbagliato, con parametri sbagliati, o non viene usato quando sarebbe necessario. <strong>La description del tool è spesso più importante del codice che implementa il tool.</strong></p>
+        <p>La categoria del tool (lettura, scrittura, comunicazione, esecuzione codice) determina il livello di rischio e la quantità di istruzione necessaria — i tool irreversibili richiedono guardrail sia nello schema che nel system prompt.</p>
+        <div class="massima" style="border-color:var(--l03); background:#eef5f0; color:#2e4a32; margin-top:10px;">
+          "Esponi intenzioni semantiche, non endpoint tecnici."
+        </div>
+      </div>
+      <div class="lc-col">
+        <div class="lc-col-lbl">Regole d'oro</div>
+        <div class="rules-list">
+          <div class="rule-item"><div class="rule-dot" style="background:var(--l03)"></div><div><strong>La description risponde a 3 domande.</strong> Cosa fa, quando usarlo, quando NON usarlo. La terza è la più trascurata — e quella che previene gli usi sbagliati più costosi.</div></div>
+          <div class="rule-item"><div class="rule-dot" style="background:var(--l03)"></div><div><strong>Il rischio determina il livello di istruzione.</strong> Tool di lettura: poca istruzione. Tool di comunicazione irreversibili: istruzione ridondante nello schema E nel system prompt + HITL obbligatorio.</div></div>
+          <div class="rule-item"><div class="rule-dot" style="background:var(--l03)"></div><div><strong>Output pulito e denso di significato.</strong> Il tool_result torna nel context window — ID tecnici, campi vuoti e messaggi di errore HTTP degradano la qualità della risposta. Restituisci solo ciò che il modello deve elaborare.</div></div>
+        </div>
+        <div class="next-leva" style="border-color:var(--border2); margin-top:12px;">
+          <span class="arrow">→ Passa alla leva successiva quando:</span> i tool funzionano correttamente ma l'agente risponde con informazioni non aggiornate o non presenti nel suo training — il problema è la conoscenza, non le azioni.
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+<!-- ═══════════════════════════
+     S4 — RAG
+═══════════════════════════ -->
+<div class="sect" id="s4">
+  <div style="padding:36px 56px 12px;"><div style="font-family:'Instrument Serif',serif; font-size:13px; color:var(--ink4);">La risposta ai problemi di conoscenza — prima di considerare il fine-tuning</div></div>
+  <div class="leva-card">
+    <div class="lc-header">
+      <div class="lc-stripe" style="background:var(--l04)"></div>
+      <div class="lc-num-wrap">
+        <div class="lc-num" style="color:var(--l04);">04</div>
+        <div class="lc-num-label">Leva</div>
+      </div>
+      <div class="lc-title-wrap">
+        <div class="lc-label">Risolve i problemi di conoscenza — aggiornabile senza training</div>
+        <div class="lc-title">Knowledge / RAG</div>
+        <div class="lc-tagline">Fornire al modello le informazioni rilevanti al momento della generazione, recuperate da corpus esterni</div>
+      </div>
+      <div class="lc-meta">
+        <div class="lc-importance">
+          <span style="background:var(--l04)"></span><span style="background:var(--l04)"></span><span style="background:var(--l04)"></span><span style="background:var(--l04)"></span><span style="background:var(--bg3)"></span>
+        </div>
+        <div class="lc-importance-lbl">Importanza alta</div>
+        <div class="lc-rev" style="color:var(--warn); border-color:var(--warn);">Reversibile in giorni</div>
+      </div>
+    </div>
+    <div class="lc-body">
+      <div class="lc-col">
+        <div class="lc-col-lbl">Descrizione</div>
+        <p>Il RAG recupera documenti o frammenti rilevanti da un corpus indicizzato e li inietta nel context window prima della generazione. Permette all'agente di rispondere su conoscenza specifica, aggiornata e verificabile — senza modificare i pesi del modello.</p>
+        <p>Il pipeline ha tre fasi: indicizzazione (chunking, embedding, archiviazione vettoriale), retrieval (embedding della query, ricerca per similarità, reranking), augmentation (iniezione nel prompt, costruzione del context).</p>
+      </div>
+      <div class="lc-col">
+        <div class="lc-col-lbl">Perché è importante</div>
+        <p>Il RAG risolve la causa più comune di risposte sbagliate nei sistemi agentic: l'assenza di informazioni specifiche del dominio. <strong>La maggior parte delle "hallucination" non sono invenzioni spontanee — sono interpolazioni su dati assenti. Fornire i dati rimuove il problema.</strong></p>
+        <p>È la leva da attivare prima del fine-tuning per qualsiasi problema di conoscenza: il RAG è aggiornabile in tempo reale, il fine-tuning richiede un nuovo ciclo di training ogni volta che la conoscenza cambia.</p>
+        <div class="massima" style="border-color:var(--l04); background:#eaf5f3; color:#1a3a2e; margin-top:10px;">
+          "La qualità del retrieval determina la qualità della risposta — non il modello."
+        </div>
+      </div>
+      <div class="lc-col">
+        <div class="lc-col-lbl">Regole d'oro</div>
+        <div class="rules-list">
+          <div class="rule-item"><div class="rule-dot" style="background:var(--l04)"></div><div><strong>Il chunking è la scelta più impattante.</strong> Chunk troppo grandi diluiscono il segnale. Chunk troppo piccoli perdono il contesto. La dimensione ottimale dipende dalla struttura dei documenti — non esiste un default universale.</div></div>
+          <div class="rule-item"><div class="rule-dot" style="background:var(--l04)"></div><div><strong>Evalua il retrieval separatamente dalla generazione.</strong> Se il retrieval porta i documenti sbagliati, nessun prompt migliora il risultato. Misura il recall del retrieval prima di ottimizzare la generazione.</div></div>
+          <div class="rule-item"><div class="rule-dot" style="background:var(--l04)"></div><div><strong>Dì al modello quando non sa.</strong> Istruzione esplicita nel prompt: "Se le informazioni rilevanti non sono nei documenti forniti, dì che non hai dati sufficienti — non rispondere dalla tua conoscenza generale."</div></div>
+        </div>
+        <div class="next-leva" style="border-color:var(--border2); margin-top:12px;">
+          <span class="arrow">→ Passa alla leva successiva quando:</span> il sistema ha tool e conoscenza adeguati ma le risposte su task complessi sono inconsistenti o richiedono troppi passi manuali — è un problema di orchestrazione.
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+<!-- ═══════════════════════════
+     S5 — ORCHESTRAZIONE
+═══════════════════════════ -->
+<div class="sect" id="s5">
+  <div style="padding:36px 56px 12px;"><div style="font-family:'Instrument Serif',serif; font-size:13px; color:var(--ink4);">Come coordinare più agenti e passi — la complessità che si paga e deve comprare qualcosa</div></div>
+  <div class="leva-card">
+    <div class="lc-header">
+      <div class="lc-stripe" style="background:var(--l05)"></div>
+      <div class="lc-num-wrap">
+        <div class="lc-num" style="color:var(--l05);">05</div>
+        <div class="lc-num-label">Leva</div>
+      </div>
+      <div class="lc-title-wrap">
+        <div class="lc-label">Per task che eccedono le capacità di un singolo agente</div>
+        <div class="lc-title">Orchestrazione</div>
+        <div class="lc-tagline">Loop agentic, pattern multi-agente, gestione dello stato, human-in-the-loop</div>
+      </div>
+      <div class="lc-meta">
+        <div class="lc-importance">
+          <span style="background:var(--l05)"></span><span style="background:var(--l05)"></span><span style="background:var(--l05)"></span><span style="background:var(--l05)"></span><span style="background:var(--bg3)"></span>
+        </div>
+        <div class="lc-importance-lbl">Importanza alta</div>
+        <div class="lc-rev" style="color:var(--warn); border-color:var(--warn);">Reversibile in settimane</div>
+      </div>
+    </div>
+    <div class="lc-body">
+      <div class="lc-col">
+        <div class="lc-col-lbl">Descrizione</div>
+        <p>L'orchestrazione definisce come l'agente esegue task multi-step: il loop read-decide-act-observe, i pattern di coordinazione tra agenti (pipeline, supervisore, peer-to-peer), la gestione dello stato tra i passi, e i punti di controllo umano.</p>
+        <p>È la leva che abilita task che un singolo agente in un singolo turno non può completare — ma porta complessità proporzionale: più agenti significano più punti di fallimento, più stato da gestire, più difficoltà di debugging.</p>
+      </div>
+      <div class="lc-col">
+        <div class="lc-col-lbl">Perché è importante</div>
+        <p>Senza orchestrazione, l'agente è limitato a task che si completano in un singolo scambio. Con orchestrazione, può gestire workflow lunghi, task che richiedono iterazione, e processi che coinvolgono sistemi multipli.</p>
+        <p><strong>La complessità dell'orchestrazione si paga sempre — in latenza, in costi di debugging, in probabilità di fallimento parziale. Deve comprare qualcosa di misurabile.</strong> Un agente singolo ben configurato batte quasi sempre un sistema multi-agente mal progettato.</p>
+        <div class="massima" style="border-color:var(--l05); background:#edf1f9; color:#1a2e52; margin-top:10px;">
+          "Aggiungi complessità solo quando un singolo agente non è sufficiente — e poi gestisci lo stato esplicitamente."
+        </div>
+      </div>
+      <div class="lc-col">
+        <div class="lc-col-lbl">Regole d'oro</div>
+        <div class="rules-list">
+          <div class="rule-item"><div class="rule-dot" style="background:var(--l05)"></div><div><strong>Lo stato è la mappa, l'output è il territorio.</strong> Progetta lo schema di stato prima del codice. Ogni passo legge lo stato all'inizio e lo aggiorna alla fine — non inferire lo stato dagli output.</div></div>
+          <div class="rule-item"><div class="rule-dot" style="background:var(--l05)"></div><div><strong>Criteri di terminazione sempre.</strong> Un loop senza limite di passi e senza rilevamento di stallo non è un agente — è un problema in attesa di manifestarsi. Definisci quando fermarsi prima del deploy.</div></div>
+          <div class="rule-item"><div class="rule-dot" style="background:var(--l05)"></div><div><strong>Il HITL selettivo è più efficace del HITL totale.</strong> Riserva l'intervento umano per le azioni irreversibili ad alto rischio. Approvare tutto meccanicamente vanifica il controllo.</div></div>
+        </div>
+        <div class="next-leva" style="border-color:var(--border2); margin-top:12px;">
+          <span class="arrow">→ Attiva in parallelo:</span> il testing non è l'ultima leva — va attivato non appena l'agente produce output, e mantenuto aggiornato ad ogni modifica delle altre leve.
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+<!-- ═══════════════════════════
+     S6 — TESTING
+═══════════════════════════ -->
+<div class="sect" id="s6">
+  <div style="padding:36px 56px 12px;"><div style="font-family:'Instrument Serif',serif; font-size:13px; color:var(--ink4);">Non l'ultima cosa da fare — la prima infrastruttura da costruire</div></div>
+  <div class="leva-card">
+    <div class="lc-header">
+      <div class="lc-stripe" style="background:var(--l06)"></div>
+      <div class="lc-num-wrap">
+        <div class="lc-num" style="color:var(--l06);">06</div>
+        <div class="lc-num-label">Leva</div>
+      </div>
+      <div class="lc-title-wrap">
+        <div class="lc-label">L'infrastruttura che rende ogni altra leva modificabile con sicurezza</div>
+        <div class="lc-title">Testing e valutazione</div>
+        <div class="lc-tagline">Misurare la qualità dell'agente su casi reali — e mantenerla nel tempo</div>
+      </div>
+      <div class="lc-meta">
+        <div class="lc-importance">
+          <span style="background:var(--l06)"></span><span style="background:var(--l06)"></span><span style="background:var(--l06)"></span><span style="background:var(--l06)"></span><span style="background:var(--l06)"></span>
+        </div>
+        <div class="lc-importance-lbl">Importanza massima</div>
+        <div class="lc-rev" style="color:var(--ok); border-color:var(--ok);">Attivare subito</div>
+      </div>
+    </div>
+    <div class="lc-body">
+      <div class="lc-col">
+        <div class="lc-col-lbl">Descrizione</div>
+        <p>Il testing definisce come si misura la qualità dell'agente: golden dataset di casi reali, metriche appropriate per il task, valutazione automatica (LLM-as-judge dove necessario), e regression suite che cresce ad ogni bug risolto.</p>
+        <p>Non è un'attività separata dal development — è l'infrastruttura che rende sicuro modificare qualsiasi altra leva. Senza testing, ogni modifica al prompt o all'architettura è un salto nel buio.</p>
+      </div>
+      <div class="lc-col">
+        <div class="lc-col-lbl">Perché è importante</div>
+        <p>Senza testing sistematico, le modifiche al sistema si basano su intuizioni e demo convincenti — che non predicono le prestazioni in produzione. <strong>Un sistema di agenti AI è un sistema vivo: cambia il modello base, cambiano i dati, cambiano i requisiti. Il testing è ciò che permette di tenere traccia della qualità nel tempo.</strong></p>
+        <p>Il golden dataset è il patrimonio più prezioso del progetto: 50–100 casi reali ben annotati valgono più di qualsiasi benchmark pubblico per prendere decisioni informate.</p>
+        <div class="massima" style="border-color:var(--l06); background:#edf2f7; color:#1a2e3a; margin-top:10px;">
+          "Non si migliora ciò che non si misura — e i benchmark pubblici non misurano il tuo task."
+        </div>
+      </div>
+      <div class="lc-col">
+        <div class="lc-col-lbl">Regole d'oro</div>
+        <div class="rules-list">
+          <div class="rule-item"><div class="rule-dot" style="background:var(--l06)"></div><div><strong>Golden dataset prima di qualsiasi ottimizzazione.</strong> 50 casi reali ben annotati con output atteso — costruiti dai log di produzione o dagli esperti di dominio. Senza ground truth non si può misurare nulla.</div></div>
+          <div class="rule-item"><div class="rule-dot" style="background:var(--l06)"></div><div><strong>Metriche appropriate per il task.</strong> BLEU e ROUGE non misurano la qualità per la maggior parte dei task agentic. Per output soggettivi: rubrica esplicita per LLM-as-judge, calibrata su valutazione umana prima di usarla in autonomia.</div></div>
+          <div class="rule-item"><div class="rule-dot" style="background:var(--l06)"></div><div><strong>Ogni bug diventa un caso di test.</strong> La regression suite cresce nel tempo — ogni problema risolto in produzione aggiunge un caso al golden dataset. Un sistema con 50 casi di regressione è molto più affidabile di uno con 5.</div></div>
+        </div>
+        <div class="next-leva" style="border-color:var(--border2); margin-top:12px;">
+          <span class="arrow">→ Il testing non ha un "dopo":</span> è un'infrastruttura permanente che supporta tutte le altre leve. Si attiva subito e si mantiene per tutta la vita del sistema.
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+<!-- ═══════════════════════════
+     S7 — MEMORIA
+═══════════════════════════ -->
+<div class="sect" id="s7">
+  <div style="padding:36px 56px 12px;"><div style="font-family:'Instrument Serif',serif; font-size:13px; color:var(--ink4);">Come l'agente ricorda — oltre il singolo turno di conversazione</div></div>
+  <div class="leva-card">
+    <div class="lc-header">
+      <div class="lc-stripe" style="background:var(--lm)"></div>
+      <div class="lc-num-wrap">
+        <div class="lc-num" style="color:var(--lm);">M</div>
+        <div class="lc-num-label">Leva</div>
+      </div>
+      <div class="lc-title-wrap">
+        <div class="lc-label">Abilita continuità e personalizzazione tra sessioni diverse</div>
+        <div class="lc-title">Gestione della memoria</div>
+        <div class="lc-tagline">In-context, episodica, semantica, procedurale — quattro tipi con usi e rischi diversi</div>
+      </div>
+      <div class="lc-meta">
+        <div class="lc-importance">
+          <span style="background:var(--lm)"></span><span style="background:var(--lm)"></span><span style="background:var(--lm)"></span><span style="background:var(--bg3)"></span><span style="background:var(--bg3)"></span>
+        </div>
+        <div class="lc-importance-lbl">Importanza media-alta</div>
+        <div class="lc-rev" style="color:var(--warn); border-color:var(--warn);">Reversibile in giorni</div>
+      </div>
+    </div>
+    <div class="lc-body">
+      <div class="lc-col">
+        <div class="lc-col-lbl">Descrizione</div>
+        <p>La gestione della memoria affronta il problema strutturale degli LLM: la mancanza di memoria persistente tra sessioni. Quattro tipi: <strong>in-context</strong> (nella finestra corrente), <strong>episodica</strong> (log di interazioni passate), <strong>semantica</strong> (fatti e conoscenza estratti), <strong>procedurale</strong> (come fare le cose — skill e workflow appresi).</p>
+        <p>La scelta del tipo dipende da cosa l'agente deve ricordare e per quanto tempo.</p>
+      </div>
+      <div class="lc-col">
+        <div class="lc-col-lbl">Perché è importante</div>
+        <p>Senza memoria, ogni sessione ricomincia da zero — l'agente non sa chi è l'utente, cosa è già stato discusso, quali preferenze sono state espresse. Con memoria, l'agente diventa progressivamente più utile nel tempo.</p>
+        <p><strong>La memoria mal gestita è però un rischio: informazioni obsolete o errate memorizzate persistono e degradano le risposte future. La qualità della selezione e dell'aggiornamento conta quanto la quantità di ciò che si memorizza.</strong></p>
+        <div class="massima" style="border-color:var(--lm); background:#f4f0fa; color:#3a2e52; margin-top:10px;">
+          "Memorizza le decisioni e le preferenze — non i dettagli di ogni conversazione."
+        </div>
+      </div>
+      <div class="lc-col">
+        <div class="lc-col-lbl">Regole d'oro</div>
+        <div class="rules-list">
+          <div class="rule-item"><div class="rule-dot" style="background:var(--lm)"></div><div><strong>Context window prima di tutto.</strong> Prima di implementare storage persistente, ottimizza la gestione del context corrente: summarization progressiva, selezione dei messaggi rilevanti, rimozione del rumore.</div></div>
+          <div class="rule-item"><div class="rule-dot" style="background:var(--lm)"></div><div><strong>Seleziona cosa memorizzare, non tutto.</strong> Memorizzare ogni dettaglio di ogni sessione produce rumore che degrada le risposte. I criteri di selezione (cosa è abbastanza importante da memorizzare?) sono parte del design.</div></div>
+          <div class="rule-item"><div class="rule-dot" style="background:var(--lm)"></div><div><strong>Memoria e privacy sono inseparabili.</strong> Tutto ciò che si memorizza può essere recuperato, citato, o usato in contesti futuri. Definire esplicitamente cosa non va mai memorizzato è parte obbligatoria del design della memoria.</div></div>
+        </div>
+        <div class="next-leva" style="border-color:var(--border2); margin-top:12px;">
+          <span class="arrow">→ Passa alla leva successiva quando:</span> il comportamento dell'agente è stabile e corretto su tutti i casi, ma lo stile, il formato o il ragionamento di dominio richiedono ancora troppa istruzione esplicita ad ogni turno — potrebbe essere candidato al fine-tuning.
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+<!-- ═══════════════════════════
+     S8 — FINE-TUNING
+═══════════════════════════ -->
+<div class="sect" id="s8">
+  <div style="padding:36px 56px 12px;"><div style="font-family:'Instrument Serif',serif; font-size:13px; color:var(--ink4);">L'ultima leva — la più potente, la più costosa, la meno reversibile</div></div>
+  <div class="leva-card">
+    <div class="lc-header">
+      <div class="lc-stripe" style="background:var(--l07)"></div>
+      <div class="lc-num-wrap">
+        <div class="lc-num" style="color:var(--l07);">07</div>
+        <div class="lc-num-label">Leva</div>
+      </div>
+      <div class="lc-title-wrap">
+        <div class="lc-label">Solo dopo aver esaurito le prime sei leve</div>
+        <div class="lc-title">Fine-tuning</div>
+        <div class="lc-tagline">Modificare i pesi del modello per specializzarlo — stile, dominio, comportamento</div>
+      </div>
+      <div class="lc-meta">
+        <div class="lc-importance">
+          <span style="background:var(--l07)"></span><span style="background:var(--l07)"></span><span style="background:var(--l07)"></span><span style="background:var(--bg3)"></span><span style="background:var(--bg3)"></span>
+        </div>
+        <div class="lc-importance-lbl">Importanza selettiva</div>
+        <div class="lc-rev" style="color:var(--bad); border-color:var(--bad);">Poco reversibile</div>
+      </div>
+    </div>
+    <div class="lc-body">
+      <div class="lc-col">
+        <div class="lc-col-lbl">Descrizione</div>
+        <p>Il fine-tuning continua il training del modello base su un dataset specifico, modificando i pesi per specializzarlo. Tre tipi con obiettivi diversi: <strong>stile e formato</strong> (il più comune — impara come rispondere), <strong>conoscenza di dominio</strong> (con rischi di confabulation), <strong>comportamento e allineamento</strong> (il più potente, richiede DPO o RLHF).</p>
+        <p>Produce un modello da mantenere indefinitamente — con aggiornamenti del dataset ad ogni cambio di requisiti.</p>
+      </div>
+      <div class="lc-col">
+        <div class="lc-col-lbl">Perché è importante — e perché è l'ultima</div>
+        <p>Il fine-tuning risolve problemi che le altre leve non possono risolvere: stile molto specifico non descrivibile in parole, comportamento coerente ad alto volume senza prompt lungo, expertise tacita di dominio.</p>
+        <p><strong>È l'ultima leva perché il suo costo reale non è il training — è mantenere il modello nel tempo.</strong> Dataset da aggiornare, regressioni da monitorare, lock-in del vendor, ri-training ad ogni cambio significativo. Questo costo si giustifica solo per problemi che le altre leve non possono risolvere.</p>
+        <div class="massima" style="border-color:var(--l07); background:#eef5f0; color:#1a3a24; margin-top:10px;">
+          "Il fine-tuning insegna al modello come rispondere — non cosa sa. Per la conoscenza usa il RAG."
+        </div>
+      </div>
+      <div class="lc-col">
+        <div class="lc-col-lbl">Regole d'oro</div>
+        <div class="rules-list">
+          <div class="rule-item"><div class="rule-dot" style="background:var(--l07)"></div><div><strong>La qualità del dataset batte la quantità.</strong> 100 esempi esemplari validati da un domain expert producono risultati migliori di 1.000 esempi mediocri. Il bar è "esemplare" — non "accettabile".</div></div>
+          <div class="rule-item"><div class="rule-dot" style="background:var(--l07)"></div><div><strong>Testa le regressioni, non solo il task ottimizzato.</strong> Il fine-tuning migliora il task target ma può degradare task non rappresentati nel dataset. Verifica che il degradamento su task generali sia ≤ 10% rispetto al baseline.</div></div>
+          <div class="rule-item"><div class="rule-dot" style="background:var(--l07)"></div><div><strong>Ciclo iterativo, non big bang.</strong> Inizia con 50–100 esempi, fai il primo round, valuta dove ancora sbaglia, aggiungi esempi mirati. Non raccogliere 500 esempi prima di avere feedback dal modello fine-tuned.</div></div>
+        </div>
+        <div class="next-leva" style="border-color:var(--border2); margin-top:12px;">
+          <span class="arrow">→ Se il fine-tuning non basta:</span> dopo 3 round con dataset di qualità e il problema persiste, la causa probabilmente non è il dataset — è il modello base sbagliato (Leva 02) o aspettative irrealistiche sulla capacità del task.
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+<!-- ═══════════════════════════
+     S9 — PRINCIPI TRASVERSALI
+═══════════════════════════ -->
+<div class="sect" id="s9">
+  <div class="final-wrap">
+
+    <div style="font-family:'Instrument Serif',serif; font-size:36px; color:var(--ink2); line-height:1.15; max-width:680px; margin-bottom:8px;">I principi che attraversano tutte le leve</div>
+    <p style="font-size:14.5px; color:var(--ink3); max-width:700px; line-height:1.75; margin-bottom:28px;">Cinque principi che si applicano indipendentemente dalla leva attiva — la filosofia di fondo dell'intera serie.</p>
+
+    <div class="principles-grid">
+      <div class="principle-card">
+        <div class="pc-num">PRINCIPIO 01</div>
+        <div class="pc-principle">L'ordine delle leve è una gerarchia di costo e reversibilità</div>
+        <div class="pc-detail">Il prompt engineering si cambia in un'ora. Il fine-tuning in settimane. <strong>Investire sempre nella leva meno costosa che risolve il problema.</strong> Non partire dal fine-tuning per un problema che si risolve con una descrizione del tool più precisa.</div>
+      </div>
+      <div class="principle-card">
+        <div class="pc-num">PRINCIPIO 02</div>
+        <div class="pc-principle">La qualità dei dati precede la qualità dell'algoritmo</div>
+        <div class="pc-detail">Vale per il RAG (qualità del corpus), per il fine-tuning (qualità del dataset), per il testing (qualità del golden dataset). <strong>Nessun algoritmo recupera dati sbagliati.</strong> Investire nel dato prima che nella tecnica.</div>
+      </div>
+      <div class="principle-card">
+        <div class="pc-num">PRINCIPIO 03</div>
+        <div class="pc-principle">La semplicità è un valore, non un compromesso</div>
+        <div class="pc-detail">Un agente singolo ben configurato batte quasi sempre un sistema multi-agente mal progettato. Un prompt chiaro batte quasi sempre un sistema RAG mal indicizzato. <strong>La complessità aggiuntiva deve comprare qualcosa di misurabile.</strong></div>
+      </div>
+      <div class="principle-card">
+        <div class="pc-num">PRINCIPIO 04</div>
+        <div class="pc-principle">La valutazione sul proprio task — non sui benchmark pubblici</div>
+        <div class="pc-detail">I benchmark generali non predicono le prestazioni sul caso d'uso specifico. Un golden dataset di 50–100 casi reali con le proprie metriche è più utile di qualsiasi leaderboard per prendere decisioni operative. <strong>Misura ciò che conta per il tuo sistema.</strong></div>
+      </div>
+      <div class="principle-card" style="grid-column:span 2;">
+        <div class="pc-num">PRINCIPIO 05</div>
+        <div class="pc-principle">I sistemi evolvono — e devono essere progettati per evolversi</div>
+        <div class="pc-detail">I modelli cambiano, i dati cambiano, i requisiti cambiano. Un sistema di agenti AI non si costruisce una volta e si lascia — si mantiene. <strong>La documentazione delle decisioni, i golden dataset, e le pipeline di valutazione non sono overhead: sono ciò che rende il sistema mantenibile nel tempo.</strong> Un sistema senza questi strumenti accumula debito tecnico invisibile che emerge come degradazione graduale della qualità.</div>
+      </div>
+    </div>
+
+    <!-- Quick Reference Table -->
+    <div style="font-family:'IBM Plex Mono',monospace; font-size:9px; letter-spacing:3px; text-transform:uppercase; color:var(--ink4); margin-top:40px; margin-bottom:12px; padding-bottom:8px; border-bottom:1px solid var(--border);">Tabella di riferimento rapido</div>
+    <table class="qr-table">
+      <thead>
+        <tr><th>Leva</th><th>Importanza</th><th>Reversibilità</th><th>Attiva quando</th><th>Massima</th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td style="color:var(--l01);">① Prompt Eng.</td>
+          <td><div class="imp-pip"><span style="background:var(--l01)"></span><span style="background:var(--l01)"></span><span style="background:var(--l01)"></span><span style="background:var(--l01)"></span><span style="background:var(--l01)"></span></div></td>
+          <td class="rev-ok">Minuti</td>
+          <td>Sempre — prima di qualsiasi altra leva</td>
+          <td style="font-style:italic;">"Mostra il comportamento, non descriverlo"</td>
+        </tr>
+        <tr>
+          <td style="color:var(--l02);">② Modello</td>
+          <td><div class="imp-pip"><span style="background:var(--l02)"></span><span style="background:var(--l02)"></span><span style="background:var(--l02)"></span><span style="background:var(--l02)"></span><span style="background:var(--bg3)"></span></div></td>
+          <td class="rev-mid">Ore / giorni</td>
+          <td>Quando il profilo capacità/costo/velocità non corrisponde al task</td>
+          <td style="font-style:italic;">"Task-first: identifica le dimensioni critiche"</td>
+        </tr>
+        <tr>
+          <td style="color:var(--l03);">③ Tool Design</td>
+          <td><div class="imp-pip"><span style="background:var(--l03)"></span><span style="background:var(--l03)"></span><span style="background:var(--l03)"></span><span style="background:var(--l03)"></span><span style="background:var(--l03)"></span></div></td>
+          <td class="rev-ok">Ore</td>
+          <td>Quando l'agente deve interagire con sistemi o eseguire azioni</td>
+          <td style="font-style:italic;">"Esponi intenzioni, non endpoint tecnici"</td>
+        </tr>
+        <tr>
+          <td style="color:var(--l04);">④ RAG</td>
+          <td><div class="imp-pip"><span style="background:var(--l04)"></span><span style="background:var(--l04)"></span><span style="background:var(--l04)"></span><span style="background:var(--l04)"></span><span style="background:var(--bg3)"></span></div></td>
+          <td class="rev-mid">Giorni</td>
+          <td>Quando l'agente risponde male per mancanza di conoscenza specifica</td>
+          <td style="font-style:italic;">"Il retrieval determina la risposta"</td>
+        </tr>
+        <tr>
+          <td style="color:var(--l05);">⑤ Orchestrazione</td>
+          <td><div class="imp-pip"><span style="background:var(--l05)"></span><span style="background:var(--l05)"></span><span style="background:var(--l05)"></span><span style="background:var(--l05)"></span><span style="background:var(--bg3)"></span></div></td>
+          <td class="rev-mid">Settimane</td>
+          <td>Quando il task supera le capacità di un singolo agente in un turno</td>
+          <td style="font-style:italic;">"Aggiungi complessità solo se necessario"</td>
+        </tr>
+        <tr>
+          <td style="color:var(--l06);">⑥ Testing</td>
+          <td><div class="imp-pip"><span style="background:var(--l06)"></span><span style="background:var(--l06)"></span><span style="background:var(--l06)"></span><span style="background:var(--l06)"></span><span style="background:var(--l06)"></span></div></td>
+          <td class="rev-ok">Subito</td>
+          <td>Sempre — in parallelo con tutte le altre leve, da subito</td>
+          <td style="font-style:italic;">"Non si migliora ciò che non si misura"</td>
+        </tr>
+        <tr>
+          <td style="color:var(--lm);">⑦ Memoria</td>
+          <td><div class="imp-pip"><span style="background:var(--lm)"></span><span style="background:var(--lm)"></span><span style="background:var(--lm)"></span><span style="background:var(--bg3)"></span><span style="background:var(--bg3)"></span></div></td>
+          <td class="rev-mid">Giorni</td>
+          <td>Quando l'agente deve ricordare tra sessioni diverse</td>
+          <td style="font-style:italic;">"Memorizza decisioni, non dettagli"</td>
+        </tr>
+        <tr>
+          <td style="color:var(--l07);">⑧ Fine-tuning</td>
+          <td><div class="imp-pip"><span style="background:var(--l07)"></span><span style="background:var(--l07)"></span><span style="background:var(--l07)"></span><span style="background:var(--bg3)"></span><span style="background:var(--bg3)"></span></div></td>
+          <td class="rev-bad">Settimane / mesi</td>
+          <td>Solo dopo aver esaurito le prime sei leve senza risultato</td>
+          <td style="font-style:italic;">"Insegna come rispondere, non cosa sa"</td>
+        </tr>
+      </tbody>
+    </table>
+
+  </div>
+</div>
+
+<div class="footer">
+  <span>Serie Agenti AI · Report Quadro Generale · Le leve per migliorare un agente</span>
+  <span>Marzo 2026</span>
+</div>
+
+<script>
+function show(n) {
+  document.querySelectorAll('.sect').forEach(s => s.classList.remove('active'));
+  document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('s'+n).classList.add('active');
+  document.querySelectorAll('.nav-btn')[n].classList.add('active');
+  window.scrollTo({top:0, behavior:'smooth'});
+}
+</script>
+</body>
+</html>

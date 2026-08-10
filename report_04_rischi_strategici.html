@@ -1,0 +1,720 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Rischi AI — Rischi Strategici</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&family=Source+Sans+3:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --accent:       #2A6B4A;
+    --accent-light: #C8E8D8;
+    --accent-dim:   #1A4A32;
+    --ink:          #1A1A1A;
+    --ink-mid:      #444444;
+    --ink-light:    #777777;
+    --paper:        #F8FCF9;
+    --paper-alt:    #EEF7F2;
+    --border:       #D0E8DA;
+    --green:        #4A8C4F;
+    --green-light:  #EAF3EB;
+    --amber:        #B35900;
+    --amber-light:  #FFF4E5;
+    --red:          #C00000;
+    --sidebar-w:    260px;
+    --content-max:  800px;
+  }
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  html { scroll-behavior: smooth; }
+
+  body {
+    font-family: 'Source Sans 3', sans-serif;
+    font-size: 16px; line-height: 1.75;
+    color: var(--ink); background: var(--paper);
+    display: flex; min-height: 100vh;
+  }
+
+  nav#sidebar {
+    width: var(--sidebar-w); min-height: 100vh;
+    background: var(--ink); position: fixed; top: 0; left: 0;
+    display: flex; flex-direction: column; z-index: 100; overflow-y: auto;
+  }
+  .nav-brand { padding: 28px 24px 20px; border-bottom: 1px solid #333; }
+  .nav-brand .series-label {
+    font-size: 10px; font-weight: 600; letter-spacing: .18em;
+    text-transform: uppercase; color: var(--accent); margin-bottom: 6px;
+  }
+  .nav-brand .doc-title {
+    font-family: 'Playfair Display', serif; font-size: 15px; color: #fff; line-height: 1.35;
+  }
+  .nav-section-label {
+    font-size: 9.5px; font-weight: 600; letter-spacing: .15em;
+    text-transform: uppercase; color: #555; padding: 20px 24px 8px;
+  }
+  nav#sidebar a {
+    display: block; padding: 8px 24px; font-size: 13px; color: #999;
+    text-decoration: none; border-left: 2px solid transparent;
+    transition: color .2s, border-color .2s, background .2s; line-height: 1.4;
+  }
+  nav#sidebar a:hover, nav#sidebar a.active {
+    color: #fff; border-left-color: var(--accent); background: rgba(42,107,74,.12);
+  }
+  nav#sidebar a.sub { padding-left: 36px; font-size: 12px; color: #666; }
+  nav#sidebar a.sub:hover, nav#sidebar a.sub.active {
+    color: #ddd; border-left-color: var(--accent); background: rgba(42,107,74,.07);
+  }
+  .nav-report-links { margin-top: auto; padding: 20px 24px; border-top: 1px solid #333; }
+  .nav-report-links .label {
+    font-size: 9.5px; font-weight: 600; letter-spacing: .15em;
+    text-transform: uppercase; color: #555; margin-bottom: 10px;
+  }
+  .nav-report-links a { padding: 5px 0; border-left: none; font-size: 12px; }
+  .nav-report-links a.current { color: var(--accent); font-weight: 600; }
+  .nav-report-links a:hover { background: none; color: #fff; border-left: none; }
+
+  main { margin-left: var(--sidebar-w); flex: 1; }
+
+  .hero {
+    background: var(--ink); color: #fff;
+    padding: 72px 64px 60px; position: relative; overflow: hidden;
+  }
+  .hero::before {
+    content: ''; position: absolute; top: -60px; right: -60px;
+    width: 320px; height: 320px; border-radius: 50%;
+    background: radial-gradient(circle, rgba(42,107,74,.32) 0%, transparent 70%);
+    pointer-events: none;
+  }
+  .hero::after {
+    content: ''; position: absolute; bottom: 0; left: 0; right: 0;
+    height: 3px; background: linear-gradient(90deg, var(--accent), transparent);
+  }
+  .hero-meta {
+    font-size: 11px; font-weight: 600; letter-spacing: .2em;
+    text-transform: uppercase; color: var(--accent); margin-bottom: 16px;
+    display: flex; align-items: center; gap: 12px;
+  }
+  .hero-meta span { color: #555; }
+  .hero h1 {
+    font-family: 'Playfair Display', serif;
+    font-size: clamp(28px, 4vw, 42px); font-weight: 700;
+    line-height: 1.15; margin-bottom: 20px; max-width: 640px;
+  }
+  .hero-lead {
+    font-size: 17px; font-weight: 300; color: #bbb; max-width: 580px; line-height: 1.65;
+  }
+  .hero-tags { margin-top: 28px; display: flex; flex-wrap: wrap; gap: 8px; }
+  .tag {
+    font-size: 11px; font-weight: 600; letter-spacing: .08em; text-transform: uppercase;
+    padding: 4px 12px; border-radius: 2px;
+    background: rgba(42,107,74,.22); color: #80c8a0; border: 1px solid rgba(42,107,74,.38);
+  }
+
+  .content { max-width: calc(var(--content-max) + 128px); padding: 64px 64px 96px; }
+  section { margin-bottom: 80px; }
+
+  .section-eyebrow {
+    font-size: 10px; font-weight: 700; letter-spacing: .22em;
+    text-transform: uppercase; color: var(--accent); margin-bottom: 12px;
+  }
+  h2 {
+    font-family: 'Playfair Display', serif; font-size: 30px; font-weight: 600;
+    color: var(--ink); margin-bottom: 24px; line-height: 1.25;
+  }
+  h3 {
+    font-family: 'Playfair Display', serif; font-size: 21px; font-weight: 600;
+    color: var(--ink); margin-bottom: 12px; line-height: 1.3;
+  }
+  p { margin-bottom: 18px; color: var(--ink-mid); }
+  p:last-child { margin-bottom: 0; }
+  strong { color: var(--ink); font-weight: 600; }
+
+  .risk-card {
+    background: #fff; border: 1px solid var(--border); border-radius: 4px;
+    margin-bottom: 56px; overflow: hidden; box-shadow: 0 2px 16px rgba(0,0,0,.05);
+    transition: box-shadow .2s;
+  }
+  .risk-card:hover { box-shadow: 0 4px 28px rgba(0,0,0,.09); }
+  .risk-card-header {
+    display: flex; align-items: flex-start; gap: 20px;
+    padding: 32px 36px; border-bottom: 1px solid var(--border); background: var(--paper-alt);
+  }
+  .risk-number {
+    font-family: 'Playfair Display', serif; font-size: 40px; font-weight: 700;
+    color: var(--accent-light); line-height: 1; min-width: 52px; padding-top: 2px;
+  }
+  .risk-subtitle { font-size: 14px; font-weight: 400; color: var(--ink-light); font-style: italic; }
+  .risk-card-body { padding: 36px; }
+
+  .severity-row {
+    display: flex; align-items: center; gap: 10px;
+    margin-bottom: 28px; padding-bottom: 28px; border-bottom: 1px solid var(--border);
+    flex-wrap: wrap;
+  }
+  .severity-label {
+    font-size: 11px; font-weight: 700; letter-spacing: .12em;
+    text-transform: uppercase; color: var(--ink-light);
+  }
+  .severity-badge {
+    font-size: 11px; font-weight: 700; letter-spacing: .08em;
+    text-transform: uppercase; padding: 3px 10px; border-radius: 2px;
+  }
+  .sev-alta   { background: #FDECEA; color: #C00000; border: 1px solid #f5c0bc; }
+  .sev-media  { background: #FFF4E5; color: #B35900; border: 1px solid #ffd599; }
+  .sev-lenta  { background: #EEF7F2; color: #2A6B4A; border: 1px solid #c8e8d8; }
+
+  .mechanism {
+    background: #f2faf5; border: 1px solid var(--border);
+    border-radius: 4px; padding: 24px 28px; margin-bottom: 28px;
+  }
+  .mechanism-label {
+    font-size: 10px; font-weight: 700; letter-spacing: .18em;
+    text-transform: uppercase; color: var(--ink-light); margin-bottom: 12px;
+  }
+  .mechanism p { font-size: 15px; margin-bottom: 12px; }
+
+  .scenario {
+    background: #edf7f2; border: 1px solid #c8e8d8;
+    border-left: 4px solid var(--accent); border-radius: 0 4px 4px 0;
+    padding: 24px 28px; margin-bottom: 28px;
+  }
+  .scenario-label {
+    font-size: 10px; font-weight: 700; letter-spacing: .18em;
+    text-transform: uppercase; color: var(--accent); margin-bottom: 12px;
+  }
+  .scenario p { font-size: 15px; color: var(--ink-mid); margin-bottom: 10px; }
+
+  .alert-box {
+    background: var(--amber-light); border: 1px solid #ffd599;
+    border-left: 4px solid var(--amber); border-radius: 0 4px 4px 0;
+    padding: 24px 28px; margin-bottom: 28px;
+  }
+  .alert-label {
+    font-size: 10px; font-weight: 700; letter-spacing: .18em;
+    text-transform: uppercase; color: var(--amber); margin-bottom: 12px;
+  }
+  ul.alerts { list-style: none; padding: 0; }
+  ul.alerts li {
+    font-size: 14px; color: #5a3a00; padding: 7px 0 7px 24px;
+    position: relative; border-bottom: 1px solid #ffe0b2; line-height: 1.5;
+  }
+  ul.alerts li:last-child { border-bottom: none; }
+  ul.alerts li::before {
+    content: '⚑'; position: absolute; left: 0; color: var(--amber); font-size: 12px; top: 9px;
+  }
+
+  .contexts-block {
+    background: var(--paper-alt); border: 1px solid var(--border);
+    border-radius: 4px; padding: 24px 28px; margin-bottom: 28px;
+  }
+  .contexts-label {
+    font-size: 10px; font-weight: 700; letter-spacing: .18em;
+    text-transform: uppercase; color: var(--ink-light); margin-bottom: 12px;
+  }
+  .context-pills { display: flex; flex-wrap: wrap; gap: 8px; }
+  .context-pill {
+    font-size: 12px; font-weight: 500; padding: 5px 14px;
+    background: #fff; border: 1px solid var(--border); border-radius: 20px; color: var(--ink-mid);
+  }
+  .context-pill.high { background: #FDECEA; border-color: #f5c0bc; color: #8B1A1A; }
+  .context-pill.med  { background: #FFF4E5; border-color: #ffd599; color: #7A3E00; }
+
+  .mitigations-block {
+    background: var(--green-light); border: 1px solid #c3e6c5; border-radius: 4px; padding: 24px 28px;
+  }
+  .mitigations-label {
+    font-size: 10px; font-weight: 700; letter-spacing: .18em;
+    text-transform: uppercase; color: var(--green); margin-bottom: 16px;
+  }
+  .mitigation-item { display: flex; gap: 14px; padding: 14px 0; border-bottom: 1px solid #c3e6c5; }
+  .mitigation-item:last-child { border-bottom: none; padding-bottom: 0; }
+  .mit-icon {
+    width: 26px; height: 26px; min-width: 26px; background: var(--green);
+    color: #fff; border-radius: 50%; display: flex; align-items: center;
+    justify-content: center; font-size: 13px; font-weight: 700; margin-top: 1px;
+  }
+  .mit-content { flex: 1; }
+  .mit-title { font-size: 14px; font-weight: 600; color: #1f4d22; margin-bottom: 4px; }
+  .mit-desc { font-size: 13.5px; color: #2d5e31; line-height: 1.55; margin: 0; }
+
+  .callout {
+    background: var(--accent-light); border-left: 4px solid var(--accent);
+    padding: 22px 26px; border-radius: 0 4px 4px 0; margin-bottom: 32px;
+  }
+  .callout p { font-size: 15.5px; color: var(--accent-dim); margin: 0; line-height: 1.6; }
+
+  /* Timeline of deskilling */
+  .timeline {
+    position: relative;
+    padding-left: 32px;
+    margin: 20px 0 28px;
+  }
+  .timeline::before {
+    content: '';
+    position: absolute;
+    left: 10px; top: 8px; bottom: 8px;
+    width: 2px;
+    background: linear-gradient(to bottom, var(--accent), var(--accent-light));
+  }
+  .timeline-item {
+    position: relative;
+    margin-bottom: 20px;
+    background: #fff;
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 16px 20px;
+  }
+  .timeline-item:last-child { margin-bottom: 0; }
+  .timeline-item::before {
+    content: '';
+    position: absolute;
+    left: -27px; top: 20px;
+    width: 12px; height: 12px;
+    border-radius: 50%;
+    background: var(--accent);
+    border: 2px solid var(--paper);
+  }
+  .timeline-phase {
+    font-size: 10px; font-weight: 700; letter-spacing: .16em;
+    text-transform: uppercase; color: var(--accent); margin-bottom: 4px;
+  }
+  .timeline-title {
+    font-size: 15px; font-weight: 600; color: var(--ink); margin-bottom: 6px;
+  }
+  .timeline-desc {
+    font-size: 13.5px; color: var(--ink-mid); line-height: 1.5; margin: 0;
+  }
+
+  /* Homogenization comparison */
+  .comparison-block {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+    margin: 20px 0 28px;
+  }
+  .comparison-col {
+    background: #fff;
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    overflow: hidden;
+  }
+  .comparison-col-header {
+    padding: 12px 18px;
+    font-size: 12px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase;
+  }
+  .comparison-col-header.without { background: var(--paper-alt); color: var(--ink-light); }
+  .comparison-col-header.with    { background: var(--accent); color: #fff; }
+  .comparison-col-body { padding: 16px 18px; }
+  .comparison-col-body p { font-size: 13.5px; color: var(--ink-mid); margin-bottom: 10px; line-height: 1.5; }
+
+  .summary-table { width: 100%; border-collapse: collapse; font-size: 14px; margin-top: 20px; }
+  .summary-table th {
+    background: var(--ink); color: #fff; padding: 12px 18px;
+    text-align: left; font-weight: 600; font-size: 12px; letter-spacing: .06em;
+  }
+  .summary-table td {
+    padding: 12px 18px; border-bottom: 1px solid var(--border);
+    vertical-align: top; font-size: 14px; line-height: 1.5;
+  }
+  .summary-table tr:nth-child(even) td { background: var(--paper-alt); }
+  .summary-table td:first-child { font-weight: 600; color: var(--ink); }
+
+  hr.section-divider { border: none; border-top: 1px solid var(--border); margin: 56px 0; }
+
+  #progress-bar {
+    position: fixed; top: 0; left: var(--sidebar-w); right: 0;
+    height: 3px; background: var(--accent); transform-origin: left;
+    transform: scaleX(0); z-index: 200; transition: transform .1s linear;
+  }
+
+  @media (max-width: 900px) {
+    nav#sidebar { display: none; }
+    main { margin-left: 0; }
+    .hero, .content { padding: 48px 28px; }
+    .comparison-block { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+
+<div id="progress-bar"></div>
+
+<nav id="sidebar">
+  <div class="nav-brand">
+    <div class="series-label">Serie: Rischi AI in Azienda</div>
+    <div class="doc-title">Report 04 — Rischi Strategici</div>
+  </div>
+  <div class="nav-section-label">Contenuti</div>
+  <a href="#intro">Introduzione</a>
+  <a href="#r6">1. Dipendenza e Deskilling</a>
+  <a class="sub" href="#r6-mec">↳ Come funziona</a>
+  <a class="sub" href="#r6-timeline">↳ Le fasi del deskilling</a>
+  <a class="sub" href="#r6-sce">↳ Scenario</a>
+  <a class="sub" href="#r6-ale">↳ Segnali di allerta</a>
+  <a class="sub" href="#r6-mit">↳ Mitigazioni</a>
+  <a href="#r10">2. Omogeneizzazione</a>
+  <a class="sub" href="#r10-mec">↳ Come funziona</a>
+  <a class="sub" href="#r10-confronto">↳ Con e senza AI</a>
+  <a class="sub" href="#r10-sce">↳ Scenario</a>
+  <a class="sub" href="#r10-ale">↳ Segnali di allerta</a>
+  <a class="sub" href="#r10-mit">↳ Mitigazioni</a>
+  <a href="#riepilogo">Riepilogo comparativo</a>
+  <div class="nav-report-links">
+    <div class="label">Serie completa</div>
+    <a href="report_01_qualita_output.html">01 · Qualità degli output</a>
+    <a href="report_02_dati_compliance.html">02 · Dati e compliance</a>
+    <a href="report_03_reputazione.html">03 · Reputazione</a>
+    <a href="report_04_rischi_strategici.html" class="current">04 · Rischi strategici</a>
+    <a href="report_05_sicurezza.html">05 · Sicurezza</a>
+  </div>
+</nav>
+
+<main>
+  <div class="hero">
+    <div class="hero-meta">Serie: Rischi AI in Azienda <span>·</span> Report 04 di 05</div>
+    <h1>Rischi Strategici di Lungo Periodo</h1>
+    <p class="hero-lead">I rischi di questo cluster non producono danni immediati e visibili. Si accumulano lentamente, in modo quasi impercettibile, finché un giorno ci si accorge che qualcosa è cambiato: le competenze interne si sono assottigliate, le idee assomigliano a quelle di tutti gli altri, la capacità di lavorare senza AI è diminuita. Sono i rischi più difficili da percepire — e tra i più importanti da governare.</p>
+    <div class="hero-tags">
+      <span class="tag">Dipendenza</span>
+      <span class="tag">Deskilling</span>
+      <span class="tag">Omogeneizzazione</span>
+      <span class="tag">Vantaggio Competitivo</span>
+    </div>
+  </div>
+
+  <div class="content">
+
+    <!-- INTRO -->
+    <section id="intro">
+      <div class="section-eyebrow">Introduzione</div>
+      <h2>I rischi che non si vedono finché non è tardi</h2>
+      <div class="callout">
+        <p>Gli altri rischi trattati in questa serie hanno un momento di manifestazione preciso: un dato che esce, un errore in un documento, un post sbagliato. I rischi strategici non hanno questo momento. Crescono sotto la superficie, attraverso migliaia di micro-decisioni quotidiane in cui si sceglie di delegare all'AI invece di ragionare in autonomia. Quando diventano visibili, sono già radicati.</p>
+      </div>
+      <p>Questo non significa che siano inevitabili. Significa che richiedono un tipo diverso di attenzione: non la vigilanza su singoli atti, ma una riflessione periodica su come l'uso dell'AI sta cambiando — nel tempo — il modo in cui le persone lavorano, pensano e producono valore.</p>
+      <p>Questo report analizza due rischi strategici distinti. Il <strong>rischio di dipendenza e deskilling</strong> riguarda ciò che succede alle competenze individuali e collettive quando si delega sistematicamente all'AI ciò che prima si faceva in autonomia. Il <strong>rischio di omogeneizzazione</strong> riguarda ciò che succede alla distintività delle idee e dei contenuti quando tutti usano gli stessi strumenti addestrati sugli stessi dati.</p>
+      <p>Entrambi hanno un impatto diretto sul vantaggio competitivo dell'azienda, che nel settore cosmetico B2B si costruisce su due pilastri: la competenza tecnica e formulativa delle persone, e la capacità di leggere il mercato e proporre idee originali. Entrambi questi pilastri possono essere erosi da un uso non governato dell'AI.</p>
+    </section>
+
+    <hr class="section-divider">
+
+    <!-- R6: DIPENDENZA E DESKILLING -->
+    <section id="r6">
+      <div class="section-eyebrow">Rischio 08</div>
+      <div class="risk-card">
+        <div class="risk-card-header">
+          <div class="risk-number">08</div>
+          <div class="risk-card-header-text">
+            <h3>Rischio di Dipendenza e Deskilling</h3>
+            <div class="risk-subtitle">L'uso sistematico dell'AI erode competenze interne, riduce la capacità critica e crea dipendenza da strumenti o vendor esterni</div>
+          </div>
+        </div>
+        <div class="risk-card-body">
+          <div class="severity-row">
+            <span class="severity-label">Rilevanza immediata</span>
+            <span class="severity-badge sev-media">Media</span>
+            <span class="severity-label" style="margin-left:16px">Rilevanza strutturale nel tempo</span>
+            <span class="severity-badge sev-alta">Alta</span>
+            <span class="severity-label" style="margin-left:16px">Velocità di manifestazione</span>
+            <span class="severity-badge sev-lenta">Lenta</span>
+          </div>
+
+          <div id="r6-mec" class="mechanism">
+            <div class="mechanism-label">Come funziona — il meccanismo sottostante</div>
+            <p>Il deskilling è un fenomeno documentato in molti contesti in cui l'automazione ha sostituito attività cognitive che prima richiedevano pratica e giudizio. La navigazione GPS ha ridotto la capacità di orientarsi con le mappe. I correttori automatici hanno ridotto la consapevolezza ortografica. La calcolatrice ha reso meno fluido il calcolo mentale. In tutti questi casi, la perdita è avvenuta gradualmente e quasi impercettibilmente.</p>
+            <p>Con l'AI generativa, il meccanismo è simile ma più pervasivo, perché l'AI può essere applicata a competenze molto più complesse e strategicamente rilevanti: la formulazione chimica, l'analisi di mercato, la scrittura argomentativa, il ragionamento su dati complessi.</p>
+            <p>Il processo funziona in tre fasi. Nella prima fase, l'AI <strong>affianca</strong> la competenza umana: la persona ha ancora le competenze necessarie e usa l'AI per accelerare o ampliare il proprio lavoro. Nella seconda fase, l'AI <strong>sostituisce progressivamente</strong> parti del processo: la persona inizia a saltare i passaggi che l'AI fa automaticamente, perdendo la pratica su quegli aspetti. Nella terza fase, la persona ha una <strong>dipendenza funzionale</strong>: non è più in grado di produrre quel tipo di output con la stessa qualità senza l'AI, e non si accorge di quanto questa dipendenza sia cresciuta finché l'AI non è disponibile o produce un errore che non riesce a riconoscere.</p>
+            <p>C'è poi una dimensione organizzativa del rischio, che va oltre il singolo individuo. Se tutta una funzione — o tutta un'azienda — inizia a delegare sistematicamente certe attività all'AI, nel tempo quelle competenze smettono di essere presidiate internamente. Questo crea anche una forma di <strong>vendor lock-in cognitivo</strong>: la capacità di cambiare strumento o di funzionare senza di esso si riduce, aumentando la dipendenza da provider specifici e la vulnerabilità rispetto a cambiamenti nei termini di servizio, nei prezzi o nella disponibilità degli strumenti.</p>
+          </div>
+
+          <!-- TIMELINE -->
+          <div id="r6-timeline">
+            <h3 style="margin-bottom: 16px; font-size: 17px;">Le fasi del deskilling</h3>
+            <div class="timeline">
+              <div class="timeline-item">
+                <div class="timeline-phase">Fase 1 — Affiancamento</div>
+                <div class="timeline-title">L'AI amplifica la competenza esistente</div>
+                <p class="timeline-desc">La persona usa l'AI per velocizzare o ampliare il proprio lavoro, mantenendo pieno controllo e giudizio critico sull'output. La competenza è intatta. Il rischio è assente o trascurabile. Questa è la fase in cui l'uso dell'AI produce il massimo valore con il minimo rischio.</p>
+              </div>
+              <div class="timeline-item">
+                <div class="timeline-phase">Fase 2 — Sostituzione progressiva</div>
+                <div class="timeline-title">La pratica su certi aspetti si riduce</div>
+                <p class="timeline-desc">L'AI gestisce sistematicamente alcune parti del processo. La persona smette di esercitarsi su quegli aspetti. La competenza non scompare, ma diventa meno fluida, meno aggiornata, meno affinata. La dipendenza dall'AI cresce gradualmente, senza che ci sia un momento preciso in cui il cambiamento diventa visibile.</p>
+              </div>
+              <div class="timeline-item">
+                <div class="timeline-phase">Fase 3 — Dipendenza funzionale</div>
+                <div class="timeline-title">La qualità del lavoro senza AI è significativamente ridotta</div>
+                <p class="timeline-desc">La persona non è più in grado di produrre certi output con la stessa qualità o velocità senza il supporto dell'AI. Ancora più critico: ha perso parte della capacità di valutare criticamente gli output dell'AI, perché quella valutazione richiede la stessa competenza che si è atrofizzata. Il rischio di comprensione (Report 01) si amplifica.</p>
+              </div>
+              <div class="timeline-item">
+                <div class="timeline-phase">Fase 4 — Dipendenza organizzativa</div>
+                <div class="timeline-title">La competenza non è più presidiata internamente</div>
+                <p class="timeline-desc">A livello di funzione o di azienda, certe competenze non esistono più come patrimonio interno. Non c'è nessuno che saprebbe svolgere quella parte del lavoro senza l'AI. L'azienda è strutturalmente dipendente da un provider esterno per aspetti core della propria operatività o del proprio vantaggio competitivo.</p>
+              </div>
+            </div>
+          </div>
+
+          <div id="r6-sce" class="scenario">
+            <div class="scenario-label">Scenario esemplificativo</div>
+            <p>Il team NPD usa sistematicamente un assistente AI per il trend scouting: ogni settimana chiede all'AI di identificare le tendenze emergenti nel mercato cosmetico globale, i nuovi ingredienti in crescita, i segmenti di prodotto più dinamici. L'AI produce sintesi ben strutturate, con riferimenti a mercati, dati e movimenti rilevanti.</p>
+            <p>Nel giro di diciotto mesi, il team ha smesso di leggere direttamente le fonti primarie — report di settore, profili Instagram di brand emergenti, fiere internazionali, conversazioni con buyer. Non è stata una decisione esplicita: semplicemente, l'AI era più veloce ed efficiente, e il tempo che prima si dedicava alla lettura diretta è stato gradualmente assorbito da altre attività.</p>
+            <p>Durante un meeting con un cliente importante, un buyer chiede l'opinione del team su un trend specifico che ha visto emergere in alcuni mercati asiatici. Il trend è reale e rilevante, ma non era ancora nei report che l'AI aveva prodotto — era troppo fresco, troppo di nicchia, visibile solo a chi seguiva direttamente certe community. Nessuno nel team lo aveva notato. Il team risponde in modo generico. Il buyer rimane con l'impressione che la loro lettura del mercato non sia poi così profonda.</p>
+            <p>Non è un danno immediato. Ma è un segnale che qualcosa si è assottigliato — proprio nella competenza che più distingueva quel team: la capacità di leggere il mercato in modo autonomo, diretto, originale.</p>
+          </div>
+
+          <div class="contexts-block">
+            <div class="contexts-label">Contesti d'uso più esposti</div>
+            <div class="context-pills">
+              <span class="context-pill high">Trend scouting e analisi di mercato</span>
+              <span class="context-pill high">Sviluppo di concept e innovazione</span>
+              <span class="context-pill high">Verifica conformità blacklist</span>
+              <span class="context-pill med">Scrittura di testi e comunicazioni</span>
+              <span class="context-pill med">Scrittura script e automazioni</span>
+              <span class="context-pill med">Supporto a decisioni complesse</span>
+            </div>
+          </div>
+
+          <div id="r6-ale" class="alert-box">
+            <div class="alert-label">Segnali di allerta — quando alzare la guardia</div>
+            <ul class="alerts">
+              <li>Ci si accorge di non leggere più le fonti primarie su un argomento perché "tanto ci pensa l'AI" — fiere, report, pubblicazioni, community di settore</li>
+              <li>Qualcuno nel team fatica a svolgere un'attività che prima faceva in autonomia, quando l'AI non è disponibile o produce un output insoddisfacente</li>
+              <li>Si accetta l'output dell'AI su argomenti tecnici senza essere in grado di valutarne la correttezza — il giudizio critico si è ridotto</li>
+              <li>Tutta una funzione sta usando lo stesso strumento AI per attività core: se quello strumento smettesse di funzionare domani, ci sarebbe un problema operativo reale</li>
+              <li>I nuovi colleghi in una funzione imparano a usare l'AI prima di aver acquisito la competenza di base che l'AI dovrebbe amplificare, non sostituire</li>
+            </ul>
+          </div>
+
+          <div id="r6-mit" class="mitigations-block">
+            <div class="mitigations-label">Misure di mitigazione</div>
+            <div class="mitigation-item">
+              <div class="mit-icon">1</div>
+              <div class="mit-content">
+                <div class="mit-title">Distinguere tra usi dell'AI che amplificano la competenza e usi che la sostituiscono</div>
+                <p class="mit-desc">Non tutti gli usi dell'AI creano dipendenza. Usare l'AI per formattare un documento, tradurre un testo o generare varianti stilistiche non erode competenze strategiche. Usare l'AI per fare il trend scouting al posto di seguire direttamente le fonti di settore, sì. La distinzione rilevante è: questa attività, se delegata all'AI, mi fa perdere una competenza che ha valore strategico? Se la risposta è sì, mantenerla come pratica umana deliberata.</p>
+              </div>
+            </div>
+            <div class="mitigation-item">
+              <div class="mit-icon">2</div>
+              <div class="mit-content">
+                <div class="mit-title">Preservare le fonti primarie come pratica deliberata</div>
+                <p class="mit-desc">Per le attività di intelligence di mercato e di innovazione, mantenere un contatto diretto con le fonti primarie — fiere, pubblicazioni specializzate, community di settore, conversazioni con clienti e buyer — anche quando l'AI offre una sintesi più comoda. La lettura diretta sviluppa intuizioni che nessuna sintesi riesce a catturare completamente.</p>
+              </div>
+            </div>
+            <div class="mitigation-item">
+              <div class="mit-icon">3</div>
+              <div class="mit-content">
+                <div class="mit-title">Garantire che le competenze core vengano praticate anche senza AI</div>
+                <p class="mit-desc">Per le attività più critiche — formulazione, valutazione tecnica, lettura di mercato, ragionamento decisionale complesso — assicurarsi che le persone continuino a esercitarle periodicamente in modo autonomo. Non come esercizio nostalgico, ma come presidio deliberato di competenze che hanno valore strategico e che si atrofizzano se non praticate.</p>
+              </div>
+            </div>
+            <div class="mitigation-item">
+              <div class="mit-icon">4</div>
+              <div class="mit-content">
+                <div class="mit-title">Evitare la mono-dipendenza da un singolo strumento o provider</div>
+                <p class="mit-desc">Se una funzione usa un solo strumento AI per attività operative rilevanti, è esposta al rischio di interruzione del servizio, cambiamenti nei prezzi o nei termini, o discontinuazione del prodotto. Diversificare gli strumenti dove possibile, e assicurarsi che esistano alternative o procedure manuali di backup per i processi più critici.</p>
+              </div>
+            </div>
+            <div class="mitigation-item">
+              <div class="mit-icon">5</div>
+              <div class="mit-content">
+                <div class="mit-title">Introdurre l'AI dopo, non al posto, della competenza di base</div>
+                <p class="mit-desc">Per i nuovi colleghi, assicurarsi che acquisiscano la competenza di base prima di introdurre gli strumenti AI che la amplificano. Un formulatore junior dovrebbe capire la chimica delle formule prima di usare l'AI per verificare la compatibilità degli ingredienti. Un analista di mercato junior dovrebbe saper leggere un report di settore prima di usare l'AI per sintetizzarlo. L'AI amplifica la competenza; non può costruirla dal nulla.</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- R10: OMOGENEIZZAZIONE -->
+    <section id="r10">
+      <div class="section-eyebrow">Rischio 09</div>
+      <div class="risk-card">
+        <div class="risk-card-header">
+          <div class="risk-number">09</div>
+          <div class="risk-card-header-text">
+            <h3>Rischio di Omogeneizzazione</h3>
+            <div class="risk-subtitle">L'uso degli stessi modelli AI appiattisce idee, letture di mercato e contenuti verso un output medio condiviso da tutti i competitor</div>
+          </div>
+        </div>
+        <div class="risk-card-body">
+          <div class="severity-row">
+            <span class="severity-label">Rilevanza immediata</span>
+            <span class="severity-badge sev-media">Media</span>
+            <span class="severity-label" style="margin-left:16px">Rilevanza per innovazione e NPD</span>
+            <span class="severity-badge sev-alta">Alta</span>
+            <span class="severity-label" style="margin-left:16px">Velocità di manifestazione</span>
+            <span class="severity-badge sev-lenta">Lenta</span>
+          </div>
+
+          <div id="r10-mec" class="mechanism">
+            <div class="mechanism-label">Come funziona — il meccanismo sottostante</div>
+            <p>I modelli linguistici di grandi dimensioni sono addestrati su dataset vastissimi ma identici per tutti gli utenti. GPT-4, Claude, Gemini: i modelli più usati sono stati costruiti sulle stesse fonti — il web, libri, articoli, dataset pubblici. Hanno quindi imparato gli stessi pattern, le stesse associazioni concettuali, le stesse strutture narrative, gli stessi frame interpretativi.</p>
+            <p>Il risultato è che quando si chiede a questi modelli di identificare i trend di un mercato, di generare idee per nuovi prodotti, di scrivere una comunicazione di brand, tendono a produrre output che convergono verso <strong>ciò che è già stato detto, scritto e pensato in modo più diffuso</strong> — verso la media, non verso il margine. Non perché siano stupidi: è proprio quello che hanno imparato a fare. Producono la risposta più plausibile dato il contesto, e la risposta più plausibile è spesso quella più comune.</p>
+            <p>Questo meccanismo ha conseguenze concrete a due livelli. A livello di <strong>contenuti e comunicazione</strong>: i testi, le immagini e i messaggi prodotti con AI tendono ad assomigliarsi tra loro e ad assomigliare a quello che tutti gli altri nel settore stanno già producendo. Il risultato è una comunicazione generica, prevedibile, difficile da distinguere. A livello di <strong>strategia e innovazione</strong>: se il processo di trend scouting, di ideazione di nuovi prodotti o di analisi competitiva è mediato dall'AI, le conclusioni tendono a convergere verso ciò che il modello "sa già" — ovvero ciò che era già nel mainstream quando i dati di training sono stati raccolti. I segnali deboli, le tendenze emergenti, le nicchie creative vengono sistematicamente sottorappresentati.</p>
+            <p>In un settore come il cosmetico, dove la differenziazione si costruisce sull'originalità della proposta e sulla capacità di anticipare — non di seguire — le tendenze di mercato, questo è un rischio strategico reale.</p>
+          </div>
+
+          <!-- CONFRONTO -->
+          <div id="r10-confronto">
+            <h3 style="margin-bottom: 16px; font-size: 17px;">Pensiero autonomo vs pensiero mediato dall'AI</h3>
+            <div class="comparison-block">
+              <div class="comparison-col">
+                <div class="comparison-col-header without">Senza mediazione AI</div>
+                <div class="comparison-col-body">
+                  <p>Le idee nascono dall'interazione diretta con il mercato: fiere, buyer, community di nicchia, letture eterogenee, intuizioni personali.</p>
+                  <p>I trend vengono intercettati nella loro fase emergente, prima che siano nel mainstream e quindi già visibili a tutti.</p>
+                  <p>Le proposte riflettono il punto di vista specifico e distintivo di chi le genera — la sua storia, le sue esperienze, la sua sensibilità.</p>
+                  <p>Il rischio principale è la lentezza e la soggettività non controllata.</p>
+                </div>
+              </div>
+              <div class="comparison-col">
+                <div class="comparison-col-header with">Con mediazione AI sistematica</div>
+                <div class="comparison-col-body">
+                  <p>Le idee vengono filtrate da un modello che ha imparato dai pattern dominanti — tende a riprodurre ciò che era già affermato al momento del training.</p>
+                  <p>I trend vengono identificati quando sono già abbastanza diffusi da essere rappresentati nel dataset di training — spesso troppo tardi per essere distintivi.</p>
+                  <p>Le proposte convergono verso una media: ciò che "suona bene" all'AI è ciò che assomiglia a ciò che ha già visto molto. L'originalità viene penalizzata dalla statistica.</p>
+                  <p>Il rischio principale è l'omologazione invisibile — non si nota perché tutti stanno andando nella stessa direzione.</p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div id="r10-sce" class="scenario">
+            <div class="scenario-label">Scenario esemplificativo</div>
+            <p>Il team Innovation sta lavorando alla pipeline di prodotti per la stagione successiva. Per accelerare il processo di ideazione, usa un assistente AI per generare concept di nuovi prodotti in alcune categorie target: skincare viso, lip care, prodotti multifunzione. Fornisce come input le categorie di prodotto, il posizionamento del brand e alcune parole chiave sui trend del momento.</p>
+            <p>L'AI genera una serie di concept interessanti e ben articolati: sieri con adattogeni, lip care con ingredienti fermentati, prodotti skincare-makeup ibridi con SPF integrato. Il team lavora su questi concept, li affina, li porta in una proposta strutturata.</p>
+            <p>Alla fiera successiva, il team si accorge che almeno quattro competitor hanno presentato proposte molto simili — stesse categorie di ingredienti, stesso posizionamento "clean e multifunzione", stessa narrativa sulla skinification. Non è una coincidenza: quei trend erano già nel mainstream del settore quando i modelli AI sono stati addestrati. L'AI li ha riprodotti fedelmente, per tutti.</p>
+            <p>La proposta del team Innovation non è sbagliata — è solo indistinguibile. E in un contesto B2B dove i clienti cercano partner capaci di portare idee originali, l'indistinguibilità è un problema.</p>
+          </div>
+
+          <div class="contexts-block">
+            <div class="contexts-label">Contesti d'uso più esposti</div>
+            <div class="context-pills">
+              <span class="context-pill high">Ideazione nuovi prodotti e concept</span>
+              <span class="context-pill high">Trend scouting e analisi di mercato</span>
+              <span class="context-pill high">Contenuti per comunicazione e social</span>
+              <span class="context-pill med">Stesura brief NPD</span>
+              <span class="context-pill med">Sviluppo materiali di brand</span>
+              <span class="context-pill med">Analisi competitiva</span>
+            </div>
+          </div>
+
+          <div id="r10-ale" class="alert-box">
+            <div class="alert-label">Segnali di allerta — quando alzare la guardia</div>
+            <ul class="alerts">
+              <li>Le idee generate con AI assomigliano molto a ciò che si vede già in giro — sui social, sui siti dei competitor, nelle presentazioni dei fornitori</li>
+              <li>Il processo di trend scouting è diventato principalmente un processo di interrogazione dell'AI, senza contatto diretto con le fonti di mercato</li>
+              <li>I testi e i contenuti prodotti con AI per la comunicazione di brand potrebbero essere stati scritti da qualsiasi altro player del settore</li>
+              <li>Le proposte di concept o innovazione non riescono a sorprendere i clienti — vengono percepite come "quello che ci aspettavamo di sentire"</li>
+              <li>Il team di Innovation sta usando l'AI per generare idee prima di aver esplorato le fonti di ispirazione primarie: fiere, nicchie di mercato, tendenze emergenti non ancora mainstream</li>
+            </ul>
+          </div>
+
+          <div id="r10-mit" class="mitigations-block">
+            <div class="mitigations-label">Misure di mitigazione</div>
+            <div class="mitigation-item">
+              <div class="mit-icon">1</div>
+              <div class="mit-content">
+                <div class="mit-title">Usare l'AI dopo, non prima, dell'esplorazione creativa autonoma</div>
+                <p class="mit-desc">Nel processo di ideazione e trend scouting, invertire l'ordine: prima esplorare le fonti primarie in modo autonomo — fiere, community di nicchia, brand emergenti, conversazioni con buyer — e sviluppare un punto di vista proprio. Solo dopo usare l'AI per ampliare, verificare o strutturare le idee già generate. In questo modo l'AI amplifica la prospettiva originale invece di sostituirla con la media.</p>
+              </div>
+            </div>
+            <div class="mitigation-item">
+              <div class="mit-icon">2</div>
+              <div class="mit-content">
+                <div class="mit-title">Alimentare l'AI con input non convenzionali</div>
+                <p class="mit-desc">La qualità dell'output dipende dalla qualità dell'input. Se si chiede all'AI di generare idee a partire da trend già noti, l'output sarà prevedibile. Se si fornisce come input osservazioni originali, segnali deboli raccolti direttamente, riferimenti incrociati da settori distanti (food, fashion, wellness), l'output può essere più originale — perché si sta guidando il modello fuori dalla sua zona di comfort statistica.</p>
+              </div>
+            </div>
+            <div class="mitigation-item">
+              <div class="mit-icon">3</div>
+              <div class="mit-content">
+                <div class="mit-title">Preservare la diversità dei punti di vista nel team</div>
+                <p class="mit-desc">L'omogeneizzazione dell'AI si combatte anche con la diversità umana. Team con background diversi, esposizioni diverse al mercato, sensibilità diverse tendono a generare idee meno convergenti. Se tutti nel team usano gli stessi strumenti AI con gli stessi prompt, il rischio di omologazione si moltiplica. Valorizzare e proteggere la diversità delle prospettive come antidoto all'uniformità dell'AI.</p>
+              </div>
+            </div>
+            <div class="mitigation-item">
+              <div class="mit-icon">4</div>
+              <div class="mit-content">
+                <div class="mit-title">Chiedere esplicitamente all'AI l'inatteso e il non convenzionale</div>
+                <p class="mit-desc">I modelli AI tendono verso il mainstream, ma possono essere guidati in direzioni meno convenzionali con prompt appropriati: "proponi idee che non si vedono ancora sul mercato", "suggerisci approcci che vanno contro le tendenze dominanti", "identifica segmenti o ingredienti che stanno emergendo in mercati di nicchia prima che raggiungano il mainstream". Questo non elimina il bias verso la media, ma lo riduce.</p>
+              </div>
+            </div>
+            <div class="mitigation-item">
+              <div class="mit-icon">5</div>
+              <div class="mit-content">
+                <div class="mit-title">Valutare periodicamente la distintività delle proposte rispetto al mercato</div>
+                <p class="mit-desc">Introdurre un momento di riflessione periodica — per esempio, dopo ogni fiera o ogni ciclo di ideazione — in cui si confrontano le proprie proposte con quelle visibili nel mercato. Se la sovrapposizione è alta, è un segnale che il processo di ideazione sta producendo output troppo simili a ciò che tutti gli altri stanno già facendo. Questo confronto può essere fatto in parte con l'AI stessa, chiedendole di evidenziare le somiglianze con le tendenze dominanti.</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <hr class="section-divider">
+
+    <!-- RIEPILOGO -->
+    <section id="riepilogo">
+      <div class="section-eyebrow">Riepilogo comparativo</div>
+      <h2>Due rischi lenti, un impatto strategico</h2>
+      <p>I due rischi di questo cluster operano su scale temporali simili — mesi, anni — ma attraverso meccanismi diversi e con impatti su aspetti diversi del vantaggio competitivo. Comprenderli insieme aiuta a vedere il quadro completo.</p>
+
+      <table class="summary-table">
+        <thead>
+          <tr>
+            <th>Rischio</th>
+            <th>Cosa viene eroso</th>
+            <th>Come si manifesta</th>
+            <th>Come si contrasta</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Dipendenza e deskilling</td>
+            <td>Le competenze individuali e il patrimonio di know-how interno</td>
+            <td>Difficoltà a lavorare senza AI, incapacità di valutare criticamente gli output, vulnerabilità operativa</td>
+            <td>Preservare la pratica autonoma delle competenze core; introdurre l'AI dopo, non al posto, della competenza di base</td>
+          </tr>
+          <tr>
+            <td>Omogeneizzazione</td>
+            <td>La distintività delle idee, delle proposte e della comunicazione</td>
+            <td>Proposte indistinguibili dalla concorrenza, trend scouting che replica il mainstream, comunicazione generica</td>
+            <td>Esplorare le fonti primarie prima di usare l'AI; alimentare il modello con input originali e non convenzionali</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <div style="margin-top: 32px; padding: 24px 28px; background: var(--paper-alt); border: 1px solid var(--border); border-radius: 4px;">
+        <div style="font-size: 10px; font-weight: 700; letter-spacing: .18em; text-transform: uppercase; color: var(--accent); margin-bottom: 12px;">Una nota finale</div>
+        <p style="font-size: 15px; color: var(--ink-mid); margin-bottom: 10px;">Questi due rischi non suggeriscono di usare meno l'AI. Suggeriscono di usarla in modo più consapevole — preservando i momenti e i processi in cui il valore specifico dell'azienda si genera attraverso competenza umana diretta, giudizio autonomo e originalità di pensiero.</p>
+        <p style="font-size: 15px; color: var(--ink-mid); margin: 0;">L'AI è uno strumento potente di amplificazione. La domanda da porsi non è "stiamo usando l'AI?" ma "stiamo usando l'AI per amplificare il nostro valore specifico, o lo stiamo usando per sostituirlo con la media?"</p>
+      </div>
+    </section>
+
+  </div>
+</main>
+
+<script>
+  window.addEventListener('scroll', () => {
+    const doc = document.documentElement;
+    const scrolled = doc.scrollTop / (doc.scrollHeight - doc.clientHeight);
+    document.getElementById('progress-bar').style.transform = `scaleX(${scrolled})`;
+  });
+  const allTargets = document.querySelectorAll('[id]');
+  const navLinks = document.querySelectorAll('nav#sidebar a[href^="#"]');
+  const observer = new IntersectionObserver(entries => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        navLinks.forEach(a => {
+          a.classList.toggle('active', a.getAttribute('href') === '#' + entry.target.id);
+        });
+      }
+    });
+  }, { rootMargin: '-15% 0px -75% 0px' });
+  allTargets.forEach(s => observer.observe(s));
+</script>
+</body>
+</html>

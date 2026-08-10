@@ -1,0 +1,962 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>RAG Pratico — Report 1 · Come l'LLM usa le informazioni</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:ital,wght@0,300;0,400;0,500;0,600;1,300;1,400&family=DM+Mono:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg:      #fafaf7;
+  --bg2:     #f2f1ec;
+  --bg3:     #e8e6df;
+  --ink:     #1a1916;
+  --ink2:    #2d2b26;
+  --ink3:    #5c5a52;
+  --ink4:    #9c9a90;
+  --border:  #dddbd2;
+  --border2: #cbc9bf;
+
+  --accent:  #1a4a6b;
+  --accent2: #e8f0f7;
+  --accent3: #b8d0e8;
+
+  --warn:    #7a4a10;
+  --warn-bg: #fdf3e3;
+  --warn-bd: #e8c878;
+
+  --ok:      #2d6040;
+  --ok-bg:   #eaf4ee;
+  --ok-bd:   #a8d4b4;
+
+  --note:    #4a2d7a;
+  --note-bg: #f0ecfb;
+  --note-bd: #c4aef0;
+}
+
+* { margin:0; padding:0; box-sizing:border-box; }
+html { scroll-behavior: smooth; }
+body {
+  background: var(--bg);
+  color: var(--ink);
+  font-family: 'DM Sans', sans-serif;
+  font-weight: 300;
+  font-size: 15px;
+  line-height: 1.75;
+}
+
+/* ── MASTHEAD ── */
+.masthead {
+  background: var(--accent);
+  color: #fff;
+  padding: 56px 60px 52px;
+  position: relative;
+  overflow: hidden;
+}
+.masthead::before {
+  content: '';
+  position: absolute;
+  top: -80px; right: -80px;
+  width: 400px; height: 400px;
+  border-radius: 50%;
+  border: 1px solid rgba(255,255,255,.06);
+  pointer-events: none;
+}
+.masthead::after {
+  content: '';
+  position: absolute;
+  bottom: -60px; right: 60px;
+  width: 240px; height: 240px;
+  border-radius: 50%;
+  border: 1px solid rgba(255,255,255,.04);
+  pointer-events: none;
+}
+.mh-series {
+  font-family: 'DM Mono', monospace;
+  font-size: 10px;
+  letter-spacing: 3px;
+  text-transform: uppercase;
+  color: rgba(255,255,255,.35);
+  margin-bottom: 20px;
+}
+.mh-num {
+  font-family: 'DM Serif Display', serif;
+  font-size: 80px;
+  line-height: 1;
+  color: rgba(255,255,255,.1);
+  position: absolute;
+  right: 60px;
+  top: 40px;
+  letter-spacing: -4px;
+  user-select: none;
+}
+.masthead h1 {
+  font-family: 'DM Serif Display', serif;
+  font-size: clamp(28px, 4vw, 46px);
+  font-weight: 400;
+  line-height: 1.1;
+  letter-spacing: -.5px;
+  max-width: 720px;
+  position: relative;
+}
+.masthead h1 em {
+  font-style: italic;
+  color: rgba(255,255,255,.75);
+}
+.mh-sub {
+  margin-top: 20px;
+  font-size: 15px;
+  font-weight: 300;
+  color: rgba(255,255,255,.45);
+  max-width: 640px;
+  line-height: 1.7;
+  position: relative;
+}
+.mh-pills {
+  margin-top: 28px;
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  position: relative;
+}
+.mh-pill {
+  font-family: 'DM Mono', monospace;
+  font-size: 10px;
+  letter-spacing: 1px;
+  padding: 4px 12px;
+  border: 1px solid rgba(255,255,255,.2);
+  color: rgba(255,255,255,.5);
+  border-radius: 20px;
+}
+
+/* ── NAV ── */
+.nav {
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  background: var(--ink);
+  display: flex;
+  overflow-x: auto;
+  border-bottom: 1px solid rgba(255,255,255,.08);
+}
+.nav-btn {
+  flex-shrink: 0;
+  padding: 14px 20px;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  font-family: 'DM Mono', monospace;
+  font-size: 10px;
+  font-weight: 400;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  color: rgba(255,255,255,.3);
+  border-right: 1px solid rgba(255,255,255,.06);
+  transition: color .2s;
+  white-space: nowrap;
+}
+.nav-btn:hover { color: rgba(255,255,255,.65); }
+.nav-btn.active { color: #fff; background: rgba(255,255,255,.06); }
+
+.sect { display: none; }
+.sect.active { display: block; animation: fadeUp .3s ease; }
+@keyframes fadeUp { from{opacity:0;transform:translateY(5px)} to{opacity:1;transform:translateY(0)} }
+
+/* ── CONTENT WRAP ── */
+.cw {
+  max-width: 860px;
+  margin: 0 auto;
+  padding: 52px 60px 64px;
+}
+
+/* ── SECTION LABEL ── */
+.s-eyebrow {
+  font-family: 'DM Mono', monospace;
+  font-size: 10px;
+  letter-spacing: 3px;
+  text-transform: uppercase;
+  color: var(--ink4);
+  margin-bottom: 8px;
+}
+.s-title {
+  font-family: 'DM Serif Display', serif;
+  font-size: 30px;
+  font-weight: 400;
+  letter-spacing: -.3px;
+  color: var(--ink);
+  line-height: 1.15;
+  margin-bottom: 28px;
+}
+
+/* ── PROSE ── */
+p { margin-bottom: 18px; color: var(--ink2); }
+p:last-child { margin-bottom: 0; }
+p strong { font-weight: 600; color: var(--ink); }
+
+/* ── CALLOUT BOXES ── */
+.callout {
+  padding: 20px 24px;
+  border-left: 3px solid;
+  margin: 28px 0;
+  border-radius: 0 6px 6px 0;
+}
+.callout-warn {
+  background: var(--warn-bg);
+  border-color: var(--warn);
+}
+.callout-ok {
+  background: var(--ok-bg);
+  border-color: var(--ok);
+}
+.callout-note {
+  background: var(--note-bg);
+  border-color: var(--note);
+}
+.callout-accent {
+  background: var(--accent2);
+  border-color: var(--accent);
+}
+.callout-title {
+  font-family: 'DM Mono', monospace;
+  font-size: 10px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  margin-bottom: 8px;
+}
+.callout-warn .callout-title { color: var(--warn); }
+.callout-ok .callout-title { color: var(--ok); }
+.callout-note .callout-title { color: var(--note); }
+.callout-accent .callout-title { color: var(--accent); }
+.callout p { font-size: 14px; line-height: 1.65; margin-bottom: 8px; }
+.callout p:last-child { margin-bottom: 0; }
+
+/* ── DIAGRAM BOXES ── */
+.diagram {
+  background: var(--bg2);
+  border: 1px solid var(--border2);
+  padding: 28px 32px;
+  margin: 28px 0;
+}
+.diagram-title {
+  font-family: 'DM Mono', monospace;
+  font-size: 10px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: var(--ink4);
+  margin-bottom: 20px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid var(--border);
+}
+
+/* context window visual */
+.ctx-window {
+  border: 2px solid var(--accent);
+  border-radius: 6px;
+  overflow: hidden;
+  margin: 8px 0;
+}
+.ctx-bar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 7px 14px;
+  font-family: 'DM Mono', monospace;
+  font-size: 11px;
+  letter-spacing: .5px;
+  border-bottom: 1px solid var(--border);
+}
+.ctx-bar:last-child { border-bottom: none; }
+.ctx-bar-label {
+  font-size: 10px;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  color: var(--ink4);
+  min-width: 120px;
+  flex-shrink: 0;
+}
+.ctx-bar-fill {
+  height: 18px;
+  border-radius: 3px;
+  flex-shrink: 0;
+  transition: width .4s ease;
+}
+.ctx-bar-note {
+  font-size: 11px;
+  color: var(--ink3);
+  margin-left: 6px;
+}
+
+/* ── COMPARISON TABLE ── */
+.comp-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 20px 0;
+  font-size: 13.5px;
+}
+.comp-table th {
+  background: var(--ink);
+  color: rgba(255,255,255,.8);
+  font-family: 'DM Mono', monospace;
+  font-size: 9.5px;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  padding: 10px 14px;
+  text-align: left;
+  font-weight: 400;
+}
+.comp-table td {
+  padding: 11px 14px;
+  border: 1px solid var(--border);
+  vertical-align: top;
+  line-height: 1.55;
+  color: var(--ink2);
+}
+.comp-table tr:nth-child(even) td { background: var(--bg2); }
+.comp-table td:first-child {
+  font-weight: 500;
+  color: var(--ink);
+  font-size: 13px;
+}
+
+/* ── ANALOGY CARD ── */
+.analogy {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1px;
+  background: var(--border2);
+  border: 1px solid var(--border2);
+  margin: 24px 0;
+  overflow: hidden;
+  border-radius: 6px;
+}
+.analogy-side {
+  background: var(--bg);
+  padding: 22px 24px;
+}
+.analogy-label {
+  font-family: 'DM Mono', monospace;
+  font-size: 9px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: var(--ink4);
+  margin-bottom: 10px;
+}
+.analogy-heading {
+  font-family: 'DM Serif Display', serif;
+  font-size: 17px;
+  color: var(--ink);
+  margin-bottom: 8px;
+  line-height: 1.2;
+}
+.analogy-body {
+  font-size: 13.5px;
+  color: var(--ink3);
+  line-height: 1.6;
+}
+
+/* ── SCENARIO BOX ── */
+.scenario {
+  border: 1px solid var(--border2);
+  border-radius: 6px;
+  overflow: hidden;
+  margin: 24px 0;
+}
+.scenario-head {
+  background: var(--bg3);
+  padding: 12px 20px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  border-bottom: 1px solid var(--border);
+}
+.scenario-num {
+  font-family: 'DM Mono', monospace;
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--accent);
+  background: var(--accent2);
+  padding: 2px 8px;
+  border-radius: 3px;
+  letter-spacing: .5px;
+}
+.scenario-title {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--ink);
+}
+.scenario-body {
+  padding: 18px 20px;
+  font-size: 13.5px;
+  color: var(--ink2);
+  line-height: 1.65;
+}
+.scenario-body p { margin-bottom: 10px; font-size: 13.5px; }
+.scenario-body p:last-child { margin-bottom: 0; }
+
+/* ── TOKEN METER ── */
+.token-meter {
+  margin: 20px 0;
+}
+.tm-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 10px;
+}
+.tm-label {
+  font-family: 'DM Mono', monospace;
+  font-size: 11px;
+  color: var(--ink3);
+  min-width: 200px;
+  flex-shrink: 0;
+}
+.tm-track {
+  flex: 1;
+  height: 10px;
+  background: var(--bg3);
+  border-radius: 2px;
+  overflow: hidden;
+}
+.tm-fill {
+  height: 100%;
+  border-radius: 2px;
+}
+.tm-count {
+  font-family: 'DM Mono', monospace;
+  font-size: 10.5px;
+  color: var(--ink4);
+  min-width: 60px;
+  text-align: right;
+}
+
+/* ── STEP LIST ── */
+.steps { display: flex; flex-direction: column; gap: 16px; margin: 20px 0; }
+.step {
+  display: grid;
+  grid-template-columns: 36px 1fr;
+  gap: 16px;
+  align-items: start;
+}
+.step-num {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: var(--accent);
+  color: #fff;
+  font-family: 'DM Mono', monospace;
+  font-size: 13px;
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+.step-body {}
+.step-title { font-weight: 600; font-size: 14.5px; color: var(--ink); margin-bottom: 4px; }
+.step-text { font-size: 13.5px; color: var(--ink3); line-height: 1.6; }
+
+/* ── KEY INSIGHT ── */
+.key-insight {
+  background: var(--ink);
+  color: #fff;
+  padding: 28px 32px;
+  margin: 32px 0;
+  border-radius: 6px;
+  position: relative;
+  overflow: hidden;
+}
+.key-insight::before {
+  content: '"';
+  position: absolute;
+  right: 24px;
+  top: -10px;
+  font-family: 'DM Serif Display', serif;
+  font-size: 100px;
+  color: rgba(255,255,255,.06);
+  line-height: 1;
+  pointer-events: none;
+}
+.ki-label {
+  font-family: 'DM Mono', monospace;
+  font-size: 9px;
+  letter-spacing: 2.5px;
+  text-transform: uppercase;
+  color: rgba(255,255,255,.3);
+  margin-bottom: 12px;
+}
+.ki-text {
+  font-family: 'DM Serif Display', serif;
+  font-size: 20px;
+  font-weight: 400;
+  line-height: 1.4;
+  color: rgba(255,255,255,.9);
+  max-width: 680px;
+}
+
+/* ── NEXT REPORT ── */
+.next-report {
+  border-top: 1px solid var(--border);
+  margin-top: 52px;
+  padding-top: 32px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 20px;
+}
+.nr-label {
+  font-family: 'DM Mono', monospace;
+  font-size: 9px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: var(--ink4);
+  margin-bottom: 6px;
+}
+.nr-title {
+  font-family: 'DM Serif Display', serif;
+  font-size: 18px;
+  color: var(--ink);
+  line-height: 1.2;
+}
+.nr-sub {
+  font-size: 13px;
+  color: var(--ink4);
+  margin-top: 4px;
+}
+.nr-arrow {
+  font-family: 'DM Mono', monospace;
+  font-size: 22px;
+  color: var(--accent);
+  flex-shrink: 0;
+}
+
+/* ── FOOTER ── */
+.footer {
+  padding: 22px 60px;
+  border-top: 1px solid var(--border);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-family: 'DM Mono', monospace;
+  font-size: 10px;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  color: var(--ink4);
+}
+
+@media (max-width: 680px) {
+  .masthead, .cw, .footer { padding-left: 24px; padding-right: 24px; }
+  .mh-num { display: none; }
+  .analogy { grid-template-columns: 1fr; }
+}
+</style>
+</head>
+<body>
+
+<!-- ══ MASTHEAD ══ -->
+<div class="masthead">
+  <div class="mh-series">Serie RAG Pratico · Report 1 di 6</div>
+  <div class="mh-num">01</div>
+  <h1>Come l'LLM usa<br>le informazioni:<br><em>il contesto come unica memoria</em></h1>
+  <p class="mh-sub">Prima di capire cosa fa il RAG, bisogna capire cosa vede un modello linguistico quando gli si passano delle informazioni — e perché quello che sembra ovvio non lo è affatto.</p>
+  <div class="mh-pills">
+    <span class="mh-pill">Context window</span>
+    <span class="mh-pill">Token e limiti</span>
+    <span class="mh-pill">Prompt vs. RAG</span>
+    <span class="mh-pill">Information overload</span>
+    <span class="mh-pill">Testo in database</span>
+  </div>
+</div>
+
+<!-- ══ NAV ══ -->
+<div class="nav">
+  <button class="nav-btn active" onclick="show(0)">1 · Il modello non ricorda</button>
+  <button class="nav-btn" onclick="show(1)">2 · Il context window</button>
+  <button class="nav-btn" onclick="show(2)">3 · Cosa succede senza RAG</button>
+  <button class="nav-btn" onclick="show(3)">4 · Il problema del testo in tabella</button>
+  <button class="nav-btn" onclick="show(4)">5 · Prompt vs. RAG</button>
+</div>
+
+
+<!-- ══════════════════════════════════
+     S0 — IL MODELLO NON RICORDA
+══════════════════════════════════ -->
+<div class="sect active" id="s0">
+<div class="cw">
+
+  <div class="s-eyebrow">Il punto di partenza</div>
+  <div class="s-title">Il modello non ricorda — vede solo</div>
+
+  <p>Prima di capire come un LLM usa le informazioni che gli fornisci, c'è un fatto fondamentale da interiorizzare: <strong>un modello linguistico non ha memoria</strong>. Non nel senso in cui la intendiamo normalmente.</p>
+
+  <p>Non ricorda le conversazioni precedenti. Non ha accesso a un database interno di fatti aggiornato. Non "sa" nulla che non sia stato compresso nei suoi pesi durante l'addestramento — e quell'addestramento si è concluso in un momento preciso nel passato.</p>
+
+  <p>Ogni volta che invochi un modello, è come se si svegliasse per la prima volta. L'unica cosa che esiste per lui è quello che gli stai mandando <em>adesso</em>, in questa chiamata.</p>
+
+  <div class="key-insight">
+    <div class="ki-label">Il principio fondamentale</div>
+    <div class="ki-text">Per un LLM esiste solo il presente. Il presente è il contenuto della chiamata in corso — niente di più, niente di meno.</div>
+  </div>
+
+  <p>Questo ha una conseguenza diretta che spesso viene sottovalutata: <strong>se vuoi che il modello usi delle informazioni specifiche, quelle informazioni devono essere nella chiamata</strong>. Non basta che esistano da qualche parte nel tuo sistema — devono essere fisicamente presenti nel testo che mandi al modello.</p>
+
+  <div class="analogy">
+    <div class="analogy-side">
+      <div class="analogy-label">Come pensiamo che funzioni</div>
+      <div class="analogy-heading">Un assistente con accesso all'archivio</div>
+      <div class="analogy-body">Chiedi all'assistente di valutare un prodotto. Lui va nell'archivio, recupera la scheda, la legge, e risponde. Sa dove cercare, sa cosa cercare, accede autonomamente.</div>
+    </div>
+    <div class="analogy-side" style="background:var(--accent2);">
+      <div class="analogy-label">Come funziona davvero</div>
+      <div class="analogy-heading">Un consulente che legge solo quello che gli consegni</div>
+      <div class="analogy-body">Il consulente non ha accesso all'archivio. Può rispondere solo sui documenti che gli metti davanti in questo momento. Se non glieli porti, non li conosce.</div>
+    </div>
+  </div>
+
+  <p>Questa distinzione è il punto di partenza di tutta la logica del RAG. Il problema che il RAG risolve non è tecnico — è strutturale: come faccio arrivare al modello le informazioni giuste, al momento giusto, nella quantità giusta?</p>
+
+  <div class="callout callout-accent">
+    <div class="callout-title">Perché questo è rilevante per il tuo caso</div>
+    <p>Se stai costruendo un agente che deve selezionare prodotti da un catalogo, e quei prodotti hanno descrizioni di 2–3 pagine ciascuno, la domanda non è "come faccio a far sì che il modello le legga?" ma "come faccio a farglielo fisicamente arrivare nel contesto?". E se il catalogo ha 200 prodotti, la risposta non può essere "le mando tutte" — il contesto ha un limite fisico.</p>
+  </div>
+
+</div>
+</div>
+
+
+<!-- ══════════════════════════════════
+     S1 — IL CONTEXT WINDOW
+══════════════════════════════════ -->
+<div class="sect" id="s1">
+<div class="cw">
+
+  <div class="s-eyebrow">La struttura tecnica</div>
+  <div class="s-title">Il context window: lo spazio di lavoro del modello</div>
+
+  <p>Il <strong>context window</strong> è la quantità massima di testo — misurata in <em>token</em> — che un modello può ricevere ed elaborare in una singola chiamata. È lo spazio di lavoro del modello: tutto ciò che non ci entra, non esiste.</p>
+
+  <p>Un token corrisponde approssimativamente a 3–4 caratteri in italiano, o a circa ¾ di parola. Una pagina di testo normale corrisponde a circa 500–600 token. Una scheda prodotto di 2 pagine è circa 1.000–1.200 token.</p>
+
+  <div class="diagram">
+    <div class="diagram-title">Dimensione del context window nei principali modelli (2025)</div>
+    <div class="token-meter">
+      <div class="tm-row">
+        <div class="tm-label">GPT-4o</div>
+        <div class="tm-track"><div class="tm-fill" style="width:62%; background:var(--accent)"></div></div>
+        <div class="tm-count">128K token</div>
+      </div>
+      <div class="tm-row">
+        <div class="tm-label">Claude Sonnet 4</div>
+        <div class="tm-track"><div class="tm-fill" style="width:100%; background:#2d6040"></div></div>
+        <div class="tm-count">200K token</div>
+      </div>
+      <div class="tm-row">
+        <div class="tm-label">Gemini 1.5 Pro</div>
+        <div class="tm-track"><div class="tm-fill" style="width:100%; background:#7a4a10"></div></div>
+        <div class="tm-count">1M token</div>
+      </div>
+      <div class="tm-row" style="margin-top:16px; padding-top:16px; border-top:1px solid var(--border)">
+        <div class="tm-label" style="color:var(--ink4); font-size:10px;">Scheda prodotto (2 pag.)</div>
+        <div class="tm-track"><div class="tm-fill" style="width:.6%; background:var(--border2)"></div></div>
+        <div class="tm-count" style="color:var(--ink4);">~1.200 tok</div>
+      </div>
+      <div class="tm-row">
+        <div class="tm-label" style="color:var(--ink4); font-size:10px;">100 schede prodotto</div>
+        <div class="tm-track"><div class="tm-fill" style="width:60%; background:var(--warn-bd)"></div></div>
+        <div class="tm-count" style="color:var(--warn);">~120K tok</div>
+      </div>
+      <div class="tm-row">
+        <div class="tm-label" style="color:var(--ink4); font-size:10px;">500 schede prodotto</div>
+        <div class="tm-track"><div class="tm-fill" style="width:100%; background:#c0392b"></div></div>
+        <div class="tm-count" style="color:#c0392b;">~600K tok</div>
+      </div>
+    </div>
+  </div>
+
+  <p>Come si vede, 100 schede da 2 pagine occupano quasi tutto il context window di GPT-4o. 500 schede lo saturerebbero anche per i modelli con finestre più ampie.</p>
+
+  <p>Ma c'è un secondo problema, meno ovvio del primo: <strong>un context window grande non garantisce che il modello usi bene tutto ciò che ci metti dentro</strong>.</p>
+
+  <div class="callout callout-warn">
+    <div class="callout-title">Il problema del "lost in the middle"</div>
+    <p>Ricerche empiriche mostrano che i modelli tendono ad elaborare meglio le informazioni che compaiono <strong>all'inizio e alla fine</strong> del context window. Le informazioni nel mezzo — specialmente in contesti molto lunghi — vengono sistematicamente sottoutilizzate.</p>
+    <p>Se mandi 100 schede prodotto in sequenza nel prompt, le schede dalla 30 alla 70 hanno molta meno probabilità di essere realmente considerate rispetto alle prime e alle ultime.</p>
+  </div>
+
+  <p>Il context window è quindi uno spazio prezioso con due limiti distinti: uno quantitativo (quanti token ci entrano) e uno qualitativo (quanto il modello usa davvero ciò che ci metti dentro). Il RAG lavora su entrambi.</p>
+
+  <div class="diagram">
+    <div class="diagram-title">Cosa occupa il context window in una chiamata tipica</div>
+    <div class="ctx-window">
+      <div class="ctx-bar">
+        <div class="ctx-bar-label">System prompt</div>
+        <div class="ctx-bar-fill" style="width:80px; background:var(--accent); opacity:.8;"></div>
+        <div class="ctx-bar-note">Istruzioni, ruolo, vincoli — scritti dallo sviluppatore</div>
+      </div>
+      <div class="ctx-bar">
+        <div class="ctx-bar-label">Contesto / dati</div>
+        <div class="ctx-bar-fill" style="width:320px; background:#e8b84a;"></div>
+        <div class="ctx-bar-note">Documenti, schede, tabelle — la parte più variabile</div>
+      </div>
+      <div class="ctx-bar">
+        <div class="ctx-bar-label">History conversazione</div>
+        <div class="ctx-bar-fill" style="width:120px; background:var(--note); opacity:.7;"></div>
+        <div class="ctx-bar-note">Turni precedenti della sessione corrente</div>
+      </div>
+      <div class="ctx-bar">
+        <div class="ctx-bar-label">Query / domanda</div>
+        <div class="ctx-bar-fill" style="width:40px; background:var(--ok); opacity:.8;"></div>
+        <div class="ctx-bar-note">La richiesta dell'utente o del sistema</div>
+      </div>
+      <div class="ctx-bar">
+        <div class="ctx-bar-label">Output atteso</div>
+        <div class="ctx-bar-fill" style="width:100px; background:var(--bg3); border:1px dashed var(--border2)"></div>
+        <div class="ctx-bar-note">Spazio riservato per la risposta del modello</div>
+      </div>
+    </div>
+  </div>
+
+  <p>In questo schema, la sezione "Contesto / dati" è quella dove vive il problema. Se hai un catalogo di 200 prodotti, non puoi metterlo tutto lì — e anche se potessi, non funzionerebbe bene. Il RAG risolve esattamente questo: invece di mandare tutto il catalogo, manda solo le parti rilevanti per la richiesta corrente.</p>
+
+</div>
+</div>
+
+
+<!-- ══════════════════════════════════
+     S2 — COSA SUCCEDE SENZA RAG
+══════════════════════════════════ -->
+<div class="sect" id="s2">
+<div class="cw">
+
+  <div class="s-eyebrow">Il caso base</div>
+  <div class="s-title">Cosa succede quando non c'è RAG</div>
+
+  <p>Senza un sistema di retrieval, hai essenzialmente tre opzioni per fornire informazioni a un modello. Ognuna ha caratteristiche molto diverse.</p>
+
+  <div class="scenario">
+    <div class="scenario-head">
+      <div class="scenario-num">Opzione 1</div>
+      <div class="scenario-title">Tutto nel prompt — "Context stuffing"</div>
+    </div>
+    <div class="scenario-body">
+      <p>Inserisci tutte le informazioni direttamente nel system prompt o nel messaggio utente. Il modello le riceve, le elabora, risponde.</p>
+      <p><strong>Quando funziona:</strong> corpus piccolo (decine di documenti brevi), domande che richiedono visione d'insieme, informazioni sempre rilevanti per ogni query.</p>
+      <p><strong>Quando non funziona:</strong> corpus grande, documenti lunghi, lost-in-the-middle, costo per chiamata elevato perché paghi per tutti i token ogni volta, latenza alta.</p>
+    </div>
+  </div>
+
+  <div class="scenario">
+    <div class="scenario-head">
+      <div class="scenario-num">Opzione 2</div>
+      <div class="scenario-title">Solo la conoscenza del modello — nessun contesto aggiuntivo</div>
+    </div>
+    <div class="scenario-body">
+      <p>Non passi nessun documento. Il modello risponde solo con quello che ha imparato durante il training.</p>
+      <p><strong>Quando funziona:</strong> domande generali su conoscenza pubblica, task che non richiedono dati specifici del tuo dominio.</p>
+      <p><strong>Quando non funziona:</strong> praticamente sempre per use case aziendali — il modello non conosce i tuoi prodotti, i tuoi documenti interni, le tue policy. Può inventare dettagli che sembrano plausibili ma sono sbagliati.</p>
+    </div>
+  </div>
+
+  <div class="scenario">
+    <div class="scenario-head">
+      <div class="scenario-num">Opzione 3</div>
+      <div class="scenario-title">Selezione manuale — il developer decide cosa includere</div>
+    </div>
+    <div class="scenario-body">
+      <p>Scrivi del codice che seleziona a priori quali documenti o sezioni includere nel contesto, basandosi su regole fisse (es. sempre includere la categoria del prodotto, mai includere il testo descrittivo lungo).</p>
+      <p><strong>Quando funziona:</strong> regole semplici e stabili, corpus ben strutturato, domande prevedibili.</p>
+      <p><strong>Quando non funziona:</strong> quando la rilevanza dipende dalla domanda specifica — non puoi sapere a priori quali testi descrittivi saranno utili per un brief che non hai ancora letto.</p>
+    </div>
+  </div>
+
+  <div class="callout callout-warn">
+    <div class="callout-title">Il problema specifico della selezione manuale</div>
+    <p>L'Opzione 3 è spesso quella che viene implementata per prima — e quella che genera il problema che stai descrivendo. Si decide di includere nel contesto i dati strutturati (nome, prezzo, categoria, specifiche tecniche) ma non i testi descrittivi lunghi, perché "ci stanno a malapena". Risultato: il modello vede solo i dati strutturati e ignora completamente le descrizioni.</p>
+    <p>Questo è quasi certamente quello che sta succedendo al tuo agente di selezione prodotti.</p>
+  </div>
+
+  <p>Il RAG è la risposta a tutti e tre i limiti. Non manda tutto il corpus (Opzione 1), non ignora i documenti specifici (Opzione 2), e non usa regole fisse (Opzione 3) — invece recupera <em>dinamicamente</em> le parti più rilevanti per la richiesta corrente.</p>
+
+  <div class="key-insight">
+    <div class="ki-label">Il salto concettuale</div>
+    <div class="ki-text">Il RAG non aggiunge informazioni al modello — cambia il modo in cui le informazioni vengono selezionate prima di arrivare al modello. La selezione diventa dinamica, guidata dalla domanda, invece di essere statica e predefinita.</div>
+  </div>
+
+</div>
+</div>
+
+
+<!-- ══════════════════════════════════
+     S3 — IL PROBLEMA DEL TESTO IN TABELLA
+══════════════════════════════════ -->
+<div class="sect" id="s3">
+<div class="cw">
+
+  <div class="s-eyebrow">Il tuo caso pratico</div>
+  <div class="s-title">Perché il testo in una colonna di database non viene davvero letto</div>
+
+  <p>Hai una tabella con una colonna di testo descrittivo per ogni prodotto. Intuitivamente sembra che l'agente "abbia accesso" a quelle descrizioni — sono lì, nel database, accessibili. Ma questo intuito è sbagliato, e capire perché è fondamentale.</p>
+
+  <p>Il modello non ha accesso al database. <strong>Il modello vede solo quello che l'agente decide di passargli</strong> nel contesto della chiamata. C'è un layer intermedio — il codice dell'agente — che interroga il database e costruisce il contesto da mandare al modello.</p>
+
+  <div class="diagram">
+    <div class="diagram-title">Il percorso dell'informazione: dal database al modello</div>
+
+    <div style="display:flex; align-items:center; gap:0; margin:8px 0;">
+      <div style="flex:1; padding:16px; background:var(--bg3); border:1px solid var(--border2); border-radius:4px; text-align:center;">
+        <div style="font-family:'DM Mono',monospace; font-size:9px; letter-spacing:2px; text-transform:uppercase; color:var(--ink4); margin-bottom:6px;">Database</div>
+        <div style="font-size:13px; color:var(--ink2); line-height:1.5;">Tabella prodotti<br><span style="color:var(--ink4);">id, nome, categoria,<br>prezzo, <strong style="color:var(--warn);">testo_descrittivo</strong></span></div>
+      </div>
+      <div style="padding:0 12px; font-family:'DM Mono',monospace; font-size:18px; color:var(--border2);">→</div>
+      <div style="flex:1; padding:16px; background:var(--accent2); border:1px solid var(--accent3); border-radius:4px; text-align:center;">
+        <div style="font-family:'DM Mono',monospace; font-size:9px; letter-spacing:2px; text-transform:uppercase; color:var(--accent); margin-bottom:6px;">Codice agente</div>
+        <div style="font-size:13px; color:var(--ink2); line-height:1.5;">Query SQL<br><span style="color:var(--ink4);">Decide cosa includere<br>nel contesto</span></div>
+      </div>
+      <div style="padding:0 12px; font-family:'DM Mono',monospace; font-size:18px; color:var(--border2);">→</div>
+      <div style="flex:1; padding:16px; background:var(--bg3); border:1px solid var(--border2); border-radius:4px; text-align:center;">
+        <div style="font-family:'DM Mono',monospace; font-size:9px; letter-spacing:2px; text-transform:uppercase; color:var(--ink4); margin-bottom:6px;">Context window</div>
+        <div style="font-size:13px; color:var(--ink2); line-height:1.5;">Quello che il modello<br><span style="color:var(--ink4);">riceve davvero</span></div>
+      </div>
+      <div style="padding:0 12px; font-family:'DM Mono',monospace; font-size:18px; color:var(--border2);">→</div>
+      <div style="flex:1; padding:16px; background:var(--ink); border-radius:4px; text-align:center;">
+        <div style="font-family:'DM Mono',monospace; font-size:9px; letter-spacing:2px; text-transform:uppercase; color:rgba(255,255,255,.3); margin-bottom:6px;">LLM</div>
+        <div style="font-size:13px; color:rgba(255,255,255,.7); line-height:1.5;">Risposta basata<br>solo su questo</div>
+      </div>
+    </div>
+  </div>
+
+  <p>Il problema è in quel secondo box — il codice dell'agente. Quasi certamente sta costruendo il contesto includendo i campi strutturati (nome, categoria, prezzo, specifiche) ma <strong>escludendo o troncando il testo descrittivo</strong>. Le ragioni tipiche sono:</p>
+
+  <div class="steps">
+    <div class="step">
+      <div class="step-num">1</div>
+      <div class="step-body">
+        <div class="step-title">Il testo è troppo lungo per stare nel contesto con tutti i prodotti</div>
+        <div class="step-text">Se hai 200 prodotti e ogni descrizione è 1.200 token, inserirle tutte occupa 240.000 token. L'agente probabilmente le tronca o le esclude silenziosamente per non superare il limite.</div>
+      </div>
+    </div>
+    <div class="step">
+      <div class="step-num">2</div>
+      <div class="step-body">
+        <div class="step-title">La query SQL recupera tutti i prodotti allo stesso modo</div>
+        <div class="step-text">Senza un meccanismo di retrieval selettivo, l'agente fa <code style="font-family:'DM Mono',monospace; background:var(--bg3); padding:1px 5px; border-radius:3px; font-size:12px;">SELECT * FROM prodotti</code> e poi cerca di costruire un contesto. Con testi lunghi, questo non scala.</div>
+      </div>
+    </div>
+    <div class="step">
+      <div class="step-num">3</div>
+      <div class="step-body">
+        <div class="step-title">Il lost-in-the-middle colpisce soprattutto i testi descrittivi</div>
+        <div class="step-text">Anche se il testo fosse incluso, in un contesto con 200 prodotti in sequenza, le descrizioni dei prodotti nella posizione centrale verrebbero sistematicamente sottoutilizzate.</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="callout callout-note">
+    <div class="callout-title">Come verificare se questo è il problema</div>
+    <p>Testa il tuo agente con un brief molto specifico che corrisponde chiaramente a una caratteristica descritta solo nel testo descrittivo di un prodotto — non nelle colonne strutturate. Se l'agente non seleziona quel prodotto, il testo descrittivo non viene letto.</p>
+    <p>Puoi anche chiedere direttamente all'agente: "Sulla base di cosa hai selezionato questi prodotti?" Le risposte che citano solo dati strutturati (categoria, prezzo, specifiche tecniche) confermano che i testi non vengono usati.</p>
+  </div>
+
+  <p>La soluzione non è "mandare più testo nel contesto" — è cambiare l'architettura. Invece di recuperare tutti i prodotti e sperare che il modello usi le descrizioni, si indicizzano le descrizioni e si recuperano solo quelle rilevanti per il brief specifico. Questo è esattamente quello che fa il RAG.</p>
+
+</div>
+</div>
+
+
+<!-- ══════════════════════════════════
+     S4 — PROMPT VS. RAG
+══════════════════════════════════ -->
+<div class="sect" id="s4">
+<div class="cw">
+
+  <div class="s-eyebrow">La distinzione centrale</div>
+  <div class="s-title">Prompt diretto vs. RAG: quando usare cosa</div>
+
+  <p>Una volta capito che il modello può usare solo ciò che gli mandi, la domanda diventa: quando ha senso inserire tutto nel prompt, e quando ha senso usare il RAG?</p>
+
+  <p>Non esiste una risposta universale — dipende da quattro variabili: la quantità di informazioni, la frequenza con cui cambiano, la variabilità delle domande, e il costo che sei disposto a pagare.</p>
+
+  <table class="comp-table">
+    <thead>
+      <tr>
+        <th>Dimensione</th>
+        <th>Prompt diretto (tutto nel contesto)</th>
+        <th>RAG (retrieval selettivo)</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>Quantità di informazioni</td>
+        <td>Decine di documenti brevi — funziona bene fino a ~20–30K token di contenuto</td>
+        <td>Centinaia o migliaia di documenti — qualsiasi volume, perché ne recuperi solo una parte</td>
+      </tr>
+      <tr>
+        <td>Variabilità delle domande</td>
+        <td>Domande simili che usano sempre le stesse informazioni — non vale la pena selezionare</td>
+        <td>Domande molto diverse che richiedono parti diverse del corpus — la selezione dinamica è essenziale</td>
+      </tr>
+      <tr>
+        <td>Frequenza di aggiornamento</td>
+        <td>Informazioni stabili nel tempo — aggiornare il prompt è sufficiente</td>
+        <td>Corpus che si aggiorna spesso — basta reindicizzare i nuovi documenti, non cambiare il sistema</td>
+      </tr>
+      <tr>
+        <td>Costo per chiamata</td>
+        <td>Alto — paghi per tutti i token del corpus ad ogni chiamata</td>
+        <td>Basso — paghi solo per i chunk recuperati, di solito il 2–5% del corpus totale</td>
+      </tr>
+      <tr>
+        <td>Complessità implementativa</td>
+        <td>Bassa — basta costruire il prompt con i dati</td>
+        <td>Alta — serve pipeline di indicizzazione, vector store, retrieval</td>
+      </tr>
+      <tr>
+        <td>Precisione</td>
+        <td>Alta per corpus piccoli — il modello vede tutto</td>
+        <td>Dipende dalla qualità del retrieval — può perdere informazioni se il retrieval è impreciso</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <div class="callout callout-ok">
+    <div class="callout-title">La regola pratica</div>
+    <p>Se il tuo corpus è <strong>piccolo e stabile</strong> (meno di 20–30 documenti che cambiano raramente), inserire tutto nel prompt è spesso la scelta più semplice e robusta. Il RAG introduce complessità che si giustifica solo quando il corpus supera quello che il contesto può gestire bene — sia per dimensione che per varietà delle domande.</p>
+    <p>Nel caso di un catalogo prodotti con testi descrittivi lunghi e un agent che deve fare screening sistematico, il RAG è quasi certamente necessario.</p>
+  </div>
+
+  <p>C'è un terzo caso che vale la pena menzionare: l'approccio ibrido. Puoi inserire nel prompt i dati strutturati di tutti i prodotti (poco spazio, sempre utili per filtraggi rapidi) e usare il RAG solo per i testi descrittivi (che recuperi selettivamente solo per i prodotti che sembrano promettenti dai dati strutturati). Questa architettura ibrida è spesso quella più efficiente per il caso del catalogo prodotti.</p>
+
+  <div class="key-insight">
+    <div class="ki-label">Il punto da portare via</div>
+    <div class="ki-text">Il RAG non è una soluzione migliore del prompt diretto — è una soluzione diversa, per problemi diversi. La scelta giusta dipende dalla dimensione del corpus, dalla varietà delle domande e dal costo che sei disposto a sostenere.</div>
+  </div>
+
+  <!-- NEXT REPORT -->
+  <div class="next-report">
+    <div>
+      <div class="nr-label">Prossimo report</div>
+      <div class="nr-title">Indicizzazione e vector store:<br>cosa succede praticamente</div>
+      <div class="nr-sub">Cosa significa convertire un testo in embedding · Come funziona la similarità semantica · Cosa cambia dopo l'indicizzazione</div>
+    </div>
+    <div class="nr-arrow">→</div>
+  </div>
+
+</div>
+</div>
+
+<!-- FOOTER -->
+<div class="footer">
+  <span>Serie RAG Pratico · Report 1 · Come l'LLM usa le informazioni</span>
+  <span>2026</span>
+</div>
+
+<script>
+function show(n) {
+  document.querySelectorAll('.sect').forEach(s => s.classList.remove('active'));
+  document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('s'+n).classList.add('active');
+  document.querySelectorAll('.nav-btn')[n].classList.add('active');
+  window.scrollTo({top:0, behavior:'smooth'});
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,727 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Rischi AI — Qualità degli Output</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&family=Source+Sans+3:wght@300;400;500;600&family=Source+Code+Pro:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --accent:       #C85A2A;
+    --accent-light: #F0D5C8;
+    --accent-dim:   #8B3D1C;
+    --ink:          #1A1A1A;
+    --ink-mid:      #444444;
+    --ink-light:    #777777;
+    --paper:        #FAFAF8;
+    --paper-alt:    #F2F0EC;
+    --border:       #E0DDD8;
+    --sidebar-w:    260px;
+    --content-max:  760px;
+  }
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  html { scroll-behavior: smooth; }
+
+  body {
+    font-family: 'Source Sans 3', sans-serif;
+    font-weight: 400;
+    font-size: 16px;
+    line-height: 1.75;
+    color: var(--ink);
+    background: var(--paper);
+    display: flex;
+    min-height: 100vh;
+  }
+
+  /* ── SIDEBAR ─────────────────────────────────────── */
+  nav#sidebar {
+    width: var(--sidebar-w);
+    min-height: 100vh;
+    background: var(--ink);
+    color: #ccc;
+    position: fixed;
+    top: 0; left: 0;
+    display: flex;
+    flex-direction: column;
+    padding: 0;
+    z-index: 100;
+    overflow-y: auto;
+  }
+
+  .nav-brand {
+    padding: 28px 24px 20px;
+    border-bottom: 1px solid #333;
+  }
+  .nav-brand .series-label {
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: .18em;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin-bottom: 6px;
+  }
+  .nav-brand .doc-title {
+    font-family: 'Playfair Display', serif;
+    font-size: 15px;
+    color: #fff;
+    line-height: 1.35;
+  }
+
+  .nav-section-label {
+    font-size: 9.5px;
+    font-weight: 600;
+    letter-spacing: .15em;
+    text-transform: uppercase;
+    color: #555;
+    padding: 20px 24px 8px;
+  }
+
+  nav#sidebar a {
+    display: block;
+    padding: 8px 24px;
+    font-size: 13px;
+    color: #999;
+    text-decoration: none;
+    border-left: 2px solid transparent;
+    transition: color .2s, border-color .2s, background .2s;
+    line-height: 1.4;
+  }
+  nav#sidebar a:hover,
+  nav#sidebar a.active {
+    color: #fff;
+    border-left-color: var(--accent);
+    background: rgba(200,90,42,.08);
+  }
+
+  .nav-report-links {
+    margin-top: auto;
+    padding: 20px 24px;
+    border-top: 1px solid #333;
+  }
+  .nav-report-links .label {
+    font-size: 9.5px;
+    font-weight: 600;
+    letter-spacing: .15em;
+    text-transform: uppercase;
+    color: #555;
+    margin-bottom: 10px;
+  }
+  .nav-report-links a {
+    padding: 5px 0;
+    border-left: none;
+    font-size: 12px;
+  }
+  .nav-report-links a.current {
+    color: var(--accent);
+    font-weight: 600;
+  }
+  .nav-report-links a:hover { background: none; color: #fff; border-left: none; }
+
+  /* ── MAIN CONTENT ────────────────────────────────── */
+  main {
+    margin-left: var(--sidebar-w);
+    flex: 1;
+    padding: 0;
+  }
+
+  /* Hero */
+  .hero {
+    background: var(--ink);
+    color: #fff;
+    padding: 72px 64px 60px;
+    position: relative;
+    overflow: hidden;
+  }
+  .hero::before {
+    content: '';
+    position: absolute;
+    top: -60px; right: -60px;
+    width: 320px; height: 320px;
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(200,90,42,.25) 0%, transparent 70%);
+    pointer-events: none;
+  }
+  .hero::after {
+    content: '';
+    position: absolute;
+    bottom: 0; left: 0; right: 0;
+    height: 3px;
+    background: linear-gradient(90deg, var(--accent), transparent);
+  }
+  .hero-meta {
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: .2em;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin-bottom: 16px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+  .hero-meta span { color: #555; }
+  .hero h1 {
+    font-family: 'Playfair Display', serif;
+    font-size: clamp(28px, 4vw, 42px);
+    font-weight: 700;
+    line-height: 1.15;
+    margin-bottom: 20px;
+    max-width: 640px;
+  }
+  .hero-lead {
+    font-size: 17px;
+    font-weight: 300;
+    color: #bbb;
+    max-width: 580px;
+    line-height: 1.65;
+  }
+  .hero-tags {
+    margin-top: 28px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+  .tag {
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: .08em;
+    text-transform: uppercase;
+    padding: 4px 12px;
+    border-radius: 2px;
+    background: rgba(200,90,42,.18);
+    color: #e8a080;
+    border: 1px solid rgba(200,90,42,.3);
+  }
+
+  /* Content area */
+  .content {
+    max-width: calc(var(--content-max) + 128px);
+    padding: 64px 64px 96px;
+  }
+
+  /* Section */
+  section { margin-bottom: 72px; }
+
+  .section-eyebrow {
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: .22em;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin-bottom: 12px;
+  }
+
+  h2 {
+    font-family: 'Playfair Display', serif;
+    font-size: 28px;
+    font-weight: 600;
+    color: var(--ink);
+    margin-bottom: 20px;
+    line-height: 1.25;
+  }
+
+  h3 {
+    font-family: 'Playfair Display', serif;
+    font-size: 20px;
+    font-weight: 600;
+    color: var(--ink);
+    margin-bottom: 12px;
+    line-height: 1.3;
+  }
+
+  p { margin-bottom: 16px; color: var(--ink-mid); }
+  p:last-child { margin-bottom: 0; }
+
+  /* Risk card */
+  .risk-card {
+    background: #fff;
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    margin-bottom: 40px;
+    overflow: hidden;
+    box-shadow: 0 2px 12px rgba(0,0,0,.04);
+    transition: box-shadow .2s;
+  }
+  .risk-card:hover { box-shadow: 0 4px 24px rgba(0,0,0,.08); }
+
+  .risk-card-header {
+    display: flex;
+    align-items: flex-start;
+    gap: 20px;
+    padding: 28px 32px;
+    border-bottom: 1px solid var(--border);
+    background: var(--paper-alt);
+  }
+  .risk-number {
+    font-family: 'Playfair Display', serif;
+    font-size: 36px;
+    font-weight: 700;
+    color: var(--accent-light);
+    line-height: 1;
+    min-width: 48px;
+    padding-top: 2px;
+  }
+  .risk-card-header-text h3 { margin-bottom: 6px; }
+  .risk-subtitle {
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--ink-light);
+    letter-spacing: .04em;
+  }
+
+  .risk-card-body { padding: 28px 32px; }
+
+  .risk-description { margin-bottom: 24px; }
+
+  /* Severity badge */
+  .severity-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 24px;
+  }
+  .severity-label {
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: .12em;
+    text-transform: uppercase;
+    color: var(--ink-light);
+  }
+  .severity-badge {
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: .08em;
+    text-transform: uppercase;
+    padding: 3px 10px;
+    border-radius: 2px;
+  }
+  .sev-alta    { background: #FDECEA; color: #C00000; border: 1px solid #f5c0bc; }
+  .sev-media   { background: #FFF4E5; color: #B35900; border: 1px solid #ffd599; }
+
+  /* Sub-blocks */
+  .block {
+    background: var(--paper);
+    border-left: 3px solid var(--border);
+    padding: 16px 20px;
+    margin-bottom: 16px;
+    border-radius: 0 4px 4px 0;
+  }
+  .block.accent { border-left-color: var(--accent); }
+  .block.green  { border-left-color: #4A8C4F; }
+
+  .block-label {
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: .16em;
+    text-transform: uppercase;
+    color: var(--ink-light);
+    margin-bottom: 8px;
+  }
+  .block p { font-size: 14px; margin-bottom: 8px; }
+  .block p:last-child { margin-bottom: 0; }
+
+  ul.examples, ul.contexts, ul.mitigations {
+    list-style: none;
+    padding: 0;
+  }
+  ul.examples li, ul.contexts li, ul.mitigations li {
+    font-size: 14px;
+    color: var(--ink-mid);
+    padding: 6px 0 6px 20px;
+    position: relative;
+    border-bottom: 1px solid var(--border);
+  }
+  ul.examples li:last-child,
+  ul.contexts li:last-child,
+  ul.mitigations li:last-child { border-bottom: none; }
+
+  ul.examples li::before {
+    content: '→';
+    position: absolute; left: 0;
+    color: var(--accent);
+    font-weight: 700;
+  }
+  ul.contexts li::before {
+    content: '◆';
+    position: absolute; left: 0;
+    color: var(--accent);
+    font-size: 8px;
+    top: 10px;
+  }
+  ul.mitigations li::before {
+    content: '✓';
+    position: absolute; left: 0;
+    color: #4A8C4F;
+    font-weight: 700;
+  }
+
+  /* Intro callout */
+  .callout {
+    background: var(--accent-light);
+    border-left: 4px solid var(--accent);
+    padding: 20px 24px;
+    border-radius: 0 4px 4px 0;
+    margin-bottom: 32px;
+  }
+  .callout p { font-size: 15px; color: var(--accent-dim); margin: 0; }
+
+  /* Summary table */
+  .summary-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 14px;
+    margin-top: 16px;
+  }
+  .summary-table th {
+    background: var(--ink);
+    color: #fff;
+    padding: 10px 16px;
+    text-align: left;
+    font-weight: 600;
+    font-size: 12px;
+    letter-spacing: .06em;
+  }
+  .summary-table td {
+    padding: 10px 16px;
+    border-bottom: 1px solid var(--border);
+    vertical-align: top;
+  }
+  .summary-table tr:nth-child(even) td { background: var(--paper-alt); }
+  .summary-table td:first-child { font-weight: 600; color: var(--ink); }
+
+  /* Divider */
+  hr.section-divider {
+    border: none;
+    border-top: 1px solid var(--border);
+    margin: 48px 0;
+  }
+
+  /* Scroll indicator */
+  #progress-bar {
+    position: fixed;
+    top: 0; left: var(--sidebar-w); right: 0;
+    height: 3px;
+    background: var(--accent);
+    transform-origin: left;
+    transform: scaleX(0);
+    z-index: 200;
+    transition: transform .1s linear;
+  }
+
+  @media (max-width: 900px) {
+    nav#sidebar { display: none; }
+    main { margin-left: 0; }
+    .hero { padding: 48px 32px; }
+    .content { padding: 48px 32px; }
+  }
+</style>
+</head>
+<body>
+
+<div id="progress-bar"></div>
+
+<!-- SIDEBAR -->
+<nav id="sidebar">
+  <div class="nav-brand">
+    <div class="series-label">Serie: Rischi AI in Azienda</div>
+    <div class="doc-title">Report 01 — Qualità degli Output</div>
+  </div>
+
+  <div class="nav-section-label">Contenuti</div>
+  <a href="#intro">Introduzione</a>
+  <a href="#r1">1. Rischio Epistemico</a>
+  <a href="#r2">2. Rischio di Comprensione</a>
+  <a href="#r3">3. Rischio di Delega Decisionale</a>
+  <a href="#riepilogo">Riepilogo</a>
+
+  <div class="nav-report-links">
+    <div class="label">Serie completa</div>
+    <a href="report_01_qualita_output.html" class="current">01 · Qualità degli output</a>
+    <a href="Tutti%20i%20report%20html/report_02_dati_compliance.html">02 · Dati e compliance</a>
+    <a href="Tutti%20i%20report%20html/report_03_reputazione.html">03 · Reputazione</a>
+    <a href="Tutti%20i%20report%20html/report_04_rischi_strategici.html">04 · Rischi strategici</a>
+    <a href="Tutti%20i%20report%20html/report_05_sicurezza.html">05 · Sicurezza</a>
+  </div>
+</nav>
+
+<!-- MAIN -->
+<main>
+  <div class="hero">
+    <div class="hero-meta">
+      Serie: Rischi AI in Azienda <span>·</span> Report 01 di 05
+    </div>
+    <h1>Rischi legati alla Qualità degli Output</h1>
+    <p class="hero-lead">
+      L'AI generativa produce testo, analisi e decisioni con un tono autorevole che può mascherare errori, lacune e ragionamenti incompleti. Questo report analizza i tre rischi fondamentali legati all'affidabilità di ciò che l'AI produce.
+    </p>
+    <div class="hero-tags">
+      <span class="tag">Rischio Epistemico</span>
+      <span class="tag">Opacità</span>
+      <span class="tag">Delega Decisionale</span>
+    </div>
+  </div>
+
+  <div class="content">
+
+    <!-- INTRO -->
+    <section id="intro">
+      <div class="section-eyebrow">Introduzione</div>
+      <h2>Il problema della fiducia non calibrata</h2>
+
+      <div class="callout">
+        <p>I rischi descritti in questo report condividono una radice comune: l'AI generativa comunica sempre con lo stesso tono sicuro e fluente, indipendentemente dalla correttezza o dalla completezza di ciò che sta producendo. Questo rende difficile per l'utente calibrare la propria fiducia nell'output.</p>
+      </div>
+
+      <p>Quando un essere umano esperto non è sicuro di qualcosa, di solito lo segnala — esita, usa formule di dubbio, rimanda a una verifica. I modelli linguistici attuali non hanno questo meccanismo in modo affidabile. Producono testo con la stessa fluidità che si tratti di un fatto certo o di un'invenzione plausibile.</p>
+
+      <p>Questo cluster raggruppa tre rischi distinti ma strettamente correlati: il rischio che l'output sia oggettivamente sbagliato (epistemico), il rischio che l'utente non sia in grado di riconoscerlo come tale (comprensione), e il rischio che una decisione venga delegata all'AI senza fornirle il contesto necessario per ragionare correttamente (delega decisionale).</p>
+    </section>
+
+    <hr class="section-divider">
+
+    <!-- RISCHIO 1 -->
+    <section id="r1">
+      <div class="section-eyebrow">Rischio 01</div>
+
+      <div class="risk-card">
+        <div class="risk-card-header">
+          <div class="risk-number">01</div>
+          <div class="risk-card-header-text">
+            <h3>Rischio Epistemico</h3>
+            <div class="risk-subtitle">Output errati, incompleti o fuorvianti presentati con tono autorevole</div>
+          </div>
+        </div>
+        <div class="risk-card-body">
+          <div class="severity-row">
+            <span class="severity-label">Rilevanza generale</span>
+            <span class="severity-badge sev-alta">Alta</span>
+          </div>
+
+          <div class="risk-description">
+            <p>I modelli linguistici generano testo predicendo la sequenza di parole più plausibile dato un contesto, non cercando la verità. Il risultato è che possono produrre informazioni false, imprecise o obsolete con lo stesso tono sicuro con cui producono informazioni corrette.</p>
+            <p>Il fenomeno è noto come <strong>allucinazione</strong>: il modello inventa fatti, cita fonti inesistenti, riporta dati sbagliati, o costruisce ragionamenti plausibili ma infondati. Il problema non è l'eccentricità dell'errore — spesso l'output allucinato è perfettamente credibile e coerente col resto del testo.</p>
+            <p>Questo rischio è particolarmente insidioso nei contesti in cui si cercano <strong>dati fattuali specifici</strong>: cifre di mercato, normative, proprietà di ingredienti, riferimenti bibliografici. Sono esattamente i contesti in cui l'utente ha meno strumenti per verificare autonomamente la correttezza dell'output.</p>
+          </div>
+
+          <div class="block accent">
+            <div class="block-label">Esempi nella nostra realtà</div>
+            <ul class="examples">
+              <li>Un'analisi di mercato che riporta quote di mercato o dati di crescita inventati, presentati con precisione numerica convincente</li>
+              <li>Una ricerca su un ingrediente cosmetico che omette restrizioni normative rilevanti o attribuisce proprietà non documentate</li>
+              <li>La citazione di studi scientifici o brevetti che non esistono, con titoli e autori plausibili</li>
+              <li>Dati su competitor o tendenze di settore basati su informazioni obsolete o distorte</li>
+            </ul>
+          </div>
+
+          <div class="block">
+            <div class="block-label">Contesti d'uso più esposti</div>
+            <ul class="contexts">
+              <li>Ricerca e sintesi di informazioni generali</li>
+              <li>Analisi di mercato</li>
+              <li>Ricerca su ingredienti, tecnologie e brevetti</li>
+              <li>Verifica di conformità alle blacklist</li>
+              <li>Supporto pianificazione e customer service</li>
+            </ul>
+          </div>
+
+          <div class="block green">
+            <div class="block-label">Misure di mitigazione</div>
+            <ul class="mitigations">
+              <li>Trattare sempre l'output AI come una bozza da verificare, non come una fonte definitiva — specialmente per dati numerici, normative e riferimenti</li>
+              <li>Richiedere esplicitamente all'AI di indicare le fonti, e verificarle direttamente (non fidarsi della citazione senza controllare l'originale)</li>
+              <li>Per ricerche critiche, affiancare sempre strumenti di ricerca tradizionali (database specializzati, fonti primarie, esperti interni)</li>
+              <li>Costruire una cultura interna del "doppio controllo": chi usa AI per produrre contenuti fattuali da condividere si assume la responsabilità della verifica</li>
+              <li>Preferire strumenti AI dotati di accesso al web in tempo reale per informazioni che cambiano frequentemente, ricordando che anche questi non sono infallibili</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- RISCHIO 2 -->
+    <section id="r2">
+      <div class="section-eyebrow">Rischio 02</div>
+
+      <div class="risk-card">
+        <div class="risk-card-header">
+          <div class="risk-number">02</div>
+          <div class="risk-card-header-text">
+            <h3>Rischio di Comprensione (Opacità)</h3>
+            <div class="risk-subtitle">L'utente usa l'output senza essere in grado di valutarlo criticamente</div>
+          </div>
+        </div>
+        <div class="risk-card-body">
+          <div class="severity-row">
+            <span class="severity-label">Rilevanza generale</span>
+            <span class="severity-badge sev-alta">Alta</span>
+          </div>
+
+          <div class="risk-description">
+            <p>Questo rischio è distinto dal rischio epistemico: non riguarda la correttezza dell'output, ma la capacità dell'utente di valutarla. Un output può essere tecnicamente corretto ma essere usato in modo sbagliato perché l'utente non ne ha compreso i limiti, le assunzioni o il funzionamento.</p>
+            <p>Il problema è amplificato dal fatto che l'AI produce output dall'aspetto <strong>completo e rifinito</strong>. Uno script, un'analisi, una sintesi generati dall'AI sembrano prodotti finiti — non bozze che richiedono revisione esperta. Questo abbassa la guardia critica dell'utente.</p>
+            <p>Il caso più evidente è quello del <strong>codice generato</strong>: uno script può funzionare in condizioni normali e comportarsi in modo imprevisto in casi limite, con conseguenze difficili da diagnosticare se l'utente non ha compreso la logica sottostante. Ma lo stesso vale per analisi statistiche, sintesi di documenti legali, o verifiche di conformità.</p>
+          </div>
+
+          <div class="block accent">
+            <div class="block-label">Esempi nella nostra realtà</div>
+            <ul class="examples">
+              <li>Uno script per la pianificazione della produzione usato in produzione senza aver verificato cosa succede con input anomali o casi limite</li>
+              <li>Una verifica di conformità alle blacklist delegata all'AI, accettata senza revisione da parte di un chimico che comprenda le logiche di esclusione</li>
+              <li>Un'analisi del portfolio formule prodotta dall'AI, usata per decisioni strategiche senza verificare i criteri con cui sono stati classificati i dati</li>
+              <li>Una sintesi contrattuale da cui mancano clausole importanti, non rilevata perché l'utente si è fidato della completezza apparente del riassunto</li>
+            </ul>
+          </div>
+
+          <div class="block">
+            <div class="block-label">Contesti d'uso più esposti</div>
+            <ul class="contexts">
+              <li>Scrittura di script e automazioni</li>
+              <li>Sviluppo di tool interni e applicazioni</li>
+              <li>Verifica di conformità (blacklist ingredienti)</li>
+              <li>Sintesi e interrogazione di documenti interni</li>
+              <li>Supporto pianificazione e customer service</li>
+            </ul>
+          </div>
+
+          <div class="block green">
+            <div class="block-label">Misure di mitigazione</div>
+            <ul class="mitigations">
+              <li>Adottare il principio: <em>non usare in produzione ciò che non si è in grado di spiegare</em> — vale per codice, analisi e verifiche automatizzate</li>
+              <li>Per output tecnici complessi, prevedere sempre una revisione da parte di chi ha la competenza per valutarli (es: chimico per conformità, sviluppatore per script)</li>
+              <li>Chiedere all'AI di spiegare il proprio ragionamento passo per passo ("chain of thought") per rendere più visibile la logica sottostante</li>
+              <li>Testare gli output in contesti controllati prima di usarli su dati o processi reali</li>
+              <li>Documentare le assunzioni dell'AI esplicitamente, soprattutto quando l'output alimenta decisioni o processi critici</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- RISCHIO 3 -->
+    <section id="r3">
+      <div class="section-eyebrow">Rischio 03</div>
+
+      <div class="risk-card">
+        <div class="risk-card-header">
+          <div class="risk-number">03</div>
+          <div class="risk-card-header-text">
+            <h3>Rischio di Delega Decisionale</h3>
+            <div class="risk-subtitle">Decisioni affidate all'AI senza contesto sufficiente o criteri esplicitati</div>
+          </div>
+        </div>
+        <div class="risk-card-body">
+          <div class="severity-row">
+            <span class="severity-label">Rilevanza generale</span>
+            <span class="severity-badge sev-alta">Alta</span>
+          </div>
+
+          <div class="risk-description">
+            <p>L'AI generativa è molto efficace nel produrre ragionamenti strutturati, valutazioni comparative e raccomandazioni. Questo la rende attraente come supporto a decisioni complesse — ma crea un rischio sottile: la qualità della decisione dipende interamente dalla qualità del contesto fornito, che l'utente spesso non fornisce in modo esaustivo.</p>
+            <p>Questo rischio si manifesta in tre forme distinte:</p>
+            <p><strong>Contesto incompleto</strong> — l'utente non fornisce all'AI tutte le informazioni rilevanti, spesso perché non sa cosa è rilevante, o perché lo dà per scontato. L'AI ragiona su una rappresentazione parziale della realtà.</p>
+            <p><strong>Criteri impliciti</strong> — la decisione dipende da valori, priorità o vincoli aziendali che l'AI non conosce e che l'utente non ha esplicitato. L'AI applica criteri generici dove servirebbero criteri specifici.</p>
+            <p><strong>Falsa oggettività</strong> — l'output dell'AI viene percepito come neutro e razionale, riducendo la capacità critica dell'utente nel valutarlo. Una raccomandazione dell'AI può essere accettata con meno senso critico di quanto si riserverebbe a un collega.</p>
+          </div>
+
+          <div class="block accent">
+            <div class="block-label">Esempi nella nostra realtà</div>
+            <ul class="examples">
+              <li>Chiedere all'AI quale formula proporre a un cliente senza fornire il contesto della relazione commerciale, i margini, le priorità strategiche su quel cliente</li>
+              <li>Usare l'AI per prioritizzare la pianificazione della produzione senza comunicarle i vincoli operativi reali, le urgenze in corso, i rapporti con i fornitori</li>
+              <li>Chiedere una valutazione su un nuovo ingrediente senza fornire le blacklist specifiche di quel cliente o le sue preferenze storiche</li>
+              <li>Delegare all'AI la valutazione di un brief NPD senza esplicitare i criteri di fattibilità interni, i costi target, i vincoli di timeline</li>
+            </ul>
+          </div>
+
+          <div class="block">
+            <div class="block-label">Contesti d'uso più esposti</div>
+            <ul class="contexts">
+              <li>Supporto a decisioni strategiche e operative</li>
+              <li>Analisi di mercato e scouting</li>
+              <li>Costruzione di proposte commerciali</li>
+              <li>Supporto pianificazione e customer service</li>
+              <li>Verifica di conformità</li>
+            </ul>
+          </div>
+
+          <div class="block green">
+            <div class="block-label">Misure di mitigazione</div>
+            <ul class="mitigations">
+              <li>Prima di chiedere una raccomandazione all'AI, scrivere esplicitamente nel prompt: obiettivi, vincoli, criteri di priorità, e contesto specifico della situazione</li>
+              <li>Trattare l'output dell'AI come un punto di vista strutturato da valutare, non come una risposta definitiva — mantenersi responsabili della decisione finale</li>
+              <li>Usare l'AI per esplorare opzioni alternative o per identificare fattori trascurati, piuttosto che per ricevere una risposta univoca</li>
+              <li>Quando la posta in gioco è alta, chiedere all'AI di esplicitare le assunzioni su cui si basa la propria raccomandazione — verificare che corrispondano alla realtà</li>
+              <li>Condividere le decisioni supportate dall'AI con chi ha il contesto operativo completo, prima di agire</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <hr class="section-divider">
+
+    <!-- RIEPILOGO -->
+    <section id="riepilogo">
+      <div class="section-eyebrow">Riepilogo</div>
+      <h2>I tre rischi a confronto</h2>
+      <p>Pur condividendo la radice comune della fiducia non calibrata, i tre rischi si distinguono per natura e per il tipo di attenzione che richiedono.</p>
+
+      <table class="summary-table">
+        <thead>
+          <tr>
+            <th>Rischio</th>
+            <th>Il problema è…</th>
+            <th>La guardia va tenuta su…</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Epistemico</td>
+            <td>L'output contiene errori fattuali o informazioni false</td>
+            <td>La veridicità dei contenuti prima di usarli o condividerli</td>
+          </tr>
+          <tr>
+            <td>Comprensione</td>
+            <td>L'utente non capisce abbastanza l'output per valutarlo</td>
+            <td>La propria capacità di giudicare ciò che si sta usando</td>
+          </tr>
+          <tr>
+            <td>Delega decisionale</td>
+            <td>L'AI ha ragionato su un problema mal posto o incompleto</td>
+            <td>La qualità e completezza del contesto fornito all'AI</td>
+          </tr>
+        </tbody>
+      </table>
+    </section>
+
+  </div><!-- /content -->
+</main>
+
+<script>
+  // Progress bar
+  window.addEventListener('scroll', () => {
+    const doc = document.documentElement;
+    const scrolled = doc.scrollTop / (doc.scrollHeight - doc.clientHeight);
+    document.getElementById('progress-bar').style.transform = `scaleX(${scrolled})`;
+  });
+
+  // Active nav link on scroll
+  const sections = document.querySelectorAll('section[id]');
+  const navLinks = document.querySelectorAll('nav#sidebar a[href^="#"]');
+
+  const observer = new IntersectionObserver(entries => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        navLinks.forEach(a => {
+          a.classList.toggle('active', a.getAttribute('href') === '#' + entry.target.id);
+        });
+      }
+    });
+  }, { rootMargin: '-20% 0px -70% 0px' });
+
+  sections.forEach(s => observer.observe(s));
+</script>
+</body>
+</html>

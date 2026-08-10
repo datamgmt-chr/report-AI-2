@@ -1,0 +1,540 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Scelta del modello — Report Quadro · Le dimensioni e il triangolo fondamentale</title>
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Outfit:wght@200;300;400;500;600;700;800;900&family=IBM+Plex+Mono:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg:     #faf8f5;
+  --bg2:    #f2efe9;
+  --bg3:    #e9e5dc;
+  --ink:    #1b1915;
+  --ink2:   #2e2b25;
+  --ink3:   #6d685c;
+  --ink4:   #a19c8f;
+  --border: #d9d4c8;
+  --border2:#cac4b6;
+
+  /* Leva Scelta modello — ardesia calda */
+  --accent:  #5a4a3a;
+  --accent2: #3a2e22;
+  --accent-light: #f5f0eb;
+
+  /* Dimensioni colori */
+  --d1: #2e4a7a; --d1-l:#edf1f9; /* ragionamento — blu */
+  --d2: #3d7a45; --d2-l:#f4faf5; /* velocità — verde */
+  --d3: #b07d24; --d3-l:#fdf6e8; /* costo — oro */
+  --d4: #7b5ea7; --d4-l:#f4f0fa; /* context — viola */
+  --d5: #2e7d9c; --d5-l:#edf4f9; /* strutturato — teal */
+  --d6: #8a3a5a; --d6-l:#faf0f4; /* istruzioni — rosa */
+
+  --ok:   #3d7a45; --ok-l:  #f4faf5;
+  --bad:  #c0392b; --bad-l: #fdf5f5;
+  --warn: #b07d24; --warn-l:#fdf6e8;
+}
+
+* { margin:0; padding:0; box-sizing:border-box; }
+html { scroll-behavior:smooth; }
+body { background:var(--bg); color:var(--ink); font-family:'Outfit',sans-serif; font-weight:300; font-size:14px; line-height:1.75; }
+
+.masthead { background:var(--ink); color:rgba(255,255,255,.9); padding:60px 56px 52px; position:relative; overflow:hidden; }
+.masthead::before { content:''; position:absolute; inset:0; background: repeating-linear-gradient(90deg,rgba(255,255,255,.012) 0,rgba(255,255,255,.012) 1px,transparent 1px,transparent 64px), repeating-linear-gradient(0deg,rgba(255,255,255,.012) 0,rgba(255,255,255,.012) 1px,transparent 1px,transparent 64px); pointer-events:none; }
+.masthead::after { content:'M'; position:absolute; right:44px; bottom:-28px; font-family:'Instrument Serif',serif; font-size:280px; line-height:1; color:rgba(255,255,255,.025); pointer-events:none; }
+.mh-eye { font-family:'IBM Plex Mono',monospace; font-size:10px; letter-spacing:3px; text-transform:uppercase; color:rgba(255,255,255,.25); margin-bottom:18px; position:relative; }
+.mh-cluster { display:inline-block; font-family:'IBM Plex Mono',monospace; font-size:10px; letter-spacing:2px; text-transform:uppercase; padding:4px 12px; border:1px solid var(--accent); color:var(--accent); margin-bottom:20px; position:relative; }
+.masthead h1 { font-family:'Instrument Serif',serif; font-weight:400; font-size:clamp(30px,4.5vw,54px); line-height:1.08; letter-spacing:-1px; max-width:700px; position:relative; }
+.mh-sub { margin-top:20px; font-size:15px; font-weight:300; color:rgba(255,255,255,.38); max-width:660px; line-height:1.7; position:relative; }
+.mh-meta { margin-top:32px; display:flex; gap:32px; flex-wrap:wrap; position:relative; }
+.mh-stat { display:flex; flex-direction:column; gap:4px; }
+.mh-stat-val { font-family:'IBM Plex Mono',monospace; font-size:22px; font-weight:500; color:rgba(255,255,255,.85); }
+.mh-stat-lbl { font-size:10px; letter-spacing:2px; text-transform:uppercase; color:rgba(255,255,255,.25); }
+
+.nav { background:var(--ink2); position:sticky; top:0; z-index:100; display:flex; overflow-x:auto; border-bottom:1px solid rgba(255,255,255,.06); }
+.nav-btn { flex:1; min-width:110px; padding:13px 12px; border:none; background:transparent; cursor:pointer; font-family:'Outfit',sans-serif; font-size:10.5px; font-weight:600; text-transform:uppercase; letter-spacing:.4px; color:rgba(255,255,255,.3); border-right:1px solid rgba(255,255,255,.06); transition:all .2s; white-space:nowrap; }
+.nav-btn:last-child { border-right:none; }
+.nav-btn:hover { color:rgba(255,255,255,.6); }
+.nav-btn.active { color:#fff; background:rgba(255,255,255,.05); }
+
+.sect { display:none; }
+.sect.active { display:block; animation:fadeIn .3s ease; }
+@keyframes fadeIn { from{opacity:0;transform:translateY(6px)} to{opacity:1;transform:translateY(0)} }
+.sect-head { padding:48px 56px 36px; border-bottom:1px solid var(--border); }
+.sect-num { font-family:'IBM Plex Mono',monospace; font-size:10px; letter-spacing:3px; text-transform:uppercase; color:var(--ink4); margin-bottom:10px; }
+.sect-head h2 { font-family:'Instrument Serif',serif; font-weight:400; font-size:clamp(26px,3.5vw,42px); line-height:1.1; letter-spacing:-.5px; max-width:640px; margin-bottom:14px; }
+.sect-head p { color:var(--ink3); max-width:700px; font-size:14.5px; }
+.wrap { padding:0 56px 64px; }
+
+.prose { max-width:760px; }
+.prose p { font-size:14.5px; color:var(--ink3); line-height:1.85; margin-bottom:16px; }
+.prose p strong { color:var(--ink2); font-weight:500; }
+.prose p em { font-style:italic; color:var(--ink2); }
+
+/* ── DIMENSION CARDS ── */
+.dim-grid { display:grid; grid-template-columns:1fr 1fr 1fr; gap:12px; margin-top:20px; }
+.dim-card { border:1px solid var(--border2); background:var(--bg); overflow:hidden; }
+.dim-bar { height:4px; }
+.dim-head { padding:12px 16px; background:var(--bg2); border-bottom:1px solid var(--border); }
+.dim-num { font-family:'IBM Plex Mono',monospace; font-size:9px; letter-spacing:2px; text-transform:uppercase; margin-bottom:3px; }
+.dim-name { font-weight:600; font-size:14px; color:var(--ink2); margin-bottom:2px; }
+.dim-tagline { font-size:12px; color:var(--ink4); }
+.dim-body { padding:12px 16px; }
+.dim-desc { font-size:13px; color:var(--ink3); line-height:1.6; margin-bottom:8px; }
+.dim-desc strong { color:var(--ink2); font-weight:500; }
+.dim-stable { font-family:'IBM Plex Mono',monospace; font-size:10px; padding:5px 8px; border-left:3px solid; }
+.dim-question { margin-top:8px; padding:7px 10px; font-size:12.5px; font-style:italic; color:var(--ink3); border-left:3px solid var(--border2); background:var(--bg2); }
+
+/* ── TRIANGOLO SVG ── */
+.triangle-panel { background:var(--ink); border:1px solid var(--border2); padding:24px; margin-top:20px; overflow-x:auto; }
+.triangle-panel svg { display:block; margin:0 auto; }
+
+/* ── TASK FIRST ── */
+.task-grid { display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-top:16px; }
+.task-card { border:1px solid var(--border2); background:var(--bg); padding:14px 16px; }
+.tc-task { font-family:'IBM Plex Mono',monospace; font-size:10px; font-weight:600; letter-spacing:1px; text-transform:uppercase; margin-bottom:4px; }
+.tc-question { font-weight:600; font-size:13.5px; color:var(--ink2); margin-bottom:6px; }
+.tc-answer { font-size:12.5px; color:var(--ink3); line-height:1.55; }
+.tc-answer strong { color:var(--ink2); font-weight:500; }
+.tc-dim { margin-top:8px; display:flex; gap:5px; flex-wrap:wrap; }
+.tc-dim-tag { font-family:'IBM Plex Mono',monospace; font-size:9px; padding:2px 7px; border:1px solid; border-radius:2px; }
+
+/* ── SPECTRUM TABLE ── */
+.spec-table { width:100%; border-collapse:collapse; margin-top:16px; border:1px solid var(--border2); }
+.spec-table th, .spec-table td { padding:11px 14px; border:1px solid var(--border); font-size:12.5px; line-height:1.5; vertical-align:top; text-align:left; }
+.spec-table thead th { background:var(--ink); color:rgba(255,255,255,.82); font-family:'IBM Plex Mono',monospace; font-size:9px; letter-spacing:.5px; text-transform:uppercase; }
+.spec-table tbody tr:nth-child(even) { background:var(--bg2); }
+.spec-table td:first-child { font-weight:500; color:var(--ink2); width:160px; }
+.s-hi  { background:#f4faf5; color:#2e4a32; font-weight:600; font-family:'IBM Plex Mono',monospace; font-size:11px; }
+.s-mid { background:#fdf6e8; color:#5a3a00; font-weight:600; font-family:'IBM Plex Mono',monospace; font-size:11px; }
+.s-lo  { background:#fdf5f5; color:#6b3030; font-weight:600; font-family:'IBM Plex Mono',monospace; font-size:11px; }
+
+/* ── ROADMAP ── */
+.roadmap { margin-top:24px; }
+.rm-item { display:grid; grid-template-columns:48px 1fr; margin-bottom:2px; }
+.rm-step { display:flex; flex-direction:column; align-items:center; }
+.rm-circle { width:36px; height:36px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-family:'IBM Plex Mono',monospace; font-weight:500; font-size:11px; color:#fff; flex-shrink:0; background:var(--accent); }
+.rm-line { width:2px; flex:1; background:var(--border); margin:4px 0; min-height:16px; }
+.rm-content { padding:6px 0 20px 16px; }
+.rm-id { font-family:'IBM Plex Mono',monospace; font-size:9px; letter-spacing:2px; text-transform:uppercase; color:var(--ink4); margin-bottom:2px; }
+.rm-title { font-family:'Instrument Serif',serif; font-size:18px; color:var(--ink2); margin-bottom:4px; }
+.rm-desc { font-size:13px; color:var(--ink3); line-height:1.6; }
+.rm-desc strong { color:var(--ink2); font-weight:500; }
+
+/* ── KEY POINT / INSIGHT ── */
+.key-point { margin-top:36px; padding:24px 28px; border-left:4px solid var(--accent); background:var(--accent-light); }
+.kp-label { font-family:'IBM Plex Mono',monospace; font-size:9px; letter-spacing:2px; text-transform:uppercase; color:var(--accent); margin-bottom:8px; }
+.kp-text { font-family:'Instrument Serif',serif; font-size:18px; line-height:1.45; color:var(--ink2); }
+.kp-sub { margin-top:10px; font-size:13px; color:var(--ink3); line-height:1.65; }
+.insight { margin:16px 0; padding:16px 20px; border-left:4px solid var(--accent); background:var(--accent-light); }
+.insight-lbl { font-family:'IBM Plex Mono',monospace; font-size:9px; letter-spacing:2px; text-transform:uppercase; color:var(--accent); margin-bottom:6px; }
+.insight p { font-size:13.5px; color:var(--ink2); line-height:1.65; max-width:700px; }
+.insight p strong { font-weight:500; }
+.mechanism { margin-top:14px; padding:14px 18px; border-left:3px solid var(--accent); background:var(--accent-light); }
+.mech-lbl { font-family:'IBM Plex Mono',monospace; font-size:9px; letter-spacing:2px; text-transform:uppercase; color:var(--accent); margin-bottom:6px; }
+.mechanism p { font-size:13px; color:var(--ink3); line-height:1.65; }
+.mechanism p strong { color:var(--ink2); font-weight:500; }
+
+.footer { padding:24px 56px; border-top:1px solid var(--border); display:flex; justify-content:space-between; align-items:center; font-family:'IBM Plex Mono',monospace; font-size:10px; letter-spacing:1px; text-transform:uppercase; color:var(--ink4); }
+
+@media (max-width:700px) {
+  .masthead,.sect-head,.wrap,.footer { padding-left:20px; padding-right:20px; }
+  .dim-grid,.task-grid { grid-template-columns:1fr; }
+}
+</style>
+</head>
+<body>
+
+<div class="masthead">
+  <div class="mh-eye">Serie Agenti AI · Leva 02 · Scelta del modello</div>
+  <div class="mh-cluster">Report Quadro</div>
+  <h1>Le dimensioni di scelta e il triangolo fondamentale</h1>
+  <p class="mh-sub">Cosa si misura per confrontare i modelli — e perché le classifiche pubbliche non bastano. Il triangolo intelligenza/velocità/costo che governa ogni scelta. E la domanda che viene sempre dopo ma dovrebbe venire prima: qual è esattamente il task?</p>
+  <div class="mh-meta">
+    <div class="mh-stat"><div class="mh-stat-val">6</div><div class="mh-stat-lbl">Dimensioni operative</div></div>
+    <div class="mh-stat"><div class="mh-stat-val">Triangolo</div><div class="mh-stat-lbl">Il vincolo fondamentale</div></div>
+    <div class="mh-stat"><div class="mh-stat-value">Task-first</div><div class="mh-stat-lbl">Il principio guida</div></div>
+    <div class="mh-stat"><div class="mh-stat-val">4</div><div class="mh-stat-lbl">Report nella serie</div></div>
+  </div>
+</div>
+
+<div class="nav">
+  <button class="nav-btn active" onclick="show(1)">Il problema</button>
+  <button class="nav-btn" onclick="show(2)">Le 6 dimensioni</button>
+  <button class="nav-btn" onclick="show(3)">Il triangolo</button>
+  <button class="nav-btn" onclick="show(4)">Task-first</button>
+  <button class="nav-btn" onclick="show(5)">La serie</button>
+</div>
+
+
+<!-- ═══════════════════════════
+     S1 — IL PROBLEMA
+═══════════════════════════ -->
+<div class="sect active" id="s1">
+  <div class="sect-head">
+    <div class="sect-num">Introduzione</div>
+    <h2>Perché la scelta del modello è difficile — e perché i benchmark non aiutano</h2>
+    <p>I benchmark pubblici misurano cosa i modelli sanno fare in astratto. Il tuo sistema ha bisogno di sapere cosa fanno sul tuo task specifico, con il tuo tipo di dati, alle condizioni di latenza e costo che il tuo prodotto può sostenere.</p>
+  </div>
+  <div class="wrap">
+
+    <div class="prose" style="margin-top:28px;">
+      <p>Quando si sceglie un modello per un sistema agentic, la tentazione è cercare "il migliore" — guardare i leaderboard, controllare i benchmark MMLU o HumanEval, scegliere quello in cima. Il problema è che questi benchmark non misurano le dimensioni che contano per la maggior parte dei casi d'uso reali: quanto costa per milione di token a volume di produzione, qual è la latenza al 95° percentile con tool calls multiple, quanto l'output JSON è affidabilmente valido senza retry.</p>
+      <p>C'è anche un secondo problema: i benchmark cambiano ogni trimestre. Un modello che oggi è in testa per il ragionamento potrebbe essere superato nel prossimo aggiornamento — e in ogni caso il modello in testa a un benchmark generale potrebbe non essere la scelta giusta per il tuo task specifico. <strong>La scelta del modello è sempre una scelta relativa a un task concreto, un budget reale, e requisiti operativi specifici</strong> — non una classifica assoluta.</p>
+      <p>Questa serie affronta la scelta del modello con un approccio diverso: prima i criteri (stabili nel tempo), poi il metodo di valutazione (applicabile a qualsiasi modello, presente o futuro), poi i pattern di matching tra task e profilo di modello (che cambiano lentamente). I valori specifici dei modelli attuali vengono usati come esempi ma non come contenuto principale.</p>
+    </div>
+
+    <div class="key-point" style="margin-top:24px;">
+      <div class="kp-label">La distinzione che salva tempo</div>
+      <div class="kp-text">Ci sono due domande diverse. "Qual è il modello migliore?" è una domanda a risposta instabile che cambia ogni mese. "Quali sono le dimensioni su cui valutare un modello per il mio task?" è una domanda a risposta stabile che vale anni.</div>
+      <div class="kp-sub">Questa serie risponde alla seconda domanda. Il team che sa cosa valutare — e come valutarlo — può prendere la decisione giusta oggi e rievalutarla correttamente tra sei mesi quando il panorama è cambiato. Il team che sa solo qual è il modello più reclamizzato di oggi deve ricominciare da capo ogni volta.</div>
+    </div>
+
+  </div>
+</div>
+
+
+<!-- ═══════════════════════════
+     S2 — LE 6 DIMENSIONI
+═══════════════════════════ -->
+<div class="sect" id="s2">
+  <div class="sect-head">
+    <div class="sect-num">Sezione 02</div>
+    <h2>Le 6 dimensioni operative — cosa si misura davvero</h2>
+    <p>Non tutte le dimensioni di un modello hanno lo stesso peso per tutti i task. Identificare le due o tre dimensioni critiche per il proprio caso è il primo passo per una scelta sensata.</p>
+  </div>
+  <div class="wrap">
+
+    <div class="dim-grid" style="margin-top:28px;">
+
+      <div class="dim-card">
+        <div class="dim-bar" style="background:var(--d1)"></div>
+        <div class="dim-head">
+          <div class="dim-num" style="color:var(--d1)">Dimensione 01</div>
+          <div class="dim-name">Capacità di ragionamento</div>
+          <div class="dim-tagline">Quanto il modello ragiona bene su task complessi</div>
+        </div>
+        <div class="dim-body">
+          <div class="dim-desc">La capacità di scomporre problemi multi-step, mantenere coerenza su ragionamenti lunghi, identificare errori nel proprio output, e gestire ambiguità senza collassare su risposte semplici. <strong>La dimensione più visibile ma anche la più costosa.</strong></div>
+          <div class="dim-stable" style="border-color:var(--d1); background:var(--d1-l); color:var(--d1);">Stabile nel tempo: i modelli "grandi" sono storicamente meglio qui</div>
+          <div class="dim-question">Domanda da porsi: il mio task richiede ragionamento complesso o seguire istruzioni strutturate?</div>
+        </div>
+      </div>
+
+      <div class="dim-card">
+        <div class="dim-bar" style="background:var(--d2)"></div>
+        <div class="dim-head">
+          <div class="dim-num" style="color:var(--d2)">Dimensione 02</div>
+          <div class="dim-name">Velocità e latenza</div>
+          <div class="dim-tagline">Quanto tempo per generare la risposta</div>
+        </div>
+        <div class="dim-body">
+          <div class="dim-desc">Time-to-first-token (quanto aspetta l'utente prima di vedere qualcosa) e throughput totale (token al secondo). In sistemi agentic con tool calls multiple, la latenza si <strong>moltiplica per il numero di passi</strong> — un modello 2x più lento produce un workflow 10x più lento su 5 passi.</div>
+          <div class="dim-stable" style="border-color:var(--d2); background:var(--d2-l); color:var(--d2);">Critica per: chatbot, agenti interattivi, pipeline ad alto volume</div>
+          <div class="dim-question">Domanda da porsi: l'utente aspetta la risposta in tempo reale, o è un processo batch?</div>
+        </div>
+      </div>
+
+      <div class="dim-card">
+        <div class="dim-bar" style="background:var(--d3)"></div>
+        <div class="dim-head">
+          <div class="dim-num" style="color:var(--d3)">Dimensione 03</div>
+          <div class="dim-name">Costo per operazione</div>
+          <div class="dim-tagline">Quanto costa a volume di produzione</div>
+        </div>
+        <div class="dim-body">
+          <div class="dim-desc">Non il costo per singola chiamata — il costo totale per operazione completata a volume di produzione. Include: token di input (system prompt + context + tool results) + token di output + retry. <strong>Un sistema con 70% di retry ha costi 1.7x più alti del nominale.</strong></div>
+          <div class="dim-stable" style="border-color:var(--d3); background:var(--d3-l); color:var(--d3);">Nota: i costi scendono nel tempo — ricalcola ogni 6 mesi</div>
+          <div class="dim-question">Domanda da porsi: quante operazioni al mese? Qual è il budget massimo sostenibile?</div>
+        </div>
+      </div>
+
+      <div class="dim-card">
+        <div class="dim-bar" style="background:var(--d4)"></div>
+        <div class="dim-head">
+          <div class="dim-num" style="color:var(--d4)">Dimensione 04</div>
+          <div class="dim-name">Context window</div>
+          <div class="dim-tagline">Quanto il modello può "tenere in mente" contemporaneamente</div>
+        </div>
+        <div class="dim-body">
+          <div class="dim-desc">La dimensione massima del contesto che il modello elabora in una singola chiamata. Critica per: documenti lunghi, sessioni con molti tool results, workflow con stato accumulato. <strong>Attenzione: una context window grande non significa che il modello usa bene le informazioni in coda</strong> — alcuni modelli degradano sulla metà del contesto.</div>
+          <div class="dim-stable" style="border-color:var(--d4); background:var(--d4-l); color:var(--d4);">Testa l'accuratezza a metà contesto, non solo il limite massimo</div>
+          <div class="dim-question">Domanda da porsi: qual è la dimensione massima dell'input nella sessione più lunga?</div>
+        </div>
+      </div>
+
+      <div class="dim-card">
+        <div class="dim-bar" style="background:var(--d5)"></div>
+        <div class="dim-head">
+          <div class="dim-num" style="color:var(--d5)">Dimensione 05</div>
+          <div class="dim-name">Fedeltà all'output strutturato</div>
+          <div class="dim-tagline">Quanto il modello produce JSON/XML valido in modo affidabile</div>
+        </div>
+        <div class="dim-body">
+          <div class="dim-desc">In sistemi agentic, l'output del modello viene spesso parsato programmaticamente. Un modello che produce JSON invalido anche nel 5% dei casi richiede retry che aumentano latenza e costo. <strong>La fedeltà all'output strutturato varia significativamente tra modelli</strong> anche a parità di capacità generale.</div>
+          <div class="dim-stable" style="border-color:var(--d5); background:var(--d5-l); color:var(--d5);">Testa con i tuoi schemi specifici — non con JSON generici</div>
+          <div class="dim-question">Domanda da porsi: il workflow dipende da parsing programmatico dell'output?</div>
+        </div>
+      </div>
+
+      <div class="dim-card">
+        <div class="dim-bar" style="background:var(--d6)"></div>
+        <div class="dim-head">
+          <div class="dim-num" style="color:var(--d6)">Dimensione 06</div>
+          <div class="dim-name">Instruction following</div>
+          <div class="dim-tagline">Quanto il modello segue istruzioni complesse e vincolate</div>
+        </div>
+        <div class="dim-body">
+          <div class="dim-desc">La capacità di rispettare vincoli espliciti nel prompt (formato, lunghezza, tono, comportamenti proibiti) anche quando l'input è ambiguo o difficile. <strong>Critica per i sistemi agentic dove le istruzioni del system prompt devono essere rispettate anche in condizioni avverse.</strong> Un modello con instruction following debole ignorerà i guardrail sui casi difficili.</div>
+          <div class="dim-stable" style="border-color:var(--d6); background:var(--d6-l); color:var(--d6);">Testa con prompt complessi e input edge-case — non solo il caso tipico</div>
+          <div class="dim-question">Domanda da porsi: il sistema ha guardrail o vincoli di comportamento critici?</div>
+        </div>
+      </div>
+
+    </div>
+
+    <div class="insight" style="margin-top:20px;">
+      <div class="insight-lbl">Le dimensioni non hanno lo stesso peso per tutti i task</div>
+      <p>Per un chatbot di supporto ad alto volume, velocità e costo dominano — la capacità di ragionamento è secondaria. Per un agente di analisi contrattuale, il ragionamento e l'instruction following dominano — il costo è secondario. <strong>Identificare le due o tre dimensioni critiche per il proprio caso è il primo atto della scelta del modello</strong> — prima di guardare qualsiasi benchmark o confrontare prezzi.</p>
+    </div>
+
+  </div>
+</div>
+
+
+<!-- ═══════════════════════════
+     S3 — IL TRIANGOLO
+═══════════════════════════ -->
+<div class="sect" id="s3">
+  <div class="sect-head">
+    <div class="sect-num">Sezione 03</div>
+    <h2>Il triangolo fondamentale — intelligenza, velocità, costo</h2>
+    <p>Tre delle sei dimensioni formano un vincolo strutturale che vale per tutti i modelli, oggi e probabilmente ancora tra anni. Non si ottimizza su tutte e tre simultaneamente — scegliere su quale ottimizzare è la decisione più importante.</p>
+  </div>
+  <div class="wrap">
+
+    <div class="triangle-panel">
+      <svg viewBox="0 0 700 280" width="100%" xmlns="http://www.w3.org/2000/svg" font-family="IBM Plex Mono, monospace">
+        <text x="20" y="22" fill="rgba(255,255,255,.35)" font-size="9" letter-spacing="2">IL TRIANGOLO INTELLIGENZA / VELOCITÀ / COSTO</text>
+
+        <!-- Triangolo principale -->
+        <polygon points="350,50 120,230 580,230" fill="none" stroke="rgba(255,255,255,.12)" stroke-width="1.5"/>
+
+        <!-- Vertici -->
+        <!-- INTELLIGENZA (top) -->
+        <circle cx="350" cy="50" r="28" fill="#1a2438" stroke="#2e4a7a" stroke-width="2"/>
+        <text x="350" y="46" fill="#93c5e8" font-size="9" text-anchor="middle" font-weight="700">INTELLI-</text>
+        <text x="350" y="58" fill="#93c5e8" font-size="9" text-anchor="middle" font-weight="700">GENZA</text>
+        <text x="350" y="20" fill="rgba(255,255,255,.35)" font-size="8" text-anchor="middle">modelli grandi, lenti, costosi</text>
+
+        <!-- VELOCITÀ (bottom-left) -->
+        <circle cx="120" cy="230" r="28" fill="#1a2e1e" stroke="#3d7a45" stroke-width="2"/>
+        <text x="120" y="226" fill="#7dd3a8" font-size="9" text-anchor="middle" font-weight="700">VELO-</text>
+        <text x="120" y="238" fill="#7dd3a8" font-size="9" text-anchor="middle" font-weight="700">CITÀ</text>
+        <text x="50" y="265" fill="rgba(255,255,255,.35)" font-size="8" text-anchor="middle">modelli piccoli, veloci</text>
+
+        <!-- COSTO (bottom-right) -->
+        <circle cx="580" cy="230" r="28" fill="#2a1e0a" stroke="#b07d24" stroke-width="2"/>
+        <text x="580" y="226" fill="#f4c87a" font-size="9" text-anchor="middle" font-weight="700">COSTO</text>
+        <text x="580" y="238" fill="#f4c87a" font-size="9" text-anchor="middle" font-weight="700">BASSO</text>
+        <text x="640" y="265" fill="rgba(255,255,255,.35)" font-size="8" text-anchor="middle">modelli economici</text>
+
+        <!-- Zona "pick two" -->
+        <text x="350" y="148" fill="rgba(255,255,255,.55)" font-size="14" text-anchor="middle" font-style="italic">pick two</text>
+        <text x="350" y="166" fill="rgba(255,255,255,.25)" font-size="9" text-anchor="middle">non si ottimizza su tutti e tre</text>
+
+        <!-- Esempi lungo i lati -->
+        <!-- Lato velocità-intelligenza -->
+        <text x="218" y="130" fill="rgba(255,255,255,.3)" font-size="8" text-anchor="middle" transform="rotate(-56,218,130)">intelligente E veloce → costoso</text>
+        <!-- Lato intelligenza-costo -->
+        <text x="480" y="130" fill="rgba(255,255,255,.3)" font-size="8" text-anchor="middle" transform="rotate(56,480,130)">intelligente E economico → lento</text>
+        <!-- Lato velocità-costo -->
+        <text x="350" y="248" fill="rgba(255,255,255,.3)" font-size="8" text-anchor="middle">veloce E economico → meno capace</text>
+
+        <!-- Punti esempio sul triangolo -->
+        <circle cx="235" cy="140" r="5" fill="#e74c3c"/>
+        <text x="235" y="128" fill="#f4a8a8" font-size="7" text-anchor="middle">API cara</text>
+        <text x="235" y="118" fill="#f4a8a8" font-size="7" text-anchor="middle">real-time</text>
+
+        <circle cx="460" cy="140" r="5" fill="#b07d24"/>
+        <text x="460" y="128" fill="#f4c87a" font-size="7" text-anchor="middle">batch</text>
+        <text x="460" y="118" fill="#f4c87a" font-size="7" text-anchor="middle">overnight</text>
+
+        <circle cx="350" cy="220" r="5" fill="#3d7a45"/>
+        <text x="350" y="208" fill="#7dd3a8" font-size="7" text-anchor="middle">classificazione</text>
+        <text x="350" y="198" fill="#7dd3a8" font-size="7" text-anchor="middle">ad alto volume</text>
+      </svg>
+    </div>
+
+    <div class="prose" style="margin-top:24px;">
+      <p>Il triangolo non è una limitazione tecnica superabile col prossimo modello — è un vincolo strutturale del mercato. I modelli più capaci richiedono più compute per generare, quindi sono più lenti o più costosi (o entrambi). I modelli più veloci e più economici sono tipicamente più piccoli, quindi meno capaci su task complessi. La distanza tra i vertici si riduce nel tempo man mano che l'efficienza migliora — ma il triangolo rimane.</p>
+    </div>
+
+    <table class="spec-table" style="margin-top:20px;">
+      <thead>
+        <tr><th>Se ottimizzi su…</th><th>Cosa ottieni</th><th>Cosa sacrifichi</th><th>Caso d'uso tipico</th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>Intelligenza + Velocità</td>
+          <td class="s-hi">Output di qualità alta in tempo reale</td>
+          <td class="s-lo">Costo elevato — non sostenibile ad alto volume</td>
+          <td>Assistente interattivo premium, analisi complesse in tempo reale</td>
+        </tr>
+        <tr>
+          <td>Intelligenza + Costo basso</td>
+          <td class="s-hi">Output di qualità alta a costo contenuto</td>
+          <td class="s-lo">Latenza alta — solo per processi batch non interattivi</td>
+          <td>Analisi documentale batch, report overnight, pipeline non interattive</td>
+        </tr>
+        <tr>
+          <td>Velocità + Costo basso</td>
+          <td class="s-hi">Throughput alto a costo contenuto</td>
+          <td class="s-lo">Capacità ridotta — solo per task strutturati e prevedibili</td>
+          <td>Classificazione ad alto volume, estrazione semplice, routing delle richieste</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <div class="mechanism" style="margin-top:20px;">
+      <div class="mech-lbl">Il routing come soluzione al triangolo</div>
+      <p>La risposta più intelligente al triangolo non è scegliere un vertice — è <strong>usare modelli diversi per parti diverse del sistema</strong>. Un modello veloce ed economico per la classificazione iniziale delle richieste, un modello capace per il ragionamento complesso, un modello strutturato per l'estrazione formattata. Questo è il routing intelligente (Report A), che permette di ottimizzare su tutte e tre le dimensioni nei rispettivi sotto-task invece di cercare un compromesso su un singolo modello.</p>
+    </div>
+
+  </div>
+</div>
+
+
+<!-- ═══════════════════════════
+     S4 — TASK-FIRST
+═══════════════════════════ -->
+<div class="sect" id="s4">
+  <div class="sect-head">
+    <div class="sect-num">Sezione 04</div>
+    <h2>Task-first — la domanda che viene prima di qualsiasi altra</h2>
+    <p>La scelta del modello dipende completamente dal task. Prima di guardare benchmark, prezzi o annunci di vendor, il team deve rispondere a cinque domande sul task specifico. Le risposte determinano le dimensioni critiche — e le dimensioni critiche determinano il profilo del modello.</p>
+  </div>
+  <div class="wrap">
+
+    <div class="task-grid" style="margin-top:28px;">
+
+      <div class="task-card" style="border-top:3px solid var(--d1)">
+        <div class="tc-task" style="color:var(--d1)">Domanda 1</div>
+        <div class="tc-question">Il task richiede ragionamento complesso o esecuzione strutturata?</div>
+        <div class="tc-answer">Se il task è seguire una sequenza di passi predefiniti con input variabili → <strong>esecuzione strutturata</strong>, non serve il modello più capace. Se il task richiede di ragionare su problemi ambigui, valutare opzioni, o produrre analisi originali → <strong>ragionamento complesso</strong>, la capacità del modello è critica.</div>
+        <div class="tc-dim"><span class="tc-dim-tag" style="color:var(--d1); border-color:var(--d1)">Dimensione critica: Ragionamento</span></div>
+      </div>
+
+      <div class="task-card" style="border-top:3px solid var(--d2)">
+        <div class="tc-task" style="color:var(--d2)">Domanda 2</div>
+        <div class="tc-question">L'utente aspetta la risposta in tempo reale?</div>
+        <div class="tc-answer">Un chatbot interattivo ha requisiti di latenza molto diversi da una pipeline batch notturna. Se c'è un umano che aspetta → <strong>velocità critica</strong>. Se il risultato viene usato il giorno dopo → <strong>velocità secondaria</strong>, si possono usare modelli più lenti e capaci senza impatto sull'esperienza.</div>
+        <div class="tc-dim"><span class="tc-dim-tag" style="color:var(--d2); border-color:var(--d2)">Dimensione critica: Velocità</span></div>
+      </div>
+
+      <div class="task-card" style="border-top:3px solid var(--d3)">
+        <div class="tc-task" style="color:var(--d3)">Domanda 3</div>
+        <div class="tc-question">Qual è il volume di operazioni e il budget sostenibile?</div>
+        <div class="tc-answer">1.000 operazioni/mese con budget ampio → quasi qualsiasi modello va bene. 1.000.000 operazioni/mese con budget fisso → il costo per operazione è il vincolo che esclude la maggior parte dei modelli capaci. <strong>Calcola il costo a volume prima di scegliere</strong> — non il costo per singola chiamata di test.</div>
+        <div class="tc-dim"><span class="tc-dim-tag" style="color:var(--d3); border-color:var(--d3)">Dimensione critica: Costo</span></div>
+      </div>
+
+      <div class="task-card" style="border-top:3px solid var(--d5)">
+        <div class="tc-task" style="color:var(--d5)">Domanda 4</div>
+        <div class="tc-question">L'output viene parsato programmaticamente?</div>
+        <div class="tc-answer">Se la risposta del modello viene letta da un umano → il formato è meno critico. Se la risposta viene parsata da codice (JSON, XML, strutture specifiche) → la fedeltà all'output strutturato è critica. <strong>Un tasso di JSON invalido del 5% significa il 5% di retry in più</strong> — che aumenta latenza e costo su ogni singola operazione.</div>
+        <div class="tc-dim"><span class="tc-dim-tag" style="color:var(--d5); border-color:var(--d5)">Dimensione critica: Output strutturato</span></div>
+      </div>
+
+      <div class="task-card" style="border-top:3px solid var(--d4); grid-column: span 2;">
+        <div class="tc-task" style="color:var(--d4)">Domanda 5</div>
+        <div class="tc-question">Il task ha guardrail critici o vincoli di comportamento che devono essere rispettati anche sui casi difficili?</div>
+        <div class="tc-answer">Un agente che deve sempre seguire una specifica procedura, che non deve mai comunicare certi tipi di informazioni, o che deve sempre richiedere conferma prima di certe azioni — richiede un modello con instruction following robusto. <strong>Non basta che il modello segua le istruzioni nel caso tipico — deve seguirle anche quando l'input è ambiguo, provocatorio, o fuori distribuzione.</strong> Testa sempre con edge-case, non solo con il caso tipico.</div>
+        <div class="tc-dim"><span class="tc-dim-tag" style="color:var(--d4); border-color:var(--d4)">Dimensione critica: Instruction following</span></div>
+      </div>
+
+    </div>
+
+    <div class="key-point" style="margin-top:24px;">
+      <div class="kp-label">Il principio task-first in pratica</div>
+      <div class="kp-text">Non si sceglie il modello migliore. Si sceglie il modello più adatto per le dimensioni critiche del task specifico — che raramente è il modello in testa alla classifica generale.</div>
+      <div class="kp-sub">Un task di classificazione binaria ad alto volume (spam / non spam) non ha bisogno del modello con le maggiori capacità di ragionamento — ha bisogno del modello più veloce ed economico che raggiunge una soglia accettabile di accuratezza. Un task di analisi legale complessa ha bisogno del contrario. Usare il modello "migliore" per il task sbagliato è over-engineering costoso — usare il modello "peggiore" per il task sbagliato è sotto-engineering che produce risultati insufficienti.</div>
+    </div>
+
+  </div>
+</div>
+
+
+<!-- ═══════════════════════════
+     S5 — LA SERIE
+═══════════════════════════ -->
+<div class="sect" id="s5">
+  <div class="sect-head">
+    <div class="sect-num">Sezione 05</div>
+    <h2>La serie — 4 report pratici</h2>
+  </div>
+  <div class="wrap">
+
+    <div class="roadmap" style="margin-top:28px;">
+
+      <div class="rm-item">
+        <div class="rm-step"><div class="rm-circle">Q</div><div class="rm-line"></div></div>
+        <div class="rm-content">
+          <div class="rm-id">Questo report — Quadro</div>
+          <div class="rm-title">Le dimensioni e il triangolo fondamentale</div>
+          <div class="rm-desc">Le 6 dimensioni operative, il triangolo intelligenza/velocità/costo, l'approccio task-first con le 5 domande che precedono qualsiasi scelta.</div>
+        </div>
+      </div>
+
+      <div class="rm-item">
+        <div class="rm-step"><div class="rm-circle">A</div><div class="rm-line"></div></div>
+        <div class="rm-content">
+          <div class="rm-id">Report A</div>
+          <div class="rm-title">Il routing intelligente — modelli diversi per task diversi</div>
+          <div class="rm-desc">Come usare modelli diversi per parti diverse dello stesso sistema. <strong>Tre pattern</strong>: cascata (prova col modello piccolo, escalate se non basta), routing esplicito (assegna il modello in base alle caratteristiche dell'input), ensemble (usa più modelli e aggrega). Il risparmio economico reale: un sistema che usa 70% small e 30% large può costare 5–10x meno di uno che usa solo il large. Quando il routing vale la complessità aggiuntiva.</div>
+        </div>
+      </div>
+
+      <div class="rm-item">
+        <div class="rm-step"><div class="rm-circle">B</div><div class="rm-line"></div></div>
+        <div class="rm-content">
+          <div class="rm-id">Report B</div>
+          <div class="rm-title">Valutare nella pratica — benchmark propri invece di benchmark pubblici</div>
+          <div class="rm-desc">Perché i benchmark pubblici (MMLU, HumanEval, ecc.) non predicono le prestazioni sul tuo task specifico. Come costruire un golden dataset dai propri casi reali. Scegliere le metriche giuste per il task. Usare LLM-as-judge per la valutazione automatica. Il protocollo pratico per confrontare due modelli: come strutturare il test, come evitare i bias di valutazione, come interpretare i risultati.</div>
+        </div>
+      </div>
+
+      <div class="rm-item">
+        <div class="rm-step"><div class="rm-circle">C</div></div>
+        <div class="rm-content">
+          <div class="rm-id">Report C</div>
+          <div class="rm-title">Casi d'uso tipo e segnali di warning</div>
+          <div class="rm-desc">Quattro casi d'uso tipo con il profilo di scelta corrispondente: analisi documentale complessa (ragionamento e instruction following critici), chatbot ad alto volume (velocità e costo critici), agente di codice (coding capability e output strutturato), pipeline di classificazione/estrazione (velocità, costo, output strutturato). I segnali che il modello è il collo di bottiglia — e come distinguerli dai problemi di prompt o di architettura.</div>
+        </div>
+      </div>
+
+    </div>
+
+    <div class="prose" style="margin-top:32px; padding-top:24px; border-top:1px solid var(--border);">
+      <p style="color:var(--ink4); font-size:13px;">Serie Agenti AI · Leva 02 · Scelta del modello · 4 report (Quadro + A–C) · Marzo 2026</p>
+    </div>
+
+  </div>
+</div>
+
+<div class="footer">
+  <span>Serie Agenti AI — Leva 02 · Scelta del modello · Report Quadro</span>
+  <span>Marzo 2026</span>
+</div>
+
+<script>
+function show(n) {
+  document.querySelectorAll('.sect').forEach(s => s.classList.remove('active'));
+  document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('s'+n).classList.add('active');
+  document.querySelectorAll('.nav-btn')[n-1].classList.add('active');
+  window.scrollTo({top:0, behavior:'smooth'});
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,600 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Rischi AI — Reputazione</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&family=Source+Sans+3:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --accent:       #7B3FA0;
+    --accent-light: #E8D5F5;
+    --accent-dim:   #52297A;
+    --ink:          #1A1A1A;
+    --ink-mid:      #444444;
+    --ink-light:    #777777;
+    --paper:        #FAF8FC;
+    --paper-alt:    #F2EEF7;
+    --border:       #DDD6E8;
+    --green:        #4A8C4F;
+    --green-light:  #EAF3EB;
+    --amber:        #B35900;
+    --amber-light:  #FFF4E5;
+    --sidebar-w:    260px;
+    --content-max:  800px;
+  }
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  html { scroll-behavior: smooth; }
+
+  body {
+    font-family: 'Source Sans 3', sans-serif;
+    font-size: 16px; line-height: 1.75;
+    color: var(--ink); background: var(--paper);
+    display: flex; min-height: 100vh;
+  }
+
+  nav#sidebar {
+    width: var(--sidebar-w); min-height: 100vh;
+    background: var(--ink); position: fixed; top: 0; left: 0;
+    display: flex; flex-direction: column; z-index: 100; overflow-y: auto;
+  }
+  .nav-brand { padding: 28px 24px 20px; border-bottom: 1px solid #333; }
+  .nav-brand .series-label {
+    font-size: 10px; font-weight: 600; letter-spacing: .18em;
+    text-transform: uppercase; color: var(--accent); margin-bottom: 6px;
+  }
+  .nav-brand .doc-title {
+    font-family: 'Playfair Display', serif; font-size: 15px; color: #fff; line-height: 1.35;
+  }
+  .nav-section-label {
+    font-size: 9.5px; font-weight: 600; letter-spacing: .15em;
+    text-transform: uppercase; color: #555; padding: 20px 24px 8px;
+  }
+  nav#sidebar a {
+    display: block; padding: 8px 24px; font-size: 13px; color: #999;
+    text-decoration: none; border-left: 2px solid transparent;
+    transition: color .2s, border-color .2s, background .2s; line-height: 1.4;
+  }
+  nav#sidebar a:hover, nav#sidebar a.active {
+    color: #fff; border-left-color: var(--accent); background: rgba(123,63,160,.1);
+  }
+  nav#sidebar a.sub { padding-left: 36px; font-size: 12px; color: #666; }
+  nav#sidebar a.sub:hover, nav#sidebar a.sub.active {
+    color: #ddd; border-left-color: var(--accent); background: rgba(123,63,160,.06);
+  }
+  .nav-report-links { margin-top: auto; padding: 20px 24px; border-top: 1px solid #333; }
+  .nav-report-links .label {
+    font-size: 9.5px; font-weight: 600; letter-spacing: .15em;
+    text-transform: uppercase; color: #555; margin-bottom: 10px;
+  }
+  .nav-report-links a { padding: 5px 0; border-left: none; font-size: 12px; }
+  .nav-report-links a.current { color: var(--accent); font-weight: 600; }
+  .nav-report-links a:hover { background: none; color: #fff; border-left: none; }
+
+  main { margin-left: var(--sidebar-w); flex: 1; }
+
+  .hero {
+    background: var(--ink); color: #fff;
+    padding: 72px 64px 60px; position: relative; overflow: hidden;
+  }
+  .hero::before {
+    content: ''; position: absolute; top: -60px; right: -60px;
+    width: 320px; height: 320px; border-radius: 50%;
+    background: radial-gradient(circle, rgba(123,63,160,.3) 0%, transparent 70%);
+    pointer-events: none;
+  }
+  .hero::after {
+    content: ''; position: absolute; bottom: 0; left: 0; right: 0;
+    height: 3px; background: linear-gradient(90deg, var(--accent), transparent);
+  }
+  .hero-meta {
+    font-size: 11px; font-weight: 600; letter-spacing: .2em;
+    text-transform: uppercase; color: var(--accent); margin-bottom: 16px;
+    display: flex; align-items: center; gap: 12px;
+  }
+  .hero-meta span { color: #555; }
+  .hero h1 {
+    font-family: 'Playfair Display', serif;
+    font-size: clamp(28px, 4vw, 42px); font-weight: 700;
+    line-height: 1.15; margin-bottom: 20px; max-width: 640px;
+  }
+  .hero-lead {
+    font-size: 17px; font-weight: 300; color: #bbb; max-width: 580px; line-height: 1.65;
+  }
+  .hero-tags { margin-top: 28px; display: flex; flex-wrap: wrap; gap: 8px; }
+  .tag {
+    font-size: 11px; font-weight: 600; letter-spacing: .08em; text-transform: uppercase;
+    padding: 4px 12px; border-radius: 2px;
+    background: rgba(123,63,160,.2); color: #c99ee0; border: 1px solid rgba(123,63,160,.35);
+  }
+
+  .content { max-width: calc(var(--content-max) + 128px); padding: 64px 64px 96px; }
+  section { margin-bottom: 80px; }
+
+  .section-eyebrow {
+    font-size: 10px; font-weight: 700; letter-spacing: .22em;
+    text-transform: uppercase; color: var(--accent); margin-bottom: 12px;
+  }
+  h2 {
+    font-family: 'Playfair Display', serif; font-size: 30px; font-weight: 600;
+    color: var(--ink); margin-bottom: 24px; line-height: 1.25;
+  }
+  h3 {
+    font-family: 'Playfair Display', serif; font-size: 21px; font-weight: 600;
+    color: var(--ink); margin-bottom: 12px; line-height: 1.3;
+  }
+  p { margin-bottom: 18px; color: var(--ink-mid); }
+  p:last-child { margin-bottom: 0; }
+  strong { color: var(--ink); font-weight: 600; }
+
+  .risk-card {
+    background: #fff; border: 1px solid var(--border); border-radius: 4px;
+    margin-bottom: 56px; overflow: hidden; box-shadow: 0 2px 16px rgba(0,0,0,.05);
+    transition: box-shadow .2s;
+  }
+  .risk-card:hover { box-shadow: 0 4px 28px rgba(0,0,0,.09); }
+  .risk-card-header {
+    display: flex; align-items: flex-start; gap: 20px;
+    padding: 32px 36px; border-bottom: 1px solid var(--border); background: var(--paper-alt);
+  }
+  .risk-number {
+    font-family: 'Playfair Display', serif; font-size: 40px; font-weight: 700;
+    color: var(--accent-light); line-height: 1; min-width: 52px; padding-top: 2px;
+  }
+  .risk-subtitle { font-size: 14px; font-weight: 400; color: var(--ink-light); font-style: italic; }
+  .risk-card-body { padding: 36px; }
+
+  .severity-row {
+    display: flex; align-items: center; gap: 10px;
+    margin-bottom: 28px; padding-bottom: 28px; border-bottom: 1px solid var(--border);
+    flex-wrap: wrap;
+  }
+  .severity-label {
+    font-size: 11px; font-weight: 700; letter-spacing: .12em;
+    text-transform: uppercase; color: var(--ink-light);
+  }
+  .severity-badge {
+    font-size: 11px; font-weight: 700; letter-spacing: .08em;
+    text-transform: uppercase; padding: 3px 10px; border-radius: 2px;
+  }
+  .sev-alta  { background: #FDECEA; color: #C00000; border: 1px solid #f5c0bc; }
+  .sev-media { background: #FFF4E5; color: #B35900; border: 1px solid #ffd599; }
+
+  .mechanism {
+    background: #f8f5fc; border: 1px solid var(--border);
+    border-radius: 4px; padding: 24px 28px; margin-bottom: 28px;
+  }
+  .mechanism-label {
+    font-size: 10px; font-weight: 700; letter-spacing: .18em;
+    text-transform: uppercase; color: var(--ink-light); margin-bottom: 12px;
+  }
+  .mechanism p { font-size: 15px; margin-bottom: 12px; }
+
+  .scenario {
+    background: #f7f0fc; border: 1px solid #dcc8f0;
+    border-left: 4px solid var(--accent); border-radius: 0 4px 4px 0;
+    padding: 24px 28px; margin-bottom: 28px;
+  }
+  .scenario-label {
+    font-size: 10px; font-weight: 700; letter-spacing: .18em;
+    text-transform: uppercase; color: var(--accent); margin-bottom: 12px;
+  }
+  .scenario p { font-size: 15px; color: var(--ink-mid); margin-bottom: 10px; }
+
+  .alert-box {
+    background: var(--amber-light); border: 1px solid #ffd599;
+    border-left: 4px solid var(--amber); border-radius: 0 4px 4px 0;
+    padding: 24px 28px; margin-bottom: 28px;
+  }
+  .alert-label {
+    font-size: 10px; font-weight: 700; letter-spacing: .18em;
+    text-transform: uppercase; color: var(--amber); margin-bottom: 12px;
+  }
+  ul.alerts { list-style: none; padding: 0; }
+  ul.alerts li {
+    font-size: 14px; color: #5a3a00; padding: 7px 0 7px 24px;
+    position: relative; border-bottom: 1px solid #ffe0b2; line-height: 1.5;
+  }
+  ul.alerts li:last-child { border-bottom: none; }
+  ul.alerts li::before {
+    content: '⚑'; position: absolute; left: 0; color: var(--amber); font-size: 12px; top: 9px;
+  }
+
+  .contexts-block {
+    background: var(--paper-alt); border: 1px solid var(--border);
+    border-radius: 4px; padding: 24px 28px; margin-bottom: 28px;
+  }
+  .contexts-label {
+    font-size: 10px; font-weight: 700; letter-spacing: .18em;
+    text-transform: uppercase; color: var(--ink-light); margin-bottom: 12px;
+  }
+  .context-pills { display: flex; flex-wrap: wrap; gap: 8px; }
+  .context-pill {
+    font-size: 12px; font-weight: 500; padding: 5px 14px;
+    background: #fff; border: 1px solid var(--border); border-radius: 20px; color: var(--ink-mid);
+  }
+  .context-pill.high { background: #FDECEA; border-color: #f5c0bc; color: #8B1A1A; }
+  .context-pill.med  { background: #FFF4E5; border-color: #ffd599; color: #7A3E00; }
+
+  .mitigations-block {
+    background: var(--green-light); border: 1px solid #c3e6c5; border-radius: 4px; padding: 24px 28px;
+  }
+  .mitigations-label {
+    font-size: 10px; font-weight: 700; letter-spacing: .18em;
+    text-transform: uppercase; color: var(--green); margin-bottom: 16px;
+  }
+  .mitigation-item { display: flex; gap: 14px; padding: 14px 0; border-bottom: 1px solid #c3e6c5; }
+  .mitigation-item:last-child { border-bottom: none; padding-bottom: 0; }
+  .mit-icon {
+    width: 26px; height: 26px; min-width: 26px; background: var(--green);
+    color: #fff; border-radius: 50%; display: flex; align-items: center;
+    justify-content: center; font-size: 13px; font-weight: 700; margin-top: 1px;
+  }
+  .mit-content { flex: 1; }
+  .mit-title { font-size: 14px; font-weight: 600; color: #1f4d22; margin-bottom: 4px; }
+  .mit-desc { font-size: 13.5px; color: #2d5e31; line-height: 1.55; margin: 0; }
+
+  .callout {
+    background: var(--accent-light); border-left: 4px solid var(--accent);
+    padding: 22px 26px; border-radius: 0 4px 4px 0; margin-bottom: 32px;
+  }
+  .callout p { font-size: 15.5px; color: var(--accent-dim); margin: 0; line-height: 1.6; }
+
+  /* Exposure map */
+  .exposure-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+    margin: 20px 0 28px;
+  }
+  .exposure-card {
+    background: #fff; border: 1px solid var(--border); border-radius: 4px;
+    padding: 18px 20px;
+  }
+  .exposure-card-title {
+    font-size: 12px; font-weight: 700; letter-spacing: .08em;
+    text-transform: uppercase; color: var(--accent); margin-bottom: 8px;
+  }
+  .exposure-card p { font-size: 13.5px; color: var(--ink-mid); margin: 0; line-height: 1.5; }
+
+  .summary-table { width: 100%; border-collapse: collapse; font-size: 14px; margin-top: 20px; }
+  .summary-table th {
+    background: var(--ink); color: #fff; padding: 12px 18px;
+    text-align: left; font-weight: 600; font-size: 12px; letter-spacing: .06em;
+  }
+  .summary-table td {
+    padding: 12px 18px; border-bottom: 1px solid var(--border);
+    vertical-align: top; font-size: 14px; line-height: 1.5;
+  }
+  .summary-table tr:nth-child(even) td { background: var(--paper-alt); }
+  .summary-table td:first-child { font-weight: 600; color: var(--ink); }
+
+  hr.section-divider { border: none; border-top: 1px solid var(--border); margin: 56px 0; }
+
+  #progress-bar {
+    position: fixed; top: 0; left: var(--sidebar-w); right: 0;
+    height: 3px; background: var(--accent); transform-origin: left;
+    transform: scaleX(0); z-index: 200; transition: transform .1s linear;
+  }
+
+  @media (max-width: 900px) {
+    nav#sidebar { display: none; }
+    main { margin-left: 0; }
+    .hero, .content { padding: 48px 28px; }
+    .exposure-grid { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+
+<div id="progress-bar"></div>
+
+<nav id="sidebar">
+  <div class="nav-brand">
+    <div class="series-label">Serie: Rischi AI in Azienda</div>
+    <div class="doc-title">Report 03 — Reputazione</div>
+  </div>
+  <div class="nav-section-label">Contenuti</div>
+  <a href="#intro">Introduzione</a>
+  <a href="#esposizione">Chi è più esposto</a>
+  <a href="#r5">Il Rischio Reputazionale</a>
+  <a class="sub" href="#r5-mec">↳ Come funziona</a>
+  <a class="sub" href="#r5-vettori">↳ I quattro vettori</a>
+  <a class="sub" href="#r5-sce1">↳ Scenario: comunicazione esterna</a>
+  <a class="sub" href="#r5-sce2">↳ Scenario: relazione commerciale</a>
+  <a class="sub" href="#r5-ale">↳ Segnali di allerta</a>
+  <a class="sub" href="#r5-mit">↳ Mitigazioni</a>
+  <a href="#riepilogo">Principi guida</a>
+  <div class="nav-report-links">
+    <div class="label">Serie completa</div>
+    <a href="report_01_qualita_output.html">01 · Qualità degli output</a>
+    <a href="report_02_dati_compliance.html">02 · Dati e compliance</a>
+    <a href="report_03_reputazione.html" class="current">03 · Reputazione</a>
+    <a href="report_04_rischi_strategici.html">04 · Rischi strategici</a>
+    <a href="report_05_sicurezza.html">05 · Sicurezza</a>
+  </div>
+</nav>
+
+<main>
+  <div class="hero">
+    <div class="hero-meta">Serie: Rischi AI in Azienda <span>·</span> Report 03 di 05</div>
+    <h1>Rischi legati alla Reputazione</h1>
+    <p class="hero-lead">Un contenuto sbagliato inviato a un cliente, un post inappropriato pubblicato sui social, un render che non corrisponde al prodotto reale: l'AI generativa accelera la produzione di contenuti, ma accelera anche la velocità con cui un errore può raggiungere l'esterno. Questo report analizza come il rischio reputazionale si manifesta nell'uso quotidiano dell'AI.</p>
+    <div class="hero-tags">
+      <span class="tag">Comunicazione Esterna</span>
+      <span class="tag">Relazione con i Clienti</span>
+      <span class="tag">Brand Consistency</span>
+      <span class="tag">Social Media</span>
+    </div>
+  </div>
+
+  <div class="content">
+
+    <!-- INTRO -->
+    <section id="intro">
+      <div class="section-eyebrow">Introduzione</div>
+      <h2>Velocità e rischio reputazionale: un binomio da gestire</h2>
+      <div class="callout">
+        <p>Il rischio reputazionale non è un rischio nuovo. Esisteva prima dell'AI. Ma l'AI lo amplifica in modo specifico: abbassa la barriera alla produzione di contenuti, aumenta la velocità di pubblicazione, e crea un senso di sicurezza — l'output è ben scritto, fluente, professionale — che può ridurre la propensione alla revisione critica prima della condivisione.</p>
+      </div>
+      <p>A differenza degli altri rischi trattati in questa serie, il rischio reputazionale non si manifesta all'interno dell'azienda — si manifesta fuori, nella percezione di clienti, partner, pubblico e mercato. Le sue conseguenze sono spesso difficili da quantificare ma facilmente percepibili: un cliente che perde fiducia, una relazione commerciale che si incrina, un'immagine di brand che viene associata a contenuti inappropriati o imprecisi.</p>
+      <p>In un'azienda che lavora in conto terzi nel settore cosmetico, la reputazione ha una doppia valenza. C'è la reputazione verso i clienti — fatta di affidabilità tecnica, correttezza nelle comunicazioni, coerenza tra promesse e consegne. E c'è la reputazione verso il mercato — fatta di posizionamento, qualità percepita, coerenza del brand in tutte le sue espressioni. L'AI può mettere a rischio entrambe, attraverso meccanismi diversi.</p>
+      <p>Questo report tratta il rischio reputazionale come un'unica categoria, ma ne analizza i quattro vettori principali — affermazioni tecniche errate, tono inappropriato, incoerenza di brand, e aspettative non mantenute — perché richiedono attenzioni e mitigazioni parzialmente diverse.</p>
+    </section>
+
+    <!-- ESPOSIZIONE -->
+    <section id="esposizione">
+      <div class="section-eyebrow">Mappa di esposizione</div>
+      <h2>Chi è più esposto e in quali contesti</h2>
+      <p>Il rischio reputazionale non è distribuito uniformemente tra le funzioni. Le aree più esposte sono quelle che producono contenuti destinati all'esterno — clienti, partner, pubblico — o che gestiscono la relazione diretta con il mercato.</p>
+
+      <div class="exposure-grid">
+        <div class="exposure-card">
+          <div class="exposure-card-title">Marketing Comunicazione</div>
+          <p>Alta esposizione: gestisce la comunicazione esterna, i social media, i materiali fieristici. È la funzione che più frequentemente produce contenuti che raggiungono il pubblico in modo diretto e veloce. Un errore qui può diventare pubblico in pochi minuti.</p>
+        </div>
+        <div class="exposure-card">
+          <div class="exposure-card-title">Sales</div>
+          <p>Alta esposizione: gestisce la relazione diretta con i clienti, produce presentazioni, proposte e comunicazioni commerciali. Un'affermazione tecnica errata o un tono non calibrato sulla relazione specifica può compromettere fiducia costruita nel tempo.</p>
+        </div>
+        <div class="exposure-card">
+          <div class="exposure-card-title">Marketing NPD</div>
+          <p>Esposizione media: produce materiali che raggiungono i clienti attraverso il canale Sales e R&D. Il rischio è principalmente legato alla correttezza delle affermazioni tecniche sui prodotti e alla coerenza con il posizionamento di portfolio.</p>
+        </div>
+        <div class="exposure-card">
+          <div class="exposure-card-title">R&D</div>
+          <p>Esposizione media: produce documentazione tecnica e brief che raggiungono i clienti. Il rischio è concentrato sulla precisione delle affermazioni sugli ingredienti, le proprietà dei prodotti e la conformità normativa.</p>
+        </div>
+      </div>
+    </section>
+
+    <hr class="section-divider">
+
+    <!-- RISCHIO REPUTAZIONALE -->
+    <section id="r5">
+      <div class="section-eyebrow">Rischio 07</div>
+      <div class="risk-card">
+        <div class="risk-card-header">
+          <div class="risk-number">07</div>
+          <div class="risk-card-header-text">
+            <h3>Rischio Reputazionale</h3>
+            <div class="risk-subtitle">Output AI condivisi all'esterno senza revisione adeguata, con conseguenze sull'immagine aziendale e sulla fiducia dei clienti</div>
+          </div>
+        </div>
+        <div class="risk-card-body">
+          <div class="severity-row">
+            <span class="severity-label">Rilevanza per comunicazione esterna</span>
+            <span class="severity-badge sev-alta">Alta</span>
+            <span class="severity-label" style="margin-left:16px">Per relazione con i clienti</span>
+            <span class="severity-badge sev-alta">Alta</span>
+          </div>
+
+          <div id="r5-mec" class="mechanism">
+            <div class="mechanism-label">Come funziona — il meccanismo sottostante</div>
+            <p>Il rischio reputazionale nasce dall'interazione tra tre caratteristiche dell'AI generativa e il contesto in cui opera la nostra azienda.</p>
+            <p>La prima è la <strong>velocità</strong>: l'AI abbassa radicalmente il tempo necessario per produrre un testo, un'immagine o una proposta. Questo porta naturalmente a comprimere i tempi di revisione, perché il senso di urgenza non diminuisce mentre il tempo di produzione si accorcia. Il risultato è che contenuti vengono condivisi più rapidamente, con meno passaggi di verifica.</p>
+            <p>La seconda è la <strong>plausibilità superficiale</strong>: l'output dell'AI è generalmente ben scritto, coerente, professionale nella forma. Questo crea un effetto di fiducia che può ridurre la propensione alla revisione critica. Un testo che "suona bene" viene percepito come affidabile, anche quando contiene errori di sostanza.</p>
+            <p>La terza è la <strong>mancanza di contesto relazionale</strong>: l'AI non conosce la storia di un cliente, il registro comunicativo che si è costruito nel tempo con quella persona, le sensibilità specifiche di quel mercato o di quel settore. Produce contenuti genericamente appropriati, non specificamente calibrati sulla relazione reale.</p>
+            <p>Queste tre caratteristiche si combinano in modo diverso a seconda del canale e del contesto, generando quattro vettori distinti di rischio reputazionale che analizziamo di seguito.</p>
+          </div>
+
+          <!-- I QUATTRO VETTORI -->
+          <div id="r5-vettori">
+            <h3 style="margin-bottom: 20px; margin-top: 8px;">I quattro vettori del rischio reputazionale</h3>
+
+            <div style="background: #fff; border: 1px solid var(--border); border-radius: 4px; overflow: hidden; margin-bottom: 28px;">
+
+              <div style="padding: 20px 24px; border-bottom: 1px solid var(--border); background: var(--paper-alt);">
+                <div style="font-size: 11px; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; color: var(--accent); margin-bottom: 6px;">Vettore A</div>
+                <div style="font-size: 16px; font-weight: 600; color: var(--ink);">Affermazioni tecniche errate</div>
+              </div>
+              <div style="padding: 20px 24px;">
+                <p style="font-size: 14.5px;">L'AI può produrre affermazioni sulle proprietà di ingredienti, sulle caratteristiche di prodotto o sulla conformità normativa che sono imprecise o non verificate. In un settore come il cosmetico, dove i claims sono regolamentati e i clienti hanno alta competenza tecnica, un'affermazione errata su un prodotto — in una presentazione, in un post, in un brief tecnico — viene notata e compromette la credibilità.</p>
+                <p style="font-size: 14.5px; margin-bottom: 0;"><strong>Dove si manifesta:</strong> materiali commerciali, post sui social con contenuto tecnico, documentazione prodotto, comunicazioni a clienti su ingredienti o normative.</p>
+              </div>
+
+              <div style="padding: 20px 24px; border-top: 1px solid var(--border); border-bottom: 1px solid var(--border); background: var(--paper-alt);">
+                <div style="font-size: 11px; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; color: var(--accent); margin-bottom: 6px;">Vettore B</div>
+                <div style="font-size: 16px; font-weight: 600; color: var(--ink);">Tono non calibrato sulla relazione</div>
+              </div>
+              <div style="padding: 20px 24px;">
+                <p style="font-size: 14.5px;">Le relazioni con i clienti, specialmente in un contesto B2B come il nostro, sono costruite nel tempo e hanno una dimensione personale rilevante. L'AI produce un tono genericamente professionale, ma non sa se con quel cliente si usa il tu o il lei, se la relazione è formale o informale, se ci sono tensioni in corso o momenti delicati da navigare. Un'email o una comunicazione con il tono sbagliato può essere percepita come distante, fredda, o peggio, come un segnale che la relazione non viene curata personalmente.</p>
+                <p style="font-size: 14.5px; margin-bottom: 0;"><strong>Dove si manifesta:</strong> email ai clienti, risposte a brief, comunicazioni in momenti delicati della relazione commerciale.</p>
+              </div>
+
+              <div style="padding: 20px 24px; border-top: 1px solid var(--border); border-bottom: 1px solid var(--border); background: var(--paper-alt);">
+                <div style="font-size: 11px; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; color: var(--accent); margin-bottom: 6px;">Vettore C</div>
+                <div style="font-size: 16px; font-weight: 600; color: var(--ink);">Incoerenza di brand e posizionamento</div>
+              </div>
+              <div style="padding: 20px 24px;">
+                <p style="font-size: 14.5px;">L'AI non conosce le linee guida di comunicazione dell'azienda, il tono of voice, i valori che il brand vuole esprimere, il posizionamento rispetto ai competitor. Produce contenuti che possono essere corretti nella forma ma incoerenti con l'identità del brand — troppo generici, troppo entusiasti, con scelte lessicali o valoriali che non corrispondono a come l'azienda vuole essere percepita.</p>
+                <p style="font-size: 14.5px; margin-bottom: 0;"><strong>Dove si manifesta:</strong> social media, comunicati stampa, materiali fieristici, contenuti per il sito web.</p>
+              </div>
+
+              <div style="padding: 20px 24px; border-top: 1px solid var(--border); background: var(--paper-alt);">
+                <div style="font-size: 11px; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; color: var(--accent); margin-bottom: 6px;">Vettore D</div>
+                <div style="font-size: 16px; font-weight: 600; color: var(--ink);">Aspettative visive non mantenute</div>
+              </div>
+              <div style="padding: 20px 24px;">
+                <p style="font-size: 14.5px;">I render generati con AI possono rappresentare prodotti con caratteristiche visive — colori, texture, finitura, packaging — che non corrispondono esattamente al prodotto reale che verrà consegnato. Se queste immagini vengono usate in proposte commerciali o materiali di vendita, il cliente sviluppa aspettative che possono non essere soddisfatte alla consegna. La discrepanza tra il "bello" del render e il "reale" del prodotto è una fonte concreta di insoddisfazione.</p>
+                <p style="font-size: 14.5px; margin-bottom: 0;"><strong>Dove si manifesta:</strong> proposte commerciali con render, materiali di presentazione a clienti, fiere ed eventi.</p>
+              </div>
+            </div>
+          </div>
+
+          <!-- SCENARIO 1 -->
+          <div id="r5-sce1" class="scenario">
+            <div class="scenario-label">Scenario 1 — Comunicazione esterna</div>
+            <p>Il team Marketing Comunicazione deve pubblicare una serie di post per il lancio di una nuova linea di prodotti sviluppata con ingredienti attivi di origine naturale. I tempi sono stretti — la fiera si avvicina — e si decide di usare un assistente AI per accelerare la produzione dei testi.</p>
+            <p>L'AI produce una serie di post ben scritti, con un tono entusiasta e affermazioni sulle proprietà degli ingredienti che suonano convincenti. Vengono revisionati rapidamente per forma e pubblicati. Uno dei post afferma che un ingrediente specifico ha proprietà antiossidanti "clinicamente dimostrate" — un'affermazione che nel settore cosmetico ha implicazioni normative precise e che nel caso specifico non è supportata da dati clinici propri, ma da studi generici sull'ingrediente non condotti sul prodotto finito.</p>
+            <p>Un buyer di un cliente importante — che segue i canali social dell'azienda — nota il post e invia un'email chiedendo i riferimenti degli studi clinici citati. La gestione della risposta richiede il coinvolgimento di R&D e del team legale, crea un momento di imbarazzo nella relazione, e porta a rimuovere il post. Il danno è contenuto, ma l'episodio genera internamente una discussione sul processo di approvazione dei contenuti.</p>
+          </div>
+
+          <!-- SCENARIO 2 -->
+          <div id="r5-sce2" class="scenario">
+            <div class="scenario-label">Scenario 2 — Relazione commerciale</div>
+            <p>Un account manager riceve un'email critica da un cliente storico: ci sono stati ritardi nella consegna di campioni e il cliente è chiaramente frustrato. L'account deve rispondere rapidamente e decide di usare l'AI per strutturare la risposta, fornendo come contesto la situazione e chiedendo di produrre un testo professionale e rassicurante.</p>
+            <p>L'AI produce una risposta formalmente ineccepibile: riconosce il disagio, spiega le cause del ritardo con un linguaggio corporate, assicura che la situazione è sotto controllo, e conclude con una formula di chiusura cortese. Il tono è quello di un'email di customer service standard.</p>
+            <p>Il problema: questo cliente ha una relazione personale con l'account manager da sette anni. Si danno del tu, si sentono regolarmente, si conoscono a livello personale. Ricevere in risposta a una sua email frustrata un testo che suona come una comunicazione di un call center lo fa sentire trattato come un numero, non come un partner. Non risponde. Due settimane dopo, la sua azienda avvia conversazioni con un competitor.</p>
+          </div>
+
+          <div class="contexts-block">
+            <div class="contexts-label">Contesti d'uso più esposti</div>
+            <div class="context-pills">
+              <span class="context-pill high">Contenuti per social media</span>
+              <span class="context-pill high">Comunicazioni a clienti</span>
+              <span class="context-pill high">Render fotorealistici di prodotto</span>
+              <span class="context-pill high">Materiali per fiere ed eventi</span>
+              <span class="context-pill med">Presentazioni commerciali</span>
+              <span class="context-pill med">Comunicati stampa</span>
+              <span class="context-pill med">Brief tecnici con claims di prodotto</span>
+            </div>
+          </div>
+
+          <div id="r5-ale" class="alert-box">
+            <div class="alert-label">Segnali di allerta — quando alzare la guardia</div>
+            <ul class="alerts">
+              <li>Un testo generato con AI sta per essere pubblicato o inviato all'esterno senza che una persona con conoscenza del contesto lo abbia letto integralmente</li>
+              <li>Il contenuto include affermazioni sulle proprietà di ingredienti, su efficacia o sicurezza di prodotti, o su conformità normativa — affermazioni che richiedono una verifica tecnica esplicita</li>
+              <li>Si sta rispondendo con AI a una comunicazione di un cliente in un momento delicato della relazione (reclamo, ritardo, negoziazione, momento critico)</li>
+              <li>I render generati non sono stati validati rispetto alle specifiche tecniche reali del prodotto da inviare al cliente</li>
+              <li>Il testo prodotto dall'AI non è stato adattato al tono e al registro specifico del destinatario — è rimasto nella sua versione "generica"</li>
+              <li>Si sta usando AI per produrre contenuti in un'area in cui l'azienda ha un posizionamento o dei valori specifici che l'AI non conosce</li>
+            </ul>
+          </div>
+
+          <div id="r5-mit" class="mitigations-block">
+            <div class="mitigations-label">Misure di mitigazione</div>
+            <div class="mitigation-item">
+              <div class="mit-icon">1</div>
+              <div class="mit-content">
+                <div class="mit-title">Stabilire il principio: nessun contenuto AI va all'esterno senza revisione umana</div>
+                <p class="mit-desc">Il processo di produzione di contenuti con AI deve sempre includere un passaggio di revisione da parte di una persona che conosce il contesto — il cliente, il canale, il momento della relazione. Questo non significa rallentare la produzione: significa inserire un checkpoint deliberato prima della pubblicazione o dell'invio. Nella policy, questo principio dovrebbe essere esplicito e non negoziabile per i contenuti destinati all'esterno.</p>
+              </div>
+            </div>
+            <div class="mitigation-item">
+              <div class="mit-icon">2</div>
+              <div class="mit-content">
+                <div class="mit-title">Verificare sempre le affermazioni tecniche prima della pubblicazione</div>
+                <p class="mit-desc">Qualsiasi affermazione su proprietà di ingredienti, efficacia di prodotto, conformità normativa o certificazioni deve essere verificata da chi ha la competenza tecnica necessaria — R&D o il team regulatory — prima di comparire in un contenuto esterno. Questo vale sia per i social media che per le presentazioni commerciali e i brief tecnici.</p>
+              </div>
+            </div>
+            <div class="mitigation-item">
+              <div class="mit-icon">3</div>
+              <div class="mit-content">
+                <div class="mit-title">Fornire all'AI il tono of voice e il contesto relazionale come parte del prompt</div>
+                <p class="mit-desc">Per comunicazioni con clienti specifici, includere nel prompt informazioni sul registro della relazione: "con questo cliente usiamo un tono informale, ci diamo del tu, la relazione è personale e diretta". Per contenuti di brand, includere le linee guida comunicative dell'azienda o un esempio di testo ben riuscito come riferimento stilistico. L'AI usa questo contesto per calibrare l'output.</p>
+              </div>
+            </div>
+            <div class="mitigation-item">
+              <div class="mit-icon">4</div>
+              <div class="mit-content">
+                <div class="mit-title">Usare l'AI per la bozza, riservare alla persona la voce della relazione</div>
+                <p class="mit-desc">Nelle comunicazioni con clienti in momenti ad alta intensità relazionale — reclami, negoziazioni, momenti critici — usare l'AI per strutturare i punti da comunicare, ma scrivere il testo finale in prima persona, con la propria voce. L'AI può aiutare a non dimenticare nessun elemento importante; la relazione richiede la presenza umana nella scrittura.</p>
+              </div>
+            </div>
+            <div class="mitigation-item">
+              <div class="mit-icon">5</div>
+              <div class="mit-content">
+                <div class="mit-title">Validare i render rispetto al prodotto reale prima dell'uso commerciale</div>
+                <p class="mit-desc">I render generati con AI da inviare a clienti o usare in materiali commerciali devono essere validati rispetto alle specifiche tecniche reali del prodotto: colore Pantone, tipo di finitura, caratteristiche del packaging. Chi approva il render deve avere accesso alle specifiche reali e la responsabilità di verificare la corrispondenza.</p>
+              </div>
+            </div>
+            <div class="mitigation-item">
+              <div class="mit-icon">6</div>
+              <div class="mit-content">
+                <div class="mit-title">Definire un processo specifico per i contenuti social prima della pubblicazione</div>
+                <p class="mit-desc">I social media sono il canale con la velocità di diffusione più alta e la correzione più difficile una volta pubblicato. Per i post che includono contenuto tecnico o affermazioni di prodotto, definire un processo di approvazione che includa almeno una revisione da parte di chi ha competenza tecnica sul contenuto. Per i post puramente emozionali o di brand, la revisione può essere più leggera ma non assente.</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <hr class="section-divider">
+
+    <!-- RIEPILOGO -->
+    <section id="riepilogo">
+      <div class="section-eyebrow">Principi guida</div>
+      <h2>Come usare l'AI senza mettere a rischio la reputazione</h2>
+      <p>Il rischio reputazionale non richiede di smettere di usare l'AI per produrre contenuti — richiede di inserire nel processo alcuni checkpoint deliberati che oggi spesso mancano. La logica di fondo è semplice: l'AI accelera la produzione, non sostituisce il giudizio su cosa è appropriato condividere.</p>
+
+      <table class="summary-table">
+        <thead>
+          <tr>
+            <th>Vettore di rischio</th>
+            <th>Contesti principali</th>
+            <th>Il checkpoint essenziale</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Affermazioni tecniche errate</td>
+            <td>Social, brief tecnici, presentazioni</td>
+            <td>Verifica da parte di R&D o team regulatory prima della pubblicazione</td>
+          </tr>
+          <tr>
+            <td>Tono non calibrato</td>
+            <td>Email a clienti, comunicazioni in momenti delicati</td>
+            <td>Revisione e adattamento da parte di chi conosce la relazione specifica</td>
+          </tr>
+          <tr>
+            <td>Incoerenza di brand</td>
+            <td>Social media, materiali fieristici, comunicati</td>
+            <td>Revisione da parte di chi conosce il tono of voice e il posizionamento</td>
+          </tr>
+          <tr>
+            <td>Aspettative visive non mantenute</td>
+            <td>Render in proposte commerciali, materiali di vendita</td>
+            <td>Validazione rispetto alle specifiche tecniche reali del prodotto</td>
+          </tr>
+        </tbody>
+      </table>
+    </section>
+
+  </div>
+</main>
+
+<script>
+  window.addEventListener('scroll', () => {
+    const doc = document.documentElement;
+    const scrolled = doc.scrollTop / (doc.scrollHeight - doc.clientHeight);
+    document.getElementById('progress-bar').style.transform = `scaleX(${scrolled})`;
+  });
+  const allTargets = document.querySelectorAll('[id]');
+  const navLinks = document.querySelectorAll('nav#sidebar a[href^="#"]');
+  const observer = new IntersectionObserver(entries => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        navLinks.forEach(a => {
+          a.classList.toggle('active', a.getAttribute('href') === '#' + entry.target.id);
+        });
+      }
+    });
+  }, { rootMargin: '-15% 0px -75% 0px' });
+  allTargets.forEach(s => observer.observe(s));
+</script>
+</body>
+</html>

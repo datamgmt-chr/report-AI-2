@@ -1,0 +1,819 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Strumenti — D · Composizione, Skill Pipeline e MCP</title>
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Outfit:wght@200;300;400;500;600;700;800;900&family=IBM+Plex+Mono:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg:     #faf8f5;
+  --bg2:    #f2efe9;
+  --bg3:    #e9e5dc;
+  --ink:    #1b1915;
+  --ink2:   #2e2b25;
+  --ink3:   #6d685c;
+  --ink4:   #a19c8f;
+  --border: #d9d4c8;
+  --border2:#cac4b6;
+
+  --accent:  #4a7c59;
+  --accent2: #2e5038;
+  --accent-light: #eef5f1;
+
+  --mcp:  #2e5f8a;
+  --mcp-l:#edf3f9;
+
+  --ok:  #3d7a45; --ok-l:#f4faf5;
+  --bad: #c0392b; --bad-l:#fdf5f5;
+  --warn:#b07d24; --warn-l:#fdf6e8;
+}
+
+* { margin:0; padding:0; box-sizing:border-box; }
+html { scroll-behavior:smooth; }
+body { background:var(--bg); color:var(--ink); font-family:'Outfit',sans-serif; font-weight:300; font-size:14px; line-height:1.75; }
+
+.masthead { background:var(--ink); color:rgba(255,255,255,.9); padding:60px 56px 52px; position:relative; overflow:hidden; }
+.masthead::before { content:''; position:absolute; inset:0; background: repeating-linear-gradient(90deg,rgba(255,255,255,.012) 0,rgba(255,255,255,.012) 1px,transparent 1px,transparent 64px), repeating-linear-gradient(0deg,rgba(255,255,255,.012) 0,rgba(255,255,255,.012) 1px,transparent 1px,transparent 64px); pointer-events:none; }
+.masthead::after { content:'D'; position:absolute; right:44px; bottom:-28px; font-family:'Instrument Serif',serif; font-size:280px; line-height:1; color:rgba(255,255,255,.025); pointer-events:none; }
+.mh-eye { font-family:'IBM Plex Mono',monospace; font-size:10px; letter-spacing:3px; text-transform:uppercase; color:rgba(255,255,255,.25); margin-bottom:18px; position:relative; }
+.mh-cluster { display:inline-block; font-family:'IBM Plex Mono',monospace; font-size:10px; letter-spacing:2px; text-transform:uppercase; padding:4px 12px; border:1px solid var(--accent); color:var(--accent); margin-bottom:20px; position:relative; }
+.masthead h1 { font-family:'Instrument Serif',serif; font-weight:400; font-size:clamp(30px,4.5vw,54px); line-height:1.08; letter-spacing:-1px; max-width:700px; position:relative; }
+.mh-sub { margin-top:20px; font-size:15px; font-weight:300; color:rgba(255,255,255,.38); max-width:660px; line-height:1.7; position:relative; }
+.mh-meta { margin-top:32px; display:flex; gap:32px; flex-wrap:wrap; position:relative; }
+.mh-stat { display:flex; flex-direction:column; gap:4px; }
+.mh-stat-val { font-family:'IBM Plex Mono',monospace; font-size:22px; font-weight:500; color:rgba(255,255,255,.85); }
+.mh-stat-lbl { font-size:10px; letter-spacing:2px; text-transform:uppercase; color:rgba(255,255,255,.25); }
+
+.nav { background:var(--ink2); position:sticky; top:0; z-index:100; display:flex; overflow-x:auto; border-bottom:1px solid rgba(255,255,255,.06); }
+.nav-btn { flex:1; min-width:110px; padding:13px 12px; border:none; background:transparent; cursor:pointer; font-family:'Outfit',sans-serif; font-size:10.5px; font-weight:600; text-transform:uppercase; letter-spacing:.4px; color:rgba(255,255,255,.3); border-right:1px solid rgba(255,255,255,.06); transition:all .2s; white-space:nowrap; }
+.nav-btn:last-child { border-right:none; }
+.nav-btn:hover { color:rgba(255,255,255,.6); }
+.nav-btn.active { color:#fff; background:rgba(255,255,255,.05); }
+
+.sect { display:none; }
+.sect.active { display:block; animation:fadeIn .3s ease; }
+@keyframes fadeIn { from{opacity:0;transform:translateY(6px)} to{opacity:1;transform:translateY(0)} }
+
+.sect-head { padding:48px 56px 36px; border-bottom:1px solid var(--border); }
+.sect-num { font-family:'IBM Plex Mono',monospace; font-size:10px; letter-spacing:3px; text-transform:uppercase; color:var(--ink4); margin-bottom:10px; }
+.sect-head h2 { font-family:'Instrument Serif',serif; font-weight:400; font-size:clamp(26px,3.5vw,42px); line-height:1.1; letter-spacing:-.5px; max-width:640px; margin-bottom:14px; }
+.sect-head p { color:var(--ink3); max-width:700px; font-size:14.5px; }
+.wrap { padding:0 56px 64px; }
+
+.prose { max-width:760px; }
+.prose p { font-size:14.5px; color:var(--ink3); line-height:1.85; margin-bottom:16px; }
+.prose p strong { color:var(--ink2); font-weight:500; }
+
+/* ── GL CARD ── */
+.gl-group { margin-top:36px; }
+.gl-group-title { font-family:'IBM Plex Mono',monospace; font-size:9px; letter-spacing:3px; text-transform:uppercase; color:var(--ink4); padding-bottom:10px; border-bottom:1px solid var(--border); }
+.gl-card { border:1px solid var(--border2); border-top:none; background:var(--bg); }
+.gl-header { display:grid; grid-template-columns:5px 52px 1fr auto; align-items:stretch; border-bottom:1px solid var(--border); }
+.gl-stripe { background:var(--accent); }
+.gl-num { font-family:'Outfit',sans-serif; font-weight:800; font-size:20px; color:var(--bg3); display:flex; align-items:center; justify-content:center; border-right:1px solid var(--border); }
+.gl-title-wrap { padding:16px 20px; }
+.gl-title { font-family:'Instrument Serif',serif; font-size:20px; color:var(--ink2); line-height:1.2; }
+.gl-subtitle { font-size:12px; color:var(--ink4); margin-top:3px; }
+.gl-impact-wrap { padding:14px 20px; display:flex; flex-direction:column; align-items:flex-end; justify-content:center; gap:4px; }
+.gl-impact-stars { font-size:14px; }
+.gl-impact-lbl { font-family:'IBM Plex Mono',monospace; font-size:8px; letter-spacing:1px; text-transform:uppercase; color:var(--ink4); }
+.gl-body { padding:0; }
+.gl-section { padding:20px 24px; border-bottom:1px solid var(--border); }
+.gl-section:last-child { border-bottom:none; }
+.gl-section-lbl { font-family:'IBM Plex Mono',monospace; font-size:9px; letter-spacing:2px; text-transform:uppercase; color:var(--ink4); margin-bottom:10px; padding-bottom:6px; border-bottom:1px solid var(--border); }
+.gl-section p { font-size:13.5px; color:var(--ink3); line-height:1.8; max-width:740px; }
+.gl-section p strong { color:var(--ink2); font-weight:500; }
+
+/* ── PATTERN CARDS ── */
+.pattern-grid { display:grid; grid-template-columns:1fr 1fr; gap:14px; margin-top:16px; }
+.pattern-card { border:1px solid var(--border2); background:var(--bg); overflow:hidden; }
+.pc-bar { height:4px; background:var(--accent); }
+.pc-head { padding:12px 16px; background:var(--bg2); border-bottom:1px solid var(--border); }
+.pc-badge { font-family:'IBM Plex Mono',monospace; font-size:8px; letter-spacing:2px; text-transform:uppercase; color:var(--ink4); margin-bottom:3px; }
+.pc-name { font-weight:600; font-size:14px; color:var(--ink2); }
+.pc-body { padding:14px 16px; }
+.pc-desc { font-size:13px; color:var(--ink3); line-height:1.6; margin-bottom:10px; }
+.pc-desc strong { color:var(--ink2); font-weight:500; }
+.pc-diagram { font-family:'IBM Plex Mono',monospace; font-size:11px; padding:10px 14px; background:var(--ink); color:rgba(255,255,255,.7); line-height:1.7; margin-bottom:8px; }
+.pc-when { padding:7px 10px; background:var(--accent-light); border-left:3px solid var(--accent); font-size:12px; color:var(--accent2); line-height:1.5; }
+
+/* ── PIPELINE ANATOMY ── */
+.pipeline-anatomy { margin-top:16px; border:1px solid var(--border2); }
+.pa-head { padding:10px 16px; background:var(--ink); border-bottom:1px solid rgba(255,255,255,.06); font-family:'IBM Plex Mono',monospace; font-size:9px; letter-spacing:2px; text-transform:uppercase; color:rgba(255,255,255,.4); }
+.pa-step { display:grid; grid-template-columns:36px 1fr; border-bottom:1px solid var(--border); }
+.pa-step:last-child { border-bottom:none; }
+.pa-num { background:var(--accent); color:#fff; font-family:'IBM Plex Mono',monospace; font-size:12px; font-weight:500; display:flex; align-items:center; justify-content:center; flex-shrink:0; }
+.pa-content { padding:12px 16px; }
+.pa-action { font-family:'IBM Plex Mono',monospace; font-size:11.5px; font-weight:600; color:var(--ink2); margin-bottom:3px; }
+.pa-detail { font-size:12.5px; color:var(--ink3); line-height:1.5; }
+.pa-detail strong { color:var(--ink2); font-weight:500; }
+.pa-type { display:inline-block; font-family:'IBM Plex Mono',monospace; font-size:9px; padding:1px 7px; border:1px solid; margin-top:4px; }
+
+/* ── MCP DIAGRAM ── */
+.mcp-diagram { background:var(--ink); padding:24px; margin-top:16px; border:1px solid var(--border2); overflow-x:auto; }
+.mcp-diagram svg { display:block; margin:0 auto; }
+
+/* ── MCP DETAIL ── */
+.mcp-schema { margin-top:12px; font-family:'IBM Plex Mono',monospace; font-size:11.5px; line-height:1.85; padding:18px 22px; border:1px solid var(--border2); background:var(--ink); color:rgba(255,255,255,.75); white-space:pre-wrap; }
+.mcp-schema .k  { color:#93c5e8; }
+.mcp-schema .v  { color:#7dd3a8; }
+.mcp-schema .t  { color:#f4a87a; }
+.mcp-schema .cm { color:rgba(255,255,255,.28); }
+
+/* ── COMPARE GRID ── */
+.compare-grid { display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-top:12px; }
+.pex-lbl { font-family:'IBM Plex Mono',monospace; font-size:9px; letter-spacing:2px; text-transform:uppercase; margin-bottom:6px; }
+.pex-lbl.bad  { color:var(--bad); }
+.pex-lbl.good { color:var(--accent); }
+.pex-lbl.mcp  { color:var(--mcp); }
+.pex-lbl.neutral { color:var(--ink4); }
+.prompt-box { font-family:'IBM Plex Mono',monospace; font-size:11.5px; line-height:1.75; padding:14px 18px; border:1px solid; white-space:pre-wrap; word-break:break-word; }
+.prompt-box.bad  { border-color:#e8c5c5; background:var(--bad-l); color:#6b3030; }
+.prompt-box.good { border-color:#a8d4b8; background:var(--accent-light); color:var(--accent2); }
+.prompt-box.mcp  { border-color:#a8c0d8; background:var(--mcp-l); color:#1d3a52; }
+.prompt-box.neutral { border-color:var(--border2); background:var(--bg2); color:var(--ink3); }
+.prompt-box .hl { font-weight:500; color:var(--accent); }
+
+/* ── WHEN PANELS ── */
+.when-grid { display:grid; grid-template-columns:1fr 1fr; gap:1px; background:var(--border); margin-top:16px; border:1px solid var(--border2); }
+.wg-col { background:var(--bg); padding:18px 20px; }
+.wg-label { font-family:'IBM Plex Mono',monospace; font-size:9px; letter-spacing:2px; text-transform:uppercase; margin-bottom:8px; padding-bottom:8px; border-bottom:1px solid var(--border); }
+.wg-col:first-child .wg-label { color:var(--ok); }
+.wg-col:last-child  .wg-label { color:var(--bad); }
+.wg-body { font-size:13px; color:var(--ink3); line-height:1.65; }
+.wg-body strong { color:var(--ink2); font-weight:500; }
+
+/* ── CHECKLIST ── */
+.checklist { margin-top:16px; }
+.check-item { display:flex; gap:12px; align-items:flex-start; padding:10px 0; border-bottom:1px solid var(--border); font-size:13.5px; color:var(--ink3); }
+.check-item:last-child { border-bottom:none; }
+.check-icon { width:20px; height:20px; border-radius:50%; background:var(--accent); color:#fff; display:flex; align-items:center; justify-content:center; font-size:11px; font-weight:700; flex-shrink:0; margin-top:1px; }
+.check-item strong { color:var(--ink2); font-weight:500; }
+
+/* ── MECHANISM ── */
+.mechanism { margin-top:14px; padding:14px 18px; border-left:3px solid var(--accent); background:var(--accent-light); }
+.mech-lbl { font-family:'IBM Plex Mono',monospace; font-size:9px; letter-spacing:2px; text-transform:uppercase; color:var(--accent); margin-bottom:6px; }
+.mechanism p { font-size:13px; color:var(--ink3); line-height:1.65; }
+.mechanism p strong { color:var(--ink2); font-weight:500; }
+
+/* ── KEY POINT ── */
+.key-point { margin-top:36px; padding:24px 28px; border-left:4px solid var(--accent); background:var(--accent-light); }
+.kp-label { font-family:'IBM Plex Mono',monospace; font-size:9px; letter-spacing:2px; text-transform:uppercase; color:var(--accent); margin-bottom:8px; }
+.kp-text { font-family:'Instrument Serif',serif; font-size:18px; line-height:1.45; color:var(--ink2); }
+.kp-sub { margin-top:10px; font-size:13px; color:var(--ink3); line-height:1.65; }
+
+/* ── INSIGHT ── */
+.insight { margin:16px 0; padding:16px 20px; border-left:4px solid var(--accent); background:var(--accent-light); }
+.insight-lbl { font-family:'IBM Plex Mono',monospace; font-size:9px; letter-spacing:2px; text-transform:uppercase; color:var(--accent); margin-bottom:6px; }
+.insight p { font-size:13.5px; color:var(--ink2); line-height:1.65; max-width:700px; }
+.insight p strong { font-weight:500; }
+
+/* ── FOOTER ── */
+.footer { padding:24px 56px; border-top:1px solid var(--border); display:flex; justify-content:space-between; align-items:center; font-family:'IBM Plex Mono',monospace; font-size:10px; letter-spacing:1px; text-transform:uppercase; color:var(--ink4); }
+
+@media (max-width:700px) {
+  .masthead,.sect-head,.wrap,.footer { padding-left:20px; padding-right:20px; }
+  .pattern-grid,.compare-grid,.when-grid { grid-template-columns:1fr; }
+  .gl-header { grid-template-columns:5px 40px 1fr; }
+  .gl-impact-wrap { display:none; }
+  .pa-step { grid-template-columns:1fr; }
+}
+</style>
+</head>
+<body>
+
+<!-- HEADER -->
+<div class="masthead">
+  <div class="mh-eye">Serie Agenti AI · Leva 03 · Strumenti</div>
+  <div class="mh-cluster">Report D</div>
+  <h1>Composizione, skill pipeline e MCP</h1>
+  <p class="mh-sub">Come combinare tool in pattern complessi, quando astrarre una sequenza in una skill pipeline invocabile come unità, tool con stato, e il Model Context Protocol come standard emergente per la distribuzione dei tool tra sistemi diversi.</p>
+  <div class="mh-meta">
+    <div class="mh-stat"><div class="mh-stat-val">4</div><div class="mh-stat-lbl">Pattern composizione</div></div>
+    <div class="mh-stat"><div class="mh-stat-val">MCP</div><div class="mh-stat-lbl">Standard emergente</div></div>
+    <div class="mh-stat"><div class="mh-stat-val">Pipeline</div><div class="mh-stat-lbl">Tool come unità</div></div>
+    <div class="mh-stat"><div class="mh-stat-value">Stato</div><div class="mh-stat-lbl">Tool stateful</div></div>
+  </div>
+</div>
+
+<!-- NAV -->
+<div class="nav">
+  <button class="nav-btn active" onclick="show(1)">Pattern di composizione</button>
+  <button class="nav-btn" onclick="show(2)">Skill pipeline</button>
+  <button class="nav-btn" onclick="show(3)">Tool con stato</button>
+  <button class="nav-btn" onclick="show(4)">MCP — cos'è</button>
+  <button class="nav-btn" onclick="show(5)">MCP — come funziona</button>
+  <button class="nav-btn" onclick="show(6)">MCP — quando adottarlo</button>
+</div>
+
+
+<!-- ═══════════════════════════
+     S1 — PATTERN DI COMPOSIZIONE
+═══════════════════════════ -->
+<div class="sect active" id="s1">
+  <div class="sect-head">
+    <div class="sect-num">Sezione 01</div>
+    <h2>Pattern di composizione dei tool</h2>
+    <p>I tool raramente operano in isolamento. Quattro pattern fondamentali per combinarli — ognuno con le sue implicazioni su ordine, dipendenze, latenza e gestione degli errori.</p>
+  </div>
+  <div class="wrap">
+
+    <div class="prose" style="margin-top:28px;">
+      <p>Un agente maturo non usa tool singoli in modo indipendente — li compone in sequenze, li esegue in parallelo, li condiziona su risultati precedenti, o li itera finché una condizione è soddisfatta. Questi quattro pattern coprono la quasi totalità dei casi reali. Capirli serve sia a progettare il sistema sia a documentare il comportamento atteso nel system prompt.</p>
+    </div>
+
+    <div class="pattern-grid" style="margin-top:24px;">
+
+      <!-- SEQUENZIALE -->
+      <div class="pattern-card">
+        <div class="pc-bar" style="background:#2e7d9c"></div>
+        <div class="pc-head">
+          <div class="pc-badge">Pattern 01</div>
+          <div class="pc-name">Sequenziale — output di A è input di B</div>
+        </div>
+        <div class="pc-body">
+          <div class="pc-desc">I tool si eseguono in ordine. <strong>L'output di ogni tool diventa input del successivo.</strong> Il modello aspetta il risultato prima di invocare il passo seguente. Se un passo fallisce, la catena si interrompe.</div>
+          <div class="pc-diagram">get_user(id)
+  → [user_data]
+create_ticket(user_data.email, title)
+  → [ticket_id]
+send_confirmation(user_data.email, ticket_id)
+  → [done]</div>
+          <div class="pc-when">Quando: task con dipendenze strette tra passi. Ogni output alimenta il successivo. Errori bloccano la sequenza.</div>
+        </div>
+      </div>
+
+      <!-- PARALLELO -->
+      <div class="pattern-card">
+        <div class="pc-bar" style="background:#3d7a45"></div>
+        <div class="pc-head">
+          <div class="pc-badge">Pattern 02</div>
+          <div class="pc-name">Parallelo — più tool senza dipendenze reciproche</div>
+        </div>
+        <div class="pc-body">
+          <div class="pc-desc">Più tool si invocano contemporaneamente quando i loro output sono <strong>indipendenti</strong> — nessuno deve aspettare l'altro. Riduce la latenza totale al tempo del tool più lento invece della somma.</div>
+          <div class="pc-diagram">Insieme:
+  search_internal_docs(query)
+  search_web(query)
+  get_user_context(user_id)
+→ [doc_results, web_results, user_ctx]
+Poi: sintetizza i tre risultati insieme.</div>
+          <div class="pc-when">Quando: più fonti di dati indipendenti, nessuna dipendenza tra tool call. Ottimizza la latenza totale del loop.</div>
+        </div>
+      </div>
+
+      <!-- CONDIZIONALE -->
+      <div class="pattern-card">
+        <div class="pc-bar" style="background:#7b5ea7"></div>
+        <div class="pc-head">
+          <div class="pc-badge">Pattern 03</div>
+          <div class="pc-name">Condizionale — il tool successivo dipende dal risultato</div>
+        </div>
+        <div class="pc-body">
+          <div class="pc-desc">Il modello valuta il risultato di un tool e <strong>sceglie il passo successivo in base al valore ricevuto.</strong> Permette branch logic nell'esecuzione dell'agente senza hardcodare ogni percorso.</div>
+          <div class="pc-diagram">check_ticket_status(id)
+  → if status == "open":
+      escalate_ticket(id, reason)
+  → if status == "resolved":
+      send_satisfaction_survey(email)
+  → if status == "pending":
+      add_note(id, "In attesa risposta")</div>
+          <div class="pc-when">Quando: comportamento dell'agente dipende dai dati, non dalla query originale. Il modello adatta il percorso dinamicamente.</div>
+        </div>
+      </div>
+
+      <!-- ITERATIVO -->
+      <div class="pattern-card">
+        <div class="pc-bar" style="background:#b07d24"></div>
+        <div class="pc-head">
+          <div class="pc-badge">Pattern 04</div>
+          <div class="pc-name">Iterativo — ripete finché una condizione è soddisfatta</div>
+        </div>
+        <div class="pc-body">
+          <div class="pc-desc">Il modello invoca lo stesso tool (o una sequenza) più volte <strong>finché il risultato soddisfa un criterio</strong>. Tipico per paginazione, retry, o retrieval raffinato. Richiede sempre un limite esplicito.</div>
+          <div class="pc-diagram">page = 1
+loop (max 5 iterazioni):
+  results = list_records(page=page)
+  process(results)
+  if not results.has_next_page: break
+  page += 1
+→ [tutti i record processati]</div>
+          <div class="pc-when">Quando: paginazione, retry con backoff, retrieval iterativo che raffina la query. Limite di iterazioni obbligatorio nel prompt.</div>
+        </div>
+      </div>
+
+    </div>
+
+    <div class="key-point" style="margin-top:28px;">
+      <div class="kp-label">Il principio della composizione</div>
+      <div class="kp-text">I pattern non si escludono — si combinano. Un agente maturo usa sequenziale, parallelo, condizionale e iterativo nello stesso task, ognuno dove è più appropriato.</div>
+      <div class="kp-sub">Un task di analisi contrattuale potrebbe: invocare in parallelo il retrieval di documenti interni e il profilo del cliente (parallelo), poi analizzare il contratto sequenzialmente con i dati recuperati (sequenziale), poi scegliere se escalare o rispondere in base al risk score (condizionale), poi iterare sulla ricerca se i primi risultati sono insufficienti (iterativo). Identificare quale pattern si applica a quale passo è parte del design del system prompt.</div>
+    </div>
+
+  </div>
+</div>
+
+
+<!-- ═══════════════════════════
+     S2 — SKILL PIPELINE
+═══════════════════════════ -->
+<div class="sect" id="s2">
+  <div class="sect-head">
+    <div class="sect-num">Sezione 02</div>
+    <h2>Skill pipeline — tool compositi come unità</h2>
+    <p>Quando una sequenza di tool viene usata ripetutamente e rappresenta un'operazione logica autonoma, vale la pena astraarla in una skill pipeline invocabile come unità singola.</p>
+  </div>
+  <div class="wrap">
+
+    <div class="prose" style="margin-top:28px;">
+      <p>Una skill pipeline è una funzione di ordine superiore: una sequenza di tool — eventualmente con logica condizionale, trasformazioni intermedie e gestione degli errori — esposta come se fosse un singolo tool. Dal punto di vista del modello che la invoca, è un tool come gli altri. Dietro ha una pipeline.</p>
+      <p>Il vantaggio non è solo l'astrazione — è la <strong>riusabilità</strong> e la <strong>coerenza</strong>. Invece di istruire ogni agente su come eseguire la stessa sequenza di passi, la logica è codificata una volta nella pipeline e riusata ovunque.</p>
+    </div>
+
+    <!-- GL 01 -->
+    <div class="gl-group">
+      <div class="gl-group-title">Linea guida 01</div>
+      <div class="gl-card">
+        <div class="gl-header">
+          <div class="gl-stripe"></div>
+          <div class="gl-num">01</div>
+          <div class="gl-title-wrap">
+            <div class="gl-title">Astrai in skill pipeline quando la sequenza ha 3+ passi e viene usata in più contesti</div>
+            <div class="gl-subtitle">Sotto i 3 passi l'astrazione aggiunge più overhead che valore — lascia i tool singoli nel prompt</div>
+          </div>
+          <div class="gl-impact-wrap">
+            <div class="gl-impact-stars" style="color:var(--accent)">★★★</div>
+            <div class="gl-impact-lbl">Impatto</div>
+          </div>
+        </div>
+        <div class="gl-body">
+
+          <div class="gl-section">
+            <div class="gl-section-lbl">Esempio — dalla sequenza alla skill pipeline</div>
+            <div class="compare-grid">
+              <div>
+                <div class="pex-lbl bad">❌ Sequenza non astratta — ripetuta in ogni system prompt</div>
+                <div class="prompt-box bad">In ogni agente che deve analizzare contratti:
+
+"Per analizzare un contratto:
+1. extract_contract_metadata(text)
+2. check_legal_database(metadata.contract_type)
+3. flag_non_standard_clauses(text, standard_clauses)
+4. calculate_risk_score(flags)
+5. format_analysis_report(score, flags)"
+
+→ Duplicato in 5 agenti diversi.
+   Se la logica cambia, va aggiornata in 5 posti.</div>
+              </div>
+              <div>
+                <div class="pex-lbl good">✓ Skill pipeline — logica centralizzata</div>
+                <div class="prompt-box good">Definizione della pipeline (una volta sola):
+analyze_contract_pipeline(contract_text)
+  internamente: extract → check → flag → score → format
+
+In ogni agente:
+"Usa analyze_contract_pipeline(text)
+ per analizzare contratti. Restituisce
+ un report strutturato con risk_score,
+ flags e raccomandazioni."
+
+→ Un punto di manutenzione.
+   Aggiornamento propagato automaticamente.</div>
+              </div>
+            </div>
+          </div>
+
+          <div class="gl-section">
+            <div class="gl-section-lbl">Anatomia di una skill pipeline ben progettata</div>
+            <div class="pipeline-anatomy">
+              <div class="pa-head">analyze_contract_pipeline — struttura interna</div>
+              <div class="pa-step">
+                <div class="pa-num">1</div>
+                <div class="pa-content">
+                  <div class="pa-action">extract_contract_metadata(text)</div>
+                  <div class="pa-detail">Estrae tipo contratto, parti, date, importi. <strong>Fallisce la pipeline se il testo non è un contratto</strong> — restituisce INVALID_DOCUMENT.</div>
+                  <div class="pa-type" style="color:#2e7d9c; border-color:#2e7d9c">Tool di lettura</div>
+                </div>
+              </div>
+              <div class="pa-step">
+                <div class="pa-num">2</div>
+                <div class="pa-content">
+                  <div class="pa-action">check_legal_database(contract_type)</div>
+                  <div class="pa-detail">Recupera le clausole standard per quel tipo contratto. <strong>Se vuoto: usa clausole generiche</strong>, non fallisce la pipeline.</div>
+                  <div class="pa-type" style="color:#2e7d9c; border-color:#2e7d9c">Tool di lettura + fallback</div>
+                </div>
+              </div>
+              <div class="pa-step">
+                <div class="pa-num">3</div>
+                <div class="pa-content">
+                  <div class="pa-action">flag_non_standard_clauses(text, standards)</div>
+                  <div class="pa-detail">Confronta il testo con le clausole standard. Produce lista di flag con severità. Può produrre lista vuota — non è un errore.</div>
+                  <div class="pa-type" style="color:#7b5ea7; border-color:#7b5ea7">Code execution (analisi)</div>
+                </div>
+              </div>
+              <div class="pa-step">
+                <div class="pa-num">4</div>
+                <div class="pa-content">
+                  <div class="pa-action">calculate_risk_score(flags, metadata)</div>
+                  <div class="pa-detail">Calcola il risk score da 0 a 100 in base ai flag. Deterministico dato lo stesso input.</div>
+                  <div class="pa-type" style="color:#7b5ea7; border-color:#7b5ea7">Code execution (calcolo)</div>
+                </div>
+              </div>
+              <div class="pa-step">
+                <div class="pa-num">5</div>
+                <div class="pa-content">
+                  <div class="pa-action">Skill (ragionamento) — format_analysis_report</div>
+                  <div class="pa-detail">Il modello sintetizza i risultati dei passi precedenti nel formato standard. <strong>Non è un tool — è ragionamento del modello</strong> guidato dalle istruzioni nel prompt della pipeline.</div>
+                  <div class="pa-type" style="color:#5a6e8a; border-color:#5a6e8a">Skill latente (ragionamento)</div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="gl-section">
+            <div class="gl-section-lbl">Quando astrarre vs. quando lasciare i tool singoli</div>
+            <div class="when-grid">
+              <div class="wg-col">
+                <div class="wg-label">Astrai in skill pipeline quando</div>
+                <div class="wg-body">
+                  <strong>3+ passi</strong> che rappresentano un'operazione logica coerente.<br><br>
+                  La sequenza è <strong>riusata in più agenti</strong> o in più contesti dello stesso agente.<br><br>
+                  La logica di orchestrazione ha <strong>condizioni e fallback</strong> che sarebbe verboso ripetere in ogni system prompt.<br><br>
+                  Il task ha un <strong>nome naturale</strong> che gli utenti e i developer capiscono senza spiegazione ("analisi contratto", "onboarding cliente").
+                </div>
+              </div>
+              <div class="wg-col">
+                <div class="wg-label">Lascia i tool singoli quando</div>
+                <div class="wg-body">
+                  La sequenza ha <strong>1–2 passi</strong> — l'astrazione aggiunge overhead senza semplificare.<br><br>
+                  La sequenza è usata in <strong>un solo contesto</strong> — non vale la pena centralizzare.<br><br>
+                  I passi sono <strong>altamente variabili</strong> in base al contesto — la pipeline fisserebbe troppe assunzioni.<br><br>
+                  Il modello deve poter <strong>saltare passi</strong> in base al contesto — una pipeline li rende obbligatori.
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="gl-section">
+            <div class="gl-section-lbl">Perché funziona — astrazione come riduzione della complessità cognitiva</div>
+            <div class="mechanism">
+              <div class="mech-lbl">Chunking e riduzione del carico nel context window</div>
+              <p>Ogni tool nel context window del modello occupa spazio e attenzione. Un agente con 15 tool singoli esposti nel prompt ha un carico cognitivo molto maggiore di uno con 5 tool singoli + 2 skill pipeline che coprono gli stessi 15 tool. <strong>La skill pipeline riduce il numero di decisioni che il modello deve prendere per ogni task</strong> — non "quale dei 15 tool uso qui?" ma "uso la pipeline o un tool singolo?". Questo si riflette in scelte più coerenti e meno errori di selezione.</p>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+
+<!-- ═══════════════════════════
+     S3 — TOOL CON STATO
+═══════════════════════════ -->
+<div class="sect" id="s3">
+  <div class="sect-head">
+    <div class="sect-num">Sezione 03</div>
+    <h2>Tool con stato — sessioni, contesto persistente, progressi</h2>
+    <p>La maggior parte dei tool è stateless — ogni invocazione è indipendente. I tool con stato mantengono un contesto tra invocazioni. Più potenti, più complessi da progettare.</p>
+  </div>
+  <div class="wrap">
+
+    <div class="prose" style="margin-top:28px;">
+      <p>Un tool stateless non "ricorda" nulla tra invocazioni. Un tool con stato mantiene un contesto che evolve nel corso di più chiamate: una sessione di lavoro aperta, un processo multi-step in corso, un insieme di file modificati, un buffer di operazioni da confermare.</p>
+    </div>
+
+    <!-- GL 02 -->
+    <div class="gl-group">
+      <div class="gl-group-title">Linea guida 02</div>
+      <div class="gl-card">
+        <div class="gl-header">
+          <div class="gl-stripe"></div>
+          <div class="gl-num">02</div>
+          <div class="gl-title-wrap">
+            <div class="gl-title">Progetta tool con stato come coppie open/close con ID di sessione esplicito</div>
+            <div class="gl-subtitle">Il modello deve sapere quando aprire, usare e chiudere una sessione — lo stato non si gestisce autonomamente</div>
+          </div>
+          <div class="gl-impact-wrap">
+            <div class="gl-impact-stars" style="color:var(--accent)">★★★</div>
+            <div class="gl-impact-lbl">Impatto</div>
+          </div>
+        </div>
+        <div class="gl-body">
+          <div class="gl-section">
+            <div class="gl-section-lbl">Il pattern open → use → close per tool con stato</div>
+            <div class="prompt-box neutral" style="margin-top:12px; font-size:11.5px;">Esempio: agente che lavora su un spreadsheet
+
+open_spreadsheet_session(file_path)
+  → Restituisce session_id = "sess_abc123"
+  → Lo spreadsheet è ora aperto e modificabile
+
+read_cell(session_id="sess_abc123", cell="A1")
+  → "127.50"
+
+write_cell(session_id="sess_abc123", cell="B1", value=255.00)
+  → Modifica registrata nella sessione (non ancora salvata)
+
+calculate_sum(session_id="sess_abc123", range="A1:B10")
+  → Opera sullo stato corrente della sessione
+
+save_and_close_spreadsheet(session_id="sess_abc123")
+  → Salva tutte le modifiche · chiude la sessione · libera le risorse</div>
+          </div>
+
+          <div class="gl-section">
+            <div class="gl-section-lbl">Le 3 regole dei tool con stato</div>
+            <p><strong>1. Sempre session_id esplicito.</strong> Il modello deve passare lo stesso session_id a tutte le operazioni correlate. Non lasciare che il sistema gestisca la sessione implicitamente — il modello non vedrà lo stato che cambia tra invocazioni se non è nel risultato di ogni tool call.</p>
+            <p><strong>2. Lo stato corrente nel risultato di ogni operazione.</strong> Ogni tool call su una sessione aperta deve restituire un riepilogo dello stato corrente — non solo il risultato dell'operazione. Questo permette al modello di ragionare correttamente su cosa ha fatto finora nella sessione.</p>
+            <p><strong>3. Cleanup obbligatorio — esplicito o automatico.</strong> Ogni sessione aperta deve avere una chiusura. Progettare un timeout automatico (es. chiusura dopo 30 minuti di inattività) e documentarlo al modello — così sa che non può aspettarsi che la sessione sia ancora aperta dopo un lungo periodo.</p>
+          </div>
+
+          <div class="gl-section">
+            <div class="gl-section-lbl">Quando i tool con stato sono necessari — e quando sono overkill</div>
+            <p><strong>Necessari quando:</strong> le operazioni successive dipendono dallo stato accumulato da operazioni precedenti (editing di documenti, transazioni multi-step, processi di approvazione), o quando il costo di ricostruire il contesto a ogni invocazione è proibitivo.</p>
+            <p><strong>Overkill quando:</strong> le operazioni sono indipendenti e il risultato non dipende dallo storico, o quando la sessione durerebbe meno di 3–4 invocazioni — in quel caso il pattern sequenziale stateless è più semplice e altrettanto efficace.</p>
+          </div>
+
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+
+<!-- ═══════════════════════════
+     S4 — MCP: COS'È
+═══════════════════════════ -->
+<div class="sect" id="s4">
+  <div class="sect-head">
+    <div class="sect-num">Sezione 04</div>
+    <h2>Model Context Protocol — cos'è e perché esiste</h2>
+    <p>MCP è uno standard aperto proposto da Anthropic per definire, esporre e distribuire tool in modo interoperabile tra sistemi e modelli diversi. Il problema che risolve è reale: ogni sistema che usa tool oggi li reinventa da zero.</p>
+  </div>
+  <div class="wrap">
+
+    <div class="prose" style="margin-top:28px;">
+      <p>Oggi, ogni sistema agentico definisce i propri tool in modo proprietario. Un tool scritto per Claude non è direttamente usabile con GPT-4 o con Gemini. Un tool scritto per un agente non è direttamente distribuibile a un altro agente. Non esiste un formato standard per descrivere un tool, esporlo su rete, gestire l'autenticazione, o comunicare le sue capacità a un modello che non l'ha mai visto.</p>
+      <p><strong>MCP (Model Context Protocol) è la risposta a questo problema.</strong> Definisce un protocollo standard che permette a qualsiasi client (un agente, un IDE, un workflow builder) di scoprire, connettersi e usare qualsiasi server MCP (un sistema che espone tool) — indipendentemente dal modello LLM sottostante e dall'implementazione specifica.</p>
+    </div>
+
+    <div class="mcp-diagram">
+      <svg viewBox="0 0 740 200" width="100%" xmlns="http://www.w3.org/2000/svg" font-family="IBM Plex Mono, monospace">
+        <text x="20" y="22" fill="rgba(255,255,255,.35)" font-size="9" letter-spacing="2">MODEL CONTEXT PROTOCOL — ARCHITETTURA</text>
+
+        <!-- Client side -->
+        <rect x="20" y="38" width="140" height="48" fill="#1a2e1a" stroke="#4a7c59" stroke-width="1.5"/>
+        <text x="90" y="58" fill="rgba(255,255,255,.8)" font-size="9" text-anchor="middle">MCP CLIENT</text>
+        <text x="90" y="72" fill="rgba(255,255,255,.45)" font-size="8" text-anchor="middle">agente, IDE, app</text>
+
+        <!-- LLM -->
+        <rect x="20" y="98" width="140" height="48" fill="#1a2e1a" stroke="#4a7c59" stroke-width="1.5"/>
+        <text x="90" y="118" fill="rgba(255,255,255,.8)" font-size="9" text-anchor="middle">LLM</text>
+        <text x="90" y="132" fill="rgba(255,255,255,.45)" font-size="8" text-anchor="middle">Claude, GPT, Gemini...</text>
+
+        <line x1="90" y1="86" x2="90" y2="98" stroke="#4a7c59" stroke-width="1" stroke-dasharray="3,2"/>
+
+        <!-- Protocol arrow -->
+        <line x1="160" y1="62" x2="260" y2="62" stroke="#2e5f8a" stroke-width="2" marker-end="url(#arr1)"/>
+        <line x1="260" y1="70" x2="160" y2="70" stroke="#2e5f8a" stroke-width="2" marker-end="url(#arr2)"/>
+        <text x="210" y="56" fill="#93c5e8" font-size="8" text-anchor="middle">JSON-RPC</text>
+        <text x="210" y="80" fill="rgba(255,255,255,.3)" font-size="8" text-anchor="middle">stdio / HTTP+SSE</text>
+
+        <!-- MCP Server 1 -->
+        <rect x="260" y="38" width="130" height="48" fill="#1a2a2e" stroke="#2e5f8a" stroke-width="1.5"/>
+        <text x="325" y="58" fill="#93c5e8" font-size="9" text-anchor="middle">MCP SERVER</text>
+        <text x="325" y="72" fill="rgba(255,255,255,.45)" font-size="8" text-anchor="middle">tool: search_docs</text>
+
+        <!-- Arrow to services -->
+        <line x1="390" y1="62" x2="440" y2="50" stroke="rgba(255,255,255,.2)" stroke-width="1"/>
+        <line x1="390" y1="62" x2="440" y2="70" stroke="rgba(255,255,255,.2)" stroke-width="1"/>
+        <line x1="390" y1="62" x2="440" y2="90" stroke="rgba(255,255,255,.2)" stroke-width="1"/>
+
+        <!-- Services -->
+        <rect x="440" y="34" width="100" height="24" fill="#2e2b25" stroke="rgba(255,255,255,.15)" stroke-width="1"/>
+        <text x="490" y="49" fill="rgba(255,255,255,.5)" font-size="8" text-anchor="middle">Vector DB</text>
+        <rect x="440" y="62" width="100" height="24" fill="#2e2b25" stroke="rgba(255,255,255,.15)" stroke-width="1"/>
+        <text x="490" y="77" fill="rgba(255,255,255,.5)" font-size="8" text-anchor="middle">File System</text>
+        <rect x="440" y="90" width="100" height="24" fill="#2e2b25" stroke="rgba(255,255,255,.15)" stroke-width="1"/>
+        <text x="490" y="105" fill="rgba(255,255,255,.5)" font-size="8" text-anchor="middle">API Esterna</text>
+
+        <!-- Second server -->
+        <rect x="260" y="100" width="130" height="48" fill="#1a2a2e" stroke="#2e5f8a" stroke-width="1.5"/>
+        <text x="325" y="120" fill="#93c5e8" font-size="9" text-anchor="middle">MCP SERVER</text>
+        <text x="325" y="134" fill="rgba(255,255,255,.45)" font-size="8" text-anchor="middle">tool: send_email</text>
+
+        <line x1="160" y1="122" x2="260" y2="122" stroke="#2e5f8a" stroke-width="1.5" stroke-dasharray="3,2"/>
+
+        <!-- Protocol label -->
+        <rect x="560" y="50" width="160" height="80" fill="#1e2a38" stroke="#2e5f8a" stroke-width="1"/>
+        <text x="640" y="70" fill="rgba(255,255,255,.6)" font-size="9" text-anchor="middle">STANDARD MCP</text>
+        <text x="640" y="84" fill="rgba(255,255,255,.4)" font-size="8" text-anchor="middle">• Tool discovery</text>
+        <text x="640" y="96" fill="rgba(255,255,255,.4)" font-size="8" text-anchor="middle">• Schema standard</text>
+        <text x="640" y="108" fill="rgba(255,255,255,.4)" font-size="8" text-anchor="middle">• Auth integrata</text>
+        <text x="640" y="120" fill="rgba(255,255,255,.4)" font-size="8" text-anchor="middle">• Interoperabilità</text>
+
+        <!-- Key benefit -->
+        <text x="370" y="175" fill="rgba(255,255,255,.25)" font-size="8" text-anchor="middle">Il client MCP può connettersi a qualsiasi server MCP — indipendentemente dall'implementazione specifica</text>
+
+        <defs>
+          <marker id="arr1" markerWidth="6" markerHeight="6" refX="5" refY="3" orient="auto"><path d="M0,0 L6,3 L0,6 Z" fill="#2e5f8a"/></marker>
+          <marker id="arr2" markerWidth="6" markerHeight="6" refX="5" refY="3" orient="auto"><path d="M0,0 L6,3 L0,6 Z" fill="#2e5f8a"/></marker>
+        </defs>
+      </svg>
+    </div>
+
+    <div class="prose" style="margin-top:24px;">
+      <p>MCP definisce tre tipi di capability che un server può esporre: <strong>tools</strong> (funzioni che il modello può invocare — il focus di questa serie), <strong>resources</strong> (dati e contenuti che il modello può leggere, come file o database), e <strong>prompts</strong> (template di prompt che il server offre come punto di partenza). Questo report si concentra sui tool — la capability più rilevante per la leva 3.</p>
+    </div>
+
+  </div>
+</div>
+
+
+<!-- ═══════════════════════════
+     S5 — MCP: COME FUNZIONA
+═══════════════════════════ -->
+<div class="sect" id="s5">
+  <div class="sect-head">
+    <div class="sect-num">Sezione 05</div>
+    <h2>MCP — come funziona in concreto</h2>
+    <p>Il protocollo, lo schema di un tool MCP, il processo di discovery, e come si integra con i modelli LLM moderni che lo supportano nativamente.</p>
+  </div>
+  <div class="wrap">
+
+    <div class="prose" style="margin-top:28px;">
+      <p>MCP usa JSON-RPC 2.0 come protocollo di trasporto — su stdio (per processi locali) o HTTP con Server-Sent Events (per servizi remoti). Il client invia richieste in JSON, il server risponde in JSON. La struttura è semplice e ispirata a OpenAPI.</p>
+    </div>
+
+    <!-- GL 03 -->
+    <div class="gl-group">
+      <div class="gl-group-title">Linea guida 03</div>
+      <div class="gl-card">
+        <div class="gl-header">
+          <div class="gl-stripe" style="background:var(--mcp)"></div>
+          <div class="gl-num">03</div>
+          <div class="gl-title-wrap">
+            <div class="gl-title">Lo schema MCP di un tool è l'interfaccia di Report A — in formato standard interoperabile</div>
+            <div class="gl-subtitle">Le stesse 5 componenti (nome, descrizione, parametri, output, errori) in formato JSON standardizzato</div>
+          </div>
+          <div class="gl-impact-wrap">
+            <div class="gl-impact-stars" style="color:var(--mcp)">★★★</div>
+            <div class="gl-impact-lbl">Impatto</div>
+          </div>
+        </div>
+        <div class="gl-body">
+
+          <div class="gl-section">
+            <div class="gl-section-lbl">Schema completo di un tool MCP</div>
+            <div class="mcp-schema">{
+  <span class="cm">// Risposta di tools/list — lista i tool disponibili nel server</span>
+  <span class="k">"tools"</span>: [
+    {
+      <span class="k">"name"</span>:        <span class="v">"search_internal_docs"</span>,      <span class="cm">// Componente 1: nome</span>
+      <span class="k">"description"</span>: <span class="v">"Cerca nei documenti interni aziendali (policy,
+                       procedure, contratti) tramite ricerca semantica.
+                       Usare quando l'utente chiede di regole o procedure aziendali.
+                       NON usare per informazioni generali.
+                       Restituisce array vuoto se nessun documento trovato."</span>,
+      <span class="k">"inputSchema"</span>: {                              <span class="cm">// Componente 3: parametri</span>
+        <span class="k">"type"</span>: <span class="v">"object"</span>,
+        <span class="k">"properties"</span>: {
+          <span class="k">"query"</span>:   { <span class="k">"type"</span>: <span class="v">"string"</span>,  <span class="k">"description"</span>: <span class="v">"Testo della ricerca"</span>,
+                       <span class="k">"minLength"</span>: <span class="t">3</span> },
+          <span class="k">"k"</span>:       { <span class="k">"type"</span>: <span class="v">"integer"</span>, <span class="k">"description"</span>: <span class="v">"Risultati da restituire"</span>,
+                       <span class="k">"default"</span>: <span class="t">5</span>, <span class="k">"minimum"</span>: <span class="t">1</span>, <span class="k">"maximum"</span>: <span class="t">10</span> },
+          <span class="k">"filters"</span>: { <span class="k">"type"</span>: <span class="v">"object"</span>, <span class="k">"description"</span>: <span class="v">"Filtri metadati opzionali"</span> }
+        },
+        <span class="k">"required"</span>: [<span class="v">"query"</span>]
+      }
+    }
+  ]
+}</div>
+          </div>
+
+          <div class="gl-section">
+            <div class="gl-section-lbl">Il processo di discovery — come il client trova i tool del server</div>
+            <div class="prompt-box mcp" style="margin-top:12px; font-size:11.5px;">1. INIZIALIZZAZIONE
+Client → Server: { "method": "initialize", "params": { "protocolVersion": "2024-11-05" } }
+Server → Client: { "capabilities": { "tools": {} }, "serverInfo": { "name": "docs-server" } }
+
+2. DISCOVERY DEI TOOL
+Client → Server: { "method": "tools/list" }
+Server → Client: { "tools": [ { "name": "search_internal_docs", "description": "...", "inputSchema": {...} } ] }
+
+3. INVOCAZIONE
+Client → Server: { "method": "tools/call", "params": { "name": "search_internal_docs", "arguments": { "query": "policy ferie" } } }
+Server → Client: { "content": [ { "type": "text", "text": "[{'title': 'Policy Ferie 2024', ...}]" } ] }</div>
+          </div>
+
+          <div class="gl-section">
+            <div class="gl-section-lbl">Il vantaggio concreto: un tool, molti client</div>
+            <p>Un server MCP che espone <code>search_internal_docs</code> può essere usato simultaneamente da: un agente Claude nel sistema di supporto, un copilot nel IDE dei developer, un workflow builder automatizzato, e qualsiasi altro client MCP — <strong>senza dover reimplementare il tool in nessuno di questi sistemi</strong>. Il server è scritto una volta e i client si connettono tramite protocollo standard.</p>
+          </div>
+
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+
+<!-- ═══════════════════════════
+     S6 — MCP: QUANDO ADOTTARLO
+═══════════════════════════ -->
+<div class="sect" id="s6">
+  <div class="sect-head">
+    <div class="sect-num">Sezione 06</div>
+    <h2>MCP — quando adottarlo e checklist finale</h2>
+    <p>MCP aggiunge valore in contesti specifici. Adottarlo quando non è necessario aggiunge complessità senza beneficio. La guida alla decisione e la checklist finale dell'intero report.</p>
+  </div>
+  <div class="wrap">
+
+    <div class="prose" style="margin-top:28px;">
+      <p>MCP non è la risposta giusta a ogni situazione. È uno standard con un costo di setup (server da mantenere, protocollo da implementare, infrastruttura aggiuntiva) che si giustifica solo quando i benefici dell'interoperabilità superano quel costo.</p>
+    </div>
+
+    <div class="when-grid" style="margin-top:20px;">
+      <div class="wg-col">
+        <div class="wg-label">Adotta MCP quando</div>
+        <div class="wg-body">
+          <strong>Più agenti o sistemi</strong> devono usare gli stessi tool — MCP elimina le reimplementazioni duplicate.<br><br>
+          <strong>Tool distribuiti a terze parti</strong> o condivisi tra team diversi — il protocollo standard abbassa la barriera all'integrazione.<br><br>
+          <strong>Ecosistema di tool in crescita</strong> — il discovery automatico scala meglio della configurazione manuale.<br><br>
+          <strong>Modelli multipli</strong> nello stack (Claude + GPT come fallback) — MCP è model-agnostic, i tool funzionano con entrambi senza adattamenti.
+        </div>
+      </div>
+      <div class="wg-col">
+        <div class="wg-label">Non adottare MCP quando</div>
+        <div class="wg-body">
+          <strong>Un solo agente, pochi tool</strong> — il function calling nativo è più semplice e sufficiente.<br><br>
+          <strong>Tool fortemente accoppiati</strong> al sistema specifico — l'overhead del protocollo non porta benefici se i tool non saranno mai riusati altrove.<br><br>
+          <strong>Prototipo o POC</strong> — aggiungere MCP in fase di prototipazione è prematura optimization.<br><br>
+          <strong>Team piccolo con un solo stack</strong> — l'interoperabilità non è un problema se tutti usano lo stesso sistema.
+        </div>
+      </div>
+    </div>
+
+    <div class="insight" style="margin-top:24px;">
+      <div class="insight-lbl">Lo stato attuale di MCP — Marzo 2026</div>
+      <p>MCP è stato pubblicato da Anthropic a fine 2024 ed è diventato rapidamente uno standard de facto: Claude Code, Claude Desktop, Cursor, Cline e molti altri client lo supportano nativamente. Centinaia di server MCP sono disponibili open source per i servizi più comuni (GitHub, Slack, Google Drive, database, ecc.). <strong>Per sistemi nuovi che prevedono più di un agente o più di un modello, MCP è oggi la scelta di default per l'esposizione dei tool</strong> — non più solo una tecnologia sperimentale.</p>
+    </div>
+
+    <div class="prose" style="margin-top:32px;">
+      <p style="font-size:15px; font-weight:500; color:var(--ink2);">Checklist — composizione, skill pipeline e MCP configurati?</p>
+    </div>
+
+    <div class="checklist" style="margin-top:12px;">
+      <div class="check-item">
+        <div class="check-icon">P</div>
+        <div><strong>Pattern di composizione:</strong> ogni sequenza di tool nel system prompt è classificata — sequenziale, parallelo, condizionale o iterativo. I limiti di iterazione per i pattern iterativi sono esplicitati.</div>
+      </div>
+      <div class="check-item">
+        <div class="check-icon">S</div>
+        <div><strong>Skill pipeline:</strong> le sequenze con 3+ passi usate in più contesti sono astratte in pipeline con nome, descrizione, input/output e gestione degli errori propri.</div>
+      </div>
+      <div class="check-item">
+        <div class="check-icon">↻</div>
+        <div><strong>Tool con stato:</strong> ogni tool stateful segue il pattern open→use→close con session_id esplicito, stato corrente nel risultato di ogni chiamata, e timeout automatico documentato.</div>
+      </div>
+      <div class="check-item">
+        <div class="check-icon" style="background:var(--mcp)">M</div>
+        <div><strong>MCP (se adottato):</strong> ogni tool ha lo schema completo con name, description, inputSchema. Il server implementa i metodi initialize, tools/list e tools/call del protocollo.</div>
+      </div>
+      <div class="check-item">
+        <div class="check-icon" style="background:var(--mcp)">M</div>
+        <div><strong>MCP (se adottato):</strong> la decisione di adottare MCP è giustificata da almeno uno dei trigger — più agenti, tool distribuiti, modelli multipli, ecosistema in crescita.</div>
+      </div>
+    </div>
+
+    <div class="insight" style="margin-top:28px; border-color:#c0392b; background:#fdf5f5;">
+      <div class="insight-lbl" style="color:#c0392b;">Prossimo — Report E</div>
+      <p>Con il design dei tool (A), le istruzioni (B), i tipi (C) e la composizione (D) coperti, il Report E chiude la serie con le dimensioni trasversali: <strong>gestione degli errori in profondità</strong>, <strong>sicurezza</strong> (scope minimo, sandboxing, validazione input), e <strong>come valutare se l'agente usa i tool correttamente</strong> — tool use accuracy, suite di test per il comportamento tool-use, diagnosi degli errori più comuni.</p>
+    </div>
+
+  </div>
+</div>
+
+
+<!-- FOOTER -->
+<div class="footer">
+  <span>Serie Agenti AI — Leva 03 · Strumenti · Report D · Composizione, Skill Pipeline e MCP</span>
+  <span>Marzo 2026</span>
+</div>
+
+<script>
+function show(n) {
+  document.querySelectorAll('.sect').forEach(s => s.classList.remove('active'));
+  document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('s'+n).classList.add('active');
+  document.querySelectorAll('.nav-btn')[n-1].classList.add('active');
+  window.scrollTo({top:0, behavior:'smooth'});
+}
+</script>
+</body>
+</html>

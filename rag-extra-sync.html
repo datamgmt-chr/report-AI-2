@@ -1,0 +1,1026 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>RAG Pratico — Report Extra · Indice sincronizzato con fonte esterna</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:ital,wght@0,300;0,400;0,500;0,600;1,300;1,400&family=DM+Mono:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg:      #fafaf7;
+  --bg2:     #f2f1ec;
+  --bg3:     #e8e6df;
+  --ink:     #1a1916;
+  --ink2:    #2d2b26;
+  --ink3:    #5c5a52;
+  --ink4:    #9c9a90;
+  --border:  #dddbd2;
+  --border2: #cbc9bf;
+
+  --accent:  #5a3a1a;
+  --accent2: #f7f0e8;
+  --accent3: #d4b890;
+
+  --teal:    #1a5f5f;
+  --teal-bg: #e5f3f3;
+  --teal-bd: #8ecece;
+
+  --warm:    #7a4a10;
+  --warm-bg: #fdf3e3;
+  --warm-bd: #e8c878;
+
+  --ok:      #2d6040;
+  --ok-bg:   #eaf4ee;
+  --ok-bd:   #a8d4b4;
+
+  --bad:     #8a1a1a;
+  --bad-bg:  #fdf0f0;
+  --bad-bd:  #e8a8a8;
+
+  --note:    #4a2d7a;
+  --note-bg: #f0ecfb;
+  --note-bd: #c4aef0;
+
+  --navy:    #2a4878;
+  --navy-bg: #e8edf6;
+}
+
+* { margin:0; padding:0; box-sizing:border-box; }
+html { scroll-behavior:smooth; }
+body {
+  background: var(--bg);
+  color: var(--ink);
+  font-family: 'DM Sans', sans-serif;
+  font-weight: 300;
+  font-size: 15px;
+  line-height: 1.75;
+}
+
+/* ── MASTHEAD ── */
+.masthead {
+  background: var(--accent);
+  color: #fff;
+  padding: 56px 60px 52px;
+  position: relative;
+  overflow: hidden;
+}
+.masthead::before {
+  content: '';
+  position: absolute;
+  top: -80px; right: -80px;
+  width: 400px; height: 400px;
+  border-radius: 50%;
+  border: 1px solid rgba(255,255,255,.06);
+  pointer-events: none;
+}
+.masthead::after {
+  content: '';
+  position: absolute;
+  bottom: 20px; right: 40px;
+  width: 200px; height: 200px;
+  border-radius: 50%;
+  border: 1px solid rgba(255,255,255,.04);
+  pointer-events: none;
+}
+.mh-series {
+  font-family: 'DM Mono', monospace;
+  font-size: 10px; letter-spacing: 3px;
+  text-transform: uppercase; color: rgba(255,255,255,.35);
+  margin-bottom: 20px;
+}
+.mh-num {
+  font-family: 'DM Serif Display', serif;
+  font-size: 80px; line-height: 1;
+  color: rgba(255,255,255,.07);
+  position: absolute; right: 60px; top: 40px;
+  letter-spacing: -4px; user-select: none;
+}
+.masthead h1 {
+  font-family: 'DM Serif Display', serif;
+  font-size: clamp(26px, 3.5vw, 42px);
+  font-weight: 400; line-height: 1.1;
+  letter-spacing: -.5px; max-width: 740px; position: relative;
+}
+.masthead h1 em { font-style: italic; color: rgba(255,255,255,.7); }
+.mh-sub {
+  margin-top: 20px; font-size: 15px; font-weight: 300;
+  color: rgba(255,255,255,.45); max-width: 660px;
+  line-height: 1.7; position: relative;
+}
+.mh-pills {
+  margin-top: 28px; display: flex; gap: 8px;
+  flex-wrap: wrap; position: relative;
+}
+.mh-pill {
+  font-family: 'DM Mono', monospace; font-size: 10px;
+  letter-spacing: 1px; padding: 4px 12px;
+  border: 1px solid rgba(255,255,255,.2);
+  color: rgba(255,255,255,.5); border-radius: 20px;
+}
+
+/* ── NAV ── */
+.nav {
+  position: sticky; top: 0; z-index: 100;
+  background: var(--ink); display: flex; overflow-x: auto;
+  border-bottom: 1px solid rgba(255,255,255,.08);
+}
+.nav-btn {
+  flex-shrink: 0; padding: 14px 20px;
+  border: none; background: transparent; cursor: pointer;
+  font-family: 'DM Mono', monospace; font-size: 10px;
+  letter-spacing: 1px; text-transform: uppercase;
+  color: rgba(255,255,255,.3);
+  border-right: 1px solid rgba(255,255,255,.06);
+  transition: color .2s; white-space: nowrap;
+}
+.nav-btn:hover { color: rgba(255,255,255,.65); }
+.nav-btn.active { color: #fff; background: rgba(255,255,255,.06); }
+
+.sect { display: none; }
+.sect.active { display: block; animation: fadeUp .3s ease; }
+@keyframes fadeUp { from{opacity:0;transform:translateY(5px)} to{opacity:1;transform:translateY(0)} }
+
+/* ── CONTENT WRAP ── */
+.cw { max-width: 860px; margin: 0 auto; padding: 52px 60px 64px; }
+
+.s-eyebrow {
+  font-family: 'DM Mono', monospace; font-size: 10px;
+  letter-spacing: 3px; text-transform: uppercase;
+  color: var(--ink4); margin-bottom: 8px;
+}
+.s-title {
+  font-family: 'DM Serif Display', serif; font-size: 30px;
+  font-weight: 400; letter-spacing: -.3px; color: var(--ink);
+  line-height: 1.15; margin-bottom: 28px;
+}
+
+p { margin-bottom: 18px; color: var(--ink2); }
+p:last-child { margin-bottom: 0; }
+p strong { font-weight: 600; color: var(--ink); }
+code {
+  font-family: 'DM Mono', monospace;
+  background: var(--bg3); padding: 1px 6px;
+  border-radius: 3px; font-size: 13px; color: var(--ink2);
+}
+
+/* ── CALLOUT ── */
+.callout {
+  padding: 20px 24px; border-left: 3px solid;
+  margin: 28px 0; border-radius: 0 6px 6px 0;
+}
+.callout-warn   { background: var(--warm-bg); border-color: var(--warm); }
+.callout-ok     { background: var(--ok-bg);   border-color: var(--ok);   }
+.callout-bad    { background: var(--bad-bg);  border-color: var(--bad);  }
+.callout-note   { background: var(--note-bg); border-color: var(--note); }
+.callout-accent { background: var(--accent2); border-color: var(--accent); }
+.callout-teal   { background: var(--teal-bg); border-color: var(--teal); }
+.callout-navy   { background: var(--navy-bg); border-color: var(--navy); }
+.callout-title {
+  font-family: 'DM Mono', monospace; font-size: 10px;
+  letter-spacing: 2px; text-transform: uppercase; margin-bottom: 8px;
+}
+.callout-warn .callout-title   { color: var(--warm);   }
+.callout-ok .callout-title     { color: var(--ok);     }
+.callout-bad .callout-title    { color: var(--bad);    }
+.callout-note .callout-title   { color: var(--note);   }
+.callout-accent .callout-title { color: var(--accent); }
+.callout-teal .callout-title   { color: var(--teal);   }
+.callout-navy .callout-title   { color: var(--navy);   }
+.callout p { font-size: 14px; line-height: 1.65; margin-bottom: 8px; }
+.callout p:last-child { margin-bottom: 0; }
+
+/* ── DIAGRAM ── */
+.diagram {
+  background: var(--bg2); border: 1px solid var(--border2);
+  padding: 28px 32px; margin: 28px 0;
+}
+.diagram-title {
+  font-family: 'DM Mono', monospace; font-size: 10px;
+  letter-spacing: 2px; text-transform: uppercase; color: var(--ink4);
+  margin-bottom: 20px; padding-bottom: 12px; border-bottom: 1px solid var(--border);
+}
+
+/* ── THREE MODES COMPARISON ── */
+.three-modes {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 1px;
+  background: var(--border2);
+  border: 1px solid var(--border2);
+  border-radius: 6px;
+  overflow: hidden;
+  margin: 24px 0;
+}
+.mode-card { background: var(--bg); padding: 20px; display: flex; flex-direction: column; }
+.mc-badge {
+  font-family: 'DM Mono', monospace; font-size: 8.5px;
+  letter-spacing: 2px; text-transform: uppercase;
+  padding: 3px 10px; border-radius: 20px; width: fit-content;
+  margin-bottom: 10px;
+}
+.mc-title {
+  font-family: 'DM Serif Display', serif; font-size: 16px;
+  color: var(--ink); margin-bottom: 8px; line-height: 1.2;
+}
+.mc-body { font-size: 12.5px; color: var(--ink3); line-height: 1.6; flex: 1; }
+.mc-body p { font-size: 12.5px; margin-bottom: 6px; }
+.mc-verdict {
+  margin-top: 12px; padding: 8px 10px;
+  font-size: 12px; border-radius: 3px; line-height: 1.45;
+}
+
+/* ── FLOW DIAGRAM ── */
+.flow {
+  display: flex; flex-direction: column; gap: 0;
+  border: 1px solid var(--border2); border-radius: 6px; overflow: hidden;
+  margin: 20px 0;
+}
+.flow-step {
+  display: grid; grid-template-columns: 52px 1fr;
+  border-bottom: 1px solid var(--border);
+}
+.flow-step:last-child { border-bottom: none; }
+.fs-num {
+  display: flex; align-items: center; justify-content: center;
+  background: var(--accent);
+  color: rgba(255,255,255,.9);
+  font-family: 'DM Mono', monospace; font-size: 14px; font-weight: 500;
+  border-right: 1px solid rgba(255,255,255,.1);
+}
+.fs-content { padding: 14px 18px; }
+.fs-label {
+  font-family: 'DM Mono', monospace; font-size: 9px;
+  letter-spacing: 2px; text-transform: uppercase; color: var(--ink4); margin-bottom: 3px;
+}
+.fs-title { font-size: 14px; font-weight: 600; color: var(--ink); margin-bottom: 5px; }
+.fs-body { font-size: 13px; color: var(--ink3); line-height: 1.6; }
+
+/* ── CODE BLOCK ── */
+.code-block {
+  background: var(--ink); border-radius: 6px; overflow: hidden; margin: 16px 0;
+  font-family: 'DM Mono', monospace;
+}
+.cb-head {
+  padding: 8px 16px;
+  background: rgba(255,255,255,.06);
+  border-bottom: 1px solid rgba(255,255,255,.06);
+  font-size: 9.5px; letter-spacing: 1px;
+  text-transform: uppercase; color: rgba(255,255,255,.3);
+  display: flex; justify-content: space-between; align-items: center;
+}
+.cb-body {
+  padding: 16px; font-size: 12px; line-height: 1.8;
+  color: rgba(255,255,255,.8); overflow-x: auto;
+}
+.cb-comment { color: rgba(255,255,255,.25); }
+.cb-key { color: #7ec8e3; }
+.cb-val { color: #c8e67e; }
+.cb-str { color: #e8c87e; }
+.cb-kw  { color: #e87ec8; }
+.cb-fn  { color: #c8a8e8; }
+
+/* ── TRIGGER CARDS ── */
+.trigger-grid {
+  display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin: 20px 0;
+}
+.trigger-card {
+  border: 1px solid var(--border2); border-radius: 4px; overflow: hidden;
+}
+.tc-head {
+  padding: 10px 14px; border-bottom: 1px solid var(--border);
+  display: flex; align-items: center; gap: 10px;
+}
+.tc-badge {
+  font-family: 'DM Mono', monospace; font-size: 9px;
+  letter-spacing: 1px; text-transform: uppercase;
+  padding: 2px 8px; border-radius: 10px; flex-shrink: 0;
+}
+.tc-name { font-size: 13.5px; font-weight: 600; color: var(--ink); }
+.tc-body { padding: 12px 14px; font-size: 12.5px; color: var(--ink3); line-height: 1.6; }
+.tc-body p { font-size: 12.5px; margin-bottom: 6px; }
+.tc-when {
+  padding: 8px 14px; border-top: 1px solid var(--border);
+  font-size: 11.5px; color: var(--ink4);
+  font-family: 'DM Mono', monospace; letter-spacing: .3px;
+}
+
+/* ── SOURCE TABLE ── */
+.source-table {
+  width: 100%; border-collapse: collapse; margin: 20px 0; font-size: 13px;
+}
+.source-table th {
+  background: var(--accent); color: rgba(255,255,255,.85);
+  font-family: 'DM Mono', monospace; font-size: 9.5px;
+  letter-spacing: 1.5px; text-transform: uppercase;
+  padding: 10px 14px; text-align: left; font-weight: 400;
+}
+.source-table td {
+  padding: 11px 14px; border: 1px solid var(--border);
+  vertical-align: top; line-height: 1.55; color: var(--ink2);
+}
+.source-table tr:nth-child(even) td { background: var(--bg2); }
+.source-table td:first-child { font-weight: 600; color: var(--ink); white-space: nowrap; }
+
+/* ── METADATA RECORD ── */
+.meta-record {
+  background: var(--bg);
+  border: 1px solid var(--border2);
+  border-radius: 4px;
+  overflow: hidden;
+  font-family: 'DM Mono', monospace;
+  font-size: 11.5px;
+  margin: 16px 0;
+}
+.mr-head {
+  padding: 8px 14px;
+  background: var(--teal);
+  color: rgba(255,255,255,.8);
+  font-size: 9.5px; letter-spacing: 1px; text-transform: uppercase;
+}
+.mr-row {
+  padding: 7px 14px;
+  border-bottom: 1px solid var(--border);
+  display: flex; gap: 16px;
+  line-height: 1.5;
+}
+.mr-row:last-child { border-bottom: none; }
+.mr-key { color: var(--ink4); min-width: 160px; flex-shrink: 0; }
+.mr-val { color: var(--ink2); }
+.mr-val.ok  { color: var(--ok);  }
+.mr-val.bad { color: var(--bad); }
+.mr-val.warn { color: var(--warm); }
+
+/* ── DECISION MATRIX ── */
+.decision-matrix {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1px;
+  background: var(--border2);
+  border-radius: 6px;
+  overflow: hidden;
+  border: 1px solid var(--border2);
+  margin: 24px 0;
+}
+.dm-cell {
+  background: var(--bg);
+  padding: 18px 20px;
+}
+.dm-cell.header {
+  background: var(--bg3);
+  font-family: 'DM Mono', monospace; font-size: 9px;
+  letter-spacing: 2px; text-transform: uppercase; color: var(--ink4);
+  padding: 10px 20px;
+}
+.dm-q { font-weight: 600; font-size: 13.5px; color: var(--ink); margin-bottom: 6px; }
+.dm-a { font-size: 13px; color: var(--ink3); line-height: 1.6; }
+.dm-verdict {
+  font-family: 'DM Mono', monospace; font-size: 10px;
+  letter-spacing: 1px; text-transform: uppercase;
+  margin-top: 8px; padding: 4px 10px; border-radius: 10px;
+  display: inline-block;
+}
+
+/* ── COST TABLE ── */
+.cost-row {
+  display: grid;
+  grid-template-columns: 1fr 60px 60px 60px;
+  gap: 0;
+  border-bottom: 1px solid var(--border);
+  font-size: 13px;
+}
+.cost-row:last-child { border-bottom: none; }
+.cost-row.header {
+  background: var(--bg3);
+  font-family: 'DM Mono', monospace; font-size: 9px;
+  letter-spacing: 1px; text-transform: uppercase; color: var(--ink4);
+}
+.cr-cell {
+  padding: 10px 14px;
+  border-right: 1px solid var(--border);
+  line-height: 1.45; color: var(--ink2);
+}
+.cr-cell:last-child { border-right: none; }
+.cr-cell.center { text-align: center; }
+.dot-ok   { color: var(--ok);  font-size: 16px; }
+.dot-warn { color: var(--warm); font-size: 16px; }
+.dot-bad  { color: var(--bad); font-size: 16px; }
+
+/* ── KEY INSIGHT ── */
+.key-insight {
+  background: var(--ink); color: #fff;
+  padding: 28px 32px; margin: 32px 0; border-radius: 6px;
+  position: relative; overflow: hidden;
+}
+.key-insight::before {
+  content: '"'; position: absolute; right: 24px; top: -10px;
+  font-family: 'DM Serif Display', serif; font-size: 100px;
+  color: rgba(255,255,255,.06); line-height: 1; pointer-events: none;
+}
+.ki-label {
+  font-family: 'DM Mono', monospace; font-size: 9px;
+  letter-spacing: 2.5px; text-transform: uppercase;
+  color: rgba(255,255,255,.3); margin-bottom: 12px;
+}
+.ki-text {
+  font-family: 'DM Serif Display', serif; font-size: 20px;
+  font-weight: 400; line-height: 1.4;
+  color: rgba(255,255,255,.9); max-width: 680px;
+}
+
+/* ── FOOTER ── */
+.footer {
+  padding: 22px 60px; border-top: 1px solid var(--border);
+  display: flex; justify-content: space-between; align-items: center;
+  font-family: 'DM Mono', monospace; font-size: 10px;
+  letter-spacing: 1px; text-transform: uppercase; color: var(--ink4);
+}
+
+@media (max-width: 720px) {
+  .masthead, .cw, .footer { padding-left: 24px; padding-right: 24px; }
+  .mh-num { display: none; }
+  .three-modes { grid-template-columns: 1fr; }
+  .trigger-grid { grid-template-columns: 1fr; }
+  .decision-matrix { grid-template-columns: 1fr; }
+  .cost-row { grid-template-columns: 1fr 1fr; }
+}
+</style>
+</head>
+<body>
+
+<!-- ══ MASTHEAD ══ -->
+<div class="masthead">
+  <div class="mh-series">Serie RAG Pratico · Report Extra</div>
+  <div class="mh-num">+1</div>
+  <h1>Indice locale sincronizzato<br>con fonte esterna:<br><em>il meglio dei due mondi</em></h1>
+  <p class="mh-sub">Un agente RAG classico lavora su documenti statici. Ma la maggior parte delle informazioni aziendali vive altrove — in CMS, Drive, database, ERP — e cambia continuamente. Questo report spiega come costruire un sistema che tiene l'indice locale sempre allineato alla fonte, senza doverlo ricostruire da zero ogni volta.</p>
+  <div class="mh-pills">
+    <span class="mh-pill">Tre modalità di accesso</span>
+    <span class="mh-pill">Sincronizzazione</span>
+    <span class="mh-pill">Hash e freschezza</span>
+    <span class="mh-pill">Trigger e webhook</span>
+    <span class="mh-pill">Sorgenti comuni</span>
+    <span class="mh-pill">Quando ha senso</span>
+  </div>
+</div>
+
+<!-- ══ NAV ══ -->
+<div class="nav">
+  <button class="nav-btn active" onclick="show(0)">1 · Le tre modalità</button>
+  <button class="nav-btn" onclick="show(1)">2 · Come funziona la sincronia</button>
+  <button class="nav-btn" onclick="show(2)">3 · Come si imposta</button>
+  <button class="nav-btn" onclick="show(3)">4 · Freschezza e conflitti</button>
+  <button class="nav-btn" onclick="show(4)">5 · Quando ha senso</button>
+</div>
+
+
+<!-- ══════════════════════════════════
+     S0 — LE TRE MODALITÀ
+══════════════════════════════════ -->
+<div class="sect active" id="s0">
+<div class="cw">
+
+  <div class="s-eyebrow">Il punto di partenza</div>
+  <div class="s-title">Le tre modalità di accesso alle informazioni</div>
+
+  <p>Un agente RAG ha bisogno di accedere a informazioni esterne. La domanda concreta è: dove vivono quelle informazioni, e come le raggiunge? Esistono tre approcci fondamentali, ciascuno con caratteristiche molto diverse.</p>
+
+  <div class="three-modes">
+    <div class="mode-card">
+      <div class="mc-badge" style="background:var(--bg3); color:var(--ink3);">Modalità 1</div>
+      <div class="mc-title">Connessione diretta alla fonte</div>
+      <div class="mc-body">
+        <p>Ad ogni query, l'agente si connette alla fonte originale — il database, l'API, il CMS — recupera le informazioni rilevanti in tempo reale e le usa nella risposta.</p>
+        <p><strong>Nessun indice locale.</strong> Le informazioni sono sempre aggiornate perché vengono lette dalla fonte al momento della richiesta.</p>
+      </div>
+      <div class="mc-verdict" style="background:var(--warm-bg); color:var(--warm);">
+        Lento e fragile su fonti grandi. Ogni query fa una chiamata esterna. Se la fonte è lenta o non disponibile, l'agente si blocca.
+      </div>
+    </div>
+
+    <div class="mode-card">
+      <div class="mc-badge" style="background:var(--bg3); color:var(--ink3);">Modalità 2</div>
+      <div class="mc-title">Copia locale statica</div>
+      <div class="mc-body">
+        <p>I documenti vengono copiati una volta, indicizzati nel vector store, e l'agente lavora sempre sull'indice locale. La fonte originale non viene più consultata.</p>
+        <p><strong>Nessuna sincronizzazione.</strong> Il retrieval è veloce e affidabile, ma l'indice invecchia non appena la fonte cambia.</p>
+      </div>
+      <div class="mc-verdict" style="background:var(--warm-bg); color:var(--warm);">
+        Rapido e autonomo, ma l'indice diventa stale. Per corpus che cambiano frequentemente, la qualità delle risposte degrada silenziosamente nel tempo.
+      </div>
+    </div>
+
+    <div class="mode-card" style="background:var(--accent2);">
+      <div class="mc-badge" style="background:var(--accent3); color:var(--accent);">Modalità 3</div>
+      <div class="mc-title">Indice locale sincronizzato</div>
+      <div class="mc-body">
+        <p>L'agente lavora su un indice locale veloce, ma un processo separato mantiene l'indice allineato alla fonte. Quando un documento cambia nella fonte, l'indice viene aggiornato.</p>
+        <p><strong>Il meglio dei due mondi:</strong> velocità e resilienza dell'indice locale, freschezza della connessione diretta.</p>
+      </div>
+      <div class="mc-verdict" style="background:rgba(255,255,255,.5); color:var(--accent);">
+        Più complesso da costruire e mantenere — ma è l'unica opzione sostenibile per corpus che cambiano nel tempo e che devono alimentare un agente in produzione.
+      </div>
+    </div>
+  </div>
+
+  <div class="callout callout-note">
+    <div class="callout-title">Perché la modalità 2 (statica) è più fragile di quanto sembri</div>
+    <p>Il rischio della copia statica non è che improvvisamente smette di funzionare — è che degrada lentamente e silenziosamente. L'agente continua a rispondere, ma le sue risposte si basano su informazioni sempre più vecchie. Se le schede prodotto vengono aggiornate, le procedure cambiano, i prezzi variano — l'agente non lo sa.</p>
+    <p>Il problema è che spesso non si accorge nessuno subito. Le risposte sembrano ancora "ragionevoli" perché il corpus vecchio è ancora parzialmente valido. Il danno si scopre quando un cliente riceve informazioni sbagliate o un'opportunità viene persa.</p>
+  </div>
+
+  <p>La modalità 3 richiede un componente aggiuntivo che non esiste nel RAG classico: un <strong>processo di sincronizzazione</strong> che monitora la fonte, rileva i cambiamenti, e aggiorna l'indice di conseguenza. La sezione successiva mostra come funziona questo processo internamente.</p>
+
+</div>
+</div>
+
+
+<!-- ══════════════════════════════════
+     S1 — COME FUNZIONA LA SINCRONIZZAZIONE
+══════════════════════════════════ -->
+<div class="sect" id="s1">
+<div class="cw">
+
+  <div class="s-eyebrow">Il meccanismo interno</div>
+  <div class="s-title">Come funziona la sincronizzazione: hash, freschezza e ciclo di aggiornamento</div>
+
+  <p>Il cuore del sistema ibrido è il processo di sincronizzazione. Non è complicato — ma deve essere affidabile, perché un errore qui produce un indice silenziosamente sbagliato. Il meccanismo si basa su tre componenti: il <strong>registro di stato</strong>, l'<strong>hash del contenuto</strong>, e il <strong>ciclo di rilevamento delle modifiche</strong>.</p>
+
+  <div class="diagram">
+    <div class="diagram-title">Il ciclo completo di sincronizzazione — da "documento cambia" a "indice aggiornato"</div>
+    <div class="flow">
+      <div class="flow-step">
+        <div class="fs-num">1</div>
+        <div class="fs-content">
+          <div class="fs-label">Trigger</div>
+          <div class="fs-title">Il processo di sync si attiva</div>
+          <div class="fs-body">Il processo di sincronizzazione viene attivato — da un webhook della fonte, da un timer (polling), o manualmente. Inizia il ciclo di rilevamento.</div>
+        </div>
+      </div>
+      <div class="flow-step">
+        <div class="fs-num">2</div>
+        <div class="fs-content">
+          <div class="fs-label">Scansione</div>
+          <div class="fs-title">Recupera l'elenco dei documenti dalla fonte</div>
+          <div class="fs-body">Il sistema chiede alla fonte: "dammi l'elenco di tutti i documenti (o quelli modificati dopo questa data) con i loro timestamp di modifica". Non recupera ancora il contenuto — solo i metadati identificativi.</div>
+        </div>
+      </div>
+      <div class="flow-step">
+        <div class="fs-num">3</div>
+        <div class="fs-content">
+          <div class="fs-label">Confronto</div>
+          <div class="fs-title">Confronta con il registro di stato locale</div>
+          <div class="fs-body">Per ogni documento ricevuto, confronta il timestamp (o l'hash, se disponibile) con il registro locale. Classifica ogni documento in tre categorie: <strong>invariato</strong> (nessuna azione), <strong>modificato</strong> (da reindicizzare), <strong>nuovo</strong> (da indicizzare).</div>
+        </div>
+      </div>
+      <div class="flow-step">
+        <div class="fs-num">4</div>
+        <div class="fs-content">
+          <div class="fs-label">Verifica</div>
+          <div class="fs-title">Calcola l'hash del contenuto per i documenti candidati</div>
+          <div class="fs-body">Per i documenti classificati come "modificati", recupera il contenuto completo e calcola l'hash. Un documento con timestamp aggiornato ma hash identico non è davvero cambiato — potrebbe essere stato "toccato" senza modifiche sostanziali. In quel caso, aggiorna solo il timestamp nel registro, non reindicizzare.</div>
+        </div>
+      </div>
+      <div class="flow-step">
+        <div class="fs-num">5</div>
+        <div class="fs-content">
+          <div class="fs-label">Aggiornamento</div>
+          <div class="fs-title">Reindicizza i documenti effettivamente cambiati</div>
+          <div class="fs-body">Per ogni documento con hash diverso: elimina i vecchi chunk dal vector store (filtro su <code>documento_id</code>), esegui chunking del nuovo testo, calcola gli embedding, salva i nuovi chunk con i metadati aggiornati. Aggiorna il registro di stato con il nuovo hash e timestamp.</div>
+        </div>
+      </div>
+      <div class="flow-step" style="border-bottom:none;">
+        <div class="fs-num">6</div>
+        <div class="fs-content">
+          <div class="fs-label">Pulizia</div>
+          <div class="fs-title">Rimuovi i documenti eliminati dalla fonte</div>
+          <div class="fs-body">Confronta i documenti nel registro locale con quelli ricevuti dalla fonte. Quelli nel registro ma non nella fonte sono stati eliminati — rimuovi i loro chunk dal vector store e aggiorna il registro.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="diagram">
+    <div class="diagram-title">Il registro di stato — la struttura dei metadati di ogni documento</div>
+    <div class="meta-record">
+      <div class="mr-head">Registro locale — un record per documento</div>
+      <div class="mr-row">
+        <div class="mr-key">documento_id</div>
+        <div class="mr-val">"doc-PRD-2847"</div>
+      </div>
+      <div class="mr-row">
+        <div class="mr-key">fonte_id</div>
+        <div class="mr-val">"1BxUz8Kj_mNpQr..." <span style="color:var(--ink4); font-size:10px;">// ID nella fonte (es. Google Drive file ID)</span></div>
+      </div>
+      <div class="mr-row">
+        <div class="mr-key">hash_contenuto</div>
+        <div class="mr-val">"sha256:a3f8c2e1..." <span style="color:var(--ink4); font-size:10px;">// hash SHA-256 del testo completo</span></div>
+      </div>
+      <div class="mr-row">
+        <div class="mr-key">ultima_modifica_fonte</div>
+        <div class="mr-val">"2026-03-14T09:22:00Z" <span style="color:var(--ink4); font-size:10px;">// timestamp della fonte</span></div>
+      </div>
+      <div class="mr-row">
+        <div class="mr-key">ultima_indicizzazione</div>
+        <div class="mr-val ok">"2026-03-14T09:25:00Z" <span style="color:var(--ink4); font-size:10px;">// quando abbiamo (re)indicizzato</span></div>
+      </div>
+      <div class="mr-row">
+        <div class="mr-key">chunk_ids</div>
+        <div class="mr-val">["doc-PRD-2847-c0", "doc-PRD-2847-c1", "doc-PRD-2847-c2", "doc-PRD-2847-c3"]</div>
+      </div>
+      <div class="mr-row">
+        <div class="mr-key">stato</div>
+        <div class="mr-val ok">SINCRONIZZATO <span style="color:var(--ink4); font-size:10px;">// SINCRONIZZATO | STALE | IN_AGGIORNAMENTO | ERRORE</span></div>
+      </div>
+    </div>
+    <p style="font-size:12px; color:var(--ink4); margin-top:12px; margin-bottom:0;">Il registro di stato può vivere in una tabella del database relazionale esistente — non serve infrastruttura separata. Ogni riga corrisponde a un documento della fonte, non a un chunk dell'indice.</p>
+  </div>
+
+  <div class="callout callout-accent">
+    <div class="callout-title">Perché l'hash è più affidabile del timestamp</div>
+    <p>I timestamp di modifica delle fonti esterne sono spesso inaffidabili: si aggiornano quando un file viene "toccato" anche senza modifiche di contenuto, dipendono dal fuso orario e dalla precisione del sistema, e a volte non vengono aggiornati in operazioni batch.</p>
+    <p>L'hash del contenuto è deterministico: due testi identici producono sempre lo stesso hash, due testi diversi producono hash diversi (con probabilità astronomicamente alta). Usare l'hash come "firma del contenuto" garantisce che si reindicizzi solo quando il testo è effettivamente cambiato — non quando è cambiato solo il metadata della fonte.</p>
+    <p>Il costo è minimo: calcolare SHA-256 di un documento di 3 pagine richiede microsecondi.</p>
+  </div>
+
+</div>
+</div>
+
+
+<!-- ══════════════════════════════════
+     S2 — COME SI IMPOSTA
+══════════════════════════════════ -->
+<div class="sect" id="s2">
+<div class="cw">
+
+  <div class="s-eyebrow">La parte operativa</div>
+  <div class="s-title">Come si imposta: trigger, codice e sorgenti comuni</div>
+
+  <p>Il processo di sincronizzazione può essere attivato in quattro modi diversi, con caratteristiche molto diverse in termini di latenza dell'aggiornamento, complessità e requisiti di infrastruttura.</p>
+
+  <div class="trigger-grid">
+
+    <div class="trigger-card">
+      <div class="tc-head">
+        <div class="tc-badge" style="background:var(--ok-bg); color:var(--ok);">Più semplice</div>
+        <div class="tc-name">Polling periodico</div>
+      </div>
+      <div class="tc-body">
+        <p>Un job schedulato (cron) esegue il ciclo di sincronizzazione a intervalli regolari: ogni ora, ogni notte, ogni settimana. Confronta la fonte con l'indice e aggiorna ciò che è cambiato.</p>
+        <p><strong>Latenza aggiornamento:</strong> pari all'intervallo di polling. Se aggiorni ogni ora, l'agente può lavorare su dati vecchi fino a 59 minuti.</p>
+      </div>
+      <div class="tc-when">Quando: corpus con aggiornamenti non urgenti · bassa frequenza di modifica · zero infrastruttura realtime</div>
+    </div>
+
+    <div class="trigger-card">
+      <div class="tc-head">
+        <div class="tc-badge" style="background:var(--teal-bg); color:var(--teal);">Più reattivo</div>
+        <div class="tc-name">Webhook dalla fonte</div>
+      </div>
+      <div class="tc-body">
+        <p>La fonte notifica il sistema ogni volta che un documento viene creato, modificato o eliminato. Il sistema riceve la notifica e aggiorna solo il documento interessato — quasi in tempo reale.</p>
+        <p><strong>Latenza aggiornamento:</strong> secondi o minuti. L'indice è quasi sempre aggiornato.</p>
+      </div>
+      <div class="tc-when">Quando: aggiornamenti frequenti o urgenti · la fonte supporta webhook (Google Drive, SharePoint, GitHub, la maggior parte dei CMS moderni)</div>
+    </div>
+
+    <div class="trigger-card">
+      <div class="tc-head">
+        <div class="tc-badge" style="background:var(--note-bg); color:var(--note);">Più preciso</div>
+        <div class="tc-name">Event-driven (database trigger)</div>
+      </div>
+      <div class="tc-body">
+        <p>Se la fonte è un database relazionale, un trigger SQL può invocare una funzione di sync ogni volta che una riga viene modificata. Nessun polling, nessun webhook esterno — la sincronizzazione è atomica con la modifica.</p>
+        <p><strong>Latenza aggiornamento:</strong> praticamente zero. L'aggiornamento dell'indice avviene nella stessa transazione o immediatamente dopo.</p>
+      </div>
+      <div class="tc-when">Quando: la fonte è un database SQL · massima coerenza richiesta · il caso catalogo prodotti con PostgreSQL</div>
+    </div>
+
+    <div class="trigger-card">
+      <div class="tc-head">
+        <div class="tc-badge" style="background:var(--bg3); color:var(--ink3);">Più controllato</div>
+        <div class="tc-name">Trigger manuale / CI-CD</div>
+      </div>
+      <div class="tc-body">
+        <p>La sincronizzazione viene eseguita esplicitamente — a seguito di una pubblicazione nel CMS, di un deploy del sistema, o su richiesta di un operatore. Non è automatica.</p>
+        <p><strong>Latenza aggiornamento:</strong> deliberata — avviene quando qualcuno la sceglie. Semplice da controllare, difficile da dimenticare.</p>
+      </div>
+      <div class="tc-when">Quando: corpus che cambia raramente · aggiornamenti pianificati e strutturati · team piccoli senza infrastruttura realtime</div>
+    </div>
+
+  </div>
+
+  <div class="diagram">
+    <div class="diagram-title">Implementazione del ciclo di sincronizzazione — struttura del codice</div>
+    <div class="code-block">
+      <div class="cb-head">Python — classe SyncManager</div>
+      <div class="cb-body"><span class="cb-kw">class</span> <span class="cb-fn">SyncManager</span>:
+  <span class="cb-kw">def</span> <span class="cb-fn">__init__</span>(self, fonte, vector_store, registro):
+    self.fonte = fonte          <span class="cb-comment"># connettore alla fonte esterna</span>
+    self.vs    = vector_store   <span class="cb-comment"># il vector store (pgvector, Chroma, ...)</span>
+    self.reg   = registro       <span class="cb-comment"># tabella di stato nel DB relazionale</span>
+
+  <span class="cb-kw">def</span> <span class="cb-fn">sync</span>(self, doc_ids=<span class="cb-val">None</span>):
+    <span class="cb-comment"># Se doc_ids è None, sincronizza tutto il corpus</span>
+    <span class="cb-comment"># Se doc_ids è una lista, sincronizza solo quei documenti (per webhook)</span>
+    docs_fonte = self.fonte.lista_documenti(doc_ids)
+
+    <span class="cb-kw">for</span> doc <span class="cb-kw">in</span> docs_fonte:
+      stato = self.reg.get(doc.id)
+
+      <span class="cb-kw">if</span> stato <span class="cb-kw">is None</span>:
+        self.<span class="cb-fn">indicizza_nuovo</span>(doc)         <span class="cb-comment"># documento nuovo</span>
+      <span class="cb-kw">elif</span> self.<span class="cb-fn">_hash_cambiato</span>(doc, stato):
+        self.<span class="cb-fn">reindicizza</span>(doc, stato)      <span class="cb-comment"># documento modificato</span>
+      <span class="cb-kw">else</span>:
+        self.reg.touch(doc.id)            <span class="cb-comment"># invariato, aggiorna solo timestamp sync</span>
+
+    <span class="cb-comment"># Gestisci le eliminazioni (solo in sync completa)</span>
+    <span class="cb-kw">if</span> doc_ids <span class="cb-kw">is None</span>:
+      ids_fonte = {d.id <span class="cb-kw">for</span> d <span class="cb-kw">in</span> docs_fonte}
+      <span class="cb-kw">for</span> doc_id <span class="cb-kw">in</span> self.reg.tutti_gli_id():
+        <span class="cb-kw">if</span> doc_id <span class="cb-kw">not in</span> ids_fonte:
+          self.<span class="cb-fn">elimina_da_indice</span>(doc_id)   <span class="cb-comment"># eliminato dalla fonte</span>
+
+  <span class="cb-kw">def</span> <span class="cb-fn">reindicizza</span>(self, doc, stato_precedente):
+    self.reg.set_stato(doc.id, <span class="cb-str">"IN_AGGIORNAMENTO"</span>)
+    testo = self.fonte.scarica_testo(doc.id)
+    chunks = <span class="cb-fn">chunking</span>(testo, doc.nome, doc.categoria)
+
+    self.vs.elimina(filter={<span class="cb-str">"documento_id"</span>: doc.id})  <span class="cb-comment"># rimuovi vecchi chunk</span>
+    self.vs.aggiungi(chunks)                            <span class="cb-comment"># aggiungi nuovi chunk</span>
+
+    self.reg.aggiorna(doc.id, {
+      <span class="cb-str">"hash_contenuto"</span>:       <span class="cb-fn">sha256</span>(testo),
+      <span class="cb-str">"ultima_indicizzazione"</span>: <span class="cb-fn">now</span>(),
+      <span class="cb-str">"stato"</span>:                <span class="cb-str">"SINCRONIZZATO"</span>,
+      <span class="cb-str">"chunk_ids"</span>:            [c.id <span class="cb-kw">for</span> c <span class="cb-kw">in</span> chunks]
+    })</div>
+    </div>
+  </div>
+
+  <p>Di seguito le specificità di implementazione per le sorgenti più comuni nella pratica:</p>
+
+  <table class="source-table">
+    <thead>
+      <tr>
+        <th>Sorgente</th>
+        <th>Come rileva le modifiche</th>
+        <th>Trigger consigliato</th>
+        <th>Note specifiche</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>Google Drive</td>
+        <td>API Webhook (Drive push notifications) o polling sull'endpoint <code>changes.list</code> con <code>pageToken</code></td>
+        <td>Webhook se disponibile, altrimenti polling ogni 30–60 min</td>
+        <td>I webhook di Drive scadono ogni 7 giorni e vanno rinnovati. Il <code>pageToken</code> in polling è più affidabile a lungo termine.</td>
+      </tr>
+      <tr>
+        <td>SharePoint / OneDrive</td>
+        <td>Microsoft Graph subscriptions (webhook) o <code>delta</code> API per tracking incrementale</td>
+        <td>Graph subscriptions — scadono ogni 4.230 minuti, vanno rinnovate</td>
+        <td>La <code>delta</code> API di Microsoft Graph è molto efficiente: restituisce solo i file cambiati dall'ultima chiamata senza dover scorrere tutto.</td>
+      </tr>
+      <tr>
+        <td>Database SQL (PostgreSQL)</td>
+        <td>Trigger su <code>INSERT</code>/<code>UPDATE</code>/<code>DELETE</code> sulla tabella dei documenti, o <code>LISTEN/NOTIFY</code></td>
+        <td>Trigger SQL + LISTEN/NOTIFY per aggiornamento quasi-atomico</td>
+        <td>Il trigger SQL è il metodo più preciso. Con <code>pg_notify</code> puoi inviare il <code>documento_id</code> modificato direttamente al processo di sync in ascolto.</td>
+      </tr>
+      <tr>
+        <td>CMS (Contentful, Strapi, WordPress)</td>
+        <td>Webhook nativi su publish/update/delete dei contenuti</td>
+        <td>Webhook — quasi tutti i CMS moderni li supportano nativamente</td>
+        <td>Attenzione: i CMS spesso inviano webhook sulle bozze, non solo sulle pubblicazioni. Filtra per stato "pubblicato" prima di triggherare la sync.</td>
+      </tr>
+      <tr>
+        <td>File system / S3 / storage cloud</td>
+        <td>S3 Event Notifications, inotify su filesystem locale, polling periodico sul timestamp dei file</td>
+        <td>Event notifications se su cloud, polling su filesystem locale</td>
+        <td>Per bucket S3 con molti file, converti le notifiche in messaggi SQS — più robusto di processare ogni evento direttamente.</td>
+      </tr>
+      <tr>
+        <td>API esterne (ERP, PIM, sistemi custom)</td>
+        <td>Dipende dal sistema: webhook se supportati, endpoint <code>?modified_since=</code> per polling efficiente</td>
+        <td>Polling con filtro temporale — la maggior parte delle API supporta <code>modified_after</code></td>
+        <td>Molti ERP non supportano webhook. Il polling con filtro <code>modified_after</code> + paginazione è la soluzione più universale.</td>
+      </tr>
+    </tbody>
+  </table>
+
+</div>
+</div>
+
+
+<!-- ══════════════════════════════════
+     S3 — FRESCHEZZA E CONFLITTI
+══════════════════════════════════ -->
+<div class="sect" id="s3">
+<div class="cw">
+
+  <div class="s-eyebrow">La robustezza del sistema</div>
+  <div class="s-title">Metadato di freschezza e gestione dei casi difficili</div>
+
+  <p>Un sistema di sincronizzazione in produzione incontra casi che il ciclo "felice" non contempla: webhook mancati, documenti modificati durante una reindicizzazione, errori di rete, fonti temporaneamente irraggiungibili. Come si costruisce un sistema che regge in questi casi?</p>
+
+  <div class="diagram">
+    <div class="diagram-title">Gli stati del registro — ciclo di vita di un documento nell'indice</div>
+
+    <div style="display:flex; align-items:center; justify-content:center; gap:0; flex-wrap:wrap; margin:8px 0;">
+      <div style="padding:12px 18px; border:1.5px solid var(--ok); border-radius:4px; background:var(--ok-bg); text-align:center;">
+        <div style="font-family:'DM Mono',monospace; font-size:9px; letter-spacing:1.5px; text-transform:uppercase; color:var(--ok); margin-bottom:4px;">SINCRONIZZATO</div>
+        <div style="font-size:12px; color:var(--ink3);">hash locale = hash fonte<br>agente usa i chunk</div>
+      </div>
+      <div style="padding:0 10px; color:var(--border2); font-family:'DM Mono',monospace; font-size:18px;">→</div>
+      <div style="padding:12px 18px; border:1.5px solid var(--warm); border-radius:4px; background:var(--warm-bg); text-align:center;">
+        <div style="font-family:'DM Mono',monospace; font-size:9px; letter-spacing:1.5px; text-transform:uppercase; color:var(--warm); margin-bottom:4px;">STALE</div>
+        <div style="font-size:12px; color:var(--ink3);">fonte modificata<br>indice non ancora aggiornato</div>
+      </div>
+      <div style="padding:0 10px; color:var(--border2); font-family:'DM Mono',monospace; font-size:18px;">→</div>
+      <div style="padding:12px 18px; border:1.5px solid var(--note); border-radius:4px; background:var(--note-bg); text-align:center;">
+        <div style="font-family:'DM Mono',monospace; font-size:9px; letter-spacing:1.5px; text-transform:uppercase; color:var(--note); margin-bottom:4px;">IN AGGIORNAMENTO</div>
+        <div style="font-size:12px; color:var(--ink3);">reindicizzazione<br>in corso</div>
+      </div>
+      <div style="padding:0 10px; color:var(--border2); font-family:'DM Mono',monospace; font-size:18px;">→</div>
+      <div style="padding:12px 18px; border:1.5px solid var(--ok); border-radius:4px; background:var(--ok-bg); text-align:center;">
+        <div style="font-family:'DM Mono',monospace; font-size:9px; letter-spacing:1.5px; text-transform:uppercase; color:var(--ok); margin-bottom:4px;">SINCRONIZZATO</div>
+        <div style="font-size:12px; color:var(--ink3);">aggiornamento completato</div>
+      </div>
+    </div>
+    <div style="margin-top:12px; display:flex; justify-content:center;">
+      <div style="padding:10px 16px; border:1.5px solid var(--bad); border-radius:4px; background:var(--bad-bg); text-align:center; max-width:200px;">
+        <div style="font-family:'DM Mono',monospace; font-size:9px; letter-spacing:1.5px; text-transform:uppercase; color:var(--bad); margin-bottom:4px;">ERRORE</div>
+        <div style="font-size:12px; color:var(--ink3);">sincronizzazione fallita<br>richiede retry o intervento</div>
+      </div>
+    </div>
+  </div>
+
+  <p>Il caso più delicato è lo stato <strong>STALE</strong>: il documento nella fonte è stato modificato, ma l'indice non è ancora aggiornato. Come si comporta l'agente in questo intervallo? Ci sono tre approcci:</p>
+
+  <div class="callout callout-teal">
+    <div class="callout-title">Come gestire lo stato STALE durante il retrieval</div>
+    <p><strong>Approccio 1 — Usa i vecchi chunk, aggiungi un disclaimer.</strong> Il retrieval restituisce i chunk esistenti, ma il sistema aggiunge un'annotazione nel contesto: "Nota: questa scheda è stata modificata nella fonte — le informazioni potrebbero non essere aggiornate." Il modello può includerlo nella risposta.</p>
+    <p><strong>Approccio 2 — Blocca il retrieval, connessione diretta per i documenti STALE.</strong> Quando un documento è STALE, il sistema recupera il contenuto direttamente dalla fonte invece di usare l'indice. Più corretto, ma introduce latenza variabile.</p>
+    <p><strong>Approccio 3 — Accetta la finestra di staleness.</strong> Se il polling avviene ogni ora e il dominio lo permette, un'ora di lag è accettabile. Il sistema non fa nulla di speciale per i documenti STALE — si aggiorneranno al prossimo ciclo.</p>
+    <p>La scelta dipende da quanto critica è la freschezza per il tuo caso. Per un catalogo prodotti con prezzi che cambiano raramente, l'approccio 3 è spesso sufficiente. Per un sistema di supporto dove le procedure cambiano frequentemente, l'approccio 1 o 2 è necessario.</p>
+  </div>
+
+  <p>Un secondo caso difficile è la <strong>reindicizzazione durante l'uso</strong>: cosa succede se un documento è in fase di aggiornamento (stato IN_AGGIORNAMENTO) mentre l'agente sta eseguendo una query? La soluzione più semplice è mantenere i vecchi chunk nel vector store finché i nuovi non sono pronti — eliminare i vecchi e aggiungere i nuovi in modo atomico, alla fine del processo. Il retrieval continua a funzionare sui vecchi chunk durante l'aggiornamento.</p>
+
+  <div class="code-block">
+    <div class="cb-head">Pattern di reindicizzazione atomica — aggiungi prima, elimina dopo</div>
+    <div class="cb-body"><span class="cb-kw">def</span> <span class="cb-fn">reindicizza_atomico</span>(self, doc):
+  <span class="cb-comment"># Passo 1: aggiungi i NUOVI chunk con suffisso "_new"</span>
+  testo = self.fonte.scarica_testo(doc.id)
+  nuovi_chunks = <span class="cb-fn">chunking</span>(testo, doc.nome, doc.categoria, suffix=<span class="cb-str">"_new"</span>)
+  self.vs.aggiungi(nuovi_chunks)
+
+  <span class="cb-comment"># Passo 2: aggiorna il registro con i nuovi chunk_ids</span>
+  <span class="cb-comment"># Da questo momento in poi il retrieval trova i nuovi chunk</span>
+  self.reg.aggiorna(doc.id, {
+    <span class="cb-str">"chunk_ids"</span>: [c.id <span class="cb-kw">for</span> c <span class="cb-kw">in</span> nuovi_chunks],
+    <span class="cb-str">"stato"</span>:     <span class="cb-str">"SINCRONIZZATO"</span>,
+    <span class="cb-str">"hash_contenuto"</span>: <span class="cb-fn">sha256</span>(testo)
+  })
+
+  <span class="cb-comment"># Passo 3: elimina i VECCHI chunk (ora non più referenziati)</span>
+  self.vs.elimina(filter={<span class="cb-str">"documento_id"</span>: doc.id,
+                          <span class="cb-str">"versione"</span>: <span class="cb-str">"old"</span>})
+  <span class="cb-comment"># Nessuna finestra di "zero chunk" — sempre disponibili</span></div>
+  </div>
+
+  <div class="callout callout-warn">
+    <div class="callout-title">Il problema dei webhook mancati</div>
+    <p>I webhook non sono garantiti. Una notifica può essere persa per un downtime del server, un timeout, un errore di rete. Se si usano solo webhook come trigger, un documento modificato durante un'interruzione non viene mai reindicizzato.</p>
+    <p><strong>La soluzione è il sistema ibrido di trigger:</strong> webhook come meccanismo primario (bassa latenza), polling periodico come fallback (alta affidabilità). Il polling notturno con confronto degli hash cattura tutti i documenti modificati che i webhook non hanno notificato.</p>
+    <p>Il timestamp dell'ultima sync nel registro è fondamentale per questo: il polling filtra solo i documenti con <code>ultima_modifica_fonte &gt; ultima_indicizzazione</code> — non deve riscansionare tutto, solo i candidati.</p>
+  </div>
+
+</div>
+</div>
+
+
+<!-- ══════════════════════════════════
+     S4 — QUANDO HA SENSO
+══════════════════════════════════ -->
+<div class="sect" id="s4">
+<div class="cw">
+
+  <div class="s-eyebrow">La guida decisionale</div>
+  <div class="s-title">Quando ha senso e quando non vale la complessità</div>
+
+  <p>L'indice sincronizzato è potente ma non gratuito. Ha un costo di sviluppo iniziale (costruire il sync manager, il registro, i connettori alle fonti), un costo operativo (monitoraggio, gestione degli errori, manutenzione dei connettori quando le API cambiano), e un costo cognitivo (il team deve capire e mantenere un sistema con più componenti mobili).</p>
+
+  <p>Prima di costruirlo, vale la pena rispondere onestamente a quattro domande:</p>
+
+  <div class="decision-matrix">
+    <div class="dm-cell header">Domanda</div>
+    <div class="dm-cell header">Implicazione</div>
+
+    <div class="dm-cell">
+      <div class="dm-q">Con quale frequenza cambia il corpus?</div>
+      <div class="dm-a">Se il corpus cambia raramente (mensile o meno), la copia statica è spesso sufficiente — si reindicizza manualmente quando necessario. La sincronizzazione automatica vale la pena quando i cambiamenti sono settimanali o più frequenti.</div>
+      <div class="dm-verdict" style="background:var(--ok-bg); color:var(--ok);">Cambia spesso → sync automatica giustificata</div>
+    </div>
+    <div class="dm-cell" style="background:var(--bg2);">
+      <div class="dm-q">Quanto è critica la freschezza delle informazioni?</div>
+      <div class="dm-a">Un catalogo prodotti con prezzi stabili tollera 24–48 ore di lag. Un sistema di supporto con procedure che cambiano frequentemente non può tollerare nemmeno poche ore di disallineamento. La criticità della freschezza determina la latenza massima accettabile e quindi il tipo di trigger.</div>
+      <div class="dm-verdict" style="background:var(--teal-bg); color:var(--teal);">Critica → webhook, non solo polling</div>
+    </div>
+
+    <div class="dm-cell">
+      <div class="dm-q">Il team ha le competenze per mantenere il sistema nel tempo?</div>
+      <div class="dm-a">Un sync manager in produzione richiede monitoraggio attivo: alert su fallimenti, gestione dei rinnovi dei webhook, aggiornamenti quando le API della fonte cambiano. Se non c'è un responsabile tecnico che monitora il sistema, gli errori di sincronizzazione si accumulano silenziosamente.</div>
+      <div class="dm-verdict" style="background:var(--warm-bg); color:var(--warm);">Nessun responsabile → considera la copia statica</div>
+    </div>
+    <div class="dm-cell" style="background:var(--bg2);">
+      <div class="dm-q">Esiste già un'infrastruttura su cui appoggiarsi?</div>
+      <div class="dm-a">Se la fonte è già PostgreSQL, l'aggiunta di trigger SQL e un registro di stato è un'estensione naturale del sistema esistente. Se la fonte è Google Drive e non hai mai usato le API di Drive, il connettore ha una curva di apprendimento non banale. L'infrastruttura esistente abbassa il costo reale.</div>
+      <div class="dm-verdict" style="background:var(--navy-bg); color:var(--navy);">Infrastruttura esistente → costo ridotto</div>
+    </div>
+  </div>
+
+  <div class="diagram">
+    <div class="diagram-title">Confronto dei tre approcci — costo vs. benefici</div>
+    <div style="border:1px solid var(--border2); border-radius:4px; overflow:hidden;">
+      <div class="cost-row header">
+        <div class="cr-cell">Dimensione</div>
+        <div class="cr-cell center">Connessione<br>diretta</div>
+        <div class="cr-cell center">Copia<br>statica</div>
+        <div class="cr-cell center">Indice<br>sincronizzato</div>
+      </div>
+      <div class="cost-row">
+        <div class="cr-cell">Velocità del retrieval</div>
+        <div class="cr-cell center"><span class="dot-bad">●</span></div>
+        <div class="cr-cell center"><span class="dot-ok">●</span></div>
+        <div class="cr-cell center"><span class="dot-ok">●</span></div>
+      </div>
+      <div class="cost-row">
+        <div class="cr-cell">Freschezza delle informazioni</div>
+        <div class="cr-cell center"><span class="dot-ok">●</span></div>
+        <div class="cr-cell center"><span class="dot-bad">●</span></div>
+        <div class="cr-cell center"><span class="dot-warn">●</span></div>
+      </div>
+      <div class="cost-row">
+        <div class="cr-cell">Resilienza (fonte non disponibile)</div>
+        <div class="cr-cell center"><span class="dot-bad">●</span></div>
+        <div class="cr-cell center"><span class="dot-ok">●</span></div>
+        <div class="cr-cell center"><span class="dot-ok">●</span></div>
+      </div>
+      <div class="cost-row">
+        <div class="cr-cell">Costo di sviluppo iniziale</div>
+        <div class="cr-cell center"><span class="dot-ok">●</span></div>
+        <div class="cr-cell center"><span class="dot-ok">●</span></div>
+        <div class="cr-cell center"><span class="dot-bad">●</span></div>
+      </div>
+      <div class="cost-row">
+        <div class="cr-cell">Costo operativo nel tempo</div>
+        <div class="cr-cell center"><span class="dot-warn">●</span></div>
+        <div class="cr-cell center"><span class="dot-ok">●</span></div>
+        <div class="cr-cell center"><span class="dot-warn">●</span></div>
+      </div>
+      <div class="cost-row" style="border-bottom:none;">
+        <div class="cr-cell">Scala su corpus grande</div>
+        <div class="cr-cell center"><span class="dot-bad">●</span></div>
+        <div class="cr-cell center"><span class="dot-ok">●</span></div>
+        <div class="cr-cell center"><span class="dot-ok">●</span></div>
+      </div>
+    </div>
+    <p style="font-size:12px; color:var(--ink4); margin-top:10px; margin-bottom:0;"><span style="color:var(--ok);">●</span> buono &nbsp;&nbsp; <span style="color:var(--warn);">●</span> accettabile &nbsp;&nbsp; <span style="color:var(--bad);">●</span> problematico</p>
+  </div>
+
+  <div class="callout callout-ok">
+    <div class="callout-title">Il percorso evolutivo consigliato</div>
+    <p>Non è necessario costruire il sistema sincronizzato fin dal primo giorno. Il percorso più pragmatico è evolutivo:</p>
+    <p><strong>Fase 1:</strong> copia statica. Indicizza il corpus, costruisci l'agente, validalo. Questa fase ti dice se il RAG risolve il problema — prima di investire nell'infrastruttura di sincronizzazione.</p>
+    <p><strong>Fase 2:</strong> polling manuale strutturato. Aggiungi il registro di stato e il sync manager, ma triggheralo manualmente o su schedule settimanale. Inizia a capire quali documenti cambiano frequentemente e quanto la freschezza impatta le risposte.</p>
+    <p><strong>Fase 3:</strong> sincronizzazione automatica. Aggiungi i trigger (webhook o polling periodico) solo per le fonti e i documenti che cambiano abbastanza spesso da giustificare l'automazione.</p>
+    <p>Questo approccio evita di costruire infrastruttura complessa per un problema che potrebbe non esistere ancora — o che potrebbe essere molto più piccolo di quanto si anticipi.</p>
+  </div>
+
+  <div class="key-insight">
+    <div class="ki-label">Il principio da portare via</div>
+    <div class="ki-text">L'indice sincronizzato non è una tecnologia — è una responsabilità. Funziona bene solo se qualcuno lo monitora, lo mantiene, e lo aggiorna quando le fonti cambiano. Vale la pena costruirlo quando il costo di avere informazioni stale supera il costo di mantenere il sistema.</div>
+  </div>
+
+</div>
+</div>
+
+<!-- FOOTER -->
+<div class="footer">
+  <span>Serie RAG Pratico · Report Extra · Indice locale sincronizzato con fonte esterna</span>
+  <span>2026</span>
+</div>
+
+<script>
+function show(n) {
+  document.querySelectorAll('.sect').forEach(s => s.classList.remove('active'));
+  document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('s'+n).classList.add('active');
+  document.querySelectorAll('.nav-btn')[n].classList.add('active');
+  window.scrollTo({top:0, behavior:'smooth'});
+}
+</script>
+</body>
+</html>
