@@ -1,0 +1,773 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Memoria — C · Memoria semantica: costruire un profilo stabile</title>
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Outfit:wght@200;300;400;500;600;700;800;900&family=IBM+Plex+Mono:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg:     #faf8f5;
+  --bg2:    #f2efe9;
+  --bg3:    #e9e5dc;
+  --ink:    #1b1915;
+  --ink2:   #2e2b25;
+  --ink3:   #6d685c;
+  --ink4:   #a19c8f;
+  --border: #d9d4c8;
+  --border2:#cac4b6;
+
+  --accent:  #3d7a45;
+  --accent2: #2e5038;
+  --accent-light: #f4faf5;
+
+  --ok:  #3d7a45; --ok-l:#f4faf5;
+  --bad: #c0392b; --bad-l:#fdf5f5;
+  --warn:#b07d24; --warn-l:#fdf6e8;
+}
+
+* { margin:0; padding:0; box-sizing:border-box; }
+html { scroll-behavior:smooth; }
+body { background:var(--bg); color:var(--ink); font-family:'Outfit',sans-serif; font-weight:300; font-size:14px; line-height:1.75; }
+
+.masthead { background:var(--ink); color:rgba(255,255,255,.9); padding:60px 56px 52px; position:relative; overflow:hidden; }
+.masthead::before { content:''; position:absolute; inset:0; background: repeating-linear-gradient(90deg,rgba(255,255,255,.012) 0,rgba(255,255,255,.012) 1px,transparent 1px,transparent 64px), repeating-linear-gradient(0deg,rgba(255,255,255,.012) 0,rgba(255,255,255,.012) 1px,transparent 1px,transparent 64px); pointer-events:none; }
+.masthead::after { content:'C'; position:absolute; right:44px; bottom:-28px; font-family:'Instrument Serif',serif; font-size:280px; line-height:1; color:rgba(255,255,255,.025); pointer-events:none; }
+.mh-eye { font-family:'IBM Plex Mono',monospace; font-size:10px; letter-spacing:3px; text-transform:uppercase; color:rgba(255,255,255,.25); margin-bottom:18px; position:relative; }
+.mh-cluster { display:inline-block; font-family:'IBM Plex Mono',monospace; font-size:10px; letter-spacing:2px; text-transform:uppercase; padding:4px 12px; border:1px solid var(--accent); color:var(--accent); margin-bottom:20px; position:relative; }
+.masthead h1 { font-family:'Instrument Serif',serif; font-weight:400; font-size:clamp(30px,4.5vw,54px); line-height:1.08; letter-spacing:-1px; max-width:700px; position:relative; }
+.mh-sub { margin-top:20px; font-size:15px; font-weight:300; color:rgba(255,255,255,.38); max-width:660px; line-height:1.7; position:relative; }
+.mh-meta { margin-top:32px; display:flex; gap:32px; flex-wrap:wrap; position:relative; }
+.mh-stat { display:flex; flex-direction:column; gap:4px; }
+.mh-stat-val { font-family:'IBM Plex Mono',monospace; font-size:22px; font-weight:500; color:rgba(255,255,255,.85); }
+.mh-stat-lbl { font-size:10px; letter-spacing:2px; text-transform:uppercase; color:rgba(255,255,255,.25); }
+
+.nav { background:var(--ink2); position:sticky; top:0; z-index:100; display:flex; overflow-x:auto; border-bottom:1px solid rgba(255,255,255,.06); }
+.nav-btn { flex:1; min-width:100px; padding:13px 12px; border:none; background:transparent; cursor:pointer; font-family:'Outfit',sans-serif; font-size:10.5px; font-weight:600; text-transform:uppercase; letter-spacing:.4px; color:rgba(255,255,255,.3); border-right:1px solid rgba(255,255,255,.06); transition:all .2s; white-space:nowrap; }
+.nav-btn:last-child { border-right:none; }
+.nav-btn:hover { color:rgba(255,255,255,.6); }
+.nav-btn.active { color:#fff; background:rgba(255,255,255,.05); }
+
+.sect { display:none; }
+.sect.active { display:block; animation:fadeIn .3s ease; }
+@keyframes fadeIn { from{opacity:0;transform:translateY(6px)} to{opacity:1;transform:translateY(0)} }
+.sect-head { padding:48px 56px 36px; border-bottom:1px solid var(--border); }
+.sect-num { font-family:'IBM Plex Mono',monospace; font-size:10px; letter-spacing:3px; text-transform:uppercase; color:var(--ink4); margin-bottom:10px; }
+.sect-head h2 { font-family:'Instrument Serif',serif; font-weight:400; font-size:clamp(26px,3.5vw,42px); line-height:1.1; letter-spacing:-.5px; max-width:640px; margin-bottom:14px; }
+.sect-head p { color:var(--ink3); max-width:700px; font-size:14.5px; }
+.wrap { padding:0 56px 64px; }
+
+.prose { max-width:760px; }
+.prose p { font-size:14.5px; color:var(--ink3); line-height:1.85; margin-bottom:16px; }
+.prose p strong { color:var(--ink2); font-weight:500; }
+.prose p em { font-style:italic; color:var(--ink2); }
+
+/* ── GL CARD ── */
+.gl-group { margin-top:36px; }
+.gl-group-title { font-family:'IBM Plex Mono',monospace; font-size:9px; letter-spacing:3px; text-transform:uppercase; color:var(--ink4); padding-bottom:10px; border-bottom:1px solid var(--border); }
+.gl-card { border:1px solid var(--border2); border-top:none; background:var(--bg); }
+.gl-header { display:grid; grid-template-columns:5px 52px 1fr auto; align-items:stretch; border-bottom:1px solid var(--border); }
+.gl-stripe { background:var(--accent); }
+.gl-num { font-family:'Outfit',sans-serif; font-weight:800; font-size:20px; color:var(--bg3); display:flex; align-items:center; justify-content:center; border-right:1px solid var(--border); }
+.gl-title-wrap { padding:16px 20px; }
+.gl-title { font-family:'Instrument Serif',serif; font-size:20px; color:var(--ink2); line-height:1.2; }
+.gl-subtitle { font-size:12px; color:var(--ink4); margin-top:3px; }
+.gl-impact-wrap { padding:14px 20px; display:flex; flex-direction:column; align-items:flex-end; justify-content:center; gap:4px; }
+.gl-impact-stars { font-size:14px; }
+.gl-impact-lbl { font-family:'IBM Plex Mono',monospace; font-size:8px; letter-spacing:1px; text-transform:uppercase; color:var(--ink4); }
+.gl-body { padding:0; }
+.gl-section { padding:20px 24px; border-bottom:1px solid var(--border); }
+.gl-section:last-child { border-bottom:none; }
+.gl-section-lbl { font-family:'IBM Plex Mono',monospace; font-size:9px; letter-spacing:2px; text-transform:uppercase; color:var(--ink4); margin-bottom:10px; padding-bottom:6px; border-bottom:1px solid var(--border); }
+.gl-section p { font-size:13.5px; color:var(--ink3); line-height:1.8; max-width:740px; }
+.gl-section p strong { color:var(--ink2); font-weight:500; }
+
+/* ── CONSOLIDATION FLOW ── */
+.consol-flow { margin-top:20px; background:var(--ink); border:1px solid var(--border2); padding:22px; overflow-x:auto; }
+.consol-flow svg { display:block; margin:0 auto; }
+
+/* ── PROFILE SCHEMA ── */
+.profile-card { margin-top:16px; border:1px solid var(--border2); overflow:hidden; }
+.pc-head { padding:10px 16px; background:var(--ink); border-bottom:1px solid rgba(255,255,255,.06); font-family:'IBM Plex Mono',monospace; font-size:9px; letter-spacing:2px; text-transform:uppercase; color:rgba(255,255,255,.4); }
+.pc-body { font-family:'IBM Plex Mono',monospace; font-size:11.5px; line-height:1.9; padding:18px 22px; background:var(--ink); color:rgba(255,255,255,.75); white-space:pre-wrap; }
+.pc-body .k  { color:#93c5e8; }
+.pc-body .v  { color:#7dd3a8; }
+.pc-body .t  { color:#f4a87a; }
+.pc-body .cm { color:rgba(255,255,255,.28); }
+.pc-body .sec { color:#c4a8e8; font-weight:500; }
+
+/* ── EXTRACTION EXAMPLES ── */
+.extraction-grid { display:grid; grid-template-columns:1fr auto 1fr; gap:0; margin-top:16px; border:1px solid var(--border2); }
+.eg-col { padding:16px 18px; background:var(--bg); }
+.eg-col:first-child { border-right:1px solid var(--border); }
+.eg-col:last-child  { border-left:1px solid var(--border); }
+.eg-arrow { background:var(--bg2); display:flex; align-items:center; justify-content:center; padding:0 12px; font-size:20px; color:var(--accent); }
+.eg-label { font-family:'IBM Plex Mono',monospace; font-size:9px; letter-spacing:2px; text-transform:uppercase; color:var(--ink4); margin-bottom:8px; padding-bottom:6px; border-bottom:1px solid var(--border); }
+.eg-item { font-size:13px; color:var(--ink3); line-height:1.65; padding:6px 0; border-bottom:1px solid var(--border); }
+.eg-item:last-child { border-bottom:none; }
+.eg-item em { color:var(--ink4); font-style:italic; font-size:12px; }
+.eg-item strong { color:var(--ink2); font-weight:500; }
+.eg-item .arrow { color:var(--accent); font-family:'IBM Plex Mono',monospace; font-size:12px; }
+
+/* ── UPDATE STRATEGIES ── */
+.update-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:12px; margin-top:16px; }
+.ug-card { border:1px solid var(--border2); background:var(--bg); padding:16px 18px; overflow:hidden; }
+.ug-type { font-family:'IBM Plex Mono',monospace; font-size:8px; letter-spacing:2px; text-transform:uppercase; margin-bottom:5px; }
+.ug-name { font-weight:600; font-size:14px; color:var(--ink2); margin-bottom:8px; }
+.ug-when { font-size:13px; color:var(--ink3); line-height:1.6; margin-bottom:8px; }
+.ug-when strong { color:var(--ink2); font-weight:500; }
+.ug-example { padding:8px 10px; font-family:'IBM Plex Mono',monospace; font-size:10.5px; line-height:1.6; border-left:3px solid; }
+
+/* ── CONFLICT PANEL ── */
+.conflict-panel { margin-top:16px; display:grid; grid-template-columns:1fr 1fr; gap:12px; }
+.cp-card { border:1px solid var(--border2); background:var(--bg); padding:16px 18px; overflow:hidden; }
+.cp-label { font-family:'IBM Plex Mono',monospace; font-size:9px; letter-spacing:2px; text-transform:uppercase; margin-bottom:6px; }
+.cp-title { font-family:'Instrument Serif',serif; font-size:17px; color:var(--ink2); margin-bottom:8px; }
+.cp-body { font-size:13px; color:var(--ink3); line-height:1.6; }
+.cp-body strong { color:var(--ink2); font-weight:500; }
+.cp-example { margin-top:8px; padding:8px 10px; font-family:'IBM Plex Mono',monospace; font-size:11px; line-height:1.6; }
+
+/* ── PROMPT TEMPLATE ── */
+.pt { margin-top:14px; font-family:'IBM Plex Mono',monospace; font-size:11.5px; line-height:1.85; padding:16px 20px; border:1px solid var(--border2); background:var(--ink); color:rgba(255,255,255,.75); white-space:pre-wrap; word-break:break-word; }
+.pt .sec { color:#f4a87a; font-weight:500; }
+.pt .ins { color:#7dd3a8; }
+.pt .var { color:#93c5e8; }
+.pt .cmt { color:rgba(255,255,255,.28); }
+.pt .out { color:#c4a8e8; }
+
+/* ── COMPARE GRID ── */
+.compare-grid { display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-top:12px; }
+.pex-lbl { font-family:'IBM Plex Mono',monospace; font-size:9px; letter-spacing:2px; text-transform:uppercase; margin-bottom:6px; }
+.pex-lbl.bad  { color:var(--bad); }
+.pex-lbl.good { color:var(--accent); }
+.prompt-box { font-family:'IBM Plex Mono',monospace; font-size:11.5px; line-height:1.75; padding:14px 18px; border:1px solid; white-space:pre-wrap; word-break:break-word; }
+.prompt-box.bad  { border-color:#e8c5c5; background:var(--bad-l); color:#6b3030; }
+.prompt-box.good { border-color:#a8d4b8; background:var(--accent-light); color:var(--accent2); }
+.prompt-box.neutral { border-color:var(--border2); background:var(--bg2); color:var(--ink3); }
+.prompt-box .hl { font-weight:500; color:var(--accent); }
+
+/* ── CHECKLIST ── */
+.checklist { margin-top:16px; }
+.check-item { display:flex; gap:12px; align-items:flex-start; padding:10px 0; border-bottom:1px solid var(--border); font-size:13.5px; color:var(--ink3); }
+.check-item:last-child { border-bottom:none; }
+.check-icon { width:20px; height:20px; border-radius:50%; background:var(--accent); color:#fff; display:flex; align-items:center; justify-content:center; font-size:11px; font-weight:700; flex-shrink:0; margin-top:1px; }
+.check-item strong { color:var(--ink2); font-weight:500; }
+
+/* ── MECHANISM ── */
+.mechanism { margin-top:14px; padding:14px 18px; border-left:3px solid var(--accent); background:var(--accent-light); }
+.mech-lbl { font-family:'IBM Plex Mono',monospace; font-size:9px; letter-spacing:2px; text-transform:uppercase; color:var(--accent); margin-bottom:6px; }
+.mechanism p { font-size:13px; color:var(--ink3); line-height:1.65; }
+.mechanism p strong { color:var(--ink2); font-weight:500; }
+
+/* ── KEY POINT ── */
+.key-point { margin-top:36px; padding:24px 28px; border-left:4px solid var(--accent); background:var(--accent-light); }
+.kp-label { font-family:'IBM Plex Mono',monospace; font-size:9px; letter-spacing:2px; text-transform:uppercase; color:var(--accent); margin-bottom:8px; }
+.kp-text { font-family:'Instrument Serif',serif; font-size:18px; line-height:1.45; color:var(--ink2); }
+.kp-sub { margin-top:10px; font-size:13px; color:var(--ink3); line-height:1.65; }
+
+/* ── INSIGHT ── */
+.insight { margin:16px 0; padding:16px 20px; border-left:4px solid var(--accent); background:var(--accent-light); }
+.insight-lbl { font-family:'IBM Plex Mono',monospace; font-size:9px; letter-spacing:2px; text-transform:uppercase; color:var(--accent); margin-bottom:6px; }
+.insight p { font-size:13.5px; color:var(--ink2); line-height:1.65; max-width:700px; }
+.insight p strong { font-weight:500; }
+
+/* ── FOOTER ── */
+.footer { padding:24px 56px; border-top:1px solid var(--border); display:flex; justify-content:space-between; align-items:center; font-family:'IBM Plex Mono',monospace; font-size:10px; letter-spacing:1px; text-transform:uppercase; color:var(--ink4); }
+
+@media (max-width:700px) {
+  .masthead,.sect-head,.wrap,.footer { padding-left:20px; padding-right:20px; }
+  .compare-grid,.update-grid,.conflict-panel,.extraction-grid { grid-template-columns:1fr; }
+  .gl-header { grid-template-columns:5px 40px 1fr; }
+  .gl-impact-wrap { display:none; }
+  .eg-arrow { display:none; }
+}
+</style>
+</head>
+<body>
+
+<div class="masthead">
+  <div class="mh-eye">Serie Agenti AI · Leva Memoria</div>
+  <div class="mh-cluster">Report C</div>
+  <h1>Memoria semantica: costruire un profilo stabile</h1>
+  <p class="mh-sub">Il passaggio dagli episodi ai fatti generali. Come estrarre conoscenza stabile dalle conversazioni, strutturare il profilo dell'utente, mantenerlo aggiornato quando le informazioni cambiano, e gestire i conflitti tra memoria consolidata e input corrente.</p>
+  <div class="mh-meta">
+    <div class="mh-stat"><div class="mh-stat-val">Consolidamento</div><div class="mh-stat-lbl">Il processo chiave</div></div>
+    <div class="mh-stat"><div class="mh-stat-val">4</div><div class="mh-stat-lbl">Categorie del profilo</div></div>
+    <div class="mh-stat"><div class="mh-stat-val">Conflitti</div><div class="mh-stat-lbl">Il caso più delicato</div></div>
+    <div class="mh-stat"><div class="mh-stat-val">Permanente</div><div class="mh-stat-lbl">Durata</div></div>
+  </div>
+</div>
+
+<div class="nav">
+  <button class="nav-btn active" onclick="show(1)">Il consolidamento</button>
+  <button class="nav-btn" onclick="show(2)">Estrarre i fatti</button>
+  <button class="nav-btn" onclick="show(3)">Il profilo strutturato</button>
+  <button class="nav-btn" onclick="show(4)">Aggiornare il profilo</button>
+  <button class="nav-btn" onclick="show(5)">Gestire i conflitti</button>
+  <button class="nav-btn" onclick="show(6)">Checklist</button>
+</div>
+
+
+<!-- ═══════════════════════════
+     S1 — IL CONSOLIDAMENTO
+═══════════════════════════ -->
+<div class="sect active" id="s1">
+  <div class="sect-head">
+    <div class="sect-num">Introduzione</div>
+    <h2>Il consolidamento — da episodi a fatti generali</h2>
+    <p>La memoria semantica non si costruisce dall'alto: emerge dal basso, distillando pattern ricorrenti dagli episodi. È il processo che trasforma "ha detto X tre volte in tre sessioni diverse" in "preferisce X".</p>
+  </div>
+  <div class="wrap">
+
+    <div class="prose" style="margin-top:28px;">
+      <p>Un singolo episodio può contenere un'informazione interessante sull'utente — ma un'affermazione fatta una sola volta non è ancora un fatto stabile. La memoria semantica richiede un processo di <em>consolidamento</em>: osservare i pattern nel tempo, valutare la loro persistenza, e generalizzarli in attributi del profilo che si applicano a tutte le sessioni future.</p>
+      <p>La distinzione tra episodico e semantico non è solo teorica. <strong>Un fatto semantico ben estratto vale molto di più di dieci episodi correlati</strong> nel context window — occupa meno spazio, è più facile da aggiornare, e si applica direttamente a qualsiasi sessione senza richiedere retrieval. Il profilo semantico è il nucleo della continuità a lungo termine.</p>
+    </div>
+
+    <div class="consol-flow">
+      <svg viewBox="0 0 720 200" width="100%" xmlns="http://www.w3.org/2000/svg" font-family="IBM Plex Mono, monospace">
+        <text x="20" y="20" fill="rgba(255,255,255,.35)" font-size="9" letter-spacing="2">IL FLUSSO DI CONSOLIDAMENTO — DA EPISODI A PROFILO SEMANTICO</text>
+
+        <!-- Episodi multipli -->
+        <rect x="20"  y="40" width="120" height="44" rx="3" fill="#2a1e0a" stroke="#b07d24" stroke-width="1.2"/>
+        <text x="80" y="60" fill="#f4c87a" font-size="9" text-anchor="middle">[EPISODIO 1]</text>
+        <text x="80" y="74" fill="rgba(255,255,255,.4)" font-size="8" text-anchor="middle">15/03 contratti</text>
+
+        <rect x="20"  y="94" width="120" height="44" rx="3" fill="#2a1e0a" stroke="#b07d24" stroke-width="1.2"/>
+        <text x="80" y="114" fill="#f4c87a" font-size="9" text-anchor="middle">[EPISODIO 2]</text>
+        <text x="80" y="128" fill="rgba(255,255,255,.4)" font-size="8" text-anchor="middle">18/03 analisi</text>
+
+        <rect x="20"  y="148" width="120" height="44" rx="3" fill="#2a1e0a" stroke="#b07d24" stroke-width="1.2"/>
+        <text x="80" y="168" fill="#f4c87a" font-size="9" text-anchor="middle">[EPISODIO 3]</text>
+        <text x="80" y="182" fill="rgba(255,255,255,.4)" font-size="8" text-anchor="middle">20/03 report</text>
+
+        <!-- Frecce convergenti -->
+        <line x1="140" y1="62"  x2="195" y2="108" stroke="#b07d24" stroke-width="1.5" stroke-dasharray="4,3"/>
+        <line x1="140" y1="116" x2="195" y2="112" stroke="#b07d24" stroke-width="1.5" stroke-dasharray="4,3"/>
+        <line x1="140" y1="170" x2="195" y2="116" stroke="#b07d24" stroke-width="1.5" stroke-dasharray="4,3"/>
+
+        <!-- Motore di consolidamento -->
+        <rect x="195" y="80" width="150" height="60" rx="3" fill="#2a2e1a" stroke="#3d7a45" stroke-width="2"/>
+        <text x="270" y="104" fill="#7dd3a8" font-size="10" text-anchor="middle" font-weight="700">CONSOLIDAMENTO</text>
+        <text x="270" y="120" fill="rgba(255,255,255,.45)" font-size="9" text-anchor="middle">estrai → generalizza</text>
+        <text x="270" y="132" fill="rgba(255,255,255,.45)" font-size="9" text-anchor="middle">→ aggiorna profilo</text>
+
+        <!-- Freccia al profilo -->
+        <line x1="345" y1="110" x2="395" y2="110" stroke="#3d7a45" stroke-width="2" marker-end="url(#arr_c)"/>
+
+        <!-- Profilo semantico -->
+        <rect x="395" y="55" width="200" height="110" rx="3" fill="#1a2e1e" stroke="#3d7a45" stroke-width="2"/>
+        <text x="495" y="78" fill="#7dd3a8" font-size="10" text-anchor="middle" font-weight="700">PROFILO SEMANTICO</text>
+        <text x="410" y="96"  fill="rgba(255,255,255,.6)" font-size="9">settore: diritto contrattuale</text>
+        <text x="410" y="110" fill="rgba(255,255,255,.6)" font-size="9">stile: analisi dettagliata</text>
+        <text x="410" y="124" fill="rgba(255,255,255,.6)" font-size="9">expertise: senior</text>
+        <text x="410" y="138" fill="rgba(255,255,255,.6)" font-size="9">lingua: italiano</text>
+        <text x="410" y="152" fill="rgba(255,255,255,.45)" font-size="8">permanente · aggiornabile</text>
+
+        <!-- Freccia utilizzo -->
+        <line x1="595" y1="110" x2="645" y2="110" stroke="rgba(61,122,69,.5)" stroke-width="1.5" stroke-dasharray="3,2" marker-end="url(#arr_d)"/>
+
+        <!-- Ogni sessione -->
+        <rect x="645" y="80" width="62" height="60" rx="3" fill="#1a2e1e" stroke="rgba(61,122,69,.4)" stroke-width="1"/>
+        <text x="676" y="108" fill="rgba(255,255,255,.5)" font-size="9" text-anchor="middle">ogni</text>
+        <text x="676" y="121" fill="rgba(255,255,255,.5)" font-size="9" text-anchor="middle">sessione</text>
+
+        <defs>
+          <marker id="arr_c" markerWidth="6" markerHeight="6" refX="5" refY="3" orient="auto"><path d="M0,0 L6,3 L0,6 Z" fill="#3d7a45"/></marker>
+          <marker id="arr_d" markerWidth="6" markerHeight="6" refX="5" refY="3" orient="auto"><path d="M0,0 L6,3 L0,6 Z" fill="rgba(61,122,69,.5)"/></marker>
+        </defs>
+      </svg>
+    </div>
+
+    <div class="key-point" style="margin-top:24px;">
+      <div class="kp-label">Semantico vs. episodico — la differenza operativa</div>
+      <div class="kp-text">La memoria episodica dice "il 15 marzo ha preferito un'analisi dettagliata". La memoria semantica dice "preferisce analisi dettagliate". La seconda è più potente — si applica sempre, non richiede retrieval contestuale, e occupa un centesimo dei token.</div>
+      <div class="kp-sub">Il trade-off: la memoria episodica è più precisa ma più costosa da usare. La memoria semantica è meno precisa (ha già perso il contesto dell'episodio) ma molto più efficiente. Un sistema maturo usa entrambe: la semantica per il profilo stabile, l'episodica per i task e le decisioni recenti legate a un contesto specifico.</div>
+    </div>
+
+  </div>
+</div>
+
+
+<!-- ═══════════════════════════
+     S2 — ESTRARRE I FATTI
+═══════════════════════════ -->
+<div class="sect" id="s2">
+  <div class="sect-head">
+    <div class="sect-num">Linea guida 01</div>
+    <h2>Estrarre i fatti semantici dagli episodi</h2>
+    <p>Come passare da un episodio specifico a un fatto generale del profilo. Il processo di astrazione, il prompt di estrazione, e i criteri per decidere quando un'osservazione episodica è abbastanza solida da diventare un fatto semantico.</p>
+  </div>
+  <div class="wrap">
+
+    <!-- GL 01 -->
+    <div class="gl-group" style="margin-top:28px;">
+      <div class="gl-group-title">Linea guida 01</div>
+      <div class="gl-card">
+        <div class="gl-header">
+          <div class="gl-stripe"></div>
+          <div class="gl-num">01</div>
+          <div class="gl-title-wrap">
+            <div class="gl-title">Consolida in semantica solo le preferenze confermate da almeno 2 episodi — non al primo segnale</div>
+            <div class="gl-subtitle">Un'informazione espressa una sola volta potrebbe essere contestuale — non generalizzarla prematuramente</div>
+          </div>
+          <div class="gl-impact-wrap">
+            <div class="gl-impact-stars" style="color:var(--accent)">★★★</div>
+            <div class="gl-impact-lbl">Impatto</div>
+          </div>
+        </div>
+        <div class="gl-body">
+
+          <div class="gl-section">
+            <div class="gl-section-lbl">Esempi di estrazione — da episodio a fatto semantico</div>
+            <div class="extraction-grid">
+              <div class="eg-col">
+                <div class="eg-label">Segnale episodico (raw)</div>
+                <div class="eg-item">"Non ho tempo per le spiegazioni introduttive, vai diretto al punto" <em>— sessione 12/03</em></div>
+                <div class="eg-item">"Puoi saltare il background? Lo conosco già" <em>— sessione 15/03</em></div>
+                <div class="eg-item">"Ho un dottorato in diritto commerciale" <em>— sessione 10/03</em></div>
+                <div class="eg-item">"Rispondimi in italiano, per favore" <em>— sessione 08/03</em></div>
+                <div class="eg-item">"Il tuo riassunto era troppo lungo, la prossima volta fallo in 3 punti" <em>— sessione 18/03</em></div>
+                <div class="eg-item">"Di solito lavoro su contratti di fornitura e appalti" <em>— sessione 10/03</em></div>
+              </div>
+              <div class="eg-arrow">→</div>
+              <div class="eg-col">
+                <div class="eg-label">Fatto semantico (consolidato)</div>
+                <div class="eg-item"><span class="arrow">→</span> <strong>stile_risposta:</strong> "diretto, senza preamboli — l'utente è esperto e non vuole introduzioni" <em>(2 segnali)</em></div>
+                <div class="eg-item"><span class="arrow">→</span> <strong>stile_risposta:</strong> medesimo fatto — rinforza il segnale già presente</div>
+                <div class="eg-item"><span class="arrow">→</span> <strong>expertise_livello:</strong> "senior" / <strong>expertise_dominio:</strong> "diritto commerciale" <em>(1 segnale — in staging)</em></div>
+                <div class="eg-item"><span class="arrow">→</span> <strong>lingua_preferita:</strong> "italiano" <em>(1 segnale esplicito — consolida subito)</em></div>
+                <div class="eg-item"><span class="arrow">→</span> <strong>formato_output:</strong> "massimo 3 punti per i riassunti" <em>(1 segnale — in staging)</em></div>
+                <div class="eg-item"><span class="arrow">→</span> <strong>area_lavoro:</strong> "contratti di fornitura e appalti" <em>(1 segnale — in staging)</em></div>
+              </div>
+            </div>
+            <div class="insight" style="margin-top:16px;">
+              <div class="insight-lbl">La regola delle eccezioni: quando consolidare al primo segnale</div>
+              <p>Alcune informazioni meritano di essere consolidate subito, anche da un solo segnale: <strong>fatti dichiarativi espliciti</strong> ("ho un dottorato", "lavoro in questo settore", "preferisco l'italiano") e <strong>preferenze espresse come istruzione diretta</strong> ("rispondimi sempre in 3 punti"). La differenza da un'osservazione contestuale è che l'utente le ha dichiarate come caratteristiche stabili di sé, non come reazione a un caso specifico.</p>
+            </div>
+          </div>
+
+          <div class="gl-section">
+            <div class="gl-section-lbl">Il prompt di consolidamento semantico</div>
+            <div class="pt"><span class="cmt"># Prompt di consolidamento — eseguito periodicamente (ogni 5–10 sessioni)</span>
+<span class="cmt"># o a fine sessione se sono emerse informazioni dichiarative esplicite</span>
+
+<span class="sec">COMPITO</span>
+<span class="ins">Analizza questi episodi recenti e il profilo semantico attuale dell'utente.
+Identifica informazioni nuove o aggiornamenti da integrare nel profilo.</span>
+
+<span class="sec">PROFILO SEMANTICO ATTUALE</span>
+<span class="var">{current_profile_json}</span>
+
+<span class="sec">EPISODI RECENTI (da analizzare)</span>
+<span class="var">{recent_episodes_summaries}</span>
+
+<span class="sec">ISTRUZIONI PER L'ESTRAZIONE</span>
+<span class="ins">Per ogni possibile aggiornamento del profilo:
+1. Identifica il campo da creare o aggiornare
+2. Indica il valore proposto
+3. Indica l'evidence: quanti episodi lo supportano?
+4. Classifica: CONFERMA (già nel profilo), NUOVO (aggiunge), AGGIORNA (sostituisce), CONTRADDICE
+
+Consolida SOLO se:
+- È un fatto dichiarativo esplicito (sempre consolida)
+- È una preferenza confermata da ≥2 segnali indipendenti
+- NON è chiaramente contestuale a un episodio specifico</span>
+
+<span class="sec">OUTPUT — lista di aggiornamenti proposti</span>
+<span class="out">[
+  {"campo": "stile_risposta", "valore": "diretto senza preamboli",
+   "tipo": "AGGIORNA", "evidence": "2 sessioni", "confidenza": "alta"},
+  {"campo": "formato_output.riassunti", "valore": "max 3 punti",
+   "tipo": "NUOVO", "evidence": "1 sessione", "confidenza": "media"}
+]</span></div>
+          </div>
+
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+
+<!-- ═══════════════════════════
+     S3 — IL PROFILO STRUTTURATO
+═══════════════════════════ -->
+<div class="sect" id="s3">
+  <div class="sect-head">
+    <div class="sect-num">Linea guida 02</div>
+    <h2>La struttura del profilo semantico</h2>
+    <p>Come organizzare le informazioni semantiche in un profilo strutturato, leggibile dal modello e aggiornabile in modo selettivo. Quattro categorie principali con i loro campi.</p>
+  </div>
+  <div class="wrap">
+
+    <!-- GL 02 -->
+    <div class="gl-group" style="margin-top:28px;">
+      <div class="gl-group-title">Linea guida 02</div>
+      <div class="gl-card">
+        <div class="gl-header">
+          <div class="gl-stripe"></div>
+          <div class="gl-num">02</div>
+          <div class="gl-title-wrap">
+            <div class="gl-title">Struttura il profilo in 4 categorie — identità, stile, contesto lavorativo, relazione</div>
+            <div class="gl-subtitle">Categorie separate permettono aggiornamenti chirurgici senza rischio di corrompere il profilo intero</div>
+          </div>
+          <div class="gl-impact-wrap">
+            <div class="gl-impact-stars" style="color:var(--accent)">★★★</div>
+            <div class="gl-impact-lbl">Impatto</div>
+          </div>
+        </div>
+        <div class="gl-body">
+
+          <div class="gl-section">
+            <div class="gl-section-lbl">Schema completo del profilo semantico</div>
+            <div class="profile-card">
+              <div class="pc-head">Profilo semantico utente — schema completo con annotazioni</div>
+              <div class="pc-body"><span class="sec">// CATEGORIA 1 — IDENTITÀ</span>
+<span class="cm">// Fatti stabili sull'utente come persona — cambiano raramente</span>
+<span class="k">"identita"</span>: {
+  <span class="k">"nome"</span>:             <span class="v">"Mario Rossi"</span>,             <span class="cm">// se dichiarato</span>
+  <span class="k">"lingua_preferita"</span>: <span class="v">"italiano"</span>,
+  <span class="k">"fuso_orario"</span>:      <span class="v">"Europe/Rome"</span>,            <span class="cm">// se rilevato</span>
+  <span class="k">"expertise_livello"</span>:<span class="v">"senior"</span>,                 <span class="cm">// junior/mid/senior/expert</span>
+  <span class="k">"expertise_dominio"</span>:[<span class="v">"diritto commerciale"</span>, <span class="v">"contrattualistica"</span>]
+},
+
+<span class="sec">// CATEGORIA 2 — STILE DI INTERAZIONE</span>
+<span class="cm">// Come l'utente vuole essere servito — cambiano con esperienza</span>
+<span class="k">"stile"</span>: {
+  <span class="k">"risposta"</span>:          <span class="v">"diretto, senza preamboli"</span>,
+  <span class="k">"lunghezza"</span>:         <span class="v">"concisa"</span>,               <span class="cm">// verbose/bilanciata/concisa</span>
+  <span class="k">"formato_preferito"</span>: <span class="v">"punti elenco"</span>,
+  <span class="k">"dettaglio_tecnico"</span>: <span class="v">"alto"</span>,                  <span class="cm">// basso/medio/alto</span>
+  <span class="k">"tono"</span>:              <span class="v">"professionale formale"</span>,
+  <span class="k">"esempi"</span>:            <span class="t">false</span>                    <span class="cm">// non vuole esempi introduttivi</span>
+},
+
+<span class="sec">// CATEGORIA 3 — CONTESTO LAVORATIVO</span>
+<span class="cm">// Il contesto professionale dell'utente — relativamente stabile</span>
+<span class="k">"contesto_lavoro"</span>: {
+  <span class="k">"area"</span>:              [<span class="v">"contratti fornitura"</span>, <span class="v">"appalti"</span>],
+  <span class="k">"azienda_tipo"</span>:      <span class="v">"PMI manifatturiera"</span>,     <span class="cm">// se inferito</span>
+  <span class="k">"ruolo"</span>:             <span class="v">"responsabile legale"</span>,    <span class="cm">// se dichiarato</span>
+  <span class="k">"strumenti_usati"</span>:   [<span class="v">"Word"</span>, <span class="v">"Excel"</span>],
+  <span class="k">"vincoli_freq"</span>:      [<span class="v">"budget limitato"</span>, <span class="v">"deadline stringenti"</span>]
+},
+
+<span class="sec">// CATEGORIA 4 — RELAZIONE CON L'AGENTE</span>
+<span class="cm">// Come l'utente usa l'agente — evolve nel tempo</span>
+<span class="k">"relazione"</span>: {
+  <span class="k">"prima_sessione"</span>:    <span class="v">"2026-03-08"</span>,
+  <span class="k">"sessioni_totali"</span>:   <span class="t">12</span>,
+  <span class="k">"task_freq"</span>:         [<span class="v">"analisi contratti"</span>, <span class="v">"redazione clausole"</span>],
+  <span class="k">"feedback_ricevuto"</span>: [<span class="v">"preferisce risposte più brevi"</span>, <span class="v">"apprezza risk score"</span>],
+  <span class="k">"ultimo_aggiornamento"</span>: <span class="v">"2026-03-20"</span>
+}</div>
+            </div>
+          </div>
+
+          <div class="gl-section">
+            <div class="gl-section-lbl">Come iniettare il profilo nel context window</div>
+            <p>Il profilo semantico viene iniettato nel context window all'inizio di ogni sessione — prima della memoria episodica, dopo il system prompt. Non serve retrieval: è sempre presente, in modo compatto.</p>
+            <div class="compare-grid">
+              <div>
+                <div class="pex-lbl bad">❌ Profilo dump verboso — spreca token</div>
+                <div class="prompt-box bad">L'utente si chiama Mario Rossi e ha detto di
+essere un esperto di diritto commerciale con
+molti anni di esperienza. Nelle sessioni passate
+ha indicato che preferisce risposte concise
+e senza preamboli. Usa spesso Excel e Word e
+lavora principalmente su contratti di fornitura
+e appalti in un'azienda manifatturiera...</div>
+              </div>
+              <div>
+                <div class="pex-lbl good">✓ Profilo compatto — alta densità, pochi token</div>
+                <div class="prompt-box good">PROFILO UTENTE:
+lingua=italiano | expertise=senior(diritto
+commerciale, contrattualistica)
+stile=diretto, conciso, no preamboli,
+       punti elenco, dettaglio tecnico alto
+area=contratti fornitura/appalti
+preferenze=risk score sì, esempi intro no
+
+Applica questo profilo a tutta la sessione.</div>
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+
+<!-- ═══════════════════════════
+     S4 — AGGIORNARE IL PROFILO
+═══════════════════════════ -->
+<div class="sect" id="s4">
+  <div class="sect-head">
+    <div class="sect-num">Linea guida 03</div>
+    <h2>Aggiornare il profilo — tre strategie per tre casi</h2>
+    <p>Il profilo semantico non è statico. Le preferenze cambiano, il contesto lavorativo evolve, l'expertise cresce. Tre strategie per gestire aggiornamenti di diversa natura senza destabilizzare ciò che è già consolidato.</p>
+  </div>
+  <div class="wrap">
+
+    <!-- GL 03 -->
+    <div class="gl-group" style="margin-top:28px;">
+      <div class="gl-group-title">Linea guida 03</div>
+      <div class="gl-card">
+        <div class="gl-header">
+          <div class="gl-stripe"></div>
+          <div class="gl-num">03</div>
+          <div class="gl-title-wrap">
+            <div class="gl-title">Usa la strategia di aggiornamento corretta per ogni tipo di cambiamento</div>
+            <div class="gl-subtitle">Sovrascrittura immediata, aggiornamento progressivo o versioning — dipende dalla natura del cambiamento</div>
+          </div>
+          <div class="gl-impact-wrap">
+            <div class="gl-impact-stars" style="color:var(--accent)">★★★</div>
+            <div class="gl-impact-lbl">Impatto</div>
+          </div>
+        </div>
+        <div class="gl-body">
+
+          <div class="gl-section">
+            <div class="gl-section-lbl">Le tre strategie di aggiornamento</div>
+            <div class="update-grid">
+
+              <div class="ug-card">
+                <div class="ug-type" style="color:var(--bad);">Sovrascrittura immediata</div>
+                <div class="ug-name">Override esplicito</div>
+                <div class="ug-when"><strong>Quando:</strong> l'utente dichiara esplicitamente un cambiamento. La nuova informazione sostituisce la vecchia senza incertezza.</div>
+                <div class="ug-example" style="border-color:var(--bad); background:var(--bad-l); color:#6b3030;">Utente: "Da oggi rispondimi
+in inglese, ho cambiato lavoro."
+
+→ lingua_preferita = "inglese"
+   (sovrascrive "italiano" subito)</div>
+              </div>
+
+              <div class="ug-card">
+                <div class="ug-type" style="color:var(--warn);">Aggiornamento progressivo</div>
+                <div class="ug-name">Staging + conferma</div>
+                <div class="ug-when"><strong>Quando:</strong> emerge un segnale che potrebbe aggiornare il profilo ma non è ancora confermato da più episodi. Va in "staging" fino alla seconda conferma.</div>
+                <div class="ug-example" style="border-color:var(--warn); background:var(--warn-l); color:#5a3a00;">Sessione 1: "Questa volta
+vorrei una risposta più lunga"
+
+→ staging: [possibile cambio
+   su lunghezza risposte]
+   (non aggiorna ancora)
+
+Sessione 2: stesso segnale
+→ consolida nel profilo</div>
+              </div>
+
+              <div class="ug-card">
+                <div class="ug-type" style="color:var(--accent);">Versioning</div>
+                <div class="ug-name">Mantieni la storia</div>
+                <div class="ug-when"><strong>Quando:</strong> il cambiamento è significativo e potrebbe essere temporaneo, o quando la cronologia del cambiamento è informazione utile di per sé.</div>
+                <div class="ug-example" style="border-color:var(--accent); background:var(--accent-light); color:var(--accent2);">area_lavoro prima: ["contratti"]
+area_lavoro ora:   ["M&A", "due diligence"]
+→ mantieni entrambi:
+  area_attuale + area_precedente
+  (potrebbe tornare utile)</div>
+              </div>
+
+            </div>
+          </div>
+
+          <div class="gl-section">
+            <div class="gl-section-lbl">La struttura di staging — come gestire le informazioni non ancora consolidate</div>
+            <p>Lo staging è un'area temporanea del profilo dove le informazioni "candidate" attendono di essere confermate prima di diventare parte del profilo stabile. Ogni voce in staging include il numero di segnali ricevuti e la prima data del segnale.</p>
+            <div class="pt" style="margin-top:12px;"><span class="cmt">// Sezione staging nel profilo — non usata nella risposta ma monitrored</span>
+<span class="k">"_staging"</span>: {
+  <span class="k">"candidati"</span>: [
+    {
+      <span class="k">"campo"</span>:    <span class="v">"stile.lunghezza"</span>,
+      <span class="k">"valore"</span>:   <span class="v">"verbose"</span>,
+      <span class="k">"segnali"</span>:  <span class="t">1</span>,               <span class="cm">// serve il secondo per consolidare</span>
+      <span class="k">"primo_segnale"</span>: <span class="v">"2026-03-18"</span>,
+      <span class="k">"note"</span>:    <span class="v">"ha chiesto risposta lunga una volta"</span>
+    }
+  ]
+}</div>
+          </div>
+
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+
+<!-- ═══════════════════════════
+     S5 — GESTIRE I CONFLITTI
+═══════════════════════════ -->
+<div class="sect" id="s5">
+  <div class="sect-head">
+    <div class="sect-num">Linea guida 04</div>
+    <h2>Gestire i conflitti — memoria vs. input corrente</h2>
+    <p>Il caso più delicato: quando l'input corrente dell'utente contraddice un fatto consolidato nel profilo semantico. Tre tipi di conflitto con tre strategie diverse.</p>
+  </div>
+  <div class="wrap">
+
+    <!-- GL 04 -->
+    <div class="gl-group" style="margin-top:28px;">
+      <div class="gl-group-title">Linea guida 04</div>
+      <div class="gl-card">
+        <div class="gl-header">
+          <div class="gl-stripe"></div>
+          <div class="gl-num">04</div>
+          <div class="gl-title-wrap">
+            <div class="gl-title">L'input corrente ha sempre precedenza — ma il tipo di conflitto determina se aggiornare il profilo</div>
+            <div class="gl-subtitle">Non ogni deviazione dalla memoria è un aggiornamento — a volte è un'eccezione contestuale</div>
+          </div>
+          <div class="gl-impact-wrap">
+            <div class="gl-impact-stars" style="color:var(--accent)">★★★</div>
+            <div class="gl-impact-lbl">Impatto critico</div>
+          </div>
+        </div>
+        <div class="gl-body">
+
+          <div class="gl-section">
+            <div class="gl-section-lbl">I tre tipi di conflitto e come risolverli</div>
+            <div class="conflict-panel">
+
+              <div class="cp-card">
+                <div class="cp-label" style="color:var(--ok);">Conflitto Tipo 1 — Eccezione contestuale</div>
+                <div class="cp-title">L'utente vuole qualcosa di diverso per questo task specifico</div>
+                <div class="cp-body">Il profilo dice "risposta concisa" ma oggi l'utente chiede un'analisi approfondita. Non è un cambiamento del profilo — è un caso d'uso diverso dal solito. <strong>Usa l'input corrente, non aggiornare il profilo.</strong></div>
+                <div class="cp-example" style="border-left:3px solid var(--ok); background:var(--ok-l); color:#2e4a32;">Profilo: lunghezza = "concisa"
+Input: "fai un'analisi dettagliata"
+→ Risposta: analisi dettagliata
+→ Profilo: invariato
+→ Nessun aggiornamento staging</div>
+              </div>
+
+              <div class="cp-card">
+                <div class="cp-label" style="color:var(--warn);">Conflitto Tipo 2 — Possibile aggiornamento</div>
+                <div class="cp-title">L'utente sembra aver cambiato preferenza in modo non esplicito</div>
+                <div class="cp-body">Il profilo dice "no esempi introduttivi" ma nelle ultime tre sessioni l'utente ha risposto bene agli esempi senza protestare. Il segnale è debole ma ripetuto. <strong>Metti in staging, aspetta la conferma.</strong></div>
+                <div class="cp-example" style="border-left:3px solid var(--warn); background:var(--warn-l); color:#5a3a00;">Profilo: esempi = false
+Osservazione: 3 sessioni
+  con esempi non contestati
+→ staging: esempi = true (3 segnali)
+→ Alla prossima sessione: consolida</div>
+              </div>
+
+              <div class="cp-card">
+                <div class="cp-label" style="color:var(--bad);">Conflitto Tipo 3 — Override esplicito</div>
+                <div class="cp-title">L'utente dichiara esplicitamente un cambiamento</div>
+                <div class="cp-body">L'utente dice chiaramente che qualcosa è cambiato. <strong>Aggiorna il profilo immediatamente.</strong> Eventualmente fai una nota sulla versione precedente se potrebbe essere utile in futuro.</div>
+                <div class="cp-example" style="border-left:3px solid var(--bad); background:var(--bad-l); color:#6b3030;">Profilo: lingua = "italiano"
+Input: "rispondimi in inglese,
+        ho cambiato contesto"
+→ Aggiorna subito: lingua = "inglese"
+→ Nota versioning: era "italiano"</div>
+              </div>
+
+              <div class="cp-card">
+                <div class="cp-label" style="color:#7b5ea7;">Conflitto Tipo 4 — Contraddizione del profilo</div>
+                <div class="cp-title">L'input contraddice un fatto dichiarativo nel profilo</div>
+                <div class="cp-body">Il profilo dice "expertise senior in diritto commerciale" ma l'utente sta facendo domande molto basilari. Potrebbe essere un cambio di ruolo, un nuovo collega che usa l'account, o semplicemente un dominio diverso. <strong>Non aggiornare automaticamente — chiedi chiarimento se importante.</strong></div>
+                <div class="cp-example" style="border-left:3px solid #7b5ea7; background:#f4f0fa; color:#3a2e52;">Profilo: expertise = "senior"
+Comportamento: domande molto base
+→ Non aggiornare expertise
+→ Se rilevante: "Noto che questa
+   è un'area nuova per te — posso
+   fornire più contesto di base?"</div>
+              </div>
+
+            </div>
+          </div>
+
+          <div class="gl-section">
+            <div class="gl-section-lbl">La regola generale — nella risposta, nell'aggiornamento e nella segnalazione</div>
+            <p><strong>Nella risposta:</strong> segui sempre l'input corrente. Se l'utente oggi chiede qualcosa di diverso dal profilo, risponde a ciò che chiede oggi.</p>
+            <p><strong>Nell'aggiornamento del profilo:</strong> distingui tra eccezione contestuale (non aggiornare), segnale ricorrente (staging), override esplicito (aggiorna subito), contraddizione dichiarativa (chiedi se rilevante).</p>
+            <p><strong>Nella segnalazione:</strong> il modello non deve mai "contestare" il profilo con l'utente ("ma tu di solito preferisci...") — è fastidioso e presuntuoso. La memoria è un contesto silenzioso, non un contratto da far rispettare.</p>
+            <div class="mechanism">
+              <div class="mech-lbl">Il principio della memoria come servizio, non come vincolo</div>
+              <p>La memoria semantica esiste per <em>servire</em> l'utente — per anticipare i suoi bisogni, adattare lo stile, ridurre la friction. Non è un contratto che vincola le risposte future. <strong>Un agente che cita la memoria per resistere a una richiesta dell'utente ha invertito la logica del sistema.</strong> La memoria è un default che l'utente può sempre sovrascrivere con l'input corrente — senza dover spiegare perché.</p>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+
+<!-- ═══════════════════════════
+     S6 — CHECKLIST
+═══════════════════════════ -->
+<div class="sect" id="s6">
+  <div class="sect-head">
+    <div class="sect-num">Sezione finale</div>
+    <h2>Checklist e prossimo report</h2>
+  </div>
+  <div class="wrap">
+
+    <div class="prose" style="margin-top:28px;">
+      <p style="font-size:15px; font-weight:500; color:var(--ink2);">Checklist — memoria semantica configurata correttamente?</p>
+    </div>
+
+    <div class="checklist" style="margin-top:12px;">
+      <div class="check-item">
+        <div class="check-icon">1</div>
+        <div><strong>Schema a 4 categorie:</strong> il profilo è strutturato in identità, stile, contesto lavorativo e relazione — con campi distinti per ogni attributo. Non è un blob di testo libero.</div>
+      </div>
+      <div class="check-item">
+        <div class="check-icon">2</div>
+        <div><strong>Regola di consolidamento (≥2 segnali):</strong> le preferenze comportamentali vengono consolidate solo dopo almeno 2 segnali indipendenti. Le dichiarazioni esplicite vengono consolidate subito.</div>
+      </div>
+      <div class="check-item">
+        <div class="check-icon">3</div>
+        <div><strong>Area di staging:</strong> esiste un'area di staging per le informazioni candidate — non ancora consolidate ma monitorate per la seconda conferma.</div>
+      </div>
+      <div class="check-item">
+        <div class="check-icon">4</div>
+        <div><strong>Tre strategie di aggiornamento:</strong> il sistema distingue tra override esplicito (sovrascrittura immediata), segnale ricorrente (staging → consolidamento), e cambiamento significativo (versioning).</div>
+      </div>
+      <div class="check-item">
+        <div class="check-icon">5</div>
+        <div><strong>Gestione dei conflitti:</strong> la regola "input corrente ha sempre precedenza" è implementata — con distinzione tra eccezione contestuale (non aggiornare il profilo) e override esplicito (aggiornare).</div>
+      </div>
+      <div class="check-item">
+        <div class="check-icon">6</div>
+        <div><strong>Iniezione compatta nel context window:</strong> il profilo viene iniettato in formato compatto (non verboso) all'inizio di ogni sessione, dopo il system prompt.</div>
+      </div>
+      <div class="check-item">
+        <div class="check-icon">✓</div>
+        <div><strong>La memoria è un servizio, non un vincolo:</strong> le istruzioni nel system prompt specificano che il profilo è un default — sempre sovrascrivibile dall'input corrente senza che il modello lo "contesti".</div>
+      </div>
+    </div>
+
+    <div class="insight" style="margin-top:28px; border-color:#c0392b; background:var(--bad-l);">
+      <div class="insight-lbl" style="color:#c0392b;">Prossimo — Report D</div>
+      <p>Con la memoria semantica costruita, il Report D affronta il quarto tipo: <strong>la memoria procedurale</strong> — skill, routine e comportamenti acquisiti che il modello incorpora non come dato da recuperare ma come modo di agire. Come progettarla, stratificarla e aggiornarla.</p>
+    </div>
+
+  </div>
+</div>
+
+<div class="footer">
+  <span>Serie Agenti AI — Leva Memoria · Report C · Memoria semantica</span>
+  <span>Marzo 2026</span>
+</div>
+
+<script>
+function show(n) {
+  document.querySelectorAll('.sect').forEach(s => s.classList.remove('active'));
+  document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('s'+n).classList.add('active');
+  document.querySelectorAll('.nav-btn')[n-1].classList.add('active');
+  window.scrollTo({top:0, behavior:'smooth'});
+}
+</script>
+</body>
+</html>

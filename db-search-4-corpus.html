@@ -1,0 +1,794 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Interrogare un database — Report 4 · Corpus documentali</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:ital,wght@0,300;0,400;0,500;0,600;1,300;1,400&family=DM+Mono:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg:      #fafaf7;
+  --bg2:     #f2f1ec;
+  --bg3:     #e8e6df;
+  --ink:     #1a1916;
+  --ink2:    #2d2b26;
+  --ink3:    #5c5a52;
+  --ink4:    #9c9a90;
+  --border:  #dddbd2;
+  --border2: #cbc9bf;
+
+  --accent:  #5a1a3a;
+  --accent2: #f8ecf2;
+  --accent3: #e0a8c4;
+
+  --teal:    #1a5f5f;
+  --teal-bg: #e5f3f3;
+  --teal-bd: #8ecece;
+
+  --warm:    #7a4a10;
+  --warm-bg: #fdf3e3;
+  --warm-bd: #e8c878;
+
+  --ok:      #2d6040;
+  --ok-bg:   #eaf4ee;
+  --ok-bd:   #a8d4b4;
+
+  --bad:     #8a1a1a;
+  --bad-bg:  #fdf0f0;
+  --bad-bd:  #e8a8a8;
+
+  --note:    #4a2d7a;
+  --note-bg: #f0ecfb;
+  --note-bd: #c4aef0;
+
+  --navy:    #1a3a5c;
+  --navy-bg: #e8eef6;
+  --navy-bd: #b0c8e0;
+
+  --brown:   #5a3a1a;
+  --brown-bg:#f7f0e8;
+  --brown-bd:#e0c8a8;
+}
+
+* { margin:0; padding:0; box-sizing:border-box; }
+html { scroll-behavior:smooth; }
+body {
+  background: var(--bg);
+  color: var(--ink);
+  font-family: 'DM Sans', sans-serif;
+  font-weight: 300;
+  font-size: 15px;
+  line-height: 1.75;
+}
+
+.masthead {
+  background: var(--accent);
+  color: #fff;
+  padding: 56px 60px 52px;
+  position: relative; overflow: hidden;
+}
+.masthead::before {
+  content: ''; position: absolute;
+  top: -80px; right: -80px; width: 380px; height: 380px;
+  border-radius: 50%; border: 1px solid rgba(255,255,255,.06); pointer-events: none;
+}
+.mh-series {
+  font-family: 'DM Mono', monospace; font-size: 10px; letter-spacing: 3px;
+  text-transform: uppercase; color: rgba(255,255,255,.35); margin-bottom: 20px;
+}
+.mh-num {
+  font-family: 'DM Serif Display', serif; font-size: 80px; line-height: 1;
+  color: rgba(255,255,255,.07); position: absolute; right: 60px; top: 36px;
+  letter-spacing: -4px; user-select: none;
+}
+.masthead h1 {
+  font-family: 'DM Serif Display', serif; font-size: clamp(26px, 3.8vw, 44px);
+  font-weight: 400; line-height: 1.1; letter-spacing: -.5px;
+  max-width: 740px; position: relative;
+}
+.masthead h1 em { font-style: italic; color: rgba(255,255,255,.68); }
+.mh-sub {
+  margin-top: 20px; font-size: 15px; font-weight: 300;
+  color: rgba(255,255,255,.42); max-width: 640px; line-height: 1.7; position: relative;
+}
+.mh-pills {
+  margin-top: 28px; display: flex; gap: 8px; flex-wrap: wrap; position: relative;
+}
+.mh-pill {
+  font-family: 'DM Mono', monospace; font-size: 10px; letter-spacing: 1px;
+  padding: 4px 12px; border: 1px solid rgba(255,255,255,.2);
+  color: rgba(255,255,255,.48); border-radius: 20px;
+}
+
+.nav {
+  position: sticky; top: 0; z-index: 100;
+  background: var(--ink); display: flex; overflow-x: auto;
+  border-bottom: 1px solid rgba(255,255,255,.08);
+}
+.nav-btn {
+  flex-shrink: 0; padding: 14px 20px; border: none; background: transparent; cursor: pointer;
+  font-family: 'DM Mono', monospace; font-size: 10px; letter-spacing: 1px;
+  text-transform: uppercase; color: rgba(255,255,255,.3);
+  border-right: 1px solid rgba(255,255,255,.06); transition: color .2s; white-space: nowrap;
+}
+.nav-btn:hover { color: rgba(255,255,255,.65); }
+.nav-btn.active { color: #fff; background: rgba(255,255,255,.06); }
+
+.sect { display: none; }
+.sect.active { display: block; animation: fadeUp .3s ease; }
+@keyframes fadeUp { from{opacity:0;transform:translateY(5px)} to{opacity:1;transform:translateY(0)} }
+
+.cw { max-width: 860px; margin: 0 auto; padding: 52px 60px 64px; }
+
+.s-eyebrow {
+  font-family: 'DM Mono', monospace; font-size: 10px; letter-spacing: 3px;
+  text-transform: uppercase; color: var(--ink4); margin-bottom: 8px;
+}
+.s-title {
+  font-family: 'DM Serif Display', serif; font-size: 30px; font-weight: 400;
+  letter-spacing: -.3px; color: var(--ink); line-height: 1.15; margin-bottom: 28px;
+}
+
+p { margin-bottom: 18px; color: var(--ink2); }
+p:last-child { margin-bottom: 0; }
+p strong { font-weight: 600; color: var(--ink); }
+code {
+  font-family: 'DM Mono', monospace; background: var(--bg3);
+  padding: 1px 6px; border-radius: 3px; font-size: 13px; color: var(--ink2);
+}
+
+.callout {
+  padding: 20px 24px; border-left: 3px solid; margin: 28px 0; border-radius: 0 6px 6px 0;
+}
+.callout-warn   { background: var(--warm-bg); border-color: var(--warm); }
+.callout-ok     { background: var(--ok-bg);   border-color: var(--ok);   }
+.callout-bad    { background: var(--bad-bg);  border-color: var(--bad);  }
+.callout-note   { background: var(--note-bg); border-color: var(--note); }
+.callout-accent { background: var(--accent2); border-color: var(--accent); }
+.callout-teal   { background: var(--teal-bg); border-color: var(--teal); }
+.callout-navy   { background: var(--navy-bg); border-color: var(--navy); }
+.callout-brown  { background: var(--brown-bg); border-color: var(--brown); }
+.callout-title {
+  font-family: 'DM Mono', monospace; font-size: 10px;
+  letter-spacing: 2px; text-transform: uppercase; margin-bottom: 8px;
+}
+.callout-warn .callout-title   { color: var(--warm);   }
+.callout-ok .callout-title     { color: var(--ok);     }
+.callout-bad .callout-title    { color: var(--bad);    }
+.callout-note .callout-title   { color: var(--note);   }
+.callout-accent .callout-title { color: var(--accent); }
+.callout-teal .callout-title   { color: var(--teal);   }
+.callout-navy .callout-title   { color: var(--navy);   }
+.callout-brown .callout-title  { color: var(--brown);  }
+.callout p { font-size: 14px; line-height: 1.65; margin-bottom: 8px; }
+.callout p:last-child { margin-bottom: 0; }
+
+.diagram {
+  background: var(--bg2); border: 1px solid var(--border2); padding: 28px 32px; margin: 28px 0;
+}
+.diagram-title {
+  font-family: 'DM Mono', monospace; font-size: 10px; letter-spacing: 2px;
+  text-transform: uppercase; color: var(--ink4);
+  margin-bottom: 20px; padding-bottom: 12px; border-bottom: 1px solid var(--border);
+}
+
+/* ── DIFF TABLE ── */
+.diff-table {
+  width: 100%; border-collapse: collapse; margin: 20px 0; font-size: 13.5px;
+}
+.diff-table th {
+  font-family: 'DM Mono', monospace; font-size: 9.5px; letter-spacing: 1.5px;
+  text-transform: uppercase; padding: 10px 14px; text-align: left; font-weight: 400;
+}
+.diff-table th:first-child { background: var(--bg3); color: var(--ink4); }
+.diff-table th:nth-child(2) { background: var(--navy); color: rgba(255,255,255,.85); }
+.diff-table th:nth-child(3) { background: var(--accent); color: rgba(255,255,255,.85); }
+.diff-table td {
+  padding: 10px 14px; border: 1px solid var(--border);
+  vertical-align: top; line-height: 1.55; color: var(--ink2);
+}
+.diff-table tr:nth-child(even) td { background: var(--bg2); }
+.diff-table td:first-child { font-weight: 500; color: var(--ink); font-size: 13px; }
+.td-db   { border-left: 3px solid var(--navy) !important; }
+.td-corp { border-left: 3px solid var(--accent) !important; }
+
+/* ── PIPELINE ── */
+.pipeline {
+  display: flex; flex-direction: column; gap: 0;
+  border: 1px solid var(--border2); border-radius: 6px; overflow: hidden; margin: 20px 0;
+}
+.pipe-step {
+  display: grid; grid-template-columns: 52px 1fr;
+  border-bottom: 1px solid var(--border);
+}
+.pipe-step:last-child { border-bottom: none; }
+.pipe-num {
+  display: flex; align-items: center; justify-content: center;
+  font-family: 'DM Mono', monospace; font-size: 14px; font-weight: 500;
+  border-right: 1px solid var(--border); background: var(--bg2);
+}
+.pipe-body { padding: 13px 17px; }
+.pipe-label {
+  font-family: 'DM Mono', monospace; font-size: 9px; letter-spacing: 1.5px;
+  text-transform: uppercase; color: var(--ink4); margin-bottom: 3px;
+}
+.pipe-title { font-size: 13.5px; font-weight: 600; color: var(--ink); margin-bottom: 4px; }
+.pipe-text { font-size: 13px; color: var(--ink3); line-height: 1.6; }
+
+/* ── INTEGRATION CARD ── */
+.int-card {
+  border: 1.5px solid var(--border2); border-radius: 6px; overflow: hidden; margin: 20px 0;
+}
+.ic-head {
+  display: flex; align-items: center; gap: 14px;
+  padding: 14px 20px; border-bottom: 1px solid var(--border);
+}
+.ic-badge {
+  font-family: 'DM Mono', monospace; font-size: 9px; letter-spacing: 2px;
+  text-transform: uppercase; padding: 3px 10px; border-radius: 20px; flex-shrink: 0;
+}
+.ic-name {
+  font-family: 'DM Serif Display', serif; font-size: 17px; color: var(--ink); line-height: 1.1;
+}
+.ic-when {
+  margin-left: auto; font-family: 'DM Mono', monospace; font-size: 9.5px; color: var(--ink4);
+}
+.ic-body { padding: 18px 20px; display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+.ic-col-label {
+  font-family: 'DM Mono', monospace; font-size: 9px; letter-spacing: 2px;
+  text-transform: uppercase; color: var(--ink4);
+  margin-bottom: 10px; padding-bottom: 6px; border-bottom: 1px solid var(--border);
+}
+.ic-list { display: flex; flex-direction: column; gap: 6px; }
+.ic-item {
+  display: grid; grid-template-columns: 12px 1fr; gap: 6px;
+  font-size: 13px; color: var(--ink2); line-height: 1.45; align-items: start;
+}
+.ic-dot { width: 5px; height: 5px; border-radius: 50%; margin-top: 5px; flex-shrink: 0; }
+
+/* ── FUSION DIAGRAM ── */
+.fusion-row {
+  display: flex; align-items: center; gap: 12px; margin-bottom: 10px;
+}
+.fr-source {
+  font-size: 13px; color: var(--ink2); min-width: 200px; flex-shrink: 0; line-height: 1.4;
+  padding: 8px 12px; border: 1px solid var(--border2); background: var(--bg); border-radius: 4px;
+}
+.fr-score {
+  font-family: 'DM Mono', monospace; font-size: 11px; font-weight: 500;
+  min-width: 38px; text-align: center;
+}
+.fr-bar-wrap { flex: 1; }
+.fr-track { height: 7px; background: var(--bg3); border-radius: 2px; overflow: hidden; }
+.fr-fill { height: 100%; border-radius: 2px; }
+.fr-rank {
+  font-family: 'DM Mono', monospace; font-size: 10px; color: var(--ink4); min-width: 28px; text-align: right;
+}
+
+/* ── SUMMARY TABLE ── */
+.sum-table {
+  width: 100%; border-collapse: collapse; margin: 20px 0; font-size: 13px;
+}
+.sum-table th {
+  background: var(--accent); color: rgba(255,255,255,.85);
+  font-family: 'DM Mono', monospace; font-size: 9.5px; letter-spacing: 1.5px;
+  text-transform: uppercase; padding: 10px 14px; text-align: left; font-weight: 400;
+}
+.sum-table td {
+  padding: 10px 14px; border: 1px solid var(--border);
+  vertical-align: top; line-height: 1.55; color: var(--ink2);
+}
+.sum-table tr:nth-child(even) td { background: var(--bg2); }
+.sum-table td:first-child { font-weight: 500; color: var(--ink); }
+
+/* ── KEY INSIGHT ── */
+.key-insight {
+  background: var(--ink); color: #fff; padding: 28px 32px; margin: 32px 0; border-radius: 6px;
+  position: relative; overflow: hidden;
+}
+.key-insight::before {
+  content: '"'; position: absolute; right: 24px; top: -10px;
+  font-family: 'DM Serif Display', serif; font-size: 100px;
+  color: rgba(255,255,255,.06); line-height: 1; pointer-events: none;
+}
+.ki-label {
+  font-family: 'DM Mono', monospace; font-size: 9px; letter-spacing: 2.5px;
+  text-transform: uppercase; color: rgba(255,255,255,.3); margin-bottom: 12px;
+}
+.ki-text {
+  font-family: 'DM Serif Display', serif; font-size: 20px; font-weight: 400;
+  line-height: 1.4; color: rgba(255,255,255,.9); max-width: 680px;
+}
+
+/* ── SERIES RECAP ── */
+.series-recap {
+  background: var(--ink); border-radius: 6px; overflow: hidden; margin: 40px 0;
+}
+.sr-head {
+  padding: 18px 24px; border-bottom: 1px solid rgba(255,255,255,.08);
+  font-family: 'DM Mono', monospace; font-size: 10px; letter-spacing: 2.5px;
+  text-transform: uppercase; color: rgba(255,255,255,.3);
+}
+.sr-grid {
+  display: grid; grid-template-columns: repeat(2, 1fr); gap: 1px;
+  background: rgba(255,255,255,.06);
+}
+.sr-item { padding: 16px 20px; background: var(--ink); }
+.sr-item.current { background: rgba(255,255,255,.04); }
+.sr-num {
+  font-family: 'DM Mono', monospace; font-size: 9px; letter-spacing: 2px;
+  text-transform: uppercase; color: rgba(255,255,255,.25); margin-bottom: 6px;
+}
+.sr-title { font-size: 13px; font-weight: 600; color: rgba(255,255,255,.8); line-height: 1.3; margin-bottom: 4px; }
+.sr-item.current .sr-title { color: rgba(255,255,255,.95); }
+.sr-sub { font-size: 11.5px; color: rgba(255,255,255,.3); line-height: 1.4; }
+
+.footer {
+  padding: 22px 60px; border-top: 1px solid var(--border);
+  display: flex; justify-content: space-between; align-items: center;
+  font-family: 'DM Mono', monospace; font-size: 10px; letter-spacing: 1px;
+  text-transform: uppercase; color: var(--ink4);
+}
+
+@media (max-width: 720px) {
+  .masthead, .cw, .footer { padding-left: 24px; padding-right: 24px; }
+  .mh-num { display: none; }
+  .ic-body { grid-template-columns: 1fr; }
+  .sr-grid { grid-template-columns: 1fr; }
+}
+</style>
+</head>
+<body>
+
+<div class="masthead">
+  <div class="mh-series">Interrogare un database · Report 4 di 4 · Report finale</div>
+  <div class="mh-num">04</div>
+  <h1>Corpus documentali<br>non strutturati:<br><em>differenze, punti di contatto,<br>integrazione</em></h1>
+  <p class="mh-sub">Quando le informazioni non stanno in una tabella ma in documenti liberi — PDF, articoli, contratti, policy. Cosa cambia rispetto al database, dove i meccanismi sono gli stessi, e come si costruisce una pipeline che interroga entrambe le fonti in risposta alla stessa domanda.</p>
+  <div class="mh-pills">
+    <span class="mh-pill">Corpus vs. tabella</span>
+    <span class="mh-pill">Unità di ricerca</span>
+    <span class="mh-pill">Struttura assente</span>
+    <span class="mh-pill">Pipeline eterogena</span>
+    <span class="mh-pill">Fusione dei risultati</span>
+    <span class="mh-pill">Quando integrare</span>
+  </div>
+</div>
+
+<div class="nav">
+  <button class="nav-btn active" onclick="show(0)">1 · Cosa cambia</button>
+  <button class="nav-btn" onclick="show(1)">2 · Cosa resta uguale</button>
+  <button class="nav-btn" onclick="show(2)">3 · La pipeline per corpus</button>
+  <button class="nav-btn" onclick="show(3)">4 · Fonti eterogenee</button>
+  <button class="nav-btn" onclick="show(4)">5 · Quando integrare</button>
+</div>
+
+
+<!-- ══════════════════════════════════
+     S0 — COSA CAMBIA
+══════════════════════════════════ -->
+<div class="sect active" id="s0">
+<div class="cw">
+
+  <div class="s-eyebrow">Le differenze strutturali</div>
+  <div class="s-title">Cosa cambia quando le informazioni sono in documenti liberi</div>
+
+  <p>Un database ha una struttura predefinita: colonne con tipi, righe con valori, relazioni tra tabelle. Anche il testo libero in una colonna esiste in un contesto strutturato — sa già che è un prodotto, ha un ID, appartiene a una categoria. Un corpus documentale non ha niente di tutto questo. Un PDF è solo testo — non sa se è una policy aziendale, un contratto, un manuale tecnico o una ricerca di mercato, a meno che qualcuno non glielo dica.</p>
+
+  <p>Questa assenza di struttura pre-esistente non è solo un inconveniente tecnico — cambia in profondità il modo in cui si progetta il sistema di ricerca.</p>
+
+  <div class="diagram">
+    <div class="diagram-title">Le differenze strutturali — database vs. corpus documentale</div>
+    <table class="diff-table">
+      <thead>
+        <tr>
+          <th>Dimensione</th>
+          <th>Database / tabella</th>
+          <th>Corpus documentale</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>Struttura</td>
+          <td class="td-db">Pre-esistente — colonne, tipi, relazioni definite dallo schema</td>
+          <td class="td-corp">Assente o implicita — il testo è continuo, la struttura deve essere estratta o inferita</td>
+        </tr>
+        <tr>
+          <td>Unità di ricerca</td>
+          <td class="td-db">La riga — ogni riga è un'entità atomica con identità propria (ID, chiave primaria)</td>
+          <td class="td-corp">Il chunk — un pezzo di documento. La stessa domanda può trovare chunk diversi dello stesso documento</td>
+        </tr>
+        <tr>
+          <td>Contesto dell'informazione</td>
+          <td class="td-db">Sempre disponibile — ogni campo sa a quale riga appartiene, ogni riga sa a quale tabella appartiene</td>
+          <td class="td-corp">Va costruito esplicitamente — un chunk estratto da un PDF non sa nulla di sé a meno che non vengano aggiunti metadati</td>
+        </tr>
+        <tr>
+          <td>Criteri di filtro</td>
+          <td class="td-db">Spesso disponibili come colonne strutturate (categoria, prezzo, data) — SQL li gestisce con precisione assoluta</td>
+          <td class="td-corp">Raramente disponibili come attributi strutturati — i filtri si basano su metadati che vanno estratti o assegnati manualmente (tipo documento, data, autore)</td>
+        </tr>
+        <tr>
+          <td>Natura della query</td>
+          <td class="td-db">Spesso mista — criteri strutturati più criteri semantici. Il pre-filtro SQL riduce il corpus prima del retrieval semantico</td>
+          <td class="td-corp">Quasi sempre puramente semantica — non ci sono colonne su cui fare WHERE. Il retrieval semantico è l'unica strategia disponibile</td>
+        </tr>
+        <tr>
+          <td>Aggiornamenti</td>
+          <td class="td-db">Granulari — si aggiorna una riga, si reindicizza quella riga. La sincronizzazione è precisa</td>
+          <td class="td-corp">A documento — si aggiorna un file, si reindicizzano tutti i suoi chunk. Più semplice da gestire ma meno granulare</td>
+        </tr>
+        <tr>
+          <td>Deduplicazione risultati</td>
+          <td class="td-db">Non necessaria — ogni riga è unica, i risultati non si sovrappongono</td>
+          <td class="td-corp">Necessaria — più chunk dello stesso documento possono emergere nella stessa query, occupando spazio nel contesto con informazioni ridondanti</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="callout callout-accent">
+    <div class="callout-title">La differenza più sottile e più importante</div>
+    <p>Nel database, ogni riga ha un'identità propria — è un prodotto, un ordine, un cliente. L'informazione ha un soggetto chiaro. Nel corpus documentale, un chunk è solo un pezzo di testo — non ha identità finché non gliela dai tu. Un chunk che dice "la resistenza idrorepellente si mantiene fino a 50 lavaggi" non sa di essere la terza sezione della scheda del prodotto Alpentech Pro, a meno che tu non lo abbia scritto nei metadati quando hai indicizzato quel documento.</p>
+    <p>Questa è la ragione per cui la qualità dei metadati è molto più critica per i corpus documentali che per i database — nel database i metadati sono già lì, nelle colonne strutturate. Nel corpus documentale devi costruirli tu.</p>
+  </div>
+
+</div>
+</div>
+
+
+<!-- ══════════════════════════════════
+     S1 — COSA RESTA UGUALE
+══════════════════════════════════ -->
+<div class="sect" id="s1">
+<div class="cw">
+
+  <div class="s-eyebrow">I punti di contatto genuini</div>
+  <div class="s-title">Cosa resta uguale: il meccanismo centrale è lo stesso</div>
+
+  <p>Nonostante le differenze strutturali, il cuore del processo di ricerca semantica è identico nei due contesti. Chiunque abbia letto i report precedenti su RAG e database ha già la comprensione necessaria per i corpus documentali — il cambiamento è nei dettagli di contesto, non nel meccanismo.</p>
+
+  <div class="diagram">
+    <div class="diagram-title">I meccanismi condivisi — stessa logica, contesto diverso</div>
+
+    <div style="display:flex; flex-direction:column; gap:10px; margin-top:4px;">
+
+      <div style="display:grid; grid-template-columns:1fr 1fr; gap:1px; background:var(--border2); border-radius:4px; overflow:hidden;">
+        <div style="padding:12px 16px; background:var(--navy-bg);">
+          <div style="font-family:'DM Mono',monospace; font-size:9px; letter-spacing:1.5px; text-transform:uppercase; color:var(--navy); margin-bottom:6px;">Nel database</div>
+          <div style="font-size:13px; color:var(--ink2); line-height:1.6;">Il testo di una colonna lunga viene embeddato. Il vettore viene salvato in pgvector o in un vector store con il prodotto_id come metadato.</div>
+        </div>
+        <div style="padding:12px 16px; background:var(--accent2);">
+          <div style="font-family:'DM Mono',monospace; font-size:9px; letter-spacing:1.5px; text-transform:uppercase; color:var(--accent); margin-bottom:6px;">Nel corpus documentale</div>
+          <div style="font-size:13px; color:var(--ink2); line-height:1.6;">Il testo di un documento viene chunkato ed embeddato. I vettori vengono salvati con il nome_file e il numero_pagina come metadati.</div>
+        </div>
+      </div>
+      <div style="text-align:center; font-family:'DM Mono',monospace; font-size:10px; color:var(--ink4); letter-spacing:1px; text-transform:uppercase; padding:4px 0;">→ stesso meccanismo di embedding e archiviazione ←</div>
+
+      <div style="display:grid; grid-template-columns:1fr 1fr; gap:1px; background:var(--border2); border-radius:4px; overflow:hidden;">
+        <div style="padding:12px 16px; background:var(--navy-bg);">
+          <div style="font-family:'DM Mono',monospace; font-size:9px; letter-spacing:1.5px; text-transform:uppercase; color:var(--navy); margin-bottom:6px;">Nel database</div>
+          <div style="font-size:13px; color:var(--ink2); line-height:1.6;">La query viene trasformata in vettore dallo stesso modello di embedding usato per i documenti. Si cercano i vettori più vicini nel vector store.</div>
+        </div>
+        <div style="padding:12px 16px; background:var(--accent2);">
+          <div style="font-family:'DM Mono',monospace; font-size:9px; letter-spacing:1.5px; text-transform:uppercase; color:var(--accent); margin-bottom:6px;">Nel corpus documentale</div>
+          <div style="font-size:13px; color:var(--ink2); line-height:1.6;">Identico — la query viene embeddizzata e si cercano i chunk con vettore più vicino. La ricerca è la stessa operazione.</div>
+        </div>
+      </div>
+      <div style="text-align:center; font-family:'DM Mono',monospace; font-size:10px; color:var(--ink4); letter-spacing:1px; text-transform:uppercase; padding:4px 0;">→ stesso meccanismo di retrieval per similarità ←</div>
+
+      <div style="display:grid; grid-template-columns:1fr 1fr; gap:1px; background:var(--border2); border-radius:4px; overflow:hidden;">
+        <div style="padding:12px 16px; background:var(--navy-bg);">
+          <div style="font-family:'DM Mono',monospace; font-size:9px; letter-spacing:1.5px; text-transform:uppercase; color:var(--navy); margin-bottom:6px;">Nel database</div>
+          <div style="font-size:13px; color:var(--ink2); line-height:1.6;">Il vocabulary mismatch tra prompt e testo è il problema che giustifica l'embedding. "Impermeabile" non trova "idrorepellente" con SQL.</div>
+        </div>
+        <div style="padding:12px 16px; background:var(--accent2);">
+          <div style="font-family:'DM Mono',monospace; font-size:9px; letter-spacing:1.5px; text-transform:uppercase; color:var(--accent); margin-bottom:6px;">Nel corpus documentale</div>
+          <div style="font-size:13px; color:var(--ink2); line-height:1.6;">Identico — il documento usa linguaggio tecnico, la query usa linguaggio naturale. L'embedding supera il gap. Stessa diagnosi, stessa soluzione.</div>
+        </div>
+      </div>
+      <div style="text-align:center; font-family:'DM Mono',monospace; font-size:10px; color:var(--ink4); letter-spacing:1px; text-transform:uppercase; padding:4px 0;">→ stesso problema di vocabulary mismatch ←</div>
+
+    </div>
+  </div>
+
+  <p>Quello che cambia non è la meccanica del retrieval — è il lavoro preparatorio. Nel database la struttura è già lì. Nel corpus documentale bisogna crearla: decidere come chunkare i documenti, quali metadati aggiungere, come gestire documenti di tipo e formato diverso.</p>
+
+  <div class="callout callout-ok">
+    <div class="callout-title">Il vantaggio di aver capito il database prima</div>
+    <p>Chi ha lavorato con il testo in un database ha già interiorizzato i concetti chiave per i corpus documentali: il chunking (decidi dove spezzare il testo), i metadati (aggiungi contesto al chunk per sapere da dove viene), il retrieval semantico (cerca per significato, non per parole), il grounding (il modello usa solo quello che trova, non inventa).</p>
+    <p>L'unica cosa nuova è la gestione della struttura assente — e la consapevolezza che i metadati che nel database erano gratis (la colonna categoria, la colonna prezzo) nel corpus documentale si costruiscono.</p>
+  </div>
+
+</div>
+</div>
+
+
+<!-- ══════════════════════════════════
+     S2 — LA PIPELINE PER CORPUS
+══════════════════════════════════ -->
+<div class="sect" id="s2">
+<div class="cw">
+
+  <div class="s-eyebrow">La pipeline specifica</div>
+  <div class="s-title">Come si costruisce la pipeline per un corpus documentale</div>
+
+  <p>La pipeline per un corpus documentale è riconoscibile — è quella RAG descritta nella serie precedente. Vale la pena però metterla in relazione con quello che abbiamo visto in questa serie, evidenziando le scelte che diventano più critiche quando manca la struttura del database.</p>
+
+  <div class="pipeline">
+    <div class="pipe-step">
+      <div class="pipe-num" style="color:var(--accent); font-size:12px;">A</div>
+      <div class="pipe-body">
+        <div class="pipe-label">Fase offline · Inventario e classificazione</div>
+        <div class="pipe-title">Conosci il tuo corpus prima di indicizzarlo</div>
+        <div class="pipe-text">Prima di chunkare, classifica i documenti: tipo (policy, contratto, manuale, articolo), lingua, data, autore se disponibile. Questi diventano i metadati che permetteranno filtri successivi. Un corpus non classificato è un corpus non filtrabile — ogni query dovrà cercare in tutto, senza possibilità di restringere lo scope.</div>
+      </div>
+    </div>
+    <div class="pipe-step">
+      <div class="pipe-num" style="color:var(--accent); font-size:12px;">B</div>
+      <div class="pipe-body">
+        <div class="pipe-label">Fase offline · Chunking adattivo al tipo</div>
+        <div class="pipe-title">Strategie diverse per documenti diversi</div>
+        <div class="pipe-text">Un contratto, un manuale tecnico e un articolo di ricerca hanno strutture molto diverse. Il chunking ottimale non è uguale per tutti: un contratto ha clausole numerate che sono unità semantiche autonome; un manuale ha sezioni con titoli; un articolo ha paragrafi. Usare la stessa strategia fixed-size su tutto produce chunk peggiori di una strategia adattata al tipo.</div>
+      </div>
+    </div>
+    <div class="pipe-step">
+      <div class="pipe-num" style="color:var(--accent); font-size:12px;">C</div>
+      <div class="pipe-body">
+        <div class="pipe-label">Fase offline · Metadati ricchi</div>
+        <div class="pipe-title">Aggiungi il contesto che nel database era gratis</div>
+        <div class="pipe-text">Per ogni chunk: nome del file sorgente, tipo di documento, numero di pagina o sezione, data del documento, un titolo estratto o sintetizzato. Questi metadati servono per due cose: filtrare il retrieval (cerca solo tra le policy del 2024) e permettere al modello di citare le fonti correttamente nella risposta.</div>
+      </div>
+    </div>
+    <div class="pipe-step">
+      <div class="pipe-num" style="color:var(--accent); font-size:12px;">D</div>
+      <div class="pipe-body">
+        <div class="pipe-label">Fase online · Deduplicazione per documento</div>
+        <div class="pipe-title">Evita che lo stesso documento domini il contesto</div>
+        <div class="pipe-text">A differenza del database dove ogni riga è distinta, un corpus documentale può avere un documento molto rilevante che genera 5–6 chunk nei top-K risultati, occupando metà del contesto. Applica una regola: massimo 2–3 chunk per documento nei risultati finali. Questo garantisce diversità e lascia spazio a documenti diversi.</div>
+      </div>
+    </div>
+    <div class="pipe-step" style="border-bottom:none;">
+      <div class="pipe-num" style="color:var(--accent); font-size:12px;">E</div>
+      <div class="pipe-body">
+        <div class="pipe-label">Fase online · Citazione delle fonti</div>
+        <div class="pipe-title">Il modello deve sapere da dove vengono le informazioni</div>
+        <div class="pipe-text">A differenza del database dove la riga ha un ID chiaro, i chunk documentali vanno presentati al modello con il loro contesto esplicito: "Dal documento: Policy rimborsi spese 2024.pdf, sezione 3.2, pagina 8". Il modello può così citare la fonte nella risposta — fondamentale per documenti normativi o legali dove la provenienza dell'informazione conta quanto l'informazione stessa.</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="callout callout-brown">
+    <div class="callout-title">Il caso dei documenti non testuali — PDF scansionati, presentazioni, immagini</div>
+    <p>Non tutti i documenti di un corpus sono testo estraibile direttamente. PDF scansionati, presentazioni con contenuto grafico, documenti con tabelle complesse richiedono un passaggio aggiuntivo prima dell'indicizzazione: OCR per i PDF scansionati, estrazione strutturata per le tabelle, trascrizione del testo visibile nelle presentazioni.</p>
+    <p>Questo passaggio è spesso il più costoso e il più critico per la qualità. Un OCR impreciso produce testo pieno di errori che compromette sia il full-text search che gli embedding. La qualità del corpus a valle dell'indicizzazione non può essere migliore della qualità dell'estrazione del testo a monte.</p>
+  </div>
+
+</div>
+</div>
+
+
+<!-- ══════════════════════════════════
+     S3 — FONTI ETEROGENEE
+══════════════════════════════════ -->
+<div class="sect" id="s3">
+<div class="cw">
+
+  <div class="s-eyebrow">Il caso più realistico</div>
+  <div class="s-title">Fonti eterogenee: database e corpus nella stessa pipeline</div>
+
+  <p>I sistemi reali raramente hanno un'unica fonte di informazione. Un agente aziendale tipico ha accesso a un database relazionale con i dati strutturati, un corpus di documenti (policy, contratti, manuali), e a volte anche fonti esterne (documentazione web, knowledge base pubbliche). Una domanda dell'utente può richiedere informazioni da fonti diverse contemporaneamente.</p>
+
+  <p>Esempio concreto: "Quali prodotti outdoor del nostro catalogo sono coperti dalla garanzia estesa descritta nella policy commerciale?" Questa domanda richiede dati dal database prodotti (quali prodotti sono in categoria outdoor) e dal corpus documentale (cosa dice la policy commerciale sulla garanzia estesa). Nessuna delle due fonti da sola può rispondere completamente.</p>
+
+  <div class="int-card">
+    <div class="ic-head">
+      <div class="ic-badge" style="background:var(--teal-bg); color:var(--teal);">Architettura A</div>
+      <div class="ic-name">Query parallele, fusione finale</div>
+      <div class="ic-when">Caso più comune</div>
+    </div>
+    <div class="ic-body">
+      <div>
+        <div class="ic-col-label">Come funziona</div>
+        <p style="font-size:13px; color:var(--ink3); line-height:1.65; margin-bottom:10px;">L'agente decompone la domanda in sotto-query per ciascuna fonte. Esegue le query in parallelo — SQL sul database, retrieval semantico sul corpus. I risultati vengono assemblati in un unico contesto e passati all'LLM per la risposta finale.</p>
+        <p style="font-size:13px; color:var(--ink3); line-height:1.65;">L'LLM riceve: dati strutturati dal database + chunk rilevanti dal corpus + domanda originale. Ha tutto il necessario per rispondere integrando le due fonti.</p>
+      </div>
+      <div>
+        <div class="ic-col-label">Trade-off</div>
+        <div class="ic-list">
+          <div class="ic-item"><div class="ic-dot" style="background:var(--ok)"></div><div>Risposta completa che integra entrambe le fonti</div></div>
+          <div class="ic-item"><div class="ic-dot" style="background:var(--ok)"></div><div>Le query parallele minimizzano la latenza</div></div>
+          <div class="ic-item"><div class="ic-dot" style="background:var(--bad)"></div><div>Il contesto può diventare grande se entrambe le fonti restituiscono molto</div></div>
+          <div class="ic-item"><div class="ic-dot" style="background:var(--bad)"></div><div>La decomposizione della domanda richiede una chiamata LLM preliminare</div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="int-card">
+    <div class="ic-head">
+      <div class="ic-badge" style="background:var(--note-bg); color:var(--note);">Architettura B</div>
+      <div class="ic-name">Query sequenziale — la prima risposta guida la seconda</div>
+      <div class="ic-when">Quando le fonti dipendono l'una dall'altra</div>
+    </div>
+    <div class="ic-body">
+      <div>
+        <div class="ic-col-label">Come funziona</div>
+        <p style="font-size:13px; color:var(--ink3); line-height:1.65; margin-bottom:10px;">Prima si interroga una fonte (tipicamente il database con SQL) per ottenere un sottoinsieme preciso. Poi si usa quel sottoinsieme per costruire la query sulla seconda fonte (il corpus).</p>
+        <p style="font-size:13px; color:var(--ink3); line-height:1.65;">Esempio: prima si trovano i prodotti outdoor del catalogo, poi si cercano nel corpus i documenti che parlano di quei prodotti specifici. La seconda query è guidata dai risultati della prima.</p>
+      </div>
+      <div>
+        <div class="ic-col-label">Trade-off</div>
+        <div class="ic-list">
+          <div class="ic-item"><div class="ic-dot" style="background:var(--ok)"></div><div>La seconda query è più precisa perché guidata dalla prima</div></div>
+          <div class="ic-item"><div class="ic-dot" style="background:var(--ok)"></div><div>Il contesto finale è più compatto e pertinente</div></div>
+          <div class="ic-item"><div class="ic-dot" style="background:var(--bad)"></div><div>Latenza doppia — le query sono in sequenza</div></div>
+          <div class="ic-item"><div class="ic-dot" style="background:var(--bad)"></div><div>Un errore nella prima query si propaga alla seconda</div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="diagram">
+    <div class="diagram-title">Come si fondono i risultati eterogenei — RRF applicato a fonti diverse</div>
+    <p style="font-size:13px; color:var(--ink3); margin-bottom:20px; margin-top:0;">Stessa query su database e corpus. Ogni fonte restituisce risultati con score diversi e non comparabili direttamente. RRF li fonde usando solo i rank, non i valori assoluti.</p>
+
+    <div style="font-family:'DM Mono',monospace; font-size:9px; letter-spacing:1.5px; text-transform:uppercase; color:var(--navy); margin-bottom:8px;">Risultati dal database (score di similarità vettoriale)</div>
+    <div style="display:flex; flex-direction:column; gap:6px; margin-bottom:20px;">
+      <div class="fusion-row">
+        <div class="fr-source">Alpentech Pro — scheda prodotto</div>
+        <div class="fr-score" style="color:var(--navy);">0.91</div>
+        <div class="fr-bar-wrap"><div class="fr-track"><div class="fr-fill" style="width:91%; background:var(--navy);"></div></div></div>
+        <div class="fr-rank">rank 1</div>
+      </div>
+      <div class="fusion-row">
+        <div class="fr-source">WinterShell Pro — scheda prodotto</div>
+        <div class="fr-score" style="color:var(--navy);">0.82</div>
+        <div class="fr-bar-wrap"><div class="fr-track"><div class="fr-fill" style="width:82%; background:var(--navy);"></div></div></div>
+        <div class="fr-rank">rank 2</div>
+      </div>
+    </div>
+
+    <div style="font-family:'DM Mono',monospace; font-size:9px; letter-spacing:1.5px; text-transform:uppercase; color:var(--accent); margin-bottom:8px;">Risultati dal corpus documentale (score BM25 — scala diversa)</div>
+    <div style="display:flex; flex-direction:column; gap:6px; margin-bottom:20px;">
+      <div class="fusion-row">
+        <div class="fr-source">Policy commerciale 2024 — sezione garanzie</div>
+        <div class="fr-score" style="color:var(--accent);">14.2</div>
+        <div class="fr-bar-wrap"><div class="fr-track"><div class="fr-fill" style="width:100%; background:var(--accent);"></div></div></div>
+        <div class="fr-rank">rank 1</div>
+      </div>
+      <div class="fusion-row">
+        <div class="fr-source">Contratto fornitura outdoor — clausola 8</div>
+        <div class="fr-score" style="color:var(--accent);">9.7</div>
+        <div class="fr-bar-wrap"><div class="fr-track"><div class="fr-fill" style="width:68%; background:var(--accent);"></div></div></div>
+        <div class="fr-rank">rank 2</div>
+      </div>
+    </div>
+
+    <div style="font-family:'DM Mono',monospace; font-size:9px; letter-spacing:1.5px; text-transform:uppercase; color:var(--ok); margin-bottom:8px;">Dopo RRF — rank unificato (non confronta i valori, confronta i rank)</div>
+    <div style="display:flex; flex-direction:column; gap:6px;">
+      <div class="fusion-row">
+        <div class="fr-source" style="border-color:var(--ok-bd);">Policy commerciale 2024 — garanzie</div>
+        <div class="fr-score" style="color:var(--ok);">0.016</div>
+        <div class="fr-bar-wrap"><div class="fr-track"><div class="fr-fill" style="width:98%; background:var(--ok);"></div></div></div>
+        <div class="fr-rank" style="color:var(--ok);">rank 1</div>
+      </div>
+      <div class="fusion-row">
+        <div class="fr-source" style="border-color:var(--ok-bd);">Alpentech Pro — scheda prodotto</div>
+        <div class="fr-score" style="color:var(--ok);">0.016</div>
+        <div class="fr-bar-wrap"><div class="fr-track"><div class="fr-fill" style="width:96%; background:var(--ok);"></div></div></div>
+        <div class="fr-rank" style="color:var(--ok);">rank 2</div>
+      </div>
+      <div class="fusion-row">
+        <div class="fr-source" style="border-color:var(--ok-bd);">WinterShell Pro — scheda prodotto</div>
+        <div class="fr-score" style="color:var(--ok);">0.015</div>
+        <div class="fr-bar-wrap"><div class="fr-track"><div class="fr-fill" style="width:90%; background:var(--ok);"></div></div></div>
+        <div class="fr-rank" style="color:var(--ok);">rank 3</div>
+      </div>
+      <div class="fusion-row">
+        <div class="fr-source" style="border-color:var(--ok-bd);">Contratto fornitura outdoor — clausola 8</div>
+        <div class="fr-score" style="color:var(--ok);">0.015</div>
+        <div class="fr-bar-wrap"><div class="fr-track"><div class="fr-fill" style="width:88%; background:var(--ok);"></div></div></div>
+        <div class="fr-rank" style="color:var(--ok);">rank 4</div>
+      </div>
+    </div>
+    <p style="font-size:12px; color:var(--ink4); margin-top:14px; margin-bottom:0;">RRF calcola lo score come 1/(k + rank) dove k è tipicamente 60. Il vantaggio: non importa che i database restituiscano score su scale diverse (0–1 vs. BM25 su scala aperta). Solo il rank conta. Risultati da fonti diverse vengono messi sullo stesso piano in modo equo.</p>
+  </div>
+
+</div>
+</div>
+
+
+<!-- ══════════════════════════════════
+     S4 — QUANDO INTEGRARE
+══════════════════════════════════ -->
+<div class="sect" id="s4">
+<div class="cw">
+
+  <div class="s-eyebrow">La guida decisionale</div>
+  <div class="s-title">Quando integrare il corpus documentale con il database</div>
+
+  <p>Aggiungere un corpus documentale a una pipeline che già interroga un database non è mai gratis — richiede infrastruttura aggiuntiva, metadati da costruire, logica di fusione da implementare, sincronizzazione da gestire. La domanda non è "sarebbe utile avere anche i documenti?" ma "il valore aggiunto giustifica la complessità aggiuntiva?"</p>
+
+  <div class="diagram">
+    <div class="diagram-title">Quando integrare e quando no</div>
+
+    <div style="display:grid; grid-template-columns:1fr 1fr; gap:16px; margin-top:4px;">
+      <div>
+        <div style="font-family:'DM Mono',monospace; font-size:9px; letter-spacing:2px; text-transform:uppercase; color:var(--ok); margin-bottom:12px; padding-bottom:8px; border-bottom:1px solid var(--ok-bd);">Segnali che l'integrazione vale la pena</div>
+        <div style="display:flex; flex-direction:column; gap:8px;">
+          <div style="padding:10px 14px; background:var(--ok-bg); border-radius:4px; font-size:13px; color:var(--ink2); line-height:1.55;">Le query degli utenti richiedono informazioni che stanno <strong>solo nei documenti</strong> — policy, contratti, manuali — e non possono essere ricavate dal database strutturato</div>
+          <div style="padding:10px 14px; background:var(--ok-bg); border-radius:4px; font-size:13px; color:var(--ink2); line-height:1.55;">Il corpus documentale contiene <strong>informazioni qualitative</strong> (spiegazioni, motivazioni, contesto) che arricchiscono le risposte basate solo sui dati strutturati</div>
+          <div style="padding:10px 14px; background:var(--ok-bg); border-radius:4px; font-size:13px; color:var(--ink2); line-height:1.55;">C'è un problema di <strong>vocabulary mismatch</strong> frequente tra le query degli utenti e il testo dei documenti — l'embedding risolve un problema reale</div>
+          <div style="padding:10px 14px; background:var(--ok-bg); border-radius:4px; font-size:13px; color:var(--ink2); line-height:1.55;">Il corpus è relativamente <strong>stabile</strong> — documenti che cambiano frequentemente richiedono reindicizzazione continua, alzando il costo operativo</div>
+        </div>
+      </div>
+      <div>
+        <div style="font-family:'DM Mono',monospace; font-size:9px; letter-spacing:2px; text-transform:uppercase; color:var(--bad); margin-bottom:12px; padding-bottom:8px; border-bottom:1px solid var(--bad-bd);">Segnali che l'integrazione non vale la pena (ancora)</div>
+        <div style="display:flex; flex-direction:column; gap:8px;">
+          <div style="padding:10px 14px; background:var(--bad-bg); border-radius:4px; font-size:13px; color:var(--ink2); line-height:1.55;">Le query degli utenti sono quasi sempre soddisfatte dal database — il corpus sarebbe accessoriamente utile ma non necessario per la maggior parte delle domande</div>
+          <div style="padding:10px 14px; background:var(--bad-bg); border-radius:4px; font-size:13px; color:var(--ink2); line-height:1.55;">Il corpus è piccolo (meno di 20–30 documenti brevi) — può essere incluso direttamente nel prompt senza indicizzazione, come descritto nel Report 2</div>
+          <div style="padding:10px 14px; background:var(--bad-bg); border-radius:4px; font-size:13px; color:var(--ink2); line-height:1.55;">La qualità dei documenti è bassa — testo mal estratto da PDF, documenti non aggiornati, corpus non classificato. Il costo di pulizia supera il beneficio del retrieval</div>
+          <div style="padding:10px 14px; background:var(--bad-bg); border-radius:4px; font-size:13px; color:var(--ink2); line-height:1.55;">Il team non ha ancora ottimizzato la pipeline sul database — aggiungere il corpus prima di avere una buona baseline sul database è prematuro</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="callout callout-teal">
+    <div class="callout-title">Il percorso evolutivo consigliato</div>
+    <p>La sequenza più pragmatica: (1) costruisci prima una pipeline solida sul database strutturato con text-to-SQL e retrieval semantico sui campi di testo aperti, (2) identifica le domande che il sistema non riesce a rispondere perché l'informazione non è nel database ma nei documenti, (3) solo a quel punto aggiungi il corpus documentale come fonte integrativa.</p>
+    <p>Questo approccio garantisce che ogni aggiunta di complessità risponda a un bisogno concreto e misurabile — non a una necessità teorica.</p>
+  </div>
+
+  <div class="key-insight">
+    <div class="ki-label">Il principio che unifica la serie</div>
+    <div class="ki-text">I dati strutturati, i testi aperti nel database, e i documenti liberi sono tre manifestazioni dello stesso problema: come fare in modo che un modello acceda alle informazioni giuste al momento giusto. Il meccanismo centrale — embedding, retrieval, grounding — è lo stesso. Cambia il contesto in cui si applica, non la logica.</div>
+  </div>
+
+  <!-- Series recap -->
+  <div class="series-recap">
+    <div class="sr-head">Serie — Interrogare un database · tutti i report</div>
+    <div class="sr-grid">
+      <div class="sr-item">
+        <div class="sr-num">Report 1</div>
+        <div class="sr-title">Da prompt a SQL</div>
+        <div class="sr-sub">Schema, valori codificati, mapping semantico, quando SQL non basta</div>
+      </div>
+      <div class="sr-item">
+        <div class="sr-num">Report 2</div>
+        <div class="sr-title">Ricerca su testi aperti</div>
+        <div class="sr-sub">Full-text search, embedding, LLM diretto, la soglia tra le tre strategie</div>
+      </div>
+      <div class="sr-item">
+        <div class="sr-num">Report 3</div>
+        <div class="sr-title">Database misti</div>
+        <div class="sr-sub">Architettura a due stadi, ranking combinato, il testo corto</div>
+      </div>
+      <div class="sr-item current">
+        <div class="sr-num">Report 4 · questo</div>
+        <div class="sr-title">Corpus documentali</div>
+        <div class="sr-sub">Differenze, punti di contatto, pipeline eterogena, quando integrare</div>
+      </div>
+    </div>
+  </div>
+
+</div>
+</div>
+
+<div class="footer">
+  <span>Interrogare un database · Report 4 · Corpus documentali · Fine serie</span>
+  <span>2026</span>
+</div>
+
+<script>
+function show(n) {
+  document.querySelectorAll('.sect').forEach(s => s.classList.remove('active'));
+  document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('s'+n).classList.add('active');
+  document.querySelectorAll('.nav-btn')[n].classList.add('active');
+  window.scrollTo({top:0, behavior:'smooth'});
+}
+</script>
+</body>
+</html>

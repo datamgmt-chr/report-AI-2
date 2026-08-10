@@ -1,0 +1,837 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Interrogare un database — Report 1 · Da prompt a SQL</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:ital,wght@0,300;0,400;0,500;0,600;1,300;1,400&family=DM+Mono:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg:      #fafaf7;
+  --bg2:     #f2f1ec;
+  --bg3:     #e8e6df;
+  --ink:     #1a1916;
+  --ink2:    #2d2b26;
+  --ink3:    #5c5a52;
+  --ink4:    #9c9a90;
+  --border:  #dddbd2;
+  --border2: #cbc9bf;
+
+  --accent:  #1a3a5c;
+  --accent2: #e8eef6;
+  --accent3: #b0c8e0;
+
+  --teal:    #1a5f5f;
+  --teal-bg: #e5f3f3;
+  --teal-bd: #8ecece;
+
+  --warm:    #7a4a10;
+  --warm-bg: #fdf3e3;
+  --warm-bd: #e8c878;
+
+  --ok:      #2d6040;
+  --ok-bg:   #eaf4ee;
+  --ok-bd:   #a8d4b4;
+
+  --bad:     #8a1a1a;
+  --bad-bg:  #fdf0f0;
+  --bad-bd:  #e8a8a8;
+
+  --note:    #4a2d7a;
+  --note-bg: #f0ecfb;
+  --note-bd: #c4aef0;
+}
+
+* { margin:0; padding:0; box-sizing:border-box; }
+html { scroll-behavior:smooth; }
+body {
+  background: var(--bg);
+  color: var(--ink);
+  font-family: 'DM Sans', sans-serif;
+  font-weight: 300;
+  font-size: 15px;
+  line-height: 1.75;
+}
+
+/* ── MASTHEAD ── */
+.masthead {
+  background: var(--accent);
+  color: #fff;
+  padding: 56px 60px 52px;
+  position: relative;
+  overflow: hidden;
+}
+.masthead::before {
+  content: '';
+  position: absolute;
+  top: -80px; right: -80px;
+  width: 380px; height: 380px;
+  border-radius: 50%;
+  border: 1px solid rgba(255,255,255,.06);
+  pointer-events: none;
+}
+.mh-series {
+  font-family: 'DM Mono', monospace;
+  font-size: 10px; letter-spacing: 3px;
+  text-transform: uppercase; color: rgba(255,255,255,.35);
+  margin-bottom: 20px;
+}
+.mh-num {
+  font-family: 'DM Serif Display', serif;
+  font-size: 80px; line-height: 1;
+  color: rgba(255,255,255,.07);
+  position: absolute; right: 60px; top: 36px;
+  letter-spacing: -4px; user-select: none;
+}
+.masthead h1 {
+  font-family: 'DM Serif Display', serif;
+  font-size: clamp(26px, 3.8vw, 44px);
+  font-weight: 400; line-height: 1.1;
+  letter-spacing: -.5px; max-width: 740px; position: relative;
+}
+.masthead h1 em { font-style: italic; color: rgba(255,255,255,.68); }
+.mh-sub {
+  margin-top: 20px; font-size: 15px; font-weight: 300;
+  color: rgba(255,255,255,.42); max-width: 640px;
+  line-height: 1.7; position: relative;
+}
+.mh-pills {
+  margin-top: 28px; display: flex; gap: 8px;
+  flex-wrap: wrap; position: relative;
+}
+.mh-pill {
+  font-family: 'DM Mono', monospace; font-size: 10px;
+  letter-spacing: 1px; padding: 4px 12px;
+  border: 1px solid rgba(255,255,255,.2);
+  color: rgba(255,255,255,.48); border-radius: 20px;
+}
+
+/* ── NAV ── */
+.nav {
+  position: sticky; top: 0; z-index: 100;
+  background: var(--ink); display: flex; overflow-x: auto;
+  border-bottom: 1px solid rgba(255,255,255,.08);
+}
+.nav-btn {
+  flex-shrink: 0; padding: 14px 20px;
+  border: none; background: transparent; cursor: pointer;
+  font-family: 'DM Mono', monospace; font-size: 10px;
+  letter-spacing: 1px; text-transform: uppercase;
+  color: rgba(255,255,255,.3);
+  border-right: 1px solid rgba(255,255,255,.06);
+  transition: color .2s; white-space: nowrap;
+}
+.nav-btn:hover { color: rgba(255,255,255,.65); }
+.nav-btn.active { color: #fff; background: rgba(255,255,255,.06); }
+
+.sect { display: none; }
+.sect.active { display: block; animation: fadeUp .3s ease; }
+@keyframes fadeUp { from{opacity:0;transform:translateY(5px)} to{opacity:1;transform:translateY(0)} }
+
+/* ── CONTENT WRAP ── */
+.cw { max-width: 860px; margin: 0 auto; padding: 52px 60px 64px; }
+
+.s-eyebrow {
+  font-family: 'DM Mono', monospace; font-size: 10px;
+  letter-spacing: 3px; text-transform: uppercase;
+  color: var(--ink4); margin-bottom: 8px;
+}
+.s-title {
+  font-family: 'DM Serif Display', serif; font-size: 30px;
+  font-weight: 400; letter-spacing: -.3px; color: var(--ink);
+  line-height: 1.15; margin-bottom: 28px;
+}
+
+p { margin-bottom: 18px; color: var(--ink2); }
+p:last-child { margin-bottom: 0; }
+p strong { font-weight: 600; color: var(--ink); }
+code {
+  font-family: 'DM Mono', monospace;
+  background: var(--bg3); padding: 1px 6px;
+  border-radius: 3px; font-size: 13px; color: var(--ink2);
+}
+
+/* ── CALLOUT ── */
+.callout {
+  padding: 20px 24px; border-left: 3px solid;
+  margin: 28px 0; border-radius: 0 6px 6px 0;
+}
+.callout-warn   { background: var(--warm-bg); border-color: var(--warm); }
+.callout-ok     { background: var(--ok-bg);   border-color: var(--ok);   }
+.callout-bad    { background: var(--bad-bg);  border-color: var(--bad);  }
+.callout-note   { background: var(--note-bg); border-color: var(--note); }
+.callout-accent { background: var(--accent2); border-color: var(--accent); }
+.callout-teal   { background: var(--teal-bg); border-color: var(--teal); }
+.callout-title {
+  font-family: 'DM Mono', monospace; font-size: 10px;
+  letter-spacing: 2px; text-transform: uppercase; margin-bottom: 8px;
+}
+.callout-warn .callout-title   { color: var(--warm);   }
+.callout-ok .callout-title     { color: var(--ok);     }
+.callout-bad .callout-title    { color: var(--bad);    }
+.callout-note .callout-title   { color: var(--note);   }
+.callout-accent .callout-title { color: var(--accent); }
+.callout-teal .callout-title   { color: var(--teal);   }
+.callout p { font-size: 14px; line-height: 1.65; margin-bottom: 8px; }
+.callout p:last-child { margin-bottom: 0; }
+
+/* ── DIAGRAM ── */
+.diagram {
+  background: var(--bg2); border: 1px solid var(--border2);
+  padding: 28px 32px; margin: 28px 0;
+}
+.diagram-title {
+  font-family: 'DM Mono', monospace; font-size: 10px;
+  letter-spacing: 2px; text-transform: uppercase; color: var(--ink4);
+  margin-bottom: 20px; padding-bottom: 12px; border-bottom: 1px solid var(--border);
+}
+
+/* ── SQL BLOCK ── */
+.sql-block {
+  background: var(--ink); border-radius: 6px;
+  overflow: hidden; margin: 16px 0;
+  font-family: 'DM Mono', monospace;
+}
+.sql-head {
+  padding: 8px 16px; background: rgba(255,255,255,.06);
+  border-bottom: 1px solid rgba(255,255,255,.06);
+  font-size: 9.5px; letter-spacing: 1px;
+  text-transform: uppercase; color: rgba(255,255,255,.3);
+  display: flex; justify-content: space-between; align-items: center;
+}
+.sql-body {
+  padding: 14px 16px; font-size: 12.5px;
+  line-height: 1.8; color: rgba(255,255,255,.78);
+  overflow-x: auto;
+}
+.sql-kw  { color: #7ec8e3; font-weight: 500; }
+.sql-str { color: #e8c87e; }
+.sql-num { color: #c8e67e; }
+.sql-cmt { color: rgba(255,255,255,.25); }
+.sql-op  { color: #e8a87e; }
+
+/* ── TRANSFORM FLOW ── */
+.transform-flow {
+  display: flex; flex-direction: column; gap: 0;
+  border: 1px solid var(--border2); border-radius: 6px;
+  overflow: hidden; margin: 20px 0;
+}
+.tf-step {
+  display: grid; grid-template-columns: 48px 1fr;
+  border-bottom: 1px solid var(--border);
+}
+.tf-step:last-child { border-bottom: none; }
+.tf-num {
+  display: flex; align-items: center; justify-content: center;
+  font-family: 'DM Mono', monospace; font-size: 13px; font-weight: 500;
+  border-right: 1px solid var(--border); background: var(--bg2);
+}
+.tf-body { padding: 12px 16px; }
+.tf-label {
+  font-family: 'DM Mono', monospace; font-size: 9px;
+  letter-spacing: 1.5px; text-transform: uppercase;
+  color: var(--ink4); margin-bottom: 3px;
+}
+.tf-title { font-size: 13.5px; font-weight: 600; color: var(--ink); margin-bottom: 4px; }
+.tf-text { font-size: 13px; color: var(--ink3); line-height: 1.6; }
+
+/* ── SCHEMA BLOCK ── */
+.schema-block {
+  border: 1px solid var(--border2); border-radius: 6px;
+  overflow: hidden; margin: 20px 0;
+}
+.schema-head {
+  padding: 10px 16px; background: var(--accent);
+  font-family: 'DM Mono', monospace; font-size: 9.5px;
+  letter-spacing: 1.5px; text-transform: uppercase;
+  color: rgba(255,255,255,.8); border-bottom: 1px solid rgba(255,255,255,.1);
+}
+.schema-table {
+  width: 100%; border-collapse: collapse;
+  font-family: 'DM Mono', monospace; font-size: 12px;
+}
+.schema-table th {
+  padding: 7px 14px; background: var(--bg3);
+  font-size: 9px; letter-spacing: 1.5px; text-transform: uppercase;
+  color: var(--ink4); font-weight: 400; text-align: left;
+  border-bottom: 1px solid var(--border);
+}
+.schema-table td {
+  padding: 8px 14px; border-bottom: 1px solid var(--border);
+  vertical-align: top; line-height: 1.5;
+}
+.schema-table tr:last-child td { border-bottom: none; }
+.col-name { color: var(--accent); font-weight: 500; }
+.col-type { color: var(--teal); }
+.col-values { color: var(--ink3); font-size: 11px; }
+.col-note { color: var(--ink4); font-size: 11px; }
+.tag-struct { background: var(--accent2); color: var(--accent); padding: 1px 6px; border-radius: 10px; font-size: 9.5px; }
+.tag-closed { background: var(--ok-bg); color: var(--ok); padding: 1px 6px; border-radius: 10px; font-size: 9.5px; }
+.tag-open   { background: var(--warm-bg); color: var(--warm); padding: 1px 6px; border-radius: 10px; font-size: 9.5px; }
+
+/* ── MAPPING TABLE ── */
+.mapping-table {
+  width: 100%; border-collapse: collapse; margin: 16px 0; font-size: 13px;
+}
+.mapping-table th {
+  background: var(--accent); color: rgba(255,255,255,.85);
+  font-family: 'DM Mono', monospace; font-size: 9.5px;
+  letter-spacing: 1.5px; text-transform: uppercase;
+  padding: 9px 14px; text-align: left; font-weight: 400;
+}
+.mapping-table td {
+  padding: 9px 14px; border: 1px solid var(--border);
+  vertical-align: top; line-height: 1.5; color: var(--ink2);
+}
+.mapping-table tr:nth-child(even) td { background: var(--bg2); }
+.td-prompt { font-style: italic; color: var(--ink3); }
+.td-value  { font-family: 'DM Mono', monospace; color: var(--accent); font-size: 12px; }
+.td-ok   { color: var(--ok); }
+.td-warn { color: var(--warm); }
+.td-bad  { color: var(--bad); }
+
+/* ── BEFORE AFTER ── */
+.before-after {
+  display: grid; grid-template-columns: 1fr 1fr; gap: 1px;
+  background: var(--border2); border: 1px solid var(--border2);
+  border-radius: 6px; overflow: hidden; margin: 20px 0;
+}
+.ba-side { background: var(--bg); padding: 18px 20px; }
+.ba-label {
+  font-family: 'DM Mono', monospace; font-size: 9px;
+  letter-spacing: 2px; text-transform: uppercase; margin-bottom: 10px;
+}
+.ba-body { font-size: 13px; color: var(--ink3); line-height: 1.65; }
+.ba-body p { font-size: 13px; margin-bottom: 8px; }
+
+/* ── KEY INSIGHT ── */
+.key-insight {
+  background: var(--ink); color: #fff;
+  padding: 28px 32px; margin: 32px 0; border-radius: 6px;
+  position: relative; overflow: hidden;
+}
+.key-insight::before {
+  content: '"'; position: absolute; right: 24px; top: -10px;
+  font-family: 'DM Serif Display', serif; font-size: 100px;
+  color: rgba(255,255,255,.06); line-height: 1; pointer-events: none;
+}
+.ki-label {
+  font-family: 'DM Mono', monospace; font-size: 9px;
+  letter-spacing: 2.5px; text-transform: uppercase;
+  color: rgba(255,255,255,.3); margin-bottom: 12px;
+}
+.ki-text {
+  font-family: 'DM Serif Display', serif; font-size: 20px;
+  font-weight: 400; line-height: 1.4;
+  color: rgba(255,255,255,.9); max-width: 680px;
+}
+
+/* ── NEXT REPORT ── */
+.next-report {
+  border-top: 1px solid var(--border); margin-top: 52px;
+  padding-top: 32px; display: flex;
+  justify-content: space-between; align-items: center; gap: 20px;
+}
+.nr-label {
+  font-family: 'DM Mono', monospace; font-size: 9px;
+  letter-spacing: 2px; text-transform: uppercase;
+  color: var(--ink4); margin-bottom: 6px;
+}
+.nr-title { font-family: 'DM Serif Display', serif; font-size: 18px; color: var(--ink); line-height: 1.2; }
+.nr-sub { font-size: 13px; color: var(--ink4); margin-top: 4px; }
+.nr-arrow { font-family: 'DM Mono', monospace; font-size: 22px; color: var(--accent); flex-shrink: 0; }
+
+/* ── FOOTER ── */
+.footer {
+  padding: 22px 60px; border-top: 1px solid var(--border);
+  display: flex; justify-content: space-between; align-items: center;
+  font-family: 'DM Mono', monospace; font-size: 10px;
+  letter-spacing: 1px; text-transform: uppercase; color: var(--ink4);
+}
+
+@media (max-width: 720px) {
+  .masthead, .cw, .footer { padding-left: 24px; padding-right: 24px; }
+  .mh-num { display: none; }
+  .before-after { grid-template-columns: 1fr; }
+}
+</style>
+</head>
+<body>
+
+<!-- ══ MASTHEAD ══ -->
+<div class="masthead">
+  <div class="mh-series">Interrogare un database · Report 1 di 4</div>
+  <div class="mh-num">01</div>
+  <h1>Da prompt a SQL:<br><em>ricerca su campi strutturati<br>e testi chiusi</em></h1>
+  <p class="mh-sub">Come un agente traduce una richiesta in linguaggio naturale in una query sul database. Cosa deve sapere, cosa va comunicato esplicitamente, e quando SQL comincia a non bastare più.</p>
+  <div class="mh-pills">
+    <span class="mh-pill">Text-to-SQL</span>
+    <span class="mh-pill">Schema e valori codificati</span>
+    <span class="mh-pill">Vocabulary mismatch</span>
+    <span class="mh-pill">Testi chiusi</span>
+    <span class="mh-pill">Normalizzazione</span>
+    <span class="mh-pill">Limite di SQL</span>
+  </div>
+</div>
+
+<!-- ══ NAV ══ -->
+<div class="nav">
+  <button class="nav-btn active" onclick="show(0)">1 · Come funziona</button>
+  <button class="nav-btn" onclick="show(1)">2 · Cosa fornire all'LLM</button>
+  <button class="nav-btn" onclick="show(2)">3 · Campi a valori codificati</button>
+  <button class="nav-btn" onclick="show(3)">4 · Testi chiusi con variazioni</button>
+  <button class="nav-btn" onclick="show(4)">5 · Quando SQL non basta</button>
+</div>
+
+
+<!-- ══════════════════════════════════
+     S0 — COME FUNZIONA
+══════════════════════════════════ -->
+<div class="sect active" id="s0">
+<div class="cw">
+
+  <div class="s-eyebrow">Il meccanismo base</div>
+  <div class="s-title">Come un agente trasforma un prompt in una query SQL</div>
+
+  <p>Quando un utente chiede "mostrami i prodotti outdoor disponibili sotto i 200 euro", non sta scrivendo una query — sta descrivendo in linguaggio naturale un insieme di criteri. Il compito dell'agente è tradurre questa descrizione in qualcosa che il database capisce: una query SQL precisa, con nomi di colonne reali, operatori corretti, valori nel formato atteso.</p>
+
+  <p>Questo processo si chiama <strong>text-to-SQL</strong>. Non è magia — è una forma di traduzione da un linguaggio (il linguaggio naturale) a un altro (SQL), e come ogni traduzione funziona bene quando il traduttore conosce entrambe le lingue. Il modello LLM conosce bene SQL in senso astratto; quello che non conosce è il vocabolario specifico del tuo database: come si chiama la colonna del prezzo, quali sono i valori esatti della colonna categoria, se "disponibile" è un booleano o una stringa.</p>
+
+  <div class="diagram">
+    <div class="diagram-title">Il ciclo text-to-SQL — dalla richiesta al risultato</div>
+    <div class="transform-flow">
+      <div class="tf-step">
+        <div class="tf-num" style="color:var(--accent);">1</div>
+        <div class="tf-body">
+          <div class="tf-label">Input</div>
+          <div class="tf-title">La richiesta in linguaggio naturale</div>
+          <div class="tf-text">"Mostrami i prodotti outdoor disponibili sotto i 200 euro, ordinati per prezzo crescente."</div>
+        </div>
+      </div>
+      <div class="tf-step">
+        <div class="tf-num" style="color:var(--accent);">2</div>
+        <div class="tf-body">
+          <div class="tf-label">Contesto</div>
+          <div class="tf-title">L'LLM riceve lo schema del database</div>
+          <div class="tf-text">Nome delle tabelle, colonne, tipi di dato, valori validi per i campi codificati. Senza questo, il modello non può costruire una query corretta — inventerebbe nomi di colonne che non esistono.</div>
+        </div>
+      </div>
+      <div class="tf-step">
+        <div class="tf-num" style="color:var(--accent);">3</div>
+        <div class="tf-body">
+          <div class="tf-label">Traduzione</div>
+          <div class="tf-title">L'LLM genera la query SQL</div>
+          <div class="tf-text">Il modello mappa ogni concetto del prompt sui campi e valori del database: "outdoor" → <code>categoria = 'abbigliamento-outdoor'</code>, "disponibili" → <code>disponibile = true</code>, "sotto i 200 euro" → <code>prezzo &lt; 200</code>.</div>
+        </div>
+      </div>
+      <div class="tf-step">
+        <div class="tf-num" style="color:var(--accent);">4</div>
+        <div class="tf-body">
+          <div class="tf-label">Esecuzione</div>
+          <div class="tf-title">Il runtime esegue la query sul database</div>
+          <div class="tf-text">L'agente passa la query generata al database. I risultati tornano come righe strutturate che il modello usa per costruire la risposta finale.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <p>Il passo più critico è il 3 — la traduzione. E il punto più fragile della traduzione è il <strong>mapping tra concetti del prompt e valori del database</strong>. "Outdoor" nel prompt corrisponde a <code>'abbigliamento-outdoor'</code> nel database? O a <code>'outdoor'</code>? O a <code>'Outdoor & Sport'</code>? Il modello non lo sa — a meno che tu non glielo dica.</p>
+
+  <div class="key-insight">
+    <div class="ki-label">Il principio di base</div>
+    <div class="ki-text">Un LLM conosce SQL. Non conosce il tuo database. Tutto ciò che è specifico del tuo schema — nomi, tipi, valori — deve essere comunicato esplicitamente nel contesto.</div>
+  </div>
+
+</div>
+</div>
+
+
+<!-- ══════════════════════════════════
+     S1 — COSA FORNIRE ALL'LLM
+══════════════════════════════════ -->
+<div class="sect" id="s1">
+<div class="cw">
+
+  <div class="s-eyebrow">Il contesto necessario</div>
+  <div class="s-title">Cosa fornire all'LLM: schema, valori, significati</div>
+
+  <p>Per fare text-to-SQL in modo affidabile, il modello ha bisogno di tre livelli di informazione sul database. Ognuno risolve un problema diverso.</p>
+
+  <div class="schema-block">
+    <div class="schema-head">Tabella di esempio — prodotti</div>
+    <table class="schema-table">
+      <thead>
+        <tr>
+          <th>Colonna</th>
+          <th>Tipo</th>
+          <th>Valori / range</th>
+          <th>Tipo campo</th>
+          <th>Note</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td class="col-name">id</td>
+          <td class="col-type">INTEGER</td>
+          <td class="col-values">—</td>
+          <td><span class="tag-struct">strutturato</span></td>
+          <td class="col-note">Chiave primaria</td>
+        </tr>
+        <tr>
+          <td class="col-name">nome</td>
+          <td class="col-type">VARCHAR</td>
+          <td class="col-values">testo libero</td>
+          <td><span class="tag-open">aperto</span></td>
+          <td class="col-note">Nome commerciale del prodotto</td>
+        </tr>
+        <tr>
+          <td class="col-name">categoria</td>
+          <td class="col-type">VARCHAR</td>
+          <td class="col-values">'abbigliamento-outdoor', 'abbigliamento-sport', 'accessori', 'calzature', 'equipment'</td>
+          <td><span class="tag-closed">chiuso</span></td>
+          <td class="col-note">Elenco fisso di 5 valori</td>
+        </tr>
+        <tr>
+          <td class="col-name">prezzo</td>
+          <td class="col-type">DECIMAL</td>
+          <td class="col-values">da 9.90 a 1.200,00</td>
+          <td><span class="tag-struct">strutturato</span></td>
+          <td class="col-note">Prezzo di vendita in €</td>
+        </tr>
+        <tr>
+          <td class="col-name">disponibile</td>
+          <td class="col-type">BOOLEAN</td>
+          <td class="col-values">true / false</td>
+          <td><span class="tag-struct">strutturato</span></td>
+          <td class="col-note">true = in stock</td>
+        </tr>
+        <tr>
+          <td class="col-name">stagione</td>
+          <td class="col-type">VARCHAR</td>
+          <td class="col-values">'primavera-estate', 'autunno-inverno', 'tutti-stagioni'</td>
+          <td><span class="tag-closed">chiuso</span></td>
+          <td class="col-note">Stagione di riferimento</td>
+        </tr>
+        <tr>
+          <td class="col-name">descrizione</td>
+          <td class="col-type">TEXT</td>
+          <td class="col-values">testo libero, 200–2.000 parole</td>
+          <td><span class="tag-open">aperto</span></td>
+          <td class="col-note">Scheda tecnica descrittiva</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <p>Guardando questa tabella, emergono tre livelli di informazione che servono al modello:</p>
+
+  <div class="diagram">
+    <div class="diagram-title">I tre livelli di contesto — cosa risolvono</div>
+
+    <div style="display:flex; flex-direction:column; gap:12px; margin-top:4px;">
+
+      <div style="border:1px solid var(--border2); border-radius:4px; overflow:hidden;">
+        <div style="display:grid; grid-template-columns:44px 1fr; align-items:stretch;">
+          <div style="background:var(--accent); display:flex; align-items:center; justify-content:center; font-family:'DM Mono',monospace; font-size:14px; font-weight:500; color:#fff;">1</div>
+          <div style="padding:12px 16px;">
+            <div style="font-size:14px; font-weight:600; color:var(--ink); margin-bottom:4px;">Schema — nomi e tipi</div>
+            <div style="font-size:13px; color:var(--ink3); line-height:1.6;">Nomi esatti delle colonne, tipi di dato, struttura della tabella. <strong style="color:var(--ink2);">Obbligatorio.</strong> Senza di esso il modello inventa nomi di colonne che non esistono — generando query che falliscono silenziosamente o con errore.</div>
+            <div style="margin-top:8px; font-family:'DM Mono',monospace; font-size:11px; color:var(--ink4);">Risolve: "Non so come si chiama la colonna del prezzo"</div>
+          </div>
+        </div>
+      </div>
+
+      <div style="border:1px solid var(--border2); border-radius:4px; overflow:hidden;">
+        <div style="display:grid; grid-template-columns:44px 1fr; align-items:stretch;">
+          <div style="background:var(--teal); display:flex; align-items:center; justify-content:center; font-family:'DM Mono',monospace; font-size:14px; font-weight:500; color:#fff;">2</div>
+          <div style="padding:12px 16px;">
+            <div style="font-size:14px; font-weight:600; color:var(--ink); margin-bottom:4px;">Valori validi per i campi codificati</div>
+            <div style="font-size:13px; color:var(--ink3); line-height:1.6;">L'elenco completo dei valori possibili per ogni campo a vocabolario chiuso. <strong style="color:var(--ink2);">Obbligatorio per i campi chiusi.</strong> Senza di esso il modello usa valori plausibili ma sbagliati — <code>'outdoor'</code> invece di <code>'abbigliamento-outdoor'</code>.</div>
+            <div style="margin-top:8px; font-family:'DM Mono',monospace; font-size:11px; color:var(--ink4);">Risolve: "Non so il valore esatto da usare nel WHERE"</div>
+          </div>
+        </div>
+      </div>
+
+      <div style="border:1px solid var(--border2); border-radius:4px; overflow:hidden;">
+        <div style="display:grid; grid-template-columns:44px 1fr; align-items:stretch;">
+          <div style="background:var(--warm); display:flex; align-items:center; justify-content:center; font-family:'DM Mono',monospace; font-size:14px; font-weight:500; color:#fff;">3</div>
+          <div style="padding:12px 16px;">
+            <div style="font-size:14px; font-weight:600; color:var(--ink); margin-bottom:4px;">Significati e mapping semantico</div>
+            <div style="font-size:13px; color:var(--ink3); line-height:1.6;">Spiegazione del significato di ogni valore codificato — cosa include, sinonimi comuni, casi limite. <strong style="color:var(--ink2);">Necessario quando il vocabolario del prompt diverge dal vocabolario del database.</strong> Senza di esso il modello non sa che "giacche" corrisponde a <code>'abbigliamento-outdoor'</code>.</div>
+            <div style="margin-top:8px; font-family:'DM Mono',monospace; font-size:11px; color:var(--ink4);">Risolve: "Non so quale valore corrisponde al concetto espresso nel prompt"</div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <p>I livelli 1 e 2 sono sempre necessari. Il livello 3 è necessario quando c'è un divario semantico tra il linguaggio del prompt e i valori del database — il che accade quasi sempre con i campi a valori codificati non ovvi.</p>
+
+  <div class="callout callout-accent">
+    <div class="callout-title">Come si fornisce questo contesto in pratica</div>
+    <p>Il modo più semplice e robusto è includere lo schema come testo strutturato nel system prompt dell'agente. Non serve un formato sofisticato — basta che sia leggibile e completo:</p>
+    <p><code>Tabella: prodotti<br>- categoria (VARCHAR): valori possibili: 'abbigliamento-outdoor' (giacche, pantaloni, pile per uso esterno), 'abbigliamento-sport' (abbigliamento per sport indoor e palestra), 'accessori' (zaini, guanti, cappelli), 'calzature', 'equipment' (attrezzatura tecnica)</code></p>
+    <p>Il livello di dettaglio nel mapping semantico dipende da quanto è intuitivo il vocabolario del database. Se i valori sono autoesplicativi (<code>'true'</code> / <code>'false'</code>), bastano i valori. Se sono codici o etichette opache (<code>'CAT-01'</code>, <code>'abbigliamento-outdoor'</code>), serve la spiegazione.</p>
+  </div>
+
+</div>
+</div>
+
+
+<!-- ══════════════════════════════════
+     S2 — CAMPI A VALORI CODIFICATI
+══════════════════════════════════ -->
+<div class="sect" id="s2">
+<div class="cw">
+
+  <div class="s-eyebrow">Il caso più comune e più insidioso</div>
+  <div class="s-title">Campi a valori codificati: il problema del vocabulary mismatch</div>
+
+  <p>Un campo a valori codificati — categoria, stato, tipo, stagione — sembra il caso più semplice: ha un numero finito di valori, basta elencarli. Ma è anche il caso dove gli errori di traduzione sono più frequenti e più silenziosi.</p>
+
+  <p>Il problema è il <strong>vocabulary mismatch</strong>: il prompt usa parole diverse dai valori del database. L'utente dice "giacche invernali" — il database ha <code>'abbigliamento-outdoor'</code> e <code>'autunno-inverno'</code>. Il modello deve capire che "giacche invernali" corrisponde a quella combinazione di valori — e lo fa solo se gli viene detto esplicitamente come sono strutturate le categorie.</p>
+
+  <div class="diagram">
+    <div class="diagram-title">Vocabulary mismatch — esempi di prompt e mappings necessari</div>
+    <table class="mapping-table">
+      <thead>
+        <tr>
+          <th>Prompt dell'utente</th>
+          <th>Concetto espresso</th>
+          <th>Valore nel database</th>
+          <th>Mapping ovvio?</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td class="td-prompt">"prodotti outdoor"</td>
+          <td>abbigliamento per uso esterno</td>
+          <td class="td-value">categoria = 'abbigliamento-outdoor'</td>
+          <td class="td-warn">Parzialmente — dipende da come il modello interpreta "outdoor"</td>
+        </tr>
+        <tr>
+          <td class="td-prompt">"giacche e pantaloni da montagna"</td>
+          <td>specifici capi outdoor</td>
+          <td class="td-value">categoria = 'abbigliamento-outdoor'</td>
+          <td class="td-bad">No — "montagna" non è una categoria, è un contesto d'uso</td>
+        </tr>
+        <tr>
+          <td class="td-prompt">"roba invernale"</td>
+          <td>prodotti per stagione fredda</td>
+          <td class="td-value">stagione = 'autunno-inverno'</td>
+          <td class="td-warn">Parzialmente — il modello potrebbe anche cercare parole come "invernale" nel nome</td>
+        </tr>
+        <tr>
+          <td class="td-prompt">"prodotti disponibili subito"</td>
+          <td>in stock</td>
+          <td class="td-value">disponibile = true</td>
+          <td class="td-ok">Sì — "disponibile" è semanticamente vicino a <code>true</code></td>
+        </tr>
+        <tr>
+          <td class="td-prompt">"articoli esauriti"</td>
+          <td>non in stock</td>
+          <td class="td-value">disponibile = false</td>
+          <td class="td-ok">Sì — con il mapping dei valori booleani</td>
+        </tr>
+        <tr>
+          <td class="td-prompt">"scarpe e stivali"</td>
+          <td>calzature</td>
+          <td class="td-value">categoria = 'calzature'</td>
+          <td class="td-warn">Parzialmente — il modello potrebbe non sapere che "stivali" è in questa categoria</td>
+        </tr>
+        <tr>
+          <td class="td-prompt">"attrezzatura tecnica"</td>
+          <td>equipment</td>
+          <td class="td-value">categoria = 'equipment'</td>
+          <td class="td-bad">No — senza spiegazione "equipment" è opaco, il modello potrebbe usare 'abbigliamento-sport'</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <p>Il pattern che emerge: i mapping che sembrano ovvi spesso non lo sono per il modello, perché il modello non conosce la logica interna con cui le categorie sono state definite nel tuo database specifico. "Equipment" come categoria che include zaini ma non giacche — chi ha progettato il database lo sa, il modello no.</p>
+
+  <div class="callout callout-ok">
+    <div class="callout-title">Come strutturare il mapping semantico nel prompt</div>
+    <p>Per ogni campo a valori codificati, fornisci: il nome del campo, l'elenco dei valori, e per ogni valore una riga di spiegazione con esempi di cosa include e i sinonimi comuni che un utente potrebbe usare.</p>
+    <p>Esempio efficace:</p>
+    <p><code>categoria: classificazione merceologica del prodotto<br>  'abbigliamento-outdoor': giacche, pantaloni, pile, softshell — capi per attività all'aperto (trekking, alpinismo, sci)<br>  'abbigliamento-sport': magliette tecniche, pantaloncini, leggings — per attività sportive indoor<br>  'accessori': zaini, guanti, cappelli, imbracature, corde, bastoni<br>  'calzature': scarpe, stivali, scarponi, sandali da trekking<br>  'equipment': tende, sacchi a pelo, fornelletti, materassini</code></p>
+    <p>Con questo contesto, il modello può mappare correttamente "giacche da montagna" su <code>'abbigliamento-outdoor'</code> e "corde" su <code>'accessori'</code>.</p>
+  </div>
+
+  <div class="callout callout-warn">
+    <div class="callout-title">Il caso delle categorie sovrapposte</div>
+    <p>Un problema frequente: categorie che si sovrappongono semanticamente. "Giacca da running" — è <code>'abbigliamento-outdoor'</code> o <code>'abbigliamento-sport'</code>? Se il database non ha una regola chiara, il modello ne applicherà una sua — e sarà imprevedibile.</p>
+    <p>La soluzione: documenta esplicitamente i casi limite nel mapping. "Nota: le giacche da running e ciclismo sono in <code>'abbigliamento-sport'</code>, non in <code>'abbigliamento-outdoor'</code>, anche se usate all'esterno." Questo è il tipo di conoscenza implicita che il modello non può inferire — deve trovarsela scritta.</p>
+  </div>
+
+</div>
+</div>
+
+
+<!-- ══════════════════════════════════
+     S3 — TESTI CHIUSI CON VARIAZIONI
+══════════════════════════════════ -->
+<div class="sect" id="s3">
+<div class="cw">
+
+  <div class="s-eyebrow">Il caso più sottovalutato</div>
+  <div class="s-title">Testi chiusi con variazioni: normalizzazione e ambiguità</div>
+
+  <p>C'è una categoria di campo che si comporta come un valore codificato ma ha la forma di un testo libero: lo stato di un ordine, il nome di un fornitore, la descrizione di un processo. In teoria ha un vocabolario finito; in pratica i valori non sono standardizzati — lo stesso concetto appare scritto in modi diversi da operatori diversi, in momenti diversi, con convenzioni diverse.</p>
+
+  <div class="diagram">
+    <div class="diagram-title">Il problema della non-uniformità — stessa colonna, stesso concetto, valori diversi</div>
+
+    <div style="display:grid; grid-template-columns:1fr 1fr; gap:16px; margin-top:4px;">
+      <div>
+        <div style="font-family:'DM Mono',monospace; font-size:9px; letter-spacing:2px; text-transform:uppercase; color:var(--ink4); margin-bottom:10px; padding-bottom:6px; border-bottom:1px solid var(--border);">Campo: stato_ordine — valori reali trovati nel database</div>
+        <div style="display:flex; flex-direction:column; gap:4px;">
+          <div style="padding:6px 12px; background:var(--bg); border:1px solid var(--border2); font-family:'DM Mono',monospace; font-size:12px; color:var(--ok);">'In lavorazione'</div>
+          <div style="padding:6px 12px; background:var(--bg); border:1px solid var(--border2); font-family:'DM Mono',monospace; font-size:12px; color:var(--ok);">'in lavorazione'</div>
+          <div style="padding:6px 12px; background:var(--bg); border:1px solid var(--border2); font-family:'DM Mono',monospace; font-size:12px; color:var(--warn);">'lavorazione in corso'</div>
+          <div style="padding:6px 12px; background:var(--bg); border:1px solid var(--border2); font-family:'DM Mono',monospace; font-size:12px; color:var(--warn);">'IN LAVORAZIONE'</div>
+          <div style="padding:6px 12px; background:var(--bg); border:1px solid var(--border2); font-family:'DM Mono',monospace; font-size:12px; color:var(--bad);">'lavoraz.'</div>
+          <div style="padding:6px 12px; background:var(--bg); border:1px solid var(--border2); font-family:'DM Mono',monospace; font-size:12px; color:var(--bad);">'Processing'</div>
+        </div>
+        <div style="margin-top:8px; font-size:12px; color:var(--ink4);">6 modi diversi per lo stesso stato. Un <code>WHERE stato_ordine = 'In lavorazione'</code> troverebbe solo 1 su 6.</div>
+      </div>
+      <div>
+        <div style="font-family:'DM Mono',monospace; font-size:9px; letter-spacing:2px; text-transform:uppercase; color:var(--ink4); margin-bottom:10px; padding-bottom:6px; border-bottom:1px solid var(--border);">Come gestirlo — due approcci</div>
+        <div style="display:flex; flex-direction:column; gap:10px;">
+          <div style="padding:12px 14px; background:var(--ok-bg); border:1px solid var(--ok-bd); border-radius:4px;">
+            <div style="font-family:'DM Mono',monospace; font-size:9.5px; letter-spacing:1px; text-transform:uppercase; color:var(--ok); margin-bottom:6px;">Approccio A — ILIKE e pattern matching</div>
+            <div style="font-family:'DM Mono',monospace; font-size:11.5px; color:var(--ink2); line-height:1.7;"><span style="color:#7ec8e3;">WHERE</span> <span style="color:#e8c87e;">LOWER(stato_ordine)</span> <span style="color:#7ec8e3;">LIKE</span> <span style="color:#c8e67e;">'%lavorazi%'</span></div>
+            <div style="font-size:12px; color:var(--ok); margin-top:6px;">Trova tutte le varianti senza normalizzare i dati. Fragile se le varianti sono molto eterogenee.</div>
+          </div>
+          <div style="padding:12px 14px; background:var(--accent2); border:1px solid var(--accent3); border-radius:4px;">
+            <div style="font-family:'DM Mono',monospace; font-size:9.5px; letter-spacing:1px; text-transform:uppercase; color:var(--accent); margin-bottom:6px;">Approccio B — mapping esplicito nel prompt</div>
+            <div style="font-size:12px; color:var(--ink2); line-height:1.6;">Fornire al modello la lista di tutte le varianti note per ogni concetto: "stato 'in lavorazione' può apparire come: 'In lavorazione', 'lavorazione in corso', 'IN LAVORAZIONE', 'lavoraz.', 'Processing'. Usa <code>LOWER(stato) LIKE '%lavorazi%'</code>".</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <p>La soluzione definitiva per questo problema non è nel prompt — è nel database. Dati non uniformi producono query fragili indipendentemente da quanto sia buono il modello. Ma in attesa di una pulizia dei dati, il prompt può fornire al modello le varianti note e le strategie di ricerca robuste.</p>
+
+  <div class="callout callout-note">
+    <div class="callout-title">Il testo chiuso corto — un caso speciale</div>
+    <p>C'è un tipo di campo che merita attenzione separata: il testo corto con contenuto semantico ma vocabolario parzialmente aperto. Esempi: il campo "note" di un ordine con frasi come "cliente VIP", "urgente", "spedizione express richiesta". Non è un valore codificato fisso, ma non è nemmeno un testo aperto narrativo.</p>
+    <p>Per questi campi, il full-text search con <code>ILIKE</code> funziona spesso bene per parole chiave specifiche. Il rischio è che il modello provi a fare inferenze semantiche — cercando "urgente" quando il prompt dice "prioritario" — e fallisca perché il campo non è abbastanza ricco per il retrieval semantico. La regola pratica: se il campo ha meno di 20 parole in media, usa keyword search; se ha più di 50 parole, considera il retrieval semantico.</p>
+  </div>
+
+</div>
+</div>
+
+
+<!-- ══════════════════════════════════
+     S4 — QUANDO SQL NON BASTA
+══════════════════════════════════ -->
+<div class="sect" id="s4">
+<div class="cw">
+
+  <div class="s-eyebrow">Il confine</div>
+  <div class="s-title">Quando SQL non basta: il limite strutturale del testo aperto</div>
+
+  <p>SQL è uno strumento straordinario per i dati strutturati. Ma ha un limite preciso: lavora su corrispondenze, confronti e pattern — non sul significato. Quando la ricerca richiede di capire il significato di un testo, SQL non è la soluzione giusta.</p>
+
+  <div class="before-after">
+    <div class="ba-side">
+      <div class="ba-label" style="color:var(--ok);">SQL funziona bene — questi casi</div>
+      <div class="ba-body">
+        <p>"Prodotti con prezzo tra 100 e 300 euro" → <code>WHERE prezzo BETWEEN 100 AND 300</code></p>
+        <p>"Giacche disponibili in magazzino" → <code>WHERE categoria = 'abbigliamento-outdoor' AND disponibile = true</code></p>
+        <p>"Ordini degli ultimi 30 giorni" → <code>WHERE data_ordine &gt; NOW() - INTERVAL '30 days'</code></p>
+        <p>"Prodotti con 'merino' nel nome" → <code>WHERE LOWER(nome) LIKE '%merino%'</code></p>
+        <p>"Tutto tranne la categoria calzature" → <code>WHERE categoria != 'calzature'</code></p>
+      </div>
+    </div>
+    <div class="ba-side" style="background:var(--bad-bg);">
+      <div class="ba-label" style="color:var(--bad);">SQL non funziona — questi casi</div>
+      <div class="ba-body">
+        <p>"Prodotti adatti all'alta montagna" → non è un campo, è un concetto nella descrizione</p>
+        <p>"Giacche con materiali tecnici di qualità premium" → qualità e premium sono valutazioni soggettive nel testo</p>
+        <p>"Articoli pensati per clienti professionisti" → l'uso previsto è nella descrizione, non in una colonna</p>
+        <p>"Prodotti simili a questo che ho già visto" → similarità semantica tra descrizioni</p>
+        <p>"Capi resistenti e durevoli" → durabilità non è una colonna — è un concetto distribuito nella scheda</p>
+      </div>
+    </div>
+  </div>
+
+  <p>Il confine tra "SQL basta" e "SQL non basta" non è la lunghezza del testo — è la <strong>natura della corrispondenza cercata</strong>. Se cerchi un valore specifico o un pattern testuale, SQL funziona. Se cerchi un concetto che potrebbe essere espresso in molti modi diversi nel testo, hai bisogno di qualcosa che capisca il significato.</p>
+
+  <div class="diagram">
+    <div class="diagram-title">La mappa delle strategie di ricerca per tipo di campo</div>
+
+    <div style="display:grid; grid-template-columns: 180px 1fr 1fr; gap:1px; background:var(--border2); border-radius:4px; overflow:hidden; font-size:13px;">
+
+      <!-- header -->
+      <div style="padding:8px 14px; background:var(--ink); font-family:'DM Mono',monospace; font-size:9px; letter-spacing:1.5px; text-transform:uppercase; color:rgba(255,255,255,.5);">Tipo di campo</div>
+      <div style="padding:8px 14px; background:var(--ink); font-family:'DM Mono',monospace; font-size:9px; letter-spacing:1.5px; text-transform:uppercase; color:rgba(255,255,255,.5);">Strategia di ricerca</div>
+      <div style="padding:8px 14px; background:var(--ink); font-family:'DM Mono',monospace; font-size:9px; letter-spacing:1.5px; text-transform:uppercase; color:rgba(255,255,255,.5);">Cosa serve al modello</div>
+
+      <!-- Numeri, date, booleani -->
+      <div style="padding:10px 14px; background:var(--bg); border-bottom:1px solid var(--border); font-weight:500;">Numeri, date, booleani</div>
+      <div style="padding:10px 14px; background:var(--ok-bg); border-bottom:1px solid var(--border); color:var(--ok);">SQL puro — confronti e range</div>
+      <div style="padding:10px 14px; background:var(--bg); border-bottom:1px solid var(--border); color:var(--ink3);">Schema + tipi. Nient'altro.</div>
+
+      <!-- Valori codificati -->
+      <div style="padding:10px 14px; background:var(--bg); border-bottom:1px solid var(--border); font-weight:500;">Valori codificati (enum)</div>
+      <div style="padding:10px 14px; background:var(--ok-bg); border-bottom:1px solid var(--border); color:var(--ok);">SQL + mapping semantico</div>
+      <div style="padding:10px 14px; background:var(--bg); border-bottom:1px solid var(--border); color:var(--ink3);">Schema + tutti i valori + spiegazione dei casi non ovvi.</div>
+
+      <!-- Testo chiuso non uniforme -->
+      <div style="padding:10px 14px; background:var(--bg); border-bottom:1px solid var(--border); font-weight:500;">Testo chiuso non uniforme</div>
+      <div style="padding:10px 14px; background:var(--warm-bg); border-bottom:1px solid var(--border); color:var(--warm);">SQL con ILIKE + normalizzazione</div>
+      <div style="padding:10px 14px; background:var(--bg); border-bottom:1px solid var(--border); color:var(--ink3);">Schema + varianti note di ogni valore + istruzione su ILIKE vs. =</div>
+
+      <!-- Testo corto aperto -->
+      <div style="padding:10px 14px; background:var(--bg); border-bottom:1px solid var(--border); font-weight:500;">Testo corto aperto (&lt; 50 parole)</div>
+      <div style="padding:10px 14px; background:var(--warm-bg); border-bottom:1px solid var(--border); color:var(--warm);">Full-text search (ILIKE / tsvector)</div>
+      <div style="padding:10px 14px; background:var(--bg); border-bottom:1px solid var(--border); color:var(--ink3);">Schema + avvertenza che il campo non è codificato — keyword search su termini chiave.</div>
+
+      <!-- Testo lungo aperto -->
+      <div style="padding:10px 14px; background:var(--bg); font-weight:500;">Testo lungo aperto (&gt; 50–100 parole)</div>
+      <div style="padding:10px 14px; background:var(--bad-bg); color:var(--bad);">RAG — embedding + vector search</div>
+      <div style="padding:10px 14px; background:var(--bg); color:var(--ink3);">Indicizzazione separata. SQL non è la strategia giusta per questo campo. → Report 2</div>
+
+    </div>
+  </div>
+
+  <div class="key-insight">
+    <div class="ki-label">Il confine che conta</div>
+    <div class="ki-text">SQL cerca corrispondenze. Il retrieval semantico cerca significati. Quando la domanda è "trova le righe che hanno questo valore", SQL è la risposta. Quando la domanda è "trova le righe che parlano di questo concetto", serve qualcosa di più.</div>
+  </div>
+
+  <!-- NEXT REPORT -->
+  <div class="next-report">
+    <div>
+      <div class="nr-label">Prossimo report</div>
+      <div class="nr-title">Ricerca su testi aperti: tre strategie a confronto</div>
+      <div class="nr-sub">Full-text search · Embedding + vector search · LLM diretto sul testo · La soglia tra le tre strategie</div>
+    </div>
+    <div class="nr-arrow">→</div>
+  </div>
+
+</div>
+</div>
+
+<!-- FOOTER -->
+<div class="footer">
+  <span>Interrogare un database · Report 1 · Da prompt a SQL</span>
+  <span>2026</span>
+</div>
+
+<script>
+function show(n) {
+  document.querySelectorAll('.sect').forEach(s => s.classList.remove('active'));
+  document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('s'+n).classList.add('active');
+  document.querySelectorAll('.nav-btn')[n].classList.add('active');
+  window.scrollTo({top:0, behavior:'smooth'});
+}
+</script>
+</body>
+</html>

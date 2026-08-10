@@ -1,0 +1,765 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Memoria — D · Memoria procedurale: skill, routine e comportamenti acquisiti</title>
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Outfit:wght@200;300;400;500;600;700;800;900&family=IBM+Plex+Mono:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg:     #faf8f5;
+  --bg2:    #f2efe9;
+  --bg3:    #e9e5dc;
+  --ink:    #1b1915;
+  --ink2:   #2e2b25;
+  --ink3:   #6d685c;
+  --ink4:   #a19c8f;
+  --border: #d9d4c8;
+  --border2:#cac4b6;
+
+  --accent:  #7b5ea7;
+  --accent2: #4a3070;
+  --accent-light: #f4f0fa;
+
+  --ok:   #3d7a45; --ok-l:  #f4faf5;
+  --bad:  #c0392b; --bad-l: #fdf5f5;
+  --warn: #b07d24; --warn-l:#fdf6e8;
+}
+
+* { margin:0; padding:0; box-sizing:border-box; }
+html { scroll-behavior:smooth; }
+body { background:var(--bg); color:var(--ink); font-family:'Outfit',sans-serif; font-weight:300; font-size:14px; line-height:1.75; }
+
+.masthead { background:var(--ink); color:rgba(255,255,255,.9); padding:60px 56px 52px; position:relative; overflow:hidden; }
+.masthead::before { content:''; position:absolute; inset:0; background: repeating-linear-gradient(90deg,rgba(255,255,255,.012) 0,rgba(255,255,255,.012) 1px,transparent 1px,transparent 64px), repeating-linear-gradient(0deg,rgba(255,255,255,.012) 0,rgba(255,255,255,.012) 1px,transparent 1px,transparent 64px); pointer-events:none; }
+.masthead::after { content:'D'; position:absolute; right:44px; bottom:-28px; font-family:'Instrument Serif',serif; font-size:280px; line-height:1; color:rgba(255,255,255,.025); pointer-events:none; }
+.mh-eye { font-family:'IBM Plex Mono',monospace; font-size:10px; letter-spacing:3px; text-transform:uppercase; color:rgba(255,255,255,.25); margin-bottom:18px; position:relative; }
+.mh-cluster { display:inline-block; font-family:'IBM Plex Mono',monospace; font-size:10px; letter-spacing:2px; text-transform:uppercase; padding:4px 12px; border:1px solid var(--accent); color:var(--accent); margin-bottom:20px; position:relative; }
+.masthead h1 { font-family:'Instrument Serif',serif; font-weight:400; font-size:clamp(30px,4.5vw,54px); line-height:1.08; letter-spacing:-1px; max-width:700px; position:relative; }
+.mh-sub { margin-top:20px; font-size:15px; font-weight:300; color:rgba(255,255,255,.38); max-width:660px; line-height:1.7; position:relative; }
+.mh-meta { margin-top:32px; display:flex; gap:32px; flex-wrap:wrap; position:relative; }
+.mh-stat { display:flex; flex-direction:column; gap:4px; }
+.mh-stat-val { font-family:'IBM Plex Mono',monospace; font-size:22px; font-weight:500; color:rgba(255,255,255,.85); }
+.mh-stat-lbl { font-size:10px; letter-spacing:2px; text-transform:uppercase; color:rgba(255,255,255,.25); }
+
+.nav { background:var(--ink2); position:sticky; top:0; z-index:100; display:flex; overflow-x:auto; border-bottom:1px solid rgba(255,255,255,.06); }
+.nav-btn { flex:1; min-width:100px; padding:13px 12px; border:none; background:transparent; cursor:pointer; font-family:'Outfit',sans-serif; font-size:10.5px; font-weight:600; text-transform:uppercase; letter-spacing:.4px; color:rgba(255,255,255,.3); border-right:1px solid rgba(255,255,255,.06); transition:all .2s; white-space:nowrap; }
+.nav-btn:last-child { border-right:none; }
+.nav-btn:hover { color:rgba(255,255,255,.6); }
+.nav-btn.active { color:#fff; background:rgba(255,255,255,.05); }
+
+.sect { display:none; }
+.sect.active { display:block; animation:fadeIn .3s ease; }
+@keyframes fadeIn { from{opacity:0;transform:translateY(6px)} to{opacity:1;transform:translateY(0)} }
+.sect-head { padding:48px 56px 36px; border-bottom:1px solid var(--border); }
+.sect-num { font-family:'IBM Plex Mono',monospace; font-size:10px; letter-spacing:3px; text-transform:uppercase; color:var(--ink4); margin-bottom:10px; }
+.sect-head h2 { font-family:'Instrument Serif',serif; font-weight:400; font-size:clamp(26px,3.5vw,42px); line-height:1.1; letter-spacing:-.5px; max-width:640px; margin-bottom:14px; }
+.sect-head p { color:var(--ink3); max-width:700px; font-size:14.5px; }
+.wrap { padding:0 56px 64px; }
+
+.prose { max-width:760px; }
+.prose p { font-size:14.5px; color:var(--ink3); line-height:1.85; margin-bottom:16px; }
+.prose p strong { color:var(--ink2); font-weight:500; }
+.prose p em { font-style:italic; color:var(--ink2); }
+
+/* ── GL CARD ── */
+.gl-group { margin-top:36px; }
+.gl-group-title { font-family:'IBM Plex Mono',monospace; font-size:9px; letter-spacing:3px; text-transform:uppercase; color:var(--ink4); padding-bottom:10px; border-bottom:1px solid var(--border); }
+.gl-card { border:1px solid var(--border2); border-top:none; background:var(--bg); }
+.gl-header { display:grid; grid-template-columns:5px 52px 1fr auto; align-items:stretch; border-bottom:1px solid var(--border); }
+.gl-stripe { background:var(--accent); }
+.gl-num { font-family:'Outfit',sans-serif; font-weight:800; font-size:20px; color:var(--bg3); display:flex; align-items:center; justify-content:center; border-right:1px solid var(--border); }
+.gl-title-wrap { padding:16px 20px; }
+.gl-title { font-family:'Instrument Serif',serif; font-size:20px; color:var(--ink2); line-height:1.2; }
+.gl-subtitle { font-size:12px; color:var(--ink4); margin-top:3px; }
+.gl-impact-wrap { padding:14px 20px; display:flex; flex-direction:column; align-items:flex-end; justify-content:center; gap:4px; }
+.gl-impact-stars { font-size:14px; }
+.gl-impact-lbl { font-family:'IBM Plex Mono',monospace; font-size:8px; letter-spacing:1px; text-transform:uppercase; color:var(--ink4); }
+.gl-body { padding:0; }
+.gl-section { padding:20px 24px; border-bottom:1px solid var(--border); }
+.gl-section:last-child { border-bottom:none; }
+.gl-section-lbl { font-family:'IBM Plex Mono',monospace; font-size:9px; letter-spacing:2px; text-transform:uppercase; color:var(--ink4); margin-bottom:10px; padding-bottom:6px; border-bottom:1px solid var(--border); }
+.gl-section p { font-size:13.5px; color:var(--ink3); line-height:1.8; max-width:740px; }
+.gl-section p strong { color:var(--ink2); font-weight:500; }
+
+/* ── SPECTRUM TABLE ── */
+.spectrum { margin-top:16px; border:1px solid var(--border); overflow:hidden; }
+.spectrum-row { display:grid; border-bottom:1px solid var(--border); font-size:12.5px; }
+.spectrum-row:last-child { border-bottom:none; }
+.spectrum-row.head { background:var(--ink); color:rgba(255,255,255,.7); font-family:'IBM Plex Mono',monospace; font-size:9px; letter-spacing:1px; text-transform:uppercase; }
+.spectrum-row.col3 { grid-template-columns:200px 1fr 1fr; }
+.spectrum-row.col4 { grid-template-columns:160px 1fr 1fr 1fr; }
+.s-cell { padding:11px 14px; border-right:1px solid var(--border); color:var(--ink3); line-height:1.5; }
+.s-cell:last-child { border-right:none; }
+.s-cell.lbl  { font-weight:500; color:var(--ink2); background:var(--bg2); }
+.s-cell.hi   { background:var(--accent-light); color:var(--accent2); }
+.s-cell.ok   { background:var(--ok-l); color:#2e4a32; }
+.s-cell.lo   { background:var(--bad-l); color:#8b3030; }
+.s-cell.mid  { background:var(--warn-l); color:#5a3a00; }
+
+/* ── LAYER ANATOMY ── */
+.layer-stack { margin-top:20px; display:flex; flex-direction:column; gap:2px; }
+.ls-layer { display:grid; grid-template-columns:5px 140px 1fr; border:1px solid var(--border2); }
+.ls-stripe {}
+.ls-label { padding:14px 16px; border-right:1px solid var(--border); background:var(--bg2); }
+.ls-label-tag { font-family:'IBM Plex Mono',monospace; font-size:8px; letter-spacing:2px; text-transform:uppercase; margin-bottom:3px; }
+.ls-label-name { font-weight:600; font-size:13px; color:var(--ink2); }
+.ls-label-note { font-size:11px; color:var(--ink4); margin-top:2px; line-height:1.4; }
+.ls-content { padding:14px 18px; font-family:'IBM Plex Mono',monospace; font-size:11.5px; line-height:1.7; color:rgba(255,255,255,.75); background:var(--ink); white-space:pre-wrap; }
+.ls-content .k  { color:#93c5e8; }
+.ls-content .v  { color:#7dd3a8; }
+.ls-content .cm { color:rgba(255,255,255,.28); }
+.ls-content .hl { color:#c4a8e8; font-weight:500; }
+
+/* ── PROCEDURE CARD ── */
+.procedure-card { border:1px solid var(--border2); background:var(--bg); overflow:hidden; margin-top:16px; }
+.proc-head { padding:12px 16px; background:var(--bg2); border-bottom:1px solid var(--border); display:flex; align-items:center; gap:12px; }
+.proc-badge { font-family:'IBM Plex Mono',monospace; font-size:9px; font-weight:700; letter-spacing:2px; padding:3px 9px; background:var(--accent); color:#fff; flex-shrink:0; }
+.proc-name { font-family:'Instrument Serif',serif; font-size:19px; color:var(--ink2); }
+.proc-tagline { font-size:12px; color:var(--ink4); }
+.proc-body { display:grid; grid-template-columns:1fr 1fr; gap:1px; background:var(--border); }
+.proc-col { background:var(--bg); padding:16px 18px; }
+.proc-col-title { font-family:'IBM Plex Mono',monospace; font-size:9px; letter-spacing:2px; text-transform:uppercase; color:var(--ink4); margin-bottom:8px; padding-bottom:6px; border-bottom:1px solid var(--border); }
+.proc-col p { font-size:13px; color:var(--ink3); line-height:1.65; }
+.proc-col p strong { color:var(--ink2); font-weight:500; }
+
+/* ── PROMPT TEMPLATE ── */
+.pt { margin-top:14px; font-family:'IBM Plex Mono',monospace; font-size:11.5px; line-height:1.85; padding:16px 20px; border:1px solid var(--border2); background:var(--ink); color:rgba(255,255,255,.75); white-space:pre-wrap; word-break:break-word; }
+.pt .sec { color:#f4a87a; font-weight:500; }
+.pt .ins { color:#7dd3a8; }
+.pt .var { color:#93c5e8; }
+.pt .cmt { color:rgba(255,255,255,.28); }
+.pt .sk  { color:#c4a8e8; }
+
+/* ── COMPARE ── */
+.compare-grid { display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-top:12px; }
+.pex-lbl { font-family:'IBM Plex Mono',monospace; font-size:9px; letter-spacing:2px; text-transform:uppercase; margin-bottom:6px; }
+.pex-lbl.bad  { color:var(--bad); }
+.pex-lbl.good { color:var(--accent); }
+.pex-lbl.neutral { color:var(--ink4); }
+.prompt-box { font-family:'IBM Plex Mono',monospace; font-size:11.5px; line-height:1.75; padding:14px 18px; border:1px solid; white-space:pre-wrap; word-break:break-word; }
+.prompt-box.bad  { border-color:#e8c5c5; background:var(--bad-l); color:#6b3030; }
+.prompt-box.good { border-color:#cbbce8; background:var(--accent-light); color:var(--accent2); }
+.prompt-box.neutral { border-color:var(--border2); background:var(--bg2); color:var(--ink3); }
+.prompt-box .hl { font-weight:500; color:var(--accent); }
+
+/* ── CHECKLIST ── */
+.checklist { margin-top:16px; }
+.check-item { display:flex; gap:12px; align-items:flex-start; padding:10px 0; border-bottom:1px solid var(--border); font-size:13.5px; color:var(--ink3); }
+.check-item:last-child { border-bottom:none; }
+.check-icon { width:20px; height:20px; border-radius:50%; background:var(--accent); color:#fff; display:flex; align-items:center; justify-content:center; font-size:11px; font-weight:700; flex-shrink:0; margin-top:1px; }
+.check-item strong { color:var(--ink2); font-weight:500; }
+
+/* ── MECHANISM ── */
+.mechanism { margin-top:14px; padding:14px 18px; border-left:3px solid var(--accent); background:var(--accent-light); }
+.mech-lbl { font-family:'IBM Plex Mono',monospace; font-size:9px; letter-spacing:2px; text-transform:uppercase; color:var(--accent); margin-bottom:6px; }
+.mechanism p { font-size:13px; color:var(--ink3); line-height:1.65; }
+.mechanism p strong { color:var(--ink2); font-weight:500; }
+
+/* ── KEY POINT ── */
+.key-point { margin-top:36px; padding:24px 28px; border-left:4px solid var(--accent); background:var(--accent-light); }
+.kp-label { font-family:'IBM Plex Mono',monospace; font-size:9px; letter-spacing:2px; text-transform:uppercase; color:var(--accent); margin-bottom:8px; }
+.kp-text { font-family:'Instrument Serif',serif; font-size:18px; line-height:1.45; color:var(--ink2); }
+.kp-sub { margin-top:10px; font-size:13px; color:var(--ink3); line-height:1.65; }
+
+/* ── INSIGHT ── */
+.insight { margin:16px 0; padding:16px 20px; border-left:4px solid var(--accent); background:var(--accent-light); }
+.insight-lbl { font-family:'IBM Plex Mono',monospace; font-size:9px; letter-spacing:2px; text-transform:uppercase; color:var(--accent); margin-bottom:6px; }
+.insight p { font-size:13.5px; color:var(--ink2); line-height:1.65; max-width:700px; }
+.insight p strong { font-weight:500; }
+
+/* ── FOOTER ── */
+.footer { padding:24px 56px; border-top:1px solid var(--border); display:flex; justify-content:space-between; align-items:center; font-family:'IBM Plex Mono',monospace; font-size:10px; letter-spacing:1px; text-transform:uppercase; color:var(--ink4); }
+
+@media (max-width:700px) {
+  .masthead,.sect-head,.wrap,.footer { padding-left:20px; padding-right:20px; }
+  .compare-grid,.proc-body { grid-template-columns:1fr; }
+  .gl-header { grid-template-columns:5px 40px 1fr; }
+  .gl-impact-wrap { display:none; }
+  .ls-layer { grid-template-columns:5px 1fr; }
+  .ls-label { display:none; }
+  .spectrum-row.col3,.spectrum-row.col4 { grid-template-columns:1fr; }
+}
+</style>
+</head>
+<body>
+
+<div class="masthead">
+  <div class="mh-eye">Serie Agenti AI · Leva Memoria</div>
+  <div class="mh-cluster">Report D</div>
+  <h1>Memoria procedurale: skill, routine e comportamenti acquisiti</h1>
+  <p class="mh-sub">Il tipo di memoria che non si recupera come dato — si esegue come comportamento. Come progettarla in modo deliberato, stratificarla per contesto, aggiornarla senza destabilizzare il sistema, e dove finisce il prompt e inizia il training.</p>
+  <div class="mh-meta">
+    <div class="mh-stat"><div class="mh-stat-val">3</div><div class="mh-stat-lbl">Layer del sistema</div></div>
+    <div class="mh-stat"><div class="mh-stat-val">Implicita</div><div class="mh-stat-lbl">Modalità di accesso</div></div>
+    <div class="mh-stat"><div class="mh-stat-value">Prompt</div><div class="mh-stat-lbl">Meccanismo principale</div></div>
+    <div class="mh-stat"><div class="mh-stat-val">Permanente</div><div class="mh-stat-lbl">Durata</div></div>
+  </div>
+</div>
+
+<div class="nav">
+  <button class="nav-btn active" onclick="show(1)">Cos'è e come funziona</button>
+  <button class="nav-btn" onclick="show(2)">I 3 layer</button>
+  <button class="nav-btn" onclick="show(3)">Come codificarla</button>
+  <button class="nav-btn" onclick="show(4)">Come aggiornarla</button>
+  <button class="nav-btn" onclick="show(5)">Prompt vs. training</button>
+  <button class="nav-btn" onclick="show(6)">Checklist</button>
+</div>
+
+
+<!-- ═══════════════════════════
+     S1 — COS'È E COME FUNZIONA
+═══════════════════════════ -->
+<div class="sect active" id="s1">
+  <div class="sect-head">
+    <div class="sect-num">Introduzione</div>
+    <h2>La memoria che non si legge — si esegue</h2>
+    <p>Mentre la memoria episodica e semantica sono dati da recuperare, la memoria procedurale è diversa per natura: non è nel context window come informazione ma nel comportamento del modello come pattern d'azione.</p>
+  </div>
+  <div class="wrap">
+
+    <div class="prose" style="margin-top:28px;">
+      <p>Un musicista esperto non "ricorda" come leggere la musica — lo fa. Un avvocato senior non consulta una checklist su come analizzare un contratto — applica un framework interiorizzato. Questo è il territorio della memoria procedurale: competenze che operano sotto il livello della consapevolezza esplicita, attivate automaticamente dal contesto giusto.</p>
+      <p>Negli agenti AI, la memoria procedurale si manifesta in due forme. La prima è <strong>codificata nel system prompt</strong> come istruzioni di comportamento — framework di analisi, stili di risposta, sequenze di passi da seguire. La seconda è <strong>incorporata nel training</strong> del modello, parte dei suoi pesi neurali. Entrambe sono memoria procedurale; hanno meccanismi di aggiornamento molto diversi.</p>
+      <p>Il contributo specifico di questo report rispetto a quanto già detto nella Leva 3 (skill latenti nel prompt): lì le skill erano trattate come componenti dell'interfaccia tool. Qui le trattiamo come <strong>sistema di memoria</strong> — come si progetta la collezione di skill procedurali, come si stratificano per contesto, come si gestisce la loro evoluzione nel tempo senza perdere la coerenza del sistema.</p>
+    </div>
+
+    <div class="key-point" style="margin-top:24px;">
+      <div class="kp-label">La distinzione fondamentale</div>
+      <div class="kp-text">La memoria semantica dice "l'utente preferisce analisi dettagliate". La memoria procedurale dice "quando ricevi un contratto, segui questo framework". Una descrive l'utente; l'altra descrive il comportamento dell'agente.</div>
+      <div class="kp-sub">Le due si complementano: la memoria semantica informa la memoria procedurale (sapere che l'utente è senior modifica come si esegue il framework di analisi), ma operano su livelli distinti. La memoria semantica è un dato nel context window; la memoria procedurale è una regola di comportamento che si attiva con il contesto.</div>
+    </div>
+
+  </div>
+</div>
+
+
+<!-- ═══════════════════════════
+     S2 — I 3 LAYER
+═══════════════════════════ -->
+<div class="sect" id="s2">
+  <div class="sect-head">
+    <div class="sect-num">Sezione 02</div>
+    <h2>I 3 layer della memoria procedurale</h2>
+    <p>Non tutta la memoria procedurale è uguale. Tre layer con caratteristiche diverse di universalità, contestualità e aggiornabilità — da progettare e mantenere separatamente.</p>
+  </div>
+  <div class="wrap">
+
+    <div class="prose" style="margin-top:28px;">
+      <p>La memoria procedurale di un agente è strutturata in strati. Gli strati più profondi sono universali e stabili; gli strati più superficiali sono contestuali e aggiornabili. Confonderli — mettere comportamenti contestuali in strati profondi o viceversa — produce sistemi rigidi dove tutto è difficile da cambiare o sistemi incoerenti dove niente si comporta in modo prevedibile.</p>
+    </div>
+
+    <div class="layer-stack">
+
+      <!-- Layer 1: universale -->
+      <div class="ls-layer" style="border-color:#c0392b">
+        <div class="ls-stripe" style="background:#c0392b; width:5px;"></div>
+        <div class="ls-label">
+          <div class="ls-label-tag" style="color:#c0392b;">Layer 1</div>
+          <div class="ls-label-name">Universale</div>
+          <div class="ls-label-note">Comportamenti validi per qualsiasi utente e contesto — il nucleo stabile</div>
+        </div>
+        <div class="ls-content"><span class="cm">// Si applica SEMPRE, indipendentemente dall'utente e dal task</span>
+<span class="cm">// Cambia raramente — richiede revisione deliberata</span>
+
+<span class="hl">Sicurezza e guardrail fondamentali:</span>
+<span class="k">- Non eseguire azioni irreversibili senza conferma esplicita</span>
+<span class="k">- Non divulgare dati di un utente ad altri utenti</span>
+<span class="k">- Segnalare esplicitamente quando non si è certi di un fatto</span>
+
+<span class="hl">Comportamenti di base:</span>
+<span class="k">- Rispondere nella lingua dell'utente (salvo profilo semantico diverso)</span>
+<span class="k">- Citare la fonte quando si recuperano documenti o fatti specifici</span>
+<span class="k">- Non inventare — se non si sa, dichiararlo</span></div>
+      </div>
+
+      <!-- Layer 2: di dominio -->
+      <div class="ls-layer" style="border-color:var(--warn)">
+        <div class="ls-stripe" style="background:var(--warn); width:5px;"></div>
+        <div class="ls-label">
+          <div class="ls-label-tag" style="color:var(--warn);">Layer 2</div>
+          <div class="ls-label-name">Di dominio</div>
+          <div class="ls-label-note">Skill specifiche del dominio operativo dell'agente — stabili ma aggiornabili</div>
+        </div>
+        <div class="ls-content"><span class="cm">// Si applica a tutti gli utenti di questo agente specifico</span>
+<span class="cm">// Cambia con l'evoluzione del dominio o dei processi</span>
+
+<span class="hl">Framework di analisi contrattuale:</span>
+<span class="k">Quando ricevi un testo contrattuale, analizza in sequenza:</span>
+<span class="k">1. Parti e oggetto</span>
+<span class="k">2. Clausole economiche (importo, penali, revisioni)</span>
+<span class="k">3. Clausole di uscita (recesso, disdetta, scadenza)</span>
+<span class="k">4. Elementi non standard rispetto al settore</span>
+<span class="k">5. Risk score [BASSO/MEDIO/ALTO] con motivazione</span>
+
+<span class="hl">Stile di output per documenti legali:</span>
+<span class="k">Struttura: sommario esecutivo → analisi → raccomandazione</span></div>
+      </div>
+
+      <!-- Layer 3: contestuale -->
+      <div class="ls-layer" style="border-color:var(--accent)">
+        <div class="ls-stripe" style="background:var(--accent); width:5px;"></div>
+        <div class="ls-label">
+          <div class="ls-label-tag" style="color:var(--accent);">Layer 3</div>
+          <div class="ls-label-name">Contestuale</div>
+          <div class="ls-label-note">Adattamenti per utenti o contesti specifici — aggiornabili frequentemente</div>
+        </div>
+        <div class="ls-content"><span class="cm">// Personalizzazioni per utenti specifici o casi d'uso specifici</span>
+<span class="cm">// Si costruisce dall'interazione con la memoria semantica dell'utente</span>
+
+<span class="hl">Per utenti con expertise = "senior":</span>
+<span class="k">- Ometti le definizioni dei termini tecnici</span>
+<span class="k">- Usa il gergo del settore senza spiegazioni</span>
+<span class="k">- Nella sezione 4 approfondisci il confronto con best practice del settore</span>
+
+<span class="hl">Per utenti con stile = "conciso":</span>
+<span class="k">- Riduci il sommario esecutivo a 3 bullet</span>
+<span class="k">- Ometti le clausole standard non problematiche</span>
+<span class="k">- Risk score in prima posizione, non alla fine</span></div>
+      </div>
+
+    </div>
+
+    <div class="insight" style="margin-top:20px;">
+      <div class="insight-lbl">Come i layer si integrano con la memoria semantica</div>
+      <p>Il layer contestuale (3) è il punto di integrazione tra memoria procedurale e memoria semantica: le informazioni del profilo semantico dell'utente (expertise, stile, area di lavoro — Report C) modificano come si eseguono le procedure del layer 2. <strong>Non è il profilo semantico a cambiare il comportamento direttamente — sono le regole contestuali del layer 3 che usano il profilo per adattare l'esecuzione.</strong> Questa separazione mantiene il sistema controllabile: se vuoi cambiare come si serve un utente senior, modifichi le regole del layer 3, non il profilo dell'utente.</p>
+    </div>
+
+  </div>
+</div>
+
+
+<!-- ═══════════════════════════
+     S3 — COME CODIFICARLA
+═══════════════════════════ -->
+<div class="sect" id="s3">
+  <div class="sect-head">
+    <div class="sect-num">Linea guida 01</div>
+    <h2>Come codificare la memoria procedurale nel prompt</h2>
+    <p>Le skill procedurali nel system prompt devono essere scritte in modo che il modello le applichi autonomamente, nel momento giusto, senza che l'utente le attivi esplicitamente. La struttura della codifica determina l'affidabilità dell'esecuzione.</p>
+  </div>
+  <div class="wrap">
+
+    <!-- GL 01 -->
+    <div class="gl-group" style="margin-top:28px;">
+      <div class="gl-group-title">Linea guida 01</div>
+      <div class="gl-card">
+        <div class="gl-header">
+          <div class="gl-stripe"></div>
+          <div class="gl-num">01</div>
+          <div class="gl-title-wrap">
+            <div class="gl-title">Ogni procedura ha tre componenti: trigger, sequenza, output — non solo la sequenza</div>
+            <div class="gl-subtitle">Il trigger definisce quando si attiva; la sequenza cosa fare; l'output come presentarlo — tutti e tre obbligatori</div>
+          </div>
+          <div class="gl-impact-wrap">
+            <div class="gl-impact-stars" style="color:var(--accent)">★★★</div>
+            <div class="gl-impact-lbl">Impatto</div>
+          </div>
+        </div>
+        <div class="gl-body">
+
+          <div class="gl-section">
+            <div class="gl-section-lbl">Confronto — procedura incompleta vs. procedura completa</div>
+            <div class="compare-grid">
+              <div>
+                <div class="pex-lbl bad">❌ Solo sequenza — trigger e output non definiti</div>
+                <div class="prompt-box bad">Quando analizzi un contratto:
+1. Identifica le parti
+2. Analizza le clausole economiche
+3. Controlla le clausole di uscita
+4. Valuta gli elementi non standard
+5. Calcola il risk score
+
+→ Quando si attiva? Solo se l'utente
+  dice "analizza questo contratto"?
+  O anche se carica un PDF senza dire nulla?
+→ Come si presenta l'output?
+  In quale formato? Con quale struttura?</div>
+              </div>
+              <div>
+                <div class="pex-lbl good">✓ Trigger + sequenza + output — completa</div>
+                <div class="prompt-box good"><span class="hl">TRIGGER:</span> Quando l'utente invia testo
+contrattuale (PDF, incolla testo, o menziona
+un contratto da analizzare) — anche senza
+istruzione esplicita di analisi.
+
+<span class="hl">SEQUENZA:</span>
+1. Parti e oggetto (1-2 frasi)
+2. Clausole economiche (importo, penali)
+3. Clausole di uscita
+4. Elementi non standard
+5. Risk score [BASSO/MEDIO/ALTO]
+
+<span class="hl">OUTPUT:</span>
+Intestazione: "ANALISI CONTRATTO — [oggetto]"
+Struttura: paragrafi numerati per ogni punto
+Chiusura: risk score con motivazione in grassetto</div>
+              </div>
+            </div>
+          </div>
+
+          <div class="gl-section">
+            <div class="gl-section-lbl">Anatomia di una procedura ben codificata — template</div>
+            <div class="pt"><span class="cmt"># Template per codificare una procedura nel system prompt</span>
+
+<span class="sec">PROCEDURA: [NOME IN MAIUSCOLO]</span>
+
+<span class="ins">TRIGGER — quando si attiva automaticamente:
+Attiva questa procedura quando: [condizioni precise di attivazione]
+Non attivare quando: [casi di esclusione se necessari]</span>
+
+<span class="sk">SEQUENZA — passi da seguire nell'ordine:
+1. [passo 1 — azione concreta]
+2. [passo 2 — azione concreta]
+3. [passo 3 — con eventuale condizionale: "se X, allora Y; se Z, allora W"]
+[...]</span>
+
+<span class="ins">OUTPUT — come presentare il risultato:
+Struttura: [intestazione / sezioni / formato]
+Lunghezza: [indicazione sulla dimensione attesa]
+Elementi obbligatori: [cosa non può mancare]
+Stile: [specifiche se si differenzia dallo stile generale]</span></div>
+          </div>
+
+          <div class="gl-section">
+            <div class="gl-section-lbl">Trigger espliciti vs. trigger impliciti</div>
+            <p><strong>Trigger espliciti</strong> — l'utente dice chiaramente di voler eseguire la procedura: "analizza questo contratto", "fammi un report su...", "valuta questo documento". Più semplici da implementare, meno potenti come memoria procedurale — richiedono sempre un'istruzione esplicita.</p>
+            <p><strong>Trigger impliciti</strong> — la procedura si attiva in base al tipo di contenuto o di situazione, indipendentemente dall'istruzione: "quando l'utente carica un PDF con caratteristiche contrattuali", "quando viene menzionato un valore monetario superiore a €50k in una decisione d'acquisto". Più potenti, più difficili da calibrare — attenzione a trigger troppo ampi che attivano la procedura nei momenti sbagliati.</p>
+            <div class="mechanism">
+              <div class="mech-lbl">Il costo dei trigger ambigui</div>
+              <p>Un trigger mal calibrato produce due problemi opposti: la procedura si attiva quando non dovrebbe (over-triggering — produce output non richiesto e rompe il flusso naturale della conversazione) o non si attiva quando dovrebbe (under-triggering — l'utente si aspetta il comportamento e non lo ottiene). <strong>Il test: descrivi il trigger a qualcuno che non conosce il sistema e chiedi se lo applicherebbe nei casi giusti e solo in quelli.</strong></p>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </div>
+
+    <!-- GL 02 -->
+    <div class="gl-group">
+      <div class="gl-group-title">Linea guida 02</div>
+      <div class="gl-card">
+        <div class="gl-header">
+          <div class="gl-stripe"></div>
+          <div class="gl-num">02</div>
+          <div class="gl-title-wrap">
+            <div class="gl-title">Scrivi procedure condizionali per adattare l'esecuzione al contesto — non procedure rigide</div>
+            <div class="gl-subtitle">La memoria procedurale adattiva produce un comportamento più utile della procedura identica per tutti</div>
+          </div>
+          <div class="gl-impact-wrap">
+            <div class="gl-impact-stars" style="color:var(--accent)">★★☆</div>
+            <div class="gl-impact-lbl">Impatto</div>
+          </div>
+        </div>
+        <div class="gl-body">
+          <div class="gl-section">
+            <div class="gl-section-lbl">Come scrivere procedure che si adattano al profilo dell'utente</div>
+            <p>Le procedure di layer 2 (di dominio) possono includere rami condizionali che riferiscono al profilo semantico dell'utente. Questo evita di dover scrivere una versione separata della procedura per ogni tipo di utente.</p>
+            <div class="pt" style="margin-top:12px;"><span class="sec">PROCEDURA: ANALISI CONTRATTUALE</span>
+
+<span class="ins">SEQUENZA (con adattamenti contestuali):</span>
+<span class="sk">1. Identifica parti e oggetto
+2. Analizza clausole economiche
+3. Analizza clausole di uscita
+4. Elementi non standard:
+   → Se utente.expertise = "senior":
+     confronta con best practice del settore,
+     usa terminologia tecnica specifica
+   → Se utente.expertise = "junior"/"mid":
+     spiega perché ogni elemento è non standard,
+     fornisci un esempio di formulazione alternativa
+5. Risk score:
+   → Se utente.stile = "conciso":
+     risk score PRIMA dell'analisi, sintesi in 3 righe
+   → Default: risk score DOPO l'analisi, con motivazione estesa</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+
+<!-- ═══════════════════════════
+     S4 — COME AGGIORNARLA
+═══════════════════════════ -->
+<div class="sect" id="s4">
+  <div class="sect-head">
+    <div class="sect-num">Linea guida 03</div>
+    <h2>Come aggiornare la memoria procedurale</h2>
+    <p>La memoria procedurale nel prompt è la parte più rigida del sistema — ogni modifica si applica a tutti gli utenti e a tutte le sessioni immediatamente. Tre strategie per aggiornare con controllo.</p>
+  </div>
+  <div class="wrap">
+
+    <!-- GL 03 -->
+    <div class="gl-group" style="margin-top:28px;">
+      <div class="gl-group-title">Linea guida 03</div>
+      <div class="gl-card">
+        <div class="gl-header">
+          <div class="gl-stripe"></div>
+          <div class="gl-num">03</div>
+          <div class="gl-title-wrap">
+            <div class="gl-title">Aggiorna la memoria procedurale con deliberatezza — non in risposta a un singolo segnale</div>
+            <div class="gl-subtitle">A differenza della memoria semantica, un aggiornamento procedurale si applica a tutti gli utenti subito — non si può "rollback" per un utente specifico</div>
+          </div>
+          <div class="gl-impact-wrap">
+            <div class="gl-impact-stars" style="color:var(--accent)">★★★</div>
+            <div class="gl-impact-lbl">Impatto critico</div>
+          </div>
+        </div>
+        <div class="gl-body">
+
+          <div class="gl-section">
+            <div class="gl-section-lbl">I tre trigger legittimi per aggiornare una procedura</div>
+            <div class="spectrum">
+              <div class="spectrum-row head col3">
+                <div class="s-cell">Trigger di aggiornamento</div>
+                <div class="s-cell">Segnale</div>
+                <div class="s-cell">Come aggiornare</div>
+              </div>
+              <div class="spectrum-row col3">
+                <div class="s-cell lbl">Feedback ricorrente da più utenti</div>
+                <div class="s-cell">3+ utenti diversi segnalano lo stesso problema con la procedura</div>
+                <div class="s-cell hi">Modifica il layer 2 (dominio) — il problema è sistemico, non individuale.</div>
+              </div>
+              <div class="spectrum-row col3">
+                <div class="s-cell lbl">Cambiamento del dominio o dei processi</div>
+                <div class="s-cell">Le regole del dominio cambiano (nuova normativa, nuova policy aziendale)</div>
+                <div class="s-cell hi">Aggiorna il layer 2 con versioning — mantieni la versione precedente con data di fine validità.</div>
+              </div>
+              <div class="spectrum-row col3">
+                <div class="s-cell lbl">Scoperta di un pattern di errore sistematico</div>
+                <div class="s-cell">La procedura produce errori su una classe di casi non previsti</div>
+                <div class="s-cell hi">Aggiungi un caso condizionale alla sequenza — non riscrivere l'intera procedura.</div>
+              </div>
+              <div class="spectrum-row col3">
+                <div class="s-cell lbl">Preferenza di un singolo utente</div>
+                <div class="s-cell">Un utente vuole un comportamento diverso dalla procedura standard</div>
+                <div class="s-cell ok">NON aggiornare il layer 2. Aggiungi una regola contestuale nel layer 3 — specificamente per quell'utente.</div>
+              </div>
+            </div>
+          </div>
+
+          <div class="gl-section">
+            <div class="gl-section-lbl">Il ciclo di aggiornamento sicuro — test prima del deploy</div>
+            <p>A differenza degli aggiornamenti della memoria semantica (che riguardano un utente alla volta), un aggiornamento procedurale si applica globalmente. Prima di deployarlo, seguire questo ciclo:</p>
+            <div class="pt" style="margin-top:12px;"><span class="cmt"># Ciclo di aggiornamento procedurale</span>
+
+<span class="sec">1. IDENTIFICA L'AGGIORNAMENTO</span>
+<span class="ins">Definisci esattamente cosa cambia: quale passo della sequenza,
+quale trigger, quale output. Scrivi l'aggiornamento in isolamento.</span>
+
+<span class="sec">2. VERIFICA IL CONFLITTO</span>
+<span class="ins">Controlla che il nuovo comportamento non contraddica
+le procedure degli altri layer. In particolare:
+- Il nuovo trigger non si sovrappone ad altri trigger?
+- Il nuovo output è compatibile con il formato delle altre procedure?</span>
+
+<span class="sec">3. TEST SU CASI CAMPIONE</span>
+<span class="ins">Esegui la nuova procedura su almeno 5 casi campione reali:
+2 casi tipici + 2 casi limite + 1 caso che aveva il problema originale.
+Verifica che tutti producano il comportamento atteso.</span>
+
+<span class="sec">4. DEPLOY CON VERSIONING</span>
+<span class="ins">Aggiungi la data di aggiornamento in un commento nel prompt.
+Mantieni la versione precedente commentata per 30 giorni.
+Monitora i feedback nelle prime 2 settimane post-deploy.</span></div>
+          </div>
+
+          <div class="gl-section">
+            <div class="gl-section-lbl">Il rischio dell'aggiornamento procedurale reattivo</div>
+            <p>L'errore più comune è aggiornare le procedure in risposta a singoli feedback, senza valutare l'impatto sistemico. Ogni modifica "piccola" alla procedura ha effetti su tutti gli utenti e su tutti i task che attivano quella procedura. <strong>Un aggiornamento a una procedura di layer 2 può risolvere un problema per un utente mentre ne crea tre diversi per altri.</strong> La regola: aggiorna il layer 2 solo per problemi sistemici; usa il layer 3 per le personalizzazioni individuali.</p>
+          </div>
+
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+
+<!-- ═══════════════════════════
+     S5 — PROMPT VS. TRAINING
+═══════════════════════════ -->
+<div class="sect" id="s5">
+  <div class="sect-head">
+    <div class="sect-num">Sezione 05</div>
+    <h2>Dove finisce il prompt e inizia il training</h2>
+    <p>La memoria procedurale nel prompt ha limiti pratici. Quando la complessità o la criticità di una skill supera quei limiti, il training diventa la soluzione giusta. La mappa decisionale.</p>
+  </div>
+  <div class="wrap">
+
+    <div class="prose" style="margin-top:28px;">
+      <p>Il system prompt è il meccanismo principale della memoria procedurale — ma non è illimitato. Due limiti fondamentali: la <em>dimensione</em> (un prompt molto lungo compete per lo stesso context window del contenuto operativo), e la <em>stabilità</em> (il modello può ignorare o interpretare diversamente le istruzioni scritte se il prompt è sovraccarico o ambiguo). Il fine-tuning supera entrambi — ma introduce costi e vincoli propri.</p>
+    </div>
+
+    <!-- GL 04 -->
+    <div class="gl-group">
+      <div class="gl-group-title">Linea guida 04</div>
+      <div class="gl-card">
+        <div class="gl-header">
+          <div class="gl-stripe"></div>
+          <div class="gl-num">04</div>
+          <div class="gl-title-wrap">
+            <div class="gl-title">Usa il prompt per comportamenti espliciti aggiornabili — il training per comportamenti stabili e taciti</div>
+            <div class="gl-subtitle">La regola non è "prima il prompt, poi il training" — è capire quale caratteristica della skill richiede quale meccanismo</div>
+          </div>
+          <div class="gl-impact-wrap">
+            <div class="gl-impact-stars" style="color:var(--accent)">★★★</div>
+            <div class="gl-impact-lbl">Impatto</div>
+          </div>
+        </div>
+        <div class="gl-body">
+
+          <div class="gl-section">
+            <div class="gl-section-lbl">La mappa decisionale — prompt vs. training</div>
+            <div class="spectrum">
+              <div class="spectrum-row head col4">
+                <div class="s-cell">Caratteristica della skill</div>
+                <div class="s-cell">Prompt</div>
+                <div class="s-cell">Fine-tuning</div>
+                <div class="s-cell">Motivazione</div>
+              </div>
+              <div class="spectrum-row col4">
+                <div class="s-cell lbl">Frequenza di aggiornamento</div>
+                <div class="s-cell ok">Alta (mensile o più) → Prompt</div>
+                <div class="s-cell hi">Bassa (annuale o meno) → Training</div>
+                <div class="s-cell">Il training richiede re-training ogni volta che la skill cambia — costoso se frequente.</div>
+              </div>
+              <div class="spectrum-row col4">
+                <div class="s-cell lbl">Tipo di conoscenza</div>
+                <div class="s-cell ok">Esplicita (regole, sequenze, criteri)</div>
+                <div class="s-cell hi">Tacita (tono, giudizio, pattern sottili)</div>
+                <div class="s-cell">Il prompt codifica bene regole esplicite. Il training è necessario per conoscenza che non si può articolare completamente in regole.</div>
+              </div>
+              <div class="spectrum-row col4">
+                <div class="s-cell lbl">Criticità degli errori</div>
+                <div class="s-cell ok">Media — un errore è recuperabile</div>
+                <div class="s-cell hi">Alta — errori costosi o rischiosi</div>
+                <div class="s-cell">Per skill critiche, il training produce comportamenti più stabili e meno dipendenti dalla formulazione del prompt.</div>
+              </div>
+              <div class="spectrum-row col4">
+                <div class="s-cell lbl">Volume di istruzioni necessarie</div>
+                <div class="s-cell ok">Piccolo (< 500 token per la skill)</div>
+                <div class="s-cell hi">Grande — descrizione esauriente richiederebbe molto spazio</div>
+                <div class="s-cell">Se la skill richiede centinaia di esempi per essere descritta correttamente, il training è più efficiente del prompt.</div>
+              </div>
+              <div class="spectrum-row col4">
+                <div class="s-cell lbl">Specificità dell'organizzazione</div>
+                <div class="s-cell ok">Generale — simile a pratiche standard del settore</div>
+                <div class="s-cell hi">Molto specifica — unica per l'organizzazione</div>
+                <div class="s-cell">Skill molto specifiche (es. cultura aziendale interna, gergo proprietario) spesso richiedono training per essere internalizzate davvero.</div>
+              </div>
+            </div>
+          </div>
+
+          <div class="gl-section">
+            <div class="gl-section-lbl">Il pattern ibrido — prompt per il framework, training per il giudizio</div>
+            <p>Il pattern più potente per skill complesse combina i due meccanismi: il prompt codifica il <em>framework</em> esplicito (struttura della procedura, trigger, output), mentre il fine-tuning internalizza il <em>giudizio</em> (come classificare i casi ambigui, quanto peso dare a ogni elemento, qual è il tono giusto per ogni situazione). Il framework garantisce la coerenza strutturale; il giudizio garantisce la qualità delle decisioni all'interno della struttura.</p>
+            <div class="compare-grid">
+              <div>
+                <div class="pex-lbl neutral">Nel prompt — il framework esplicito</div>
+                <div class="prompt-box neutral">PROCEDURA ANALISI CONTRATTUALE:
+1. Parti e oggetto
+2. Clausole economiche
+3. Clausole di uscita
+4. Elementi non standard
+5. Risk score [BASSO/MEDIO/ALTO]
+
+→ La struttura è fissa e chiara.</div>
+              </div>
+              <div>
+                <div class="pex-lbl good">Nel training — il giudizio sottile</div>
+                <div class="prompt-box good">Il modello fine-tuned su 500 esempi
+di analisi contrattuali ha imparato:
+- Quanto è "non standard" una penale
+  del 2% vs. del 5% in quel settore
+- Quando un risk score è "medio" vs. "alto"
+  su casistiche ambigue
+- Quale tono usare con un legale senior
+  vs. un imprenditore senza background legale
+
+→ Il giudizio non si può articolare in regole.</div>
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+
+<!-- ═══════════════════════════
+     S6 — CHECKLIST
+═══════════════════════════ -->
+<div class="sect" id="s6">
+  <div class="sect-head">
+    <div class="sect-num">Sezione finale</div>
+    <h2>Checklist e prossimo report</h2>
+  </div>
+  <div class="wrap">
+
+    <div class="prose" style="margin-top:28px;">
+      <p style="font-size:15px; font-weight:500; color:var(--ink2);">Checklist — memoria procedurale progettata correttamente?</p>
+    </div>
+
+    <div class="checklist" style="margin-top:12px;">
+      <div class="check-item">
+        <div class="check-icon">1</div>
+        <div><strong>3 layer distinti:</strong> le procedure sono organizzate in layer universale (guardrail stabili), di dominio (skill specifiche dell'agente), e contestuale (adattamenti per utenti specifici). I layer non si mescolano.</div>
+      </div>
+      <div class="check-item">
+        <div class="check-icon">2</div>
+        <div><strong>Ogni procedura ha 3 componenti:</strong> trigger esplicito (quando si attiva), sequenza (cosa fare), output (come presentare il risultato). Nessuna delle tre è opzionale.</div>
+      </div>
+      <div class="check-item">
+        <div class="check-icon">3</div>
+        <div><strong>Trigger calibrati:</strong> i trigger non sono né troppo ampi (over-triggering) né troppo stretti (under-triggering). Il test: descrivi il trigger a un collega e chiedi se lo applicherebbe nei casi giusti.</div>
+      </div>
+      <div class="check-item">
+        <div class="check-icon">4</div>
+        <div><strong>Procedure condizionali per il layer 3:</strong> le personalizzazioni per utenti specifici sono nel layer contestuale come rami condizionali che referenziano il profilo semantico — non come procedure separate.</div>
+      </div>
+      <div class="check-item">
+        <div class="check-icon">5</div>
+        <div><strong>Ciclo di aggiornamento rispettato:</strong> gli aggiornamenti al layer 2 seguono il ciclo identifica → verifica conflitti → test su campione → deploy con versioning. Le preferenze individuali vanno nel layer 3, non nel layer 2.</div>
+      </div>
+      <div class="check-item">
+        <div class="check-icon">6</div>
+        <div><strong>Decisione prompt vs. training:</strong> per ogni skill critica o complessa, la decisione su quale meccanismo usare è stata valutata esplicitamente usando la mappa (frequenza di aggiornamento, tipo di conoscenza, criticità, volume).</div>
+      </div>
+      <div class="check-item">
+        <div class="check-icon">✓</div>
+        <div><strong>Integrazione con la memoria semantica:</strong> il layer 3 usa il profilo semantico dell'utente (expertise, stile, area) come input per adattare l'esecuzione delle procedure del layer 2 — senza duplicare informazioni tra i due sistemi.</div>
+      </div>
+    </div>
+
+    <div class="insight" style="margin-top:28px; border-color:var(--warn); background:var(--warn-l);">
+      <div class="insight-lbl" style="color:var(--warn);">Prossimo — Report E</div>
+      <p>Con tutti e 4 i tipi di memoria trattati, il Report E affronta il tema più trascurato dell'intera serie: <strong>cosa ricordare e cosa dimenticare</strong>. Criteri di selezione, decadimento intenzionale, scadenza degli episodi, e — il tema più sensibile — privacy, GDPR e cosa non si può ricordare.</p>
+    </div>
+
+  </div>
+</div>
+
+<div class="footer">
+  <span>Serie Agenti AI — Leva Memoria · Report D · Memoria procedurale</span>
+  <span>Marzo 2026</span>
+</div>
+
+<script>
+function show(n) {
+  document.querySelectorAll('.sect').forEach(s => s.classList.remove('active'));
+  document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('s'+n).classList.add('active');
+  document.querySelectorAll('.nav-btn')[n-1].classList.add('active');
+  window.scrollTo({top:0, behavior:'smooth'});
+}
+</script>
+</body>
+</html>

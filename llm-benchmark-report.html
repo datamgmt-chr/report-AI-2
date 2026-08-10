@@ -1,0 +1,1565 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Guida ai Benchmark degli LLM — 2025</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:wght@300;400;500&family=DM+Mono:wght@400;500&display=swap');
+
+:root {
+  --paper: #faf8f3;
+  --ink: #1a1915;
+  --warm-mid: #6b6559;
+  --rule: #ddd9d0;
+  --surface: #f0ede6;
+  --surface2: #e8e4db;
+
+  /* Categoria colori */
+  --c-general:    #2d5a8e;   /* blu — conoscenza generale */
+  --c-reasoning:  #7a3b8c;   /* viola — ragionamento */
+  --c-coding:     #1a7a4a;   /* verde — codice */
+  --c-math:       #8c5a1a;   /* ambra — matematica */
+  --c-human:      #8c2d2d;   /* rosso — valutazione umana */
+  --c-agent:      #2d6b7a;   /* teal — agenti */
+  --c-safety:     #5a5a8c;   /* lavanda — sicurezza */
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  background: var(--paper);
+  color: var(--ink);
+  font-family: 'DM Sans', sans-serif;
+  font-size: 15.5px;
+  line-height: 1.75;
+  max-width: 980px;
+  margin: 0 auto;
+  padding: 0 0 120px;
+}
+
+/* ── COVER ─────────────────────────────────── */
+.cover {
+  padding: 72px 64px 56px;
+  border-bottom: 2px solid var(--ink);
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 40px;
+  align-items: end;
+}
+@media(max-width:680px){ .cover { grid-template-columns: 1fr; padding: 48px 28px 40px; } }
+
+.cover-left {}
+.cover-kicker {
+  font-family: 'DM Mono', monospace;
+  font-size: 10px;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--warm-mid);
+  margin-bottom: 20px;
+}
+.cover h1 {
+  font-family: 'DM Serif Display', serif;
+  font-size: clamp(32px, 5.5vw, 54px);
+  line-height: 1.08;
+  letter-spacing: -0.02em;
+  margin-bottom: 18px;
+}
+.cover h1 em { font-style: italic; }
+.cover-desc {
+  font-size: 16px;
+  color: var(--warm-mid);
+  max-width: 520px;
+  line-height: 1.65;
+  font-weight: 300;
+}
+.cover-right {
+  text-align: right;
+  flex-shrink: 0;
+}
+.cover-date {
+  font-family: 'DM Mono', monospace;
+  font-size: 11px;
+  color: var(--warm-mid);
+  line-height: 1.9;
+}
+.cover-date strong { color: var(--ink); font-weight: 500; }
+
+/* ── NAVIGATION BAR ─────────────────────────── */
+.toc {
+  padding: 0 64px;
+  border-bottom: 1px solid var(--rule);
+  display: flex;
+  gap: 0;
+  overflow-x: auto;
+}
+@media(max-width:680px){ .toc { padding: 0 28px; } }
+.toc-item {
+  font-family: 'DM Mono', monospace;
+  font-size: 10px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  padding: 14px 20px;
+  color: var(--warm-mid);
+  border-right: 1px solid var(--rule);
+  white-space: nowrap;
+  cursor: default;
+}
+.toc-item:first-child { padding-left: 0; }
+.toc-item span { color: var(--ink); font-weight: 500; }
+
+/* ── BODY CONTENT ───────────────────────────── */
+.body { padding: 0 64px; }
+@media(max-width:680px){ .body { padding: 0 28px; } }
+
+section { padding: 60px 0; border-bottom: 1px solid var(--rule); }
+section:last-child { border-bottom: none; }
+
+.sec-header {
+  display: flex;
+  align-items: baseline;
+  gap: 16px;
+  margin-bottom: 32px;
+}
+.sec-num {
+  font-family: 'DM Mono', monospace;
+  font-size: 11px;
+  color: var(--warm-mid);
+  flex-shrink: 0;
+}
+h2 {
+  font-family: 'DM Serif Display', serif;
+  font-size: clamp(22px, 3.5vw, 34px);
+  font-weight: 400;
+  line-height: 1.15;
+  letter-spacing: -0.01em;
+}
+h2 em { font-style: italic; }
+
+p { margin-bottom: 16px; font-weight: 300; }
+p:last-child { margin-bottom: 0; }
+strong { font-weight: 500; }
+
+.intro-text {
+  max-width: 680px;
+  font-size: 16px;
+  line-height: 1.8;
+}
+
+/* ── ALERT BOX ──────────────────────────────── */
+.alert {
+  margin: 28px 0;
+  padding: 20px 24px;
+  border: 1.5px solid;
+  border-radius: 3px;
+  font-size: 14px;
+  line-height: 1.65;
+}
+.alert-label {
+  font-family: 'DM Mono', monospace;
+  font-size: 9px;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  font-weight: 500;
+  margin-bottom: 8px;
+}
+.alert p { margin: 0; font-weight: 300; }
+.alert-warn { border-color: #c4892a; background: rgba(196,137,42,0.04); }
+.alert-warn .alert-label { color: #c4892a; }
+.alert-info { border-color: var(--c-general); background: rgba(45,90,142,0.04); }
+.alert-info .alert-label { color: var(--c-general); }
+
+/* ── BENCHMARK CARDS ────────────────────────── */
+.bench-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+  margin: 28px 0;
+}
+@media(max-width:700px){ .bench-grid { grid-template-columns: 1fr; } }
+
+.bench-card {
+  border: 1.5px solid var(--rule);
+  border-radius: 4px;
+  padding: 20px 22px;
+  position: relative;
+  background: white;
+  transition: box-shadow 0.15s;
+}
+.bench-card:hover { box-shadow: 0 2px 12px rgba(0,0,0,0.07); }
+
+.bench-card-top {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+.bench-name {
+  font-family: 'DM Mono', monospace;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--ink);
+}
+.bench-tag {
+  font-family: 'DM Mono', monospace;
+  font-size: 9px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  padding: 3px 8px;
+  border-radius: 2px;
+  white-space: nowrap;
+  color: white;
+  font-weight: 500;
+}
+.bench-full { font-size: 12px; color: var(--warm-mid); margin-bottom: 10px; font-style: italic; }
+.bench-desc { font-size: 13.5px; line-height: 1.6; color: var(--ink); font-weight: 300; margin-bottom: 12px; }
+
+.bench-meta {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  margin-top: 10px;
+  padding-top: 10px;
+  border-top: 1px solid var(--rule);
+}
+.bench-meta-item {}
+.bench-meta-label {
+  font-family: 'DM Mono', monospace;
+  font-size: 8.5px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--warm-mid);
+  margin-bottom: 2px;
+}
+.bench-meta-val { font-size: 12px; line-height: 1.4; font-weight: 400; }
+
+.bench-status {
+  font-family: 'DM Mono', monospace;
+  font-size: 9px;
+  padding: 2px 7px;
+  border-radius: 10px;
+  display: inline-block;
+  margin-top: 6px;
+}
+.status-active { background: rgba(26,122,74,0.1); color: #1a7a4a; }
+.status-saturated { background: rgba(196,137,42,0.1); color: #c4892a; }
+.status-emerging { background: rgba(45,90,142,0.1); color: #2d5a8e; }
+
+/* ── CATEGORY HEADERS ───────────────────────── */
+.cat-header {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin: 40px 0 20px;
+  padding: 16px 20px;
+  border-radius: 4px;
+  border-left: 4px solid;
+}
+.cat-icon {
+  font-size: 20px;
+  flex-shrink: 0;
+}
+.cat-title {
+  font-family: 'DM Serif Display', serif;
+  font-size: 20px;
+  font-weight: 400;
+}
+.cat-sub {
+  font-size: 12px;
+  color: var(--warm-mid);
+  font-weight: 300;
+  margin-top: 2px;
+}
+
+/* ── INTERPRETATION GUIDE ───────────────────── */
+.interp-box {
+  margin: 24px 0;
+  padding: 20px 24px;
+  background: var(--surface);
+  border-radius: 4px;
+  border-left: 3px solid var(--ink);
+}
+.interp-label {
+  font-family: 'DM Mono', monospace;
+  font-size: 9px;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  color: var(--warm-mid);
+  margin-bottom: 10px;
+}
+.interp-box p { font-size: 14px; margin-bottom: 10px; }
+.interp-box p:last-child { margin: 0; }
+
+/* ── TASK MAP ───────────────────────────────── */
+.task-map {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 12px;
+  margin: 28px 0;
+}
+
+.task-row {
+  display: grid;
+  grid-template-columns: 220px 1fr;
+  gap: 0;
+  border: 1.5px solid var(--rule);
+  border-radius: 4px;
+  overflow: hidden;
+  background: white;
+}
+@media(max-width:680px){ .task-row { grid-template-columns: 1fr; } }
+
+.task-label-cell {
+  padding: 16px 20px;
+  background: var(--surface);
+  border-right: 1.5px solid var(--rule);
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+.task-name {
+  font-size: 14px;
+  font-weight: 500;
+  margin-bottom: 4px;
+}
+.task-desc {
+  font-size: 11.5px;
+  color: var(--warm-mid);
+  line-height: 1.4;
+  font-weight: 300;
+}
+
+.task-benches {
+  padding: 16px 20px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+}
+.task-bench-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 12px;
+  border-radius: 3px;
+  font-size: 12px;
+  border: 1.5px solid;
+  font-family: 'DM Mono', monospace;
+  font-weight: 500;
+  white-space: nowrap;
+}
+.pill-primary { opacity: 1; }
+.pill-secondary { opacity: 0.6; }
+.pill-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.task-note {
+  padding: 0 20px 14px;
+  font-size: 12px;
+  color: var(--warm-mid);
+  font-style: italic;
+  font-weight: 300;
+  grid-column: 1 / -1;
+  border-top: 1px dashed var(--rule);
+  padding-top: 10px;
+}
+
+/* ── LEADERBOARD SOURCES TABLE ──────────────── */
+.source-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 24px 0;
+  font-size: 13.5px;
+}
+.source-table th {
+  background: var(--ink);
+  color: var(--paper);
+  padding: 10px 16px;
+  text-align: left;
+  font-family: 'DM Mono', monospace;
+  font-weight: 500;
+  font-size: 9.5px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+.source-table td {
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--rule);
+  vertical-align: top;
+  line-height: 1.55;
+  font-weight: 300;
+}
+.source-table tr:nth-child(even) td { background: var(--surface); }
+.source-table td:first-child { font-family: 'DM Mono', monospace; font-size: 12px; font-weight: 500; color: var(--ink); }
+
+/* ── LIMITS SECTION ─────────────────────────── */
+.limits-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 14px;
+  margin: 24px 0;
+}
+@media(max-width:680px){ .limits-grid { grid-template-columns: 1fr; } }
+
+.limit-card {
+  background: var(--surface);
+  border: 1.5px solid var(--rule);
+  border-radius: 4px;
+  padding: 18px 20px;
+}
+.limit-num {
+  font-family: 'DM Mono', monospace;
+  font-size: 22px;
+  font-weight: 400;
+  color: var(--rule);
+  margin-bottom: 10px;
+  display: block;
+}
+.limit-title { font-size: 14px; font-weight: 500; margin-bottom: 8px; }
+.limit-text { font-size: 13px; color: var(--warm-mid); line-height: 1.6; font-weight: 300; }
+
+/* ── DECISION FLOWCHART ─────────────────────── */
+.flow-container {
+  background: var(--surface);
+  border: 1px solid var(--rule);
+  border-radius: 6px;
+  padding: 32px;
+  margin: 28px 0;
+  overflow-x: auto;
+}
+
+/* ── FINAL BOX ──────────────────────────────── */
+.final-box {
+  background: var(--ink);
+  color: var(--paper);
+  border-radius: 6px;
+  padding: 40px 44px;
+  margin-top: 48px;
+}
+.final-box-label {
+  font-family: 'DM Mono', monospace;
+  font-size: 10px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: rgba(250,248,243,0.45);
+  margin-bottom: 20px;
+}
+.final-box h3 {
+  font-family: 'DM Serif Display', serif;
+  font-size: 24px;
+  font-weight: 400;
+  margin-bottom: 20px;
+  line-height: 1.2;
+}
+.final-box p { font-weight: 300; color: rgba(250,248,243,0.8); margin-bottom: 14px; }
+.final-box p strong { color: var(--paper); font-weight: 500; }
+.final-box p:last-child { margin: 0; }
+
+/* ── COLORS BY CATEGORY ─────────────────────── */
+.c-general  { color: var(--c-general); }
+.c-reasoning{ color: var(--c-reasoning); }
+.c-coding   { color: var(--c-coding); }
+.c-math     { color: var(--c-math); }
+.c-human    { color: var(--c-human); }
+.c-agent    { color: var(--c-agent); }
+.c-safety   { color: var(--c-safety); }
+
+.bg-general  { background: var(--c-general); }
+.bg-reasoning{ background: var(--c-reasoning); }
+.bg-coding   { background: var(--c-coding); }
+.bg-math     { background: var(--c-math); }
+.bg-human    { background: var(--c-human); }
+.bg-agent    { background: var(--c-agent); }
+.bg-safety   { background: var(--c-safety); }
+
+.border-general   { border-color: var(--c-general); }
+.border-reasoning { border-color: var(--c-reasoning); }
+.border-coding    { border-color: var(--c-coding); }
+.border-math      { border-color: var(--c-math); }
+.border-human     { border-color: var(--c-human); }
+.border-agent     { border-color: var(--c-agent); }
+.border-safety    { border-color: var(--c-safety); }
+
+.cat-bg-general   { background: rgba(45,90,142,0.06); border-color: var(--c-general); }
+.cat-bg-reasoning { background: rgba(122,59,140,0.06); border-color: var(--c-reasoning); }
+.cat-bg-coding    { background: rgba(26,122,74,0.06); border-color: var(--c-coding); }
+.cat-bg-math      { background: rgba(140,90,26,0.06); border-color: var(--c-math); }
+.cat-bg-human     { background: rgba(140,45,45,0.06); border-color: var(--c-human); }
+.cat-bg-agent     { background: rgba(45,107,122,0.06); border-color: var(--c-agent); }
+.cat-bg-safety    { background: rgba(90,90,140,0.06); border-color: var(--c-safety); }
+</style>
+</head>
+<body>
+
+<!-- COVER -->
+<div class="cover">
+  <div class="cover-left">
+    <div class="cover-kicker">Report di ricerca · Valutazione LLM</div>
+    <h1>Guida ai benchmark<br>per la selezione <em>degli LLM</em></h1>
+    <p class="cover-desc">Una mappa operativa dei principali test pubblici: cosa misurano, come interpretarli, e quali guardare per scegliere il modello giusto per ogni tipo di compito.</p>
+  </div>
+  <div class="cover-right">
+    <div class="cover-date">
+      Aggiornamento<br>
+      <strong>Febbraio 2025</strong><br><br>
+      Basato su ricerca<br>
+      <strong>aggiornata</strong>
+    </div>
+  </div>
+</div>
+
+<!-- TOC -->
+<div class="toc">
+  <div class="toc-item"><span>01</span> Panoramica</div>
+  <div class="toc-item"><span>02</span> Come leggere i numeri</div>
+  <div class="toc-item"><span>03</span> I benchmark per categoria</div>
+  <div class="toc-item"><span>04</span> Mappa task → benchmark</div>
+  <div class="toc-item"><span>05</span> Dove trovare i dati</div>
+  <div class="toc-item"><span>06</span> Limiti e avvertenze</div>
+</div>
+
+<div class="body">
+
+<!-- ═══════════════════════════════ -->
+<!-- 01 - PANORAMICA -->
+<!-- ═══════════════════════════════ -->
+<section id="s1">
+  <div class="sec-header">
+    <span class="sec-num">01</span>
+    <h2>Panoramica: il <em>paesaggio</em> dei benchmark nel 2025</h2>
+  </div>
+
+  <div class="intro-text">
+    <p>Un benchmark è un test standardizzato: una raccolta di domande o compiti a cui un modello deve rispondere, con un sistema di punteggio che permette di confrontare modelli diversi sulla stessa scala. Senza benchmark sarebbe impossibile dire se un modello è "migliore" di un altro in modo oggettivo — le impressioni soggettive non bastano.</p>
+    <p>Nel 2025 esistono decine di benchmark pubblici. Non tutti sono ugualmente utili: alcuni sono ormai <strong>saturi</strong> (i modelli di punta segnano tutti oltre il 90%, rendendo impossibile distinguerli), altri sono <strong>troppo specialistici</strong> per essere utili a scopi generali, altri ancora sono <strong>emergenti</strong> e ancora da consolidare.</p>
+    <p>Questo report si concentra sui benchmark più rilevanti, citati nei technical report dei principali laboratori (OpenAI, Anthropic, Google, Meta) e usati dalle piattaforme di confronto indipendenti.</p>
+  </div>
+
+  <div class="alert alert-warn">
+    <div class="alert-label">⚠ Avvertenza critica — leggere prima di usare qualsiasi punteggio</div>
+    <p>I benchmark sono strumenti utili ma imperfetti. Tre problemi ricorrenti: <strong>(1) Contaminazione</strong>: alcuni modelli vengono addestrati su dati che includono (anche involontariamente) le risposte ai test — il punteggio risulta gonfiato. <strong>(2) Saturazione</strong>: quando quasi tutti i modelli avanzati superano il 90%, il test non distingue più nulla. <strong>(3) Benchmark gaming</strong>: i laboratori ottimizzano i propri modelli specificamente per i test più seguiti, migliorando il numero senza migliorare la capacità reale. Usare i benchmark come <em>orientamento</em>, non come verdetto definitivo.</p>
+  </div>
+
+  <p style="margin-top:20px;">Il paesaggio si divide in <strong>sette aree tematiche</strong>, ciascuna con i propri benchmark di riferimento:</p>
+
+  <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(240px,1fr)); gap:10px; margin:20px 0;">
+    <div style="padding:14px 16px; border-radius:3px; border-left:3px solid var(--c-general); background:rgba(45,90,142,0.05); font-size:13px;"><strong class="c-general">Conoscenza generale</strong><br><span style="color:var(--warm-mid); font-weight:300;">Ampiezza del sapere su domini multipli</span></div>
+    <div style="padding:14px 16px; border-radius:3px; border-left:3px solid var(--c-reasoning); background:rgba(122,59,140,0.05); font-size:13px;"><strong class="c-reasoning">Ragionamento avanzato</strong><br><span style="color:var(--warm-mid); font-weight:300;">Logica, deduzione, pensiero scientifico</span></div>
+    <div style="padding:14px 16px; border-radius:3px; border-left:3px solid var(--c-coding); background:rgba(26,122,74,0.05); font-size:13px;"><strong class="c-coding">Programmazione</strong><br><span style="color:var(--warm-mid); font-weight:300;">Generazione e correzione di codice</span></div>
+    <div style="padding:14px 16px; border-radius:3px; border-left:3px solid var(--c-math); background:rgba(140,90,26,0.05); font-size:13px;"><strong class="c-math">Matematica</strong><br><span style="color:var(--warm-mid); font-weight:300;">Calcolo, algebra, problem solving numerico</span></div>
+    <div style="padding:14px 16px; border-radius:3px; border-left:3px solid var(--c-human); background:rgba(140,45,45,0.05); font-size:13px;"><strong class="c-human">Preferenza umana</strong><br><span style="color:var(--warm-mid); font-weight:300;">Qualità percepita da utenti reali</span></div>
+    <div style="padding:14px 16px; border-radius:3px; border-left:3px solid var(--c-agent); background:rgba(45,107,122,0.05); font-size:13px;"><strong class="c-agent">Agenti e strumenti</strong><br><span style="color:var(--warm-mid); font-weight:300;">Azioni multi-step, uso di tool</span></div>
+    <div style="padding:14px 16px; border-radius:3px; border-left:3px solid var(--c-safety); background:rgba(90,90,140,0.05); font-size:13px;"><strong class="c-safety">Sicurezza e affidabilità</strong><br><span style="color:var(--warm-mid); font-weight:300;">Allineamento, bias, rischi</span></div>
+  </div>
+</section>
+
+
+<!-- ═══════════════════════════════ -->
+<!-- 02 - COME LEGGERE I NUMERI -->
+<!-- ═══════════════════════════════ -->
+<section id="s2">
+  <div class="sec-header">
+    <span class="sec-num">02</span>
+    <h2>Come leggere <em>correttamente</em> i punteggi</h2>
+  </div>
+
+  <p>Prima di immergersi nei singoli benchmark, è essenziale capire come interpretare i numeri che si vedono sui leaderboard.</p>
+
+  <div style="display:grid; grid-template-columns:1fr 1fr; gap:14px; margin:24px 0;">
+    <div style="padding:20px; background:white; border:1.5px solid var(--rule); border-radius:4px;">
+      <div style="font-family:'DM Mono',monospace; font-size:9px; letter-spacing:0.12em; text-transform:uppercase; color:var(--warm-mid); margin-bottom:10px;">Punteggio in %</div>
+      <p style="font-size:13.5px; margin:0; font-weight:300;">La maggior parte dei benchmark riporta una <strong>percentuale di risposte corrette</strong> su un set di domande a scelta multipla o con risposta verificabile. Un 85% su MMLU-Pro significa che il modello ha risposto correttamente all'85% delle 12.000 domande del test.</p>
+    </div>
+    <div style="padding:20px; background:white; border:1.5px solid var(--rule); border-radius:4px;">
+      <div style="font-family:'DM Mono',monospace; font-size:9px; letter-spacing:0.12em; text-transform:uppercase; color:var(--warm-mid); margin-bottom:10px;">Punteggio Elo</div>
+      <p style="font-size:13.5px; margin:0; font-weight:300;">I benchmark basati su votazioni umane (come Arena) usano il sistema <strong>Elo</strong> — lo stesso degli scacchi. Un punteggio di 1500 vs 1400 non significa "10% migliore": significa che il modello con 1500 batte quello con 1400 nel ~64% dei confronti diretti.</p>
+    </div>
+    <div style="padding:20px; background:white; border:1.5px solid var(--rule); border-radius:4px;">
+      <div style="font-family:'DM Mono',monospace; font-size:9px; letter-spacing:0.12em; text-transform:uppercase; color:var(--warm-mid); margin-bottom:10px;">Pass@k (benchmark di codice)</div>
+      <p style="font-size:13.5px; margin:0; font-weight:300;"><strong>Pass@1</strong> = percentuale di problemi risolti al primo tentativo. <strong>Pass@k</strong> = percentuale di problemi in cui almeno una delle k soluzioni generate funziona. Per usi reali (dove il modello ha un solo tentativo) guardare sempre Pass@1.</p>
+    </div>
+    <div style="padding:20px; background:white; border:1.5px solid var(--rule); border-radius:4px;">
+      <div style="font-family:'DM Mono',monospace; font-size:9px; letter-spacing:0.12em; text-transform:uppercase; color:var(--warm-mid); margin-bottom:10px;">Baseline di riferimento</div>
+      <p style="font-size:13.5px; margin:0; font-weight:300;">Un punteggio va sempre confrontato con la <strong>baseline casuale</strong> (es. 25% per domande a 4 opzioni) e con il <strong>punteggio umano di riferimento</strong>. Un 70% su GPQA Diamond è straordinario (l'esperto umano medio segna ~65%); un 70% su MMLU è mediocre (i modelli avanzati superano il 90%).</p>
+    </div>
+  </div>
+
+  <div class="interp-box">
+    <div class="interp-label">Regola pratica per interpretare i punteggi</div>
+    <p>Non guardare il numero assoluto — guardare <strong>la distanza dai competitor</strong> su quello specifico benchmark. Un modello che segna 82% mentre tutti gli altri segnano 79-80% su un benchmark difficile ha una differenza significativa. Uno che segna 92% mentre gli altri segnano 89-91% su un benchmark saturo non dice quasi nulla.</p>
+    <p>Nei technical report dei laboratori i punteggi sono quasi sempre <strong>auto-dichiarati</strong>. Per valutazioni indipendenti preferire le fonti come Artificial Analysis, Epoch AI o HELM, che eseguono i test in modo standardizzato su tutti i modelli.</p>
+  </div>
+</section>
+
+
+<!-- ═══════════════════════════════ -->
+<!-- 03 - BENCHMARK PER CATEGORIA -->
+<!-- ═══════════════════════════════ -->
+<section id="s3">
+  <div class="sec-header">
+    <span class="sec-num">03</span>
+    <h2>I benchmark <em>più rilevanti</em> per categoria</h2>
+  </div>
+
+  <!-- ── CONOSCENZA GENERALE ── -->
+  <div class="cat-header cat-bg-general">
+    <div class="cat-icon">📚</div>
+    <div>
+      <div class="cat-title c-general">Conoscenza Generale</div>
+      <div class="cat-sub">Ampiezza del sapere su discipline diverse — da usare per: assistenti generici, ricerca, Q&A su domini vari</div>
+    </div>
+  </div>
+
+  <div class="bench-grid">
+    <div class="bench-card">
+      <div class="bench-card-top">
+        <span class="bench-name">MMLU</span>
+        <span class="bench-tag bg-general">Generale</span>
+      </div>
+      <div class="bench-full">Massive Multitask Language Understanding</div>
+      <div class="bench-desc">57 materie accademiche (matematica, storia, legge, medicina, scienze…) — domande a scelta multipla dal livello liceale a quello universitario avanzato. Per anni il benchmark di riferimento per la conoscenza generale.</div>
+      <div class="bench-meta">
+        <div class="bench-meta-item">
+          <div class="bench-meta-label">Difficoltà</div>
+          <div class="bench-meta-val">Media — da liceale a universitario</div>
+        </div>
+        <div class="bench-meta-item">
+          <div class="bench-meta-label">Baseline umana</div>
+          <div class="bench-meta-val">~89% (esperto ensemble)</div>
+        </div>
+        <div class="bench-meta-item">
+          <div class="bench-meta-label">Top modelli 2025</div>
+          <div class="bench-meta-val">>90% (modelli di punta)</div>
+        </div>
+        <div class="bench-meta-item">
+          <div class="bench-meta-label">Interpretazione</div>
+          <div class="bench-meta-val">Differenzia poco i top model</div>
+        </div>
+      </div>
+      <span class="bench-status status-saturated">⚠ Quasi saturo</span>
+    </div>
+
+    <div class="bench-card">
+      <div class="bench-card-top">
+        <span class="bench-name">MMLU-Pro</span>
+        <span class="bench-tag bg-general">Generale+</span>
+      </div>
+      <div class="bench-full">Massive Multitask Language Understanding — Professional</div>
+      <div class="bench-desc">Versione potenziata di MMLU: 12.000 domande graduate-level, 10 opzioni di risposta invece di 4, elimina le domande banali. Richiede ragionamento, non solo memoria. I modelli perdono 16-33% rispetto a MMLU standard.</div>
+      <div class="bench-meta">
+        <div class="bench-meta-item">
+          <div class="bench-meta-label">Difficoltà</div>
+          <div class="bench-meta-val">Alta — livello universitario avanzato</div>
+        </div>
+        <div class="bench-meta-item">
+          <div class="bench-meta-label">Punteggi tipici 2025</div>
+          <div class="bench-meta-val">75–90% per i top model</div>
+        </div>
+        <div class="bench-meta-item">
+          <div class="bench-meta-label">Cosa misura meglio</div>
+          <div class="bench-meta-val">Ragionamento multi-dominio</div>
+        </div>
+        <div class="bench-meta-item">
+          <div class="bench-meta-label">Uso consigliato</div>
+          <div class="bench-meta-val">Confronto tra modelli di fascia alta</div>
+        </div>
+      </div>
+      <span class="bench-status status-active">✓ Ancora discriminante</span>
+    </div>
+  </div>
+
+  <div class="interp-box">
+    <div class="interp-label">Come usare MMLU / MMLU-Pro nella selezione</div>
+    <p><strong>Usa MMLU-Pro, non MMLU</strong>, per confronti tra modelli avanzati. MMLU va bene come check di base per modelli open-source o di fascia media. Un punteggio MMLU-Pro sopra 80% indica un modello con buona cultura generale; sopra 85% è nella fascia di punta. La differenza tra 82% e 87% è più significativa di quanto sembri: si traduce in molte meno risposte errate su domande tecniche o specialistiche.</p>
+  </div>
+
+  <!-- ── RAGIONAMENTO AVANZATO ── -->
+  <div class="cat-header cat-bg-reasoning" style="margin-top:48px;">
+    <div class="cat-icon">🧠</div>
+    <div>
+      <div class="cat-title c-reasoning">Ragionamento Avanzato</div>
+      <div class="cat-sub">Logica, deduzione, pensiero scientifico di livello esperto — da usare per: analisi complesse, ricerca, supporto decisionale</div>
+    </div>
+  </div>
+
+  <div class="bench-grid">
+    <div class="bench-card">
+      <div class="bench-card-top">
+        <span class="bench-name">GPQA Diamond</span>
+        <span class="bench-tag bg-reasoning">Sci. Avanzato</span>
+      </div>
+      <div class="bench-full">Graduate-level Google-Proof Q&A — Diamond subset</div>
+      <div class="bench-desc">198 domande di biologia, fisica, chimica scritte da dottorandi. "Google-proof": anche i non-esperti con accesso illimitato a internet segnano solo 34%. È il test di ragionamento scientifico più credibile oggi disponibile.</div>
+      <div class="bench-meta">
+        <div class="bench-meta-item">
+          <div class="bench-meta-label">Baseline casuale</div>
+          <div class="bench-meta-val">25% (4 opzioni)</div>
+        </div>
+        <div class="bench-meta-item">
+          <div class="bench-meta-label">PhD umano</div>
+          <div class="bench-meta-val">~65–69%</div>
+        </div>
+        <div class="bench-meta-item">
+          <div class="bench-meta-label">Top modelli 2025</div>
+          <div class="bench-meta-val">88–92% (modelli reasoning)</div>
+        </div>
+        <div class="bench-meta-item">
+          <div class="bench-meta-label">Dimensione dataset</div>
+          <div class="bench-meta-val">198 domande (piccolo — varianza alta)</div>
+        </div>
+      </div>
+      <span class="bench-status status-active">✓ Molto discriminante</span>
+    </div>
+
+    <div class="bench-card">
+      <div class="bench-card-top">
+        <span class="bench-name">HLE</span>
+        <span class="bench-tag bg-reasoning">Frontier</span>
+      </div>
+      <div class="bench-full">Humanity's Last Exam</div>
+      <div class="bench-desc">2.500 domande expert-level in matematica, scienze, umanistica — progettate specificamente per essere troppo difficili per i modelli attuali. Include domande open-ended (non solo scelta multipla). Anche i migliori modelli segnano 20-30%.</div>
+      <div class="bench-meta">
+        <div class="bench-meta-item">
+          <div class="bench-meta-label">Top modelli 2025</div>
+          <div class="bench-meta-val">~20–30% (in rapida crescita)</div>
+        </div>
+        <div class="bench-meta-item">
+          <div class="bench-meta-label">Uso pratico</div>
+          <div class="bench-meta-val">Confronto tra i migliori modelli frontier</div>
+        </div>
+        <div class="bench-meta-item">
+          <div class="bench-meta-label">Cosa rappresenta</div>
+          <div class="bench-meta-val">Ragionamento al limite delle capacità AI</div>
+        </div>
+        <div class="bench-meta-item">
+          <div class="bench-meta-label">Limitazione</div>
+          <div class="bench-meta-val">Poco rilevante per usi business ordinari</div>
+        </div>
+      </div>
+      <span class="bench-status status-emerging">↗ Emergente — non saturo</span>
+    </div>
+
+    <div class="bench-card">
+      <div class="bench-card-top">
+        <span class="bench-name">ARC-AGI / ARC-AGI-2</span>
+        <span class="bench-tag bg-reasoning">Astrazione</span>
+      </div>
+      <div class="bench-full">Abstraction and Reasoning Corpus</div>
+      <div class="bench-desc">Test di ragionamento astratto visivo: il modello deve identificare pattern e regole da esempi visivi e applicarli a nuovi casi. Non richiede conoscenza pregressa — misura capacità di generalizzazione e ragionamento da zero.</div>
+      <div class="bench-meta">
+        <div class="bench-meta-item">
+          <div class="bench-meta-label">Cosa misura</div>
+          <div class="bench-meta-val">Astrazione, generalizzazione, pattern recognition</div>
+        </div>
+        <div class="bench-meta-item">
+          <div class="bench-meta-label">Rilevanza pratica</div>
+          <div class="bench-meta-val">Alta per problem solving non standard</div>
+        </div>
+      </div>
+      <span class="bench-status status-active">✓ Molto discusso nel 2025</span>
+    </div>
+
+    <div class="bench-card">
+      <div class="bench-card-top">
+        <span class="bench-name">BIG-Bench Hard</span>
+        <span class="bench-tag bg-reasoning">Logica</span>
+      </div>
+      <div class="bench-full">Beyond the Imitation Game Benchmark — Hard subset</div>
+      <div class="bench-desc">Subset delle 23 task più difficili di BIG-Bench — quelle dove i modelli pre-2022 erano peggio del caso. Testa ragionamento logico, inferenza causale, comprensione di algoritmi, senso comune complesso.</div>
+      <div class="bench-meta">
+        <div class="bench-meta-item">
+          <div class="bench-meta-label">Punteggi tipici 2025</div>
+          <div class="bench-meta-val">85–92% per i top model</div>
+        </div>
+        <div class="bench-meta-item">
+          <div class="bench-meta-label">Status</div>
+          <div class="bench-meta-val">Parzialmente saturo ma ancora usato</div>
+        </div>
+      </div>
+      <span class="bench-status status-saturated">⚠ Parzialmente saturo</span>
+    </div>
+  </div>
+
+  <div class="interp-box">
+    <div class="interp-label">Come usare GPQA Diamond nella selezione</div>
+    <p>È il benchmark più affidabile per identificare modelli con capacità di ragionamento scientifico genuino. <strong>Punteggi sopra 70%</strong> indicano capacità avanzate di ragionamento; sopra 80% rappresenta la fascia di eccellenza. Attenzione: il dataset è piccolo (198 domande), quindi piccole differenze percentuali (es. 85% vs 87%) non sono statisticamente robuste. Guardare la differenza solo quando è superiore a 3-4 punti. I modelli "thinking" (con ragionamento esteso) segnano sistematicamente più alto su questo benchmark rispetto alle versioni standard dello stesso modello.</p>
+  </div>
+
+  <!-- ── PROGRAMMAZIONE ── -->
+  <div class="cat-header cat-bg-coding" style="margin-top:48px;">
+    <div class="cat-icon">💻</div>
+    <div>
+      <div class="cat-title c-coding">Programmazione</div>
+      <div class="cat-sub">Generazione, comprensione e correzione di codice — da usare per: sviluppo software, automazione, data analysis</div>
+    </div>
+  </div>
+
+  <div class="bench-grid">
+    <div class="bench-card">
+      <div class="bench-card-top">
+        <span class="bench-name">SWE-bench Verified</span>
+        <span class="bench-tag bg-coding">Real-world Code</span>
+      </div>
+      <div class="bench-full">Software Engineering Benchmark — Verified subset</div>
+      <div class="bench-desc">Il modello deve risolvere veri bug report da repository GitHub reali: naviga il codebase, capisce il problema, genera una patch che supera i test automatici. Misura capacità di engineering reale, non algoritmi isolati. Gold standard per il coding nel 2025.</div>
+      <div class="bench-meta">
+        <div class="bench-meta-item">
+          <div class="bench-meta-label">Tipo di task</div>
+          <div class="bench-meta-val">Bug fixing su repository reali</div>
+        </div>
+        <div class="bench-meta-item">
+          <div class="bench-meta-label">Top modelli 2025</div>
+          <div class="bench-meta-val">Claude Opus 4.5: 80.9% (record)</div>
+        </div>
+        <div class="bench-meta-item">
+          <div class="bench-meta-label">Cosa rappresenta bene</div>
+          <div class="bench-meta-val">Sviluppo software professionale reale</div>
+        </div>
+        <div class="bench-meta-item">
+          <div class="bench-meta-label">Limitazione</div>
+          <div class="bench-meta-val">Solo Python/repository OS pubblici</div>
+        </div>
+      </div>
+      <span class="bench-status status-active">✓ Gold standard 2025</span>
+    </div>
+
+    <div class="bench-card">
+      <div class="bench-card-top">
+        <span class="bench-name">HumanEval</span>
+        <span class="bench-tag bg-coding">Algoritmi</span>
+      </div>
+      <div class="bench-full">Human Evaluation of Code Generation</div>
+      <div class="bench-desc">164 problemi Python: il modello riceve una docstring (descrizione della funzione) e deve scrivere il codice. Valutazione automatica con unit test. Classico e molto usato, ma quasi saturo — la maggior parte dei modelli avanzati supera l'85%.</div>
+      <div class="bench-meta">
+        <div class="bench-meta-item">
+          <div class="bench-meta-label">Top modelli 2025</div>
+          <div class="bench-meta-val">>85% quasi tutti i top model</div>
+        </div>
+        <div class="bench-meta-item">
+          <div class="bench-meta-label">Uso consigliato</div>
+          <div class="bench-meta-val">Confronto modelli entry/mid level</div>
+        </div>
+      </div>
+      <span class="bench-status status-saturated">⚠ Quasi saturo per i top model</span>
+    </div>
+
+    <div class="bench-card">
+      <div class="bench-card-top">
+        <span class="bench-name">LiveCodeBench</span>
+        <span class="bench-tag bg-coding">Contamination-free</span>
+      </div>
+      <div class="bench-full">Live Coding Benchmark</div>
+      <div class="bench-desc">Raccoglie problemi freschi da LeetCode, AtCoder, CodeForces — aggiornato continuamente per evitare che i modelli abbiano visto le soluzioni in training. Più affidabile di HumanEval proprio perché a prova di contaminazione.</div>
+      <div class="bench-meta">
+        <div class="bench-meta-item">
+          <div class="bench-meta-label">Aggiornamento</div>
+          <div class="bench-meta-val">Mensile — sempre nuovi problemi</div>
+        </div>
+        <div class="bench-meta-item">
+          <div class="bench-meta-label">Cosa misura</div>
+          <div class="bench-meta-val">Problem solving algoritmico genuino</div>
+        </div>
+      </div>
+      <span class="bench-status status-active">✓ Anti-contaminazione</span>
+    </div>
+
+    <div class="bench-card">
+      <div class="bench-card-top">
+        <span class="bench-name">SciCode</span>
+        <span class="bench-tag bg-coding">Scientific Coding</span>
+      </div>
+      <div class="bench-full">Scientific Coding Benchmark</div>
+      <div class="bench-desc">338 sotto-task derivati da 80 problemi reali di laboratorio in 16 discipline scientifiche. Misura la capacità di scrivere codice per analisi dati scientifici, simulazioni, modellistica — molto rilevante per R&D e ricerca applicata.</div>
+      <div class="bench-meta">
+        <div class="bench-meta-item">
+          <div class="bench-meta-label">Uso ideale</div>
+          <div class="bench-meta-val">Ricerca scientifica, data science, R&D</div>
+        </div>
+        <div class="bench-meta-item">
+          <div class="bench-meta-label">Status</div>
+          <div class="bench-meta-val">Ancora discriminante — benchmark giovane</div>
+        </div>
+      </div>
+      <span class="bench-status status-emerging">↗ Emergente</span>
+    </div>
+  </div>
+
+  <!-- ── MATEMATICA ── -->
+  <div class="cat-header cat-bg-math" style="margin-top:48px;">
+    <div class="cat-icon">∑</div>
+    <div>
+      <div class="cat-title c-math">Matematica</div>
+      <div class="cat-sub">Dal problem solving elementare alle competizioni olimpiche — da usare per: analisi quantitative, modellistica, finanza, ingegneria</div>
+    </div>
+  </div>
+
+  <div class="bench-grid">
+    <div class="bench-card">
+      <div class="bench-card-top">
+        <span class="bench-name">AIME 2025</span>
+        <span class="bench-tag bg-math">Olimpiadi</span>
+      </div>
+      <div class="bench-full">American Invitational Mathematics Examination</div>
+      <div class="bench-desc">30 problemi dall'esame di matematica olimpionico americano 2025. Nessuna risposta a scelta multipla — solo numeri interi da 000 a 999. Zero rischio di contaminazione (domande pubblicate nel 2025). Benchmark di ragionamento matematico di alto livello.</div>
+      <div class="bench-meta">
+        <div class="bench-meta-item">
+          <div class="bench-meta-label">Difficoltà</div>
+          <div class="bench-meta-val">Competizione olimpionica — altissima</div>
+        </div>
+        <div class="bench-meta-item">
+          <div class="bench-meta-label">Vantaggio</div>
+          <div class="bench-meta-val">Contaminazione impossibile (domande 2025)</div>
+        </div>
+      </div>
+      <span class="bench-status status-active">✓ Anti-contaminazione certificato</span>
+    </div>
+
+    <div class="bench-card">
+      <div class="bench-card-top">
+        <span class="bench-name">MATH Level 5</span>
+        <span class="bench-tag bg-math">Competizione</span>
+      </div>
+      <div class="bench-full">MATH Benchmark — Livello 5 (massimo)</div>
+      <div class="bench-desc">500 problemi dalle competizioni matematiche USA (algebra, calcolo, geometria, statistica). Livello 5 = difficoltà massima. Richiede tecniche avanzate di problem solving. I modelli di punta superano l'80% anche su questo livello.</div>
+      <div class="bench-meta">
+        <div class="bench-meta-item">
+          <div class="bench-meta-label">Top modelli 2025</div>
+          <div class="bench-meta-val">80–92% (modelli reasoning)</div>
+        </div>
+        <div class="bench-meta-item">
+          <div class="bench-meta-label">Status</div>
+          <div class="bench-meta-val">Parzialmente saturo per i top model</div>
+        </div>
+      </div>
+      <span class="bench-status status-saturated">⚠ Parzialmente saturo</span>
+    </div>
+
+    <div class="bench-card">
+      <div class="bench-card-top">
+        <span class="bench-name">GSM8K</span>
+        <span class="bench-tag bg-math">Elementare</span>
+      </div>
+      <div class="bench-full">Grade School Math 8K</div>
+      <div class="bench-desc">8.500 problemi di matematica della scuola elementare: richiede 2-8 passaggi di calcolo con operazioni di base. Storico benchmark, ormai completamente saturo — i modelli di punta segnano ~97-99%. Utile solo per confrontare modelli di fascia bassa.</div>
+      <div class="bench-meta">
+        <div class="bench-meta-item">
+          <div class="bench-meta-label">Top modelli 2025</div>
+          <div class="bench-meta-val">>97% quasi tutti</div>
+        </div>
+        <div class="bench-meta-item">
+          <div class="bench-meta-label">Uso consigliato</div>
+          <div class="bench-meta-val">Solo modelli piccoli/open-source</div>
+        </div>
+      </div>
+      <span class="bench-status status-saturated">⚠ Completamente saturo</span>
+    </div>
+
+    <div class="bench-card">
+      <div class="bench-card-top">
+        <span class="bench-name">FrontierMath</span>
+        <span class="bench-tag bg-math">Research Level</span>
+      </div>
+      <div class="bench-full">FrontierMath Benchmark</div>
+      <div class="bench-desc">Problemi matematici a livello di ricerca accademica — il livello più alto attualmente disponibile. I modelli di punta segnano ancora molto in basso (sotto il 10% nel 2024, in crescita nel 2025). Dataset privato, usato da Epoch AI per valutazioni indipendenti.</div>
+      <div class="bench-meta">
+        <div class="bench-meta-item">
+          <div class="bench-meta-label">Difficoltà</div>
+          <div class="bench-meta-val">Ricerca matematica — estrema</div>
+        </div>
+        <div class="bench-meta-item">
+          <div class="bench-meta-label">Uso pratico</div>
+          <div class="bench-meta-val">Solo per confronto tra i migliori frontier model</div>
+        </div>
+      </div>
+      <span class="bench-status status-emerging">↗ Emergente — molto difficile</span>
+    </div>
+  </div>
+
+  <!-- ── PREFERENZA UMANA ── -->
+  <div class="cat-header cat-bg-human" style="margin-top:48px;">
+    <div class="cat-icon">👥</div>
+    <div>
+      <div class="cat-title c-human">Valutazione Umana e Preferenza</div>
+      <div class="cat-sub">Qualità percepita da utenti reali — da usare per: chatbot, assistenti conversazionali, interfacce utente</div>
+    </div>
+  </div>
+
+  <div class="bench-grid">
+    <div class="bench-card">
+      <div class="bench-card-top">
+        <span class="bench-name">Arena (LMArena)</span>
+        <span class="bench-tag bg-human">Human Pref.</span>
+      </div>
+      <div class="bench-full">Arena (ex Chatbot Arena / LMSYS) — UC Berkeley</div>
+      <div class="bench-desc">La piattaforma più seguita per la preferenza umana: gli utenti chattano con due modelli anonimi e votano il migliore. Oltre 5 milioni di voti aggregati con il sistema Elo. Misura la qualità <em>percepita</em> dall'utente reale — non la correttezza oggettiva.</div>
+      <div class="bench-meta">
+        <div class="bench-meta-item">
+          <div class="bench-meta-label">Top modelli Feb 2025</div>
+          <div class="bench-meta-val">Claude Opus 4.6 Thinking (1506), Gemini 3 Pro (1486)</div>
+        </div>
+        <div class="bench-meta-item">
+          <div class="bench-meta-label">Voti totali</div>
+          <div class="bench-meta-val">>5 milioni di confronti</div>
+        </div>
+        <div class="bench-meta-item">
+          <div class="bench-meta-label">Cosa cattura</div>
+          <div class="bench-meta-val">Utilità reale, fluidità, soddisfazione utente</div>
+        </div>
+        <div class="bench-meta-item">
+          <div class="bench-meta-label">Limitazione</div>
+          <div class="bench-meta-val">Risposte verbose/sicure di sé possono vincere ingiustamente</div>
+        </div>
+      </div>
+      <span class="bench-status status-active">✓ Più rilevante per usi conversazionali</span>
+    </div>
+
+    <div class="bench-card">
+      <div class="bench-card-top">
+        <span class="bench-name">MT-Bench</span>
+        <span class="bench-tag bg-human">Multi-turn</span>
+      </div>
+      <div class="bench-full">Multi-Turn Benchmark</div>
+      <div class="bench-desc">80 conversazioni multi-turno in 8 categorie (scrittura, ragionamento, codice, matematica, estrarre info, roleplay, STEM, umanistica). Un LLM più potente valuta le risposte su scala 1-10. Misura coerenza e qualità nelle conversazioni estese.</div>
+      <div class="bench-meta">
+        <div class="bench-meta-item">
+          <div class="bench-meta-label">Cosa misura</div>
+          <div class="bench-meta-val">Coerenza conversazionale multi-turno</div>
+        </div>
+        <div class="bench-meta-item">
+          <div class="bench-meta-label">Vantaggio</div>
+          <div class="bench-meta-val">Copre molte categorie di task in una sola valutazione</div>
+        </div>
+      </div>
+      <span class="bench-status status-active">✓ Utile per assistenti conversazionali</span>
+    </div>
+  </div>
+
+  <div class="interp-box">
+    <div class="interp-label">Come usare Arena nella selezione</div>
+    <p>Arena è il benchmark più utile se il tuo caso d'uso è <strong>conversazionale</strong>: chatbot, assistenti interni, interfacce di supporto, Q&A. Il punteggio Elo riflette ciò che gli utenti reali preferiscono — il che include fattori come chiarezza, tono, utilità pratica che i benchmark accademici non catturano. <strong>Attenzione però</strong>: le risposte più lunghe e sicure di sé tendono a ricevere più voti anche quando sono meno accurate. Arena non sostituisce la verifica della correttezza fattuale.</p>
+  </div>
+
+  <!-- ── AGENTI E TOOL USE ── -->
+  <div class="cat-header cat-bg-agent" style="margin-top:48px;">
+    <div class="cat-icon">🤖</div>
+    <div>
+      <div class="cat-title c-agent">Agenti e Tool Use</div>
+      <div class="cat-sub">Pianificazione multi-step, uso di strumenti, azione autonoma — da usare per: automazione, workflow aziendali, RPA intelligente</div>
+    </div>
+  </div>
+
+  <div class="bench-grid">
+    <div class="bench-card">
+      <div class="bench-card-top">
+        <span class="bench-name">τ-bench (TAU-bench)</span>
+        <span class="bench-tag bg-agent">Agent Real-world</span>
+      </div>
+      <div class="bench-full">Tool-Agent-User Benchmark</div>
+      <div class="bench-desc">Valuta agenti AI in scenari realistici: il modello deve interagire con un utente simulato, usare strumenti, e completare compiti concreti (es. gestione ordini, supporto tecnico). Misura se l'agente capisce istruzioni ambigue e usa gli strumenti appropriatamente.</div>
+      <div class="bench-meta">
+        <div class="bench-meta-item">
+          <div class="bench-meta-label">Cosa misura</div>
+          <div class="bench-meta-val">Capacità agentiva in contesti business reali</div>
+        </div>
+        <div class="bench-meta-item">
+          <div class="bench-meta-label">Rilevanza</div>
+          <div class="bench-meta-val">Alta per automazione e workflow aziendali</div>
+        </div>
+      </div>
+      <span class="bench-status status-active">✓ Rilevante per agenti business</span>
+    </div>
+
+    <div class="bench-card">
+      <div class="bench-card-top">
+        <span class="bench-name">AgentBench</span>
+        <span class="bench-tag bg-agent">Multi-environment</span>
+      </div>
+      <div class="bench-full">Agent Benchmark</div>
+      <div class="bench-desc">8 ambienti diversi: OS (terminale), database, knowledge graph, gioco di carte, web shopping, web browsing, e altro. Ogni ambiente testa diverse capacità agentiche. Buon punto di partenza per valutare modelli in scenari multi-step eterogenei.</div>
+      <div class="bench-meta">
+        <div class="bench-meta-item">
+          <div class="bench-meta-label">Ambienti</div>
+          <div class="bench-meta-val">8 domini diversi</div>
+        </div>
+        <div class="bench-meta-item">
+          <div class="bench-meta-label">Uso ideale</div>
+          <div class="bench-meta-val">Prima valutazione per agenti generalisti</div>
+        </div>
+      </div>
+      <span class="bench-status status-active">✓ Utile come overview</span>
+    </div>
+
+    <div class="bench-card">
+      <div class="bench-card-top">
+        <span class="bench-name">WebArena</span>
+        <span class="bench-tag bg-agent">Web Tasks</span>
+      </div>
+      <div class="bench-full">Web Automation Arena</div>
+      <div class="bench-desc">Il modello deve navigare siti web realistici per completare compiti (cercare prodotti, compilare form, estrarre informazioni). Misura capacità di agire nel web — rilevante per agenti di ricerca, scraping intelligente, automazione browser.</div>
+      <div class="bench-meta">
+        <div class="bench-meta-item">
+          <div class="bench-meta-label">Cosa misura</div>
+          <div class="bench-meta-val">Navigazione web e automazione browser</div>
+        </div>
+        <div class="bench-meta-item">
+          <div class="bench-meta-label">Rilevanza</div>
+          <div class="bench-meta-val">Agenti di ricerca web, RPA intelligente</div>
+        </div>
+      </div>
+      <span class="bench-status status-active">✓ Per agenti web</span>
+    </div>
+
+    <div class="bench-card">
+      <div class="bench-card-top">
+        <span class="bench-name">HELM</span>
+        <span class="bench-tag bg-agent">Olistico</span>
+      </div>
+      <div class="bench-full">Holistic Evaluation of Language Models — Stanford</div>
+      <div class="bench-desc">Suite olistica sviluppata da Stanford che misura accuratezza, calibrazione, robustezza, fairness, bias, tossicità ed efficienza in 42 scenari. Non è un singolo numero — è una valutazione multidimensionale. Utile per avere una visione d'insieme e per valutazioni di sicurezza.</div>
+      <div class="bench-meta">
+        <div class="bench-meta-item">
+          <div class="bench-meta-label">Dimensioni valutate</div>
+          <div class="bench-meta-val">7 (accuratezza, bias, sicurezza, robustezza…)</div>
+        </div>
+        <div class="bench-meta-item">
+          <div class="bench-meta-label">Vantaggio</div>
+          <div class="bench-meta-val">Indipendente — condotto da Stanford</div>
+        </div>
+      </div>
+      <span class="bench-status status-active">✓ Utile per valutazioni enterprise</span>
+    </div>
+  </div>
+
+  <!-- ── SICUREZZA ── -->
+  <div class="cat-header cat-bg-safety" style="margin-top:48px;">
+    <div class="cat-icon">🛡</div>
+    <div>
+      <div class="cat-title c-safety">Sicurezza e Affidabilità</div>
+      <div class="cat-sub">Allineamento, bias, verosimiglianza — da usare per: deployment in contesti regolati, applicazioni pubbliche, HR, finance</div>
+    </div>
+  </div>
+
+  <div class="bench-grid">
+    <div class="bench-card">
+      <div class="bench-card-top">
+        <span class="bench-name">TruthfulQA</span>
+        <span class="bench-tag bg-safety">Veridicità</span>
+      </div>
+      <div class="bench-full">TruthfulQA</div>
+      <div class="bench-desc">817 domande progettate per far rispondere i modelli con convinzione ma in modo errato — miti, credenze popolari false, domande taroccate. Misura la tendenza alle allucinazioni e la capacità di rispondere "non lo so" invece di inventare.</div>
+      <div class="bench-meta">
+        <div class="bench-meta-item">
+          <div class="bench-meta-label">Cosa misura</div>
+          <div class="bench-meta-val">Tendenza all'allucinazione e alla falsità confidente</div>
+        </div>
+        <div class="bench-meta-item">
+          <div class="bench-meta-label">Rilevanza</div>
+          <div class="bench-meta-val">Alta per Q&A fattuali, assistenti aziendali</div>
+        </div>
+      </div>
+      <span class="bench-status status-active">✓ Fondamentale per usi informativi</span>
+    </div>
+
+    <div class="bench-card">
+      <div class="bench-card-top">
+        <span class="bench-name">SimpleQA</span>
+        <span class="bench-tag bg-safety">Accuratezza</span>
+      </div>
+      <div class="bench-full">SimpleQA (OpenAI)</div>
+      <div class="bench-desc">Domande fattuali semplici con risposta univoca e verificabile — ma progettate per ingannare i modelli che rispondono con eccessiva fiducia. Misura accuratezza fattuale pura su fatti di cultura generale. Interessante perché spesso i modelli più bravi su GPQA fanno peggio qui (capacità ortogonali).</div>
+      <div class="bench-meta">
+        <div class="bench-meta-item">
+          <div class="bench-meta-label">Cosa misura</div>
+          <div class="bench-meta-val">Accuratezza fattuale — senza ragionamento complesso</div>
+        </div>
+        <div class="bench-meta-item">
+          <div class="bench-meta-label">Insight</div>
+          <div class="bench-meta-val">Distingue knowledge da reasoning</div>
+        </div>
+      </div>
+      <span class="bench-status status-active">✓ Per applicazioni knowledge-intensive</span>
+    </div>
+  </div>
+</section>
+
+
+<!-- ═══════════════════════════════ -->
+<!-- 04 - MAPPA TASK → BENCHMARK -->
+<!-- ═══════════════════════════════ -->
+<section id="s4">
+  <div class="sec-header">
+    <span class="sec-num">04</span>
+    <h2>Mappa operativa: <em>task → benchmark</em> da guardare</h2>
+  </div>
+
+  <p class="intro-text">La tabella seguente è lo strumento centrale di questo report. Per ogni tipo di compito aziendale, indica quali benchmark guardare in <strong>ordine di priorità</strong>: i primari sono i più rilevanti, i secondari offrono contesto aggiuntivo.</p>
+
+  <div style="display:flex; gap:16px; align-items:center; margin:20px 0 28px; flex-wrap:wrap;">
+    <div style="display:flex; align-items:center; gap:8px; font-size:12px; font-weight:300;">
+      <div style="width:12px;height:12px;border-radius:2px;background:var(--c-general);"></div>Conoscenza gen.
+    </div>
+    <div style="display:flex; align-items:center; gap:8px; font-size:12px; font-weight:300;">
+      <div style="width:12px;height:12px;border-radius:2px;background:var(--c-reasoning);"></div>Ragionamento
+    </div>
+    <div style="display:flex; align-items:center; gap:8px; font-size:12px; font-weight:300;">
+      <div style="width:12px;height:12px;border-radius:2px;background:var(--c-coding);"></div>Coding
+    </div>
+    <div style="display:flex; align-items:center; gap:8px; font-size:12px; font-weight:300;">
+      <div style="width:12px;height:12px;border-radius:2px;background:var(--c-math);"></div>Matematica
+    </div>
+    <div style="display:flex; align-items:center; gap:8px; font-size:12px; font-weight:300;">
+      <div style="width:12px;height:12px;border-radius:2px;background:var(--c-human);"></div>Pref. umana
+    </div>
+    <div style="display:flex; align-items:center; gap:8px; font-size:12px; font-weight:300;">
+      <div style="width:12px;height:12px;border-radius:2px;background:var(--c-agent);"></div>Agenti
+    </div>
+    <div style="display:flex; align-items:center; gap:8px; font-size:12px; font-weight:300;">
+      <div style="width:12px;height:12px;border-radius:2px;background:var(--c-safety);"></div>Sicurezza
+    </div>
+    <div style="display:flex; align-items:center; gap:8px; font-size:12px; font-weight:300;">
+      <div style="width:8px;height:8px;border-radius:50%;background:var(--ink);"></div>Primario
+      <div style="width:8px;height:8px;border-radius:50%;background:var(--rule);"></div>Secondario
+    </div>
+  </div>
+
+  <div class="task-map">
+
+    <!-- ROW 1 -->
+    <div class="task-row">
+      <div class="task-label-cell">
+        <div class="task-name">Chatbot / Assistente conversazionale</div>
+        <div class="task-desc">Q&A, supporto clienti, HR, helpdesk interno</div>
+      </div>
+      <div class="task-benches">
+        <span class="task-bench-pill border-human" style="color:var(--c-human);">
+          <span class="pill-dot" style="background:var(--c-human);"></span>Arena Elo
+        </span>
+        <span class="task-bench-pill border-human" style="color:var(--c-human);">
+          <span class="pill-dot" style="background:var(--c-human);"></span>MT-Bench
+        </span>
+        <span class="task-bench-pill border-safety pill-secondary" style="color:var(--c-safety); opacity:0.6;">
+          <span class="pill-dot" style="background:var(--c-safety);"></span>TruthfulQA
+        </span>
+        <span class="task-bench-pill border-general pill-secondary" style="color:var(--c-general); opacity:0.6;">
+          <span class="pill-dot" style="background:var(--c-general);"></span>MMLU-Pro
+        </span>
+      </div>
+    </div>
+
+    <!-- ROW 2 -->
+    <div class="task-row">
+      <div class="task-label-cell">
+        <div class="task-name">Sviluppo software</div>
+        <div class="task-desc">Scrittura, revisione, debugging di codice</div>
+      </div>
+      <div class="task-benches">
+        <span class="task-bench-pill border-coding" style="color:var(--c-coding);">
+          <span class="pill-dot" style="background:var(--c-coding);"></span>SWE-bench Verified
+        </span>
+        <span class="task-bench-pill border-coding" style="color:var(--c-coding);">
+          <span class="pill-dot" style="background:var(--c-coding);"></span>LiveCodeBench
+        </span>
+        <span class="task-bench-pill border-coding pill-secondary" style="color:var(--c-coding); opacity:0.6;">
+          <span class="pill-dot" style="background:var(--c-coding);"></span>HumanEval
+        </span>
+        <span class="task-bench-pill border-human pill-secondary" style="color:var(--c-human); opacity:0.6;">
+          <span class="pill-dot" style="background:var(--c-human);"></span>Arena (coding)
+        </span>
+      </div>
+    </div>
+
+    <!-- ROW 3 -->
+    <div class="task-row">
+      <div class="task-label-cell">
+        <div class="task-name">Analisi e ricerca</div>
+        <div class="task-desc">Report, sintesi documenti, due diligence, analisi strategica</div>
+      </div>
+      <div class="task-benches">
+        <span class="task-bench-pill border-reasoning" style="color:var(--c-reasoning);">
+          <span class="pill-dot" style="background:var(--c-reasoning);"></span>GPQA Diamond
+        </span>
+        <span class="task-bench-pill border-general" style="color:var(--c-general);">
+          <span class="pill-dot" style="background:var(--c-general);"></span>MMLU-Pro
+        </span>
+        <span class="task-bench-pill border-safety pill-secondary" style="color:var(--c-safety); opacity:0.6;">
+          <span class="pill-dot" style="background:var(--c-safety);"></span>SimpleQA
+        </span>
+        <span class="task-bench-pill border-human pill-secondary" style="color:var(--c-human); opacity:0.6;">
+          <span class="pill-dot" style="background:var(--c-human);"></span>MT-Bench
+        </span>
+      </div>
+    </div>
+
+    <!-- ROW 4 -->
+    <div class="task-row">
+      <div class="task-label-cell">
+        <div class="task-name">Analisi quantitativa / Finance</div>
+        <div class="task-desc">Modelli finanziari, calcoli, proiezioni, analisi rischio</div>
+      </div>
+      <div class="task-benches">
+        <span class="task-bench-pill border-math" style="color:var(--c-math);">
+          <span class="pill-dot" style="background:var(--c-math);"></span>MATH Level 5
+        </span>
+        <span class="task-bench-pill border-math" style="color:var(--c-math);">
+          <span class="pill-dot" style="background:var(--c-math);"></span>AIME 2025
+        </span>
+        <span class="task-bench-pill border-reasoning pill-secondary" style="color:var(--c-reasoning); opacity:0.6;">
+          <span class="pill-dot" style="background:var(--c-reasoning);"></span>GPQA Diamond
+        </span>
+        <span class="task-bench-pill border-coding pill-secondary" style="color:var(--c-coding); opacity:0.6;">
+          <span class="pill-dot" style="background:var(--c-coding);"></span>LiveCodeBench
+        </span>
+      </div>
+    </div>
+
+    <!-- ROW 5 -->
+    <div class="task-row">
+      <div class="task-label-cell">
+        <div class="task-name">Ricerca scientifica / R&D</div>
+        <div class="task-desc">Biologia, chimica, fisica, data science avanzata</div>
+      </div>
+      <div class="task-benches">
+        <span class="task-bench-pill border-reasoning" style="color:var(--c-reasoning);">
+          <span class="pill-dot" style="background:var(--c-reasoning);"></span>GPQA Diamond
+        </span>
+        <span class="task-bench-pill border-coding" style="color:var(--c-coding);">
+          <span class="pill-dot" style="background:var(--c-coding);"></span>SciCode
+        </span>
+        <span class="task-bench-pill border-reasoning pill-secondary" style="color:var(--c-reasoning); opacity:0.6;">
+          <span class="pill-dot" style="background:var(--c-reasoning);"></span>HLE
+        </span>
+        <span class="task-bench-pill border-math pill-secondary" style="color:var(--c-math); opacity:0.6;">
+          <span class="pill-dot" style="background:var(--c-math);"></span>FrontierMath
+        </span>
+      </div>
+    </div>
+
+    <!-- ROW 6 -->
+    <div class="task-row">
+      <div class="task-label-cell">
+        <div class="task-name">Automazione e agenti</div>
+        <div class="task-desc">Workflow multi-step, RPA, agenti aziendali autonomi</div>
+      </div>
+      <div class="task-benches">
+        <span class="task-bench-pill border-agent" style="color:var(--c-agent);">
+          <span class="pill-dot" style="background:var(--c-agent);"></span>TAU-bench
+        </span>
+        <span class="task-bench-pill border-agent" style="color:var(--c-agent);">
+          <span class="pill-dot" style="background:var(--c-agent);"></span>AgentBench
+        </span>
+        <span class="task-bench-pill border-coding pill-secondary" style="color:var(--c-coding); opacity:0.6;">
+          <span class="pill-dot" style="background:var(--c-coding);"></span>SWE-bench Verified
+        </span>
+        <span class="task-bench-pill border-agent pill-secondary" style="color:var(--c-agent); opacity:0.6;">
+          <span class="pill-dot" style="background:var(--c-agent);"></span>WebArena
+        </span>
+      </div>
+    </div>
+
+    <!-- ROW 7 -->
+    <div class="task-row">
+      <div class="task-label-cell">
+        <div class="task-name">Scrittura e contenuti</div>
+        <div class="task-desc">Copywriting, marketing, comunicazione, documentazione</div>
+      </div>
+      <div class="task-benches">
+        <span class="task-bench-pill border-human" style="color:var(--c-human);">
+          <span class="pill-dot" style="background:var(--c-human);"></span>Arena Elo
+        </span>
+        <span class="task-bench-pill border-human" style="color:var(--c-human);">
+          <span class="pill-dot" style="background:var(--c-human);"></span>MT-Bench
+        </span>
+        <span class="task-bench-pill border-general pill-secondary" style="color:var(--c-general); opacity:0.6;">
+          <span class="pill-dot" style="background:var(--c-general);"></span>MMLU-Pro
+        </span>
+      </div>
+    </div>
+
+    <!-- ROW 8 -->
+    <div class="task-row">
+      <div class="task-label-cell">
+        <div class="task-name">Compliance / settori regolati</div>
+        <div class="task-desc">Healthcare, legal, finance, GDPR, sicurezza dei dati</div>
+      </div>
+      <div class="task-benches">
+        <span class="task-bench-pill border-safety" style="color:var(--c-safety);">
+          <span class="pill-dot" style="background:var(--c-safety);"></span>TruthfulQA
+        </span>
+        <span class="task-bench-pill border-agent" style="color:var(--c-agent);">
+          <span class="pill-dot" style="background:var(--c-agent);"></span>HELM (safety)
+        </span>
+        <span class="task-bench-pill border-safety pill-secondary" style="color:var(--c-safety); opacity:0.6;">
+          <span class="pill-dot" style="background:var(--c-safety);"></span>SimpleQA
+        </span>
+        <span class="task-bench-pill border-general pill-secondary" style="color:var(--c-general); opacity:0.6;">
+          <span class="pill-dot" style="background:var(--c-general);"></span>MMLU-Pro (legal)
+        </span>
+      </div>
+    </div>
+
+    <!-- ROW 9 -->
+    <div class="task-row">
+      <div class="task-label-cell">
+        <div class="task-name">Modello general-purpose</div>
+        <div class="task-desc">Valutazione globale senza task specifico definito</div>
+      </div>
+      <div class="task-benches">
+        <span class="task-bench-pill border-human" style="color:var(--c-human);">
+          <span class="pill-dot" style="background:var(--c-human);"></span>Arena Elo
+        </span>
+        <span class="task-bench-pill border-general" style="color:var(--c-general);">
+          <span class="pill-dot" style="background:var(--c-general);"></span>MMLU-Pro
+        </span>
+        <span class="task-bench-pill border-reasoning" style="color:var(--c-reasoning);">
+          <span class="pill-dot" style="background:var(--c-reasoning);"></span>GPQA Diamond
+        </span>
+        <span class="task-bench-pill border-agent pill-secondary" style="color:var(--c-agent); opacity:0.6;">
+          <span class="pill-dot" style="background:var(--c-agent);"></span>HELM
+        </span>
+      </div>
+    </div>
+
+  </div>
+</section>
+
+
+<!-- ═══════════════════════════════ -->
+<!-- 05 - DOVE TROVARE I DATI -->
+<!-- ═══════════════════════════════ -->
+<section id="s5">
+  <div class="sec-header">
+    <span class="sec-num">05</span>
+    <h2>Dove trovare <em>i dati aggiornati</em></h2>
+  </div>
+
+  <p>I punteggi dei benchmark cambiano ad ogni nuovo rilascio di modello. Queste sono le fonti più affidabili e aggiornate per consultare i dati, divise per tipo di valutazione.</p>
+
+  <table class="source-table">
+    <thead>
+      <tr>
+        <th>Fonte</th>
+        <th>Cosa offre</th>
+        <th>Perché usarla</th>
+        <th>URL</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>Artificial Analysis</td>
+        <td>Benchmark indipendenti su tutti i top model: GPQA Diamond, MMLU-Pro, SWE-bench, coding, long context</td>
+        <td>Valutazioni indipendenti e standardizzate — non auto-dichiarate dai laboratori</td>
+        <td style="font-family:'DM Mono',monospace; font-size:11px;">artificialanalysis.ai</td>
+      </tr>
+      <tr>
+        <td>Arena (LMArena)</td>
+        <td>Classifica Elo da milioni di votazioni umane. Leaderboard text, image, video, coding</td>
+        <td>La voce dell'utente reale — non misura accademica ma preferenza pratica</td>
+        <td style="font-family:'DM Mono',monospace; font-size:11px;">lmarena.ai / arena.ai</td>
+      </tr>
+      <tr>
+        <td>Epoch AI</td>
+        <td>GPQA Diamond, FrontierMath, AIME — valutazioni indipendenti sui frontier model</td>
+        <td>Molto rigorosi metodologicamente — dataset anti-contaminazione</td>
+        <td style="font-family:'DM Mono',monospace; font-size:11px;">epoch.ai/benchmarks</td>
+      </tr>
+      <tr>
+        <td>Hugging Face Open LLM Leaderboard v2</td>
+        <td>GPQA, MATH L5, MMLU-Pro — focus su modelli open-source</td>
+        <td>Benchmark standardizzati per modelli open-weight — essenziale se valuti Llama, Qwen, Mistral</td>
+        <td style="font-family:'DM Mono',monospace; font-size:11px;">huggingface.co/spaces/open-llm-leaderboard</td>
+      </tr>
+      <tr>
+        <td>HELM (Stanford CRFM)</td>
+        <td>Suite olistica: accuratezza, bias, tossicità, robustezza, efficienza in 42 scenari</td>
+        <td>Indipendente, multidimensionale, specifico sulla safety — fondamentale per enterprise</td>
+        <td style="font-family:'DM Mono',monospace; font-size:11px;">crfm.stanford.edu/helm</td>
+      </tr>
+      <tr>
+        <td>LiveBench</td>
+        <td>Benchmark aggiornati mensilmente — nuove domande ogni mese da pubblicazioni recenti</td>
+        <td>Praticamente immune alla contaminazione — misura capacità reali</td>
+        <td style="font-family:'DM Mono',monospace; font-size:11px;">livebench.ai</td>
+      </tr>
+      <tr>
+        <td>LLM-Stats</td>
+        <td>Aggregatore: benchmark + velocità + finestra di contesto + prezzi — aggiornato daily</td>
+        <td>Vista unica su performance e costi — utile per decisioni cost-performance</td>
+        <td style="font-family:'DM Mono',monospace; font-size:11px;">llm-stats.com</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <div class="alert alert-info">
+    <div class="alert-label">💡 Raccomandazione pratica</div>
+    <p>Per una prima selezione: <strong>inizia da Artificial Analysis</strong> per avere un quadro comparativo indipendente sui benchmark tecnici, poi <strong>incrocia con Arena</strong> per la preferenza d'uso reale. Per modelli open-source aggiungi <strong>Hugging Face Leaderboard v2</strong>. Se il contesto è enterprise con requisiti di compliance, consulta <strong>HELM</strong>.</p>
+  </div>
+</section>
+
+
+<!-- ═══════════════════════════════ -->
+<!-- 06 - LIMITI E AVVERTENZE -->
+<!-- ═══════════════════════════════ -->
+<section id="s6">
+  <div class="sec-header">
+    <span class="sec-num">06</span>
+    <h2>Limiti dei benchmark e <em>come compensarli</em></h2>
+  </div>
+
+  <div class="limits-grid">
+    <div class="limit-card">
+      <span class="limit-num">01</span>
+      <div class="limit-title">Saturazione e obsolescenza</div>
+      <div class="limit-text">I benchmark diventano inutili quando tutti i modelli li superano. MMLU e GSM8K sono già saturi. Verificare sempre che il benchmark in questione differenzi ancora i modelli che si sta confrontando.</div>
+    </div>
+    <div class="limit-card">
+      <span class="limit-num">02</span>
+      <div class="limit-title">Contaminazione dei dati</div>
+      <div class="limit-text">I modelli possono essere stati addestrati su domande presenti nei test, gonfiando i punteggi. Preferire benchmark che si aggiornano continuamente (LiveBench, AIME 2025, LiveCodeBench) o con dataset privati (FrontierMath, HELM).</div>
+    </div>
+    <div class="limit-card">
+      <span class="limit-num">03</span>
+      <div class="limit-title">Benchmark gaming</div>
+      <div class="limit-text">I laboratori ottimizzano deliberatamente i propri modelli per i benchmark più seguiti. Un punteggio alto non garantisce performance equivalente su task reali del tuo contesto. I punteggi auto-dichiarati vanno trattati con scetticismo.</div>
+    </div>
+    <div class="limit-card">
+      <span class="limit-num">04</span>
+      <div class="limit-title">I benchmark non misurano tutto</div>
+      <div class="limit-text">Nessun benchmark misura: coerenza su lunghe conversazioni, gestione di documenti aziendali specifici, adattabilità al tono aziendale, precisione su terminologia proprietaria, latenza reale in produzione.</div>
+    </div>
+    <div class="limit-card">
+      <span class="limit-num">05</span>
+      <div class="limit-title">Varianza statistica</div>
+      <div class="limit-text">Dataset piccoli (es. GPQA Diamond = 198 domande) producono varianza alta. Differenze di 1-2 punti percentuali non sono statisticamente significative. Guardare la direzione generale, non il numero preciso.</div>
+    </div>
+    <div class="limit-card">
+      <span class="limit-num">06</span>
+      <div class="limit-title">Il contesto aziendale è unico</div>
+      <div class="limit-text">I benchmark pubblici testano capacità generali. Il tuo caso d'uso potrebbe richiedere competenze specifiche non coperte da nessun benchmark esistente. La selezione finale dovrebbe sempre includere un test su dati e task reali della tua organizzazione.</div>
+    </div>
+  </div>
+
+  <div class="interp-box" style="margin-top:32px;">
+    <div class="interp-label">La strategia di selezione consigliata in tre passi</div>
+    <p><strong>1. Preselezione con benchmark:</strong> usa la mappa di questo report per identificare i 2-3 benchmark più rilevanti per il tuo task. Confronta i top 5-6 modelli su quelle metriche usando Artificial Analysis + Arena. Elimina i modelli chiaramente inferiori.</p>
+    <p><strong>2. Shortlist con test su dati reali:</strong> prendi i 2-3 modelli rimasti e testali su 20-30 esempi reali del tuo caso d'uso specifico. Questa fase non è sostituibile — i benchmark pubblici sono un proxy, non un verdetto.</p>
+    <p><strong>3. Decisione finale con fattori operativi:</strong> a parità di performance, considera: costo per token, latenza, limiti di contesto, disponibilità API, politica di data retention, certificazioni di sicurezza. Per usi enterprise questi fattori spesso pesano quanto la performance.</p>
+  </div>
+
+  <div class="final-box">
+    <div class="final-box-label">Sintesi — cosa portare via da questo report</div>
+    <h3>Tre benchmark da sapere sempre</h3>
+    <p>Se dovessi ridurre tutto a tre numeri da consultare prima di scegliere un LLM: <strong>MMLU-Pro</strong> per la cultura generale e la capacità di ragionamento multi-dominio, <strong>GPQA Diamond</strong> per il ragionamento avanzato e scientifico, e <strong>Arena Elo</strong> per la qualità percepita da utenti reali. Questi tre coprono le dimensioni principali e sono ancora discriminanti tra i modelli di punta nel 2025.</p>
+    <p>Per il coding aggiungi <strong>SWE-bench Verified</strong>. Per scenari agentici aggiungi <strong>TAU-bench</strong>. Per applicazioni in settori regolati aggiungi <strong>TruthfulQA</strong> e il safety leaderboard di <strong>HELM</strong>.</p>
+    <p><strong>Il benchmark più importante non è in questa lista:</strong> è il test che costruisci tu stesso su 20-30 task reali del tuo contesto. Nessun numero pubblico può sostituirlo.</p>
+  </div>
+
+</section>
+
+</div><!-- end body -->
+</body>
+</html>

@@ -1,0 +1,1063 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Self-Hosting LLM — C5: I Costi</title>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@300;400;500;700;900&family=JetBrains+Mono:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg:       #0c0c0f;
+  --bg2:      #13131a;
+  --bg3:      #1a1a24;
+  --bg4:      #22222e;
+  --border:   #2a2a38;
+  --border2:  #363648;
+  --ink:      #e4e4f0;
+  --ink2:     #a8a8c0;
+  --ink3:     #686880;
+  --ink4:     #404058;
+  --violet:   #a07ef0;
+  --violet-l: rgba(160,126,240,0.08);
+  --red:      #f05a6a;
+  --red-l:    rgba(240,90,106,0.07);
+  --green:    #50e8a0;
+  --green-l:  rgba(80,232,160,0.07);
+  --amber:    #f0b050;
+  --amber-l:  rgba(240,176,80,0.07);
+  --blue:     #50b8f0;
+  --blue-l:   rgba(80,184,240,0.07);
+  --teal:     #50d8d0;
+  --teal-l:   rgba(80,216,208,0.07);
+}
+
+* { margin:0; padding:0; box-sizing:border-box; }
+html { scroll-behavior:smooth; }
+
+body {
+  background: var(--bg);
+  color: var(--ink);
+  font-family: 'Archivo', sans-serif;
+  font-weight: 300;
+  font-size: 14px;
+  line-height: 1.78;
+}
+
+.masthead {
+  padding: 72px 64px 60px;
+  border-bottom: 1px solid var(--border);
+  position: relative; overflow: hidden;
+  background: var(--bg2);
+}
+.masthead::before {
+  content: ''; position: absolute; top: -200px; right: -200px;
+  width: 700px; height: 700px;
+  background: radial-gradient(circle, rgba(160,126,240,0.04) 0%, transparent 65%);
+  pointer-events: none;
+}
+.masthead::after {
+  content: 'C5'; position: absolute; right: 48px; bottom: -30px;
+  font-weight: 900; font-size: 280px; line-height: 1;
+  color: rgba(160,126,240,0.04); pointer-events: none;
+  letter-spacing: -12px; font-family: 'Archivo', sans-serif;
+}
+.series-label { font-family: 'JetBrains Mono', monospace; font-size: 10px; letter-spacing: 4px; text-transform: uppercase; color: var(--ink4); margin-bottom: 6px; }
+.report-label { font-family: 'JetBrains Mono', monospace; font-size: 11px; letter-spacing: 3px; text-transform: uppercase; color: var(--violet); margin-bottom: 32px; }
+.masthead h1 { font-weight: 900; font-size: clamp(34px, 5vw, 62px); line-height: 1.05; letter-spacing: -2.5px; max-width: 780px; }
+.masthead h1 em { font-style: italic; color: var(--violet); font-weight: 400; }
+.masthead-sub { margin-top: 24px; font-size: 15px; color: var(--ink3); max-width: 640px; line-height: 1.75; }
+.masthead-meta { margin-top: 48px; display: flex; gap: 48px; flex-wrap: wrap; padding-top: 28px; border-top: 1px solid var(--border); }
+.meta-item span { font-family: 'JetBrains Mono', monospace; font-size: 9px; letter-spacing: 2px; text-transform: uppercase; color: var(--ink4); display: block; }
+.meta-item strong { font-size: 13px; font-weight: 500; color: var(--ink2); display: block; margin-top: 3px; }
+
+.tab-nav { display: flex; background: var(--bg2); border-bottom: 1px solid var(--border); overflow-x: auto; position: sticky; top: 0; z-index: 100; scrollbar-width: none; }
+.tab-nav::-webkit-scrollbar { display: none; }
+.tab-btn { flex-shrink: 0; padding: 0; border: none; cursor: pointer; background: transparent; border-right: 1px solid var(--border); transition: background 0.2s; }
+.tab-btn:last-child { border-right: none; }
+.tab-btn-inner { display: block; padding: 13px 22px; text-align: left; }
+.tab-num { font-family: 'JetBrains Mono', monospace; font-size: 9px; letter-spacing: 2px; color: var(--ink4); display: block; margin-bottom: 3px; }
+.tab-name { font-weight: 700; font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px; color: var(--ink3); display: block; line-height: 1.25; white-space: nowrap; transition: color 0.2s; }
+.tab-btn.active .tab-name { color: var(--ink); }
+.tab-btn.active { position: relative; }
+.tab-btn.active::after { content: ''; position: absolute; bottom: 0; left: 0; right: 0; height: 2px; background: var(--violet); }
+.tab-btn:hover .tab-name { color: var(--ink2); }
+
+.tab-panel { display: none; }
+.tab-panel.active { display: grid; grid-template-columns: 190px 1fr; min-height: 80vh; animation: fadeIn 0.3s ease; }
+@keyframes fadeIn { from { opacity:0; transform:translateY(6px); } to { opacity:1; transform:translateY(0); } }
+
+.panel-aside { border-right: 1px solid var(--border); padding: 40px 24px 40px 40px; position: sticky; top: 48px; height: calc(100vh - 48px); overflow-y: auto; }
+.aside-label { font-family: 'JetBrains Mono', monospace; font-size: 9px; letter-spacing: 3px; text-transform: uppercase; color: var(--ink4); margin-bottom: 16px; }
+.panel-aside nav a { display: block; font-size: 12px; color: var(--ink3); text-decoration: none; padding: 7px 0; border-bottom: 1px solid var(--border); line-height: 1.4; transition: color 0.2s; }
+.panel-aside nav a:hover { color: var(--violet); }
+.panel-aside nav a:last-child { border: none; }
+
+.panel-content { padding: 52px 64px 88px; max-width: 940px; }
+.panel-content h3 { font-weight: 700; font-size: 17px; color: var(--ink); margin: 44px 0 16px; letter-spacing: -0.4px; line-height: 1.3; }
+.panel-content h3:first-child { margin-top: 0; }
+.panel-content p { font-size: 14px; color: var(--ink2); margin-bottom: 18px; line-height: 1.82; }
+.panel-content p strong { color: var(--ink); font-weight: 500; }
+
+/* ── COST BREAKDOWN ── */
+.cost-breakdown {
+  display: flex; flex-direction: column; gap: 2px; margin: 24px 0;
+}
+
+.cost-row {
+  display: grid; grid-template-columns: 1fr 120px 120px;
+  background: var(--bg2); border: 1px solid var(--border);
+  overflow: hidden;
+}
+
+.cost-row.header {
+  background: var(--bg3);
+}
+
+.cost-row.total {
+  border-top: 2px solid var(--border2);
+  background: var(--bg3);
+}
+
+.cost-row.total .cost-label { font-weight: 700; color: var(--ink); }
+
+.cost-label { padding: 14px 18px; font-size: 13px; color: var(--ink2); line-height: 1.5; border-right: 1px solid var(--border); }
+.cost-label strong { color: var(--ink); font-weight: 500; display: block; margin-bottom: 2px; }
+.cost-label span { font-size: 11px; color: var(--ink4); }
+.cost-row.header .cost-label { font-family: 'JetBrains Mono', monospace; font-size: 9px; letter-spacing: 2px; text-transform: uppercase; color: var(--ink4); font-weight: 400; }
+
+.cost-val { padding: 14px 16px; text-align: right; border-right: 1px solid var(--border); font-family: 'JetBrains Mono', monospace; font-size: 13px; color: var(--ink2); }
+.cost-val:last-child { border-right: none; }
+.cost-val.highlight { color: var(--amber); font-weight: 600; }
+.cost-val.total-val { color: var(--ink); font-weight: 700; font-size: 15px; }
+.cost-row.header .cost-val { font-size: 9px; letter-spacing: 2px; text-transform: uppercase; color: var(--ink4); font-weight: 400; }
+
+/* ── SCENARIO CARDS ── */
+.scenario-grid {
+  display: grid; grid-template-columns: repeat(3, 1fr);
+  gap: 2px; margin: 24px 0;
+}
+
+.scenario-card {
+  background: var(--bg2); border: 1px solid var(--border);
+  overflow: hidden;
+}
+
+.scenario-header {
+  padding: 16px 20px; border-bottom: 1px solid var(--border);
+}
+
+.scenario-tag { font-family: 'JetBrains Mono', monospace; font-size: 9px; letter-spacing: 2px; text-transform: uppercase; color: var(--ink4); display: block; margin-bottom: 8px; }
+.scenario-card h4 { font-size: 14px; font-weight: 900; color: var(--ink); letter-spacing: -0.3px; }
+
+.scenario-body { padding: 16px 20px; }
+
+.scenario-stat { display: flex; justify-content: space-between; align-items: baseline; padding: 6px 0; border-bottom: 1px solid var(--border); font-size: 12px; }
+.scenario-stat:last-child { border: none; }
+.scenario-stat-label { color: var(--ink4); font-family: 'JetBrains Mono', monospace; font-size: 10px; letter-spacing: 1px; text-transform: uppercase; }
+.scenario-stat-val { color: var(--ink2); font-weight: 500; font-size: 13px; }
+.scenario-stat-val.accent { color: var(--amber); }
+.scenario-stat-val.green { color: var(--green); }
+.scenario-stat-val.red { color: var(--red); }
+
+/* ── BREAKEVEN CHART ── */
+.breakeven-wrap { margin: 28px 0; background: var(--bg2); border: 1px solid var(--border); padding: 28px; }
+
+.breakeven-label { font-family: 'JetBrains Mono', monospace; font-size: 9px; letter-spacing: 2.5px; text-transform: uppercase; color: var(--violet); margin-bottom: 20px; display: block; }
+
+.be-chart { position: relative; height: 200px; margin-bottom: 16px; }
+
+.be-axis-y {
+  position: absolute; left: 0; top: 0; bottom: 24px; width: 60px;
+  display: flex; flex-direction: column; justify-content: space-between;
+}
+.be-axis-y span { font-family: 'JetBrains Mono', monospace; font-size: 10px; color: var(--ink4); text-align: right; padding-right: 8px; }
+
+.be-plot { position: absolute; left: 68px; right: 0; top: 0; bottom: 24px; border-left: 1px solid var(--border2); border-bottom: 1px solid var(--border2); }
+
+.be-grid-line { position: absolute; left: 0; right: 0; height: 1px; background: var(--border); }
+
+.be-line { position: absolute; left: 0; bottom: 0; width: 100%; height: 100%; }
+
+.be-label-line { position: absolute; right: 8px; font-family: 'JetBrains Mono', monospace; font-size: 10px; letter-spacing: 1px; }
+
+.be-axis-x { margin-left: 68px; display: flex; justify-content: space-between; }
+.be-axis-x span { font-family: 'JetBrains Mono', monospace; font-size: 10px; color: var(--ink4); }
+
+.be-crosshair { position: absolute; bottom: 0; width: 1px; background: var(--violet); opacity: 0.5; top: 0; }
+.be-crosshair-label { position: absolute; bottom: -20px; font-family: 'JetBrains Mono', monospace; font-size: 10px; color: var(--violet); transform: translateX(-50%); white-space: nowrap; }
+
+/* ── HIDDEN COSTS ── */
+.hidden-list { display: flex; flex-direction: column; gap: 2px; margin: 24px 0; }
+
+.hidden-item {
+  display: grid; grid-template-columns: 4px 1fr auto;
+  background: var(--bg2); border: 1px solid var(--border); overflow: hidden;
+}
+
+.hi-stripe { background: var(--amber); }
+.hidden-item.high .hi-stripe { background: var(--red); }
+.hidden-item.med  .hi-stripe { background: var(--amber); }
+.hidden-item.low  .hi-stripe { background: var(--blue); }
+
+.hi-body { padding: 16px 20px; }
+.hi-body h4 { font-size: 13px; font-weight: 700; color: var(--ink); margin-bottom: 5px; }
+.hi-body p  { font-size: 13px; color: var(--ink3); line-height: 1.65; margin: 0; }
+.hi-body p strong { color: var(--ink2); font-weight: 500; }
+
+.hi-impact { padding: 16px 14px; border-left: 1px solid var(--border); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; min-width: 80px; }
+.hi-impact span { font-family: 'JetBrains Mono', monospace; font-size: 9px; letter-spacing: 1px; text-transform: uppercase; color: var(--ink4); }
+.hi-impact strong { font-size: 12px; font-weight: 700; }
+.hidden-item.high .hi-impact strong { color: var(--red); }
+.hidden-item.med  .hi-impact strong { color: var(--amber); }
+.hidden-item.low  .hi-impact strong { color: var(--blue); }
+
+/* ── API COST TABLE ── */
+.api-table { width: 100%; border-collapse: collapse; margin: 24px 0; font-size: 13px; }
+.api-table th { font-family: 'JetBrains Mono', monospace; font-size: 9px; letter-spacing: 2px; text-transform: uppercase; color: var(--ink4); text-align: left; padding: 10px 14px; border-bottom: 1px solid var(--border2); background: var(--bg3); }
+.api-table td { padding: 12px 14px; border-bottom: 1px solid var(--border); color: var(--ink2); vertical-align: top; line-height: 1.6; }
+.api-table tr:hover td { background: var(--bg2); }
+.api-table td:first-child { font-weight: 500; color: var(--ink); }
+
+/* ── INTERACTIVE CALCULATOR ── */
+.calc-wrap { background: var(--bg2); border: 1px solid var(--border); padding: 28px; margin: 24px 0; }
+.calc-label { font-family: 'JetBrains Mono', monospace; font-size: 9px; letter-spacing: 2.5px; text-transform: uppercase; color: var(--violet); margin-bottom: 20px; display: block; }
+
+.calc-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; margin-bottom: 24px; }
+
+.calc-field label { display: block; font-family: 'JetBrains Mono', monospace; font-size: 10px; letter-spacing: 1.5px; text-transform: uppercase; color: var(--ink4); margin-bottom: 8px; }
+.calc-field input, .calc-field select {
+  width: 100%; background: var(--bg3); border: 1px solid var(--border2);
+  color: var(--ink); padding: 10px 14px; font-size: 14px; font-family: 'Archivo', sans-serif;
+  outline: none; transition: border-color 0.2s;
+}
+.calc-field input:focus, .calc-field select:focus { border-color: var(--violet); }
+.calc-field select option { background: var(--bg3); }
+
+.calc-results { border-top: 1px solid var(--border); padding-top: 20px; display: grid; grid-template-columns: repeat(3, 1fr); gap: 2px; }
+
+.calc-result-item { background: var(--bg3); border: 1px solid var(--border); padding: 14px 16px; }
+.calc-result-label { font-family: 'JetBrains Mono', monospace; font-size: 9px; letter-spacing: 1.5px; text-transform: uppercase; color: var(--ink4); margin-bottom: 6px; display: block; }
+.calc-result-val { font-size: 20px; font-weight: 900; color: var(--ink); letter-spacing: -0.5px; }
+.calc-result-val.better { color: var(--green); }
+.calc-result-val.worse  { color: var(--red); }
+.calc-result-sub { font-size: 11px; color: var(--ink4); margin-top: 3px; }
+
+/* ── ROI TABLE ── */
+.roi-table { width: 100%; border-collapse: collapse; margin: 24px 0; font-size: 13px; }
+.roi-table th { font-family: 'JetBrains Mono', monospace; font-size: 9px; letter-spacing: 2px; text-transform: uppercase; color: var(--ink4); text-align: left; padding: 10px 14px; border-bottom: 1px solid var(--border2); background: var(--bg3); }
+.roi-table td { padding: 12px 14px; border-bottom: 1px solid var(--border); color: var(--ink2); vertical-align: top; line-height: 1.6; }
+.roi-table tr:hover td { background: var(--bg2); }
+.roi-table td:first-child { font-weight: 500; color: var(--ink); width: 220px; }
+
+/* ── INFO BOX ── */
+.ibox { background: var(--bg2); border: 1px solid var(--border); border-left: 3px solid var(--violet); padding: 22px 26px; margin: 22px 0; }
+.ibox.green  { border-left-color: var(--green);  background: var(--green-l); }
+.ibox.amber  { border-left-color: var(--amber);  background: var(--amber-l); }
+.ibox.red    { border-left-color: var(--red);    background: var(--red-l); }
+.ibox.blue   { border-left-color: var(--blue);   background: var(--blue-l); }
+.ibox-label { font-family: 'JetBrains Mono', monospace; font-size: 9px; letter-spacing: 2.5px; text-transform: uppercase; margin-bottom: 10px; display: block; }
+.ibox       .ibox-label { color: var(--violet); }
+.ibox.green .ibox-label { color: var(--green); }
+.ibox.amber .ibox-label { color: var(--amber); }
+.ibox.red   .ibox-label { color: var(--red); }
+.ibox.blue  .ibox-label { color: var(--blue); }
+.ibox p { font-size: 13px; color: var(--ink2); margin: 0; line-height: 1.75; }
+.ibox p strong { color: var(--ink); font-weight: 500; }
+
+footer { border-top: 1px solid var(--border); background: var(--bg2); padding: 28px 64px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px; }
+footer p { font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--ink4); letter-spacing: 0.5px; }
+
+@media (max-width: 860px) {
+  .masthead, .panel-content, footer { padding-left: 24px; padding-right: 24px; }
+  .tab-panel.active { grid-template-columns: 1fr; }
+  .panel-aside { display: none; }
+  .scenario-grid, .calc-grid, .calc-results { grid-template-columns: 1fr; }
+}
+</style>
+</head>
+<body>
+
+<header class="masthead">
+  <div class="series-label">Serie C · Self-Hosting LLM</div>
+  <div class="report-label">Report C5 — I Costi</div>
+  <h1>Quanto costa<br><em>davvero</em> il self-hosting</h1>
+  <p class="masthead-sub">Analisi quantitativa del TCO del self-hosting, confronto con i provider cloud API, calcolo del break-even e simulatore interattivo per il proprio scenario specifico.</p>
+  <div class="masthead-meta">
+    <div class="meta-item"><span>Serie</span><strong>C · Self-Hosting LLM</strong></div>
+    <div class="meta-item"><span>Report</span><strong>C5 di 7</strong></div>
+    <div class="meta-item"><span>Destinatari</span><strong>CTO, CFO, Management tecnico</strong></div>
+    <div class="meta-item"><span>Prerequisito</span><strong>C1, C4 — La Decisione, Le Architetture</strong></div>
+  </div>
+</header>
+
+<nav class="tab-nav">
+  <button class="tab-btn active" data-tab="t1">
+    <span class="tab-btn-inner"><span class="tab-num">01</span><span class="tab-name">Struttura costi</span></span>
+  </button>
+  <button class="tab-btn" data-tab="t2">
+    <span class="tab-btn-inner"><span class="tab-num">02</span><span class="tab-name">Tre scenari</span></span>
+  </button>
+  <button class="tab-btn" data-tab="t3">
+    <span class="tab-btn-inner"><span class="tab-num">03</span><span class="tab-name">Costi API provider</span></span>
+  </button>
+  <button class="tab-btn" data-tab="t4">
+    <span class="tab-btn-inner"><span class="tab-num">04</span><span class="tab-name">Break-even</span></span>
+  </button>
+  <button class="tab-btn" data-tab="t5">
+    <span class="tab-btn-inner"><span class="tab-num">05</span><span class="tab-name">Costi nascosti</span></span>
+  </button>
+  <button class="tab-btn" data-tab="t6">
+    <span class="tab-btn-inner"><span class="tab-num">06</span><span class="tab-name">Simulatore</span></span>
+  </button>
+</nav>
+
+
+<!-- ══════════════════════════════════
+     TAB 1 — STRUTTURA DEI COSTI
+══════════════════════════════════ -->
+<div class="tab-panel active" id="t1">
+  <aside class="panel-aside">
+    <div class="aside-label">In questa sezione</div>
+    <nav>
+      <a href="#s1-premessa">Il confronto corretto</a>
+      <a href="#s1-cloud-sh">Cloud privato: voci</a>
+      <a href="#s1-onprem-sh">On-premise: voci</a>
+      <a href="#s1-principio">Il principio del TCO</a>
+    </nav>
+  </aside>
+  <div class="panel-content">
+
+    <h3 id="s1-premessa">Il confronto corretto: TCO, non costo del modello</h3>
+    <p>L'errore più comune nel valutare il self-hosting è confrontare il costo zero della licenza del modello open source con il costo per token delle API commerciali. <strong>Non è questo il confronto corretto.</strong> Il confronto corretto è tra il Total Cost of Ownership del sistema self-hosted e il costo complessivo dell'alternativa cloud — inclusi piano enterprise, integrazione e governance.</p>
+    <p>Il TCO del self-hosting ha due componenti strutturalmente diverse: <strong>costi fissi</strong> (hardware o impegno cloud, setup, personale) che esistono indipendentemente dall'uso, e <strong>costi variabili</strong> (energia, banda, storage aggiuntivo) che crescono con il volume. Questa struttura crea il fenomeno del break-even discusso nella Tab 4.</p>
+
+    <h3 id="s1-cloud-sh">Struttura costi — Cloud privato</h3>
+
+    <div class="cost-breakdown">
+      <div class="cost-row header">
+        <div class="cost-label">Voce di costo</div>
+        <div class="cost-val">Annuale</div>
+        <div class="cost-val">Note</div>
+      </div>
+      <div class="cost-row">
+        <div class="cost-label"><strong>GPU cloud (istanza dedicata)</strong><span>A100 80GB su Azure/AWS, 24/7</span></div>
+        <div class="cost-val highlight">€25.000–38.000</div>
+        <div class="cost-val" style="font-size:11px;color:var(--ink4)">Voce dominante. Reserved 1yr –30%</div>
+      </div>
+      <div class="cost-row">
+        <div class="cost-label"><strong>GPU cloud (uso lavorativo)</strong><span>10h/gg × 22gg/mese × 12</span></div>
+        <div class="cost-val highlight">€8.000–13.000</div>
+        <div class="cost-val" style="font-size:11px;color:var(--ink4)">Alternativa se uso non continuo</div>
+      </div>
+      <div class="cost-row">
+        <div class="cost-label"><strong>Setup e integrazione</strong><span>Una tantum, amortizzato anno 1</span></div>
+        <div class="cost-val">€5.000–20.000</div>
+        <div class="cost-val" style="font-size:11px;color:var(--ink4)">Dipende dalla complessità</div>
+      </div>
+      <div class="cost-row">
+        <div class="cost-label"><strong>Personale MLOps</strong><span>0.2–0.5 FTE dedicato</span></div>
+        <div class="cost-val">€12.000–30.000</div>
+        <div class="cost-val" style="font-size:11px;color:var(--ink4)">Spesso sottostimato</div>
+      </div>
+      <div class="cost-row">
+        <div class="cost-label"><strong>Storage, networking, extras</strong><span>S3/Blob, egress, monitoring</span></div>
+        <div class="cost-val">€1.000–3.000</div>
+        <div class="cost-val" style="font-size:11px;color:var(--ink4)">Marginale ma reale</div>
+      </div>
+      <div class="cost-row total">
+        <div class="cost-label">Totale annuale (24/7, anno 1)</div>
+        <div class="cost-val total-val">€43.000–91.000</div>
+        <div class="cost-val" style="font-size:11px;color:var(--ink4)">Setup incluso</div>
+      </div>
+      <div class="cost-row total">
+        <div class="cost-label">Totale annuale (uso lavorativo, anno 1)</div>
+        <div class="cost-val total-val">€26.000–66.000</div>
+        <div class="cost-val" style="font-size:11px;color:var(--ink4)">Setup incluso</div>
+      </div>
+    </div>
+
+    <h3 id="s1-onprem-sh">Struttura costi — On-premise</h3>
+
+    <div class="cost-breakdown">
+      <div class="cost-row header">
+        <div class="cost-label">Voce di costo</div>
+        <div class="cost-val">Anno 1</div>
+        <div class="cost-val">Anni 2–3</div>
+      </div>
+      <div class="cost-row">
+        <div class="cost-label"><strong>Hardware GPU</strong><span>Server con 1–2× A100 80GB</span></div>
+        <div class="cost-val highlight">€25.000–55.000</div>
+        <div class="cost-val" style="color:var(--ink4)">—</div>
+      </div>
+      <div class="cost-row">
+        <div class="cost-label"><strong>Infrastruttura datacenter</strong><span>Rack, PDU, networking, UPS</span></div>
+        <div class="cost-val">€3.000–15.000</div>
+        <div class="cost-val" style="color:var(--ink4)">—</div>
+      </div>
+      <div class="cost-row">
+        <div class="cost-label"><strong>Setup e integrazione</strong><span>Deploy, configurazione, test</span></div>
+        <div class="cost-val">€10.000–40.000</div>
+        <div class="cost-val" style="color:var(--ink4)">—</div>
+      </div>
+      <div class="cost-row">
+        <div class="cost-label"><strong>Personale MLOps + sysadmin</strong><span>0.5–1.5 FTE dedicati</span></div>
+        <div class="cost-val highlight">€30.000–90.000</div>
+        <div class="cost-val highlight">€30.000–90.000</div>
+      </div>
+      <div class="cost-row">
+        <div class="cost-label"><strong>Energia elettrica</strong><span>~15.000 kWh/anno per 2× A100 24/7</span></div>
+        <div class="cost-val">€3.000–5.000</div>
+        <div class="cost-val">€3.000–5.000</div>
+      </div>
+      <div class="cost-row">
+        <div class="cost-label"><strong>Manutenzione hardware</strong><span>~15% del costo hardware/anno</span></div>
+        <div class="cost-val" style="color:var(--ink4)">—</div>
+        <div class="cost-val">€4.000–8.000</div>
+      </div>
+      <div class="cost-row total">
+        <div class="cost-label">Totale anno 1 (capex + opex)</div>
+        <div class="cost-val total-val">€71.000–205.000</div>
+        <div class="cost-val" style="color:var(--ink4)">—</div>
+      </div>
+      <div class="cost-row total">
+        <div class="cost-label">Totale anni 2–3 (solo opex)</div>
+        <div class="cost-val" style="color:var(--ink4)">—</div>
+        <div class="cost-val total-val">€37.000–103.000</div>
+      </div>
+    </div>
+
+    <h3 id="s1-principio">Il principio del TCO su 3 anni</h3>
+    <p>Il modo corretto di confrontare le opzioni è calcolare il TCO su un orizzonte di 3 anni, includendo tutte le voci. L'on-premise ha costi iniziali molto alti che si ammortizzano nel tempo; il cloud ha costi fissi più bassi ma ricorrenti che si accumulano. Il break-even tra le due opzioni dipende dal volume d'uso e dalla configurazione specifica — la Tab 4 mostra i calcoli dettagliati.</p>
+
+    <div class="ibox amber">
+      <span class="ibox-label">La voce più sottostimata</span>
+      <p>In quasi tutte le valutazioni che sottostimano il costo del self-hosting, la voce mancante o minimizzata è il <strong>personale dedicato</strong>. Un sistema LLM in produzione non si gestisce da solo: richiede aggiornamenti, monitoring, troubleshooting, gestione degli accessi, test di regressione ad ogni cambio. Un MLOps senior costa €60.000–90.000/anno. Anche solo 0.3 FTE dedicati rappresentano €18.000–27.000/anno — spesso più del costo dell'hardware cloud.</p>
+    </div>
+
+  </div>
+</div>
+
+
+<!-- ══════════════════════════════════
+     TAB 2 — TRE SCENARI
+══════════════════════════════════ -->
+<div class="tab-panel" id="t2">
+  <aside class="panel-aside">
+    <div class="aside-label">In questa sezione</div>
+    <nav>
+      <a href="#sc-intro">I tre scenari</a>
+      <a href="#sc-light">Uso leggero</a>
+      <a href="#sc-mid">Uso medio</a>
+      <a href="#sc-heavy">Uso intensivo</a>
+      <a href="#sc-3yr">TCO a 3 anni</a>
+    </nav>
+  </aside>
+  <div class="panel-content">
+
+    <h3 id="sc-intro">Tre scenari tipo per una manifatturiera</h3>
+    <p>I costi variano enormemente in base al volume d'uso, al modello scelto e all'architettura. I tre scenari qui descritti coprono la gamma tipica per una manifatturiera di medie dimensioni (200–2.000 dipendenti) che adotta LLM per uso interno.</p>
+
+    <div class="scenario-grid" id="sc-light">
+      <div class="scenario-card">
+        <div class="scenario-header">
+          <span class="scenario-tag">Scenario A</span>
+          <h4>Uso leggero</h4>
+        </div>
+        <div class="scenario-body">
+          <div class="scenario-stat"><span class="scenario-stat-label">Utenti</span><span class="scenario-stat-val">10–30 utenti</span></div>
+          <div class="scenario-stat"><span class="scenario-stat-label">Query/mese</span><span class="scenario-stat-val">5.000–20.000</span></div>
+          <div class="scenario-stat"><span class="scenario-stat-label">Caso d'uso</span><span class="scenario-stat-val">Q&A documenti, supporto operatori</span></div>
+          <div class="scenario-stat"><span class="scenario-stat-label">Modello</span><span class="scenario-stat-val">Llama 3.2 8B o Mistral 12B</span></div>
+          <div class="scenario-stat"><span class="scenario-stat-label">Hardware</span><span class="scenario-stat-val">1× RTX 4090 o A10G</span></div>
+          <div class="scenario-stat"><span class="scenario-stat-label">Costo cloud/anno</span><span class="scenario-stat-val accent">€4.000–9.000</span></div>
+          <div class="scenario-stat"><span class="scenario-stat-label">Hardware on-prem</span><span class="scenario-stat-val">€2.000–6.000</span></div>
+          <div class="scenario-stat"><span class="scenario-stat-label">Alternativa API</span><span class="scenario-stat-val green">€500–2.000/anno</span></div>
+        </div>
+      </div>
+
+      <div class="scenario-card" id="sc-mid">
+        <div class="scenario-header">
+          <span class="scenario-tag">Scenario B</span>
+          <h4>Uso medio</h4>
+        </div>
+        <div class="scenario-body">
+          <div class="scenario-stat"><span class="scenario-stat-label">Utenti</span><span class="scenario-stat-val">50–150 utenti</span></div>
+          <div class="scenario-stat"><span class="scenario-stat-label">Query/mese</span><span class="scenario-stat-val">50.000–200.000</span></div>
+          <div class="scenario-stat"><span class="scenario-stat-label">Caso d'uso</span><span class="scenario-stat-val">Q&A + doc generation + classificazione</span></div>
+          <div class="scenario-stat"><span class="scenario-stat-label">Modello</span><span class="scenario-stat-val">Llama 3.3 70B Q4</span></div>
+          <div class="scenario-stat"><span class="scenario-stat-label">Hardware</span><span class="scenario-stat-val">1–2× A100 80GB</span></div>
+          <div class="scenario-stat"><span class="scenario-stat-label">Costo cloud/anno</span><span class="scenario-stat-val accent">€18.000–40.000</span></div>
+          <div class="scenario-stat"><span class="scenario-stat-label">Hardware on-prem</span><span class="scenario-stat-val">€25.000–55.000</span></div>
+          <div class="scenario-stat"><span class="scenario-stat-label">Alternativa API</span><span class="scenario-stat-val accent">€8.000–25.000/anno</span></div>
+        </div>
+      </div>
+
+      <div class="scenario-card" id="sc-heavy">
+        <div class="scenario-header">
+          <span class="scenario-tag">Scenario C</span>
+          <h4>Uso intensivo</h4>
+        </div>
+        <div class="scenario-body">
+          <div class="scenario-stat"><span class="scenario-stat-label">Utenti</span><span class="scenario-stat-val">200+ utenti + sistemi automatizzati</span></div>
+          <div class="scenario-stat"><span class="scenario-stat-label">Query/mese</span><span class="scenario-stat-val">500.000–2.000.000</span></div>
+          <div class="scenario-stat"><span class="scenario-stat-label">Caso d'uso</span><span class="scenario-stat-val">Pipeline produzione + agenti + utenti</span></div>
+          <div class="scenario-stat"><span class="scenario-stat-label">Modello</span><span class="scenario-stat-val">Llama 70B + modelli specializzati</span></div>
+          <div class="scenario-stat"><span class="scenario-stat-label">Hardware</span><span class="scenario-stat-val">Cluster 4× A100 o 2× H100</span></div>
+          <div class="scenario-stat"><span class="scenario-stat-label">Costo cloud/anno</span><span class="scenario-stat-val red">€70.000–140.000</span></div>
+          <div class="scenario-stat"><span class="scenario-stat-label">Hardware on-prem</span><span class="scenario-stat-val">€80.000–160.000</span></div>
+          <div class="scenario-stat"><span class="scenario-stat-label">Alternativa API</span><span class="scenario-stat-val red">€80.000–400.000/anno</span></div>
+        </div>
+      </div>
+    </div>
+
+    <h3 id="sc-3yr">TCO comparativo a 3 anni per scenario</h3>
+    <p>Il costo totale a 3 anni include hardware (o cloud GPU), setup, personale e operatività. Il personale è la voce che spesso non viene calcolata — nei tre scenari assumiamo rispettivamente 0.1, 0.3 e 0.8 FTE dedicati al sistema LLM.</p>
+
+    <div class="cost-breakdown">
+      <div class="cost-row header">
+        <div class="cost-label">Scenario + opzione</div>
+        <div class="cost-val">TCO 3 anni</div>
+        <div class="cost-val">vs API cloud</div>
+      </div>
+      <div class="cost-row">
+        <div class="cost-label"><strong>A — Leggero, cloud privato</strong><span>GPU cloud solo ore lavorative + personale</span></div>
+        <div class="cost-val">€38.000–75.000</div>
+        <div class="cost-val" style="color:var(--red);font-size:12px">API: €1.500–6.000 → NON conveniente</div>
+      </div>
+      <div class="cost-row">
+        <div class="cost-label"><strong>A — Leggero, on-premise</strong><span>Hardware RTX 4090 + personale 0.1 FTE</span></div>
+        <div class="cost-val">€28.000–50.000</div>
+        <div class="cost-val" style="color:var(--red);font-size:12px">API: €1.500–6.000 → NON conveniente</div>
+      </div>
+      <div class="cost-row">
+        <div class="cost-label"><strong>B — Medio, cloud privato</strong><span>A100 uso lavorativo + personale 0.3 FTE</span></div>
+        <div class="cost-val">€60.000–130.000</div>
+        <div class="cost-val" style="color:var(--amber);font-size:12px">API: €24.000–75.000 → Zona grigia</div>
+      </div>
+      <div class="cost-row">
+        <div class="cost-label"><strong>B — Medio, on-premise</strong><span>2× A100 + personale 0.3 FTE</span></div>
+        <div class="cost-val">€90.000–200.000</div>
+        <div class="cost-val" style="color:var(--red);font-size:12px">API: €24.000–75.000 → NON conveniente (anno 1)</div>
+      </div>
+      <div class="cost-row">
+        <div class="cost-label"><strong>C — Intensivo, cloud privato</strong><span>Cluster A100 24/7 + personale 0.8 FTE</span></div>
+        <div class="cost-val">€280.000–520.000</div>
+        <div class="cost-val" style="color:var(--green);font-size:12px">API: €240.000–1.200.000 → Conveniente</div>
+      </div>
+      <div class="cost-row">
+        <div class="cost-label"><strong>C — Intensivo, on-premise</strong><span>Cluster GPU proprio + personale 0.8 FTE</span></div>
+        <div class="cost-val">€360.000–560.000</div>
+        <div class="cost-val" style="color:var(--green);font-size:12px">API: €240.000–1.200.000 → Conveniente a volume alto</div>
+      </div>
+    </div>
+
+    <div class="ibox">
+      <span class="ibox-label">La lettura corretta di questa tabella</span>
+      <p>Per uso leggero e medio, <strong>le API cloud con piano enterprise sono quasi sempre più economiche del self-hosting</strong> quando si include il personale. Il self-hosting diventa economicamente razionale solo a volumi molto alti — scenario C, con centinaia di migliaia di query/mese. La motivazione economica per il self-hosting in scenari A e B è debole; la motivazione deve essere principalmente di sicurezza dei dati, non di risparmio.</p>
+    </div>
+
+  </div>
+</div>
+
+
+<!-- ══════════════════════════════════
+     TAB 3 — COSTI API PROVIDER
+══════════════════════════════════ -->
+<div class="tab-panel" id="t3">
+  <aside class="panel-aside">
+    <div class="aside-label">In questa sezione</div>
+    <nav>
+      <a href="#api-token">Come funziona il pricing API</a>
+      <a href="#api-prezzi">Prezzi correnti</a>
+      <a href="#api-enterprise">Piani enterprise</a>
+      <a href="#api-calcolo">Calcolo del costo</a>
+    </nav>
+  </aside>
+  <div class="panel-content">
+
+    <h3 id="api-token">Come funziona il pricing a token</h3>
+    <p>I provider API addebitano in base al numero di <strong>token</strong> processati — unità di testo più piccole di una parola (mediamente ~0.75 parole per token in italiano/inglese). Il costo ha due componenti: <strong>token in input</strong> (il testo che si invia al modello, incluso il system prompt e il contesto RAG) e <strong>token in output</strong> (il testo generato dal modello). L'output costa tipicamente 2–4 volte di più dell'input.</p>
+    <p>Per dare un'idea della scala: una query tipica a un sistema RAG su documentazione tecnica potrebbe includere 500 token di system prompt, 300 token di contesto RAG recuperato, 50 token di domanda utente = 850 token input, più ~200 token di risposta output. Con GPT-4o a €2.5/M token input + €10/M token output, questa query costa circa €0.002 — due millesimi di euro. Diecimila di queste query costano €20.</p>
+
+    <h3 id="api-prezzi">Prezzi API correnti (inizio 2026)</h3>
+
+    <div class="ibox amber">
+      <span class="ibox-label">Avvertenza</span>
+      <p>I prezzi API cambiano frequentemente — OpenAI ha ridotto i prezzi più volte negli ultimi due anni. <strong>Verificare sempre i prezzi aggiornati sui siti ufficiali dei provider prima di fare calcoli definitivi.</strong> I prezzi qui sono indicativi e basati su gennaio 2026.</p>
+    </div>
+
+    <table class="api-table">
+      <thead>
+        <tr>
+          <th>Modello</th>
+          <th>Provider</th>
+          <th>Input (per 1M token)</th>
+          <th>Output (per 1M token)</th>
+          <th>Note</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>GPT-4o</td>
+          <td>OpenAI</td>
+          <td style="color:var(--amber)">~€2.3</td>
+          <td style="color:var(--amber)">~€9.2</td>
+          <td>Modello di riferimento. Prezzi scesi ~3× in 18 mesi.</td>
+        </tr>
+        <tr>
+          <td>GPT-4o mini</td>
+          <td>OpenAI</td>
+          <td style="color:var(--green)">~€0.14</td>
+          <td style="color:var(--green)">~€0.55</td>
+          <td>Ottimo per task semplici e classificazione. Molto economico.</td>
+        </tr>
+        <tr>
+          <td>Claude Sonnet 4.5</td>
+          <td>Anthropic</td>
+          <td style="color:var(--amber)">~€2.75</td>
+          <td style="color:var(--amber)">~€13.75</td>
+          <td>Forte su ragionamento e documenti lunghi.</td>
+        </tr>
+        <tr>
+          <td>Claude Haiku 4.5</td>
+          <td>Anthropic</td>
+          <td style="color:var(--green)">~€0.23</td>
+          <td style="color:var(--green)">~€1.15</td>
+          <td>Veloce ed economico per task ripetitivi.</td>
+        </tr>
+        <tr>
+          <td>Gemini 1.5 Pro</td>
+          <td>Google</td>
+          <td style="color:var(--amber)">~€1.15</td>
+          <td style="color:var(--amber)">~€3.45</td>
+          <td>Context window 1M token — ottimo per documenti molto lunghi.</td>
+        </tr>
+        <tr>
+          <td>Gemini 1.5 Flash</td>
+          <td>Google</td>
+          <td style="color:var(--green)">~€0.07</td>
+          <td style="color:var(--green)">~€0.28</td>
+          <td>Tra i più economici disponibili. Qualità sorprendente.</td>
+        </tr>
+        <tr>
+          <td>Mistral Large</td>
+          <td>Mistral AI</td>
+          <td style="color:var(--amber)">~€1.80</td>
+          <td style="color:var(--amber)">~€5.40</td>
+          <td>Provider EU. Buona alternativa per requisiti di giurisdizione.</td>
+        </tr>
+        <tr>
+          <td>Mistral Small</td>
+          <td>Mistral AI</td>
+          <td style="color:var(--green)">~€0.18</td>
+          <td style="color:var(--green)">~€0.55</td>
+          <td>Economico, provider EU, Apache 2.0 per self-hosting.</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <h3 id="api-enterprise">Piani enterprise: struttura del costo</h3>
+    <p>I piani enterprise dei principali provider non si basano sul pricing a token standard — includono componenti aggiuntive:</p>
+    <p><strong>OpenAI Enterprise:</strong> pricing a consumo (token) con garanzie di zero data retention, DPA, SLA dedicato. Il costo per token rimane simile all'API standard ma con commitment annuale che garantisce prezzi e condizioni. Stima per uso medio (50M token/mese): €1.500–5.000/mese.</p>
+    <p><strong>Anthropic Claude for Enterprise:</strong> struttura simile con zero retention, DPA GDPR, supporto dedicato. Pricing basato su utilizzo con sconti per commitment.</p>
+    <p><strong>Microsoft Azure OpenAI:</strong> integra i modelli OpenAI nell'infrastruttura Azure, con i benefici del tenant Azure aziendale già esistente per molte aziende. Pricing identico all'API OpenAI ma con la governance Azure già in uso.</p>
+
+    <h3 id="api-calcolo">Come calcolare il costo API per il proprio caso</h3>
+    <p>Formula base: <strong>Costo mensile = (query/mese × token_input_medi × prezzo_input) + (query/mese × token_output_medi × prezzo_output)</strong></p>
+    <p>Valori tipici per un sistema RAG su documentazione tecnica: 800–1.500 token input (system prompt + contesto RAG + domanda), 200–400 token output. Con GPT-4o mini a €0.14/M input + €0.55/M output, 50.000 query/mese costano circa <strong>€35–70/mese</strong> — meno di €1.000/anno.</p>
+
+    <div class="ibox green">
+      <span class="ibox-label">Il trend che cambia il calcolo</span>
+      <p>I prezzi API sono scesi in modo drastico negli ultimi 24 mesi. GPT-4o mini oggi costa circa 50× meno di GPT-4 due anni fa, con qualità comparabile su molti task. Questo trend <strong>sposta il break-even del self-hosting a volumi sempre più alti</strong>. Un calcolo di break-even fatto 18 mesi fa potrebbe non essere più valido oggi. Aggiornare il calcolo prima di qualsiasi decisione.</p>
+    </div>
+
+  </div>
+</div>
+
+
+<!-- ══════════════════════════════════
+     TAB 4 — BREAK-EVEN
+══════════════════════════════════ -->
+<div class="tab-panel" id="t4">
+  <aside class="panel-aside">
+    <div class="aside-label">In questa sezione</div>
+    <nav>
+      <a href="#be-meccanismo">Il meccanismo del break-even</a>
+      <a href="#be-chart">Visualizzazione grafica</a>
+      <a href="#be-soglie">Soglie indicative</a>
+      <a href="#be-fattori">Fattori che spostano il punto</a>
+    </nav>
+  </aside>
+  <div class="panel-content">
+
+    <h3 id="be-meccanismo">Il meccanismo del break-even</h3>
+    <p>Il self-hosting ha una struttura di costo a <strong>U invertita</strong> rispetto al volume: costi fissi alti indipendentemente dall'uso, costo marginale per query quasi zero. Le API hanno il comportamento opposto: costo fisso vicino a zero, costo che cresce linearmente con il volume.</p>
+    <p>Il punto di break-even è il volume mensile di query oltre il quale il self-hosting diventa più economico. Sotto quel volume, le API costano meno. Sopra, il self-hosting ammortizza i costi fissi su abbastanza query da risultare conveniente.</p>
+
+    <div class="breakeven-wrap" id="be-chart">
+      <span class="breakeven-label">Andamento costi cumulativi — Self-hosted vs API (scenario medio, 36 mesi)</span>
+      <div class="be-chart">
+        <div class="be-axis-y">
+          <span>€150k</span>
+          <span>€120k</span>
+          <span>€90k</span>
+          <span>€60k</span>
+          <span>€30k</span>
+          <span>€0</span>
+        </div>
+        <div class="be-plot">
+          <div class="be-grid-line" style="bottom:80%;"></div>
+          <div class="be-grid-line" style="bottom:60%;"></div>
+          <div class="be-grid-line" style="bottom:40%;"></div>
+          <div class="be-grid-line" style="bottom:20%;"></div>
+          <!-- Self-hosted: alto investimento iniziale poi cresce lentamente -->
+          <svg class="be-line" viewBox="0 0 100 100" preserveAspectRatio="none">
+            <polyline points="0,80 5,48 10,45 20,42 30,39 40,37 50,35 60,33 70,31 80,29 90,27 100,25"
+              fill="none" stroke="#a07ef0" stroke-width="1.5"/>
+          </svg>
+          <!-- API: parte bassa ma cresce linearmente -->
+          <svg class="be-line" viewBox="0 0 100 100" preserveAspectRatio="none">
+            <polyline points="0,98 10,85 20,72 30,58 40,46 50,34 55,28 60,22 70,10 80,5 100,0"
+              fill="none" stroke="#f0b050" stroke-width="1.5"/>
+          </svg>
+          <!-- Crosshair al break-even (~mese 18) -->
+          <div class="be-crosshair" style="left:50%;">
+            <div class="be-crosshair-label">Break-even ~mese 18</div>
+          </div>
+          <!-- Labels linee -->
+          <span class="be-label-line" style="top:22%;color:var(--violet);">Self-hosted</span>
+          <span class="be-label-line" style="top:8%;color:var(--amber);">API (volume alto)</span>
+        </div>
+      </div>
+      <div class="be-axis-x">
+        <span>Mese 0</span>
+        <span>Mese 6</span>
+        <span>Mese 12</span>
+        <span>Mese 18</span>
+        <span>Mese 24</span>
+        <span>Mese 30</span>
+        <span>Mese 36</span>
+      </div>
+    </div>
+
+    <h3 id="be-soglie">Soglie di break-even indicative</h3>
+    <p>Le soglie variano significativamente in base al modello API scelto (costoso vs economico), alla configurazione hardware e al personale. Questi valori assumono uso di modelli mid-range (GPT-4o o equivalente) e configurazione cloud privata.</p>
+
+    <div class="cost-breakdown">
+      <div class="cost-row header">
+        <div class="cost-label">Configurazione self-hosted</div>
+        <div class="cost-val">Break-even mensile</div>
+        <div class="cost-val">Orizzonte temporale</div>
+      </div>
+      <div class="cost-row">
+        <div class="cost-label"><strong>Cloud GPU leggero + personale 0.1 FTE</strong><span>RTX 4090 cloud, Llama 8B, ~€2.500/mese fissi</span></div>
+        <div class="cost-val highlight">~200.000 query/mese</div>
+        <div class="cost-val" style="font-size:12px;color:var(--ink4)">vs GPT-4o mid tier</div>
+      </div>
+      <div class="cost-row">
+        <div class="cost-label"><strong>Cloud GPU medio + personale 0.3 FTE</strong><span>A100 cloud, Llama 70B, ~€5.000/mese fissi</span></div>
+        <div class="cost-val highlight">~400.000 query/mese</div>
+        <div class="cost-val" style="font-size:12px;color:var(--ink4)">vs GPT-4o mid tier</div>
+      </div>
+      <div class="cost-row">
+        <div class="cost-label"><strong>On-premise + personale 0.5 FTE</strong><span>2× A100, ~€4.000/mese opex (anni 2-3)</span></div>
+        <div class="cost-val highlight">~300.000 query/mese</div>
+        <div class="cost-val" style="font-size:12px;color:var(--ink4)">da anno 2 in poi</div>
+      </div>
+      <div class="cost-row">
+        <div class="cost-label"><strong>Confronto con API economiche</strong><span>vs GPT-4o mini, Gemini Flash (€0.07–0.55/M token)</span></div>
+        <div class="cost-val highlight">~2.000.000+ query/mese</div>
+        <div class="cost-val" style="font-size:12px;color:var(--ink4)">Difficile giustificare economicamente</div>
+      </div>
+    </div>
+
+    <h3 id="be-fattori">Fattori che spostano il punto di break-even</h3>
+    <p><strong>Spostano il break-even verso volumi più bassi</strong> (favoriscono il self-hosting): uso di modelli API costosi (GPT-4o, Claude Sonnet), alto numero di token per query (documenti lunghi, RAG con molto contesto), uso 24/7 che massimizza l'utilizzo dell'hardware, aziende con personale IT già disponibile che assorbe il costo MLOps.</p>
+    <p><strong>Spostano il break-even verso volumi più alti</strong> (favoriscono le API): uso di modelli API economici (GPT-4o mini, Gemini Flash), query corte con poco contesto, uso irregolare che non giustifica hardware dedicato, necessità di assumere personale MLOps dedicato.</p>
+
+    <div class="ibox red">
+      <span class="ibox-label">Il break-even non è l'unico criterio</span>
+      <p>Il calcolo del break-even risponde alla domanda "quando è più economico?". Ma per molte organizzazioni la motivazione principale del self-hosting non è economica — è la <strong>sicurezza dei dati</strong>. Un'azienda che non può inviare certe informazioni fuori dal perimetro aziendale potrebbe scegliere il self-hosting anche sapendo che costerà di più. <strong>Il break-even è rilevante solo se il criterio decisionale include il costo come variabile principale.</strong></p>
+    </div>
+
+  </div>
+</div>
+
+
+<!-- ══════════════════════════════════
+     TAB 5 — COSTI NASCOSTI
+══════════════════════════════════ -->
+<div class="tab-panel" id="t5">
+  <aside class="panel-aside">
+    <div class="aside-label">In questa sezione</div>
+    <nav>
+      <a href="#cn-intro">Cosa viene dimenticato</a>
+      <a href="#cn-lista">Le voci nascoste</a>
+      <a href="#cn-roi">Il ROI reale</a>
+    </nav>
+  </aside>
+  <div class="panel-content">
+
+    <h3 id="cn-intro">I costi che non compaiono nel preventivo iniziale</h3>
+    <p>Quasi tutte le valutazioni che sottostimano il costo del self-hosting lo fanno perché considerano solo le voci ovvie — hardware o cloud GPU, e al massimo il setup iniziale. Le voci qui elencate sono quelle sistematicamente dimenticate o minimizzate, che nella pratica rappresentano spesso il 40–60% del costo totale.</p>
+
+    <div class="hidden-list" id="cn-lista">
+
+      <div class="hidden-item high">
+        <div class="hi-stripe"></div>
+        <div class="hi-body">
+          <h4>Personale specializzato continuativo</h4>
+          <p>Non basta qualcuno che fa il setup iniziale. Un sistema LLM in produzione richiede <strong>manutenzione continua</strong>: aggiornamenti del framework di serving, patch di sicurezza, monitoring degli alert, test di regressione dopo ogni cambio, gestione degli accessi, troubleshooting di problemi di performance. Un MLOps part-time (0.3 FTE) in un'azienda manifatturiera media significa €18.000–27.000/anno — ogni anno, non solo anno 1.</p>
+        </div>
+        <div class="hi-impact high"><span>Impatto</span><strong>€15k–27k/anno</strong></div>
+      </div>
+
+      <div class="hidden-item high">
+        <div class="hi-stripe"></div>
+        <div class="hi-body">
+          <h4>Aggiornamento del modello</h4>
+          <p>Come discusso nel Report C3, i modelli evolvono ogni 6–12 mesi con miglioramenti significativi. Ogni aggiornamento richiede: valutazione della nuova versione, test di regressione su tutti i casi d'uso, eventuale re-fine-tuning, migrazione graduale in produzione. <strong>Per un sistema mid-range, stimare 3–8 giorni di lavoro specializzato per ogni aggiornamento maggiore</strong>, due volte l'anno.</p>
+        </div>
+        <div class="hi-impact high"><span>Impatto</span><strong>€3k–10k/anno</strong></div>
+      </div>
+
+      <div class="hidden-item med">
+        <div class="hi-stripe"></div>
+        <div class="hi-body">
+          <h4>Downtime e ridondanza</h4>
+          <p>Un sistema LLM senza ridondanza è un single point of failure. Se il server GPU si guasta o richiede manutenzione, il sistema non è disponibile. <strong>Per un uso produttivo che gli utenti dipendono, serve ridondanza</strong> — che significa hardware di backup o failover su cloud. Senza ridondanza, pianificare il costo di downtime accettato (stima: 2–5 ore/mese di manutenzione programmata + imprevisti).</p>
+        </div>
+        <div class="hi-impact med"><span>Impatto</span><strong>Downtime + €5k–20k</strong></div>
+      </div>
+
+      <div class="hidden-item med">
+        <div class="hi-stripe"></div>
+        <div class="hi-body">
+          <h4>Costruzione e manutenzione del sistema RAG</h4>
+          <p>Il modello da solo non fa quasi nulla di utile per il manifatturiero. Il valore viene dal sistema RAG che collega il modello alla documentazione aziendale. <strong>Costruire il pipeline RAG (indicizzazione documenti, vector database, retrieval, prompt engineering) richiede tipicamente 2–6 settimane di sviluppo</strong> e poi manutenzione continua: aggiornamento documenti, ottimizzazione del retrieval, gestione di documenti nuovi o modificati.</p>
+        </div>
+        <div class="hi-impact med"><span>Impatto</span><strong>€5k–20k setup + manutenzione</strong></div>
+      </div>
+
+      <div class="hidden-item med">
+        <div class="hi-stripe"></div>
+        <div class="hi-body">
+          <h4>Integrazione con sistemi aziendali</h4>
+          <p>Connettere il sistema LLM con ERP, MES, PLM, documentale esistenti è spesso il lavoro più lungo e costoso dell'intero progetto — molto più del deploy del modello. <strong>Ogni integrazione richiede API, autenticazione, gestione degli errori, testing.</strong> Stimare 2–8 settimane di sviluppo per integrazione, a seconda della complessità del sistema target.</p>
+        </div>
+        <div class="hi-impact med"><span>Impatto</span><strong>€5k–30k per integrazione</strong></div>
+      </div>
+
+      <div class="hidden-item low">
+        <div class="hi-stripe"></div>
+        <div class="hi-body">
+          <h4>Formazione degli utenti e change management</h4>
+          <p>Un sistema LLM usato male produce risultati peggiori di uno non usato. <strong>Gli utenti devono capire cosa il sistema sa fare, cosa non sa fare, come formulare le query, e quando non fidarsi delle risposte.</strong> Stimare 2–4 ore di formazione per utente più materiali e sessioni di Q&A ricorrenti. Per 50 utenti: 100–200 ore di formazione.</p>
+        </div>
+        <div class="hi-impact low"><span>Impatto</span><strong>€2k–8k</strong></div>
+      </div>
+
+      <div class="hidden-item low">
+        <div class="hi-stripe"></div>
+        <div class="hi-body">
+          <h4>Compliance, audit e documentazione</h4>
+          <p>Un sistema AI in produzione che elabora dati aziendali deve essere documentato: registro dei trattamenti (GDPR), policy di utilizzo, procedure di audit, documentazione tecnica per eventuali ispezioni. <strong>Non è un costo enorme ma è un costo reale</strong>, spesso delegato al DPO o al team legale/compliance con un overhead non trascurabile.</p>
+        </div>
+        <div class="hi-impact low"><span>Impatto</span><strong>€1k–5k/anno</strong></div>
+      </div>
+
+    </div>
+
+    <h3 id="cn-roi">Il ROI reale: come calcolarlo correttamente</h3>
+    <p>Il ROI del self-hosting (o di qualsiasi sistema LLM) non si calcola solo sui costi — va calcolato sul valore generato. Il valore tipicamente proviene da: riduzione del tempo per task ripetitivi (ore risparmiate × costo orario del personale), riduzione degli errori in processi critici (costo medio di un errore × riduzione del tasso di errore), miglioramento della velocità di risposta (valore del tempo risparmiato per utenti o clienti).</p>
+
+    <table class="roi-table">
+      <thead><tr><th>Caso d'uso</th><th>Valore stimato</th><th>Come misurarlo</th></tr></thead>
+      <tbody>
+        <tr>
+          <td>Q&A su documentazione tecnica (operatori)</td>
+          <td>10–30 min risparmiate/query × €25/h operatore × n. query/mese</td>
+          <td>Confronto tempo ricerca manuale vs. con sistema</td>
+        </tr>
+        <tr>
+          <td>Classificazione e routing non conformità</td>
+          <td>Riduzione tempo classificazione manuale + riduzione errori di routing</td>
+          <td>Before/after su campione di NC classificate</td>
+        </tr>
+        <tr>
+          <td>Supporto redazione documenti tecnici</td>
+          <td>30–60% riduzione tempo redazione per document type</td>
+          <td>Cronometrare campione prima e dopo adozione</td>
+        </tr>
+        <tr>
+          <td>Risposta a richieste commerciali standard</td>
+          <td>Riduzione tempo risposta + miglioramento tasso di conversione</td>
+          <td>Tempo medio risposta + qualità percepita cliente</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <div class="ibox green">
+      <span class="ibox-label">Regola pratica per il ROI</span>
+      <p>Per giustificare un investimento in self-hosting da €50.000 nel primo anno, il sistema deve generare almeno €50.000 di valore misurabile — equivalente a circa <strong>2.000 ore di lavoro risparmiate a €25/h</strong>, o <strong>167 ore/mese</strong>. Con 50 utenti che risparmiano in media 3–4 ore/mese grazie al sistema, il ROI è positivo. È un calcolo fattibile — ma va fatto esplicitamente, non assunto.</p>
+    </div>
+
+  </div>
+</div>
+
+
+<!-- ══════════════════════════════════
+     TAB 6 — SIMULATORE
+══════════════════════════════════ -->
+<div class="tab-panel" id="t6">
+  <aside class="panel-aside">
+    <div class="aside-label">In questa sezione</div>
+    <nav>
+      <a href="#sim-tool">Simulatore costi</a>
+      <a href="#sim-note">Come interpretare</a>
+    </nav>
+  </aside>
+  <div class="panel-content">
+
+    <h3 id="sim-tool">Simulatore: self-hosting vs API</h3>
+    <p>Inserisci i parametri del tuo scenario per ottenere una stima comparativa. I valori sono orientativi — per una valutazione definitiva è necessario dettagliare tutte le voci di costo con i fornitori specifici.</p>
+
+    <div class="calc-wrap">
+      <span class="calc-label">Parametri del tuo scenario</span>
+
+      <div class="calc-grid">
+        <div class="calc-field">
+          <label>Query al mese (stima)</label>
+          <input type="number" id="monthly-queries" value="50000" min="1000" step="1000">
+        </div>
+        <div class="calc-field">
+          <label>Token medi per query (input + output)</label>
+          <input type="number" id="tokens-per-query" value="1200" min="200" step="100">
+        </div>
+        <div class="calc-field">
+          <label>Modello API di riferimento</label>
+          <select id="api-model">
+            <option value="0.0015">GPT-4o mini / Gemini Flash (economico)</option>
+            <option value="0.006" selected>GPT-4o / Claude Sonnet (mid-range)</option>
+            <option value="0.018">Claude Opus / GPT-4 (premium)</option>
+          </select>
+        </div>
+        <div class="calc-field">
+          <label>Architettura self-hosted</label>
+          <select id="sh-arch">
+            <option value="1500">Cloud GPU leggero (RTX 4090, uso lavorativo)</option>
+            <option value="3500" selected>Cloud GPU medio (A100, uso lavorativo)</option>
+            <option value="8000">Cloud GPU intensivo (A100 24/7)</option>
+            <option value="2500">On-premise (costo mensile opex anni 2-3)</option>
+          </select>
+        </div>
+        <div class="calc-field">
+          <label>FTE personale dedicato (es. 0.3)</label>
+          <input type="number" id="fte" value="0.3" min="0.05" max="2" step="0.05">
+        </div>
+        <div class="calc-field">
+          <label>Costo annuo FTE (€)</label>
+          <input type="number" id="fte-cost" value="70000" min="30000" step="5000">
+        </div>
+      </div>
+
+      <div class="calc-results" id="calc-results">
+        <div class="calc-result-item">
+          <span class="calc-result-label">Costo API/mese</span>
+          <div class="calc-result-val" id="res-api">—</div>
+          <div class="calc-result-sub">Solo token, piano mid-range</div>
+        </div>
+        <div class="calc-result-item">
+          <span class="calc-result-label">Costo self-hosted/mese</span>
+          <div class="calc-result-val" id="res-sh">—</div>
+          <div class="calc-result-sub">Hardware + personale</div>
+        </div>
+        <div class="calc-result-item">
+          <span class="calc-result-label">Opzione più economica</span>
+          <div class="calc-result-val" id="res-winner">—</div>
+          <div class="calc-result-sub" id="res-diff">—</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="ibox amber" id="sim-note">
+      <span class="ibox-label">Come interpretare i risultati</span>
+      <p>
+      Il simulatore confronta il costo mensile delle due opzioni. <strong>Non include:</strong> il costo di setup e integrazione una-tantum (tipicamente €5.000–40.000 per il self-hosting), i costi nascosti descritti nella Tab 5, il costo del piano enterprise API (zero retention, DPA) che aggiunge tipicamente 20–50% al prezzo base, e il valore della sicurezza dei dati — che è intangibile ma reale.<br><br>
+      <strong>Usa questo simulatore per avere un ordine di grandezza, non come base per una decisione definitiva.</strong> Per una proposta di investimento formale, dettagliare ogni voce con preventivi reali da fornitori.
+      </p>
+    </div>
+
+    <div class="ibox blue">
+      <span class="ibox-label">Prossimi report della serie</span>
+      <p>
+      <strong>C6 — Agenti su modelli self-hosted:</strong> cosa cambia architetturalmente, capability e limiti, framework compatibili, sicurezza agentiva.<br>
+      <strong>C7 — Implementazione:</strong> roadmap pratica, integrazione sistemi esistenti, team necessario, milestone e KPI.
+      </p>
+    </div>
+
+  </div>
+</div>
+
+
+<footer>
+  <p>Report generato con Claude · Anthropic · 2026</p>
+  <p>Serie C: Self-Hosting LLM · Report C5 — I Costi</p>
+</footer>
+
+<script>
+document.querySelectorAll('.tab-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    const target = btn.dataset.tab;
+    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+    document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+    btn.classList.add('active');
+    document.getElementById(target).classList.add('active');
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  });
+});
+
+function calcCosts() {
+  const queries   = parseFloat(document.getElementById('monthly-queries').value) || 50000;
+  const tokens    = parseFloat(document.getElementById('tokens-per-query').value) || 1200;
+  const apiRate   = parseFloat(document.getElementById('api-model').value) || 0.006;
+  const shFixed   = parseFloat(document.getElementById('sh-arch').value) || 3500;
+  const fte       = parseFloat(document.getElementById('fte').value) || 0.3;
+  const fteCost   = parseFloat(document.getElementById('fte-cost').value) || 70000;
+
+  const apiCost = (queries * tokens / 1000000) * apiRate * 1000;
+  const shCost  = shFixed + (fte * fteCost / 12);
+
+  const fmt = v => '€' + Math.round(v).toLocaleString('it-IT');
+
+  document.getElementById('res-api').textContent = fmt(apiCost);
+  document.getElementById('res-sh').textContent  = fmt(shCost);
+
+  const winner = document.getElementById('res-winner');
+  const diff   = document.getElementById('res-diff');
+  const delta  = Math.abs(apiCost - shCost);
+  const pct    = Math.round(delta / Math.min(apiCost, shCost) * 100);
+
+  if (apiCost < shCost) {
+    winner.textContent = 'API';
+    winner.className = 'calc-result-val better';
+    diff.textContent = `Self-hosted costa ${fmt(delta)}/mese (${pct}%) in più`;
+  } else if (shCost < apiCost) {
+    winner.textContent = 'Self-hosted';
+    winner.className = 'calc-result-val better';
+    diff.textContent = `API costa ${fmt(delta)}/mese (${pct}%) in più`;
+  } else {
+    winner.textContent = 'Pari';
+    winner.className = 'calc-result-val';
+    diff.textContent = 'Sei al punto di break-even';
+  }
+}
+
+['monthly-queries','tokens-per-query','api-model','sh-arch','fte','fte-cost']
+  .forEach(id => document.getElementById(id).addEventListener('input', calcCosts));
+
+calcCosts();
+</script>
+
+</body>
+</html>

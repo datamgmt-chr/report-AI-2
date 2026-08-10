@@ -1,0 +1,787 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Come "ragiona" un LLM</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=Instrument+Sans:wght@300;400;500&display=swap');
+
+:root {
+  --bg: #0f0f13;
+  --surface: #16161c;
+  --surface2: #1e1e26;
+  --border: #2a2a36;
+  --text: #e2dfd8;
+  --muted: #6b6878;
+  --accent: #c9a96e;   /* oro caldo */
+  --accent2: #7eb8d4;  /* azzurro */
+  --accent3: #a8c98a;  /* verde */
+  --accent4: #d4887a;  /* terracotta */
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: 'Instrument Sans', sans-serif;
+  font-size: 16px;
+  line-height: 1.75;
+  max-width: 880px;
+  margin: 0 auto;
+  padding: 0 0 100px;
+}
+
+/* HERO */
+.hero {
+  padding: 80px 60px 64px;
+  border-bottom: 1px solid var(--border);
+  position: relative;
+  overflow: hidden;
+}
+
+.hero::before {
+  content: '';
+  position: absolute;
+  top: -100px; right: -100px;
+  width: 500px; height: 500px;
+  background: radial-gradient(circle, rgba(201,169,110,0.06) 0%, transparent 70%);
+  pointer-events: none;
+}
+
+.hero-label {
+  font-size: 11px;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--accent);
+  margin-bottom: 28px;
+  font-weight: 500;
+}
+
+.hero h1 {
+  font-family: 'Playfair Display', serif;
+  font-size: clamp(34px, 6vw, 60px);
+  font-weight: 400;
+  line-height: 1.1;
+  letter-spacing: -0.02em;
+  margin-bottom: 20px;
+  color: var(--text);
+}
+
+.hero h1 em {
+  font-style: italic;
+  color: var(--accent);
+}
+
+.hero-intro {
+  font-size: 17px;
+  color: var(--muted);
+  max-width: 580px;
+  line-height: 1.7;
+  font-weight: 300;
+}
+
+.hero-target {
+  margin-top: 28px;
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 16px;
+  border: 1px solid var(--border);
+  border-radius: 2px;
+  font-size: 12px;
+  color: var(--muted);
+  letter-spacing: 0.06em;
+}
+
+.hero-target span { color: var(--accent); }
+
+/* CONTENT WRAPPER */
+.content { padding: 0 60px; }
+@media(max-width:640px){ .hero { padding: 50px 28px 48px; } .content { padding: 0 28px; } }
+
+/* SECTION */
+.section {
+  padding: 60px 0;
+  border-bottom: 1px solid var(--border);
+}
+.section:last-child { border-bottom: none; }
+
+.section-number {
+  font-size: 11px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--muted);
+  margin-bottom: 20px;
+  font-weight: 500;
+}
+
+.section h2 {
+  font-family: 'Playfair Display', serif;
+  font-size: clamp(24px, 4vw, 36px);
+  font-weight: 400;
+  line-height: 1.2;
+  margin-bottom: 24px;
+  color: var(--text);
+}
+
+.section h2 em { font-style: italic; color: var(--accent); }
+
+p { margin-bottom: 18px; color: var(--text); font-weight: 300; }
+p:last-child { margin-bottom: 0; }
+
+strong { font-weight: 500; color: var(--text); }
+
+/* GLOSSARY TERM */
+.term {
+  display: inline;
+  border-bottom: 1px dashed var(--accent);
+  color: var(--accent);
+  cursor: help;
+  position: relative;
+}
+
+/* PULLQUOTE */
+.pullquote {
+  margin: 36px 0;
+  padding: 28px 32px;
+  border-left: 3px solid var(--accent);
+  background: var(--surface);
+  border-radius: 0 4px 4px 0;
+}
+.pullquote p {
+  font-family: 'Playfair Display', serif;
+  font-size: 19px;
+  font-weight: 400;
+  font-style: italic;
+  line-height: 1.6;
+  color: var(--text);
+  margin: 0;
+}
+.pullquote .attr {
+  font-family: 'Instrument Sans', sans-serif;
+  font-size: 11px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--muted);
+  margin-top: 12px;
+  font-style: normal;
+  font-weight: 400;
+}
+
+/* DIAGRAM */
+.diagram {
+  margin: 36px 0;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 32px;
+  overflow-x: auto;
+}
+.diagram-label {
+  font-size: 10px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--muted);
+  text-align: center;
+  margin-top: 18px;
+  font-weight: 500;
+}
+
+/* TWO COL */
+.two-col {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+  margin: 28px 0;
+}
+@media(max-width:600px){ .two-col { grid-template-columns: 1fr; } }
+
+.card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 22px 24px;
+}
+.card-label {
+  font-size: 10px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  margin-bottom: 10px;
+  font-weight: 500;
+}
+.card p {
+  font-size: 14px;
+  line-height: 1.65;
+  margin: 0;
+  color: var(--muted);
+}
+.card p strong { color: var(--text); }
+
+/* HIGHLIGHT BOX */
+.highlight {
+  margin: 28px 0;
+  padding: 24px 28px;
+  border-radius: 6px;
+  border: 1px solid;
+}
+.highlight p { margin: 0; font-size: 15px; line-height: 1.7; }
+.highlight .hl-label {
+  font-size: 10px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  font-weight: 500;
+  margin-bottom: 10px;
+}
+
+/* COMPARISON */
+.versus {
+  display: grid;
+  grid-template-columns: 1fr 40px 1fr;
+  gap: 0;
+  margin: 32px 0;
+  align-items: stretch;
+}
+.versus-side {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 22px 24px;
+}
+.versus-mid {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--muted);
+  font-size: 18px;
+  font-weight: 300;
+}
+.versus-label {
+  font-size: 10px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  margin-bottom: 10px;
+  font-weight: 500;
+}
+.versus-side p { font-size: 14px; line-height: 1.65; margin: 0; color: var(--muted); }
+.versus-side p strong { color: var(--text); }
+@media(max-width:600px){ .versus { grid-template-columns: 1fr; } .versus-mid { display: none; } }
+
+/* NUMBERED LIST */
+.numbered {
+  counter-reset: item;
+  list-style: none;
+  margin: 24px 0;
+}
+.numbered li {
+  counter-increment: item;
+  display: flex;
+  gap: 20px;
+  padding: 16px 0;
+  border-bottom: 1px solid var(--border);
+  align-items: flex-start;
+}
+.numbered li:last-child { border-bottom: none; }
+.numbered li::before {
+  content: counter(item, decimal-leading-zero);
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--accent);
+  letter-spacing: 0.05em;
+  padding-top: 2px;
+  flex-shrink: 0;
+  width: 28px;
+}
+.numbered li .li-content { flex: 1; }
+.numbered li .li-title { font-weight: 500; margin-bottom: 4px; font-size: 15px; }
+.numbered li .li-text { font-size: 14px; color: var(--muted); line-height: 1.6; }
+
+/* SCALE VIZ */
+.scale-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 0;
+  border-bottom: 1px solid var(--border);
+}
+.scale-row:last-child { border-bottom: none; }
+.scale-label { width: 160px; font-size: 13px; color: var(--muted); flex-shrink: 0; }
+.scale-bar-wrap { flex: 1; height: 8px; background: var(--border); border-radius: 4px; overflow: hidden; }
+.scale-bar { height: 100%; border-radius: 4px; }
+.scale-note { width: 120px; font-size: 12px; color: var(--muted); text-align: right; }
+
+/* FINAL TAKEAWAY */
+.takeaway {
+  background: var(--surface2);
+  border: 1px solid var(--accent);
+  border-radius: 8px;
+  padding: 36px 40px;
+  margin-top: 48px;
+}
+.takeaway-label {
+  font-size: 11px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--accent);
+  margin-bottom: 20px;
+  font-weight: 500;
+}
+.takeaway h3 {
+  font-family: 'Playfair Display', serif;
+  font-size: 22px;
+  font-weight: 400;
+  margin-bottom: 16px;
+  color: var(--text);
+}
+.takeaway p { font-size: 15px; color: var(--muted); }
+.takeaway p strong { color: var(--text); }
+</style>
+</head>
+<body>
+
+<!-- HERO -->
+<div class="hero">
+  <div class="hero-label">Intelligenza Artificiale · Guida per Manager</div>
+  <h1>Come <em>"ragiona"</em><br>un'intelligenza artificiale</h1>
+  <div class="hero-intro">Un'analisi del meccanismo più discusso e meno compreso degli LLM: cosa significa davvero che una macchina "pensa", e cosa questo implica per chi li usa in azienda.</div>
+  <div class="hero-target">Target: <span>Manager aziendali — nessuna competenza tecnica richiesta</span></div>
+</div>
+
+<div class="content">
+
+<!-- ═══════════════════════════ -->
+<!-- SEZIONE 1 — IL PARADOSSO -->
+<!-- ═══════════════════════════ -->
+<div class="section">
+  <div class="section-number">01 — Il punto di partenza</div>
+  <h2>Il <em>paradosso</em> che tutti sentono ma nessuno sa spiegare</h2>
+
+  <p>Chiunque abbia usato ChatGPT, Claude o un sistema simile ha avuto almeno una volta questa esperienza: fai una domanda complessa, e la risposta è sorprendentemente articolata, coerente, persino acuta. Poi fai una domanda apparentemente più semplice — un conto preciso, una sequenza logica con molti passaggi — e il sistema sbaglia in modo quasi infantile.</p>
+
+  <p>Come è possibile? Come può uno strumento che scrive analisi strategiche brillanti non saper contare con sicurezza le lettere in una parola?</p>
+
+  <p>La risposta a questa domanda rivela qualcosa di fondamentale su <em>cosa sono</em> questi sistemi — e su come usarli in modo intelligente in azienda.</p>
+
+  <div class="pullquote">
+    <p>Un LLM non "pensa" come pensa un essere umano, e non calcola come calcola un computer tradizionale. È qualcosa di terzo — e capire cosa, cambia completamente il modo in cui lo si usa.</p>
+    <div class="attr">La tesi di questo report</div>
+  </div>
+</div>
+
+
+<!-- ═══════════════════════════ -->
+<!-- SEZIONE 2 — COME FUNZIONA -->
+<!-- ═══════════════════════════ -->
+<div class="section">
+  <div class="section-number">02 — Le basi: come funziona un LLM</div>
+  <h2>Una macchina che <em>completa sequenze</em> — non che "sa le risposte"</h2>
+
+  <p>Per capire il ragionamento di un LLM bisogna prima capire cosa fa concretamente. La descrizione tecnica è semplice: un LLM è addestrato a <strong>predire quale parola (o frammento di parola) viene dopo</strong>, dato tutto il testo che ha ricevuto fino a quel momento.</p>
+
+  <p>È un obiettivo in apparenza banale. Ma per farlo bene su miliardi di frasi diverse, il sistema deve costruire internamente una rappresentazione di grammatica, logica, fatti del mondo, stili, relazioni causali. Questa conoscenza non viene inserita da qualcuno: <strong>emerge come effetto collaterale</strong> dell'addestramento su quantità enormi di testo.</p>
+
+  <!-- DIAGRAM: the basic mechanism -->
+  <div class="diagram">
+    <svg viewBox="0 0 740 140" width="100%" style="display:block;">
+      <defs>
+        <marker id="ma" markerWidth="6" markerHeight="6" refX="3" refY="3" orient="auto">
+          <path d="M0,0 L6,3 L0,6 Z" fill="#6b6878"/>
+        </marker>
+        <marker id="mb" markerWidth="6" markerHeight="6" refX="3" refY="3" orient="auto">
+          <path d="M0,0 L6,3 L0,6 Z" fill="#c9a96e"/>
+        </marker>
+      </defs>
+
+      <!-- Input tokens -->
+      <text x="16" y="20" font-family="Instrument Sans" font-size="10" fill="#6b6878" letter-spacing="1">TESTO IN INGRESSO (prompt)</text>
+      <rect x="16" y="28" width="56" height="30" rx="3" fill="#1e1e26" stroke="#2a2a36" stroke-width="1"/>
+      <text x="44" y="47" text-anchor="middle" font-family="Instrument Sans" font-size="11" fill="#e2dfd8">La</text>
+      <rect x="78" y="28" width="56" height="30" rx="3" fill="#1e1e26" stroke="#2a2a36" stroke-width="1"/>
+      <text x="106" y="47" text-anchor="middle" font-family="Instrument Sans" font-size="11" fill="#e2dfd8">capitale</text>
+      <rect x="140" y="28" width="56" height="30" rx="3" fill="#1e1e26" stroke="#2a2a36" stroke-width="1"/>
+      <text x="168" y="47" text-anchor="middle" font-family="Instrument Sans" font-size="11" fill="#e2dfd8">d'Italia</text>
+      <rect x="202" y="28" width="40" height="30" rx="3" fill="#1e1e26" stroke="#2a2a36" stroke-width="1"/>
+      <text x="222" y="47" text-anchor="middle" font-family="Instrument Sans" font-size="11" fill="#e2dfd8">è</text>
+
+      <line x1="244" y1="43" x2="274" y2="43" stroke="#6b6878" stroke-width="1.5" marker-end="url(#ma)"/>
+
+      <!-- Model box -->
+      <rect x="276" y="14" width="140" height="58" rx="5" fill="#c9a96e" opacity="0.15" stroke="#c9a96e" stroke-width="1.5"/>
+      <text x="346" y="37" text-anchor="middle" font-family="Instrument Sans" font-size="11" fill="#c9a96e" font-weight="500">LLM</text>
+      <text x="346" y="54" text-anchor="middle" font-family="Instrument Sans" font-size="9" fill="#c9a96e" opacity="0.7">calcola probabilità</text>
+      <text x="346" y="65" text-anchor="middle" font-family="Instrument Sans" font-size="9" fill="#c9a96e" opacity="0.7">token successivo</text>
+
+      <line x1="416" y1="43" x2="446" y2="43" stroke="#c9a96e" stroke-width="1.5" marker-end="url(#mb)"/>
+
+      <!-- Probability distribution -->
+      <rect x="448" y="12" width="180" height="64" rx="4" fill="#1e1e26" stroke="#2a2a36"/>
+      <text x="538" y="30" text-anchor="middle" font-family="Instrument Sans" font-size="9" fill="#6b6878">distribuzione di probabilità</text>
+      <text x="462" y="46" font-family="Instrument Sans" font-size="10" fill="#a8c98a">Roma →</text>
+      <rect x="496" y="38" width="60" height="7" rx="2" fill="#a8c98a" opacity="0.7"/>
+      <text x="560" y="46" font-family="Instrument Sans" font-size="9" fill="#6b6878">78%</text>
+      <text x="462" y="62" font-family="Instrument Sans" font-size="10" fill="#6b6878">Milano →</text>
+      <rect x="496" y="54" width="16" height="7" rx="2" fill="#6b6878" opacity="0.5"/>
+      <text x="516" y="62" font-family="Instrument Sans" font-size="9" fill="#6b6878"> 12% ···</text>
+
+      <!-- Selected -->
+      <line x1="628" y1="43" x2="658" y2="43" stroke="#a8c98a" stroke-width="1.5" marker-end="url(#mb)"/>
+      <defs><marker id="mc" markerWidth="6" markerHeight="6" refX="3" refY="3" orient="auto"><path d="M0,0 L6,3 L0,6 Z" fill="#a8c98a"/></marker></defs>
+      <line x1="628" y1="43" x2="658" y2="43" stroke="#a8c98a" stroke-width="1.5" marker-end="url(#mc)"/>
+
+      <rect x="660" y="22" width="66" height="42" rx="4" fill="#a8c98a" opacity="0.2" stroke="#a8c98a" stroke-width="1.5"/>
+      <text x="693" y="47" text-anchor="middle" font-family="Instrument Sans" font-size="12" fill="#a8c98a" font-weight="500">Roma</text>
+
+      <!-- Loop note -->
+      <text x="370" y="105" text-anchor="middle" font-family="Instrument Sans" font-size="10" fill="#6b6878">"Roma" diventa parte del contesto → il ciclo ricomincia per il token successivo</text>
+      <path d="M 693,64 Q 693,100 346,100 Q 276,100 276,72" stroke="#6b6878" stroke-width="1" fill="none" stroke-dasharray="3" marker-end="url(#ma)"/>
+    </svg>
+    <div class="diagram-label">Il ciclo base: il modello predice un token alla volta — ogni token generato diventa contesto per il successivo</div>
+  </div>
+
+  <p>Tre elementi tecnici rendono possibile tutto questo, e vale la pena nominarli brevemente:</p>
+
+  <ul class="numbered">
+    <li>
+      <div class="li-content">
+        <div class="li-title">Gli embedding — la lingua interna del modello</div>
+        <div class="li-text">Ogni parola viene convertita in un vettore di numeri che ne cattura il significato. Parole simili finiscono "vicine" nello spazio numerico interno del modello. È la base su cui tutto il resto funziona.</div>
+      </div>
+    </li>
+    <li>
+      <div class="li-content">
+        <div class="li-title">L'architettura Transformer — la capacità di "guardare tutto insieme"</div>
+        <div class="li-text">Il meccanismo che permette al modello di valutare ogni parola alla luce di tutte le altre, indipendentemente dalla distanza. Quando elabora la parola "banca" capisce se si riferisce all'istituto finanziario o alla riva del fiume guardando l'intero contesto disponibile, non solo le parole adiacenti.</div>
+      </div>
+    </li>
+    <li>
+      <div class="li-content">
+        <div class="li-title">L'addestramento su scala — la fonte della conoscenza</div>
+        <div class="li-text">Il modello viene addestrato su quantità di testo equivalenti a milioni di libri. È questa scala — resa possibile dai Transformer, che possono essere addestrati in parallelo su migliaia di processori — che produce la ricchezza di conoscenza che percepiamo nelle risposte.</div>
+      </div>
+    </li>
+  </ul>
+</div>
+
+
+<!-- ═══════════════════════════ -->
+<!-- SEZIONE 3 — RAGIONAMENTO -->
+<!-- ═══════════════════════════ -->
+<div class="section">
+  <div class="section-number">03 — Il cuore del problema</div>
+  <h2>Cosa significa <em>"ragionare"</em> per un LLM</h2>
+
+  <p>Eccoci al paradosso. Se un LLM non fa altro che predire la parola successiva, come può produrre un piano strategico articolato, risolvere un problema logico complesso, o suggerire soluzioni creative a una sfida aziendale?</p>
+
+  <p>La risposta è controintuitiva: <strong>il ragionamento non è un modulo separato che si attiva</strong>. È una proprietà emergente del completamento di sequenze, quando quel completamento avviene su un modello addestrato su testi che contengono ragionamento.</p>
+
+  <div class="pullquote">
+    <p>Il modello ha "letto" milioni di testi in cui esseri umani ragionano ad alta voce — dimostrazioni matematiche, analisi strategiche, diagnosi mediche, codice commentato. Ha interiorizzato la <em>struttura</em> di come si ragiona, anche senza capirlo nel senso in cui lo capiamo noi.</p>
+    <div class="attr">Il meccanismo del ragionamento emergente</div>
+  </div>
+
+  <p>Quando scrivi "analizza i pro e i contro di questa strategia", il token più probabile dopo quella richiesta non è una risposta casuale: è qualcosa che assomiglia strutturalmente a un'analisi. Perché il modello ha visto milioni di volte come inizia e si sviluppa un'analisi ben fatta.</p>
+
+  <!-- DIAGRAM: what reasoning looks like inside -->
+  <div class="diagram">
+    <svg viewBox="0 0 740 200" width="100%" style="display:block;">
+      <defs>
+        <marker id="md" markerWidth="6" markerHeight="6" refX="3" refY="3" orient="auto">
+          <path d="M0,0 L6,3 L0,6 Z" fill="#7eb8d4"/>
+        </marker>
+      </defs>
+
+      <text x="370" y="20" text-anchor="middle" font-family="Instrument Sans" font-size="10" fill="#6b6878" letter-spacing="1">COSA SUCCEDE QUANDO UN LLM "RAGIONA"</text>
+
+      <!-- Pattern matching layer -->
+      <rect x="16" y="34" width="708" height="40" rx="4" fill="#1e1e26" stroke="#2a2a36"/>
+      <text x="40" y="50" font-family="Instrument Sans" font-size="10" fill="#6b6878">Testo in arrivo:</text>
+      <text x="130" y="50" font-family="Instrument Sans" font-size="11" fill="#e2dfd8">"Quali sono i rischi principali di questa acquisizione?"</text>
+      <text x="40" y="66" font-family="Instrument Sans" font-size="9" fill="#7eb8d4">→ il modello riconosce il pattern: domanda analitica su rischi aziendali</text>
+
+      <!-- Internal activation -->
+      <line x1="370" y1="74" x2="370" y2="94" stroke="#7eb8d4" stroke-width="1.5" marker-end="url(#md)"/>
+
+      <rect x="100" y="96" width="540" height="60" rx="4" fill="#7eb8d4" opacity="0.08" stroke="#7eb8d4" stroke-width="1"/>
+      <text x="370" y="116" text-anchor="middle" font-family="Instrument Sans" font-size="10" fill="#7eb8d4">Strutture attivate dall'addestramento:</text>
+      <text x="210" y="134" font-family="Instrument Sans" font-size="9" fill="#6b6878">analisi rischi M&amp;A</text>
+      <text x="340" y="134" font-family="Instrument Sans" font-size="9" fill="#6b6878">framework strategici</text>
+      <text x="470" y="134" font-family="Instrument Sans" font-size="9" fill="#6b6878">struttura: problema → dimensioni → impatto</text>
+
+      <line x1="370" y1="156" x2="370" y2="176" stroke="#7eb8d4" stroke-width="1.5" marker-end="url(#md)"/>
+
+      <rect x="60" y="178" width="620" height="18" rx="3" fill="#a8c98a" opacity="0.15" stroke="#a8c98a" stroke-width="1"/>
+      <text x="370" y="191" text-anchor="middle" font-family="Instrument Sans" font-size="9" fill="#a8c98a">Output: analisi strutturata con categorie di rischio, pesi, raccomandazioni — generata token per token</text>
+    </svg>
+    <div class="diagram-label">Il "ragionamento" non è un processo separato: è il completamento del testo guidato da pattern appresi su milioni di testi analitici</div>
+  </div>
+
+  <h3 style="font-family:'Playfair Display',serif;font-size:22px;font-weight:400;margin:36px 0 16px;color:var(--accent2);">La scoperta che ha cambiato tutto: il testo intermedio come memoria di lavoro</h3>
+
+  <p>C'è un fenomeno scoperto empiricamente che spiega perché i modelli moderni ragionano molto meglio di quelli di pochi anni fa: <strong>i LLM ragionano meglio quando "pensano ad alta voce"</strong>.</p>
+
+  <p>Se chiedi a un modello "quanto fa 347 × 28?" in modo diretto, ottieni più errori di se gli chiedi di mostrare i passaggi. Questo sembra strano: perché scrivere i calcoli intermedi dovrebbe aiutare?</p>
+
+  <p>La risposta è che ogni token generato diventa <strong>contesto per il token successivo</strong>. Quando il modello scrive "347 × 20 = 6940, poi 347 × 8 = 2776, quindi 6940 + 2776 = 9716", non sta "tenendo a mente" i numeri intermedi in qualche memoria interna — li sta scrivendo, e poi li usa come appoggio per il passo successivo. Il testo prodotto <em>è</em> la memoria di lavoro.</p>
+
+  <!-- DIAGRAM: chain of thought -->
+  <div class="diagram">
+    <svg viewBox="0 0 740 230" width="100%" style="display:block;">
+      <defs>
+        <marker id="me" markerWidth="6" markerHeight="6" refX="3" refY="3" orient="auto">
+          <path d="M0,0 L6,3 L0,6 Z" fill="#6b6878"/>
+        </marker>
+        <marker id="mf" markerWidth="6" markerHeight="6" refX="3" refY="3" orient="auto">
+          <path d="M0,0 L6,3 L0,6 Z" fill="#a8c98a"/>
+        </marker>
+      </defs>
+
+      <!-- WITHOUT chain of thought -->
+      <text x="170" y="20" text-anchor="middle" font-family="Instrument Sans" font-size="10" fill="#6b6878" letter-spacing="1">SENZA CATENA DI PENSIERO</text>
+
+      <rect x="16" y="30" width="200" height="36" rx="4" fill="#1e1e26" stroke="#2a2a36"/>
+      <text x="116" y="46" text-anchor="middle" font-family="Instrument Sans" font-size="10" fill="#6b6878">"Qual è il rischio principale</text>
+      <text x="116" y="60" text-anchor="middle" font-family="Instrument Sans" font-size="10" fill="#6b6878">dell'acquisizione X?"</text>
+
+      <line x1="216" y1="48" x2="246" y2="48" stroke="#6b6878" stroke-width="1.5" marker-end="url(#me)"/>
+
+      <rect x="248" y="30" width="100" height="36" rx="4" fill="#d4887a" opacity="0.2" stroke="#d4887a" stroke-width="1"/>
+      <text x="298" y="53" text-anchor="middle" font-family="Instrument Sans" font-size="10" fill="#d4887a">risposta diretta</text>
+
+      <text x="298" y="90" text-anchor="middle" font-family="Instrument Sans" font-size="9" fill="#d4887a">⚠ più errori, meno sfumature</text>
+      <text x="298" y="104" text-anchor="middle" font-family="Instrument Sans" font-size="9" fill="#6b6878">nessun contesto intermedio</text>
+      <text x="298" y="118" text-anchor="middle" font-family="Instrument Sans" font-size="9" fill="#6b6878">su cui appoggiarsi</text>
+
+      <!-- divider -->
+      <line x1="390" y1="14" x2="390" y2="220" stroke="#2a2a36" stroke-width="1"/>
+
+      <!-- WITH chain of thought -->
+      <text x="566" y="20" text-anchor="middle" font-family="Instrument Sans" font-size="10" fill="#a8c98a" letter-spacing="1">CON CATENA DI PENSIERO</text>
+
+      <rect x="406" y="30" width="200" height="36" rx="4" fill="#1e1e26" stroke="#2a2a36"/>
+      <text x="506" y="46" text-anchor="middle" font-family="Instrument Sans" font-size="10" fill="#6b6878">"Analizza passo per passo</text>
+      <text x="506" y="60" text-anchor="middle" font-family="Instrument Sans" font-size="10" fill="#6b6878">il rischio dell'acquisizione X"</text>
+
+      <line x1="506" y1="66" x2="506" y2="86" stroke="#a8c98a" stroke-width="1.5" marker-end="url(#mf)"/>
+
+      <rect x="426" y="88" width="160" height="24" rx="3" fill="#a8c98a" opacity="0.1" stroke="#a8c98a" stroke-width="0.8"/>
+      <text x="506" y="104" text-anchor="middle" font-family="Instrument Sans" font-size="9" fill="#a8c98a">Passo 1: contesto strategico...</text>
+
+      <line x1="506" y1="112" x2="506" y2="128" stroke="#a8c98a" stroke-width="1" marker-end="url(#mf)"/>
+
+      <rect x="426" y="130" width="160" height="24" rx="3" fill="#a8c98a" opacity="0.1" stroke="#a8c98a" stroke-width="0.8"/>
+      <text x="506" y="146" text-anchor="middle" font-family="Instrument Sans" font-size="9" fill="#a8c98a">Passo 2: rischi finanziari...</text>
+
+      <line x1="506" y1="154" x2="506" y2="170" stroke="#a8c98a" stroke-width="1" marker-end="url(#mf)"/>
+
+      <rect x="426" y="172" width="160" height="24" rx="3" fill="#a8c98a" opacity="0.2" stroke="#a8c98a" stroke-width="1.2"/>
+      <text x="506" y="188" text-anchor="middle" font-family="Instrument Sans" font-size="9" fill="#a8c98a" font-weight="500">Conclusione fondata sui passi precedenti</text>
+
+      <text x="506" y="216" text-anchor="middle" font-family="Instrument Sans" font-size="9" fill="#a8c98a">✓ ogni passo è contesto per il successivo</text>
+    </svg>
+    <div class="diagram-label">Chain of Thought: chiedere al modello di ragionare per passi migliora significativamente la qualità delle risposte su problemi complessi</div>
+  </div>
+
+  <p>Questa scoperta ha un nome tecnico — <strong>Chain of Thought</strong> (catena di pensiero) — e ha implicazioni pratiche immediate: <strong>come formuli la domanda cambia radicalmente la qualità della risposta</strong>. Un modello a cui chiedi di "pensare passo per passo" o di "mostrare il ragionamento" produce output sistematicamente migliori su compiti complessi rispetto a uno a cui chiedi una risposta diretta.</p>
+</div>
+
+
+<!-- ═══════════════════════════ -->
+<!-- SEZIONE 4 — FORZE E LIMITI -->
+<!-- ═══════════════════════════ -->
+<div class="section">
+  <div class="section-number">04 — La mappa delle capacità</div>
+  <h2>Cosa sa fare bene, <em>cosa no</em> — e perché</h2>
+
+  <p>Capito il meccanismo, il quadro delle forze e dei limiti diventa perfettamente logico. Non è casuale: deriva direttamente dalla natura del sistema.</p>
+
+  <p><strong>Il LLM è forte dove il ragionamento ha forma testuale.</strong> Tutto ciò che gli esseri umani tendono a esternalizzare in testo — analisi, argomentazioni, piani, spiegazioni, dimostrazioni — il modello l'ha visto milioni di volte e sa strutturarlo bene. Non perché "capisca" il contenuto come lo capiamo noi, ma perché ha interiorizzato profondamente come appare quella struttura.</p>
+
+  <p><strong>Il LLM è debole dove serve computazione precisa o tracciamento rigoroso di stati.</strong> Contare lettere, fare aritmetica con numeri grandi, seguire una sequenza di stati complessa senza errori: queste sono operazioni che un computer classico esegue con certezza assoluta, ma che un LLM esegue in modo approssimativo — perché le "simula" testualmente invece di calcolarle davvero.</p>
+
+  <div class="diagram">
+    <svg viewBox="0 0 740 260" width="100%" style="display:block;">
+      <text x="370" y="20" text-anchor="middle" font-family="Instrument Sans" font-size="10" fill="#6b6878" letter-spacing="1">MAPPA DELLE CAPACITÀ — LLM</text>
+
+      <!-- Strong side -->
+      <text x="185" y="42" text-anchor="middle" font-family="Instrument Sans" font-size="10" fill="#a8c98a" letter-spacing="1">FORTE</text>
+
+      <div class="scale-row"/>
+      <text x="16" y="62" font-family="Instrument Sans" font-size="11" fill="#6b6878">Analisi e sintesi di testi</text>
+      <rect x="220" y="52" width="160" height="8" rx="4" fill="#2a2a36"/>
+      <rect x="220" y="52" width="152" height="8" rx="4" fill="#a8c98a" opacity="0.7"/>
+      <text x="388" y="62" font-family="Instrument Sans" font-size="9" fill="#a8c98a">95%</text>
+
+      <text x="16" y="84" font-family="Instrument Sans" font-size="11" fill="#6b6878">Scrittura e rielaborazione</text>
+      <rect x="220" y="74" width="160" height="8" rx="4" fill="#2a2a36"/>
+      <rect x="220" y="74" width="148" height="8" rx="4" fill="#a8c98a" opacity="0.7"/>
+      <text x="388" y="84" font-family="Instrument Sans" font-size="9" fill="#a8c98a">92%</text>
+
+      <text x="16" y="106" font-family="Instrument Sans" font-size="11" fill="#6b6878">Ragionamento logico in prosa</text>
+      <rect x="220" y="96" width="160" height="8" rx="4" fill="#2a2a36"/>
+      <rect x="220" y="96" width="130" height="8" rx="4" fill="#a8c98a" opacity="0.6"/>
+      <text x="388" y="106" font-family="Instrument Sans" font-size="9" fill="#a8c98a">81%</text>
+
+      <text x="16" y="128" font-family="Instrument Sans" font-size="11" fill="#6b6878">Pianificazione di sequenze</text>
+      <rect x="220" y="118" width="160" height="8" rx="4" fill="#2a2a36"/>
+      <rect x="220" y="118" width="118" height="8" rx="4" fill="#a8c98a" opacity="0.5"/>
+      <text x="388" y="128" font-family="Instrument Sans" font-size="9" fill="#a8c98a">74%</text>
+
+      <!-- Divider -->
+      <line x1="16" y1="148" x2="724" y2="148" stroke="#2a2a36" stroke-width="1"/>
+
+      <!-- Weak side -->
+      <text x="185" y="170" text-anchor="middle" font-family="Instrument Sans" font-size="10" fill="#d4887a" letter-spacing="1">DEBOLE (senza strumenti di supporto)</text>
+
+      <text x="16" y="192" font-family="Instrument Sans" font-size="11" fill="#6b6878">Aritmetica precisa</text>
+      <rect x="220" y="182" width="160" height="8" rx="4" fill="#2a2a36"/>
+      <rect x="220" y="182" width="44" height="8" rx="4" fill="#d4887a" opacity="0.6"/>
+      <text x="388" y="192" font-family="Instrument Sans" font-size="9" fill="#d4887a">28%</text>
+
+      <text x="16" y="214" font-family="Instrument Sans" font-size="11" fill="#6b6878">Conteggio e manipolazione simbolica</text>
+      <rect x="220" y="204" width="160" height="8" rx="4" fill="#2a2a36"/>
+      <rect x="220" y="204" width="36" height="8" rx="4" fill="#d4887a" opacity="0.6"/>
+      <text x="388" y="214" font-family="Instrument Sans" font-size="9" fill="#d4887a">22%</text>
+
+      <text x="16" y="236" font-family="Instrument Sans" font-size="11" fill="#6b6878">Tracciamento preciso di stati multipli</text>
+      <rect x="220" y="226" width="160" height="8" rx="4" fill="#2a2a36"/>
+      <rect x="220" y="226" width="52" height="8" rx="4" fill="#d4887a" opacity="0.6"/>
+      <text x="388" y="236" font-family="Instrument Sans" font-size="9" fill="#d4887a">32%</text>
+
+      <!-- Note -->
+      <text x="440" y="192" font-family="Instrument Sans" font-size="9" fill="#6b6878">→ delegare a calcolatori / esecutori di codice</text>
+      <text x="440" y="214" font-family="Instrument Sans" font-size="9" fill="#6b6878">→ strumenti di conteggio esterni</text>
+      <text x="440" y="236" font-family="Instrument Sans" font-size="9" fill="#6b6878">→ database strutturati + tool use</text>
+    </svg>
+    <div class="diagram-label">Le percentuali sono indicative — mostrano la direzione, non valori assoluti. I limiti si compensano collegando il modello a strumenti specifici.</div>
+  </div>
+
+  <p>La buona notizia è che i limiti computazionali si compensano facilmente: i sistemi moderni collegano il modello a calcolatrici, esecutori di codice, database — strumenti che eseguono con precisione ciò che il modello non può fare bene da solo. Il modello decide quando usarli, li chiama, e integra i risultati nella risposta. È la stessa logica con cui un professionista brillante usa Excel per i calcoli invece di farli a mente.</p>
+</div>
+
+
+<!-- ═══════════════════════════ -->
+<!-- SEZIONE 5 — NUOVE TECNOLOGIE -->
+<!-- ═══════════════════════════ -->
+<div class="section">
+  <div class="section-number">05 — L'evoluzione recente</div>
+  <h2>Le tecnologie che hanno <em>amplificato</em> il ragionamento</h2>
+
+  <p>Negli ultimi due anni il ragionamento degli LLM è migliorato in modo discontinuo — non gradualmente. Tre sviluppi in particolare hanno cambiato le capacità percepite:</p>
+
+  <div class="two-col">
+    <div class="card">
+      <div class="card-label" style="color:var(--accent)">Modelli con "ragionamento esteso"</div>
+      <p>Sistemi come o1 di OpenAI e i modelli "thinking" di Anthropic e Google sono addestrati a generare una <strong>catena di pensiero interna</strong> prima di rispondere — una sorta di brutta copia del ragionamento che il modello produce per sé, non mostrata all'utente. Questo permette di affrontare problemi molto più complessi. Il costo: più tempo di risposta e più risorse computazionali.</p>
+    </div>
+    <div class="card">
+      <div class="card-label" style="color:var(--accent2)">Context window sempre più lunga</div>
+      <p>La <strong>finestra di contesto</strong> è la quantità di testo che il modello può tenere "in mente" contemporaneamente. I modelli del 2022 gestivano circa 4.000 parole. I modelli del 2024-2025 gestiscono fino a 1-2 milioni di parole. Questo significa poter ragionare su interi documenti, contratti, basi di codice, archivi di email — senza perdere il filo.</p>
+    </div>
+    <div class="card">
+      <div class="card-label" style="color:var(--accent3)">RAG — memoria esterna aggiornata</div>
+      <p>Il <strong>Retrieval-Augmented Generation</strong> (generazione aumentata da recupero di informazioni) permette al modello di consultare basi documentali esterne prima di rispondere — manuali aziendali, normative aggiornate, database interni. Il modello non deve "sapere" tutto: può cercare l'informazione giusta nel momento in cui serve.</p>
+    </div>
+    <div class="card">
+      <div class="card-label" style="color:var(--accent4)">Tool Use — agire nel mondo</div>
+      <p>I modelli possono ora chiamare <strong>strumenti esterni</strong> — cercare sul web, eseguire codice, leggere file, inviare messaggi. Questo trasforma il modello da "oracolo testuale" in sistema che agisce: non solo risponde, ma compie azioni nel sistema informativo dell'organizzazione. È la base degli agenti AI.</p>
+    </div>
+  </div>
+
+  <!-- DIAGRAM: evolution -->
+  <div class="diagram">
+    <svg viewBox="0 0 740 120" width="100%" style="display:block;">
+      <defs>
+        <marker id="mev" markerWidth="6" markerHeight="6" refX="3" refY="3" orient="auto">
+          <path d="M0,0 L6,3 L0,6 Z" fill="#c9a96e"/>
+        </marker>
+      </defs>
+
+      <text x="370" y="18" text-anchor="middle" font-family="Instrument Sans" font-size="10" fill="#6b6878" letter-spacing="1">EVOLUZIONE DELLE CAPACITÀ DI RAGIONAMENTO</text>
+
+      <!-- Timeline -->
+      <line x1="40" y1="65" x2="700" y2="65" stroke="#2a2a36" stroke-width="2"/>
+      <line x1="700" y1="65" x2="700" y2="65" stroke="#c9a96e" stroke-width="2" marker-end="url(#mev)"/>
+
+      <!-- Points -->
+      <circle cx="100" cy="65" r="5" fill="#2a2a36" stroke="#6b6878" stroke-width="1.5"/>
+      <text x="100" y="88" text-anchor="middle" font-family="Instrument Sans" font-size="9" fill="#6b6878">2020</text>
+      <text x="100" y="100" text-anchor="middle" font-family="Instrument Sans" font-size="9" fill="#6b6878">GPT-3</text>
+      <text x="100" y="112" text-anchor="middle" font-family="Instrument Sans" font-size="8" fill="#6b6878">completamento base</text>
+
+      <circle cx="240" cy="65" r="5" fill="#c9a96e" opacity="0.5" stroke="#c9a96e" stroke-width="1.5"/>
+      <text x="240" y="88" text-anchor="middle" font-family="Instrument Sans" font-size="9" fill="#6b6878">2022</text>
+      <text x="240" y="100" text-anchor="middle" font-family="Instrument Sans" font-size="9" fill="#6b6878">ChatGPT / RLHF</text>
+      <text x="240" y="112" text-anchor="middle" font-family="Instrument Sans" font-size="8" fill="#6b6878">allineamento + istruzioni</text>
+
+      <circle cx="380" cy="65" r="5" fill="#c9a96e" opacity="0.7" stroke="#c9a96e" stroke-width="1.5"/>
+      <text x="380" y="88" text-anchor="middle" font-family="Instrument Sans" font-size="9" fill="#6b6878">2023</text>
+      <text x="380" y="100" text-anchor="middle" font-family="Instrument Sans" font-size="9" fill="#6b6878">GPT-4 / Claude 2</text>
+      <text x="380" y="112" text-anchor="middle" font-family="Instrument Sans" font-size="8" fill="#6b6878">tool use + contesto lungo</text>
+
+      <circle cx="520" cy="65" r="5" fill="#c9a96e" opacity="0.9" stroke="#c9a96e" stroke-width="1.5"/>
+      <text x="520" y="88" text-anchor="middle" font-family="Instrument Sans" font-size="9" fill="#6b6878">2024</text>
+      <text x="520" y="100" text-anchor="middle" font-family="Instrument Sans" font-size="9" fill="#6b6878">o1 / Claude 3.5</text>
+      <text x="520" y="112" text-anchor="middle" font-family="Instrument Sans" font-size="8" fill="#6b6878">ragionamento esteso</text>
+
+      <circle cx="660" cy="65" r="6" fill="#c9a96e" stroke="#c9a96e" stroke-width="2"/>
+      <text x="660" y="88" text-anchor="middle" font-family="Instrument Sans" font-size="9" fill="#c9a96e">2025</text>
+      <text x="660" y="100" text-anchor="middle" font-family="Instrument Sans" font-size="9" fill="#c9a96e">Agenti AI</text>
+      <text x="660" y="112" text-anchor="middle" font-family="Instrument Sans" font-size="8" fill="#c9a96e">ragionamento + azione</text>
+
+      <!-- Capability arc -->
+      <path d="M 100,60 Q 380,20 660,45" stroke="#c9a96e" stroke-width="1.5" fill="none" stroke-dasharray="4" opacity="0.5"/>
+      <text x="380" y="35" text-anchor="middle" font-family="Instrument Sans" font-size="8" fill="#c9a96e" opacity="0.6">crescita capacità di ragionamento</text>
+    </svg>
+    <div class="diagram-label">La progressione dal completamento di testo puro agli agenti che ragionano e agiscono — cinque anni di sviluppo non lineare</div>
+  </div>
+</div>
+
+
+<!-- ═══════════════════════════ -->
+<!-- SEZIONE 6 — LA DOMANDA APERTA -->
+<!-- ═══════════════════════════ -->
+<div class="section">
+  <div class="section-number">06 — La questione filosofica</div>
+  <h2>È <em>davvero</em> intelligenza? La domanda che il campo non ha ancora risolto</h2>
+
+  <p>Vale la pena affrontare la domanda che molti si fanno ma pochi pongono esplicitamente: quello che fa un LLM è ragionamento autentico, o è una simulazione molto sofisticata?</p>
+
+  <div class="versus">
+    <div class="versus-side">
+      <div class="versus-label" style="color:var(--accent4)">La posizione scettica</div>
+      <p>Il modello non ha un modello interno del mondo. <strong>Non verifica</strong> se quello che dice è vero. Non sa quando sta sbagliando. Produce testo che <em>assomiglia</em> a ragionamento perché ha visto tanto ragionamento, ma è fondamentalmente interpolazione statistica su pattern linguistici. Una macchina che produce l'output corretto per le ragioni sbagliate.</p>
+    </div>
+    <div class="versus-mid">vs</div>
+    <div class="versus-side">
+      <div class="versus-label" style="color:var(--accent3)">La posizione pragmatica</div>
+      <p>La distinzione tra "capire davvero" e "avere interiorizzato così profondamente un pattern da applicarlo correttamente in contesti nuovi" potrebbe essere meno importante di quanto pensiamo. <strong>Se il sistema produce output che funzionano</strong> per pianificare, analizzare, decidere — la questione filosofica ha rilevanza pratica limitata per chi lo usa in azienda.</p>
+    </div>
+  </div>
+
+  <p>La risposta più onesta è: <strong>non lo sappiamo con certezza</strong>. Sappiamo che i modelli mostrano comportamenti che funzionalmente assomigliano al ragionamento. Sappiamo che commettono errori caratteristici che un sistema veramente logico non commetterebbe. E sappiamo che le capacità crescono in modo sorprendente all'aumentare della scala — con salti qualitativi improvvisi che nessuno aveva previsto.</p>
+
+  <div class="highlight" style="border-color:var(--accent);background:rgba(201,169,110,0.05);">
+    <div class="hl-label" style="color:var(--accent)">La prospettiva utile per un manager</div>
+    <p style="color:var(--text);">Trattare un LLM come un collaboratore molto capace ma con caratteristiche specifiche: <strong>eccellente nell'elaborazione del linguaggio e nella strutturazione del pensiero</strong>, meno affidabile nella precisione computazionale, incapace di verificare autonomamente i propri errori. Come un ottimo consulente che va guidato bene e i cui output vanno validati prima di diventare decisioni.</p>
+  </div>
+</div>
+
+
+<!-- ═══════════════════════════ -->
+<!-- TAKEAWAY FINALE -->
+<!-- ═══════════════════════════ -->
+<div class="takeaway">
+  <div class="takeaway-label">Sintesi operativa</div>
+  <h3>Tre cose da ricordare per usare bene un LLM in azienda</h3>
+
+  <p style="margin-bottom:14px;"><strong>1. Chiedi il ragionamento, non solo la risposta.</strong> Su problemi complessi, istruire il modello a "pensare passo per passo" o a "mostrare il ragionamento" migliora significativamente la qualità dell'output. Non è un trucco stilistico: sfrutta il meccanismo fondamentale con cui questi sistemi funzionano meglio.</p>
+
+  <p style="margin-bottom:14px;"><strong>2. Usa strumenti per i compiti computazionali.</strong> Non far fare aritmetica precisa a un LLM. I sistemi moderni integrano calcolatrici, esecutori di codice, database — usa queste integrazioni per i compiti che richiedono precisione assoluta. Il LLM è l'intelligenza orchestrante, non il motore computazionale.</p>
+
+  <p><strong>3. Valida sempre prima di decidere.</strong> Un LLM non sa quando sbaglia. Non ha meccanismi interni di verifica della verità. Output plausibile non significa output corretto. Per decisioni importanti, trattarlo come un'ottima bozza da verificare — non come una fonte autoritative.</p>
+</div>
+
+</div><!-- end content -->
+</body>
+</html>

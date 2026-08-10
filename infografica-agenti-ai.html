@@ -1,0 +1,1109 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Agenti AI — Infografica · Leve di specializzazione</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=Syne+Mono:wght@400;500&family=Literata:ital,wght@0,300;0,400;1,300;1,400&display=swap" rel="stylesheet">
+<style>
+/* ══════════════════════════════════════
+   A3 LANDSCAPE = 420mm × 297mm
+   At 96dpi screen: 1587 × 1123px
+   Print: @page sets actual dimensions
+══════════════════════════════════════ */
+
+:root {
+  --l01: #2d6e36; --l01b: #e8f5eb; --l01m: #c2e2c9;
+  --l02: #5a4a3a; --l02b: #f2ede8; --l02m: #d8cfc6;
+  --l03: #3a6b52; --l03b: #e8f2ed; --l03m: #bcd8ca;
+  --l04: #1a5f5f; --l04b: #e5f3f3; --l04m: #b2d8d8;
+  --l05: #2a4878; --l05b: #e8edf6; --l05m: #b8c6e0;
+  --l06: #1c5a8a; --l06b: #e5eef6; --l06m: #b2ccdf;
+  --lm:  #5c3f96; --lmb:  #eeebf8; --lmm:  #ccc0ea;
+  --l07: #7a2e2e; --l07b: #f5e9e9; --l07m: #deb8b8;
+
+  --ink:    #0f0d09;
+  --ink2:   #262219;
+  --ink3:   #5a5549;
+  --ink4:   #9a9489;
+  --border: #d0cbc0;
+  --bg:     #ffffff;
+  --bg2:    #f7f5f0;
+}
+
+* { margin:0; padding:0; box-sizing:border-box; }
+
+@page {
+  size: A3 landscape;
+  margin: 0;
+}
+
+html, body {
+  width: 420mm;
+  min-height: 297mm;
+  background: #fff;
+}
+
+body {
+  font-family: 'Syne', sans-serif;
+  color: var(--ink);
+  font-size: 7.5pt;
+  line-height: 1.4;
+  display: flex;
+  flex-direction: column;
+}
+
+/* ══════════════════════
+   FASCIA 1 — HEADER
+   ~15% = ~44mm
+══════════════════════ */
+.f1 {
+  height: 44mm;
+  display: flex;
+  border-bottom: 1.5pt solid var(--ink);
+  flex-shrink: 0;
+}
+
+.f1-left {
+  width: 72mm;
+  padding: 6mm 7mm 5mm;
+  border-right: 1pt solid var(--border);
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  background: var(--ink);
+}
+.f1-series {
+  font-family: 'Syne Mono', monospace;
+  font-size: 5.5pt;
+  letter-spacing: 2.5px;
+  text-transform: uppercase;
+  color: rgba(255,255,255,.35);
+}
+.f1-title {
+  font-family: 'Syne', sans-serif;
+  font-size: 16pt;
+  font-weight: 800;
+  color: #fff;
+  line-height: 1.0;
+  letter-spacing: -.5px;
+}
+.f1-title em {
+  font-family: 'Literata', serif;
+  font-style: italic;
+  font-weight: 300;
+}
+.f1-sub {
+  font-family: 'Syne Mono', monospace;
+  font-size: 5.5pt;
+  letter-spacing: .5px;
+  color: rgba(255,255,255,.4);
+  line-height: 1.5;
+}
+
+.f1-right {
+  flex: 1;
+  padding: 5mm 6mm 4mm;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+
+.f1-axis-label {
+  font-family: 'Syne Mono', monospace;
+  font-size: 5.5pt;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: var(--ink4);
+}
+
+/* Barra delle leve */
+.leve-bar {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 0;
+  flex: 1;
+  padding: 4mm 0 2mm;
+}
+.leve-bar-line {
+  position: absolute;
+  top: 50%;
+  left: 14mm;
+  right: 14mm;
+  height: 1pt;
+  background: var(--border);
+  transform: translateY(-50%);
+}
+.lb-node {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1.5mm;
+  flex: 1;
+  position: relative;
+  z-index: 2;
+}
+.lb-dot {
+  width: 9mm;
+  height: 9mm;
+  border-radius: 2pt;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: 'Syne Mono', monospace;
+  font-size: 6pt;
+  font-weight: 500;
+  color: #fff;
+  letter-spacing: .5px;
+  border: 1.5pt solid rgba(255,255,255,.2);
+}
+.lb-name {
+  font-family: 'Syne Mono', monospace;
+  font-size: 5pt;
+  letter-spacing: .3px;
+  text-transform: uppercase;
+  color: var(--ink3);
+  text-align: center;
+  line-height: 1.3;
+}
+.lb-tag {
+  font-family: 'Syne Mono', monospace;
+  font-size: 4.5pt;
+  letter-spacing: .3px;
+  color: var(--ink4);
+  text-align: center;
+}
+
+.f1-axis-bottom {
+  display: flex;
+  justify-content: space-between;
+  font-family: 'Syne Mono', monospace;
+  font-size: 5pt;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  color: var(--ink4);
+  padding: 0 14mm;
+}
+
+/* ══════════════════════
+   FASCIA 2 — COLONNE
+   ~62% = ~184mm
+══════════════════════ */
+.f2 {
+  flex: 1;
+  display: flex;
+  border-bottom: 1pt solid var(--border);
+  min-height: 0;
+}
+
+.col {
+  flex: 1;
+  border-right: 1pt solid var(--border);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+.col:last-child { border-right: none; }
+
+/* col header */
+.col-head {
+  display: flex;
+  align-items: center;
+  gap: 0;
+  border-bottom: 1pt solid var(--border);
+  flex-shrink: 0;
+}
+.col-stripe {
+  width: 3mm;
+  align-self: stretch;
+  flex-shrink: 0;
+}
+.col-icon {
+  width: 8mm;
+  height: 8mm;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+.col-icon svg {
+  width: 14pt;
+  height: 14pt;
+}
+.col-meta {
+  padding: 1.5mm 2mm;
+  flex: 1;
+  min-width: 0;
+}
+.col-num {
+  font-family: 'Syne Mono', monospace;
+  font-size: 5pt;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  line-height: 1;
+  margin-bottom: 1px;
+}
+.col-name {
+  font-family: 'Syne', sans-serif;
+  font-size: 8pt;
+  font-weight: 800;
+  line-height: 1.1;
+  letter-spacing: -.2px;
+}
+.col-tag {
+  font-family: 'Syne Mono', monospace;
+  font-size: 5pt;
+  letter-spacing: .5px;
+  margin-top: 1px;
+  display: inline-block;
+  padding: 1px 4px;
+  border-radius: 1pt;
+}
+
+/* col body sections */
+.col-body {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  padding: 0;
+  overflow: hidden;
+}
+
+.col-section {
+  padding: 2mm 2.5mm;
+  border-bottom: 1pt solid var(--border);
+  flex-shrink: 0;
+}
+.col-section:last-child {
+  border-bottom: none;
+  flex: 1;
+}
+.cs-lbl {
+  font-family: 'Syne Mono', monospace;
+  font-size: 4.5pt;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: var(--ink4);
+  margin-bottom: 1.5mm;
+  padding-bottom: 1mm;
+  border-bottom: .5pt solid var(--border);
+}
+
+/* massima */
+.massima {
+  font-family: 'Literata', serif;
+  font-style: italic;
+  font-weight: 300;
+  font-size: 6.5pt;
+  line-height: 1.45;
+  color: var(--ink2);
+  padding: 2mm 2.5mm;
+  border-bottom: 1pt solid var(--border);
+  border-left: 2pt solid;
+  flex-shrink: 0;
+}
+
+/* sottoleve pills */
+.pills {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1.5mm;
+}
+.pill {
+  font-family: 'Syne Mono', monospace;
+  font-size: 5pt;
+  letter-spacing: .3px;
+  padding: 1px 4px;
+  border: .5pt solid var(--border);
+  background: var(--bg2);
+  color: var(--ink3);
+  border-radius: 1pt;
+  line-height: 1.5;
+  white-space: nowrap;
+}
+
+/* principi */
+.principi {
+  display: flex;
+  flex-direction: column;
+  gap: 2mm;
+}
+.pr {
+  display: grid;
+  grid-template-columns: 4mm 1fr;
+  gap: 1.5mm;
+  align-items: start;
+}
+.pr-dot {
+  width: 3mm;
+  height: 3mm;
+  border-radius: 50%;
+  margin-top: 1pt;
+  flex-shrink: 0;
+}
+.pr-text {
+  font-size: 6.5pt;
+  color: var(--ink2);
+  line-height: 1.4;
+}
+.pr-text strong {
+  font-weight: 700;
+}
+
+/* when box */
+.when-box {
+  padding: 1.5mm 2.5mm;
+  font-size: 5.5pt;
+  color: var(--ink3);
+  line-height: 1.4;
+  background: var(--bg2);
+  margin-top: auto;
+  flex-shrink: 0;
+}
+.when-lbl {
+  font-family: 'Syne Mono', monospace;
+  font-size: 4.5pt;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  color: var(--ink4);
+  margin-bottom: 1mm;
+}
+
+/* ══════════════════════
+   FASCIA 3 — FONDO
+   ~23% = ~69mm
+══════════════════════ */
+.f3 {
+  height: 69mm;
+  display: flex;
+  flex-shrink: 0;
+}
+
+/* testing block */
+.f3-testing {
+  width: 68mm;
+  border-right: 1pt solid var(--border);
+  padding: 4mm 5mm;
+  display: flex;
+  flex-direction: column;
+  gap: 2.5mm;
+  border-top: 2pt dashed var(--l06);
+  background: var(--l06b);
+}
+.ft-head {
+  display: flex;
+  align-items: center;
+  gap: 3mm;
+}
+.ft-icon {
+  width: 8mm;
+  height: 8mm;
+  background: var(--l06);
+  border-radius: 2pt;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+.ft-meta {}
+.ft-num {
+  font-family: 'Syne Mono', monospace;
+  font-size: 5pt;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: var(--l06);
+  margin-bottom: 1px;
+}
+.ft-name {
+  font-family: 'Syne', sans-serif;
+  font-size: 9pt;
+  font-weight: 800;
+  color: var(--l06);
+  line-height: 1.1;
+}
+.ft-sub {
+  font-family: 'Syne Mono', monospace;
+  font-size: 5pt;
+  letter-spacing: .3px;
+  color: var(--l06);
+  opacity: .7;
+}
+.ft-massima {
+  font-family: 'Literata', serif;
+  font-style: italic;
+  font-weight: 300;
+  font-size: 7pt;
+  color: var(--l06);
+  line-height: 1.45;
+  border-left: 2pt solid var(--l06);
+  padding-left: 3mm;
+  opacity: .85;
+}
+.ft-principles {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5mm;
+}
+.ft-pr {
+  display: grid;
+  grid-template-columns: 3mm 1fr;
+  gap: 1.5mm;
+  font-size: 6pt;
+  color: var(--l06);
+  line-height: 1.35;
+  align-items: start;
+}
+.ft-pr-dot {
+  width: 2.5mm;
+  height: 2.5mm;
+  border-radius: 50%;
+  background: var(--l06);
+  margin-top: 1.5pt;
+  opacity: .5;
+}
+
+/* diagnostica */
+.f3-diag {
+  flex: 1;
+  border-right: 1pt solid var(--border);
+  padding: 4mm 5mm;
+  display: flex;
+  flex-direction: column;
+  gap: 2mm;
+}
+.f3-section-lbl {
+  font-family: 'Syne Mono', monospace;
+  font-size: 5.5pt;
+  letter-spacing: 2.5px;
+  text-transform: uppercase;
+  color: var(--ink4);
+  padding-bottom: 1.5mm;
+  border-bottom: 1pt solid var(--border);
+  flex-shrink: 0;
+}
+.diag-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1.5mm 5mm;
+  flex: 1;
+  align-content: start;
+}
+.diag-item {
+  display: grid;
+  grid-template-columns: 1fr 3mm 28mm;
+  gap: 1.5mm;
+  align-items: start;
+}
+.diag-symptom {
+  font-size: 6pt;
+  color: var(--ink2);
+  line-height: 1.35;
+}
+.diag-arr {
+  font-family: 'Syne Mono', monospace;
+  font-size: 6pt;
+  color: var(--ink4);
+  text-align: center;
+  padding-top: .5pt;
+}
+.diag-action {
+  display: flex;
+  align-items: flex-start;
+  gap: 1.5mm;
+}
+.diag-dot {
+  width: 2.5mm;
+  height: 2.5mm;
+  border-radius: 50%;
+  flex-shrink: 0;
+  margin-top: 1.5pt;
+}
+.diag-leva {
+  font-family: 'Syne Mono', monospace;
+  font-size: 5.5pt;
+  font-weight: 500;
+  letter-spacing: .3px;
+  line-height: 1.4;
+}
+
+/* principi trasversali */
+.f3-principi {
+  width: 78mm;
+  padding: 4mm 5mm;
+  display: flex;
+  flex-direction: column;
+  gap: 2mm;
+}
+.pt-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 2mm;
+  flex: 1;
+}
+.pt-item {
+  display: grid;
+  grid-template-columns: 6mm 1fr;
+  gap: 2mm;
+  align-items: start;
+}
+.pt-num {
+  width: 5mm;
+  height: 5mm;
+  background: var(--ink);
+  color: #fff;
+  font-family: 'Syne Mono', monospace;
+  font-size: 5pt;
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  border-radius: 1pt;
+  margin-top: 1pt;
+}
+.pt-text {
+  font-family: 'Literata', serif;
+  font-style: italic;
+  font-size: 6.5pt;
+  color: var(--ink2);
+  line-height: 1.45;
+}
+
+/* footer strip */
+.footer-strip {
+  height: 6mm;
+  background: var(--ink);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 6mm;
+  flex-shrink: 0;
+}
+.fs-text {
+  font-family: 'Syne Mono', monospace;
+  font-size: 5pt;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  color: rgba(255,255,255,.3);
+}
+
+/* ══ PRINT ══ */
+@media print {
+  html, body { width: 420mm; height: 297mm; overflow: hidden; }
+  .f2 { flex: 1; }
+}
+
+/* ══ SCREEN PREVIEW ══ */
+@media screen {
+  html { background: #e8e5df; padding: 20px; }
+  body {
+    width: 1587px;
+    min-height: 1123px;
+    box-shadow: 0 8px 40px rgba(0,0,0,.2);
+  }
+  .f2 { min-height: 695px; }
+}
+</style>
+</head>
+<body>
+
+<!-- ═══════════════════════════════════════
+     FASCIA 1 — HEADER + BARRA LEVE
+═══════════════════════════════════════ -->
+<div class="f1">
+
+  <!-- titolo -->
+  <div class="f1-left">
+    <div class="f1-series">Serie Agenti AI · Infografica</div>
+    <div class="f1-title">Le <em>leve</em> per<br>specializzare<br>un agente AI</div>
+    <div class="f1-sub">Riferimento operativo · 8 leve · ordine di attivazione<br>Stampa A3 orizzontale · 2026</div>
+  </div>
+
+  <!-- barra leve -->
+  <div class="f1-right">
+    <div class="f1-axis-label">← Reversibile · Basso costo &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Irreversibile · Alto costo →</div>
+    <div class="leve-bar">
+      <div class="leve-bar-line"></div>
+      <div class="lb-node">
+        <div class="lb-dot" style="background:var(--l01)">01</div>
+        <div class="lb-name">Prompt<br>Eng.</div>
+        <div class="lb-tag">Comportamento</div>
+      </div>
+      <div class="lb-node">
+        <div class="lb-dot" style="background:var(--l03)">03</div>
+        <div class="lb-name">Tool<br>Design</div>
+        <div class="lb-tag">Capacità</div>
+      </div>
+      <div class="lb-node">
+        <div class="lb-dot" style="background:var(--l02)">02</div>
+        <div class="lb-name">Scelta<br>Modello</div>
+        <div class="lb-tag">Qualità base</div>
+      </div>
+      <div class="lb-node">
+        <div class="lb-dot" style="background:var(--l04)">04</div>
+        <div class="lb-name">Knowledge<br>/ RAG</div>
+        <div class="lb-tag">Conoscenza</div>
+      </div>
+      <div class="lb-node">
+        <div class="lb-dot" style="background:var(--lm)">M</div>
+        <div class="lb-name">Gestione<br>Memoria</div>
+        <div class="lb-tag">Continuità</div>
+      </div>
+      <div class="lb-node">
+        <div class="lb-dot" style="background:var(--l05)">05</div>
+        <div class="lb-name">Orche-<br>strazione</div>
+        <div class="lb-tag">Coordinazione</div>
+      </div>
+      <div class="lb-node">
+        <div class="lb-dot" style="background:var(--l07)">07</div>
+        <div class="lb-name">Fine-<br>tuning</div>
+        <div class="lb-tag">Specializzazione</div>
+      </div>
+      <div class="lb-node" style="opacity:.55;">
+        <div class="lb-dot" style="background:var(--l06); border:1.5pt dashed rgba(255,255,255,.5)">06</div>
+        <div class="lb-name">Testing &amp;<br>Valutaz.</div>
+        <div class="lb-tag">∞ sempre attivo</div>
+      </div>
+    </div>
+  </div>
+
+</div><!-- /f1 -->
+
+
+<!-- ═══════════════════════════════════════
+     FASCIA 2 — COLONNE LEVE
+═══════════════════════════════════════ -->
+<div class="f2">
+
+  <!-- ══ 01 PROMPT ══ -->
+  <div class="col">
+    <div class="col-head">
+      <div class="col-stripe" style="background:var(--l01)"></div>
+      <div class="col-icon" style="background:var(--l01b);">
+        <svg viewBox="0 0 14 14" fill="none"><rect x="2" y="2" width="10" height="1.5" rx=".5" fill="#2d6e36"/><rect x="2" y="5" width="8" height="1.5" rx=".5" fill="#2d6e36"/><rect x="2" y="8" width="6" height="1.5" rx=".5" fill="#2d6e36"/><path d="M2 11.5 L3.5 10 L5 11.5" stroke="#2d6e36" stroke-width="1" fill="none"/></svg>
+      </div>
+      <div class="col-meta">
+        <div class="col-num" style="color:var(--l01)">Leva 01</div>
+        <div class="col-name">Prompt Eng.</div>
+        <div class="col-tag" style="background:var(--l01b); color:var(--l01)">Comportamento · ↺ minuti</div>
+      </div>
+    </div>
+    <div class="col-body">
+      <div class="massima" style="border-left-color:var(--l01); background:var(--l01b)">
+        "Mostra il comportamento con esempi — non descriverlo con istruzioni."
+      </div>
+      <div class="col-section">
+        <div class="cs-lbl">Sotto-leve</div>
+        <div class="pills">
+          <span class="pill">A · Identità</span>
+          <span class="pill">B · Obiettivo</span>
+          <span class="pill">C · Ragionamento</span>
+          <span class="pill">D · Formato</span>
+          <span class="pill">E · Few-shot</span>
+          <span class="pill">F · Casi limite</span>
+          <span class="pill">G · Agentic</span>
+        </div>
+      </div>
+      <div class="col-section" style="flex:1;">
+        <div class="cs-lbl">Principi</div>
+        <div class="principi">
+          <div class="pr"><div class="pr-dot" style="background:var(--l01)"></div><div class="pr-text"><strong>Identità prima:</strong> il ruolo guida tutto.</div></div>
+          <div class="pr"><div class="pr-dot" style="background:var(--l01)"></div><div class="pr-text"><strong>Esempi &gt; istruzioni:</strong> un gold standard vale dieci regole.</div></div>
+          <div class="pr"><div class="pr-dot" style="background:var(--l01)"></div><div class="pr-text"><strong>Edge case espliciti:</strong> il modello non li inferisce da solo.</div></div>
+        </div>
+      </div>
+      <div class="when-box">
+        <div class="when-lbl">Passa oltre quando</div>
+        Comportamento invariato dopo prompt ottimizzato + esempi, o prompt &gt;5K token.
+      </div>
+    </div>
+  </div>
+
+  <!-- ══ 03 TOOL ══ -->
+  <div class="col">
+    <div class="col-head">
+      <div class="col-stripe" style="background:var(--l03)"></div>
+      <div class="col-icon" style="background:var(--l03b);">
+        <svg viewBox="0 0 14 14" fill="none"><path d="M8.5 2.5 C9.5 1.5 11.5 1.5 12 3 C12.5 4.5 11.5 5.5 10.5 6 L8 8.5 L5.5 6 C4.5 5.5 3.5 4.5 4 3 C4.5 1.5 6.5 1.5 7.5 2.5" stroke="#3a6b52" stroke-width="1.2" fill="none"/><path d="M6 9 L9 12 M7 8 L10 11" stroke="#3a6b52" stroke-width="1" stroke-linecap="round"/></svg>
+      </div>
+      <div class="col-meta">
+        <div class="col-num" style="color:var(--l03)">Leva 03</div>
+        <div class="col-name">Tool Design</div>
+        <div class="col-tag" style="background:var(--l03b); color:var(--l03)">Capacità d'azione · ↺ ore</div>
+      </div>
+    </div>
+    <div class="col-body">
+      <div class="massima" style="border-left-color:var(--l03); background:var(--l03b)">
+        "Esponi intenzioni semantiche — non endpoint tecnici."
+      </div>
+      <div class="col-section">
+        <div class="cs-lbl">Sotto-leve</div>
+        <div class="pills">
+          <span class="pill">Nome (verbo_oggetto)</span>
+          <span class="pill">Description</span>
+          <span class="pill">Parametri</span>
+          <span class="pill">Output contract</span>
+          <span class="pill">Error contract</span>
+          <span class="pill">Gerarchia</span>
+          <span class="pill">Guardrail irrevers.</span>
+        </div>
+      </div>
+      <div class="col-section" style="flex:1;">
+        <div class="cs-lbl">Principi</div>
+        <div class="principi">
+          <div class="pr"><div class="pr-dot" style="background:var(--l03)"></div><div class="pr-text"><strong>Description = cosa / quando / NON quando.</strong></div></div>
+          <div class="pr"><div class="pr-dot" style="background:var(--l03)"></div><div class="pr-text"><strong>Ogni azione irreversibile richiede conferma.</strong></div></div>
+          <div class="pr"><div class="pr-dot" style="background:var(--l03)"></div><div class="pr-text"><strong>Output pulito:</strong> niente ID tecnici o JSON verboso.</div></div>
+        </div>
+      </div>
+      <div class="when-box">
+        <div class="when-lbl">Passa oltre quando</div>
+        Tool corretti ma risposte con info mancanti o obsolete → problema di conoscenza.
+      </div>
+    </div>
+  </div>
+
+  <!-- ══ 02 MODELLO ══ -->
+  <div class="col">
+    <div class="col-head">
+      <div class="col-stripe" style="background:var(--l02)"></div>
+      <div class="col-icon" style="background:var(--l02b);">
+        <svg viewBox="0 0 14 14" fill="none"><circle cx="7" cy="7" r="4.5" stroke="#5a4a3a" stroke-width="1.2"/><circle cx="7" cy="7" r="1.5" fill="#5a4a3a"/><line x1="7" y1="2.5" x2="7" y2="4" stroke="#5a4a3a" stroke-width="1"/><line x1="7" y1="10" x2="7" y2="11.5" stroke="#5a4a3a" stroke-width="1"/><line x1="2.5" y1="7" x2="4" y2="7" stroke="#5a4a3a" stroke-width="1"/><line x1="10" y1="7" x2="11.5" y2="7" stroke="#5a4a3a" stroke-width="1"/></svg>
+      </div>
+      <div class="col-meta">
+        <div class="col-num" style="color:var(--l02)">Leva 02</div>
+        <div class="col-name">Scelta Modello</div>
+        <div class="col-tag" style="background:var(--l02b); color:var(--l02)">Qualità base · ↺ ore/giorni</div>
+      </div>
+    </div>
+    <div class="col-body">
+      <div class="massima" style="border-left-color:var(--l02); background:var(--l02b)">
+        "Non si sceglie il migliore — si sceglie il più adatto alle dimensioni critiche."
+      </div>
+      <div class="col-section">
+        <div class="cs-lbl">Sotto-leve</div>
+        <div class="pills">
+          <span class="pill">Dimensioni critiche</span>
+          <span class="pill">Triangolo int./vel./costo</span>
+          <span class="pill">Routing per task</span>
+          <span class="pill">Golden dataset</span>
+          <span class="pill">Benchmark vs. reale</span>
+        </div>
+      </div>
+      <div class="col-section" style="flex:1;">
+        <div class="cs-lbl">Principi</div>
+        <div class="principi">
+          <div class="pr"><div class="pr-dot" style="background:var(--l02)"></div><div class="pr-text"><strong>Task-first:</strong> identifica le 2–3 dimensioni critiche prima di confrontare.</div></div>
+          <div class="pr"><div class="pr-dot" style="background:var(--l02)"></div><div class="pr-text"><strong>Routing:</strong> 70% small + 30% large → –80% costi.</div></div>
+          <div class="pr"><div class="pr-dot" style="background:var(--l02)"></div><div class="pr-text"><strong>Valuta sul tuo task,</strong> non sui benchmark pubblici.</div></div>
+        </div>
+      </div>
+      <div class="when-box">
+        <div class="when-lbl">Passa oltre quando</div>
+        Il modello ha il profilo giusto e il problema persiste — non è lui il collo di bottiglia.
+      </div>
+    </div>
+  </div>
+
+  <!-- ══ 04 RAG ══ -->
+  <div class="col">
+    <div class="col-head">
+      <div class="col-stripe" style="background:var(--l04)"></div>
+      <div class="col-icon" style="background:var(--l04b);">
+        <svg viewBox="0 0 14 14" fill="none"><rect x="2" y="2" width="4" height="5" rx="1" stroke="#1a5f5f" stroke-width="1.2"/><rect x="8" y="2" width="4" height="5" rx="1" stroke="#1a5f5f" stroke-width="1.2"/><rect x="2" y="9" width="4" height="3" rx="1" stroke="#1a5f5f" stroke-width="1.2"/><rect x="8" y="9" width="4" height="3" rx="1" stroke="#1a5f5f" stroke-width="1.2"/><line x1="4" y1="7" x2="4" y2="9" stroke="#1a5f5f" stroke-width="1"/><line x1="10" y1="7" x2="10" y2="9" stroke="#1a5f5f" stroke-width="1"/></svg>
+      </div>
+      <div class="col-meta">
+        <div class="col-num" style="color:var(--l04)">Leva 04</div>
+        <div class="col-name">Knowledge / RAG</div>
+        <div class="col-tag" style="background:var(--l04b); color:var(--l04)">Conoscenza · ↺ giorni</div>
+      </div>
+    </div>
+    <div class="col-body">
+      <div class="massima" style="border-left-color:var(--l04); background:var(--l04b)">
+        "Il problema è quasi sempre nel chunking — non nel modello di retrieval."
+      </div>
+      <div class="col-section">
+        <div class="cs-lbl">Sotto-leve</div>
+        <div class="pills">
+          <span class="pill">Chunking</span>
+          <span class="pill">Embedding model</span>
+          <span class="pill">Vector store</span>
+          <span class="pill">Retrieval ibrido</span>
+          <span class="pill">Re-ranking</span>
+          <span class="pill">Grounding</span>
+          <span class="pill">Eval recall/faith.</span>
+        </div>
+      </div>
+      <div class="col-section" style="flex:1;">
+        <div class="cs-lbl">Principi</div>
+        <div class="principi">
+          <div class="pr"><div class="pr-dot" style="background:var(--l04)"></div><div class="pr-text"><strong>Chunk autonomo:</strong> utile letto da solo, senza il documento.</div></div>
+          <div class="pr"><div class="pr-dot" style="background:var(--l04)"></div><div class="pr-text"><strong>Retrieval ibrido &gt; semantico</strong> puro (BM25 + vettoriale).</div></div>
+          <div class="pr"><div class="pr-dot" style="background:var(--l04)"></div><div class="pr-text"><strong>Valuta recall e faithfulness</strong> separatamente per stadio.</div></div>
+        </div>
+      </div>
+      <div class="when-box">
+        <div class="when-lbl">Passa oltre quando</div>
+        Conoscenza ok ma il task richiede coordinazione tra step multipli o agenti.
+      </div>
+    </div>
+  </div>
+
+  <!-- ══ M MEMORIA ══ -->
+  <div class="col">
+    <div class="col-head">
+      <div class="col-stripe" style="background:var(--lm)"></div>
+      <div class="col-icon" style="background:var(--lmb);">
+        <svg viewBox="0 0 14 14" fill="none"><rect x="2" y="3" width="10" height="8" rx="1.5" stroke="#5c3f96" stroke-width="1.2"/><line x1="5" y1="3" x2="5" y2="11" stroke="#5c3f96" stroke-width=".8"/><circle cx="3.5" cy="7" r=".8" fill="#5c3f96"/><line x1="6.5" y1="5.5" x2="11" y2="5.5" stroke="#5c3f96" stroke-width=".8"/><line x1="6.5" y1="7" x2="11" y2="7" stroke="#5c3f96" stroke-width=".8"/><line x1="6.5" y1="8.5" x2="9" y2="8.5" stroke="#5c3f96" stroke-width=".8"/></svg>
+      </div>
+      <div class="col-meta">
+        <div class="col-num" style="color:var(--lm)">Leva M</div>
+        <div class="col-name">Gestione Memoria</div>
+        <div class="col-tag" style="background:var(--lmb); color:var(--lm)">Continuità · ↺ giorni</div>
+      </div>
+    </div>
+    <div class="col-body">
+      <div class="massima" style="border-left-color:var(--lm); background:var(--lmb)">
+        "Memorizza decisioni — non dettagli. La memoria minima è la più robusta."
+      </div>
+      <div class="col-section">
+        <div class="cs-lbl">Sotto-leve (4 tipi)</div>
+        <div class="pills">
+          <span class="pill">In-context</span>
+          <span class="pill">Episodica</span>
+          <span class="pill">Semantica</span>
+          <span class="pill">Procedurale</span>
+          <span class="pill">Summarization progr.</span>
+          <span class="pill">TTL e selezione</span>
+        </div>
+      </div>
+      <div class="col-section" style="flex:1;">
+        <div class="cs-lbl">Principi</div>
+        <div class="principi">
+          <div class="pr"><div class="pr-dot" style="background:var(--lm)"></div><div class="pr-text"><strong>4 tipi diversi,</strong> 4 meccanismi diversi — non esiste "la memoria".</div></div>
+          <div class="pr"><div class="pr-dot" style="background:var(--lm)"></div><div class="pr-text"><strong>Input corrente</strong> ha sempre precedenza sul profilo memorizzato.</div></div>
+          <div class="pr"><div class="pr-dot" style="background:var(--lm)"></div><div class="pr-text"><strong>Privacy by design:</strong> TTL su tutto, no dati sensibili.</div></div>
+        </div>
+      </div>
+      <div class="when-box">
+        <div class="when-lbl">Passa oltre quando</div>
+        Memoria ok ma comportamento sistematico impossibile da correggere col prompt.
+      </div>
+    </div>
+  </div>
+
+  <!-- ══ 05 ORCHESTRAZIONE ══ -->
+  <div class="col">
+    <div class="col-head">
+      <div class="col-stripe" style="background:var(--l05)"></div>
+      <div class="col-icon" style="background:var(--l05b);">
+        <svg viewBox="0 0 14 14" fill="none"><circle cx="3" cy="7" r="1.5" stroke="#2a4878" stroke-width="1.2"/><circle cx="11" cy="4" r="1.5" stroke="#2a4878" stroke-width="1.2"/><circle cx="11" cy="10" r="1.5" stroke="#2a4878" stroke-width="1.2"/><line x1="4.5" y1="6.5" x2="9.5" y2="4.5" stroke="#2a4878" stroke-width="1"/><line x1="4.5" y1="7.5" x2="9.5" y2="9.5" stroke="#2a4878" stroke-width="1"/></svg>
+      </div>
+      <div class="col-meta">
+        <div class="col-num" style="color:var(--l05)">Leva 05</div>
+        <div class="col-name">Orchestrazione</div>
+        <div class="col-tag" style="background:var(--l05b); color:var(--l05)">Coordinazione · ↺ settimane</div>
+      </div>
+    </div>
+    <div class="col-body">
+      <div class="massima" style="border-left-color:var(--l05); background:var(--l05b)">
+        "Un agente singolo ben configurato batte quasi sempre un sistema multi-agente mal progettato."
+      </div>
+      <div class="col-section">
+        <div class="cs-lbl">Sotto-leve</div>
+        <div class="pills">
+          <span class="pill">Loop + terminazione</span>
+          <span class="pill">Pattern composizione</span>
+          <span class="pill">Topologie multi-ag.</span>
+          <span class="pill">Schema di stato</span>
+          <span class="pill">Partial failure</span>
+          <span class="pill">HITL</span>
+          <span class="pill">Tracing</span>
+        </div>
+      </div>
+      <div class="col-section" style="flex:1;">
+        <div class="cs-lbl">Principi</div>
+        <div class="principi">
+          <div class="pr"><div class="pr-dot" style="background:var(--l05)"></div><div class="pr-text"><strong>Ogni loop ha un limite massimo</strong> di passi — senza eccezioni.</div></div>
+          <div class="pr"><div class="pr-dot" style="background:var(--l05)"></div><div class="pr-text"><strong>Singolo prima di multi-agente:</strong> esaurisci prima i limiti.</div></div>
+          <div class="pr"><div class="pr-dot" style="background:var(--l05)"></div><div class="pr-text"><strong>Lo stato è la mappa,</strong> non gli output dei passi precedenti.</div></div>
+        </div>
+      </div>
+      <div class="when-box">
+        <div class="when-lbl">Passa oltre quando</div>
+        Workflow ok ma comportamento sistematico non correggibile — specializzazione profonda.
+      </div>
+    </div>
+  </div>
+
+  <!-- ══ 07 FINE-TUNING ══ -->
+  <div class="col">
+    <div class="col-head">
+      <div class="col-stripe" style="background:var(--l07)"></div>
+      <div class="col-icon" style="background:var(--l07b);">
+        <svg viewBox="0 0 14 14" fill="none"><path d="M7 2 L8.5 5.5 L12 6 L9.5 8.5 L10 12 L7 10.5 L4 12 L4.5 8.5 L2 6 L5.5 5.5 Z" stroke="#7a2e2e" stroke-width="1.1" fill="none"/></svg>
+      </div>
+      <div class="col-meta">
+        <div class="col-num" style="color:var(--l07)">Leva 07</div>
+        <div class="col-name">Fine-tuning</div>
+        <div class="col-tag" style="background:var(--l07b); color:var(--l07)">Specializzazione · ↺ mesi</div>
+      </div>
+    </div>
+    <div class="col-body">
+      <div class="massima" style="border-left-color:var(--l07); background:var(--l07b)">
+        "Insegna come rispondere — non cosa sa. Per conoscenza usa RAG."
+      </div>
+      <div class="col-section">
+        <div class="cs-lbl">Sotto-leve (3 tipi)</div>
+        <div class="pills">
+          <span class="pill">Tipo 1 · Stile/formato</span>
+          <span class="pill">Tipo 2 · Ragionam. dominio</span>
+          <span class="pill">Tipo 3 · Comportam./DPO</span>
+          <span class="pill">Dataset quality</span>
+          <span class="pill">Loss curve</span>
+          <span class="pill">Test regressione</span>
+        </div>
+      </div>
+      <div class="col-section" style="flex:1;">
+        <div class="cs-lbl">Principi</div>
+        <div class="principi">
+          <div class="pr"><div class="pr-dot" style="background:var(--l07)"></div><div class="pr-text"><strong>Test del prompt prima:</strong> 10 esempi gold che nessun prompt produce.</div></div>
+          <div class="pr"><div class="pr-dot" style="background:var(--l07)"></div><div class="pr-text"><strong>100 esempi eccellenti</strong> battono 1.000 mediocri.</div></div>
+          <div class="pr"><div class="pr-dot" style="background:var(--l07)"></div><div class="pr-text"><strong>Testa la regressione</strong> sui task non ottimizzati dopo ogni round.</div></div>
+        </div>
+      </div>
+      <div class="when-box" style="background:var(--l07b);">
+        <div class="when-lbl" style="color:var(--l07);">Ultima leva</div>
+        Solo dopo aver esaurito tutte le precedenti senza risultato sufficiente.
+      </div>
+    </div>
+  </div>
+
+</div><!-- /f2 -->
+
+
+<!-- ═══════════════════════════════════════
+     FASCIA 3 — TESTING + DIAGNOSTICA + PRINCIPI
+═══════════════════════════════════════ -->
+<div class="f3">
+
+  <!-- testing block -->
+  <div class="f3-testing">
+    <div class="ft-head">
+      <div class="ft-icon">
+        <svg viewBox="0 0 10 10" width="18" height="18" fill="none"><rect x="3.5" y="1" width="3" height="5" rx="1" stroke="white" stroke-width="1"/><path d="M2 6 L1 9 L5 8 L9 9 L8 6" stroke="white" stroke-width="1" fill="none"/></svg>
+      </div>
+      <div class="ft-meta">
+        <div class="ft-num">Leva 06 · Affidabilità</div>
+        <div class="ft-name">Testing &amp; Valutazione</div>
+        <div class="ft-sub">∞ Attivo in parallelo a tutte le leve · sempre · subito</div>
+      </div>
+    </div>
+    <div class="ft-massima">
+      "Non si migliora ciò che non si misura. La suite di test è più importante del prompt stesso."
+    </div>
+    <div class="ft-principles">
+      <div class="ft-pr"><div class="ft-pr-dot"></div><div><strong>30% casi limite</strong> nella suite — non solo casi tipici.</div></div>
+      <div class="ft-pr"><div class="ft-pr-dot"></div><div><strong>Dev set + held-out</strong> sempre separati. Gap &gt;8pt = overfitting.</div></div>
+      <div class="ft-pr"><div class="ft-pr-dot"></div><div><strong>Soglie prima di misurare,</strong> non dopo aver visto i dati.</div></div>
+      <div class="ft-pr"><div class="ft-pr-dot"></div><div><strong>LLM-as-judge:</strong> valida su campione umano (corr. ≥ 0.85) prima di usarlo.</div></div>
+    </div>
+  </div>
+
+  <!-- diagnostica -->
+  <div class="f3-diag">
+    <div class="f3-section-lbl">Diagnostica rapida — sintomo → leva</div>
+    <div class="diag-grid">
+
+      <div class="diag-item">
+        <div class="diag-symptom">Tono / formato sbagliato nonostante istruzioni</div>
+        <div class="diag-arr">→</div>
+        <div class="diag-action"><div class="diag-dot" style="background:var(--l01)"></div><div class="diag-leva" style="color:var(--l01)">Prompt D+E · few-shot</div></div>
+      </div>
+      <div class="diag-item">
+        <div class="diag-symptom">Ignora istruzioni critiche o vincoli specifici</div>
+        <div class="diag-arr">→</div>
+        <div class="diag-action"><div class="diag-dot" style="background:var(--l01)"></div><div class="diag-leva" style="color:var(--l01)">Prompt F · istruz. esplicite</div></div>
+      </div>
+      <div class="diag-item">
+        <div class="diag-symptom">Inventa fatti · allucina su dominio specifico</div>
+        <div class="diag-arr">→</div>
+        <div class="diag-action"><div class="diag-dot" style="background:var(--l04)"></div><div class="diag-leva" style="color:var(--l04)">RAG + grounding nel prompt</div></div>
+      </div>
+      <div class="diag-item">
+        <div class="diag-symptom">Non ricorda info dette nella stessa sessione</div>
+        <div class="diag-arr">→</div>
+        <div class="diag-action"><div class="diag-dot" style="background:var(--lm)"></div><div class="diag-leva" style="color:var(--lm)">Memoria in-context · summariz.</div></div>
+      </div>
+      <div class="diag-item">
+        <div class="diag-symptom">Dimentica preferenze tra sessioni diverse</div>
+        <div class="diag-arr">→</div>
+        <div class="diag-action"><div class="diag-dot" style="background:var(--lm)"></div><div class="diag-leva" style="color:var(--lm)">Memoria episodica + semantica</div></div>
+      </div>
+      <div class="diag-item">
+        <div class="diag-symptom">Usa tool sbagliato o con parametri errati</div>
+        <div class="diag-arr">→</div>
+        <div class="diag-action"><div class="diag-dot" style="background:var(--l03)"></div><div class="diag-leva" style="color:var(--l03)">Tool · description + gerarchia</div></div>
+      </div>
+      <div class="diag-item">
+        <div class="diag-symptom">Loop infinito · workflow non converge</div>
+        <div class="diag-arr">→</div>
+        <div class="diag-action"><div class="diag-dot" style="background:var(--l05)"></div><div class="diag-leva" style="color:var(--l05)">Orchestrazione · limite passi</div></div>
+      </div>
+      <div class="diag-item">
+        <div class="diag-symptom">Troppo lento o costoso a volume</div>
+        <div class="diag-arr">→</div>
+        <div class="diag-action"><div class="diag-dot" style="background:var(--l02)"></div><div class="diag-leva" style="color:var(--l02)">Modello · routing small/large</div></div>
+      </div>
+      <div class="diag-item">
+        <div class="diag-symptom">Non sai se un cambiamento ha migliorato</div>
+        <div class="diag-arr">→</div>
+        <div class="diag-action"><div class="diag-dot" style="background:var(--l06)"></div><div class="diag-leva" style="color:var(--l06)">Testing · suite + metriche</div></div>
+      </div>
+      <div class="diag-item">
+        <div class="diag-symptom">Stile sistematicamente sbagliato malgrado prompt</div>
+        <div class="diag-arr">→</div>
+        <div class="diag-action"><div class="diag-dot" style="background:var(--l07)"></div><div class="diag-leva" style="color:var(--l07)">Fine-tuning · tipo 1 stile</div></div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- principi trasversali -->
+  <div class="f3-principi">
+    <div class="f3-section-lbl">Cinque principi trasversali</div>
+    <div class="pt-grid">
+      <div class="pt-item">
+        <div class="pt-num">01</div>
+        <div class="pt-text">L'ordine è una gerarchia di costo. Esaurisci la leva meno costosa prima di passare alla successiva.</div>
+      </div>
+      <div class="pt-item">
+        <div class="pt-num">02</div>
+        <div class="pt-text">La qualità dei dati precede la qualità dell'algoritmo. Vale per RAG, fine-tuning e testing.</div>
+      </div>
+      <div class="pt-item">
+        <div class="pt-num">03</div>
+        <div class="pt-text">La semplicità è un valore. La complessità aggiuntiva deve comprare qualcosa di misurabile.</div>
+      </div>
+      <div class="pt-item">
+        <div class="pt-num">04</div>
+        <div class="pt-text">Valuta sul tuo task, non sui benchmark. 50 casi reali battono qualsiasi leaderboard pubblico.</div>
+      </div>
+      <div class="pt-item">
+        <div class="pt-num">05</div>
+        <div class="pt-text">I sistemi evolvono. Golden dataset e pipeline di eval sono ciò che li rende mantenibili nel tempo.</div>
+      </div>
+    </div>
+  </div>
+
+</div><!-- /f3 -->
+
+<!-- FOOTER STRIP -->
+<div class="footer-strip">
+  <span class="fs-text">Serie Agenti AI · Infografica · Leve di specializzazione</span>
+  <span class="fs-text">Per approfondire consulta i report specifici della serie · 2026</span>
+</div>
+
+</body>
+</html>

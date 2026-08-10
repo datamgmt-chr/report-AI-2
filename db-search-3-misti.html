@@ -1,0 +1,826 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Interrogare un database — Report 3 · Database misti</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:ital,wght@0,300;0,400;0,500;0,600;1,300;1,400&family=DM+Mono:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg:      #fafaf7;
+  --bg2:     #f2f1ec;
+  --bg3:     #e8e6df;
+  --ink:     #1a1916;
+  --ink2:    #2d2b26;
+  --ink3:    #5c5a52;
+  --ink4:    #9c9a90;
+  --border:  #dddbd2;
+  --border2: #cbc9bf;
+
+  --accent:  #4a1a6b;
+  --accent2: #f0ebfb;
+  --accent3: #c8a8e8;
+
+  --teal:    #1a5f5f;
+  --teal-bg: #e5f3f3;
+  --teal-bd: #8ecece;
+
+  --warm:    #7a4a10;
+  --warm-bg: #fdf3e3;
+  --warm-bd: #e8c878;
+
+  --ok:      #2d6040;
+  --ok-bg:   #eaf4ee;
+  --ok-bd:   #a8d4b4;
+
+  --bad:     #8a1a1a;
+  --bad-bg:  #fdf0f0;
+  --bad-bd:  #e8a8a8;
+
+  --navy:    #1a3a5c;
+  --navy-bg: #e8eef6;
+  --navy-bd: #b0c8e0;
+
+  --sql-c:   #1a5a3a;
+  --sql-bg:  #e8f5ee;
+  --emb-c:   #1a3a5c;
+  --emb-bg:  #e8eef6;
+}
+
+* { margin:0; padding:0; box-sizing:border-box; }
+html { scroll-behavior:smooth; }
+body {
+  background: var(--bg);
+  color: var(--ink);
+  font-family: 'DM Sans', sans-serif;
+  font-weight: 300;
+  font-size: 15px;
+  line-height: 1.75;
+}
+
+.masthead {
+  background: var(--accent);
+  color: #fff;
+  padding: 56px 60px 52px;
+  position: relative;
+  overflow: hidden;
+}
+.masthead::before {
+  content: '';
+  position: absolute;
+  top: -80px; right: -80px;
+  width: 380px; height: 380px;
+  border-radius: 50%;
+  border: 1px solid rgba(255,255,255,.06);
+  pointer-events: none;
+}
+.mh-series {
+  font-family: 'DM Mono', monospace;
+  font-size: 10px; letter-spacing: 3px;
+  text-transform: uppercase; color: rgba(255,255,255,.35);
+  margin-bottom: 20px;
+}
+.mh-num {
+  font-family: 'DM Serif Display', serif;
+  font-size: 80px; line-height: 1;
+  color: rgba(255,255,255,.07);
+  position: absolute; right: 60px; top: 36px;
+  letter-spacing: -4px; user-select: none;
+}
+.masthead h1 {
+  font-family: 'DM Serif Display', serif;
+  font-size: clamp(26px, 3.8vw, 44px);
+  font-weight: 400; line-height: 1.1;
+  letter-spacing: -.5px; max-width: 740px; position: relative;
+}
+.masthead h1 em { font-style: italic; color: rgba(255,255,255,.68); }
+.mh-sub {
+  margin-top: 20px; font-size: 15px; font-weight: 300;
+  color: rgba(255,255,255,.42); max-width: 640px;
+  line-height: 1.7; position: relative;
+}
+.mh-pills {
+  margin-top: 28px; display: flex; gap: 8px;
+  flex-wrap: wrap; position: relative;
+}
+.mh-pill {
+  font-family: 'DM Mono', monospace; font-size: 10px;
+  letter-spacing: 1px; padding: 4px 12px;
+  border: 1px solid rgba(255,255,255,.2);
+  color: rgba(255,255,255,.48); border-radius: 20px;
+}
+
+.nav {
+  position: sticky; top: 0; z-index: 100;
+  background: var(--ink); display: flex; overflow-x: auto;
+  border-bottom: 1px solid rgba(255,255,255,.08);
+}
+.nav-btn {
+  flex-shrink: 0; padding: 14px 20px;
+  border: none; background: transparent; cursor: pointer;
+  font-family: 'DM Mono', monospace; font-size: 10px;
+  letter-spacing: 1px; text-transform: uppercase;
+  color: rgba(255,255,255,.3);
+  border-right: 1px solid rgba(255,255,255,.06);
+  transition: color .2s; white-space: nowrap;
+}
+.nav-btn:hover { color: rgba(255,255,255,.65); }
+.nav-btn.active { color: #fff; background: rgba(255,255,255,.06); }
+
+.sect { display: none; }
+.sect.active { display: block; animation: fadeUp .3s ease; }
+@keyframes fadeUp { from{opacity:0;transform:translateY(5px)} to{opacity:1;transform:translateY(0)} }
+
+.cw { max-width: 860px; margin: 0 auto; padding: 52px 60px 64px; }
+
+.s-eyebrow {
+  font-family: 'DM Mono', monospace; font-size: 10px;
+  letter-spacing: 3px; text-transform: uppercase;
+  color: var(--ink4); margin-bottom: 8px;
+}
+.s-title {
+  font-family: 'DM Serif Display', serif; font-size: 30px;
+  font-weight: 400; letter-spacing: -.3px; color: var(--ink);
+  line-height: 1.15; margin-bottom: 28px;
+}
+
+p { margin-bottom: 18px; color: var(--ink2); }
+p:last-child { margin-bottom: 0; }
+p strong { font-weight: 600; color: var(--ink); }
+code {
+  font-family: 'DM Mono', monospace;
+  background: var(--bg3); padding: 1px 6px;
+  border-radius: 3px; font-size: 13px; color: var(--ink2);
+}
+
+.callout {
+  padding: 20px 24px; border-left: 3px solid;
+  margin: 28px 0; border-radius: 0 6px 6px 0;
+}
+.callout-warn   { background: var(--warm-bg); border-color: var(--warm); }
+.callout-ok     { background: var(--ok-bg);   border-color: var(--ok);   }
+.callout-bad    { background: var(--bad-bg);  border-color: var(--bad);  }
+.callout-note   { background: #f0ecfb;        border-color: #4a2d7a;     }
+.callout-accent { background: var(--accent2); border-color: var(--accent); }
+.callout-teal   { background: var(--teal-bg); border-color: var(--teal); }
+.callout-navy   { background: var(--navy-bg); border-color: var(--navy); }
+.callout-title {
+  font-family: 'DM Mono', monospace; font-size: 10px;
+  letter-spacing: 2px; text-transform: uppercase; margin-bottom: 8px;
+}
+.callout-warn .callout-title   { color: var(--warm); }
+.callout-ok .callout-title     { color: var(--ok);   }
+.callout-bad .callout-title    { color: var(--bad);  }
+.callout-note .callout-title   { color: #4a2d7a;     }
+.callout-accent .callout-title { color: var(--accent); }
+.callout-teal .callout-title   { color: var(--teal); }
+.callout-navy .callout-title   { color: var(--navy); }
+.callout p { font-size: 14px; line-height: 1.65; margin-bottom: 8px; }
+.callout p:last-child { margin-bottom: 0; }
+
+.diagram {
+  background: var(--bg2); border: 1px solid var(--border2);
+  padding: 28px 32px; margin: 28px 0;
+}
+.diagram-title {
+  font-family: 'DM Mono', monospace; font-size: 10px;
+  letter-spacing: 2px; text-transform: uppercase; color: var(--ink4);
+  margin-bottom: 20px; padding-bottom: 12px; border-bottom: 1px solid var(--border);
+}
+
+/* ── QUERY DECOMP ── */
+.query-decomp {
+  border: 1px solid var(--border2); border-radius: 6px;
+  overflow: hidden; margin: 20px 0;
+}
+.qd-prompt {
+  padding: 14px 18px; background: var(--bg3);
+  border-bottom: 1px solid var(--border);
+  font-style: italic; font-size: 14.5px; color: var(--ink2);
+  line-height: 1.6;
+}
+.qd-label {
+  font-family: 'DM Mono', monospace; font-size: 9px;
+  letter-spacing: 1.5px; text-transform: uppercase; color: var(--ink4);
+  margin-bottom: 6px; font-style: normal;
+}
+.qd-parts {
+  display: grid; grid-template-columns: 1fr 1fr; gap: 1px;
+  background: var(--border2);
+}
+.qd-part { background: var(--bg); padding: 14px 18px; }
+.qd-part-label {
+  font-family: 'DM Mono', monospace; font-size: 9px;
+  letter-spacing: 2px; text-transform: uppercase; margin-bottom: 8px;
+}
+.qd-items { display: flex; flex-direction: column; gap: 5px; }
+.qd-item {
+  font-size: 12.5px; line-height: 1.45;
+  padding: 5px 10px; border-radius: 3px;
+}
+
+/* ── TWO STAGE PIPELINE ── */
+.two-stage {
+  display: flex; flex-direction: column; gap: 0;
+  border: 1.5px solid var(--border2); border-radius: 6px;
+  overflow: hidden; margin: 20px 0;
+}
+.ts-stage {
+  display: grid; grid-template-columns: 52px 1fr;
+  border-bottom: 1px solid var(--border);
+}
+.ts-stage:last-child { border-bottom: none; }
+.ts-badge {
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: center; gap: 4px;
+  padding: 16px 8px; border-right: 1px solid var(--border);
+  background: var(--bg2);
+}
+.ts-badge-num {
+  font-family: 'DM Mono', monospace; font-size: 16px;
+  font-weight: 500; line-height: 1;
+}
+.ts-badge-lbl {
+  font-family: 'DM Mono', monospace; font-size: 7px;
+  letter-spacing: 1px; text-transform: uppercase; color: var(--ink4);
+  text-align: center; line-height: 1.3;
+}
+.ts-body { padding: 14px 18px; }
+.ts-title { font-size: 14px; font-weight: 600; color: var(--ink); margin-bottom: 5px; }
+.ts-text { font-size: 13px; color: var(--ink3); line-height: 1.6; }
+.ts-pill {
+  display: inline-block; font-family: 'DM Mono', monospace;
+  font-size: 9px; letter-spacing: .5px;
+  padding: 1px 8px; border-radius: 10px; margin-top: 5px;
+}
+
+/* ── SQL BLOCK ── */
+.sql-block {
+  background: var(--ink); border-radius: 5px;
+  overflow: hidden; margin: 12px 0;
+  font-family: 'DM Mono', monospace;
+}
+.sql-head {
+  padding: 7px 14px; background: rgba(255,255,255,.05);
+  border-bottom: 1px solid rgba(255,255,255,.06);
+  font-size: 9px; letter-spacing: 1px; text-transform: uppercase;
+  color: rgba(255,255,255,.28);
+}
+.sql-body {
+  padding: 12px 14px; font-size: 12px;
+  line-height: 1.85; color: rgba(255,255,255,.75); overflow-x: auto;
+}
+.sql-kw  { color: #7ec8e3; font-weight: 500; }
+.sql-str { color: #e8c87e; }
+.sql-num { color: #c8e67e; }
+.sql-cmt { color: rgba(255,255,255,.25); }
+.sql-fn  { color: #c8a8e8; }
+.sql-op  { color: #e8a87e; }
+
+/* ── SCORE EXAMPLE ── */
+.score-example {
+  border: 1px solid var(--border2); border-radius: 6px;
+  overflow: hidden; margin: 20px 0;
+}
+.se-head {
+  padding: 10px 16px; background: var(--accent);
+  font-family: 'DM Mono', monospace; font-size: 9.5px;
+  letter-spacing: 1.5px; text-transform: uppercase;
+  color: rgba(255,255,255,.8);
+}
+.se-cols {
+  display: grid; grid-template-columns: 1fr 80px 80px 90px 90px;
+  border-bottom: 1px solid var(--border);
+}
+.se-col-head {
+  padding: 7px 12px; background: var(--bg3);
+  font-family: 'DM Mono', monospace; font-size: 8.5px;
+  letter-spacing: 1px; text-transform: uppercase; color: var(--ink4);
+  border-right: 1px solid var(--border);
+}
+.se-col-head:last-child { border-right: none; }
+.se-row { display: grid; grid-template-columns: 1fr 80px 80px 90px 90px; border-bottom: 1px solid var(--border); }
+.se-row:last-child { border-bottom: none; }
+.se-cell {
+  padding: 9px 12px; font-size: 12.5px; color: var(--ink2);
+  border-right: 1px solid var(--border); line-height: 1.4;
+}
+.se-cell:last-child { border-right: none; }
+.se-score { font-family: 'DM Mono', monospace; font-size: 12px; text-align: right; }
+
+/* ── SHORT TEXT CASE ── */
+.short-text-cases {
+  display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin: 20px 0;
+}
+.stc {
+  border: 1px solid var(--border2); border-radius: 4px; overflow: hidden;
+}
+.stc-head {
+  padding: 8px 14px; font-family: 'DM Mono', monospace; font-size: 9.5px;
+  letter-spacing: 1px; text-transform: uppercase; color: rgba(255,255,255,.85);
+  border-bottom: 1px solid rgba(255,255,255,.1);
+}
+.stc-body {
+  padding: 12px 14px; font-size: 12.5px; color: var(--ink3); line-height: 1.6;
+}
+.stc-body p { font-size: 12.5px; margin-bottom: 7px; }
+.stc-verdict {
+  padding: 8px 14px; font-size: 12px; font-weight: 500;
+  border-top: 1px solid var(--border);
+}
+
+/* ── KEY INSIGHT ── */
+.key-insight {
+  background: var(--ink); color: #fff;
+  padding: 28px 32px; margin: 32px 0; border-radius: 6px;
+  position: relative; overflow: hidden;
+}
+.key-insight::before {
+  content: '"'; position: absolute; right: 24px; top: -10px;
+  font-family: 'DM Serif Display', serif; font-size: 100px;
+  color: rgba(255,255,255,.06); line-height: 1; pointer-events: none;
+}
+.ki-label {
+  font-family: 'DM Mono', monospace; font-size: 9px;
+  letter-spacing: 2.5px; text-transform: uppercase;
+  color: rgba(255,255,255,.3); margin-bottom: 12px;
+}
+.ki-text {
+  font-family: 'DM Serif Display', serif; font-size: 20px;
+  font-weight: 400; line-height: 1.4;
+  color: rgba(255,255,255,.9); max-width: 680px;
+}
+
+/* ── NEXT REPORT ── */
+.next-report {
+  border-top: 1px solid var(--border); margin-top: 52px;
+  padding-top: 32px; display: flex;
+  justify-content: space-between; align-items: center; gap: 20px;
+}
+.nr-label {
+  font-family: 'DM Mono', monospace; font-size: 9px;
+  letter-spacing: 2px; text-transform: uppercase;
+  color: var(--ink4); margin-bottom: 6px;
+}
+.nr-title { font-family: 'DM Serif Display', serif; font-size: 18px; color: var(--ink); line-height: 1.2; }
+.nr-sub { font-size: 13px; color: var(--ink4); margin-top: 4px; }
+.nr-arrow { font-family: 'DM Mono', monospace; font-size: 22px; color: var(--accent); flex-shrink: 0; }
+
+.footer {
+  padding: 22px 60px; border-top: 1px solid var(--border);
+  display: flex; justify-content: space-between; align-items: center;
+  font-family: 'DM Mono', monospace; font-size: 10px;
+  letter-spacing: 1px; text-transform: uppercase; color: var(--ink4);
+}
+
+@media (max-width: 720px) {
+  .masthead, .cw, .footer { padding-left: 24px; padding-right: 24px; }
+  .mh-num { display: none; }
+  .qd-parts { grid-template-columns: 1fr; }
+  .se-cols, .se-row { grid-template-columns: 1fr 60px 60px; }
+  .se-cell:nth-child(4), .se-cell:nth-child(5),
+  .se-col-head:nth-child(4), .se-col-head:nth-child(5) { display: none; }
+  .short-text-cases { grid-template-columns: 1fr; }
+}
+</style>
+</head>
+<body>
+
+<div class="masthead">
+  <div class="mh-series">Interrogare un database · Report 3 di 4</div>
+  <div class="mh-num">03</div>
+  <h1>Database misti:<br><em>quando i criteri attraversano<br>campi strutturati e testi aperti</em></h1>
+  <p class="mh-sub">Una query come "prodotti outdoor sotto i 300 euro con materiali tecnici di alta qualità" attraversa tre tipi di campo contemporaneamente. Nessuna strategia singola basta. Serve un'architettura che le combini — e una logica per fondere risultati eterogenei in un ranking unico.</p>
+  <div class="mh-pills">
+    <span class="mh-pill">Architettura a due stadi</span>
+    <span class="mh-pill">Pre-filtro SQL</span>
+    <span class="mh-pill">Retrieval semantico</span>
+    <span class="mh-pill">Score ibrido</span>
+    <span class="mh-pill">RRF</span>
+    <span class="mh-pill">Testo corto — caso speciale</span>
+  </div>
+</div>
+
+<div class="nav">
+  <button class="nav-btn active" onclick="show(0)">1 · Il problema composito</button>
+  <button class="nav-btn" onclick="show(1)">2 · Decomporre la query</button>
+  <button class="nav-btn" onclick="show(2)">3 · L'architettura a due stadi</button>
+  <button class="nav-btn" onclick="show(3)">4 · Combinare gli score</button>
+  <button class="nav-btn" onclick="show(4)">5 · Il testo corto</button>
+</div>
+
+
+<!-- ══════════════════════════════════
+     S0 — IL PROBLEMA COMPOSITO
+══════════════════════════════════ -->
+<div class="sect active" id="s0">
+<div class="cw">
+
+  <div class="s-eyebrow">Il caso più realistico</div>
+  <div class="s-title">Quando una sola strategia non basta</div>
+
+  <p>Nei report 1 e 2 abbiamo trattato i campi strutturati e i testi aperti separatamente, come se le query cadessero sempre in una sola categoria. Nella realtà quasi nessuna query è così pulita. La maggior parte delle richieste interessanti attraversa contemporaneamente campi di tipo diverso.</p>
+
+  <p>Considera questa query: <em>"Vorrei i prodotti outdoor invernali sotto i 350 euro, disponibili subito, con materiali tecnici di alta qualità adatti all'alpinismo."</em></p>
+
+  <p>Contiene almeno tre tipi di criteri distinti che richiedono tre strategie diverse:</p>
+
+  <div class="query-decomp">
+    <div class="qd-prompt">
+      <div class="qd-label">Query completa</div>
+      "Vorrei i prodotti outdoor invernali sotto i 350 euro, disponibili subito, con materiali tecnici di alta qualità adatti all'alpinismo."
+    </div>
+    <div class="qd-parts">
+      <div class="qd-part">
+        <div class="qd-part-label" style="color:var(--sql-c);">Criteri strutturati → SQL</div>
+        <div class="qd-items">
+          <div class="qd-item" style="background:var(--sql-bg); color:var(--sql-c);">prezzo ≤ 350 <span style="font-family:'DM Mono',monospace; font-size:10px; opacity:.6;">→ colonna numerica</span></div>
+          <div class="qd-item" style="background:var(--sql-bg); color:var(--sql-c);">disponibile = true <span style="font-family:'DM Mono',monospace; font-size:10px; opacity:.6;">→ booleano</span></div>
+          <div class="qd-item" style="background:var(--sql-bg); color:var(--sql-c);">stagione = 'autunno-inverno' <span style="font-family:'DM Mono',monospace; font-size:10px; opacity:.6;">→ valore codificato</span></div>
+          <div class="qd-item" style="background:var(--sql-bg); color:var(--sql-c);">categoria = 'abbigliamento-outdoor' <span style="font-family:'DM Mono',monospace; font-size:10px; opacity:.6;">→ valore codificato</span></div>
+        </div>
+      </div>
+      <div class="qd-part">
+        <div class="qd-part-label" style="color:var(--emb-c);">Criteri semantici → retrieval su testo</div>
+        <div class="qd-items">
+          <div class="qd-item" style="background:var(--emb-bg); color:var(--emb-c);">"materiali tecnici di alta qualità" <span style="font-family:'DM Mono',monospace; font-size:10px; opacity:.6;">→ nella descrizione</span></div>
+          <div class="qd-item" style="background:var(--emb-bg); color:var(--emb-c);">"adatti all'alpinismo" <span style="font-family:'DM Mono',monospace; font-size:10px; opacity:.6;">→ nella descrizione</span></div>
+        </div>
+        <div style="margin-top:12px; padding:8px 10px; background:var(--warm-bg); border:1px solid var(--warm-bd); border-radius:3px; font-size:12px; color:var(--warm);">
+          Questi criteri non corrispondono a nessuna colonna. "Alta qualità" e "alpinismo" vivono nei testi descrittivi — con vocabolari diversi da prodotto a prodotto.
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <p>Il punto chiave è che i due tipi di criteri non sono indipendenti — devono essere soddisfatti contemporaneamente. Non basta trovare prodotti che costano meno di 350 euro, né prodotti con descrizioni sull'alpinismo: servono prodotti che soddisfano entrambe le condizioni insieme.</p>
+
+  <div class="key-insight">
+    <div class="ki-label">Il problema fondamentale</div>
+    <div class="ki-text">SQL filtra ma non capisce il testo. Il retrieval semantico capisce il testo ma ignora i campi strutturati. Su una query mista, l'unica soluzione è farli lavorare insieme — in sequenza o in parallelo.</div>
+  </div>
+
+</div>
+</div>
+
+
+<!-- ══════════════════════════════════
+     S1 — DECOMPORRE LA QUERY
+══════════════════════════════════ -->
+<div class="sect" id="s1">
+<div class="cw">
+
+  <div class="s-eyebrow">Il primo passo</div>
+  <div class="s-title">Decomporre la query: separare i criteri strutturati da quelli semantici</div>
+
+  <p>Prima di costruire il sistema di ricerca, bisogna insegnare all'agente a riconoscere di quale tipo sono i criteri espressi nella query. Non tutti i criteri si trattano allo stesso modo — e applicare la strategia sbagliata a un criterio produce silenziosamente risultati pessimi.</p>
+
+  <div class="diagram">
+    <div class="diagram-title">Prompt per la decomposizione automatica della query</div>
+
+    <div style="border:1px solid var(--border2); border-radius:4px; overflow:hidden; margin-bottom:16px;">
+      <div style="padding:8px 14px; background:var(--ink); font-family:'DM Mono',monospace; font-size:9px; letter-spacing:1px; text-transform:uppercase; color:rgba(255,255,255,.3);">System prompt — agente di ricerca su database</div>
+      <div style="padding:14px 16px; font-size:13px; color:var(--ink2); line-height:1.7; font-family:'DM Mono',monospace; background:var(--bg);">
+        <span style="color:var(--ink4);">/* Schema tabella */</span><br>
+        Tabella prodotti: id, nome, categoria ('abbigliamento-outdoor'|'abbigliamento-sport'|'accessori'|'calzature'|'equipment'), prezzo (DECIMAL), disponibile (BOOLEAN), stagione ('primavera-estate'|'autunno-inverno'|'tutti-stagioni'), descrizione (TEXT libero, 200-2000 parole)<br><br>
+        <span style="color:var(--ink4);">/* Istruzione di decomposizione */</span><br>
+        Quando ricevi una query, prima di cercare:<br>
+        1. Estrai i criteri <span style="color:#7ec8e3;">strutturati</span> (valori numerici, booleani, categorie codificate) → trasformali in condizioni SQL<br>
+        2. Estrai i criteri <span style="color:#c8a8e8;">semantici</span> (concetti qualitativi, caratteristiche descrittive, uso previsto) → usali per il retrieval sul campo descrizione<br>
+        3. Rispondi in JSON con due chiavi: "sql_filters" e "semantic_query"
+      </div>
+    </div>
+
+    <p style="font-size:13px; color:var(--ink3); margin-bottom:14px; margin-top:0;">Esempio di output del modello per la query precedente:</p>
+
+    <div style="background:var(--ink); border-radius:4px; padding:14px 16px; font-family:'DM Mono',monospace; font-size:12px; line-height:1.8; color:rgba(255,255,255,.75);">
+      {<br>
+      &nbsp;&nbsp;<span style="color:#e8c87e;">"sql_filters"</span>: {<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;<span style="color:#e8c87e;">"prezzo_max"</span>: <span style="color:#c8e67e;">350</span>,<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;<span style="color:#e8c87e;">"disponibile"</span>: <span style="color:#c8e67e;">true</span>,<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;<span style="color:#e8c87e;">"stagione"</span>: <span style="color:#e8c87e;">"autunno-inverno"</span>,<br>
+      &nbsp;&nbsp;&nbsp;&nbsp;<span style="color:#e8c87e;">"categoria"</span>: <span style="color:#e8c87e;">"abbigliamento-outdoor"</span><br>
+      &nbsp;&nbsp;},<br>
+      &nbsp;&nbsp;<span style="color:#e8c87e;">"semantic_query"</span>: <span style="color:#e8c87e;">"materiali tecnici alta qualità alpinismo"</span><br>
+      }
+    </div>
+  </div>
+
+  <p>La decomposizione in JSON strutturato è importante perché permette al sistema di usare i due tipi di criteri in modo diverso — i filtri SQL vengono passati a una query sul database, la query semantica viene embeddizzata e usata per il retrieval vettoriale. I due canali operano in modo diverso ma producono un risultato integrato.</p>
+
+  <div class="callout callout-accent">
+    <div class="callout-title">I casi ambigui di decomposizione</div>
+    <p>Non tutti i criteri si classificano in modo ovvio. "Prodotti economici" — è un filtro su prezzo (strutturato) o una percezione di valore (semantica)? "Giacca leggera" — il peso è una colonna numerica o una caratteristica descrittiva? "Per uso professionale" — c'è una colonna "segmento" o è nel testo?</p>
+    <p>La regola pratica: se il criterio può essere verificato con un confronto deterministico su una colonna specifica della tabella, trattalo come strutturato. Se richiede interpretazione del testo descrittivo, trattalo come semantico. In caso di dubbio, includilo in entrambi — costa poco ed evita falsi negativi.</p>
+  </div>
+
+</div>
+</div>
+
+
+<!-- ══════════════════════════════════
+     S2 — L'ARCHITETTURA A DUE STADI
+══════════════════════════════════ -->
+<div class="sect" id="s2">
+<div class="cw">
+
+  <div class="s-eyebrow">La soluzione principale</div>
+  <div class="s-title">L'architettura a due stadi: SQL prima, retrieval dopo</div>
+
+  <p>L'approccio più efficiente per una query mista è sequenziale: prima si usano i filtri SQL per ridurre il corpus ai candidati plausibili, poi si esegue il retrieval semantico solo su quel sottoinsieme. Il primo stadio è deterministico e veloce; il secondo è semantico e preciso ma più costoso.</p>
+
+  <div class="two-stage">
+
+    <div class="ts-stage">
+      <div class="ts-badge">
+        <div class="ts-badge-num" style="color:var(--sql-c);">1</div>
+        <div class="ts-badge-lbl">Stadio<br>SQL</div>
+      </div>
+      <div class="ts-body">
+        <div class="ts-title">Filtro strutturato — riduce il corpus ai candidati</div>
+        <div class="ts-text">Si esegue la query SQL con i filtri strutturati estratti nella fase di decomposizione. L'obiettivo è ridurre drasticamente il numero di righe su cui il retrieval semantico dovrà operare — da centinaia a decine.</div>
+        <div class="sql-block">
+          <div class="sql-head">Stadio 1 — Query SQL di pre-filtro</div>
+          <div class="sql-body"><span class="sql-kw">SELECT</span> id, nome, prezzo, descrizione
+<span class="sql-kw">FROM</span> prodotti
+<span class="sql-kw">WHERE</span> prezzo <span class="sql-op">&lt;=</span> <span class="sql-num">350</span>
+  <span class="sql-kw">AND</span> disponibile <span class="sql-op">=</span> <span class="sql-num">true</span>
+  <span class="sql-kw">AND</span> stagione <span class="sql-op">=</span> <span class="sql-str">'autunno-inverno'</span>
+  <span class="sql-kw">AND</span> categoria <span class="sql-op">=</span> <span class="sql-str">'abbigliamento-outdoor'</span>;
+<span class="sql-cmt">-- Risultato: 47 righe su 400 totali</span></div>
+        </div>
+        <div class="ts-pill" style="background:var(--sql-bg); color:var(--sql-c);">400 prodotti → 47 candidati (−88%)</div>
+      </div>
+    </div>
+
+    <div class="ts-stage">
+      <div class="ts-badge">
+        <div class="ts-badge-num" style="color:var(--emb-c);">2</div>
+        <div class="ts-badge-lbl">Stadio<br>Semantico</div>
+      </div>
+      <div class="ts-body">
+        <div class="ts-title">Retrieval semantico — valuta i candidati per corrispondenza qualitativa</div>
+        <div class="ts-text">Si calcola l'embedding della query semantica e si confronta con gli embedding dei testi descrittivi solo dei 47 candidati filtrati. Il risultato è un ranking per rilevanza semantica all'interno del sottoinsieme strutturalmente valido.</div>
+        <div class="sql-block">
+          <div class="sql-head">Stadio 2 — Vector search sul sottoinsieme filtrato (con pgvector)</div>
+          <div class="sql-body"><span class="sql-kw">SELECT</span> id, nome, prezzo,
+  <span class="sql-fn">1</span> <span class="sql-op">-</span> (descrizione_embedding <span class="sql-fn">&lt;=&gt;</span> <span class="sql-fn">embed</span>(<span class="sql-str">'materiali tecnici alta qualità alpinismo'</span>))
+  <span class="sql-kw">AS</span> semantic_score
+<span class="sql-kw">FROM</span> prodotti
+<span class="sql-kw">WHERE</span> id <span class="sql-kw">IN</span> (<span class="sql-num">101</span>, <span class="sql-num">204</span>, <span class="sql-num">318</span>, ...) <span class="sql-cmt">-- IDs dal stadio 1</span>
+  <span class="sql-kw">AND</span> (descrizione_embedding <span class="sql-fn">&lt;=&gt;</span> <span class="sql-fn">embed</span>(<span class="sql-str">'materiali tecnici alta qualità alpinismo'</span>))
+  <span class="sql-op">&lt;</span> <span class="sql-num">0.35</span> <span class="sql-cmt">-- soglia di similarità minima</span>
+<span class="sql-kw">ORDER BY</span> semantic_score <span class="sql-kw">DESC</span>
+<span class="sql-kw">LIMIT</span> <span class="sql-num">15</span>;</div>
+        </div>
+        <div class="ts-pill" style="background:var(--emb-bg); color:var(--emb-c);">47 candidati → top 15 per rilevanza semantica</div>
+      </div>
+    </div>
+
+    <div class="ts-stage" style="border-bottom:none;">
+      <div class="ts-badge">
+        <div class="ts-badge-num" style="color:var(--accent);">3</div>
+        <div class="ts-badge-lbl">Stadio<br>LLM</div>
+      </div>
+      <div class="ts-body">
+        <div class="ts-title">Valutazione finale — il modello legge e seleziona</div>
+        <div class="ts-text">I 15 candidati con score semantico più alto vengono passati al modello LLM insieme alla query originale. Il modello legge le descrizioni, valuta la corrispondenza su tutti i criteri contemporaneamente (inclusi quelli semantici sfumati), e produce il ranking finale motivato.</div>
+        <div class="ts-pill" style="background:var(--accent2); color:var(--accent);">15 candidati → risposta finale con ranking e motivazioni</div>
+      </div>
+    </div>
+
+  </div>
+
+  <div class="callout callout-ok">
+    <div class="callout-title">Perché l'ordine stadio 1 → stadio 2 è importante</div>
+    <p>Eseguire il retrieval semantico su tutto il corpus (400 prodotti) invece che sul sottoinsieme filtrato (47 prodotti) non produrrebbe solo più lavoro — produrrebbe risultati peggiori. Senza il pre-filtro strutturato, il retrieval semantico potrebbe restituire prodotti semanticamente vicini ("materiali tecnici di alta qualità") ma strutturalmente sbagliati (prezzo 600€, categoria attrezzatura).</p>
+    <p>Il pre-filtro strutturato non è solo un'ottimizzazione di performance — è un vincolo semantico. Garantisce che i criteri oggettivi siano rispettati prima ancora che la valutazione qualitativa inizi.</p>
+  </div>
+
+  <div class="callout callout-teal">
+    <div class="callout-title">Con pgvector: i due stadi in una sola query</div>
+    <p>Con l'estensione pgvector su PostgreSQL, non serve eseguire due query separate. I filtri SQL e il retrieval vettoriale possono coesistere nella stessa query — il database applica prima i filtri strutturati (usando gli indici B-tree esistenti) e poi la ricerca vettoriale solo sulle righe risultanti.</p>
+    <p>Questo rende l'architettura a due stadi non solo elegante concettualmente, ma anche efficiente operativamente: una sola chiamata al database, filtraggio e ranking in un'unica operazione.</p>
+  </div>
+
+</div>
+</div>
+
+
+<!-- ══════════════════════════════════
+     S3 — COMBINARE GLI SCORE
+══════════════════════════════════ -->
+<div class="sect" id="s3">
+<div class="cw">
+
+  <div class="s-eyebrow">Il problema del ranking finale</div>
+  <div class="s-title">Come combinare score eterogenei in un ranking unico</div>
+
+  <p>Nell'architettura a due stadi, il ranking finale è prodotto dal modello LLM che valuta i candidati dopo i due filtri. Ma in alcuni casi si vuole avere un ranking numerico che combini più dimensioni — per esempio per ordinare i risultati prima di passarli al modello, o per sistemi dove il modello non fa la selezione finale.</p>
+
+  <p>Il problema è che gli score di diversi sistemi non sono direttamente comparabili: uno score di similarità semantica (0.0–1.0) e un ranking SQL (1°, 2°, 3°…) non si sommano in modo significativo. Servono tecniche di fusione.</p>
+
+  <div class="diagram">
+    <div class="diagram-title">Tre approcci per combinare score eterogenei</div>
+
+    <div style="display:flex; flex-direction:column; gap:12px; margin-top:4px;">
+
+      <!-- RRF -->
+      <div style="border:1px solid var(--border2); border-radius:4px; overflow:hidden;">
+        <div style="padding:10px 16px; background:var(--ok); font-family:'DM Mono',monospace; font-size:9.5px; letter-spacing:1.5px; text-transform:uppercase; color:rgba(255,255,255,.85);">RRF — Reciprocal Rank Fusion · Raccomandato</div>
+        <div style="padding:14px 16px; font-size:13px; color:var(--ink3); line-height:1.65;">
+          <p>Invece di combinare gli score grezzi, si combinano i <strong style="color:var(--ink2);">rank</strong> — le posizioni in classifica. Per ogni documento, si calcola la somma dei reciproci dei rank in ogni classifica: <code>score = Σ 1/(k + rank_i)</code> dove k è tipicamente 60.</p>
+          <p>Il vantaggio: RRF è insensibile alla scala degli score originali — non importa se uno score va da 0 a 1 e l'altro da 0 a 100, entrambi vengono trasformati in rank prima della fusione. Robusto, semplice da implementare, funziona bene in pratica.</p>
+        </div>
+        <div class="sql-block" style="margin:0 16px 14px;">
+          <div class="sql-head">RRF — implementazione pratica</div>
+          <div class="sql-body"><span class="sql-cmt">-- Classifica semantica (rank per similarità desc)</span>
+<span class="sql-kw">WITH</span> sem_rank <span class="sql-kw">AS</span> (
+  <span class="sql-kw">SELECT</span> id, <span class="sql-fn">ROW_NUMBER</span>() <span class="sql-kw">OVER</span> (<span class="sql-kw">ORDER BY</span> semantic_score <span class="sql-kw">DESC</span>) <span class="sql-kw">AS</span> rk
+  <span class="sql-kw">FROM</span> candidati
+),
+<span class="sql-cmt">-- Classifica prezzo (rank per prezzo asc — più economico = rank più alto)</span>
+price_rank <span class="sql-kw">AS</span> (
+  <span class="sql-kw">SELECT</span> id, <span class="sql-fn">ROW_NUMBER</span>() <span class="sql-kw">OVER</span> (<span class="sql-kw">ORDER BY</span> prezzo <span class="sql-kw">ASC</span>) <span class="sql-kw">AS</span> rk
+  <span class="sql-kw">FROM</span> candidati
+)
+<span class="sql-kw">SELECT</span> s.id,
+  (<span class="sql-num">1.0</span> / (<span class="sql-num">60</span> <span class="sql-op">+</span> s.rk)) <span class="sql-op">+</span> (<span class="sql-num">1.0</span> / (<span class="sql-num">60</span> <span class="sql-op">+</span> p.rk)) <span class="sql-kw">AS</span> rrf_score
+<span class="sql-kw">FROM</span> sem_rank s <span class="sql-kw">JOIN</span> price_rank p <span class="sql-kw">ON</span> s.id <span class="sql-op">=</span> p.id
+<span class="sql-kw">ORDER BY</span> rrf_score <span class="sql-kw">DESC</span>;</div>
+        </div>
+      </div>
+
+      <!-- Media pesata -->
+      <div style="border:1px solid var(--border2); border-radius:4px; overflow:hidden;">
+        <div style="padding:10px 16px; background:var(--warm); font-family:'DM Mono',monospace; font-size:9.5px; letter-spacing:1.5px; text-transform:uppercase; color:rgba(255,255,255,.85);">Media pesata degli score normalizzati · Quando i pesi hanno significato</div>
+        <div style="padding:14px 16px; font-size:13px; color:var(--ink3); line-height:1.65;">
+          <p>Se vuoi controllare esplicitamente il peso relativo delle dimensioni — per esempio "la qualità semantica conta il doppio del prezzo" — si normalizzano gli score su scala 0–1 e si calcolano media pesata: <code>score = 0.7 × semantic + 0.3 × price_score</code>.</p>
+          <p>Il rischio: la normalizzazione è sensibile agli outlier. Un prodotto molto economico può comprimere artificialmente gli score di prezzo degli altri. Va usato con attenzione e con score che abbiano una distribuzione ragionevole.</p>
+        </div>
+      </div>
+
+      <!-- Solo semantico, filtro duro sui strutturati -->
+      <div style="border:1px solid var(--border2); border-radius:4px; overflow:hidden;">
+        <div style="padding:10px 16px; background:var(--navy); font-family:'DM Mono',monospace; font-size:9.5px; letter-spacing:1.5px; text-transform:uppercase; color:rgba(255,255,255,.85);">Filtro duro + ranking solo semantico · Il più semplice</div>
+        <div style="padding:14px 16px; font-size:13px; color:var(--ink3); line-height:1.65;">
+          <p>I criteri strutturati sono trattati come filtri binari (soddisfatto / non soddisfatto) — non entrano nel ranking. Solo i criteri semantici producono uno score di ranking. Il modello LLM eventualmente affina l'ordinamento finale.</p>
+          <p>Questo approccio è il più semplice e spesso il più appropriato: i criteri strutturati definiscono il confine del corpus valido, il retrieval semantico ordina i validi per rilevanza qualitativa. Non serve fondere score eterogenei.</p>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <div class="score-example">
+    <div class="se-head">Esempio di scoring — 5 prodotti candidati, tre approcci a confronto</div>
+    <div class="se-cols">
+      <div class="se-col-head">Prodotto</div>
+      <div class="se-col-head">Score semantico</div>
+      <div class="se-col-head">Rank prezzo</div>
+      <div class="se-col-head">RRF score</div>
+      <div class="se-col-head">Solo semantico</div>
+    </div>
+    <div class="se-row">
+      <div class="se-cell">Alpentech Pro · €289</div>
+      <div class="se-cell se-score" style="color:var(--ok);">0.91</div>
+      <div class="se-cell se-score" style="color:var(--ok);">#2</div>
+      <div class="se-cell se-score" style="color:var(--ok);">0.0328 → <strong>#1</strong></div>
+      <div class="se-cell se-score" style="color:var(--ok);"><strong>#1</strong></div>
+    </div>
+    <div class="se-row">
+      <div class="se-cell">WinterShell Pro · €240</div>
+      <div class="se-cell se-score" style="color:var(--ok);">0.84</div>
+      <div class="se-cell se-score" style="color:var(--ok);">#1</div>
+      <div class="se-cell se-score" style="color:var(--ok);">0.0327 → <strong>#2</strong></div>
+      <div class="se-cell se-score">#2</div>
+    </div>
+    <div class="se-row">
+      <div class="se-cell">ArcticLayer · €185</div>
+      <div class="se-cell se-score" style="color:var(--ink4);">0.68</div>
+      <div class="se-cell se-score" style="color:var(--ok);">#1 <span style="font-size:10px; opacity:.6;">(più econ.)</span></div>
+      <div class="se-cell se-score">#3</div>
+      <div class="se-cell se-score" style="color:var(--ink4);">#4</div>
+    </div>
+    <div class="se-row">
+      <div class="se-cell">TrailGuide Shell · €310</div>
+      <div class="se-cell se-score" style="color:var(--ok);">0.79</div>
+      <div class="se-cell se-score">#3</div>
+      <div class="se-cell se-score">#4</div>
+      <div class="se-cell se-score">#3</div>
+    </div>
+    <div class="se-row">
+      <div class="se-cell">SummitLite · €190</div>
+      <div class="se-cell se-score" style="color:var(--ink4);">0.61</div>
+      <div class="se-cell se-score" style="color:var(--ok);">#2</div>
+      <div class="se-cell se-score">#5</div>
+      <div class="se-cell se-score" style="color:var(--ink4);">#5</div>
+    </div>
+  </div>
+
+  <p>La tabella mostra come approcci diversi producono ordinamenti diversi. RRF promuove ArcticLayer al terzo posto grazie al prezzo basso, nonostante lo score semantico modesto. Il ranking solo semantico ignora completamente il prezzo nell'ordinamento (che però è già stato filtrato nella fase SQL). La scelta tra i due dipende da cosa vuoi ottimizzare nel ranking finale.</p>
+
+  <div class="callout callout-warn">
+    <div class="callout-title">Quando non serve nessun sistema di fusione degli score</div>
+    <p>Se hai lo stadio 3 (il modello LLM che valuta i candidati finali), il ranking numerico non è il prodotto finale — è solo un input per il modello. In questo caso, è sufficiente passare al modello i top-K per score semantico, includere i dati strutturati nel contesto, e lasciare che sia il modello a produrre il ranking finale ponderando tutti i criteri.</p>
+    <p>I sistemi di fusione numerica (RRF, media pesata) hanno senso quando il modello LLM non è nell'architettura — per esempio in sistemi di retrieval puro dove il risultato è una lista ordinata senza generazione di testo.</p>
+  </div>
+
+</div>
+</div>
+
+
+<!-- ══════════════════════════════════
+     S4 — IL TESTO CORTO
+══════════════════════════════════ -->
+<div class="sect" id="s4">
+<div class="cw">
+
+  <div class="s-eyebrow">Il caso speciale più comune</div>
+  <div class="s-title">Il testo corto: troppo lungo per essere un valore codificato, troppo breve per l'embedding</div>
+
+  <p>C'è un tipo di campo che sfugge alle categorie dei report precedenti: il testo corto aperto — 20–80 parole. Descrizioni di una o due frasi, tag con commento, note sintetiche. Non è un valore codificato (il vocabolario non è fisso), ma non è abbastanza lungo per beneficiare dell'embedding semantico.</p>
+
+  <p>Questi campi sono estremamente comuni: il campo "note" di un record, il "subtitle" di un prodotto, il "commento" di un ordine. Vengono spesso trascurati nell'architettura di ricerca perché non si sa bene dove metterli — e finiscono per non essere cercati affatto.</p>
+
+  <div class="short-text-cases">
+    <div class="stc">
+      <div class="stc-head" style="background:var(--ok);">Campo: note prodotto (20–40 parole)</div>
+      <div class="stc-body">
+        <p>Esempi: "Adatta per alpinismo tecnico e ghiaccio. Non consigliata per trekking estivo. Disponibile anche in versione donna." — "Prodotto di punta della gamma. Cliente professionale. Venduto con istruttori certificati."</p>
+        <p>Il vocabolario varia molto tra record. L'embedding su 30 parole produce vettori poco stabili. Il full-text search funziona per keyword esatte ma perde i sinonimi.</p>
+      </div>
+      <div class="stc-verdict" style="color:var(--ok); background:var(--ok-bg);">→ Full-text search + istruzioni al modello di guardare questo campo</div>
+    </div>
+    <div class="stc">
+      <div class="stc-head" style="background:var(--navy);">Campo: tagline / sottotitolo (10–20 parole)</div>
+      <div class="stc-body">
+        <p>Esempi: "Il riferimento per l'alpinismo estremo" — "Leggerezza e protezione senza compromessi" — "Per chi non accetta compromessi sulle prestazioni".</p>
+        <p>Testi brevi ma con forte carica semantica. L'embedding funziona meglio qui perché il testo è denso di significato per parola. Utile per matching su posizionamento ("premium", "professionale").</p>
+      </div>
+      <div class="stc-verdict" style="color:var(--navy); background:var(--navy-bg);">→ Embedding vale qui, nonostante la brevità</div>
+    </div>
+    <div class="stc">
+      <div class="stc-head" style="background:var(--accent);">Campo: uso previsto (30–60 parole)</div>
+      <div class="stc-body">
+        <p>Esempi: "Alpinismo su ghiaccio, arrampicata mista, scialpinismo tecnico. Non adatta per escursionismo. Stagione: ottobre–aprile." — "Trekking di più giorni, via ferrata, hiking estivo. Sconsigliata sotto i -5°C."</p>
+        <p>Semi-strutturato con testo libero. Il full-text search funziona bene per termini specifici ("ghiaccio", "scialpinismo"). L'embedding aggiunge valore per query semantiche ("uso in condizioni estreme").</p>
+      </div>
+      <div class="stc-verdict" style="color:var(--accent); background:var(--accent2);">→ Approccio ibrido: FTS per termini + embedding per concetti</div>
+    </div>
+    <div class="stc">
+      <div class="stc-head" style="background:var(--warm);">Campo: materiali (elenco semi-strutturato)</div>
+      <div class="stc-body">
+        <p>Esempi: "Gore-Tex Pro 3L, pile Polartec® 200, zip YKK" — "Nylon 70D, membrana impermeabile proprietaria, trattamento DWR" — "100% lana merino, certificazione mulesing-free".</p>
+        <p>Misto di termini tecnici, nomi di brand, specifiche. Il full-text search trova i termini esatti. L'embedding non aggiunge molto qui perché il matching su materiali è quasi sempre per termine esatto.</p>
+      </div>
+      <div class="stc-verdict" style="color:var(--warm); background:var(--warm-bg);">→ Full-text search, non serve embedding</div>
+    </div>
+  </div>
+
+  <div class="callout callout-note">
+    <div class="callout-title">La regola per il testo corto</div>
+    <p>La variabile decisiva non è la lunghezza in parole — è la <strong>densità semantica</strong>: quante informazioni distinte di significato ci sono per parola. "Il riferimento per l'alpinismo estremo" ha alta densità semantica (ogni parola conta); "Disponibile in magazzino, spedizione in 2 giorni" ha bassa densità semantica (informazioni di stato, non di significato).</p>
+    <p>Per testi a bassa densità semantica: full-text search o filtri strutturati. Per testi ad alta densità semantica (tagline, posizionamento, uso previsto): l'embedding funziona anche con 15–20 parole. Il test pratico: se due frasi possono descrivere la stessa cosa con parole completamente diverse, vale la pena l'embedding.</p>
+  </div>
+
+  <div class="callout callout-teal">
+    <div class="callout-title">Come gestire il testo corto nell'architettura a due stadi</div>
+    <p>Il testo corto non richiede un'architettura separata — si integra naturalmente nei due stadi. I campi a testo corto con matching per keyword (materiali, note) vengono inclusi come clausole <code>ILIKE</code> nel primo stadio SQL. I campi a testo corto con matching semantico (tagline, uso previsto) vengono concatenati al testo lungo della descrizione prima di generare l'embedding — aumentando la densità semantica complessiva del vettore.</p>
+    <p>Esempio: invece di embeddare solo la descrizione lunga, si embeddano insieme tagline + uso previsto + descrizione. Il vettore risultante cattura sia il posizionamento sintetico che il dettaglio tecnico.</p>
+  </div>
+
+  <div class="key-insight">
+    <div class="ki-label">Il principio dell'architettura mista</div>
+    <div class="ki-text">SQL filtra lo spazio di ricerca. Il retrieval semantico ordina per rilevanza qualitativa. Il modello LLM valuta con intelligenza il sottoinsieme risultante. Ognuno fa quello che sa fare meglio — e nessuno cerca di fare il lavoro degli altri.</div>
+  </div>
+
+  <!-- NEXT REPORT -->
+  <div class="next-report">
+    <div>
+      <div class="nr-label">Prossimo report</div>
+      <div class="nr-title">Corpus documentali non strutturati:<br>differenze, contatti, integrazione</div>
+      <div class="nr-sub">Cosa cambia con i documenti liberi · Come si integra con il database · Pipeline unica per fonti eterogenee</div>
+    </div>
+    <div class="nr-arrow">→</div>
+  </div>
+
+</div>
+</div>
+
+<div class="footer">
+  <span>Interrogare un database · Report 3 · Database misti</span>
+  <span>2026</span>
+</div>
+
+<script>
+function show(n) {
+  document.querySelectorAll('.sect').forEach(s => s.classList.remove('active'));
+  document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('s'+n).classList.add('active');
+  document.querySelectorAll('.nav-btn')[n].classList.add('active');
+  window.scrollTo({top:0, behavior:'smooth'});
+}
+</script>
+</body>
+</html>

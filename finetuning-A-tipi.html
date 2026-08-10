@@ -1,0 +1,598 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Fine-tuning — A · Cosa si ottimizza: i tre tipi</title>
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Outfit:wght@200;300;400;500;600;700;800;900&family=IBM+Plex+Mono:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg:     #faf8f5;
+  --bg2:    #f2efe9;
+  --bg3:    #e9e5dc;
+  --ink:    #1b1915;
+  --ink2:   #2e2b25;
+  --ink3:   #6d685c;
+  --ink4:   #a19c8f;
+  --border: #d9d4c8;
+  --border2:#cac4b6;
+
+  --accent:  #2e5a3a;
+  --accent2: #1a3a24;
+  --accent-light: #eef5f0;
+
+  --t1: #2e4a7a; --t1-l:#edf1f9;
+  --t2: #7b5ea7; --t2-l:#f4f0fa;
+  --t3: #8a3a5a; --t3-l:#faf0f4;
+
+  --ok:   #3d7a45; --ok-l:  #f4faf5;
+  --bad:  #c0392b; --bad-l: #fdf5f5;
+  --warn: #b07d24; --warn-l:#fdf6e8;
+}
+
+* { margin:0; padding:0; box-sizing:border-box; }
+html { scroll-behavior:smooth; }
+body { background:var(--bg); color:var(--ink); font-family:'Outfit',sans-serif; font-weight:300; font-size:14px; line-height:1.75; }
+
+.masthead { background:var(--ink); color:rgba(255,255,255,.9); padding:60px 56px 52px; position:relative; overflow:hidden; }
+.masthead::before { content:''; position:absolute; inset:0; background: repeating-linear-gradient(90deg,rgba(255,255,255,.012) 0,rgba(255,255,255,.012) 1px,transparent 1px,transparent 64px), repeating-linear-gradient(0deg,rgba(255,255,255,.012) 0,rgba(255,255,255,.012) 1px,transparent 1px,transparent 64px); pointer-events:none; }
+.masthead::after { content:'A'; position:absolute; right:44px; bottom:-28px; font-family:'Instrument Serif',serif; font-size:280px; line-height:1; color:rgba(255,255,255,.025); pointer-events:none; }
+.mh-eye { font-family:'IBM Plex Mono',monospace; font-size:10px; letter-spacing:3px; text-transform:uppercase; color:rgba(255,255,255,.25); margin-bottom:18px; position:relative; }
+.mh-cluster { display:inline-block; font-family:'IBM Plex Mono',monospace; font-size:10px; letter-spacing:2px; text-transform:uppercase; padding:4px 12px; border:1px solid var(--accent); color:var(--accent); margin-bottom:20px; position:relative; }
+.masthead h1 { font-family:'Instrument Serif',serif; font-weight:400; font-size:clamp(30px,4.5vw,54px); line-height:1.08; letter-spacing:-1px; max-width:700px; position:relative; }
+.mh-sub { margin-top:20px; font-size:15px; font-weight:300; color:rgba(255,255,255,.38); max-width:660px; line-height:1.7; position:relative; }
+.mh-meta { margin-top:32px; display:flex; gap:32px; flex-wrap:wrap; position:relative; }
+.mh-stat { display:flex; flex-direction:column; gap:4px; }
+.mh-stat-val { font-family:'IBM Plex Mono',monospace; font-size:22px; font-weight:500; color:rgba(255,255,255,.85); }
+.mh-stat-lbl { font-size:10px; letter-spacing:2px; text-transform:uppercase; color:rgba(255,255,255,.25); }
+
+.nav { background:var(--ink2); position:sticky; top:0; z-index:100; display:flex; overflow-x:auto; border-bottom:1px solid rgba(255,255,255,.06); }
+.nav-btn { flex:1; min-width:100px; padding:13px 12px; border:none; background:transparent; cursor:pointer; font-family:'Outfit',sans-serif; font-size:10.5px; font-weight:600; text-transform:uppercase; letter-spacing:.4px; color:rgba(255,255,255,.3); border-right:1px solid rgba(255,255,255,.06); transition:all .2s; white-space:nowrap; }
+.nav-btn:last-child { border-right:none; }
+.nav-btn:hover { color:rgba(255,255,255,.6); }
+.nav-btn.active { color:#fff; background:rgba(255,255,255,.05); }
+
+.sect { display:none; }
+.sect.active { display:block; animation:fadeIn .3s ease; }
+@keyframes fadeIn { from{opacity:0;transform:translateY(6px)} to{opacity:1;transform:translateY(0)} }
+.sect-head { padding:48px 56px 36px; border-bottom:1px solid var(--border); }
+.sect-num { font-family:'IBM Plex Mono',monospace; font-size:10px; letter-spacing:3px; text-transform:uppercase; color:var(--ink4); margin-bottom:10px; }
+.sect-head h2 { font-family:'Instrument Serif',serif; font-weight:400; font-size:clamp(26px,3.5vw,42px); line-height:1.1; letter-spacing:-.5px; max-width:640px; margin-bottom:14px; }
+.sect-head p { color:var(--ink3); max-width:700px; font-size:14.5px; }
+.wrap { padding:0 56px 64px; }
+
+.prose { max-width:760px; }
+.prose p { font-size:14.5px; color:var(--ink3); line-height:1.85; margin-bottom:16px; }
+.prose p strong { color:var(--ink2); font-weight:500; }
+.prose p em { font-style:italic; color:var(--ink2); }
+
+/* ── TYPE CARD ── */
+.type-card { border:1px solid var(--border2); background:var(--bg); overflow:hidden; margin-top:28px; }
+.tc-bar { height:5px; }
+.tc-head { padding:16px 22px; background:var(--bg2); border-bottom:1px solid var(--border); display:flex; align-items:flex-start; gap:14px; }
+.tc-badge { font-family:'IBM Plex Mono',monospace; font-size:10px; font-weight:700; letter-spacing:2px; padding:4px 10px; color:#fff; flex-shrink:0; }
+.tc-title-col {}
+.tc-label { font-family:'IBM Plex Mono',monospace; font-size:9px; letter-spacing:2px; text-transform:uppercase; color:var(--ink4); margin-bottom:3px; }
+.tc-title { font-family:'Instrument Serif',serif; font-size:22px; color:var(--ink2); }
+.tc-tagline { font-size:13px; color:var(--ink3); margin-top:2px; }
+.tc-body { display:grid; grid-template-columns:1fr 1fr; gap:1px; background:var(--border); }
+.tc-col { background:var(--bg); padding:18px 22px; }
+.tc-col-lbl { font-family:'IBM Plex Mono',monospace; font-size:9px; letter-spacing:2px; text-transform:uppercase; color:var(--ink4); margin-bottom:8px; padding-bottom:5px; border-bottom:1px solid var(--border); }
+.tc-col p { font-size:13px; color:var(--ink3); line-height:1.65; margin-bottom:7px; }
+.tc-col p strong { color:var(--ink2); font-weight:500; }
+.tc-signals { margin-top:12px; }
+.tc-signal { font-size:12.5px; color:var(--ink3); padding:4px 0; display:flex; gap:8px; line-height:1.45; border-bottom:1px solid var(--border); }
+.tc-signal:last-child { border-bottom:none; }
+.tc-signal .ico { flex-shrink:0; font-weight:700; }
+.tc-signal .ico.ok  { color:var(--ok); }
+.tc-signal .ico.bad { color:var(--bad); }
+.tc-footer { padding:14px 22px; border-top:1px solid var(--border); }
+.tc-indicator-lbl { font-family:'IBM Plex Mono',monospace; font-size:9px; letter-spacing:2px; text-transform:uppercase; color:var(--ink4); margin-bottom:5px; }
+.tc-indicator { font-size:13px; color:var(--ink3); line-height:1.55; font-style:italic; }
+.tc-indicator strong { color:var(--ink2); font-weight:500; font-style:normal; }
+
+/* ── GL CARD ── */
+.gl-group { margin-top:36px; }
+.gl-group-title { font-family:'IBM Plex Mono',monospace; font-size:9px; letter-spacing:3px; text-transform:uppercase; color:var(--ink4); padding-bottom:10px; border-bottom:1px solid var(--border); }
+.gl-card { border:1px solid var(--border2); border-top:none; background:var(--bg); }
+.gl-header { display:grid; grid-template-columns:5px 52px 1fr auto; align-items:stretch; border-bottom:1px solid var(--border); }
+.gl-stripe { background:var(--accent); }
+.gl-num { font-family:'Outfit',sans-serif; font-weight:800; font-size:20px; color:var(--bg3); display:flex; align-items:center; justify-content:center; border-right:1px solid var(--border); }
+.gl-title-wrap { padding:16px 20px; }
+.gl-title { font-family:'Instrument Serif',serif; font-size:20px; color:var(--ink2); line-height:1.2; }
+.gl-subtitle { font-size:12px; color:var(--ink4); margin-top:3px; }
+.gl-impact-wrap { padding:14px 20px; display:flex; flex-direction:column; align-items:flex-end; justify-content:center; gap:4px; }
+.gl-impact-stars { font-size:14px; }
+.gl-impact-lbl { font-family:'IBM Plex Mono',monospace; font-size:8px; letter-spacing:1px; text-transform:uppercase; color:var(--ink4); }
+.gl-body { padding:0; }
+.gl-section { padding:20px 24px; border-bottom:1px solid var(--border); }
+.gl-section:last-child { border-bottom:none; }
+.gl-section-lbl { font-family:'IBM Plex Mono',monospace; font-size:9px; letter-spacing:2px; text-transform:uppercase; color:var(--ink4); margin-bottom:10px; padding-bottom:6px; border-bottom:1px solid var(--border); }
+.gl-section p { font-size:13.5px; color:var(--ink3); line-height:1.8; max-width:740px; }
+.gl-section p strong { color:var(--ink2); font-weight:500; }
+
+/* ── COMPARE ── */
+.compare-grid { display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-top:12px; }
+.pex-lbl { font-family:'IBM Plex Mono',monospace; font-size:9px; letter-spacing:2px; text-transform:uppercase; margin-bottom:6px; }
+.pex-lbl.bad  { color:var(--bad); }
+.pex-lbl.good { color:var(--accent); }
+.pex-lbl.neutral { color:var(--ink4); }
+.prompt-box { font-family:'IBM Plex Mono',monospace; font-size:11.5px; line-height:1.75; padding:14px 18px; border:1px solid; white-space:pre-wrap; word-break:break-word; }
+.prompt-box.bad  { border-color:#e8c5c5; background:var(--bad-l); color:#6b3030; }
+.prompt-box.good { border-color:#a8c8b8; background:var(--accent-light); color:var(--accent2); }
+.prompt-box.neutral { border-color:var(--border2); background:var(--bg2); color:var(--ink3); }
+
+/* ── CHECKLIST ── */
+.checklist { margin-top:16px; }
+.check-item { display:flex; gap:12px; align-items:flex-start; padding:10px 0; border-bottom:1px solid var(--border); font-size:13.5px; color:var(--ink3); }
+.check-item:last-child { border-bottom:none; }
+.check-icon { width:20px; height:20px; border-radius:50%; background:var(--accent); color:#fff; display:flex; align-items:center; justify-content:center; font-size:11px; font-weight:700; flex-shrink:0; margin-top:1px; }
+.check-item strong { color:var(--ink2); font-weight:500; }
+
+/* ── MECHANISM / KP / INSIGHT ── */
+.mechanism { margin-top:14px; padding:14px 18px; border-left:3px solid var(--accent); background:var(--accent-light); }
+.mech-lbl { font-family:'IBM Plex Mono',monospace; font-size:9px; letter-spacing:2px; text-transform:uppercase; color:var(--accent); margin-bottom:6px; }
+.mechanism p { font-size:13px; color:var(--ink3); line-height:1.65; }
+.mechanism p strong { color:var(--ink2); font-weight:500; }
+.key-point { margin-top:36px; padding:24px 28px; border-left:4px solid var(--accent); background:var(--accent-light); }
+.kp-label { font-family:'IBM Plex Mono',monospace; font-size:9px; letter-spacing:2px; text-transform:uppercase; color:var(--accent); margin-bottom:8px; }
+.kp-text { font-family:'Instrument Serif',serif; font-size:18px; line-height:1.45; color:var(--ink2); }
+.kp-sub { margin-top:10px; font-size:13px; color:var(--ink3); line-height:1.65; }
+.insight { margin:16px 0; padding:16px 20px; border-left:4px solid var(--accent); background:var(--accent-light); }
+.insight-lbl { font-family:'IBM Plex Mono',monospace; font-size:9px; letter-spacing:2px; text-transform:uppercase; color:var(--accent); margin-bottom:6px; }
+.insight p { font-size:13.5px; color:var(--ink2); line-height:1.65; max-width:700px; }
+.insight p strong { font-weight:500; }
+
+.footer { padding:24px 56px; border-top:1px solid var(--border); display:flex; justify-content:space-between; align-items:center; font-family:'IBM Plex Mono',monospace; font-size:10px; letter-spacing:1px; text-transform:uppercase; color:var(--ink4); }
+
+@media (max-width:700px) {
+  .masthead,.sect-head,.wrap,.footer { padding-left:20px; padding-right:20px; }
+  .tc-body,.compare-grid { grid-template-columns:1fr; }
+  .gl-header { grid-template-columns:5px 40px 1fr; }
+  .gl-impact-wrap { display:none; }
+}
+</style>
+</head>
+<body>
+
+<div class="masthead">
+  <div class="mh-eye">Serie Agenti AI · Leva 07 · Fine-tuning</div>
+  <div class="mh-cluster">Report A</div>
+  <h1>Cosa si ottimizza: i tre tipi di fine-tuning</h1>
+  <p class="mh-sub">Fine-tuning di stile e formato, di conoscenza di dominio, di comportamento e allineamento. Tre tipi con meccanismi, rischi e casi d'uso completamente diversi. Capire quale serve — prima di costruire un dataset — è il prerequisito di tutto il resto.</p>
+  <div class="mh-meta">
+    <div class="mh-stat"><div class="mh-stat-val">3</div><div class="mh-stat-lbl">Tipi distinti</div></div>
+    <div class="mh-stat"><div class="mh-stat-val">Stile</div><div class="mh-stat-lbl">Il più comune</div></div>
+    <div class="mh-stat"><div class="mh-stat-value">Conoscenza</div><div class="mh-stat-lbl">Il più rischioso</div></div>
+    <div class="mh-stat"><div class="mh-stat-val">Allineamento</div><div class="mh-stat-lbl">Il più potente</div></div>
+  </div>
+</div>
+
+<div class="nav">
+  <button class="nav-btn active" onclick="show(1)">Il meccanismo comune</button>
+  <button class="nav-btn" onclick="show(2)">Tipo 1: Stile e formato</button>
+  <button class="nav-btn" onclick="show(3)">Tipo 2: Conoscenza dominio</button>
+  <button class="nav-btn" onclick="show(4)">Tipo 3: Comportamento</button>
+  <button class="nav-btn" onclick="show(5)">Come scegliere il tipo</button>
+</div>
+
+
+<!-- ═══════════════════════════
+     S1 — IL MECCANISMO COMUNE
+═══════════════════════════ -->
+<div class="sect active" id="s1">
+  <div class="sect-head">
+    <div class="sect-num">Introduzione</div>
+    <h2>Cosa succede davvero durante il fine-tuning</h2>
+    <p>Prima di scegliere il tipo giusto, capire il meccanismo — perché tutti e tre producono risultati diversi partendo dallo stesso processo di base.</p>
+  </div>
+  <div class="wrap">
+
+    <div class="prose" style="margin-top:28px;">
+      <p>Il fine-tuning continua il training di un modello pre-addestrato su un dataset specifico — modificando i pesi della rete neurale in modo che il modello si comporti meglio su quel tipo di input/output. Non è come aggiungere informazioni a un database: è come riaddestrare il modello su esempi aggiuntivi, spostando i suoi pesi verso i pattern che quegli esempi rappresentano.</p>
+      <p>Questo meccanismo ha due implicazioni fondamentali. La prima è che il fine-tuning <em>non aggiunge capacità nuove</em> — sposta il comportamento verso ciò che è stato mostrato negli esempi. Se gli esempi mostrano uno stile specifico, il modello imparerà quello stile. Se gli esempi mostrano come rispondere a certi tipi di domande, il modello risponderà a quelle domande in modo più simile agli esempi. La seconda è che il fine-tuning <em>può degradare comportamenti non rappresentati</em> nel dataset di training — il fenomeno chiamato catastrophic forgetting, trattato in dettaglio per ogni tipo.</p>
+    </div>
+
+    <div class="key-point" style="margin-top:24px;">
+      <div class="kp-label">La distinzione che guida tutto</div>
+      <div class="kp-text">Il fine-tuning insegna al modello <em>come</em> rispondere, non <em>cosa</em> sa. Se vuoi cambiare il comportamento — usa il fine-tuning. Se vuoi aggiungere conoscenza — usa il RAG.</div>
+      <div class="kp-sub">Questa distinzione non è assoluta (il tipo 2 sfida il confine), ma è il principio guida che evita l'errore più comune: usare il fine-tuning per insegnare fatti al modello invece di fornirli nel context. Il modello fine-tuned su fatti tende a confabularli nei modi che ha visto negli esempi — producendo output che sembrano corretti ma contengono errori sottili.</div>
+    </div>
+
+  </div>
+</div>
+
+
+<!-- ═══════════════════════════
+     S2 — TIPO 1: STILE E FORMATO
+═══════════════════════════ -->
+<div class="sect" id="s2">
+  <div class="sect-head">
+    <div class="sect-num">Tipo 01</div>
+    <h2>Fine-tuning di stile e formato</h2>
+    <p>Il tipo più comune, più semplice da implementare, e con il profilo rischio/beneficio più favorevole. Il modello impara <em>come</em> rispondere — non <em>cosa</em> sa.</p>
+  </div>
+  <div class="wrap">
+
+    <div class="type-card">
+      <div class="tc-bar" style="background:var(--t1)"></div>
+      <div class="tc-head">
+        <div class="tc-badge" style="background:var(--t1)">Tipo 01</div>
+        <div class="tc-title-col">
+          <div class="tc-label">Il più comune — profilo rischio/beneficio favorevole</div>
+          <div class="tc-title">Stile, tono, voce e formato dell'output</div>
+          <div class="tc-tagline">Impara come rispondere. Non tocca la conoscenza del modello.</div>
+        </div>
+      </div>
+      <div class="tc-body">
+        <div class="tc-col">
+          <div class="tc-col-lbl">Cosa ottimizza</div>
+          <p>Il modo in cui il modello formula le risposte: il registro linguistico (formale/informale), il tono (assertivo/cauto/empatico), la struttura (bullet/prosa/tabelle), la lunghezza, l'uso di terminologia specifica, le formule di apertura e chiusura.</p>
+          <p>Non tocca ciò che il modello sa — solo come lo esprime. <strong>È il tipo più sicuro perché non introduce rischi di confabulation su fatti.</strong></p>
+          <p>Esempi pratici: voce del brand per un assistente aziendale, registro di un ufficio legale, stile editoriale di una testata giornalistica, tono di un assistente medico per pazienti anziani.</p>
+        </div>
+        <div class="tc-col">
+          <div class="tc-col-lbl">Quando funziona bene — e quando delude</div>
+          <div class="tc-signals">
+            <div class="tc-signal"><span class="ico ok">✓</span><span>Lo stile target è coerente — tutti gli esempi mostrano lo stesso pattern</span></div>
+            <div class="tc-signal"><span class="ico ok">✓</span><span>Il dataset ha almeno 50–100 esempi di qualità uniforme</span></div>
+            <div class="tc-signal"><span class="ico ok">✓</span><span>Il modello base capisce già il dominio — lo stile è l'unico aspetto da modificare</span></div>
+            <div class="tc-signal"><span class="ico bad">✗</span><span>Gli esempi mostrano stili diversi tra loro — il modello non sa quale imitare</span></div>
+            <div class="tc-signal"><span class="ico bad">✗</span><span>Lo "stile" in realtà maschera una mancanza di conoscenza di dominio — il fine-tuning non la risolve</span></div>
+            <div class="tc-signal"><span class="ico bad">✗</span><span>Il dataset è troppo piccolo (&lt;30 esempi) — il modello non impara pattern stabili</span></div>
+          </div>
+        </div>
+      </div>
+      <div class="tc-footer" style="background:var(--t1-l)">
+        <div class="tc-indicator-lbl">Indicatore pratico per riconoscerlo</div>
+        <div class="tc-indicator">Sei nel territorio del tipo 1 quando la differenza tra l'output attuale e quello desiderato è <strong>come viene detto</strong>, non <strong>cosa viene detto</strong>. Se puoi prendere l'output del modello base e correggerlo riformulando (senza aggiungere informazioni), è un problema di stile.</div>
+      </div>
+    </div>
+
+    <!-- GL 01 -->
+    <div class="gl-group">
+      <div class="gl-group-title">Linea guida 01</div>
+      <div class="gl-card">
+        <div class="gl-header">
+          <div class="gl-stripe"></div>
+          <div class="gl-num">01</div>
+          <div class="gl-title-wrap">
+            <div class="gl-title">Gli esempi del dataset devono mostrare lo stile — non descriverlo</div>
+            <div class="gl-subtitle">Un dataset di stile non è una lista di regole — è una collezione di output che incarnano lo stile target</div>
+          </div>
+          <div class="gl-impact-wrap">
+            <div class="gl-impact-stars" style="color:var(--accent)">★★★</div>
+            <div class="gl-impact-lbl">Impatto</div>
+          </div>
+        </div>
+        <div class="gl-body">
+          <div class="gl-section">
+            <div class="gl-section-lbl">Formato dell'esempio di training per stile</div>
+            <div class="compare-grid">
+              <div>
+                <div class="pex-lbl bad">❌ Esempio che descrive lo stile — non efficace</div>
+                <div class="prompt-box bad">{"messages": [
+  {"role": "system",
+   "content": "Rispondi in modo formale,
+     conciso e professionale, usando
+     un tono assertivo senza essere
+     aggressivo..."},
+  {"role": "user",
+   "content": "Come funziona il rinnovo?"},
+  {"role": "assistant",
+   "content": "..."}
+]}
+
+→ La descrizione dello stile nel system
+  prompt di ogni esempio non insegna
+  il pattern — lo spiega. Il modello
+  aveva già quella istruzione nel prompt.</div>
+              </div>
+              <div>
+                <div class="pex-lbl good">✓ Esempio che mostra lo stile — efficace</div>
+                <div class="prompt-box good">{"messages": [
+  {"role": "system",
+   "content": "Sei l'assistente di Studio
+     Legale Ferretti."},
+  {"role": "user",
+   "content": "Come funziona il rinnovo
+     del contratto?"},
+  {"role": "assistant",
+   "content": "Il rinnovo avviene
+     automaticamente alla scadenza
+     salvo disdetta da comunicarsi
+     almeno 60 giorni prima a mezzo
+     raccomandata. La disdetta tardiva
+     non produce effetti."}
+]}
+
+→ Il system prompt è neutro.
+  L'assistant mostra direttamente
+  il tono, la struttura, la densità
+  informativa dello stile target.</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+
+<!-- ═══════════════════════════
+     S3 — TIPO 2: CONOSCENZA
+═══════════════════════════ -->
+<div class="sect" id="s3">
+  <div class="sect-head">
+    <div class="sect-num">Tipo 02</div>
+    <h2>Fine-tuning di conoscenza di dominio</h2>
+    <p>Il tipo più discusso e più rischioso. Insegnare al modello fatti, terminologia e procedure di un dominio specifico. Funziona — ma in modo più limitato e con rischi maggiori di quanto sembri inizialmente.</p>
+  </div>
+  <div class="wrap">
+
+    <div class="type-card">
+      <div class="tc-bar" style="background:var(--t2)"></div>
+      <div class="tc-head">
+        <div class="tc-badge" style="background:var(--t2)">Tipo 02</div>
+        <div class="tc-title-col">
+          <div class="tc-label">Il più rischioso — confabulation come failure mode principale</div>
+          <div class="tc-title">Conoscenza, terminologia e procedure di dominio</div>
+          <div class="tc-tagline">Insegna cosa sa il modello. Il rischio: confabulation convincente su fatti non visti.</div>
+        </div>
+      </div>
+      <div class="tc-body">
+        <div class="tc-col">
+          <div class="tc-col-lbl">Cosa ottimizza — e il suo limite</div>
+          <p>Il modello impara terminologia specifica del dominio, procedure interne, regole di classificazione specifiche, e schemi di ragionamento tipici di un settore. Risponde usando il gergo corretto e segue le convenzioni del dominio.</p>
+          <p><strong>Il limite critico:</strong> il fine-tuning non "memorizza" i fatti in modo affidabile — li generalizza in pattern. Questo significa che su dati simili ma non identici a quelli del training, il modello può generare output che sembrano corretti ma contengono errori sottili — prodotti interpolando tra i pattern visti. È la confabulation del dominio.</p>
+          <p><strong>Il caso d'uso valido:</strong> quando il dominio ha una terminologia e un ragionamento specifici difficili da descrivere nel prompt, il fine-tuning migliora il modo in cui il modello usa le informazioni fornite via RAG — non sostituisce il RAG.</p>
+        </div>
+        <div class="tc-col">
+          <div class="tc-col-lbl">Quando funziona — e quando produce danni</div>
+          <div class="tc-signals">
+            <div class="tc-signal"><span class="ico ok">✓</span><span>La conoscenza è stabile nel tempo e non cambierà frequentemente</span></div>
+            <div class="tc-signal"><span class="ico ok">✓</span><span>Il dominio ha terminologia e ragionamento specifici difficili da descrivere in un prompt</span></div>
+            <div class="tc-signal"><span class="ico ok">✓</span><span>Usato insieme al RAG: migliora come il modello usa la conoscenza, non la sostituisce</span></div>
+            <div class="tc-signal"><span class="ico bad">✗</span><span>La conoscenza è aggiornabile: usa RAG, non fine-tuning</span></div>
+            <div class="tc-signal"><span class="ico bad">✗</span><span>Il dominio ha fatti critici dove l'errore è costoso: la confabulation è inaccettabile</span></div>
+            <div class="tc-signal"><span class="ico bad">✗</span><span>Il dataset di training non copre tutto il dominio: il modello confabulerà nelle lacune</span></div>
+          </div>
+        </div>
+      </div>
+      <div class="tc-footer" style="background:var(--t2-l)">
+        <div class="tc-indicator-lbl">Indicatore pratico per riconoscerlo</div>
+        <div class="tc-indicator">Sei nel territorio del tipo 2 quando il problema è che il modello usa terminologia sbagliata, segue procedure diverse da quelle del dominio, o non riconosce i pattern di ragionamento specifici del settore. <strong>Ma se il problema è che il modello non sa fatti specifici aggiornabili, la risposta è RAG — non fine-tuning.</strong></div>
+      </div>
+    </div>
+
+    <!-- GL 02 -->
+    <div class="gl-group">
+      <div class="gl-group-title">Linea guida 02</div>
+      <div class="gl-card">
+        <div class="gl-header">
+          <div class="gl-stripe"></div>
+          <div class="gl-num">02</div>
+          <div class="gl-title-wrap">
+            <div class="gl-title">Per il fine-tuning di conoscenza, usa il modello come specialista nel ragionamento — non come database</div>
+            <div class="gl-subtitle">Il fine-tuning migliora come il modello usa la conoscenza fornita, non sostituisce la fonte della conoscenza</div>
+          </div>
+          <div class="gl-impact-wrap">
+            <div class="gl-impact-stars" style="color:var(--accent)">★★★</div>
+            <div class="gl-impact-lbl">Impatto critico</div>
+          </div>
+        </div>
+        <div class="gl-body">
+          <div class="gl-section">
+            <div class="gl-section-lbl">Il pattern corretto: fine-tuning + RAG insieme</div>
+            <div class="compare-grid">
+              <div>
+                <div class="pex-lbl bad">❌ Fine-tuning come sostituto del RAG — produce confabulation</div>
+                <div class="prompt-box bad">Dataset di training:
+Q: "Qual è la procedura per la
+    denuncia di sinistro?"
+A: "La procedura prevede: 1) notifica
+    entro 3 giorni, 2) invio modulo
+    CAI..."
+
+→ Il modello impara la procedura
+  come pattern. Se la procedura
+  cambia, risponderà ancora con
+  quella vecchia — con sicurezza.
+→ Su varianti non viste, interpola
+  producendo procedure inesistenti.</div>
+              </div>
+              <div>
+                <div class="pex-lbl good">✓ Fine-tuning per il ragionamento + RAG per i fatti</div>
+                <div class="prompt-box good">Dataset di training:
+Q: "Procedura sinistro?" + [documento
+    con la procedura corrente via RAG]
+A: "Dalla documentazione allegata,
+    i passi sono: [estrae dal documento].
+    Noto che il passo 2 richiede..."
+
+→ Il modello impara come analizzare
+  e presentare le procedure del dominio.
+→ I fatti vengono sempre dal RAG,
+  aggiornabili senza ri-training.
+→ Zero confabulation su fatti specifici.</div>
+              </div>
+            </div>
+          </div>
+
+          <div class="gl-section">
+            <div class="gl-section-lbl">Il catastrophic forgetting — il rischio specifico del tipo 2</div>
+            <p>Il catastrophic forgetting è la tendenza del modello a "dimenticare" capacità generali mentre impara quelle specifiche del dominio. Più il dataset di training è focalizzato su un dominio ristretto, maggiore è il rischio. Un modello addestrato solo su testi medici diventa progressivamente peggiore su altri dominio.</p>
+            <p><strong>Come mitigarlo:</strong> includere nel dataset di training una percentuale di esempi "generali" non correlati al dominio (tipicamente 20–30% del dataset). Questo rallenta il fine-tuning specifico ma riduce significativamente il degradamento su task non del dominio. Durante la valutazione (Report C), testare sempre anche su task generici non correlati al dominio di fine-tuning.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+
+<!-- ═══════════════════════════
+     S4 — TIPO 3: COMPORTAMENTO
+═══════════════════════════ -->
+<div class="sect" id="s4">
+  <div class="sect-head">
+    <div class="sect-num">Tipo 03</div>
+    <h2>Fine-tuning di comportamento e allineamento</h2>
+    <p>Il tipo più potente — e il più complesso. Non ottimizza lo stile né la conoscenza: insegna al modello <em>quando fare cosa</em>, come valutare situazioni ambigue, e come bilanciare obiettivi che si contraddicono.</p>
+  </div>
+  <div class="wrap">
+
+    <div class="type-card">
+      <div class="tc-bar" style="background:var(--t3)"></div>
+      <div class="tc-head">
+        <div class="tc-badge" style="background:var(--t3)">Tipo 03</div>
+        <div class="tc-title-col">
+          <div class="tc-label">Il più potente — richiede la maggiore cura nel design</div>
+          <div class="tc-title">Comportamento, priorità, giudizio in situazioni ambigue</div>
+          <div class="tc-tagline">Insegna quando fare cosa. Il rischio: comportamenti non previsti su casi non visti.</div>
+        </div>
+      </div>
+      <div class="tc-body">
+        <div class="tc-col">
+          <div class="tc-col-lbl">Cosa ottimizza</div>
+          <p>Come il modello prende decisioni in situazioni ambigue: quando escalare a un umano, quando rifiutare una richiesta, come bilanciare obiettivi che si contraddicono (essere utile vs. essere cauto), come rispondere a tentativi di manipolazione.</p>
+          <p>È il tipo usato implicitamente dai provider di modelli per allineare i modelli alle policy di sicurezza (RLHF, DPO). In contesti aziendali, si usa per insegnare al modello le priorità specifiche dell'organizzazione — che cosa considera "corretto" in situazioni che il prompt non prevede esplicitamente.</p>
+          <p><strong>Tecniche associate:</strong> RLHF (Reinforcement Learning from Human Feedback) per allineamento complesso, DPO (Direct Preference Optimization) più semplice da implementare per preferenze tra risposte.</p>
+        </div>
+        <div class="tc-col">
+          <div class="tc-col-lbl">Quando usarlo — e i rischi specifici</div>
+          <div class="tc-signals">
+            <div class="tc-signal"><span class="ico ok">✓</span><span>Il sistema deve gestire situazioni ambigue con priorità organizzative specifiche che il prompt non può coprire</span></div>
+            <div class="tc-signal"><span class="ico ok">✓</span><span>Il comportamento in edge-case è critico e deve essere coerente su larga scala</span></div>
+            <div class="tc-signal"><span class="ico ok">✓</span><span>Il team ha domain expert che possono valutare la correttezza del comportamento su molti casi diversi</span></div>
+            <div class="tc-signal"><span class="ico bad">✗</span><span>Il team non ha la capacità di costruire e validare un dataset comportamentale di qualità</span></div>
+            <div class="tc-signal"><span class="ico bad">✗</span><span>Le priorità comportamentali cambiano frequentemente — ri-training costoso ogni volta</span></div>
+            <div class="tc-signal"><span class="ico bad">✗</span><span>Il modello potrebbe generalizzare il comportamento in modi non previsti su casi fuori distribuzione</span></div>
+          </div>
+        </div>
+      </div>
+      <div class="tc-footer" style="background:var(--t3-l)">
+        <div class="tc-indicator-lbl">Indicatore pratico per riconoscerlo</div>
+        <div class="tc-indicator">Sei nel territorio del tipo 3 quando il problema è <strong>cosa decide il modello</strong> in situazioni dove non esiste una risposta oggettivamente corretta — ma una risposta preferibile per il contesto specifico. Se il problema è su casi univoci con risposta definita, è tipo 1 o tipo 2.</div>
+      </div>
+    </div>
+
+    <!-- GL 03 -->
+    <div class="gl-group">
+      <div class="gl-group-title">Linea guida 03</div>
+      <div class="gl-card">
+        <div class="gl-header">
+          <div class="gl-stripe"></div>
+          <div class="gl-num">03</div>
+          <div class="gl-title-wrap">
+            <div class="gl-title">Per il fine-tuning comportamentale, mostra la coppia preferita/scartata — non solo la risposta corretta</div>
+            <div class="gl-subtitle">Il modello impara le preferenze comportamentali dal confronto tra opzioni, non da esempi singoli</div>
+          </div>
+          <div class="gl-impact-wrap">
+            <div class="gl-impact-stars" style="color:var(--accent)">★★★</div>
+            <div class="gl-impact-lbl">Impatto</div>
+          </div>
+        </div>
+        <div class="gl-body">
+          <div class="gl-section">
+            <div class="gl-section-lbl">Il formato DPO — coppie di preferenza</div>
+            <p>Per il fine-tuning comportamentale con DPO (Direct Preference Optimization), il dataset non contiene esempi singoli di risposta corretta — contiene coppie di risposte per lo stesso input, con l'indicazione di quale è preferita. Il modello impara il confine tra accettabile e preferibile.</p>
+            <div class="prompt-box neutral" style="margin-top:12px; font-size:11.5px;">Formato DPO per fine-tuning comportamentale:
+
+{"prompt": "L'utente chiede di aiutarlo a
+ formulare un contratto che escluda
+ la responsabilità per danni a terzi.",
+
+ "chosen": "Posso aiutarti a strutturare
+ il contratto, ma ti segnalo che le clausole
+ di esclusione della responsabilità verso
+ terzi hanno limiti legali importanti.
+ Ti consiglio di verificare con un legale
+ prima di firmare. Vuoi che ti mostri le
+ clausole standard del settore?",
+
+ "rejected": "Certamente, ecco una clausola
+ che esclude la responsabilità: [clausola].
+ Puoi inserirla nel contratto senza
+ modifiche."}</div>
+            <div class="mechanism" style="margin-top:12px;">
+              <div class="mech-lbl">Perché la coppia è meglio del singolo esempio</div>
+              <p>Con un solo esempio "corretto", il modello impara a riprodurre quel tipo di risposta ma non necessariamente le ragioni per cui è preferita. Con la coppia preferita/scartata, il modello impara il confine: cosa distingue una risposta appropriata da una inappropriata in quel contesto. <strong>Questo bordo è esattamente ciò che deve essere robusto sugli edge case — e la coppia lo insegna molto meglio del singolo esempio.</strong></p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+
+<!-- ═══════════════════════════
+     S5 — COME SCEGLIERE IL TIPO
+═══════════════════════════ -->
+<div class="sect" id="s5">
+  <div class="sect-head">
+    <div class="sect-num">Sezione finale</div>
+    <h2>Come scegliere il tipo giusto — e la checklist</h2>
+    <p>I tre tipi non si escludono — alcuni progetti richiedono combinazioni. Ma partire dal tipo sbagliato è costoso. Come identificare quello giusto per il proprio caso.</p>
+  </div>
+  <div class="wrap">
+
+    <div class="prose" style="margin-top:28px;">
+      <p style="font-size:15px; font-weight:500; color:var(--ink2);">Le 3 domande per identificare il tipo</p>
+    </div>
+
+    <div class="checklist" style="margin-top:12px;">
+      <div class="check-item">
+        <div class="check-icon" style="background:var(--t1)">1</div>
+        <div>
+          <strong>Il problema è nel come risponde il modello?</strong> Prendi un output sbagliato del modello e correggilo manualmente. Hai aggiunto informazioni nuove, o hai solo riformulato? Se hai solo riformulato → <strong>Tipo 1 (stile e formato)</strong>. Dataset di coppie input/output che mostrano lo stile target. Il più semplice da costruire e da mantenere.
+        </div>
+      </div>
+      <div class="check-item">
+        <div class="check-icon" style="background:var(--t2)">2</div>
+        <div>
+          <strong>Il problema è che il modello non conosce il ragionamento tipico del dominio?</strong> Il modello capisce le parole ma non "pensa" come un esperto del settore — usa categorie sbagliate, priorità diverse, schemi di analisi diversi. Se sì → <strong>Tipo 2 (conoscenza di dominio)</strong>. Ma tieni il RAG per i fatti specifici: il fine-tuning migliora il ragionamento, non sostituisce la fonte dei dati.
+        </div>
+      </div>
+      <div class="check-item">
+        <div class="check-icon" style="background:var(--t3)">3</div>
+        <div>
+          <strong>Il problema è nelle decisioni che prende in situazioni ambigue?</strong> Il modello risponde bene su casi tipici ma fa scelte sbagliate (o imprevedibili) su casi borderline — situazioni dove ci sono trade-off tra obiettivi diversi. Se sì → <strong>Tipo 3 (comportamento)</strong>. Dataset di coppie DPO. Il più costoso da costruire, il più efficace per l'allineamento su edge-case.
+        </div>
+      </div>
+    </div>
+
+    <div class="insight" style="margin-top:24px;">
+      <div class="insight-lbl">I tipi si combinano — ma in sequenza, non insieme</div>
+      <p>Un sistema maturo spesso ha bisogno di tutti e tre: prima il tipo 1 (stile coerente), poi il tipo 2 (ragionamento di dominio), poi il tipo 3 (comportamento negli edge-case). La sequenza conta: inizia dal tipo 1 perché è il più semplice e quello con il miglior ritorno sul primo round di fine-tuning. Solo dopo che lo stile è stabile ha senso investire nel tipo 2, e così via. <strong>Partire dal tipo 3 senza avere stile e conoscenza di dominio stabili è costruire su fondamenta instabili.</strong></p>
+    </div>
+
+    <div class="insight" style="margin-top:12px; border-color:var(--warn); background:var(--warn-l);">
+      <div class="insight-lbl" style="color:var(--warn);">Prossimo — Report B</div>
+      <p>Con il tipo identificato, il Report B affronta il fattore che determina la qualità del fine-tuning più di qualsiasi scelta tecnica: <strong>i dati di training</strong>. Quanti esempi servono davvero, come costruirli, come evitare i problemi più comuni, e perché 100 esempi eccellenti battono 1.000 mediocri.</p>
+    </div>
+
+  </div>
+</div>
+
+<div class="footer">
+  <span>Serie Agenti AI — Leva 07 · Fine-tuning · Report A · I tre tipi</span>
+  <span>Marzo 2026</span>
+</div>
+
+<script>
+function show(n) {
+  document.querySelectorAll('.sect').forEach(s => s.classList.remove('active'));
+  document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('s'+n).classList.add('active');
+  document.querySelectorAll('.nav-btn')[n-1].classList.add('active');
+  window.scrollTo({top:0, behavior:'smooth'});
+}
+</script>
+</body>
+</html>

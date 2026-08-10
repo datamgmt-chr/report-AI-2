@@ -1,0 +1,954 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Prompt Engineering — Report Trasversale · Linee Guida per Tipo di Task</title>
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Outfit:wght@200;300;400;500;600;700;800;900&family=IBM+Plex+Mono:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg:     #faf8f5;
+  --bg2:    #f2efe9;
+  --bg3:    #e9e5dc;
+  --ink:    #1b1915;
+  --ink2:   #2e2b25;
+  --ink3:   #6d685c;
+  --ink4:   #a19c8f;
+  --border: #d9d4c8;
+  --border2:#cac4b6;
+
+  /* Task type colors */
+  --t1: #2e7d9c;   /* classificazione — teal */
+  --t2: #3d7a45;   /* estrazione — verde */
+  --t3: #b07d24;   /* generazione — oro */
+  --t4: #7b5ea7;   /* ragionamento — viola */
+  --t5: #8b5c3a;   /* agentic — marrone */
+
+  /* Cluster colors */
+  --cA: #3d7a45;
+  --cB: #2e7d9c;
+  --cC: #7b5ea7;
+  --cD: #b07d24;
+  --cE: #c0562b;
+  --cF: #3a6b8c;
+  --cG: #8b5c3a;
+}
+
+* { margin:0; padding:0; box-sizing:border-box; }
+html { scroll-behavior:smooth; }
+body {
+  background:var(--bg); color:var(--ink);
+  font-family:'Outfit',sans-serif; font-weight:300;
+  font-size:14px; line-height:1.75;
+}
+
+/* ── HEADER ── */
+.masthead {
+  background:var(--ink); color:rgba(255,255,255,.9);
+  padding:60px 56px 52px; position:relative; overflow:hidden;
+}
+.masthead::before {
+  content:''; position:absolute; inset:0;
+  background:
+    repeating-linear-gradient(90deg,rgba(255,255,255,.012) 0,rgba(255,255,255,.012) 1px,transparent 1px,transparent 64px),
+    repeating-linear-gradient(0deg,rgba(255,255,255,.012) 0,rgba(255,255,255,.012) 1px,transparent 1px,transparent 64px);
+  pointer-events:none;
+}
+.mh-series {
+  font-family:'IBM Plex Mono',monospace; font-size:10px;
+  letter-spacing:3px; text-transform:uppercase;
+  color:rgba(255,255,255,.25); margin-bottom:18px; position:relative;
+}
+.mh-tag {
+  display:inline-block; font-family:'IBM Plex Mono',monospace;
+  font-size:10px; letter-spacing:2px; text-transform:uppercase;
+  padding:4px 12px; border:1px solid rgba(255,255,255,.2);
+  color:rgba(255,255,255,.5); margin-bottom:20px; position:relative;
+}
+.masthead h1 {
+  font-family:'Instrument Serif',serif; font-weight:400;
+  font-size:clamp(28px,4vw,52px); line-height:1.08;
+  letter-spacing:-1px; max-width:720px; position:relative;
+}
+.mh-sub {
+  margin-top:20px; font-size:15px; font-weight:300;
+  color:rgba(255,255,255,.38); max-width:660px;
+  line-height:1.7; position:relative;
+}
+.mh-meta {
+  margin-top:32px; display:flex; gap:32px; flex-wrap:wrap; position:relative;
+}
+.mh-stat { display:flex; flex-direction:column; gap:4px; }
+.mh-stat-val {
+  font-family:'IBM Plex Mono',monospace; font-size:22px; font-weight:500;
+  color:rgba(255,255,255,.85);
+}
+.mh-stat-lbl {
+  font-size:10px; letter-spacing:2px; text-transform:uppercase;
+  color:rgba(255,255,255,.25);
+}
+
+/* ── NAV ── */
+.nav {
+  background:var(--ink2); position:sticky; top:0; z-index:100;
+  display:flex; overflow-x:auto;
+  border-bottom:1px solid rgba(255,255,255,.06);
+}
+.nav-btn {
+  flex:1; min-width:110px; padding:13px 10px;
+  border:none; background:transparent; cursor:pointer;
+  font-family:'Outfit',sans-serif; font-size:10px; font-weight:600;
+  text-transform:uppercase; letter-spacing:.4px;
+  color:rgba(255,255,255,.3);
+  border-right:1px solid rgba(255,255,255,.06);
+  transition:all .2s; white-space:nowrap;
+}
+.nav-btn:last-child { border-right:none; }
+.nav-btn:hover { color:rgba(255,255,255,.6); }
+.nav-btn.active { color:#fff; background:rgba(255,255,255,.05); }
+
+/* ── SECTIONS ── */
+.sect { display:none; }
+.sect.active { display:block; animation:fadeIn .3s ease; }
+@keyframes fadeIn { from{opacity:0;transform:translateY(6px)} to{opacity:1;transform:translateY(0)} }
+
+.sect-head { padding:48px 56px 36px; border-bottom:1px solid var(--border); }
+.sect-num {
+  font-family:'IBM Plex Mono',monospace; font-size:10px;
+  letter-spacing:3px; text-transform:uppercase; color:var(--ink4); margin-bottom:10px;
+}
+.sect-head h2 {
+  font-family:'Instrument Serif',serif; font-weight:400;
+  font-size:clamp(26px,3.5vw,42px); line-height:1.1;
+  letter-spacing:-.5px; max-width:640px; margin-bottom:14px;
+}
+.sect-head p { color:var(--ink3); max-width:700px; font-size:14.5px; }
+.wrap { padding:0 56px 64px; }
+
+/* ── PROSE ── */
+.prose { max-width:760px; }
+.prose p { font-size:14.5px; color:var(--ink3); line-height:1.85; margin-bottom:16px; }
+.prose p strong { color:var(--ink2); font-weight:500; }
+
+/* ── PRIORITY MATRIX (big table) ── */
+.pmatrix { width:100%; border-collapse:collapse; margin-top:24px; border:1px solid var(--border2); font-size:12px; }
+.pmatrix th, .pmatrix td { padding:11px 13px; border:1px solid var(--border); vertical-align:middle; text-align:center; }
+.pmatrix thead tr:first-child th { background:var(--ink); color:rgba(255,255,255,.82); font-family:'IBM Plex Mono',monospace; font-size:9px; letter-spacing:.5px; text-transform:uppercase; }
+.pmatrix thead tr:last-child th { background:var(--bg2); font-weight:600; font-size:11px; color:var(--ink2); text-align:left; }
+.pmatrix tbody td:first-child { font-weight:600; font-size:11px; text-align:left; background:var(--bg2); white-space:nowrap; }
+.pmatrix tbody tr:hover td { background:#f5f2eb; }
+
+/* Priority cells */
+.p-crit { background:#fdf1ec; color:#8b3a1a; font-weight:700; font-family:'IBM Plex Mono',monospace; font-size:10px; }
+.p-high { background:#edf4f9; color:#1f5a72; font-weight:600; font-family:'IBM Plex Mono',monospace; font-size:10px; }
+.p-med  { background:#f4faf5; color:#2e4a32; font-family:'IBM Plex Mono',monospace; font-size:10px; }
+.p-low  { background:var(--bg); color:var(--ink4); font-family:'IBM Plex Mono',monospace; font-size:10px; }
+.p-na   { background:var(--bg3); color:var(--ink4); font-family:'IBM Plex Mono',monospace; font-size:10px; opacity:.5; }
+
+/* Task type headers */
+.th-t1 { border-bottom:3px solid var(--t1) !important; }
+.th-t2 { border-bottom:3px solid var(--t2) !important; }
+.th-t3 { border-bottom:3px solid var(--t3) !important; }
+.th-t4 { border-bottom:3px solid var(--t4) !important; }
+.th-t5 { border-bottom:3px solid var(--t5) !important; }
+
+/* Cluster label cells */
+.cl-A { color:var(--cA); }
+.cl-B { color:var(--cB); }
+.cl-C { color:var(--cC); }
+.cl-D { color:var(--cD); }
+.cl-E { color:var(--cE); }
+.cl-F { color:var(--cF); }
+.cl-G { color:var(--cG); }
+
+/* ── TASK PROFILE CARDS ── */
+.task-profile {
+  margin-top:40px; border:1px solid var(--border2); overflow:hidden;
+}
+.tp-head {
+  padding:20px 28px; display:flex; align-items:center; gap:16px;
+  border-bottom:1px solid var(--border);
+}
+.tp-stripe { width:6px; height:100%; flex-shrink:0; align-self:stretch; }
+.tp-label {
+  font-family:'IBM Plex Mono',monospace; font-size:9px;
+  letter-spacing:2px; text-transform:uppercase; color:var(--ink4); margin-bottom:4px;
+}
+.tp-name {
+  font-family:'Instrument Serif',serif; font-size:26px; color:var(--ink2); line-height:1.1;
+}
+.tp-desc { font-size:13px; color:var(--ink3); margin-top:4px; }
+.tp-body { display:grid; grid-template-columns:1fr 1fr; gap:1px; background:var(--border); }
+.tp-col { background:var(--bg); padding:20px 24px; }
+.tp-col-title {
+  font-family:'IBM Plex Mono',monospace; font-size:9px;
+  letter-spacing:2px; text-transform:uppercase; color:var(--ink4);
+  margin-bottom:12px; padding-bottom:8px; border-bottom:1px solid var(--border);
+}
+
+/* Cluster priority list */
+.cp-list { display:flex; flex-direction:column; gap:6px; }
+.cp-item { display:flex; align-items:center; gap:10px; }
+.cp-badge {
+  font-family:'IBM Plex Mono',monospace; font-size:9px; font-weight:700;
+  letter-spacing:1px; padding:2px 8px; flex-shrink:0; min-width:60px; text-align:center;
+}
+.cp-badge.crit { background:#fdf1ec; color:#8b3a1a; border:1px solid rgba(192,86,43,.3); }
+.cp-badge.high { background:#edf4f9; color:#1f5a72; border:1px solid rgba(46,125,156,.3); }
+.cp-badge.med  { background:#f4faf5; color:#2e4a32; border:1px solid rgba(61,122,69,.3); }
+.cp-badge.low  { background:var(--bg2); color:var(--ink4); border:1px solid var(--border); }
+.cp-badge.na   { background:var(--bg3); color:var(--ink4); border:1px solid var(--border); opacity:.6; }
+.cp-name { font-size:12.5px; color:var(--ink3); }
+.cp-name strong { color:var(--ink2); font-weight:500; }
+
+/* Key insights */
+.insights-list { display:flex; flex-direction:column; gap:8px; }
+.insight-item {
+  padding:10px 14px; background:var(--bg2);
+  border-left:3px solid; font-size:12.5px; color:var(--ink3); line-height:1.6;
+}
+.insight-item strong { color:var(--ink2); font-weight:500; }
+
+/* ── COMMON TRAPS ── */
+.trap-grid {
+  display:grid; grid-template-columns:repeat(auto-fill,minmax(300px,1fr));
+  gap:14px; margin-top:20px;
+}
+.trap-card {
+  border:1px solid var(--border2); background:var(--bg);
+  padding:16px 18px;
+}
+.tc-task {
+  font-family:'IBM Plex Mono',monospace; font-size:8px;
+  letter-spacing:2px; text-transform:uppercase; margin-bottom:4px;
+}
+.tc-title { font-weight:600; font-size:13px; color:var(--ink2); margin-bottom:8px; }
+.tc-body { font-size:12.5px; color:var(--ink3); line-height:1.6; }
+.tc-body strong { color:var(--ink2); font-weight:500; }
+.tc-fix {
+  margin-top:8px; padding:8px 10px;
+  background:#f4faf5; border-left:3px solid #3d7a45;
+  font-size:12px; color:#2e4a32; line-height:1.5;
+}
+.tc-fix strong { color:#3d7a45; font-weight:600; }
+
+/* ── BUILD ORDER GUIDE ── */
+.build-order { margin-top:24px; }
+.bo-row {
+  display:grid; grid-template-columns:120px 1fr;
+  border-bottom:1px solid var(--border); font-size:13px;
+}
+.bo-row:last-child { border-bottom:none; }
+.bo-row.head {
+  background:var(--ink); color:rgba(255,255,255,.6);
+  font-family:'IBM Plex Mono',monospace; font-size:9px;
+  letter-spacing:1px; text-transform:uppercase;
+}
+.bo-task { padding:12px 14px; font-weight:600; color:var(--ink2); border-right:1px solid var(--border); background:var(--bg2); }
+.bo-order { padding:12px 14px; color:var(--ink3); line-height:1.6; }
+.bo-order .cl { display:inline-block; font-family:'IBM Plex Mono',monospace; font-size:9px; font-weight:700; padding:1px 5px; margin:1px; }
+
+/* ── KEY POINT ── */
+.key-point {
+  margin-top:36px; padding:24px 28px;
+  border-left:4px solid var(--ink3); background:var(--bg2);
+}
+.kp-label {
+  font-family:'IBM Plex Mono',monospace; font-size:9px;
+  letter-spacing:2px; text-transform:uppercase; color:var(--ink3); margin-bottom:8px;
+}
+.kp-text {
+  font-family:'Instrument Serif',serif; font-size:18px; line-height:1.45; color:var(--ink2);
+}
+.kp-sub { margin-top:10px; font-size:13px; color:var(--ink3); line-height:1.65; }
+
+/* ── INSIGHT ── */
+.insight {
+  margin:16px 0; padding:16px 20px;
+  border-left:4px solid var(--ink3); background:var(--bg2);
+}
+.insight-lbl {
+  font-family:'IBM Plex Mono',monospace; font-size:9px;
+  letter-spacing:2px; text-transform:uppercase; color:var(--ink3); margin-bottom:6px;
+}
+.insight p { font-size:13.5px; color:var(--ink2); line-height:1.65; max-width:700px; }
+.insight p strong { font-weight:500; }
+
+/* ── SERIES OVERVIEW ── */
+.series-grid {
+  display:grid; grid-template-columns:repeat(auto-fill,minmax(200px,1fr));
+  gap:10px; margin-top:20px;
+}
+.series-card {
+  border:1px solid var(--border2); background:var(--bg);
+  padding:14px 16px; display:flex; flex-direction:column; gap:6px;
+}
+.sc-cluster {
+  font-family:'IBM Plex Mono',monospace; font-size:9px;
+  letter-spacing:2px; text-transform:uppercase;
+}
+.sc-title { font-family:'Instrument Serif',serif; font-size:16px; color:var(--ink2); }
+.sc-desc { font-size:12px; color:var(--ink3); line-height:1.5; }
+
+/* ── LEGEND ── */
+.legend {
+  display:flex; gap:16px; flex-wrap:wrap; margin-top:16px;
+  padding:12px 16px; background:var(--bg2); border:1px solid var(--border);
+}
+.legend-item { display:flex; align-items:center; gap:6px; font-size:11.5px; color:var(--ink3); }
+.legend-dot { width:10px; height:10px; border-radius:2px; flex-shrink:0; }
+
+/* ── FOOTER ── */
+.footer {
+  padding:24px 56px; border-top:1px solid var(--border);
+  display:flex; justify-content:space-between; align-items:center;
+  font-family:'IBM Plex Mono',monospace; font-size:10px;
+  letter-spacing:1px; text-transform:uppercase; color:var(--ink4);
+}
+
+@media (max-width:700px) {
+  .masthead,.sect-head,.wrap,.footer { padding-left:20px; padding-right:20px; }
+  .tp-body { grid-template-columns:1fr; }
+  .bo-row { grid-template-columns:1fr; }
+  .pmatrix { font-size:10px; }
+  .pmatrix th, .pmatrix td { padding:7px 8px; }
+}
+</style>
+</head>
+<body>
+
+<!-- HEADER -->
+<div class="masthead">
+  <div class="mh-series">Serie Agenti AI · Leva 01 · Prompt Engineering</div>
+  <div class="mh-tag">Report Trasversale Finale</div>
+  <h1>Le linee guida per tipo di task</h1>
+  <p class="mh-sub">I sette cluster A–G non hanno lo stesso peso per ogni task. Questa guida mostra come le priorità cambiano per tipo di obiettivo — classificazione, estrazione, generazione, ragionamento, agentic — e come costruire il prompt nell'ordine giusto per ognuno.</p>
+  <div class="mh-meta">
+    <div class="mh-stat"><div class="mh-stat-val">5</div><div class="mh-stat-lbl">Tipi di task</div></div>
+    <div class="mh-stat"><div class="mh-stat-val">7</div><div class="mh-stat-lbl">Cluster A–G</div></div>
+    <div class="mh-stat"><div class="mh-stat-val">35</div><div class="mh-stat-lbl">Combinazioni priorità</div></div>
+    <div class="mh-stat"><div class="mh-stat-val">Fine serie</div><div class="mh-stat-lbl">Report 10/10</div></div>
+  </div>
+</div>
+
+<!-- NAV -->
+<div class="nav">
+  <button class="nav-btn active" onclick="show(1)">Mappa generale</button>
+  <button class="nav-btn" onclick="show(2)">Classificazione</button>
+  <button class="nav-btn" onclick="show(3)">Estrazione</button>
+  <button class="nav-btn" onclick="show(4)">Generazione</button>
+  <button class="nav-btn" onclick="show(5)">Ragionamento</button>
+  <button class="nav-btn" onclick="show(6)">Agentic</button>
+  <button class="nav-btn" onclick="show(7)">Errori tipici</button>
+  <button class="nav-btn" onclick="show(8)">La serie completa</button>
+</div>
+
+
+<!-- ═══════════════════════════
+     S1 — MAPPA GENERALE
+═══════════════════════════ -->
+<div class="sect active" id="s1">
+  <div class="sect-head">
+    <div class="sect-num">Panoramica</div>
+    <h2>La mappa priorità cluster × tipo di task</h2>
+    <p>Non tutti i cluster contano ugualmente per ogni task. Questa matrice mostra il peso relativo di ogni cluster in funzione del tipo di obiettivo — da critico a non applicabile.</p>
+  </div>
+  <div class="wrap">
+
+    <div class="legend">
+      <div class="legend-item"><div class="legend-dot" style="background:#fdf1ec;border:1px solid rgba(192,86,43,.5);"></div>CRITICO — priorità assoluta, impatto diretto sulla qualità</div>
+      <div class="legend-item"><div class="legend-dot" style="background:#edf4f9;border:1px solid rgba(46,125,156,.5);"></div>ALTO — fortemente raccomandato</div>
+      <div class="legend-item"><div class="legend-dot" style="background:#f4faf5;border:1px solid rgba(61,122,69,.5);"></div>MEDIO — utile ma non determinante</div>
+      <div class="legend-item"><div class="legend-dot" style="background:#faf8f5;border:1px solid #d9d4c8;"></div>BASSO — opzionale, rendimenti decrescenti</div>
+      <div class="legend-item"><div class="legend-dot" style="background:#e9e5dc;border:1px solid #cac4b6;opacity:.6"></div>N/A — non applicabile a questo tipo</div>
+    </div>
+
+    <div style="overflow-x:auto; margin-top:0;">
+      <table class="pmatrix">
+        <thead>
+          <tr>
+            <th rowspan="2" style="text-align:left; background:var(--ink2);">Cluster</th>
+            <th colspan="1" class="th-t1">Classificazione</th>
+            <th colspan="1" class="th-t2">Estrazione</th>
+            <th colspan="1" class="th-t3">Generazione</th>
+            <th colspan="1" class="th-t4">Ragionamento</th>
+            <th colspan="1" class="th-t5">Agentic</th>
+          </tr>
+          <tr>
+            <th class="th-t1" style="color:var(--t1);">Classif.</th>
+            <th class="th-t2" style="color:var(--t2);">Estraz.</th>
+            <th class="th-t3" style="color:var(--t3);">Generaz.</th>
+            <th class="th-t4" style="color:var(--t4);">Raginam.</th>
+            <th class="th-t5" style="color:var(--t5);">Agentic</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><span class="cl-A">A</span> · Identità e ruolo</td>
+            <td class="p-high">ALTO</td>
+            <td class="p-high">ALTO</td>
+            <td class="p-crit">CRITICO</td>
+            <td class="p-high">ALTO</td>
+            <td class="p-crit">CRITICO</td>
+          </tr>
+          <tr>
+            <td><span class="cl-B">B</span> · Obiettivo e vincoli</td>
+            <td class="p-crit">CRITICO</td>
+            <td class="p-crit">CRITICO</td>
+            <td class="p-crit">CRITICO</td>
+            <td class="p-crit">CRITICO</td>
+            <td class="p-crit">CRITICO</td>
+          </tr>
+          <tr>
+            <td><span class="cl-C">C</span> · Ragionamento</td>
+            <td class="p-low">BASSO</td>
+            <td class="p-low">BASSO</td>
+            <td class="p-med">MEDIO</td>
+            <td class="p-crit">CRITICO</td>
+            <td class="p-high">ALTO</td>
+          </tr>
+          <tr>
+            <td><span class="cl-D">D</span> · Formato output</td>
+            <td class="p-crit">CRITICO</td>
+            <td class="p-crit">CRITICO</td>
+            <td class="p-high">ALTO</td>
+            <td class="p-med">MEDIO</td>
+            <td class="p-crit">CRITICO</td>
+          </tr>
+          <tr>
+            <td><span class="cl-E">E</span> · Few-shot examples</td>
+            <td class="p-crit">CRITICO</td>
+            <td class="p-high">ALTO</td>
+            <td class="p-high">ALTO</td>
+            <td class="p-med">MEDIO</td>
+            <td class="p-low">BASSO</td>
+          </tr>
+          <tr>
+            <td><span class="cl-F">F</span> · Robustezza</td>
+            <td class="p-med">MEDIO</td>
+            <td class="p-high">ALTO</td>
+            <td class="p-med">MEDIO</td>
+            <td class="p-high">ALTO</td>
+            <td class="p-crit">CRITICO</td>
+          </tr>
+          <tr>
+            <td><span class="cl-G">G</span> · Agentic</td>
+            <td class="p-na">N/A</td>
+            <td class="p-na">N/A</td>
+            <td class="p-na">N/A</td>
+            <td class="p-na">N/A</td>
+            <td class="p-crit">CRITICO</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="key-point" style="margin-top:32px;">
+      <div class="kp-label">I tre pattern che emergono dalla mappa</div>
+      <div class="kp-text">B è sempre critico. G è critico solo per gli agenti. E è più utile sui task di classificazione e generazione che sui task di ragionamento.</div>
+      <div class="kp-sub">Il cluster B (obiettivo e vincoli) è l'unico ad avere peso critico per tutti i tipi di task senza eccezioni — è la base irrinunciabile. Il cluster G (agentic) è rilevante solo quando il modello opera in loop con strumenti: aggiungere G a un task di classificazione è overhead puro. Il cluster E (esempi) ha il massimo impatto dove le regole fanno più fatica: classificazioni con confini ambigui e generazione di testo con stile specifico; è meno necessario dove il processo di ragionamento è più importante del formato dell'output.</div>
+    </div>
+
+    <div class="prose" style="margin-top:28px;">
+      <p>Le sezioni successive approfondiscono ogni tipo di task con: le priorità specifiche per cluster, le tecniche più efficaci, gli errori più comuni e l'ordine di costruzione del prompt consigliato. Ogni sezione è autonoma — puoi navigare direttamente al tipo di task che ti interessa.</p>
+    </div>
+
+  </div>
+</div>
+
+
+<!-- ═══════════════════════════
+     S2 — CLASSIFICAZIONE
+═══════════════════════════ -->
+<div class="sect" id="s2">
+  <div class="sect-head">
+    <div class="sect-num">Tipo di task 01</div>
+    <h2>Classificazione</h2>
+    <p>Assegnare un input a una categoria tra N opzioni. Dal sentiment analysis alla moderazione di contenuti, dalla categorizzazione di ticket alla triage di email.</p>
+  </div>
+  <div class="wrap">
+
+    <div class="task-profile" style="margin-top:28px;">
+      <div class="tp-head" style="background:rgba(46,125,156,.06); border-left:5px solid var(--t1);">
+        <div>
+          <div class="tp-label">Tipo 01</div>
+          <div class="tp-name" style="color:var(--t1);">Classificazione</div>
+          <div class="tp-desc">Input → categoria da un insieme definito. La qualità dipende quasi interamente da quanto bene sono definite le categorie e i loro confini.</div>
+        </div>
+      </div>
+      <div class="tp-body">
+        <div class="tp-col">
+          <div class="tp-col-title">Priorità dei cluster</div>
+          <div class="cp-list">
+            <div class="cp-item"><span class="cp-badge crit">CRITICO</span><span class="cp-name"><strong>B</strong> — Definire categorie con criteri inequivocabili</span></div>
+            <div class="cp-item"><span class="cp-badge crit">CRITICO</span><span class="cp-name"><strong>D</strong> — Formato output rigido (enum, JSON)</span></div>
+            <div class="cp-item"><span class="cp-badge crit">CRITICO</span><span class="cp-name"><strong>E</strong> — Esempi per ogni categoria e per i confini ambigui</span></div>
+            <div class="cp-item"><span class="cp-badge high">ALTO</span><span class="cp-name"><strong>A</strong> — Ruolo che attiva il dominio di classificazione</span></div>
+            <div class="cp-item"><span class="cp-badge med">MEDIO</span><span class="cp-name"><strong>F</strong> — Gestione input ambigui e categoria "Altro"</span></div>
+            <div class="cp-item"><span class="cp-badge low">BASSO</span><span class="cp-name"><strong>C</strong> — CoT solo su classificazioni multi-criterio</span></div>
+            <div class="cp-item"><span class="cp-badge na">N/A</span><span class="cp-name"><strong>G</strong> — Non applicabile</span></div>
+          </div>
+        </div>
+        <div class="tp-col">
+          <div class="tp-col-title">Insight chiave</div>
+          <div class="insights-list">
+            <div class="insight-item" style="border-color:var(--t1);">Il <strong>problema principale della classificazione è l'ambiguità dei confini</strong> tra categorie. Le istruzioni verbali spesso non bastano — gli esempi ai confini (casi che stanno tra due categorie) sono la leva più potente.</div>
+            <div class="insight-item" style="border-color:var(--t1);">Definisci sempre una <strong>categoria "Altro" o "Non classificabile"</strong> con criterio preciso. Senza di essa, il modello forza ogni input in una delle categorie definite anche quando non ci appartiene.</div>
+            <div class="insight-item" style="border-color:var(--t1);">Per classificazione in pipeline: il <strong>formato JSON con enum</strong> riduce quasi a zero la varianza nell'output. È il primo investimento da fare dopo aver definito le categorie.</div>
+            <div class="insight-item" style="border-color:var(--t1);">Il <strong>CoT è raramente utile</strong> per classificazioni semplici: aggiunge latenza senza beneficio. Diventa utile solo per classificazioni multi-criterio dove bisogna pesare dimensioni diverse.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="prose" style="margin-top:28px;">
+      <p style="font-size:14px; font-weight:500; color:var(--ink2);">Ordine di costruzione consigliato per task di classificazione</p>
+    </div>
+    <div class="build-order" style="border:1px solid var(--border2);">
+      <div class="bo-row head"><div class="bo-task">Passo</div><div class="bo-order">Cosa fare e perché</div></div>
+      <div class="bo-row"><div class="bo-task">1° — B</div><div class="bo-order">Definisci le N categorie con criteri precisi e mutuamente esclusivi. Scrivi la definizione di ogni categoria in modo che non si sovrapponga con le altre. Includi la categoria "Altro".</div></div>
+      <div class="bo-row"><div class="bo-task">2° — D</div><div class="bo-order">Definisci il formato output: enum (solo il valore), JSON (con schema), o stringa con valore fisso. In pipeline: sempre JSON. Aggiungi "nessun testo fuori dal formato".</div></div>
+      <div class="bo-row"><div class="bo-task">3° — E</div><div class="bo-order">Costruisci 1–2 esempi per categoria, scegliendo quelli ai confini (i casi ambigui, non i casi ovvi). Includi almeno un esempio per la categoria "Altro" se esiste.</div></div>
+      <div class="bo-row"><div class="bo-task">4° — A</div><div class="bo-order">Aggiungi il ruolo se attiva conoscenza di dominio utile (es: "sei un analista di supporto clienti" per classificare ticket). Spesso non necessario per classificazioni puramente sintattiche.</div></div>
+      <div class="bo-row"><div class="bo-task">5° — F</div><div class="bo-order">Aggiungi gestione per input ambigui: come comportarsi quando un input potrebbe appartene a due categorie. Tipicamente: usa la categoria più probabile e segnala il dubbio, o usa "Altro".</div></div>
+    </div>
+
+  </div>
+</div>
+
+
+<!-- ═══════════════════════════
+     S3 — ESTRAZIONE
+═══════════════════════════ -->
+<div class="sect" id="s3">
+  <div class="sect-head">
+    <div class="sect-num">Tipo di task 02</div>
+    <h2>Estrazione strutturata</h2>
+    <p>Estrarre da un testo libero entità, valori, relazioni o dati specifici in un formato strutturato. Parsing di documenti, NER, data extraction, form filling automatico.</p>
+  </div>
+  <div class="wrap">
+
+    <div class="task-profile" style="margin-top:28px;">
+      <div class="tp-head" style="background:rgba(61,122,69,.06); border-left:5px solid var(--t2);">
+        <div>
+          <div class="tp-label">Tipo 02</div>
+          <div class="tp-name" style="color:var(--t2);">Estrazione strutturata</div>
+          <div class="tp-desc">Testo libero → dati strutturati. La qualità dipende dalla precisione della definizione di ogni campo e dalla gestione dei casi in cui il dato è assente o ambiguo.</div>
+        </div>
+      </div>
+      <div class="tp-body">
+        <div class="tp-col">
+          <div class="tp-col-title">Priorità dei cluster</div>
+          <div class="cp-list">
+            <div class="cp-item"><span class="cp-badge crit">CRITICO</span><span class="cp-name"><strong>B</strong> — Definizione precisa di ogni campo da estrarre</span></div>
+            <div class="cp-item"><span class="cp-badge crit">CRITICO</span><span class="cp-name"><strong>D</strong> — Schema output con tipi e valori ammessi</span></div>
+            <div class="cp-item"><span class="cp-badge crit">CRITICO</span><span class="cp-name"><strong>F</strong> — Gestione campo assente: null vs. stringa vuota vs. blocco</span></div>
+            <div class="cp-item"><span class="cp-badge high">ALTO</span><span class="cp-name"><strong>E</strong> — Esempi con documenti reali e casi "campo assente"</span></div>
+            <div class="cp-item"><span class="cp-badge high">ALTO</span><span class="cp-name"><strong>A</strong> — Ruolo con expertise nel dominio del documento</span></div>
+            <div class="cp-item"><span class="cp-badge low">BASSO</span><span class="cp-name"><strong>C</strong> — CoT solo per estrazione di relazioni complesse</span></div>
+            <div class="cp-item"><span class="cp-badge na">N/A</span><span class="cp-name"><strong>G</strong> — Non applicabile</span></div>
+          </div>
+        </div>
+        <div class="tp-col">
+          <div class="tp-col-title">Insight chiave</div>
+          <div class="insights-list">
+            <div class="insight-item" style="border-color:var(--t2);">L'estrazione ha due nemici: <strong>ambiguità nella definizione del campo</strong> (cosa si intende per "data di scadenza" in un contratto con 3 date?) e <strong>campo assente</strong> (cosa mettere nel JSON quando il documento non lo contiene?). Entrambi vanno risolti nel prompt, non a posteriori.</div>
+            <div class="insight-item" style="border-color:var(--t2);">Per ogni campo, specifica: <strong>come si chiama nel documento</strong> (può avere nomi diversi), il <strong>formato atteso</strong> nel JSON, e cosa fare se <strong>appare più volte</strong> (prendi il primo, l'ultimo, tutti in array?).</div>
+            <div class="insight-item" style="border-color:var(--t2);">Distingui sempre <strong>assente</strong> (il campo non esiste nel documento) da <strong>non leggibile</strong> (il documento è corrotto) da <strong>ambiguo</strong> (il campo c'è ma non è chiaro quale valore usare). Tre null diversi, tre comportamenti diversi.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="prose" style="margin-top:28px;">
+      <p style="font-size:14px; font-weight:500; color:var(--ink2);">Ordine di costruzione consigliato per task di estrazione</p>
+    </div>
+    <div class="build-order" style="border:1px solid var(--border2);">
+      <div class="bo-row head"><div class="bo-task">Passo</div><div class="bo-order">Cosa fare e perché</div></div>
+      <div class="bo-row"><div class="bo-task">1° — D</div><div class="bo-order">Inizia dallo schema JSON: definisci ogni campo con nome, tipo, valori ammessi, e valore quando assente (null, "", array vuoto). Lo schema è il blueprint dell'intera estrazione.</div></div>
+      <div class="bo-row"><div class="bo-task">2° — B</div><div class="bo-order">Per ogni campo dello schema, aggiungi la definizione semantica: cosa si intende, come può apparire nel documento, quale valore scegliere se appare in più varianti.</div></div>
+      <div class="bo-row"><div class="bo-task">3° — F</div><div class="bo-order">Definisci il comportamento per ogni tipo di campo mancante/ambiguo. Questo è il 40% del lavoro sull'estrazione ed è quasi sempre trascurato.</div></div>
+      <div class="bo-row"><div class="bo-task">4° — E</div><div class="bo-order">Aggiungi 1–2 esempi su documenti reali — uno con tutti i campi presenti, uno con alcuni campi mancanti. Mostra come si presenta il JSON in entrambi i casi.</div></div>
+      <div class="bo-row"><div class="bo-task">5° — A</div><div class="bo-order">Aggiungi il ruolo se attiva conoscenza di dominio utile per riconoscere come si esprimono certi campi nel linguaggio specifico del settore (es: contrattualistica, documentazione medica).</div></div>
+    </div>
+
+  </div>
+</div>
+
+
+<!-- ═══════════════════════════
+     S4 — GENERAZIONE
+═══════════════════════════ -->
+<div class="sect" id="s4">
+  <div class="sect-head">
+    <div class="sect-num">Tipo di task 03</div>
+    <h2>Generazione di testo</h2>
+    <p>Produrre testo originale: email, report, descrizioni di prodotto, testi di marketing, documentazione, sintesi narrative. Il task dove l'identità e lo stile contano di più.</p>
+  </div>
+  <div class="wrap">
+
+    <div class="task-profile" style="margin-top:28px;">
+      <div class="tp-head" style="background:rgba(176,125,36,.06); border-left:5px solid var(--t3);">
+        <div>
+          <div class="tp-label">Tipo 03</div>
+          <div class="tp-name" style="color:var(--t3);">Generazione di testo</div>
+          <div class="tp-desc">Input (brief, dati, contesto) → testo originale. La qualità dipende dalla chiarezza del brief (B), dalla precisione dello stile atteso (A+D), e dalla qualità degli esempi di riferimento (E).</div>
+        </div>
+      </div>
+      <div class="tp-body">
+        <div class="tp-col">
+          <div class="tp-col-title">Priorità dei cluster</div>
+          <div class="cp-list">
+            <div class="cp-item"><span class="cp-badge crit">CRITICO</span><span class="cp-name"><strong>A</strong> — Identità, voce, pubblico di riferimento</span></div>
+            <div class="cp-item"><span class="cp-badge crit">CRITICO</span><span class="cp-name"><strong>B</strong> — Obiettivo del testo, criterio di successo, cosa evitare</span></div>
+            <div class="cp-item"><span class="cp-badge high">ALTO</span><span class="cp-name"><strong>D</strong> — Struttura, lunghezza, tono comportamentale</span></div>
+            <div class="cp-item"><span class="cp-badge high">ALTO</span><span class="cp-name"><strong>E</strong> — Esempi di testo nello stile target</span></div>
+            <div class="cp-item"><span class="cp-badge med">MEDIO</span><span class="cp-name"><strong>C</strong> — CoT per pianificare struttura prima di scrivere</span></div>
+            <div class="cp-item"><span class="cp-badge med">MEDIO</span><span class="cp-name"><strong>F</strong> — Gestione brief incompleti o brief contraddittori</span></div>
+            <div class="cp-item"><span class="cp-badge na">N/A</span><span class="cp-name"><strong>G</strong> — Non applicabile</span></div>
+          </div>
+        </div>
+        <div class="tp-col">
+          <div class="tp-col-title">Insight chiave</div>
+          <div class="insights-list">
+            <div class="insight-item" style="border-color:var(--t3);">La generazione è il tipo di task dove il cluster A ha il <strong>maggiore impatto relativo</strong>. "Per chi scrivi" e "in quale voce" determinano automaticamente decine di scelte stilistiche che altrimenti andrebbero esplicitate una per una.</div>
+            <div class="insight-item" style="border-color:var(--t3);">Per lo stile, gli esempi (E) <strong>battono quasi sempre le istruzioni esplicite</strong>. Mostrare tre email nel tono giusto è più efficace di descrivere quel tono in cento parole. Vale soprattutto per stili molto specifici o non convenzionali.</div>
+            <div class="insight-item" style="border-color:var(--t3);">I guardrail negativi (cluster B) sono critici per la generazione: <strong>"non fare X"</strong> è spesso più utile di "fai Y", perché il modello di default tende verso pattern comuni che non sempre vuoi. "Non usare liste puntate", "non iniziare con 'Certo!'", "non aggiungere disclaimer".</div>
+            <div class="insight-item" style="border-color:var(--t3);">Il CoT per la generazione ha una forma specifica: <strong>pianifica prima, poi scrivi</strong>. "Prima elenca i 3 punti chiave che vuoi comunicare, poi scrivi il testo" produce output più coerenti di un attacco diretto alla scrittura.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="prose" style="margin-top:28px;">
+      <p style="font-size:14px; font-weight:500; color:var(--ink2);">Ordine di costruzione consigliato per task di generazione</p>
+    </div>
+    <div class="build-order" style="border:1px solid var(--border2);">
+      <div class="bo-row head"><div class="bo-task">Passo</div><div class="bo-order">Cosa fare e perché</div></div>
+      <div class="bo-row"><div class="bo-task">1° — A</div><div class="bo-order">Definisci la voce: chi scrive, per chi, in quale contesto. Includi sempre l'interlocutore — è la variabile con maggiore impatto sul registro. Per testi con brand voice specifico, descrivi il brand in A.</div></div>
+      <div class="bo-row"><div class="bo-task">2° — B</div><div class="bo-order">Definisci l'obiettivo comunicativo (persuadere / informare / rassicurare / convertire) e i guardrail negativi (cosa non fare, cosa evitare). Per la generazione, i "non fare" spesso contano più dei "fare".</div></div>
+      <div class="bo-row"><div class="bo-task">3° — D</div><div class="bo-order">Struttura e lunghezza: struttura attesa (titolo + 3 paragrafi + CTA?), limite di parole concreto, formato (prosa continua, lista, mix), tono con descrizioni comportamentali.</div></div>
+      <div class="bo-row"><div class="bo-task">4° — E</div><div class="bo-order">Se il tono è specifico o non convenzionale: aggiungi 1–2 esempi di testo nel registro target. Scegli testi reali già approvati, non inventati. Sono la calibrazione più potente per lo stile.</div></div>
+      <div class="bo-row"><div class="bo-task">5° — C</div><div class="bo-order">Per testi lunghi o strutturati: aggiungi "prima elenca la struttura, poi scrivi". Per testi brevi (email, tweet, caption): il CoT aggiunge overhead senza beneficio — omettilo.</div></div>
+    </div>
+
+  </div>
+</div>
+
+
+<!-- ═══════════════════════════
+     S5 — RAGIONAMENTO
+═══════════════════════════ -->
+<div class="sect" id="s5">
+  <div class="sect-head">
+    <div class="sect-num">Tipo di task 04</div>
+    <h2>Analisi e ragionamento</h2>
+    <p>Analizzare dati, valutare opzioni, trarre conclusioni da evidenze, rispondere a domande complesse. Il tipo di task dove il cluster C ha il massimo impatto.</p>
+  </div>
+  <div class="wrap">
+
+    <div class="task-profile" style="margin-top:28px;">
+      <div class="tp-head" style="background:rgba(123,94,167,.06); border-left:5px solid var(--t4);">
+        <div>
+          <div class="tp-label">Tipo 04</div>
+          <div class="tp-name" style="color:var(--t4);">Analisi e ragionamento</div>
+          <div class="tp-desc">Dati / documenti / domanda complessa → conclusione ragionata. La qualità dipende quasi interamente dalla struttura del processo di pensiero — non solo dall'output finale.</div>
+        </div>
+      </div>
+      <div class="tp-body">
+        <div class="tp-col">
+          <div class="tp-col-title">Priorità dei cluster</div>
+          <div class="cp-list">
+            <div class="cp-item"><span class="cp-badge crit">CRITICO</span><span class="cp-name"><strong>B</strong> — Criterio di successo operazionalizzato</span></div>
+            <div class="cp-item"><span class="cp-badge crit">CRITICO</span><span class="cp-name"><strong>C</strong> — Framework di analisi, decomposizione, CoT guidato</span></div>
+            <div class="cp-item"><span class="cp-badge high">ALTO</span><span class="cp-name"><strong>A</strong> — Expertise di dominio che attiva i pattern giusti</span></div>
+            <div class="cp-item"><span class="cp-badge high">ALTO</span><span class="cp-name"><strong>F</strong> — Dati incompleti, incertezza esplicitata, confidenza</span></div>
+            <div class="cp-item"><span class="cp-badge med">MEDIO</span><span class="cp-name"><strong>D</strong> — Struttura dell'output (ragionamento + conclusione)</span></div>
+            <div class="cp-item"><span class="cp-badge med">MEDIO</span><span class="cp-name"><strong>E</strong> — Utile solo se il framework non è ovvio dal dominio</span></div>
+            <div class="cp-item"><span class="cp-badge na">N/A</span><span class="cp-name"><strong>G</strong> — Non applicabile</span></div>
+          </div>
+        </div>
+        <div class="tp-col">
+          <div class="tp-col-title">Insight chiave</div>
+          <div class="insights-list">
+            <div class="insight-item" style="border-color:var(--t4);">Il cluster C è <strong>determinante per la qualità del ragionamento</strong>. Non basta chiedere "analizza" — bisogna strutturare il processo: quali dimensioni analizzare, in quale ordine, come pesare le evidenze contraddittorie.</div>
+            <div class="insight-item" style="border-color:var(--t4);">Per task di ragionamento, il <strong>framework di analisi domain-specific</strong> (GL04 del cluster C) ha spesso più impatto degli esempi. Il modello sa già come ragionare nel dominio — il framework lo indirizza a farlo nel modo giusto per il tuo task.</div>
+            <div class="insight-item" style="border-color:var(--t4);">La <strong>gestione dell'incertezza</strong> (cluster F + GL06 del cluster C) è critica: [CERTO] / [PROBABILE] / [IPOTESI] forza il modello a non presentare inferenze come fatti. È la differenza tra un'analisi usabile e una che richiede verifica manuale di ogni affermazione.</div>
+            <div class="insight-item" style="border-color:var(--t4);">L'<strong>auto-check critico</strong> (GL05 del cluster C) funziona particolarmente bene per il ragionamento: "qual è l'assunzione più discutibile?" porta il modello a revisitare il suo ragionamento da una prospettiva diversa e spesso identifica gap non evidenti nella generazione diretta.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="prose" style="margin-top:28px;">
+      <p style="font-size:14px; font-weight:500; color:var(--ink2);">Ordine di costruzione consigliato per task di analisi e ragionamento</p>
+    </div>
+    <div class="build-order" style="border:1px solid var(--border2);">
+      <div class="bo-row head"><div class="bo-task">Passo</div><div class="bo-order">Cosa fare e perché</div></div>
+      <div class="bo-row"><div class="bo-task">1° — B</div><div class="bo-order">Definisci cosa costituisce un'analisi di successo: quali domande deve rispondere, quale granularità di risposta è attesa, cosa distingue un'analisi eccellente da una mediocre.</div></div>
+      <div class="bo-row"><div class="bo-task">2° — C</div><div class="bo-order">Struttura il processo: framework di analisi con dimensioni da coprire in ordine, istruzione di confidenza [CERTO/PROBABILE/IPOTESI], auto-check prima di consegnare. Questo è il core del prompt per task di ragionamento.</div></div>
+      <div class="bo-row"><div class="bo-task">3° — A</div><div class="bo-order">Definisci il ruolo con expertise specifica del dominio — attiva pattern di ragionamento domain-specific appresi dal training. "Analista creditizio con focus su PMI" ragiona in modo diverso da "analista finanziario generico".</div></div>
+      <div class="bo-row"><div class="bo-task">4° — F</div><div class="bo-order">Aggiungi gestione per dati mancanti o contraddittori: il modello deve segnalare l'incertezza invece di riempire i gap con inferenze non dichiarate. Distingui dati critici da dati utili.</div></div>
+      <div class="bo-row"><div class="bo-task">5° — D</div><div class="bo-order">Struttura output con sezione ragionamento separata dalla conclusione, se utile per chi legge. Per analisi destinate a decision maker: sintesi in testa, dettaglio sotto.</div></div>
+    </div>
+
+  </div>
+</div>
+
+
+<!-- ═══════════════════════════
+     S6 — AGENTIC
+═══════════════════════════ -->
+<div class="sect" id="s6">
+  <div class="sect-head">
+    <div class="sect-num">Tipo di task 05</div>
+    <h2>Task agentic</h2>
+    <p>L'agente opera in loop autonomo con strumenti per raggiungere un obiettivo multi-step. Il tipo di task con il profilo di rischio più alto e il prompt più complesso.</p>
+  </div>
+  <div class="wrap">
+
+    <div class="task-profile" style="margin-top:28px;">
+      <div class="tp-head" style="background:rgba(139,92,58,.06); border-left:5px solid var(--t5);">
+        <div>
+          <div class="tp-label">Tipo 05</div>
+          <div class="tp-name" style="color:var(--t5);">Task agentic</div>
+          <div class="tp-desc">Obiettivo ad alto livello → azioni nel mondo reale attraverso tool, in loop autonomo. La qualità del prompt determina sia l'efficacia che la sicurezza dell'agente.</div>
+        </div>
+      </div>
+      <div class="tp-body">
+        <div class="tp-col">
+          <div class="tp-col-title">Priorità dei cluster</div>
+          <div class="cp-list">
+            <div class="cp-item"><span class="cp-badge crit">CRITICO</span><span class="cp-name"><strong>A</strong> — Scope boundaries espliciti e precisi</span></div>
+            <div class="cp-item"><span class="cp-badge crit">CRITICO</span><span class="cp-name"><strong>B</strong> — Obiettivo operazionalizzato con criteri di completamento</span></div>
+            <div class="cp-item"><span class="cp-badge crit">CRITICO</span><span class="cp-name"><strong>D</strong> — Output strutturato parsabile dal sistema</span></div>
+            <div class="cp-item"><span class="cp-badge crit">CRITICO</span><span class="cp-name"><strong>F</strong> — Robustezza su errori tool e casi non previsti</span></div>
+            <div class="cp-item"><span class="cp-badge crit">CRITICO</span><span class="cp-name"><strong>G</strong> — Tool, terminazione, guardrail irreversibili, perimetro</span></div>
+            <div class="cp-item"><span class="cp-badge high">ALTO</span><span class="cp-name"><strong>C</strong> — CoT prima di ogni azione consequenziale</span></div>
+            <div class="cp-item"><span class="cp-badge low">BASSO</span><span class="cp-name"><strong>E</strong> — Raramente utile; il comportamento viene dal loop, non dagli esempi</span></div>
+          </div>
+        </div>
+        <div class="tp-col">
+          <div class="tp-col-title">Insight chiave</div>
+          <div class="insights-list">
+            <div class="insight-item" style="border-color:var(--t5);">Il task agentic è il <strong>solo tipo dove tutti i cluster (tranne E) sono rilevanti</strong>. Ogni dimensione conta: il ruolo definisce lo scope, l'obiettivo definisce quando fermarsi, il ragionamento riduce errori a cascata, il formato rende il loop parsabile, la robustezza gestisce i fallimenti, e G copre tutto il resto.</div>
+            <div class="insight-item" style="border-color:var(--t5);">Il <strong>cluster G non sostituisce il cluster F</strong> — li richiede entrambi. F gestisce input anomali dall'utente; G gestisce errori e stati inattesi nel loop. Sono dimensioni ortogonali, non sovrapposte.</div>
+            <div class="insight-item" style="border-color:var(--t5);">Per task agentic, il <strong>prompt va testato in modo incrementale</strong>: prima verifica che l'agente raggiunga l'obiettivo sui casi tipici, poi testa i casi di errore, poi testa i guardrail sulle azioni irreversibili. Non testare tutto insieme — è impossibile diagnosticare cosa non va.</div>
+            <div class="insight-item" style="border-color:var(--t5);">Gli esempi (E) hanno <strong>impatto molto basso</strong> per task agentic: il comportamento dell'agente emerge dal loop, non dall'imitazione di esempi statici. L'eccezione è se il formato di output del loop deve seguire una struttura specifica non ovvia.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="prose" style="margin-top:28px;">
+      <p style="font-size:14px; font-weight:500; color:var(--ink2);">Ordine di costruzione consigliato per task agentic</p>
+    </div>
+    <div class="build-order" style="border:1px solid var(--border2);">
+      <div class="bo-row head"><div class="bo-task">Passo</div><div class="bo-order">Cosa fare e perché</div></div>
+      <div class="bo-row"><div class="bo-task">1° — B+A</div><div class="bo-order">Definisci obiettivo e scope insieme: cosa deve fare, dove si ferma, cosa non è autorizzato a fare. Per agenti, i confini di scope in A sono tanto critici quanto l'obiettivo in B.</div></div>
+      <div class="bo-row"><div class="bo-task">2° — G (tool)</div><div class="bo-order">Definisci criteri di uso per ogni tool (quando, quando non, gerarchia se multipli applicabili). Non puoi definire terminazione e guardrail prima di sapere quali azioni l'agente può eseguire.</div></div>
+      <div class="bo-row"><div class="bo-task">3° — G (terminazione)</div><div class="bo-order">Definisci i 3 criteri di uscita: completamento, errore bloccante, escalation. Aggiungi il limite massimo di passi. Senza questi, il loop non sa dove andare a parare.</div></div>
+      <div class="bo-row"><div class="bo-task">4° — G (guardrail)</div><div class="bo-order">Classifica ogni azione per reversibilità. Scrivi il guardrail per ogni azione irreversibile: mostra + attendi conferma esplicita. Definisci il perimetro minimo di accesso.</div></div>
+      <div class="bo-row"><div class="bo-task">5° — F</div><div class="bo-order">Gestione errori nel loop: retry strategy, comportamento su risultato inatteso, propagazione silenziosa. Questo è il 30% del lavoro su un agente in produzione.</div></div>
+      <div class="bo-row"><div class="bo-task">6° — D</div><div class="bo-order">Formato output del loop: struttura dei messaggi di stato ([COMPLETATO], [ERRORE], [IN ATTESA]), formato dei risultati intermedi se devono essere parsati dal sistema.</div></div>
+      <div class="bo-row"><div class="bo-task">7° — C</div><div class="bo-order">Aggiungi CoT prima di ogni azione consequenziale: "prima pianifica i passi, poi agisci". Riduce errori a cascata. Non necessario per ogni singolo tool call — solo per azioni che cambiano stato.</div></div>
+    </div>
+
+  </div>
+</div>
+
+
+<!-- ═══════════════════════════
+     S7 — ERRORI TIPICI
+═══════════════════════════ -->
+<div class="sect" id="s7">
+  <div class="sect-head">
+    <div class="sect-num">Sezione trasversale</div>
+    <h2>Gli errori più comuni per tipo di task</h2>
+    <p>I pattern di errore più frequenti che emergono applicando i cluster nel modo sbagliato per un tipo di task specifico.</p>
+  </div>
+  <div class="wrap">
+
+    <div class="trap-grid" style="margin-top:28px;">
+
+      <div class="trap-card">
+        <div class="tc-task" style="color:var(--t1);">Classificazione</div>
+        <div class="tc-title">Categorie definite senza i confini</div>
+        <div class="tc-body">Le categorie sono descritte ("Positivo = recensione favorevole") ma i confini tra categorie adiacenti non sono mai definiti. Il modello interpreta ogni caso limite in modo diverso tra invocazioni. <strong>Il 60% degli errori di classificazione avviene ai confini, non al centro delle categorie.</strong></div>
+        <div class="tc-fix"><strong>Fix:</strong> per ogni coppia di categorie adiacenti, scrivi un esempio al confine e mostra come classificarlo. Gli esempi borderline sono più utili degli esempi centrali.</div>
+      </div>
+
+      <div class="trap-card">
+        <div class="tc-task" style="color:var(--t1);">Classificazione</div>
+        <div class="tc-title">Nessuna categoria "Altro"</div>
+        <div class="tc-body">Il prompt definisce 4 categorie senza prevedere il caso in cui nessuna sia applicabile. In produzione, il modello forza ogni input in una delle 4 — anche quando l'input è irrilevante, corrotto o fuori dominio. <strong>Risultato: falsi positivi impossibili da filtrare a valle.</strong></div>
+        <div class="tc-fix"><strong>Fix:</strong> aggiungi sempre una categoria catch-all ("Altro", "Non classificabile", "Fuori dominio") con criterio preciso su quando usarla.</div>
+      </div>
+
+      <div class="trap-card">
+        <div class="tc-task" style="color:var(--t2);">Estrazione</div>
+        <div class="tc-title">Schema definito senza gestione null</div>
+        <div class="tc-body">Lo schema JSON è definito correttamente ma non dice cosa mettere quando un campo è assente nel documento. Il modello sceglie autonomamente tra null, stringa vuota, "N/A" e stringa descrittiva — in modo inconsistente. <strong>Il parser downstream si rompe o produce dati sporchi.</strong></div>
+        <div class="tc-fix"><strong>Fix:</strong> per ogni campo dello schema, specifica il valore di default quando assente: null, "", "N/D", o array vuoto. Il modello rispetta queste indicazioni con alta affidabilità.</div>
+      </div>
+
+      <div class="trap-card">
+        <div class="tc-task" style="color:var(--t2);">Estrazione</div>
+        <div class="tc-title">Campo definito ambiguamente</div>
+        <div class="tc-body">"Estrai la data del contratto" — ma il contratto ha una data di stipula, una data di efficacia e una data di scadenza. Il modello sceglie ogni volta una diversa. <strong>I dati estratti sembrano corretti ma non sono comparabili tra documenti diversi.</strong></div>
+        <div class="tc-fix"><strong>Fix:</strong> per ogni campo che può avere ambiguità, specifica esattamente quale dei valori possibili estrarre. "Data di efficacia (art. 1), non data di stipula né data di scadenza".</div>
+      </div>
+
+      <div class="trap-card">
+        <div class="tc-task" style="color:var(--t3);">Generazione</div>
+        <div class="tc-title">Istruzioni di tono vaghe</div>
+        <div class="tc-body">Il prompt dice "tono professionale e coinvolgente" senza specificare cosa questo significa in pratica per il brand specifico. Il modello produce testi coerenti ma generici — mai sbagliati, mai distintivi. <strong>Il brief descrive un'intenzione, non un comportamento.</strong></div>
+        <div class="tc-fix"><strong>Fix:</strong> sostituisci aggettivi con comportamenti: "frasi max 20 parole", "inizia sempre con un dato concreto", "mai tono imperativo". Oppure usa esempi di testo reale già approvato.</div>
+      </div>
+
+      <div class="trap-card">
+        <div class="tc-task" style="color:var(--t3);">Generazione</div>
+        <div class="tc-title">Nessun guardrail negativo</div>
+        <div class="tc-body">Il prompt descrive cosa fare ma non cosa evitare. Il modello produce output corretti ma con pattern indesiderati tipici del training: testo pieno di gergo, aperture con "Certo!", conclusioni con "Spero che questo aiuti", elenchi puntati dove serviva prosa. <strong>I guardrail negativi per la generazione valgono quanto quelli positivi.</strong></div>
+        <div class="tc-fix"><strong>Fix:</strong> dedica una sezione del prompt ai "non fare": pattern da evitare, parole bandite, strutture non gradite. Ogni "non fare" abbatte un pattern di default indesiderato.</div>
+      </div>
+
+      <div class="trap-card">
+        <div class="tc-task" style="color:var(--t4);">Ragionamento</div>
+        <div class="tc-title">Analisi senza framework — tutto generico</div>
+        <div class="tc-body">Il prompt chiede "analizza X" senza definire quali dimensioni analizzare. Il modello produce un'analisi completa ma superficiale — copre tutto un po' senza approfondire nulla. <strong>L'output sembra professionale ma non è azionabile.</strong></div>
+        <div class="tc-fix"><strong>Fix:</strong> definisci le 3–5 dimensioni specifiche da analizzare, nell'ordine. Il modello ragiona meglio su dimensioni esplicite che su un task aperto — anche se le dimensioni sembrano ovvie.</div>
+      </div>
+
+      <div class="trap-card">
+        <div class="tc-task" style="color:var(--t4);">Ragionamento</div>
+        <div class="tc-title">Inferenze presentate come fatti</div>
+        <div class="tc-body">Il modello non ha dati sufficienti per concludere ma presenta le inferenze con lo stesso tono assertivo dei fatti certi. Chi legge non riesce a distinguere cosa è nei dati e cosa è nel ragionamento del modello. <strong>Porta a decisioni basate su false certezze.</strong></div>
+        <div class="tc-fix"><strong>Fix:</strong> aggiungi sempre [CERTO] / [PROBABILE] / [IPOTESI] alle affermazioni. Sembra una piccola aggiunta ma cambia radicalmente l'affidabilità percepita e reale dell'analisi.</div>
+      </div>
+
+      <div class="trap-card">
+        <div class="tc-task" style="color:var(--t5);">Agentic</div>
+        <div class="tc-title">Guardrail troppo vaghi sulle azioni irreversibili</div>
+        <div class="tc-body">"Sii cauto con le azioni che non si possono annullare" — il modello interpreta "cauto" in modo variabile. Su alcuni run procede senza chiedere, su altri si ferma. <strong>Il comportamento di sicurezza non è deterministico quando il guardrail è vago.</strong></div>
+        <div class="tc-fix"><strong>Fix:</strong> lista esplicita delle azioni irreversibili + istruzione operativa precisa ("mostra X e Y, attendi 'confermo' esplicito"). Il guardrail deve essere binario e verificabile, non qualitativo.</div>
+      </div>
+
+      <div class="trap-card">
+        <div class="tc-task" style="color:var(--t5);">Agentic</div>
+        <div class="tc-title">Nessun criterio di terminazione</div>
+        <div class="tc-body">L'agente sa cosa fare ma non sa quando ha finito. Continua a verificare, ricercare e iterare oltre il necessario — o peggio, si ferma prima perché l'obiettivo sembrava raggiunto a metà strada. <strong>Senza criteri espliciti, "ho finito" è una valutazione soggettiva del modello.</strong></div>
+        <div class="tc-fix"><strong>Fix:</strong> definisci criteri oggettivi di completamento: "il task è completato quando [lista di condizioni verificabili]". Aggiungi [COMPLETATO] come marker nell'output per rendere la terminazione esplicita e parsabile.</div>
+      </div>
+
+    </div>
+
+  </div>
+</div>
+
+
+<!-- ═══════════════════════════
+     S8 — LA SERIE COMPLETA
+═══════════════════════════ -->
+<div class="sect" id="s8">
+  <div class="sect-head">
+    <div class="sect-num">Chiusura della serie</div>
+    <h2>La serie completa — mappa e principi fondamentali</h2>
+    <p>Una vista d'insieme degli 8 report prodotti, dei principi che li unificano, e di come usarli come strumento di lavoro continuativo.</p>
+  </div>
+  <div class="wrap">
+
+    <div class="prose" style="margin-top:28px;">
+      <p>Questa serie ha costruito un sistema coerente per scrivere prompt efficaci — partendo dal meccanismo LLM di base fino alle linee guida operative per ogni tipo di task. Non è una collezione di trucchi: è una struttura che riflette come i modelli effettivamente funzionano e cosa cambia il loro comportamento.</p>
+    </div>
+
+    <div class="series-grid" style="margin-top:24px;">
+      <div class="series-card">
+        <div class="sc-cluster" style="color:var(--ink4);">Report Quadro</div>
+        <div class="sc-title" style="color:var(--ink2);">La mappa completa</div>
+        <div class="sc-desc">Cos'è un prompt, perché funziona, i 7 cluster, anatomia, errori comuni, metodo di miglioramento.</div>
+      </div>
+      <div class="series-card">
+        <div class="sc-cluster" style="color:var(--cA);">Cluster A</div>
+        <div class="sc-title" style="color:var(--cA);">Identità e ruolo</div>
+        <div class="sc-desc">Ruolo specifico, competenze funzionali, contesto di deployment, interlocutore, tono e scope.</div>
+      </div>
+      <div class="series-card">
+        <div class="sc-cluster" style="color:var(--cB);">Cluster B</div>
+        <div class="sc-title" style="color:var(--cB);">Obiettivo e vincoli</div>
+        <div class="sc-desc">Output operazionalizzato, criterio di successo, 4 tipi di vincolo, guardrail sui default.</div>
+      </div>
+      <div class="series-card">
+        <div class="sc-cluster" style="color:var(--cC);">Cluster C</div>
+        <div class="sc-title" style="color:var(--cC);">Ragionamento</div>
+        <div class="sc-desc">Chain-of-thought, decomposizione, framework di analisi, auto-verifica, gestione incertezza.</div>
+      </div>
+      <div class="series-card">
+        <div class="sc-cluster" style="color:var(--cD);">Cluster D</div>
+        <div class="sc-title" style="color:var(--cD);">Formato output</div>
+        <div class="sc-desc">Struttura, prosa vs. lista vs. JSON, lunghezza con unità concrete, tono comportamentale, lingua.</div>
+      </div>
+      <div class="series-card">
+        <div class="sc-cluster" style="color:var(--cE);">Cluster E</div>
+        <div class="sc-title" style="color:var(--cE);">Few-shot examples</div>
+        <div class="sc-desc">Quando usarli, input realistici, gold standard, coerenza con A–D, numero e ordine, errori comuni.</div>
+      </div>
+      <div class="series-card">
+        <div class="sc-cluster" style="color:var(--cF);">Cluster F</div>
+        <div class="sc-title" style="color:var(--cF);">Robustezza</div>
+        <div class="sc-desc">Dati mancanti, input ambigui, fuori scope, fallback generale, suite di test sui casi limite.</div>
+      </div>
+      <div class="series-card">
+        <div class="sc-cluster" style="color:var(--cG);">Cluster G</div>
+        <div class="sc-title" style="color:var(--cG);">Agenti agentic</div>
+        <div class="sc-desc">Uso tool, gerarchia, terminazione, retry, guardrail irreversibili, perimetro accesso.</div>
+      </div>
+    </div>
+
+    <div class="key-point" style="margin-top:36px;">
+      <div class="kp-label">I cinque principi che unificano la serie</div>
+      <div class="kp-text">Un prompt non descrive cosa vuoi. Descrive il mondo in cui il modello opera — e da quel mondo la risposta giusta emerge.</div>
+      <div class="kp-sub" style="margin-top:12px;">
+        <strong>1. Specificità prima di completezza.</strong> Un obiettivo preciso vale più di dieci istruzioni generiche. Prima di aggiungere nuove sezioni al prompt, approfondisci quelle esistenti.
+        <br><br>
+        <strong>2. Esempi per le sfumature, regole per i vincoli.</strong> Non sono intercambiabili. Le regole definiscono cosa è obbligatorio; gli esempi mostrano come farlo bene nei casi ambigui.
+        <br><br>
+        <strong>3. Ogni cluster si appoggia al precedente.</strong> Il formato (D) dipende dall'obiettivo (B). Il ragionamento (C) dipende dall'identità (A) e dall'obiettivo (B). Non saltare i layer inferiori per ottimizzare quelli superiori.
+        <br><br>
+        <strong>4. La robustezza si costruisce dopo il deployment, non prima.</strong> I cluster A–E coprono il caso tipico; il cluster F cresce con ogni failure mode reale. La suite di test è un artefatto vivente.
+        <br><br>
+        <strong>5. L'autonomia dell'agente si calibra, non si massimizza.</strong> Per gli agenti, il prompt eccellente non è quello che fa fare di più al modello — è quello che definisce con precisione dove smettere di agire in autonomia.
+      </div>
+    </div>
+
+    <div class="insight" style="margin-top:28px;">
+      <div class="insight-lbl">Come usare questa serie come strumento di lavoro</div>
+      <p>Ogni volta che scrivi un nuovo prompt, parti dalla checklist della <strong>sezione 6 di ogni report</strong> per i cluster rilevanti. Ogni volta che un prompt produce output inattesi, usa la <strong>matrice di questo report trasversale</strong> per identificare quale cluster è la causa più probabile. Ogni volta che un agente fallisce in produzione, aggiungi quel caso alla suite di test del <strong>cluster F</strong> e aggiorna le istruzioni. I report non sono da leggere una volta — sono da consultare ogni volta che si lavora su un prompt.</p>
+    </div>
+
+    <div class="prose" style="margin-top:32px; padding-top:32px; border-top:1px solid var(--border);">
+      <p style="color:var(--ink4); font-size:13px;">Serie Agenti AI · Leva 01 · Prompt Engineering · 8 report · Marzo 2026</p>
+      <p style="font-size:13px; color:var(--ink4);">Report Quadro · A · B · C · D · E · F · G · <strong style="color:var(--ink2);">Trasversale ← questo report</strong></p>
+    </div>
+
+  </div>
+</div>
+
+
+<!-- FOOTER -->
+<div class="footer">
+  <span>Serie Agenti AI — Leva 01 · Prompt Engineering · Report Trasversale Finale</span>
+  <span>Marzo 2026</span>
+</div>
+
+<script>
+function show(n) {
+  document.querySelectorAll('.sect').forEach(s => s.classList.remove('active'));
+  document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('s'+n).classList.add('active');
+  document.querySelectorAll('.nav-btn')[n-1].classList.add('active');
+  window.scrollTo({top:0, behavior:'smooth'});
+}
+</script>
+</body>
+</html>

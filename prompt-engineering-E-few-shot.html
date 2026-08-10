@@ -1,0 +1,1175 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Prompt Engineering — E · Few-shot Examples</title>
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Outfit:wght@200;300;400;500;600;700;800;900&family=IBM+Plex+Mono:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg:     #faf8f5;
+  --bg2:    #f2efe9;
+  --bg3:    #e9e5dc;
+  --ink:    #1b1915;
+  --ink2:   #2e2b25;
+  --ink3:   #6d685c;
+  --ink4:   #a19c8f;
+  --border: #d9d4c8;
+  --border2:#cac4b6;
+
+  --accent:  #c0562b;
+  --accent2: #8c3a1a;
+  --accent-light: #fdf1ec;
+}
+
+* { margin:0; padding:0; box-sizing:border-box; }
+html { scroll-behavior:smooth; }
+body {
+  background:var(--bg); color:var(--ink);
+  font-family:'Outfit',sans-serif; font-weight:300;
+  font-size:14px; line-height:1.75;
+}
+
+/* ── HEADER ── */
+.masthead {
+  background:var(--ink); color:rgba(255,255,255,.9);
+  padding:60px 56px 52px; position:relative; overflow:hidden;
+}
+.masthead::before {
+  content:''; position:absolute; inset:0;
+  background:
+    repeating-linear-gradient(90deg,rgba(255,255,255,.012) 0,rgba(255,255,255,.012) 1px,transparent 1px,transparent 64px),
+    repeating-linear-gradient(0deg,rgba(255,255,255,.012) 0,rgba(255,255,255,.012) 1px,transparent 1px,transparent 64px);
+  pointer-events:none;
+}
+.masthead::after {
+  content:'E'; position:absolute; right:44px; bottom:-28px;
+  font-family:'Instrument Serif',serif; font-size:280px; line-height:1;
+  color:rgba(255,255,255,.025); pointer-events:none;
+}
+.mh-eye {
+  font-family:'IBM Plex Mono',monospace; font-size:10px;
+  letter-spacing:3px; text-transform:uppercase;
+  color:rgba(255,255,255,.25); margin-bottom:18px; position:relative;
+}
+.mh-cluster {
+  display:inline-block; font-family:'IBM Plex Mono',monospace;
+  font-size:10px; letter-spacing:2px; text-transform:uppercase;
+  padding:4px 12px; border:1px solid var(--accent);
+  color:var(--accent); margin-bottom:20px; position:relative;
+}
+.masthead h1 {
+  font-family:'Instrument Serif',serif; font-weight:400;
+  font-size:clamp(30px,4.5vw,54px); line-height:1.08;
+  letter-spacing:-1px; max-width:700px; position:relative;
+}
+.mh-sub {
+  margin-top:20px; font-size:15px; font-weight:300;
+  color:rgba(255,255,255,.38); max-width:660px;
+  line-height:1.7; position:relative;
+}
+.mh-meta {
+  margin-top:32px; display:flex; gap:32px; flex-wrap:wrap; position:relative;
+}
+.mh-stat { display:flex; flex-direction:column; gap:4px; }
+.mh-stat-val {
+  font-family:'IBM Plex Mono',monospace; font-size:22px; font-weight:500;
+  color:rgba(255,255,255,.85);
+}
+.mh-stat-lbl {
+  font-size:10px; letter-spacing:2px; text-transform:uppercase;
+  color:rgba(255,255,255,.25);
+}
+
+/* ── NAV ── */
+.nav {
+  background:var(--ink2); position:sticky; top:0; z-index:100;
+  display:flex; overflow-x:auto;
+  border-bottom:1px solid rgba(255,255,255,.06);
+}
+.nav-btn {
+  flex:1; min-width:120px; padding:13px 12px;
+  border:none; background:transparent; cursor:pointer;
+  font-family:'Outfit',sans-serif; font-size:10.5px; font-weight:600;
+  text-transform:uppercase; letter-spacing:.4px;
+  color:rgba(255,255,255,.3);
+  border-right:1px solid rgba(255,255,255,.06);
+  transition:all .2s; white-space:nowrap;
+}
+.nav-btn:last-child { border-right:none; }
+.nav-btn:hover { color:rgba(255,255,255,.6); }
+.nav-btn.active { color:#fff; background:rgba(255,255,255,.05); }
+
+/* ── SECTIONS ── */
+.sect { display:none; }
+.sect.active { display:block; animation:fadeIn .3s ease; }
+@keyframes fadeIn { from{opacity:0;transform:translateY(6px)} to{opacity:1;transform:translateY(0)} }
+
+.sect-head { padding:48px 56px 36px; border-bottom:1px solid var(--border); }
+.sect-num {
+  font-family:'IBM Plex Mono',monospace; font-size:10px;
+  letter-spacing:3px; text-transform:uppercase; color:var(--ink4); margin-bottom:10px;
+}
+.sect-head h2 {
+  font-family:'Instrument Serif',serif; font-weight:400;
+  font-size:clamp(26px,3.5vw,42px); line-height:1.1;
+  letter-spacing:-.5px; max-width:640px; margin-bottom:14px;
+}
+.sect-head p { color:var(--ink3); max-width:700px; font-size:14.5px; }
+.wrap { padding:0 56px 64px; }
+
+/* ── PROSE ── */
+.prose { max-width:760px; }
+.prose p { font-size:14.5px; color:var(--ink3); line-height:1.85; margin-bottom:16px; }
+.prose p strong { color:var(--ink2); font-weight:500; }
+.prose p em { font-style:italic; color:var(--ink2); }
+
+/* ── GUIDELINE CARD ── */
+.gl-group { margin-top:40px; }
+.gl-group-title {
+  font-family:'IBM Plex Mono',monospace; font-size:9px;
+  letter-spacing:3px; text-transform:uppercase;
+  color:var(--ink4); padding-bottom:10px; border-bottom:1px solid var(--border);
+}
+.gl-card { border:1px solid var(--border2); border-top:none; background:var(--bg); }
+.gl-header {
+  display:grid; grid-template-columns:5px 52px 1fr auto;
+  align-items:stretch; border-bottom:1px solid var(--border);
+}
+.gl-stripe { background:var(--accent); }
+.gl-num {
+  font-family:'Outfit',sans-serif; font-weight:800; font-size:20px; color:var(--bg3);
+  display:flex; align-items:center; justify-content:center;
+  border-right:1px solid var(--border);
+}
+.gl-title-wrap { padding:16px 20px; }
+.gl-title { font-family:'Instrument Serif',serif; font-size:20px; color:var(--ink2); line-height:1.2; }
+.gl-subtitle { font-size:12px; color:var(--ink4); margin-top:3px; }
+.gl-impact-wrap {
+  padding:14px 20px; display:flex; flex-direction:column;
+  align-items:flex-end; justify-content:center; gap:4px;
+}
+.gl-impact-stars { font-size:14px; }
+.gl-impact-lbl {
+  font-family:'IBM Plex Mono',monospace; font-size:8px;
+  letter-spacing:1px; text-transform:uppercase; color:var(--ink4);
+}
+.gl-body { padding:0; }
+.gl-section { padding:20px 24px; border-bottom:1px solid var(--border); }
+.gl-section:last-child { border-bottom:none; }
+.gl-section-lbl {
+  font-family:'IBM Plex Mono',monospace; font-size:9px;
+  letter-spacing:2px; text-transform:uppercase; color:var(--ink4);
+  margin-bottom:10px; padding-bottom:6px; border-bottom:1px solid var(--border);
+}
+.gl-section p { font-size:13.5px; color:var(--ink3); line-height:1.8; max-width:740px; }
+.gl-section p strong { color:var(--ink2); font-weight:500; }
+.gl-section p em { font-style:italic; color:var(--ink2); }
+
+/* ── PROMPT BOXES ── */
+.pex-lbl {
+  font-family:'IBM Plex Mono',monospace; font-size:9px;
+  letter-spacing:2px; text-transform:uppercase; margin-bottom:6px;
+}
+.pex-lbl.bad     { color:#c0392b; }
+.pex-lbl.good    { color:var(--accent); }
+.pex-lbl.neutral { color:var(--ink4); }
+
+.prompt-box {
+  font-family:'IBM Plex Mono',monospace; font-size:12px; line-height:1.75;
+  padding:14px 18px; border:1px solid; white-space:pre-wrap; word-break:break-word;
+}
+.prompt-box.bad     { border-color:#e8c5c5; background:#fdf5f5; color:#6b3030; }
+.prompt-box.good    { border-color:#e8c5b8; background:var(--accent-light); color:var(--accent2); }
+.prompt-box.neutral { border-color:var(--border2); background:var(--bg2); color:var(--ink3); }
+.prompt-box .hl     { font-weight:500; }
+.prompt-box.good .hl { color:var(--accent); text-decoration:underline; text-decoration-color:rgba(192,86,43,.3); }
+.prompt-box.bad  .hl { color:#8b3030; }
+
+.compare-grid { display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-top:12px; }
+
+/* ── MECHANISM ── */
+.mechanism {
+  margin-top:14px; padding:14px 18px;
+  border-left:3px solid var(--accent); background:var(--accent-light);
+}
+.mech-lbl {
+  font-family:'IBM Plex Mono',monospace; font-size:9px;
+  letter-spacing:2px; text-transform:uppercase; color:var(--accent); margin-bottom:6px;
+}
+.mechanism p { font-size:13px; color:var(--ink3); line-height:1.65; }
+.mechanism p strong { color:var(--ink2); font-weight:500; }
+
+/* ── EXAMPLE ANATOMY ── */
+.ex-anatomy {
+  margin-top:16px; border:1px solid var(--border2); overflow:hidden;
+}
+.ea-header {
+  padding:12px 18px; background:var(--ink);
+  border-bottom:1px solid rgba(255,255,255,.06);
+  font-family:'IBM Plex Mono',monospace; font-size:9px;
+  letter-spacing:2px; text-transform:uppercase; color:rgba(255,255,255,.4);
+}
+.ea-row {
+  display:grid; grid-template-columns:100px 1fr;
+  border-bottom:1px solid var(--border);
+}
+.ea-row:last-child { border-bottom:none; }
+.ea-label {
+  padding:14px 16px; background:var(--bg2);
+  border-right:1px solid var(--border);
+  font-family:'IBM Plex Mono',monospace; font-size:9px;
+  letter-spacing:1.5px; text-transform:uppercase;
+  color:var(--accent); display:flex; align-items:center;
+}
+.ea-content {
+  padding:14px 18px;
+  font-family:'IBM Plex Mono',monospace; font-size:12px;
+  line-height:1.7; color:var(--ink3);
+  background:var(--bg);
+}
+.ea-content .ann {
+  display:inline-block;
+  background:var(--accent-light); color:var(--accent2);
+  font-size:10px; padding:1px 6px; margin-left:6px;
+  border:1px solid rgba(192,86,43,.2);
+}
+
+/* ── SHOT COUNT MATRIX ── */
+.shot-matrix { margin-top:16px; }
+.sm-row {
+  display:grid; grid-template-columns:80px 1fr 200px;
+  border-bottom:1px solid var(--border); font-size:12.5px;
+}
+.sm-row:last-child { border-bottom:none; }
+.sm-row.head {
+  background:var(--ink); color:rgba(255,255,255,.7);
+  font-family:'IBM Plex Mono',monospace; font-size:9px;
+  letter-spacing:1px; text-transform:uppercase;
+}
+.sm-cell {
+  padding:12px 14px; border-right:1px solid var(--border);
+  color:var(--ink3); line-height:1.5; vertical-align:top;
+}
+.sm-cell:last-child { border-right:none; }
+.sm-cell.lbl { font-weight:600; color:var(--ink2); background:var(--bg2); text-align:center; }
+.sm-cell.rec { color:var(--accent2); font-weight:500; background:var(--accent-light); }
+
+/* ── EXAMPLE CARD (annotated) ── */
+.ex-card {
+  margin-top:16px; border:1px solid var(--border2); overflow:hidden;
+}
+.ec-bar {
+  height:4px; background:var(--accent);
+}
+.ec-head {
+  padding:10px 16px; background:var(--bg2);
+  border-bottom:1px solid var(--border);
+  display:flex; justify-content:space-between; align-items:center;
+}
+.ec-title {
+  font-family:'IBM Plex Mono',monospace; font-size:9px;
+  letter-spacing:2px; text-transform:uppercase; color:var(--accent);
+}
+.ec-tag {
+  font-family:'IBM Plex Mono',monospace; font-size:8px;
+  letter-spacing:1px; text-transform:uppercase;
+  padding:2px 8px; border:1px solid var(--border2); color:var(--ink4);
+}
+.ec-tag.ok   { border-color:rgba(61,122,69,.4); color:#3d7a45; background:rgba(61,122,69,.05); }
+.ec-tag.warn { border-color:rgba(192,86,43,.4); color:var(--accent); background:var(--accent-light); }
+.ec-body {
+  padding:16px 18px; display:grid;
+  grid-template-columns:1fr 1fr; gap:12px;
+}
+.ec-col-lbl {
+  font-family:'IBM Plex Mono',monospace; font-size:8px;
+  letter-spacing:2px; text-transform:uppercase;
+  color:var(--ink4); margin-bottom:8px;
+}
+.ec-text {
+  font-family:'IBM Plex Mono',monospace; font-size:11.5px;
+  line-height:1.7; color:var(--ink3); white-space:pre-wrap;
+}
+.ec-annot {
+  margin-top:10px; padding:8px 12px;
+  font-size:12px; color:var(--ink3); line-height:1.55;
+  border-top:1px solid var(--border);
+}
+.ec-annot strong { color:var(--ink2); font-weight:500; }
+
+/* ── PITFALL GRID ── */
+.pitfall-grid {
+  display:grid; grid-template-columns:repeat(auto-fill,minmax(260px,1fr));
+  gap:14px; margin-top:16px;
+}
+.pitfall-card {
+  border:1px solid var(--border2);
+  border-top:3px solid var(--accent);
+  background:var(--bg); padding:16px 18px;
+}
+.pc-num {
+  font-family:'IBM Plex Mono',monospace; font-size:10px;
+  letter-spacing:2px; text-transform:uppercase;
+  color:var(--accent); margin-bottom:6px;
+}
+.pc-title { font-weight:600; font-size:13.5px; color:var(--ink2); margin-bottom:8px; }
+.pc-desc { font-size:13px; color:var(--ink3); line-height:1.6; }
+.pc-desc strong { color:var(--ink2); font-weight:500; }
+.pc-fix {
+  margin-top:10px; padding:9px 12px;
+  background:rgba(61,122,69,.06); border-left:3px solid #3d7a45;
+  font-size:12px; color:var(--ink3); line-height:1.55;
+}
+.pc-fix strong { color:#3d7a45; font-weight:600; }
+
+/* ── SPECTRUM ── */
+.spectrum { margin-top:16px; border:1px solid var(--border); overflow:hidden; }
+.spectrum-row { display:grid; border-bottom:1px solid var(--border); font-size:12.5px; }
+.spectrum-row:last-child { border-bottom:none; }
+.spectrum-row.head {
+  background:var(--ink); color:rgba(255,255,255,.7);
+  font-family:'IBM Plex Mono',monospace; font-size:9px;
+  letter-spacing:1px; text-transform:uppercase;
+}
+.spectrum-row.col3 { grid-template-columns:200px 1fr 1fr; }
+.spectrum-row.col4 { grid-template-columns:180px 1fr 1fr 1fr; }
+.s-cell {
+  padding:11px 14px; border-right:1px solid var(--border);
+  color:var(--ink3); line-height:1.5;
+}
+.s-cell:last-child { border-right:none; }
+.s-cell.lbl { font-weight:500; color:var(--ink2); background:var(--bg2); }
+.s-cell.hi  { background:var(--accent-light); color:var(--accent2); }
+.s-cell.lo  { background:#fdf5f5; color:#8b3030; }
+
+/* ── CHECKLIST ── */
+.checklist { margin-top:16px; }
+.check-item {
+  display:flex; gap:12px; align-items:flex-start;
+  padding:10px 0; border-bottom:1px solid var(--border);
+  font-size:13.5px; color:var(--ink3);
+}
+.check-item:last-child { border-bottom:none; }
+.check-icon {
+  width:20px; height:20px; border-radius:50%;
+  background:var(--accent); color:#fff;
+  display:flex; align-items:center; justify-content:center;
+  font-size:11px; font-weight:700; flex-shrink:0; margin-top:1px;
+}
+.check-item strong { color:var(--ink2); font-weight:500; }
+
+/* ── KEY POINT ── */
+.key-point {
+  margin-top:36px; padding:24px 28px;
+  border-left:4px solid var(--accent); background:var(--accent-light);
+}
+.kp-label {
+  font-family:'IBM Plex Mono',monospace; font-size:9px;
+  letter-spacing:2px; text-transform:uppercase; color:var(--accent); margin-bottom:8px;
+}
+.kp-text {
+  font-family:'Instrument Serif',serif; font-size:18px; line-height:1.45; color:var(--ink2);
+}
+.kp-sub { margin-top:10px; font-size:13px; color:var(--ink3); line-height:1.65; }
+
+/* ── INSIGHT ── */
+.insight {
+  margin:16px 0; padding:16px 20px;
+  border-left:4px solid var(--accent); background:var(--accent-light);
+}
+.insight-lbl {
+  font-family:'IBM Plex Mono',monospace; font-size:9px;
+  letter-spacing:2px; text-transform:uppercase; color:var(--accent); margin-bottom:6px;
+}
+.insight p { font-size:13.5px; color:var(--ink2); line-height:1.65; max-width:700px; }
+.insight p strong { font-weight:500; }
+
+/* ── TEMPLATE BOX ── */
+.template-box {
+  margin-top:20px; border:1px solid var(--border2); background:var(--ink);
+  padding:28px 32px; font-family:'IBM Plex Mono',monospace;
+  font-size:12.5px; line-height:1.9; color:rgba(255,255,255,.75);
+  white-space:pre-wrap; word-break:break-word;
+}
+.template-box .t-comment { color:rgba(255,255,255,.28); }
+.template-box .t-hl      { color:#f4a87a; }
+.template-box .t-bracket { color:rgba(255,255,255,.35); }
+.template-box .t-val     { color:rgba(255,255,255,.85); }
+.template-box .t-str     { color:#7dd3a8; }
+
+/* ── FOOTER ── */
+.footer {
+  padding:24px 56px; border-top:1px solid var(--border);
+  display:flex; justify-content:space-between; align-items:center;
+  font-family:'IBM Plex Mono',monospace; font-size:10px;
+  letter-spacing:1px; text-transform:uppercase; color:var(--ink4);
+}
+
+@media (max-width:700px) {
+  .masthead,.sect-head,.wrap,.footer { padding-left:20px; padding-right:20px; }
+  .compare-grid,.ec-body { grid-template-columns:1fr; }
+  .spectrum-row.col3,.spectrum-row.col4 { grid-template-columns:1fr; }
+  .gl-header { grid-template-columns:5px 40px 1fr; }
+  .gl-impact-wrap { display:none; }
+  .pitfall-grid { grid-template-columns:1fr; }
+  .ea-row { grid-template-columns:1fr; }
+  .sm-row { grid-template-columns:1fr; }
+}
+</style>
+</head>
+<body>
+
+<!-- HEADER -->
+<div class="masthead">
+  <div class="mh-eye">Serie Agenti AI · Leva 01 · Prompt Engineering</div>
+  <div class="mh-cluster">Cluster E</div>
+  <h1>Few-shot Examples</h1>
+  <p class="mh-sub">Quando e come usare esempi concreti nel prompt per guidare il comportamento del modello. Spesso più efficaci di qualsiasi istruzione verbale per catturare sfumature difficili da descrivere — ma anche la fonte di errori più insidiosi se usati male.</p>
+  <div class="mh-meta">
+    <div class="mh-stat"><div class="mh-stat-val">6</div><div class="mh-stat-lbl">Linee guida</div></div>
+    <div class="mh-stat"><div class="mh-stat-val">Medio-alto</div><div class="mh-stat-lbl">Impatto</div></div>
+    <div class="mh-stat"><div class="mh-stat-val">Medio</div><div class="mh-stat-lbl">Costo costruzione</div></div>
+    <div class="mh-stat"><div class="mh-stat-val">Sfumature</div><div class="mh-stat-lbl">Punto di forza</div></div>
+  </div>
+</div>
+
+<!-- NAV -->
+<div class="nav">
+  <button class="nav-btn active" onclick="show(1)">Perché funziona</button>
+  <button class="nav-btn" onclick="show(2)">Quando usarli</button>
+  <button class="nav-btn" onclick="show(3)">Come costruirli</button>
+  <button class="nav-btn" onclick="show(4)">Quanti e in che ordine</button>
+  <button class="nav-btn" onclick="show(5)">Errori comuni</button>
+  <button class="nav-btn" onclick="show(6)">Template</button>
+</div>
+
+
+<!-- ═══════════════════════════
+     S1 — PERCHÉ FUNZIONA
+═══════════════════════════ -->
+<div class="sect active" id="s1">
+  <div class="sect-head">
+    <div class="sect-num">Introduzione</div>
+    <h2>Perché gli esempi spesso battono le istruzioni</h2>
+    <p>Gli esempi non sono un modo semplificato di dare istruzioni. Attivano un meccanismo di apprendimento diverso — e per certe classi di task sono nettamente più efficaci.</p>
+  </div>
+  <div class="wrap">
+    <div class="prose" style="margin-top:28px;">
+      <p>I cluster A–D lavorano tutti sulla stessa logica: istruzioni verbali esplicite che descrivono al modello cosa fare. Il cluster E introduce uno strumento diverso: <strong>esempi concreti di input e output che mostrano direttamente il comportamento atteso</strong>, senza descriverlo.</p>
+      <p>La differenza non è solo didattica. Per certi task — tono molto specifico, formato con sfumature, classificazioni con confini ambigui — descrivere verbalmente il comportamento desiderato è difficile o impossibile. Un esempio lo mostra direttamente, attivando nel modello un meccanismo di inferenza che va oltre la semplice esecuzione di istruzioni.</p>
+    </div>
+
+    <div class="insight" style="margin-top:28px;">
+      <div class="insight-lbl">Il meccanismo fondamentale — in-context learning</div>
+      <p>I modelli LLM sono stati addestrati su enormi quantità di testo con pattern impliciti. Quando vengono mostrati esempi nel prompt, il modello <strong>inferisce il pattern sottostante</strong> — non solo copia l'esempio. Questo meccanismo si chiama <em>in-context learning</em> ed è distinto dall'esecuzione di istruzioni esplicite: è più simile al riconoscimento di pattern che all'obbedienza a regole.</p>
+    </div>
+
+    <div class="prose" style="margin-top:24px;">
+      <p>Concretamente: se scrivi "rispondi sempre con tono asciutto e diretto", il modello interpreta "asciutto e diretto" in base alla sua esperienza generale. Se invece mostri tre esempi di risposte asciutte e dirette nel tuo contesto specifico, il modello inferisce da quegli esempi una definizione molto più precisa — calibrata sul tuo task, non su un generico.</p>
+    </div>
+
+    <div class="key-point" style="margin-top:24px;">
+      <div class="kp-label">Il principio del cluster E</div>
+      <div class="kp-text">Le istruzioni spiegano le regole. Gli esempi mostrano le eccezioni — e le sfumature che le regole non riescono a catturare.</div>
+      <div class="kp-sub">Regole ed esempi non sono intercambiabili. Le regole funzionano per vincoli logici, criteri oggettivi, comportamenti binari. Gli esempi funzionano per stile, tono, livello di dettaglio, gestione di casi ambigui, format con sfumature. Il cluster E è più potente dei cluster B e D per questi aspetti — ma ha un costo: costruire esempi buoni richiede cura, e un esempio sbagliato fa più danno di nessun esempio.</div>
+    </div>
+  </div>
+</div>
+
+
+<!-- ═══════════════════════════
+     S2 — QUANDO USARLI
+═══════════════════════════ -->
+<div class="sect" id="s2">
+  <div class="sect-head">
+    <div class="sect-num">Linea guida 01</div>
+    <h2>Quando usare gli esempi — e quando no</h2>
+    <p>Gli esempi non migliorano ogni tipo di task. Capire quando sono la leva giusta e quando sono overhead inutile è il primo passo per usarli bene.</p>
+  </div>
+  <div class="wrap">
+
+    <!-- GL 01 -->
+    <div class="gl-group" style="margin-top:32px;">
+      <div class="gl-group-title">Linea guida 01</div>
+      <div class="gl-card">
+        <div class="gl-header">
+          <div class="gl-stripe"></div>
+          <div class="gl-num">01</div>
+          <div class="gl-title-wrap">
+            <div class="gl-title">Usa gli esempi dove le regole non arrivano</div>
+            <div class="gl-subtitle">Gli esempi eccellono su sfumature, stile, formato e classificazioni con confini ambigui</div>
+          </div>
+          <div class="gl-impact-wrap">
+            <div class="gl-impact-stars" style="color:var(--accent)">★★★</div>
+            <div class="gl-impact-lbl">Impatto</div>
+          </div>
+        </div>
+        <div class="gl-body">
+
+          <div class="gl-section">
+            <div class="gl-section-lbl">La linea guida</div>
+            <p>Aggiungi esempi quando almeno uno di questi segnali è presente: <strong>(1)</strong> stai usando molte parole per descrivere un comportamento che potresti mostrare più facilmente; <strong>(2)</strong> il task ha confini ambigui che le regole non definiscono completamente; <strong>(3)</strong> stai cercando di catturare un tono o uno stile molto specifico; <strong>(4)</strong> le prime versioni del prompt senza esempi producono output coerenti ma leggermente fuori registro.</p>
+          </div>
+
+          <div class="gl-section">
+            <div class="gl-section-lbl">Matrice — quando gli esempi aiutano e quando no</div>
+            <div class="spectrum">
+              <div class="spectrum-row head col4">
+                <div class="s-cell">Tipo di task</div>
+                <div class="s-cell">Few-shot utile?</div>
+                <div class="s-cell">Perché</div>
+                <div class="s-cell">Alternativa se no</div>
+              </div>
+              <div class="spectrum-row col4">
+                <div class="s-cell lbl">Classificazione con categorie ambigue</div>
+                <div class="s-cell hi">Sì — molto</div>
+                <div class="s-cell">I confini di categoria si capiscono meglio da esempi che da definizioni</div>
+                <div class="s-cell">Regole esplicite + definizione di ogni categoria</div>
+              </div>
+              <div class="spectrum-row col4">
+                <div class="s-cell lbl">Generazione con tono/stile specifico</div>
+                <div class="s-cell hi">Sì — molto</div>
+                <div class="s-cell">Il tono è difficile da descrivere a parole; gli esempi lo mostrano direttamente</div>
+                <div class="s-cell">Descrizioni comportamentali del tono (cluster D)</div>
+              </div>
+              <div class="spectrum-row col4">
+                <div class="s-cell lbl">Formato output con struttura non standard</div>
+                <div class="s-cell hi">Sì</div>
+                <div class="s-cell">Un esempio del formato è più preciso di una descrizione testuale dello stesso</div>
+                <div class="s-cell">Schema esplicito (cluster D)</div>
+              </div>
+              <div class="spectrum-row col4">
+                <div class="s-cell lbl">Estrazione con regole chiare e univoche</div>
+                <div class="s-cell lo">Raramente</div>
+                <div class="s-cell">Le regole funzionano altrettanto bene e sono più facili da aggiornare</div>
+                <div class="s-cell">Istruzioni esplicite (cluster B)</div>
+              </div>
+              <div class="spectrum-row col4">
+                <div class="s-cell lbl">Ragionamento matematico o logico</div>
+                <div class="s-cell lo">Solo se il processo è non ovvio</div>
+                <div class="s-cell">Il modello generalizza bene il ragionamento; esempi utili solo per procedure non standard</div>
+                <div class="s-cell">CoT guidato (cluster C)</div>
+              </div>
+              <div class="spectrum-row col4">
+                <div class="s-cell lbl">Task con molte variabili dipendenti dal contesto</div>
+                <div class="s-cell hi">Sì — ma con cura</div>
+                <div class="s-cell">Gli esempi coprono i casi tipici; il rischio è overfitting su casi specifici</div>
+                <div class="s-cell">Esempi + regola generale esplicita</div>
+              </div>
+              <div class="spectrum-row col4">
+                <div class="s-cell lbl">Task creativo aperto</div>
+                <div class="s-cell lo">Con cautela</div>
+                <div class="s-cell">Gli esempi possono ancorare il modello a uno stile specifico, riducendo la varietà desiderata</div>
+                <div class="s-cell">Descrizione del registro e dei vincoli (cluster A+D)</div>
+              </div>
+            </div>
+          </div>
+
+          <div class="gl-section">
+            <div class="gl-section-lbl">Il segnale che gli esempi servono</div>
+            <p>Il momento più chiaro in cui aggiungere esempi è quando il prompt produce output <strong>coerenti con le istruzioni ma sistematicamente leggermente sbagliati</strong> in un modo difficile da descrivere. "È quasi giusto ma non è esattamente il tono che voglio" è il segnale classico: hai descritto il task correttamente (cluster B) ma non riesci a catturare la sfumatura verbalmente (gap che gli esempi chiudono).</p>
+          </div>
+
+          <div class="gl-section">
+            <div class="gl-section-lbl">Perché funziona — il meccanismo LLM</div>
+            <div class="mechanism">
+              <div class="mech-lbl">Inferenza di pattern vs. esecuzione di regole</div>
+              <p>Quando il modello legge esempi nel prompt, attiva un processo diverso dall'esecuzione di istruzioni: <strong>inferisce il pattern implicito che connette gli input agli output negli esempi</strong>. Questo processo, chiamato in-context learning, è particolarmente potente per catturare sfumature che le regole esplicite faticano a esprimere — perché il modello sta apprendendo da dati, non interpretando testo.</p>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+
+<!-- ═══════════════════════════
+     S3 — COME COSTRUIRLI
+═══════════════════════════ -->
+<div class="sect" id="s3">
+  <div class="sect-head">
+    <div class="sect-num">Linee guida 02 – 03</div>
+    <h2>Come costruire esempi efficaci</h2>
+    <p>La qualità degli esempi conta più della quantità. Un singolo esempio ben costruito vale più di cinque esempi mediocri — e un esempio sbagliato può degradare l'intero prompt.</p>
+  </div>
+  <div class="wrap">
+
+    <!-- GL 02 -->
+    <div class="gl-group" style="margin-top:32px;">
+      <div class="gl-group-title">Linea guida 02</div>
+      <div class="gl-card">
+        <div class="gl-header">
+          <div class="gl-stripe"></div>
+          <div class="gl-num">02</div>
+          <div class="gl-title-wrap">
+            <div class="gl-title">Costruisci ogni esempio con input realistico e output ideale</div>
+            <div class="gl-subtitle">L'esempio deve rappresentare il comportamento che vuoi — non solo un output corretto</div>
+          </div>
+          <div class="gl-impact-wrap">
+            <div class="gl-impact-stars" style="color:var(--accent)">★★★</div>
+            <div class="gl-impact-lbl">Impatto</div>
+          </div>
+        </div>
+        <div class="gl-body">
+
+          <div class="gl-section">
+            <div class="gl-section-lbl">La linea guida</div>
+            <p>Ogni esempio è composto da due parti: un <strong>input realistico</strong> (del tipo che il modello riceverà realmente in produzione) e un <strong>output ideale</strong> (esattamente come vorresti che il modello rispondesse a quell'input). L'output nell'esempio non è solo "corretto" — è la versione migliore possibile, il gold standard che vuoi che il modello approssimi.</p>
+          </div>
+
+          <div class="gl-section">
+            <div class="gl-section-lbl">Anatomia di un esempio ben costruito</div>
+            <div class="ex-anatomy">
+              <div class="ea-header">Struttura di un singolo esempio few-shot</div>
+              <div class="ea-row">
+                <div class="ea-label">Input</div>
+                <div class="ea-content">Testo di una recensione: "Ho comprato questa tastiera 3 mesi fa. Tasto destro dello shift si è rotto dopo 2 settimane, assistenza non risponde alle email. Prezzo alto per questa qualità."
+<span class="ann">→ realistico: simile a ciò che il modello riceverà in produzione</span></div>
+              </div>
+              <div class="ea-row">
+                <div class="ea-label">Output</div>
+                <div class="ea-content">{"sentiment":"Negativo","topic":"Prodotto","priorita_intervento":"Alta","sintesi":"Difetto hardware precoce e assistenza non raggiungibile"}
+<span class="ann">→ ideale: formato corretto, valore enum giusto, sintesi densa e specifica</span></div>
+              </div>
+            </div>
+          </div>
+
+          <div class="gl-section">
+            <div class="gl-section-lbl">Input realistico — cosa significa e perché conta</div>
+            <div class="compare-grid">
+              <div>
+                <div class="pex-lbl bad">❌ Input artificioso — non rappresentativo</div>
+                <div class="prompt-box bad">Input: "Prodotto pessimo, non funziona."
+
+Output: {"sentiment":"Negativo","topic":"Prodotto",...}</div>
+              </div>
+              <div>
+                <div class="pex-lbl good">✓ Input realistico — rappresentativo del dominio</div>
+                <div class="prompt-box good">Input: "Ho ricevuto ieri, tutto ok con la consegna ma il prodotto ha un difetto sul lato sinistro che in foto non si vedeva. Per il prezzo mi aspettavo di meglio."
+
+Output: {"sentiment":"Negativo","topic":"Prodotto","priorita_intervento":"Alta","sintesi":"Difetto prodotto non visibile in foto, valore percepito basso"}</div>
+              </div>
+            </div>
+            <p style="margin-top:12px; font-size:13px; color:var(--ink3);">L'input artificioso insegna al modello a riconoscere casi semplici e ovvi. L'input realistico insegna a gestire la complessità tipica del dominio — ambiguità, informazioni miste, tono indiretto.</p>
+          </div>
+
+          <div class="gl-section">
+            <div class="gl-section-lbl">Output ideale — il gold standard, non solo il corretto</div>
+            <div class="compare-grid">
+              <div>
+                <div class="pex-lbl bad">❌ Output "corretto" ma non ideale</div>
+                <div class="prompt-box bad">PROBLEMA: prodotto difettoso
+CATEGORIA: Bug
+PRIORITÀ: Alta
+SOLUZIONE: verificare il prodotto</div>
+              </div>
+              <div>
+                <div class="pex-lbl good">✓ Output ideale — gold standard esatto</div>
+                <div class="prompt-box good">PROBLEMA: difetto prodotto (lato sinistro) non visibile nelle foto del listing
+CATEGORIA: Prodotto
+PRIORITÀ: Alta — difetto fisico confermato dall'utente
+SOLUZIONE SUGGERITA:
+• Contattare cliente entro 24h con proposta di reso/sostituzione
+• Verificare foto listing per accuratezza
+• Segnalare al team QC
+ESCALATION: No — gestibile dal supporto standard</div>
+              </div>
+            </div>
+          </div>
+
+          <div class="gl-section">
+            <div class="gl-section-lbl">Perché funziona — il meccanismo LLM</div>
+            <div class="mechanism">
+              <div class="mech-lbl">Apprendimento per matching di distribuzione</div>
+              <p>Il modello generalizza dagli esempi cercando il pattern implicito che mappa input su output. <strong>Se l'input è artificioso, il pattern inferito è semplificato</strong> e non si generalizza bene a input reali. Se l'output è "corretto ma non ideale", il modello impara a produrre output corretti ma non al livello di qualità che vuoi. Gli esempi sono dati di training locali — la qualità di quei dati determina direttamente la qualità del comportamento inferito.</p>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </div>
+
+    <!-- GL 03 -->
+    <div class="gl-group" style="margin-top:8px;">
+      <div class="gl-group-title">Linea guida 03</div>
+      <div class="gl-card">
+        <div class="gl-header">
+          <div class="gl-stripe"></div>
+          <div class="gl-num">03</div>
+          <div class="gl-title-wrap">
+            <div class="gl-title">Ogni esempio deve essere coerente con le istruzioni esplicite</div>
+            <div class="gl-subtitle">Un esempio che contraddice le istruzioni crea conflitti che il modello risolve in modo imprevedibile</div>
+          </div>
+          <div class="gl-impact-wrap">
+            <div class="gl-impact-stars" style="color:var(--accent)">★★★</div>
+            <div class="gl-impact-lbl">Impatto critico</div>
+          </div>
+        </div>
+        <div class="gl-body">
+
+          <div class="gl-section">
+            <div class="gl-section-lbl">La linea guida</div>
+            <p>Ogni esempio nel prompt deve rispettare <em>tutte</em> le istruzioni definite nei cluster precedenti: formato (D), lunghezza (D), tono (A+D), vincoli (B). <strong>Un esempio che viola anche solo una regola crea un conflitto implicito</strong> tra le istruzioni testuali e il pattern mostrato dall'esempio — e il modello spesso privilegia il pattern dell'esempio sulla regola scritta, perché il pattern è più concreto.</p>
+          </div>
+
+          <div class="gl-section">
+            <div class="gl-section-lbl">Conflitti tipici tra esempi e istruzioni</div>
+            <div class="compare-grid">
+              <div>
+                <div class="pex-lbl bad">❌ Esempio che viola l'istruzione di lunghezza</div>
+                <div class="prompt-box bad">Istruzione: "Rispondi in max 2 righe."
+
+Esempio:
+Input: "Qual è la capitale della Francia?"
+Output: "La capitale della Francia è Parigi, una città con una storia millenaria che risale all'epoca romana. È sede del governo francese e uno dei principali centri culturali d'Europa."
+<span class="hl">[viola l'istruzione — il modello imparerà a rispondere in più di 2 righe]</span></div>
+              </div>
+              <div>
+                <div class="pex-lbl good">✓ Esempio coerente con tutte le istruzioni</div>
+                <div class="prompt-box good">Istruzione: "Rispondi in max 2 righe."
+
+Esempio:
+Input: "Qual è la capitale della Francia?"
+Output: "Parigi."
+<span class="hl">[coerente — mostra esattamente il livello di brevità richiesto]</span></div>
+              </div>
+            </div>
+          </div>
+
+          <div class="gl-section">
+            <div class="gl-section-lbl">Checklist di coerenza per ogni esempio</div>
+            <div class="checklist">
+              <div class="check-item">
+                <div class="check-icon" style="font-size:9px;">B</div>
+                <div>L'output dell'esempio <strong>rispetta i vincoli di obiettivo</strong>: copre quello che deve coprire, non copre ciò che è fuori scope.</div>
+              </div>
+              <div class="check-item">
+                <div class="check-icon" style="font-size:9px;">D</div>
+                <div>L'output dell'esempio <strong>usa il formato richiesto</strong>: struttura, tipo (prosa/lista/JSON), lunghezza, lingua.</div>
+              </div>
+              <div class="check-item">
+                <div class="check-icon" style="font-size:9px;">A</div>
+                <div>L'output dell'esempio <strong>mantiene il tono e il registro</strong> definiti nel ruolo: livello tecnico, formalità, proattività.</div>
+              </div>
+              <div class="check-item">
+                <div class="check-icon" style="font-size:9px;">F</div>
+                <div>Se l'esempio mostra un caso limite, <strong>il comportamento nell'esempio è coerente</strong> con le istruzioni sui casi limite.</div>
+              </div>
+            </div>
+          </div>
+
+          <div class="gl-section">
+            <div class="gl-section-lbl">Perché funziona — il meccanismo LLM</div>
+            <div class="mechanism">
+              <div class="mech-lbl">Esempi come istruzioni implicite con peso elevato</div>
+              <p>Gli esempi nel prompt agiscono come istruzioni implicite con peso molto alto, perché sono concreti e specifici. Quando un esempio contraddice un'istruzione testuale astratta, il modello tende a seguire l'esempio perché <strong>il pattern concreto è più "ancorato" nella distribuzione di probabilità del modello</strong> rispetto a una regola generica. Questo significa che un esempio sbagliato può sovrascrivere istruzioni corrette — il rischio più insidioso del cluster E.</p>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+
+<!-- ═══════════════════════════
+     S4 — QUANTI E IN CHE ORDINE
+═══════════════════════════ -->
+<div class="sect" id="s4">
+  <div class="sect-head">
+    <div class="sect-num">Linee guida 04 – 05</div>
+    <h2>Quanti esempi e in che ordine</h2>
+    <p>Il numero di esempi e il loro ordine non sono dettagli neutri. Entrambi influenzano cosa il modello inferisce e come si comporta.</p>
+  </div>
+  <div class="wrap">
+
+    <!-- GL 04 -->
+    <div class="gl-group" style="margin-top:32px;">
+      <div class="gl-group-title">Linea guida 04</div>
+      <div class="gl-card">
+        <div class="gl-header">
+          <div class="gl-stripe"></div>
+          <div class="gl-num">04</div>
+          <div class="gl-title-wrap">
+            <div class="gl-title">Usa 2–5 esempi, scelti per massimizzare la copertura dei casi rilevanti</div>
+            <div class="gl-subtitle">Il numero ottimale non è il massimo — è quello che copre la variabilità del task senza appesantire il contesto</div>
+          </div>
+          <div class="gl-impact-wrap">
+            <div class="gl-impact-stars" style="color:var(--accent)">★★☆</div>
+            <div class="gl-impact-lbl">Impatto</div>
+          </div>
+        </div>
+        <div class="gl-body">
+
+          <div class="gl-section">
+            <div class="gl-section-lbl">La linea guida</div>
+            <p>Più esempi non significa necessariamente meglio: ogni esempio occupa spazio nel context window, aumenta la lunghezza del prompt e può distrarre il modello dall'obiettivo principale. <strong>Il criterio per scegliere quanti esempi includere è la copertura della variabilità del task</strong>, non la quantità massima che entra nel contesto.</p>
+          </div>
+
+          <div class="gl-section">
+            <div class="gl-section-lbl">Guida al numero ottimale di esempi</div>
+            <div class="shot-matrix">
+              <div class="sm-row head">
+                <div class="sm-cell">N. esempi</div>
+                <div class="sm-cell">Quando è la scelta giusta</div>
+                <div class="sm-cell">Rischio principale</div>
+              </div>
+              <div class="sm-row">
+                <div class="sm-cell lbl">1</div>
+                <div class="sm-cell">Task con output molto strutturato (JSON, formato fisso): l'esempio serve solo a mostrare il formato, non a coprire variabilità</div>
+                <div class="sm-cell">Il modello overfittta su quel singolo caso — no generalizzazione</div>
+              </div>
+              <div class="sm-row">
+                <div class="sm-cell lbl">2–3</div>
+                <div class="sm-cell">Task con alcune varianti tipiche: copre i casi principali senza appesantire il contesto. Punto di partenza consigliato nella maggior parte dei casi</div>
+                <div class="sm-cell">Può non coprire casi edge rari ma frequentemente problematici</div>
+              </div>
+              <div class="sm-row">
+                <div class="sm-cell lbl">4–5</div>
+                <div class="sm-cell">Task con alta variabilità o con categorie ambigue da distinguere: serve più copertura per inferire confini precisi</div>
+                <div class="sm-cell">Appesantisce il contesto; rendimenti decrescenti oltre 5</div>
+              </div>
+              <div class="sm-row">
+                <div class="sm-cell lbl">6+</div>
+                <div class="sm-cell">Raramente utile nel prompt. Se hai molti esempi di alta qualità, considera il fine-tuning (leva 7) invece dei few-shot</div>
+                <div class="sm-cell">Overhead sul contesto; il modello può perdere il focus sulle istruzioni principali</div>
+              </div>
+            </div>
+          </div>
+
+          <div class="gl-section">
+            <div class="gl-section-lbl">Scegliere gli esempi giusti: massimizzare la copertura</div>
+            <p>Con un budget di 3 esempi, scegli esempi che <strong>coprono la variabilità più importante del task</strong> — non i casi più facili o più comuni. Una buona strategia:</p>
+            <div style="margin-top:12px;">
+              <div class="prompt-box neutral">Esempio 1 → caso tipico e "pulito" (ancora il comportamento base)
+Esempio 2 → caso con una complessità specifica rilevante (ambiguità, caso limite, formato non ovvio)
+Esempio 3 → caso con una complessità diversa (altra categoria, altro tono, altro tipo di input)</div>
+            </div>
+          </div>
+
+          <div class="gl-section">
+            <div class="gl-section-lbl">Perché funziona — il meccanismo LLM</div>
+            <div class="mechanism">
+              <div class="mech-lbl">Generalizzazione da distribuzione di esempi</div>
+              <p>Il modello non memorizza gli esempi — <strong>inferisce il pattern implicito dalla loro distribuzione</strong>. Se tutti gli esempi sono simili, il pattern inferito è ristretto. Se coprono la variabilità del task, il pattern inferito è più robusto e si generalizza meglio a input non visti. Questo è il motivo per cui 3 esempi ben scelti battono spesso 10 esempi ridondanti.</p>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </div>
+
+    <!-- GL 05 -->
+    <div class="gl-group" style="margin-top:8px;">
+      <div class="gl-group-title">Linea guida 05</div>
+      <div class="gl-card">
+        <div class="gl-header">
+          <div class="gl-stripe"></div>
+          <div class="gl-num">05</div>
+          <div class="gl-title-wrap">
+            <div class="gl-title">L'ordine degli esempi conta — metti i più rappresentativi per ultimi</div>
+            <div class="gl-subtitle">Il modello dà più peso agli esempi più recenti nel contesto (recency bias)</div>
+          </div>
+          <div class="gl-impact-wrap">
+            <div class="gl-impact-stars" style="color:var(--accent)">★★☆</div>
+            <div class="gl-impact-lbl">Impatto</div>
+          </div>
+        </div>
+        <div class="gl-body">
+
+          <div class="gl-section">
+            <div class="gl-section-lbl">La linea guida</div>
+            <p>I modelli LLM hanno un <strong>recency bias</strong>: tendono a dare più peso agli elementi più recenti nel contesto. Applicato agli esempi, significa che l'ultimo esempio prima dell'input reale ha l'influenza maggiore. <strong>Metti l'esempio più rappresentativo del caso tipico alla fine</strong>, e usa gli esempi precedenti per coprire casi particolari o ambigui.</p>
+          </div>
+
+          <div class="gl-section">
+            <div class="gl-section-lbl">Ordine consigliato con 3 esempi</div>
+            <div class="prompt-box neutral" style="margin-top:12px;">Posizione 1 (prima): caso limite o ambiguo — meno influente, utile per ancorare il confine
+Posizione 2 (mezzo):  caso con complessità media
+Posizione 3 (ultima): caso tipico e ideale — più influente, definisce il comportamento di default
+
+→ [INPUT REALE]</div>
+          </div>
+
+          <div class="gl-section">
+            <div class="gl-section-lbl">Quando invertire l'ordine — caso specifico</div>
+            <p>Se il task ha un caso limite critico che il modello gestisce spesso male, considera di <strong>mettere quel caso limite in ultima posizione</strong> per aumentarne il peso. Il rischio è che diventi il comportamento di default per casi normali — valuta caso per caso e testa sempre.</p>
+          </div>
+
+          <div class="gl-section">
+            <div class="gl-section-lbl">Perché funziona — il meccanismo LLM</div>
+            <div class="mechanism">
+              <div class="mech-lbl">Recency bias nell'attention</div>
+              <p>Il meccanismo di attenzione dei Transformer tende a pesare più fortemente i token recenti nel contesto, specialmente quando devono generare il token successivo. Questo produce un effetto di <strong>"primacy" ridotto e "recency" elevato</strong>: gli esempi in fondo al prompt hanno più influenza sul prossimo output rispetto a quelli all'inizio. Non è un effetto assoluto — tutti gli esempi contano — ma è abbastanza consistente da essere sfruttabile nella scelta dell'ordine.</p>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+
+<!-- ═══════════════════════════
+     S5 — ERRORI COMUNI
+═══════════════════════════ -->
+<div class="sect" id="s5">
+  <div class="sect-head">
+    <div class="sect-num">Linea guida 06 + Errori comuni</div>
+    <h2>Errori comuni con i few-shot examples</h2>
+    <p>Gli errori nel cluster E sono particolarmente insidiosi perché spesso peggiorano il prompt in modo sottile — non in modo evidente. Gli esempi sbagliati sembrano corretti finché non si testano su input di produzione.</p>
+  </div>
+  <div class="wrap">
+
+    <!-- GL 06 -->
+    <div class="gl-group" style="margin-top:32px;">
+      <div class="gl-group-title">Linea guida 06</div>
+      <div class="gl-card">
+        <div class="gl-header">
+          <div class="gl-stripe"></div>
+          <div class="gl-num">06</div>
+          <div class="gl-title-wrap">
+            <div class="gl-title">Testa gli esempi su input reali prima di fissarli nel prompt</div>
+            <div class="gl-subtitle">Un esempio che sembra ovvio può produrre overfitting o comportamenti inattesi su input reali</div>
+          </div>
+          <div class="gl-impact-wrap">
+            <div class="gl-impact-stars" style="color:var(--accent)">★★★</div>
+            <div class="gl-impact-lbl">Impatto</div>
+          </div>
+        </div>
+        <div class="gl-body">
+
+          <div class="gl-section">
+            <div class="gl-section-lbl">La linea guida</div>
+            <p>Prima di includere un esempio nel prompt definitivo, testalo: aggiungi l'esempio al prompt e passa attraverso la suite di test (vedi Report Quadro). Se il comportamento peggiora su alcuni casi di test rispetto alla versione senza esempi, l'esempio sta causando overfitting o introduce un pattern indesiderato. <strong>Non tutti gli esempi migliorano il comportamento — alcuni lo peggiorano selettivamente.</strong></p>
+          </div>
+
+          <div class="gl-section">
+            <div class="gl-section-lbl">I segnali di overfitting da esempio</div>
+            <p>Il modello sta sovra-imparando dall'esempio quando: produce output molto simili all'esempio anche su input molto diversi; copia frasi o strutture dell'esempio invece di adattarle all'input; cambia comportamento in modo evidente su input che non assomigliano all'esempio.</p>
+          </div>
+
+        </div>
+      </div>
+    </div>
+
+    <div class="prose" style="margin-top:32px;">
+      <p style="font-size:15px; font-weight:500; color:var(--ink2);">I 6 errori più frequenti con i few-shot examples</p>
+    </div>
+
+    <div class="pitfall-grid">
+
+      <div class="pitfall-card">
+        <div class="pc-num">Errore 01</div>
+        <div class="pc-title">Esempi troppo facili o ovvi</div>
+        <div class="pc-desc">Costruire esempi su casi semplici e non ambigui che il modello gestirebbe correttamente anche senza esempi. <strong>Il modello non impara nulla di nuovo</strong> — e l'overhead di contesto non produce benefici.</div>
+        <div class="pc-fix"><strong>Fix:</strong> scegli esempi sui casi dove il modello sbaglia più spesso, non sui casi più facili.</div>
+      </div>
+
+      <div class="pitfall-card">
+        <div class="pc-num">Errore 02</div>
+        <div class="pc-title">Un solo esempio di ogni tipo</div>
+        <div class="pc-desc">Con un solo esempio di "caso positivo" e un solo "caso negativo", il modello tende a classificare tutto in base alla somiglianza superficiale con uno dei due, invece di inferire il criterio reale. <strong>La distribuzione degli esempi insegna la soglia di classificazione.</strong></div>
+        <div class="pc-fix"><strong>Fix:</strong> se hai categorie distinte, includi almeno 1-2 esempi per categoria, scegliendo quelli più rappresentativi di ogni confine.</div>
+      </div>
+
+      <div class="pitfall-card">
+        <div class="pc-num">Errore 03</div>
+        <div class="pc-title">Output nell'esempio non al gold standard</div>
+        <div class="pc-desc">Usare come output di esempio qualcosa di "accettabile" invece del meglio possibile. Il modello apprende il livello di qualità mostrato — <strong>un esempio mediocre abbassa il target implicito</strong> di qualità dell'intero prompt.</div>
+        <div class="pc-fix"><strong>Fix:</strong> tratta ogni esempio come un micro-benchmark. L'output deve essere esattamente come vorresti fosse ogni risposta in produzione.</div>
+      </div>
+
+      <div class="pitfall-card">
+        <div class="pc-num">Errore 04</div>
+        <div class="pc-title">Esempi non aggiornati dopo modifiche al prompt</div>
+        <div class="pc-desc">Cambiare le istruzioni (formato, vincoli, tono) senza aggiornare gli esempi di conseguenza. Crea incoerenza tra istruzioni esplicite ed esempi impliciti — <strong>il modello non sa quale delle due versioni seguire.</strong></div>
+        <div class="pc-fix"><strong>Fix:</strong> ogni modifica alle istruzioni dei cluster A–D deve essere seguita da una verifica di coerenza di tutti gli esempi del cluster E.</div>
+      </div>
+
+      <div class="pitfall-card">
+        <div class="pc-num">Errore 05</div>
+        <div class="pc-title">Esempi che si "somigliano troppo"</div>
+        <div class="pc-desc">Tutti gli esempi mostrano variazioni dello stesso caso base. Il pattern inferito è molto ristretto e <strong>non si generalizza agli input reali</strong> che differiscono anche minimamente dagli esempi.</div>
+        <div class="pc-fix"><strong>Fix:</strong> diversifica intenzionalmente gli esempi: diverso tipo di input, diversa lunghezza, diverso grado di ambiguità. La varianza negli esempi produce robustezza nel comportamento.</div>
+      </div>
+
+      <div class="pitfall-card">
+        <div class="pc-num">Errore 06</div>
+        <div class="pc-title">Esempi che includono ragionamento non necessario</div>
+        <div class="pc-desc">Includere nell'output dell'esempio una spiegazione del ragionamento quando il task finale non la richiede. Il modello imparerà a includere quella spiegazione in ogni output — <strong>aggiungendo testo non voluto</strong> che appesantisce le risposte.</div>
+        <div class="pc-fix"><strong>Fix:</strong> l'output dell'esempio deve essere identico a quello che vuoi in produzione. Se non vuoi il ragionamento, non includerlo nell'esempio.</div>
+      </div>
+
+    </div>
+
+    <div class="key-point" style="margin-top:32px;">
+      <div class="kp-label">Il principio del cluster E — sintesi</div>
+      <div class="kp-text">Un esempio ben costruito vale più di dieci regole. Un esempio mal costruito peggiora dieci regole.</div>
+      <div class="kp-sub">Il cluster E ha un asimmetria di rischio diversa da tutti gli altri. Un'istruzione mancante peggiora l'output in modo prevedibile. Un esempio sbagliato peggiora l'output in modo insidioso e difficile da diagnosticare — perché il comportamento sembra quasi corretto, ma è sistematicamente distorto dal pattern errato dell'esempio. Investire nel costruire pochi esempi eccellenti e testarli è sempre meglio che accumulare molti esempi mediocri.</div>
+    </div>
+
+  </div>
+</div>
+
+
+<!-- ═══════════════════════════
+     S6 — TEMPLATE
+═══════════════════════════ -->
+<div class="sect" id="s6">
+  <div class="sect-head">
+    <div class="sect-num">Sezione pratica</div>
+    <h2>Template e checklist del Cluster E</h2>
+    <p>Come inserire gli esempi nel system prompt, template strutturato per ogni esempio, e checklist di qualità per verificare ogni singolo esempio prima di includerlo.</p>
+  </div>
+  <div class="wrap">
+
+    <div class="template-box" style="margin-top:28px;"><span class="t-comment"># ── FEW-SHOT EXAMPLES (Cluster E) ────────────────────────────</span>
+<span class="t-comment"># Aggiungi dopo i Cluster A–D, subito prima dell'input reale</span>
+<span class="t-comment"># Usa questa struttura per ogni esempio</span>
+
+<span class="t-comment"># STRUTTURA SINGOLO ESEMPIO ───────────────────────────────────</span>
+<span class="t-val">--- ESEMPIO </span><span class="t-hl">[N]</span><span class="t-val"> ---</span>
+<span class="t-hl">INPUT:</span>
+<span class="t-bracket">[input realistico e rappresentativo — simile a ciò che arriverà in produzione]</span>
+<span class="t-comment"># Scegli un input che eserciti la complessità che vuoi mostrare</span>
+
+<span class="t-hl">OUTPUT:</span>
+<span class="t-bracket">[output ideale — gold standard, rispettando tutte le istruzioni A–D]</span>
+<span class="t-comment"># Questo è esattamente ciò che vorresti il modello producesse in produzione</span>
+
+<span class="t-comment"># STRUTTURA COMPLETA CON 3 ESEMPI ─────────────────────────────</span>
+<span class="t-val">Di seguito alcuni esempi del comportamento atteso:</span>
+
+<span class="t-val">--- ESEMPIO 1 --- </span><span class="t-comment"># caso limite o ambiguo (meno influente)</span>
+<span class="t-hl">INPUT:</span> <span class="t-bracket">[caso con complessità specifica, es: categoria ambigua]</span>
+<span class="t-hl">OUTPUT:</span> <span class="t-bracket">[come gestire quella complessità specifica]</span>
+
+<span class="t-val">--- ESEMPIO 2 --- </span><span class="t-comment"># caso con complessità media</span>
+<span class="t-hl">INPUT:</span> <span class="t-bracket">[caso rappresentativo con alcune complessità]</span>
+<span class="t-hl">OUTPUT:</span> <span class="t-bracket">[output ideale per quel caso]</span>
+
+<span class="t-val">--- ESEMPIO 3 --- </span><span class="t-comment"># caso tipico e ideale (più influente — mettilo per ultimo)</span>
+<span class="t-hl">INPUT:</span> <span class="t-bracket">[caso tipico, il più comune in produzione]</span>
+<span class="t-hl">OUTPUT:</span> <span class="t-bracket">[output ideale per il caso standard]</span>
+
+<span class="t-comment"># ── FINE ESEMPI — segue l'input reale ─────────────────────────</span></div>
+
+    <div class="prose" style="margin-top:36px;">
+      <p style="font-size:15px; font-weight:500; color:var(--ink2);">Esempio compilato — agente di analisi contrattuale (continua da A–D)</p>
+    </div>
+
+    <div class="template-box" style="margin-top:12px;"><span class="t-comment"># ── FEW-SHOT EXAMPLES ────────────────────────────────────────</span>
+
+<span class="t-val">Di seguito due esempi di schede di rischio nel formato atteso:</span>
+
+<span class="t-val">--- ESEMPIO 1 --- </span><span class="t-comment"># caso con rischio ambiguo — modello impara a gestire l'incertezza</span>
+<span class="t-hl">INPUT:</span>
+<span class="t-str">Contratto di fornitura software SaaS. Art. 12: "Il fornitore si riserva il diritto
+di modificare le funzionalità del servizio con preavviso di 30 giorni."
+Art. 15: "In caso di interruzione del servizio superiore a 4 ore, il cliente ha
+diritto a un credito pari all'1% del canone mensile per ogni ora di interruzione."</span>
+
+<span class="t-hl">OUTPUT:</span>
+<span class="t-str">SINTESI: Procedere con modifiche su art. 12 e verifica SLA art. 15.
+
+RISCHI IDENTIFICATI:
+• [ALTA] Modifica unilaterale funzionalità (art. 12) — il fornitore può alterare il
+  prodotto acquistato senza accordo del cliente; 30gg di preavviso non garantisce
+  sostituzione. Rischio operativo elevato per chi dipende da funzioni specifiche.
+• [MEDIA] SLA interruzioni sottodimensionato (art. 15) — 1%/ora corrisponde a max
+  ~72% di credito per un mese di downtime totale. Non copre danni indiretti.
+
+MODIFICHE RACCOMANDATE:
+• Art. 12: aggiungere "salvo modifiche che riducono funzionalità concordate, per
+  le quali è richiesto accordo scritto del cliente"
+• Art. 15: elevare il credito a 5%/ora con cap al 100% del canone mensile</span>
+
+<span class="t-val">--- ESEMPIO 2 --- </span><span class="t-comment"># caso tipico pulito — comportamento di default</span>
+<span class="t-hl">INPUT:</span>
+<span class="t-str">Contratto di consulenza. Art. 8: "Il consulente si impegna a non svolgere
+attività per concorrenti diretti per 24 mesi dalla fine del rapporto."
+Art. 11: "Tutte le controversie saranno risolte dal foro di Milano."
+Art. 14: "Il pagamento è dovuto entro 30 giorni dalla fattura; ritardi comportano
+interessi al tasso legale maggiorato del 2%."</span>
+
+<span class="t-hl">OUTPUT:</span>
+<span class="t-str">SINTESI: Firma con modifica su art. 8 (non-compete troppo ampio).
+
+RISCHI IDENTIFICATI:
+• [ALTA] Non-compete 24 mesi senza definizione di "concorrente diretto" (art. 8) —
+  perimetro potenzialmente molto ampio; potrebbe limitare significativamente la
+  futura attività professionale del consulente.
+• [BASSA] Foro di Milano (art. 11) — standard per contratti B2B; rilevante solo
+  se il consulente opera prevalentemente in altra sede.
+
+MODIFICHE RACCOMANDATE:
+• Art. 8: limitare a 12 mesi e aggiungere lista esplicita dei concorrenti a cui
+  si applica il divieto, oppure definire "concorrente diretto" per settore e
+  dimensione</span></div>
+
+    <div class="prose" style="margin-top:36px;">
+      <p style="font-size:15px; font-weight:500; color:var(--ink2);">Checklist di qualità per ogni esempio — prima di includerlo</p>
+    </div>
+
+    <div class="checklist" style="margin-top:12px;">
+      <div class="check-item">
+        <div class="check-icon" style="background:var(--accent)">✓</div>
+        <div>L'<strong>input è realistico</strong>: somiglia a ciò che il modello riceverà realmente in produzione — non un caso artificioso o semplificato.</div>
+      </div>
+      <div class="check-item">
+        <div class="check-icon" style="background:var(--accent)">✓</div>
+        <div>L'<strong>output è al gold standard</strong>: è esattamente come vorresti ogni risposta in produzione, non solo accettabile.</div>
+      </div>
+      <div class="check-item">
+        <div class="check-icon" style="background:var(--accent)">✓</div>
+        <div>L'output <strong>rispetta tutte le istruzioni</strong> dei cluster A–D: formato, lunghezza, tono, vincoli, lingua.</div>
+      </div>
+      <div class="check-item">
+        <div class="check-icon" style="background:var(--accent)">✓</div>
+        <div>L'esempio è <strong>diverso dagli altri</strong>: copre una complessità o variante che gli altri non coprono.</div>
+      </div>
+      <div class="check-item">
+        <div class="check-icon" style="background:var(--accent)">✓</div>
+        <div>L'<strong>ordine è corretto</strong>: il caso più tipico è in ultima posizione; i casi limite o ambigui sono in posizioni precedenti.</div>
+      </div>
+      <div class="check-item">
+        <div class="check-icon" style="background:var(--accent)">✓</div>
+        <div>Ho <strong>testato l'esempio</strong> sulla suite di test: aggiungerlo al prompt non peggiora il comportamento su casi già coperti correttamente.</div>
+      </div>
+    </div>
+
+    <div class="insight" style="margin-top:28px; border-color:#3a6b8c;">
+      <div class="insight-lbl" style="color:#3a6b8c;">Prossimo — Cluster F</div>
+      <p>Con A–E il prompt copre identità, obiettivo, ragionamento, formato ed esempi. Il prossimo report (Cluster F) affronta la <strong>robustezza e i casi limite</strong>: come progettare il comportamento del modello di fronte a input anomali, dati mancanti, richieste fuori scope — la differenza tra un agente che funziona in demo e uno che regge in produzione.</p>
+    </div>
+
+  </div>
+</div>
+
+
+<!-- FOOTER -->
+<div class="footer">
+  <span>Serie Agenti AI — Leva 01 · Prompt Engineering · Cluster E · Few-shot Examples</span>
+  <span>Marzo 2026</span>
+</div>
+
+<script>
+function show(n) {
+  document.querySelectorAll('.sect').forEach(s => s.classList.remove('active'));
+  document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('s'+n).classList.add('active');
+  document.querySelectorAll('.nav-btn')[n-1].classList.add('active');
+  window.scrollTo({top:0, behavior:'smooth'});
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,1396 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Self-Hosting LLM — C3: I Modelli</title>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@300;400;500;700;900&family=JetBrains+Mono:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg:       #0c0c0f;
+  --bg2:      #13131a;
+  --bg3:      #1a1a24;
+  --bg4:      #22222e;
+  --border:   #2a2a38;
+  --border2:  #363648;
+  --ink:      #e4e4f0;
+  --ink2:     #a8a8c0;
+  --ink3:     #686880;
+  --ink4:     #404058;
+  --violet:   #a07ef0;
+  --violet-l: rgba(160,126,240,0.08);
+  --red:      #f05a6a;
+  --red-l:    rgba(240,90,106,0.07);
+  --green:    #50e8a0;
+  --green-l:  rgba(80,232,160,0.07);
+  --amber:    #f0b050;
+  --amber-l:  rgba(240,176,80,0.07);
+  --blue:     #50b8f0;
+  --blue-l:   rgba(80,184,240,0.07);
+  --teal:     #50d8d0;
+  --teal-l:   rgba(80,216,208,0.07);
+}
+
+* { margin:0; padding:0; box-sizing:border-box; }
+html { scroll-behavior:smooth; }
+
+body {
+  background: var(--bg);
+  color: var(--ink);
+  font-family: 'Archivo', sans-serif;
+  font-weight: 300;
+  font-size: 14px;
+  line-height: 1.78;
+}
+
+/* ── MASTHEAD ── */
+.masthead {
+  padding: 72px 64px 60px;
+  border-bottom: 1px solid var(--border);
+  position: relative;
+  overflow: hidden;
+  background: var(--bg2);
+}
+.masthead::before {
+  content: '';
+  position: absolute;
+  top: -200px; right: -200px;
+  width: 700px; height: 700px;
+  background: radial-gradient(circle, rgba(160,126,240,0.04) 0%, transparent 65%);
+  pointer-events: none;
+}
+.masthead::after {
+  content: 'C3';
+  position: absolute;
+  right: 48px; bottom: -30px;
+  font-weight: 900;
+  font-size: 280px;
+  line-height: 1;
+  color: rgba(160,126,240,0.04);
+  pointer-events: none;
+  letter-spacing: -12px;
+  font-family: 'Archivo', sans-serif;
+}
+.series-label {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px;
+  letter-spacing: 4px;
+  text-transform: uppercase;
+  color: var(--ink4);
+  margin-bottom: 6px;
+}
+.report-label {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  letter-spacing: 3px;
+  text-transform: uppercase;
+  color: var(--violet);
+  margin-bottom: 32px;
+}
+.masthead h1 {
+  font-weight: 900;
+  font-size: clamp(34px, 5vw, 62px);
+  line-height: 1.05;
+  letter-spacing: -2.5px;
+  max-width: 780px;
+}
+.masthead h1 em { font-style: italic; color: var(--violet); font-weight: 400; }
+.masthead-sub {
+  margin-top: 24px;
+  font-size: 15px;
+  color: var(--ink3);
+  max-width: 640px;
+  line-height: 1.75;
+}
+.masthead-meta {
+  margin-top: 48px;
+  display: flex;
+  gap: 48px;
+  flex-wrap: wrap;
+  padding-top: 28px;
+  border-top: 1px solid var(--border);
+}
+.meta-item span {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 9px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: var(--ink4);
+  display: block;
+}
+.meta-item strong {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--ink2);
+  display: block;
+  margin-top: 3px;
+}
+
+/* ── TAB NAV ── */
+.tab-nav {
+  display: flex;
+  background: var(--bg2);
+  border-bottom: 1px solid var(--border);
+  overflow-x: auto;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  scrollbar-width: none;
+}
+.tab-nav::-webkit-scrollbar { display: none; }
+.tab-btn {
+  flex-shrink: 0; padding: 0; border: none; cursor: pointer;
+  background: transparent; border-right: 1px solid var(--border);
+  transition: background 0.2s;
+}
+.tab-btn:last-child { border-right: none; }
+.tab-btn-inner { display: block; padding: 13px 22px; text-align: left; }
+.tab-num {
+  font-family: 'JetBrains Mono', monospace; font-size: 9px;
+  letter-spacing: 2px; color: var(--ink4); display: block; margin-bottom: 3px;
+}
+.tab-name {
+  font-weight: 700; font-size: 11px; text-transform: uppercase;
+  letter-spacing: 0.5px; color: var(--ink3); display: block;
+  line-height: 1.25; white-space: nowrap; transition: color 0.2s;
+}
+.tab-btn.active .tab-name { color: var(--ink); }
+.tab-btn.active { position: relative; }
+.tab-btn.active::after {
+  content: ''; position: absolute; bottom: 0; left: 0; right: 0;
+  height: 2px; background: var(--violet);
+}
+.tab-btn:hover .tab-name { color: var(--ink2); }
+
+/* ── PANELS ── */
+.tab-panel { display: none; }
+.tab-panel.active {
+  display: grid;
+  grid-template-columns: 190px 1fr;
+  min-height: 80vh;
+  animation: fadeIn 0.3s ease;
+}
+@keyframes fadeIn {
+  from { opacity:0; transform:translateY(6px); }
+  to   { opacity:1; transform:translateY(0); }
+}
+
+/* ── ASIDE ── */
+.panel-aside {
+  border-right: 1px solid var(--border);
+  padding: 40px 24px 40px 40px;
+  position: sticky;
+  top: 48px;
+  height: calc(100vh - 48px);
+  overflow-y: auto;
+}
+.aside-label {
+  font-family: 'JetBrains Mono', monospace; font-size: 9px;
+  letter-spacing: 3px; text-transform: uppercase; color: var(--ink4); margin-bottom: 16px;
+}
+.panel-aside nav a {
+  display: block; font-size: 12px; color: var(--ink3); text-decoration: none;
+  padding: 7px 0; border-bottom: 1px solid var(--border);
+  line-height: 1.4; transition: color 0.2s;
+}
+.panel-aside nav a:hover { color: var(--violet); }
+.panel-aside nav a:last-child { border: none; }
+
+/* ── CONTENT ── */
+.panel-content { padding: 52px 64px 88px; max-width: 920px; }
+
+.panel-content h3 {
+  font-weight: 700; font-size: 17px; color: var(--ink);
+  margin: 44px 0 16px; letter-spacing: -0.4px; line-height: 1.3;
+}
+.panel-content h3:first-child { margin-top: 0; }
+.panel-content p {
+  font-size: 14px; color: var(--ink2); margin-bottom: 18px; line-height: 1.82;
+}
+.panel-content p strong { color: var(--ink); font-weight: 500; }
+
+/* ── MODEL CARD ── */
+.model-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  margin: 24px 0;
+}
+
+.model-card {
+  background: var(--bg2);
+  border: 1px solid var(--border);
+  display: grid;
+  grid-template-columns: 4px 1fr;
+  overflow: hidden;
+}
+
+.model-stripe { }
+.model-card.family-meta   .model-stripe { background: var(--violet); }
+.model-card.family-mistral .model-stripe { background: var(--blue); }
+.model-card.family-deep   .model-stripe { background: var(--teal); }
+.model-card.family-google .model-stripe { background: var(--amber); }
+.model-card.family-ms     .model-stripe { background: var(--green); }
+.model-card.family-alibaba .model-stripe { background: #f070b0; }
+
+.model-body { padding: 20px 24px; }
+
+.model-header {
+  display: flex;
+  align-items: baseline;
+  gap: 12px;
+  margin-bottom: 10px;
+  flex-wrap: wrap;
+}
+
+.model-name {
+  font-weight: 900;
+  font-size: 15px;
+  color: var(--ink);
+  letter-spacing: -0.3px;
+}
+
+.model-family {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 9px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  padding: 3px 8px;
+  border-radius: 2px;
+}
+
+.family-meta    .model-family { color: var(--violet); background: var(--violet-l); }
+.family-mistral .model-family { color: var(--blue);   background: var(--blue-l); }
+.family-deep    .model-family { color: var(--teal);   background: var(--teal-l); }
+.family-google  .model-family { color: var(--amber);  background: var(--amber-l); }
+.family-ms      .model-family { color: var(--green);  background: var(--green-l); }
+.family-alibaba .model-family { color: #f070b0;       background: rgba(240,112,176,0.08); }
+
+.model-lic {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 9px;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  padding: 3px 8px;
+  border-radius: 2px;
+  margin-left: auto;
+}
+.lic-open   { color: var(--green); background: var(--green-l); }
+.lic-custom { color: var(--amber); background: var(--amber-l); }
+
+.model-desc {
+  font-size: 13px;
+  color: var(--ink3);
+  line-height: 1.7;
+  margin-bottom: 14px;
+}
+
+.model-sizes {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+  margin-bottom: 12px;
+}
+
+.size-chip {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px;
+  padding: 3px 9px;
+  border: 1px solid var(--border2);
+  color: var(--ink3);
+  background: var(--bg3);
+  letter-spacing: 0.5px;
+}
+
+.model-strengths {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.strength-tag {
+  font-size: 11px;
+  padding: 3px 10px;
+  background: var(--bg3);
+  border: 1px solid var(--border);
+  color: var(--ink3);
+}
+
+.model-note {
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top: 1px solid var(--border);
+  font-size: 12px;
+  color: var(--ink4);
+  line-height: 1.6;
+  font-family: 'JetBrains Mono', monospace;
+  letter-spacing: 0.3px;
+}
+
+/* ── CAPABILITY TABLE ── */
+.cap-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 24px 0;
+  font-size: 12px;
+}
+.cap-table th {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 9px; letter-spacing: 2px; text-transform: uppercase;
+  color: var(--ink4); text-align: left; padding: 10px 12px;
+  border-bottom: 1px solid var(--border2); background: var(--bg3);
+}
+.cap-table th.center { text-align: center; }
+.cap-table td {
+  padding: 11px 12px; border-bottom: 1px solid var(--border);
+  color: var(--ink2); line-height: 1.5; vertical-align: middle;
+}
+.cap-table tr:hover td { background: var(--bg2); }
+.cap-table td:first-child { font-weight: 500; color: var(--ink); font-size: 13px; }
+.cap-table td.center { text-align: center; }
+
+.dot-cell {
+  display: flex;
+  justify-content: center;
+}
+
+.dot-score {
+  display: flex;
+  gap: 3px;
+  align-items: center;
+}
+
+.dot-score span {
+  display: inline-block;
+  width: 7px; height: 7px;
+  border-radius: 50%;
+}
+
+.ds-on  { background: var(--green); }
+.ds-mid { background: var(--amber); }
+.ds-off { background: var(--border2); }
+
+/* ── TIMELINE ── */
+.timeline {
+  margin: 28px 0;
+  position: relative;
+}
+
+.timeline-line {
+  position: absolute;
+  left: 80px;
+  top: 0; bottom: 0;
+  width: 1px;
+  background: var(--border);
+}
+
+.timeline-item {
+  display: grid;
+  grid-template-columns: 80px 1fr;
+  gap: 0;
+  margin-bottom: 2px;
+  position: relative;
+}
+
+.timeline-date {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px;
+  color: var(--ink4);
+  letter-spacing: 1px;
+  padding: 14px 16px 14px 0;
+  text-align: right;
+  line-height: 1.4;
+}
+
+.timeline-content {
+  background: var(--bg2);
+  border: 1px solid var(--border);
+  padding: 14px 20px;
+  margin-left: 24px;
+  position: relative;
+}
+
+.timeline-content::before {
+  content: '';
+  position: absolute;
+  left: -20px; top: 50%;
+  transform: translateY(-50%);
+  width: 8px; height: 8px;
+  border-radius: 50%;
+  background: var(--violet);
+  border: 2px solid var(--bg);
+}
+
+.timeline-content h4 {
+  font-size: 13px; font-weight: 700;
+  color: var(--ink); margin-bottom: 4px;
+}
+
+.timeline-content p {
+  font-size: 12px; color: var(--ink3);
+  line-height: 1.6; margin: 0;
+}
+
+.timeline-content.major {
+  border-left: 3px solid var(--violet);
+}
+
+.timeline-content.major::before { background: var(--violet); width: 10px; height: 10px; }
+
+/* ── VELOCITY CHALLENGE ── */
+.challenge-list {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  margin: 24px 0;
+}
+
+.challenge-item {
+  display: grid;
+  grid-template-columns: 44px 1fr;
+  background: var(--bg2);
+  border: 1px solid var(--border);
+  overflow: hidden;
+}
+
+.ch-icon {
+  background: var(--violet-l);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 18px;
+  border-right: 1px solid var(--border);
+}
+
+.ch-body { padding: 16px 20px; }
+.ch-body h4 { font-size: 13px; font-weight: 700; color: var(--ink); margin-bottom: 5px; }
+.ch-body p  { font-size: 13px; color: var(--ink3); line-height: 1.65; margin: 0; }
+.ch-body p strong { color: var(--ink2); font-weight: 500; }
+
+/* ── STRATEGY CARDS ── */
+.strategy-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 2px;
+  margin: 24px 0;
+}
+
+.strategy-card {
+  background: var(--bg2);
+  border: 1px solid var(--border);
+  padding: 24px 20px;
+}
+
+.strategy-card-num {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 9px; letter-spacing: 2px; text-transform: uppercase;
+  color: var(--violet); margin-bottom: 12px; display: block;
+}
+
+.strategy-card h4 {
+  font-size: 14px; font-weight: 700; color: var(--ink);
+  margin-bottom: 10px; letter-spacing: -0.3px;
+}
+
+.strategy-card p {
+  font-size: 13px; color: var(--ink3); line-height: 1.7; margin: 0;
+}
+
+.strategy-card p strong { color: var(--ink2); font-weight: 500; }
+
+/* ── SELECTION GUIDE ── */
+.guide-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 24px 0;
+  font-size: 13px;
+}
+.guide-table th {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 9px; letter-spacing: 2px; text-transform: uppercase;
+  color: var(--ink4); text-align: left; padding: 10px 14px;
+  border-bottom: 1px solid var(--border2); background: var(--bg3);
+}
+.guide-table td {
+  padding: 13px 14px; border-bottom: 1px solid var(--border);
+  color: var(--ink2); vertical-align: top; line-height: 1.6;
+}
+.guide-table tr:hover td { background: var(--bg2); }
+.guide-table td:first-child { font-weight: 500; color: var(--ink); width: 220px; }
+
+/* ── INFO BOX ── */
+.ibox {
+  background: var(--bg2); border: 1px solid var(--border);
+  border-left: 3px solid var(--violet);
+  padding: 22px 26px; margin: 22px 0;
+}
+.ibox.green  { border-left-color: var(--green);  background: var(--green-l); }
+.ibox.amber  { border-left-color: var(--amber);  background: var(--amber-l); }
+.ibox.red    { border-left-color: var(--red);    background: var(--red-l); }
+.ibox.blue   { border-left-color: var(--blue);   background: var(--blue-l); }
+.ibox.teal   { border-left-color: var(--teal);   background: var(--teal-l); }
+.ibox-label {
+  font-family: 'JetBrains Mono', monospace; font-size: 9px;
+  letter-spacing: 2.5px; text-transform: uppercase; margin-bottom: 10px; display: block;
+}
+.ibox       .ibox-label { color: var(--violet); }
+.ibox.green .ibox-label { color: var(--green); }
+.ibox.amber .ibox-label { color: var(--amber); }
+.ibox.red   .ibox-label { color: var(--red); }
+.ibox.blue  .ibox-label { color: var(--blue); }
+.ibox.teal  .ibox-label { color: var(--teal); }
+.ibox p { font-size: 13px; color: var(--ink2); margin: 0; line-height: 1.75; }
+.ibox p strong { color: var(--ink); font-weight: 500; }
+
+/* ── FOOTER ── */
+footer {
+  border-top: 1px solid var(--border);
+  background: var(--bg2);
+  padding: 28px 64px;
+  display: flex; justify-content: space-between;
+  align-items: center; flex-wrap: wrap; gap: 8px;
+}
+footer p {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px; color: var(--ink4); letter-spacing: 0.5px;
+}
+
+/* ── RESPONSIVE ── */
+@media (max-width: 860px) {
+  .masthead, .panel-content, footer { padding-left: 24px; padding-right: 24px; }
+  .tab-panel.active { grid-template-columns: 1fr; }
+  .panel-aside { display: none; }
+  .strategy-grid { grid-template-columns: 1fr; }
+}
+</style>
+</head>
+<body>
+
+<header class="masthead">
+  <div class="series-label">Serie C · Self-Hosting LLM</div>
+  <div class="report-label">Report C3 — I Modelli</div>
+  <h1>I modelli open source:<br><em>panoramica</em> e strategia</h1>
+  <p class="masthead-sub">Quali modelli esistono, come si confrontano, e come gestire la sfida della model velocity — ovvero l'evoluzione rapida che rende obsoleto ciò che si è scelto ieri.</p>
+  <div class="masthead-meta">
+    <div class="meta-item"><span>Serie</span><strong>C · Self-Hosting LLM</strong></div>
+    <div class="meta-item"><span>Report</span><strong>C3 di 7</strong></div>
+    <div class="meta-item"><span>Destinatari</span><strong>IT, CTO, Responsabili tecnici</strong></div>
+    <div class="meta-item"><span>Prerequisito</span><strong>C1 — La Decisione, C2 — Mappa dei Task</strong></div>
+  </div>
+</header>
+
+<nav class="tab-nav">
+  <button class="tab-btn active" data-tab="t1">
+    <span class="tab-btn-inner"><span class="tab-num">01</span><span class="tab-name">Famiglie di modelli</span></span>
+  </button>
+  <button class="tab-btn" data-tab="t2">
+    <span class="tab-btn-inner"><span class="tab-num">02</span><span class="tab-name">Schede dettaglio</span></span>
+  </button>
+  <button class="tab-btn" data-tab="t3">
+    <span class="tab-btn-inner"><span class="tab-num">03</span><span class="tab-name">Confronto capability</span></span>
+  </button>
+  <button class="tab-btn" data-tab="t4">
+    <span class="tab-btn-inner"><span class="tab-num">04</span><span class="tab-name">Model velocity</span></span>
+  </button>
+  <button class="tab-btn" data-tab="t5">
+    <span class="tab-btn-inner"><span class="tab-num">05</span><span class="tab-name">Strategia aggiornamento</span></span>
+  </button>
+  <button class="tab-btn" data-tab="t6">
+    <span class="tab-btn-inner"><span class="tab-num">06</span><span class="tab-name">Come scegliere</span></span>
+  </button>
+</nav>
+
+
+<!-- ══════════════════════════════════════════
+     TAB 1 — FAMIGLIE DI MODELLI
+══════════════════════════════════════════ -->
+<div class="tab-panel active" id="t1">
+  <aside class="panel-aside">
+    <div class="aside-label">In questa sezione</div>
+    <nav>
+      <a href="#f1-intro">Il panorama attuale</a>
+      <a href="#f1-meta">Famiglia Meta / Llama</a>
+      <a href="#f1-mistral">Famiglia Mistral</a>
+      <a href="#f1-deepseek">DeepSeek</a>
+      <a href="#f1-google">Google / Gemma</a>
+      <a href="#f1-ms">Microsoft / Phi</a>
+      <a href="#f1-altri">Altri modelli</a>
+    </nav>
+  </aside>
+  <div class="panel-content">
+
+    <h3 id="f1-intro">Il panorama dei modelli open source nel 2026</h3>
+    <p>Il mercato dei modelli open source disponibili per self-hosting è diventato maturo, competitivo e molto articolato. Non esiste un singolo "miglior modello" — esistono famiglie con caratteristiche diverse, ottimizzate per casi d'uso diversi, con profili di licenza diversi e requisiti hardware diversi.</p>
+    <p>Quattro dimensioni distinguono una famiglia dall'altra in modo rilevante per la scelta: <strong>capability generale</strong>, <strong>efficienza per dimensione</strong> (quanto rende per ogni miliardo di parametri), <strong>licenza commerciale</strong>, e <strong>fiducia nel provider</strong> (rilevante per chi ha vincoli di giurisdizione sui dati).</p>
+
+    <div class="ibox">
+      <span class="ibox-label">Come leggere questa sezione</span>
+      <p>La Tab 1 offre una panoramica per famiglia. La Tab 2 approfondisce i singoli modelli più rilevanti con schede dettagliate. La Tab 3 confronta le capability per task tipo. Chi deve prendere una decisione rapida può partire dalla Tab 6 — guida alla selezione.</p>
+    </div>
+
+    <h3 id="f1-meta">Famiglia Meta / Llama</h3>
+    <p>La famiglia più adottata in assoluto per self-hosting enterprise. Llama 3.x (2024) ha segnato un salto qualitativo rispetto alle versioni precedenti, portando il modello da 70B a un livello competitivo con GPT-3.5 su molti task e avvicinandosi a GPT-4 per task specifici.</p>
+    <p>Il punto di forza è l'<strong>ecosistema</strong>: strumenti, framework, guide e community costruiti attorno a Llama sono i più ricchi disponibili. Qualsiasi problema operativo che si incontra nel deploy di un modello Llama ha quasi certamente già una soluzione documentata online. La licenza Meta consente uso commerciale con alcune restrizioni (vedi Report C1).</p>
+
+    <h3 id="f1-mistral">Famiglia Mistral AI</h3>
+    <p>Provider europeo (Francia), nato nel 2023 con il modello Mistral 7B che ha sorpreso il settore per le performance ottenute con dimensioni molto ridotte. La famiglia si è espansa rapidamente con Mixtral (architettura Mixture of Experts), Mistral Small, Medium e Large.</p>
+    <p>Il punto di forza è l'<strong>efficienza</strong>: i modelli Mistral producono risultati di qualità superiore rispetto ad altri modelli della stessa dimensione, con costi hardware inferiori. La licenza Apache 2.0 per i modelli base è la più permissiva disponibile — nessuna restrizione per uso commerciale. I modelli premium richiedono accordo separato. Essere un provider europeo può essere rilevante per aziende con requisiti di giurisdizione EU.</p>
+
+    <h3 id="f1-deepseek">DeepSeek</h3>
+    <p>Il modello più discusso degli ultimi mesi. DeepSeek R1 (2025) ha introdotto capacità di ragionamento esplicito (chain-of-thought "visibile") che lo hanno portato a superare molti benchmark di modelli frontier a una frazione del costo computazionale. L'architettura è stata progettata per massimizzare l'efficienza, con risultati sorprendenti.</p>
+    <p>Il punto di forza è il <strong>ragionamento</strong>: per task che richiedono analisi multi-step strutturata, DeepSeek R1 è tra i migliori modelli open source disponibili. La licenza MIT è liberissima. Il punto di attenzione è il <strong>provider</strong>: DeepSeek è una società cinese. Per aziende con dati molto sensibili o vincoli di giurisdizione stringenti, questo è un elemento da valutare — non sulla qualità del modello, ma sulla fiducia nel provider e sulle implicazioni per i pesi stessi del modello.</p>
+
+    <h3 id="f1-google">Google / Gemma</h3>
+    <p>La famiglia Gemma rappresenta il contributo di Google al panorama open source. Gemma 2 (2024) ha introdotto modelli compatti (2B, 9B, 27B) con performance eccellenti per la loro dimensione, particolarmente ottimizzati per l'inferenza su hardware limitato. Non è il modello più potente in assoluto, ma è tra i più efficienti per scenari edge o con risorse hardware ridotte.</p>
+
+    <h3 id="f1-ms">Microsoft / Phi</h3>
+    <p>La serie Phi di Microsoft ha rivoluzionato l'idea di cosa sia possibile con modelli piccoli. Phi-3 e Phi-4 (2024-2025) sono modelli da 3.8B e 14B parametri che superano modelli molto più grandi su task di ragionamento e coding, grazie a un training dataset di altissima qualità. Licenza MIT, nessuna restrizione commerciale.</p>
+    <p>Il caso d'uso ideale è l'<strong>edge deployment</strong> — girare su hardware molto limitato (laptop, device industriali, server senza GPU dedicate) mantenendo una capability accettabile. Per scenari dove il modello deve girare vicino ai macchinari o senza connettività, Phi è spesso la scelta più razionale.</p>
+
+    <h3 id="f1-altri">Altri modelli rilevanti</h3>
+    <p><strong>Qwen 2.5 (Alibaba):</strong> eccellente supporto multilingua e coding, licenza permissiva. Come DeepSeek, il provider è cinese — stessa valutazione di fiducia/giurisdizione. Ottimo per contesti multinazionali o task di traduzione tecnica.</p>
+    <p><strong>Command R+ (Cohere):</strong> progettato specificamente per RAG enterprise. Gestione del contesto molto lunga, ottimizzato per sistemi di retrieval. Non completamente open source ma disponibile per self-hosting con accordo commerciale.</p>
+    <p><strong>Solar (Upstage):</strong> modello coreano compatto con ottime performance in coreano e inglese, menzionato per completezza ma poco rilevante per il contesto manifatturiero italiano.</p>
+
+  </div>
+</div>
+
+
+<!-- ══════════════════════════════════════════
+     TAB 2 — SCHEDE DETTAGLIO
+══════════════════════════════════════════ -->
+<div class="tab-panel" id="t2">
+  <aside class="panel-aside">
+    <div class="aside-label">In questa sezione</div>
+    <nav>
+      <a href="#sc-llama">Llama 3.3</a>
+      <a href="#sc-llama70">Llama 3.1 70B</a>
+      <a href="#sc-mistral">Mistral 7B / Nemo</a>
+      <a href="#sc-mixtral">Mixtral 8x7B</a>
+      <a href="#sc-deepseek">DeepSeek R1</a>
+      <a href="#sc-gemma">Gemma 2</a>
+      <a href="#sc-phi">Phi-4</a>
+      <a href="#sc-qwen">Qwen 2.5</a>
+    </nav>
+  </aside>
+  <div class="panel-content">
+
+    <p>Schede di riferimento per i modelli più rilevanti per self-hosting in contesto manifatturiero enterprise. Hardware indicativo basato su quantizzazione 4-bit (Q4), che riduce la VRAM necessaria con impatto minimo sulla qualità.</p>
+
+    <div class="model-grid">
+
+      <div class="model-card family-meta" id="sc-llama">
+        <div class="model-stripe"></div>
+        <div class="model-body">
+          <div class="model-header">
+            <span class="model-name">Llama 3.3 70B</span>
+            <span class="model-family">Meta</span>
+            <span class="model-lic lic-custom">Meta License</span>
+          </div>
+          <p class="model-desc">Il punto di riferimento per self-hosting enterprise nel 2025-2026. Capacità competitive con GPT-3.5 su quasi tutti i task e con GPT-4 su molti task specifici. Instruction following molto affidabile. Il modello da scegliere quando la qualità è prioritaria e l'hardware lo consente.</p>
+          <div class="model-sizes">
+            <span class="size-chip">70B param</span>
+            <span class="size-chip">~40GB VRAM (Q4)</span>
+            <span class="size-chip">2× A100 80GB o 1× H100</span>
+          </div>
+          <div class="model-strengths">
+            <span class="strength-tag">Task generali</span>
+            <span class="strength-tag">Ragionamento</span>
+            <span class="strength-tag">Coding</span>
+            <span class="strength-tag">RAG complessi</span>
+            <span class="strength-tag">Instruction following</span>
+          </div>
+          <div class="model-note">Zona C2: Verde su quasi tutto, Gialla su task frontier. Ecosistema più ricco disponibile.</div>
+        </div>
+      </div>
+
+      <div class="model-card family-meta" id="sc-llama70">
+        <div class="model-stripe"></div>
+        <div class="model-body">
+          <div class="model-header">
+            <span class="model-name">Llama 3.2 / 3.1 8B</span>
+            <span class="model-family">Meta</span>
+            <span class="model-lic lic-custom">Meta License</span>
+          </div>
+          <p class="model-desc">La versione "leggera" della famiglia Llama, ideale per deployment su hardware più accessibile. Ottimo rapporto qualità/costo per task ben definiti e ripetibili. Perfetto per PoC iniziali e per sistemi RAG su documentazione tecnica. Non adatto a task complessi o ragionamento avanzato.</p>
+          <div class="model-sizes">
+            <span class="size-chip">8B param</span>
+            <span class="size-chip">~5GB VRAM (Q4)</span>
+            <span class="size-chip">RTX 3090 / A10G</span>
+          </div>
+          <div class="model-strengths">
+            <span class="strength-tag">RAG documentale</span>
+            <span class="strength-tag">Classificazione</span>
+            <span class="strength-tag">Estrazione dati</span>
+            <span class="strength-tag">PoC rapidi</span>
+          </div>
+          <div class="model-note">Zona C2: Verde su task definiti, hardware accessibile. Prima scelta per progetti pilota.</div>
+        </div>
+      </div>
+
+      <div class="model-card family-mistral" id="sc-mistral">
+        <div class="model-stripe"></div>
+        <div class="model-body">
+          <div class="model-header">
+            <span class="model-name">Mistral Nemo 12B</span>
+            <span class="model-family">Mistral AI · EU</span>
+            <span class="model-lic lic-open">Apache 2.0</span>
+          </div>
+          <p class="model-desc">Il modello mid-range più efficiente disponibile su licenza Apache 2.0. Sviluppato in collaborazione con NVIDIA, ottimizzato per deployment enterprise. Raggiunge qualità paragonabile a modelli da 30B+ grazie a architettura ottimizzata. Provider europeo — rilevante per chi ha requisiti di giurisdizione EU.</p>
+          <div class="model-sizes">
+            <span class="size-chip">12B param</span>
+            <span class="size-chip">~8GB VRAM (Q4)</span>
+            <span class="size-chip">RTX 4090 / A10G</span>
+          </div>
+          <div class="model-strengths">
+            <span class="strength-tag">Efficienza hardware</span>
+            <span class="strength-tag">Multilingua</span>
+            <span class="strength-tag">Licenza liberissima</span>
+            <span class="strength-tag">Provider EU</span>
+          </div>
+          <div class="model-note">Zona C2: Verde-Gialla. Ottimo compromesso per aziende con budget hardware limitato e requisiti EU.</div>
+        </div>
+      </div>
+
+      <div class="model-card family-mistral" id="sc-mixtral">
+        <div class="model-stripe"></div>
+        <div class="model-body">
+          <div class="model-header">
+            <span class="model-name">Mixtral 8×7B</span>
+            <span class="model-family">Mistral AI · EU</span>
+            <span class="model-lic lic-open">Apache 2.0</span>
+          </div>
+          <p class="model-desc">Architettura Mixture of Experts (MoE): ha 47B parametri totali ma attiva solo 13B per ogni token. Risultato: capability da modello grande con costi computazionali da modello medio. Eccellente per task di coding e ragionamento. Punto di attenzione: richiede framework di serving che supporti MoE.</p>
+          <div class="model-sizes">
+            <span class="size-chip">47B param (13B attivi)</span>
+            <span class="size-chip">~26GB VRAM (Q4)</span>
+            <span class="size-chip">2× RTX 3090 / A100 40GB</span>
+          </div>
+          <div class="model-strengths">
+            <span class="strength-tag">Efficienza MoE</span>
+            <span class="strength-tag">Coding avanzato</span>
+            <span class="strength-tag">Multilingua</span>
+            <span class="strength-tag">Ragionamento</span>
+          </div>
+          <div class="model-note">Zona C2: Verde-Gialla su task tecnici. Richiede vLLM o TGI per serving ottimale con MoE.</div>
+        </div>
+      </div>
+
+      <div class="model-card family-deep" id="sc-deepseek">
+        <div class="model-stripe"></div>
+        <div class="model-body">
+          <div class="model-header">
+            <span class="model-name">DeepSeek R1 (distilled)</span>
+            <span class="model-family">DeepSeek · CN</span>
+            <span class="model-lic lic-open">MIT</span>
+          </div>
+          <p class="model-desc">Il modello più interessante per task di ragionamento strutturato. Il modello base R1 è enorme (671B), ma le versioni "distillate" su architettura Llama (8B, 14B, 32B, 70B) mantengono gran parte delle capacità di ragionamento con hardware accessibile. Chain-of-thought esplicito: il modello "mostra il lavoro", utile per audit e debug delle risposte.</p>
+          <div class="model-sizes">
+            <span class="size-chip">8B / 14B / 32B / 70B</span>
+            <span class="size-chip">Da ~5GB a ~40GB (Q4)</span>
+            <span class="size-chip">Versione dipendente</span>
+          </div>
+          <div class="model-strengths">
+            <span class="strength-tag">Ragionamento multi-step</span>
+            <span class="strength-tag">Analisi tecnica</span>
+            <span class="strength-tag">Math e logica</span>
+            <span class="strength-tag">Chain-of-thought</span>
+          </div>
+          <div class="model-note">⚠ Provider cinese: valutare per dati molto sensibili. I pesi sono open source — nessun dato inviato a DeepSeek in self-hosting.</div>
+        </div>
+      </div>
+
+      <div class="model-card family-google" id="sc-gemma">
+        <div class="model-stripe"></div>
+        <div class="model-body">
+          <div class="model-header">
+            <span class="model-name">Gemma 2 (9B / 27B)</span>
+            <span class="model-family">Google</span>
+            <span class="model-lic lic-custom">Gemma ToU</span>
+          </div>
+          <p class="model-desc">Performance sorprendenti per la dimensione. Gemma 2 27B si avvicina a Llama 70B su molti benchmark pur richiedendo meno della metà della VRAM. Ottimizzato per inferenza efficiente. Il caso d'uso ideale è quando l'hardware è il vincolo principale e si vuole massimizzare la capability dato il budget.</p>
+          <div class="model-sizes">
+            <span class="size-chip">9B / 27B param</span>
+            <span class="size-chip">~6GB / ~16GB VRAM (Q4)</span>
+            <span class="size-chip">RTX 4090 / A100 40GB</span>
+          </div>
+          <div class="model-strengths">
+            <span class="strength-tag">Efficienza VRAM</span>
+            <span class="strength-tag">Inferenza rapida</span>
+            <span class="strength-tag">Edge deployment</span>
+            <span class="strength-tag">Task diversificati</span>
+          </div>
+          <div class="model-note">Zona C2: Verde-Gialla. Ottimo quando il budget hardware è limitato. Gemma 27B è sorprendentemente capace.</div>
+        </div>
+      </div>
+
+      <div class="model-card family-ms" id="sc-phi">
+        <div class="model-stripe"></div>
+        <div class="model-body">
+          <div class="model-header">
+            <span class="model-name">Phi-4 (14B)</span>
+            <span class="model-family">Microsoft</span>
+            <span class="model-lic lic-open">MIT</span>
+          </div>
+          <p class="model-desc">Il modello "small but mighty" per eccellenza. Phi-4 con soli 14B parametri supera modelli da 70B+ su benchmark di ragionamento e coding grazie a un training dataset di qualità eccezionale (testi sintetici ad alta densità di conoscenza). Ideale per deployment su hardware molto limitato con requisiti di ragionamento elevati.</p>
+          <div class="model-sizes">
+            <span class="size-chip">14B param</span>
+            <span class="size-chip">~9GB VRAM (Q4)</span>
+            <span class="size-chip">RTX 4090 / A10G</span>
+          </div>
+          <div class="model-strengths">
+            <span class="strength-tag">Ragionamento compatto</span>
+            <span class="strength-tag">Coding</span>
+            <span class="strength-tag">Edge / hardware limitato</span>
+            <span class="strength-tag">Licenza MIT</span>
+          </div>
+          <div class="model-note">Zona C2: Verde-Gialla su ragionamento. Prima scelta per hardware molto limitato con task tecnici.</div>
+        </div>
+      </div>
+
+      <div class="model-card family-alibaba" id="sc-qwen">
+        <div class="model-stripe"></div>
+        <div class="model-body">
+          <div class="model-header">
+            <span class="model-name">Qwen 2.5 (7B–72B)</span>
+            <span class="model-family">Alibaba · CN</span>
+            <span class="model-lic lic-custom">Qwen License</span>
+          </div>
+          <p class="model-desc">La famiglia più completa per contesti multilingua e internazionali. Qwen 2.5 72B è tra i modelli open source più capaci in assoluto, con performance vicine a GPT-4 su molti benchmark. Eccellente supporto per cinese, inglese, italiano e altre lingue europee. Versioni specializzate per coding (Qwen2.5-Coder) e matematica (Qwen2.5-Math).</p>
+          <div class="model-sizes">
+            <span class="size-chip">7B / 14B / 32B / 72B</span>
+            <span class="size-chip">Da ~5GB a ~42GB (Q4)</span>
+            <span class="size-chip">Versione dipendente</span>
+          </div>
+          <div class="model-strengths">
+            <span class="strength-tag">Multilingua eccellente</span>
+            <span class="strength-tag">Coding specializzato</span>
+            <span class="strength-tag">Gamma dimensioni ampia</span>
+            <span class="strength-tag">Performance top</span>
+          </div>
+          <div class="model-note">⚠ Provider cinese: stessa nota DeepSeek. I pesi sono open — nessun dato a Alibaba in self-hosting.</div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+
+<!-- ══════════════════════════════════════════
+     TAB 3 — CONFRONTO CAPABILITY
+══════════════════════════════════════════ -->
+<div class="tab-panel" id="t3">
+  <aside class="panel-aside">
+    <div class="aside-label">In questa sezione</div>
+    <nav>
+      <a href="#cc-metodo">Come leggere il confronto</a>
+      <a href="#cc-table">Tabella comparativa</a>
+      <a href="#cc-note">Note sul confronto</a>
+    </nav>
+  </aside>
+  <div class="panel-content">
+
+    <h3 id="cc-metodo">Come leggere il confronto</h3>
+    <p>Il confronto è organizzato per <strong>task tipo</strong> rilevanti in ambito manifatturiero, non per benchmark tecnici astratti. I punteggi a pallini (●●●○○) rappresentano una stima qualitativa basata su benchmark pubblici e casi d'uso pratici — non sono metriche precise e vanno interpretati come orientamento, non come certezze.</p>
+    <p>Per ogni modello è indicata la <strong>dimensione di riferimento</strong> usata nel confronto (in generale la versione mid-range della famiglia). I modelli più grandi della stessa famiglia performano meglio; i più piccoli peggio.</p>
+
+    <div class="ibox amber">
+      <span class="ibox-label">Avvertenza importante</span>
+      <p>I benchmark cambiano con ogni nuova versione. Questo confronto riflette la situazione a inizio 2026. <strong>Prima di una decisione definitiva, testare sempre il modello sul proprio caso d'uso specifico</strong> con i propri dati — come descritto nel Report C2, Tab 08. Il confronto qui serve per orientarsi, non per sostituire il test diretto.</p>
+    </div>
+
+    <h3 id="cc-table">Confronto per task tipo</h3>
+
+    <table class="cap-table">
+      <thead>
+        <tr>
+          <th>Task</th>
+          <th class="center">Llama 3.3 70B</th>
+          <th class="center">Mistral Nemo 12B</th>
+          <th class="center">DeepSeek R1 32B</th>
+          <th class="center">Gemma 2 27B</th>
+          <th class="center">Phi-4 14B</th>
+          <th class="center">GPT-4o (ref)</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>Q&A su documentazione (RAG)</td>
+          <td class="center"><div class="dot-cell"><div class="dot-score"><span class="ds-on"></span><span class="ds-on"></span><span class="ds-on"></span><span class="ds-on"></span><span class="ds-off"></span></div></div></td>
+          <td class="center"><div class="dot-cell"><div class="dot-score"><span class="ds-on"></span><span class="ds-on"></span><span class="ds-on"></span><span class="ds-off"></span><span class="ds-off"></span></div></div></td>
+          <td class="center"><div class="dot-cell"><div class="dot-score"><span class="ds-on"></span><span class="ds-on"></span><span class="ds-on"></span><span class="ds-on"></span><span class="ds-off"></span></div></div></td>
+          <td class="center"><div class="dot-cell"><div class="dot-score"><span class="ds-on"></span><span class="ds-on"></span><span class="ds-on"></span><span class="ds-off"></span><span class="ds-off"></span></div></div></td>
+          <td class="center"><div class="dot-cell"><div class="dot-score"><span class="ds-on"></span><span class="ds-on"></span><span class="ds-on"></span><span class="ds-off"></span><span class="ds-off"></span></div></div></td>
+          <td class="center"><div class="dot-cell"><div class="dot-score"><span class="ds-on"></span><span class="ds-on"></span><span class="ds-on"></span><span class="ds-on"></span><span class="ds-on"></span></div></div></td>
+        </tr>
+        <tr>
+          <td>Estrazione dati strutturati</td>
+          <td class="center"><div class="dot-cell"><div class="dot-score"><span class="ds-on"></span><span class="ds-on"></span><span class="ds-on"></span><span class="ds-on"></span><span class="ds-off"></span></div></div></td>
+          <td class="center"><div class="dot-cell"><div class="dot-score"><span class="ds-on"></span><span class="ds-on"></span><span class="ds-on"></span><span class="ds-on"></span><span class="ds-off"></span></div></div></td>
+          <td class="center"><div class="dot-cell"><div class="dot-score"><span class="ds-on"></span><span class="ds-on"></span><span class="ds-on"></span><span class="ds-off"></span><span class="ds-off"></span></div></div></td>
+          <td class="center"><div class="dot-cell"><div class="dot-score"><span class="ds-on"></span><span class="ds-on"></span><span class="ds-on"></span><span class="ds-off"></span><span class="ds-off"></span></div></div></td>
+          <td class="center"><div class="dot-cell"><div class="dot-score"><span class="ds-on"></span><span class="ds-on"></span><span class="ds-on"></span><span class="ds-off"></span><span class="ds-off"></span></div></div></td>
+          <td class="center"><div class="dot-cell"><div class="dot-score"><span class="ds-on"></span><span class="ds-on"></span><span class="ds-on"></span><span class="ds-on"></span><span class="ds-on"></span></div></div></td>
+        </tr>
+        <tr>
+          <td>Classificazione e routing</td>
+          <td class="center"><div class="dot-cell"><div class="dot-score"><span class="ds-on"></span><span class="ds-on"></span><span class="ds-on"></span><span class="ds-on"></span><span class="ds-on"></span></div></div></td>
+          <td class="center"><div class="dot-cell"><div class="dot-score"><span class="ds-on"></span><span class="ds-on"></span><span class="ds-on"></span><span class="ds-on"></span><span class="ds-off"></span></div></div></td>
+          <td class="center"><div class="dot-cell"><div class="dot-score"><span class="ds-on"></span><span class="ds-on"></span><span class="ds-on"></span><span class="ds-on"></span><span class="ds-off"></span></div></div></td>
+          <td class="center"><div class="dot-cell"><div class="dot-score"><span class="ds-on"></span><span class="ds-on"></span><span class="ds-on"></span><span class="ds-on"></span><span class="ds-off"></span></div></div></td>
+          <td class="center"><div class="dot-cell"><div class="dot-score"><span class="ds-on"></span><span class="ds-on"></span><span class="ds-on"></span><span class="ds-off"></span><span class="ds-off"></span></div></div></td>
+          <td class="center"><div class="dot-cell"><div class="dot-score"><span class="ds-on"></span><span class="ds-on"></span><span class="ds-on"></span><span class="ds-on"></span><span class="ds-on"></span></div></div></td>
+        </tr>
+        <tr>
+          <td>Ragionamento tecnico multi-step</td>
+          <td class="center"><div class="dot-cell"><div class="dot-score"><span class="ds-on"></span><span class="ds-on"></span><span class="ds-on"></span><span class="ds-off"></span><span class="ds-off"></span></div></div></td>
+          <td class="center"><div class="dot-cell"><div class="dot-score"><span class="ds-on"></span><span class="ds-on"></span><span class="ds-off"></span><span class="ds-off"></span><span class="ds-off"></span></div></div></td>
+          <td class="center"><div class="dot-cell"><div class="dot-score"><span class="ds-on"></span><span class="ds-on"></span><span class="ds-on"></span><span class="ds-on"></span><span class="ds-off"></span></div></div></td>
+          <td class="center"><div class="dot-cell"><div class="dot-score"><span class="ds-on"></span><span class="ds-on"></span><span class="ds-on"></span><span class="ds-off"></span><span class="ds-off"></span></div></div></td>
+          <td class="center"><div class="dot-cell"><div class="dot-score"><span class="ds-on"></span><span class="ds-on"></span><span class="ds-on"></span><span class="ds-on"></span><span class="ds-off"></span></div></div></td>
+          <td class="center"><div class="dot-cell"><div class="dot-score"><span class="ds-on"></span><span class="ds-on"></span><span class="ds-on"></span><span class="ds-on"></span><span class="ds-on"></span></div></div></td>
+        </tr>
+        <tr>
+          <td>Generazione documenti tecnici</td>
+          <td class="center"><div class="dot-cell"><div class="dot-score"><span class="ds-on"></span><span class="ds-on"></span><span class="ds-on"></span><span class="ds-on"></span><span class="ds-off"></span></div></div></td>
+          <td class="center"><div class="dot-cell"><div class="dot-score"><span class="ds-on"></span><span class="ds-on"></span><span class="ds-on"></span><span class="ds-off"></span><span class="ds-off"></span></div></div></td>
+          <td class="center"><div class="dot-cell"><div class="dot-score"><span class="ds-on"></span><span class="ds-on"></span><span class="ds-on"></span><span class="ds-off"></span><span class="ds-off"></span></div></div></td>
+          <td class="center"><div class="dot-cell"><div class="dot-score"><span class="ds-on"></span><span class="ds-on"></span><span class="ds-on"></span><span class="ds-off"></span><span class="ds-off"></span></div></div></td>
+          <td class="center"><div class="dot-cell"><div class="dot-score"><span class="ds-on"></span><span class="ds-on"></span><span class="ds-off"></span><span class="ds-off"></span><span class="ds-off"></span></div></div></td>
+          <td class="center"><div class="dot-cell"><div class="dot-score"><span class="ds-on"></span><span class="ds-on"></span><span class="ds-on"></span><span class="ds-on"></span><span class="ds-on"></span></div></div></td>
+        </tr>
+        <tr>
+          <td>Coding (Python, SQL)</td>
+          <td class="center"><div class="dot-cell"><div class="dot-score"><span class="ds-on"></span><span class="ds-on"></span><span class="ds-on"></span><span class="ds-on"></span><span class="ds-off"></span></div></div></td>
+          <td class="center"><div class="dot-cell"><div class="dot-score"><span class="ds-on"></span><span class="ds-on"></span><span class="ds-on"></span><span class="ds-off"></span><span class="ds-off"></span></div></div></td>
+          <td class="center"><div class="dot-cell"><div class="dot-score"><span class="ds-on"></span><span class="ds-on"></span><span class="ds-on"></span><span class="ds-on"></span><span class="ds-on"></span></div></div></td>
+          <td class="center"><div class="dot-cell"><div class="dot-score"><span class="ds-on"></span><span class="ds-on"></span><span class="ds-on"></span><span class="ds-off"></span><span class="ds-off"></span></div></div></td>
+          <td class="center"><div class="dot-cell"><div class="dot-score"><span class="ds-on"></span><span class="ds-on"></span><span class="ds-on"></span><span class="ds-on"></span><span class="ds-off"></span></div></div></td>
+          <td class="center"><div class="dot-cell"><div class="dot-score"><span class="ds-on"></span><span class="ds-on"></span><span class="ds-on"></span><span class="ds-on"></span><span class="ds-on"></span></div></div></td>
+        </tr>
+        <tr>
+          <td>Instruction following preciso</td>
+          <td class="center"><div class="dot-cell"><div class="dot-score"><span class="ds-on"></span><span class="ds-on"></span><span class="ds-on"></span><span class="ds-on"></span><span class="ds-off"></span></div></div></td>
+          <td class="center"><div class="dot-cell"><div class="dot-score"><span class="ds-on"></span><span class="ds-on"></span><span class="ds-on"></span><span class="ds-off"></span><span class="ds-off"></span></div></div></td>
+          <td class="center"><div class="dot-cell"><div class="dot-score"><span class="ds-on"></span><span class="ds-on"></span><span class="ds-on"></span><span class="ds-off"></span><span class="ds-off"></span></div></div></td>
+          <td class="center"><div class="dot-cell"><div class="dot-score"><span class="ds-on"></span><span class="ds-on"></span><span class="ds-on"></span><span class="ds-off"></span><span class="ds-off"></span></div></div></td>
+          <td class="center"><div class="dot-cell"><div class="dot-score"><span class="ds-on"></span><span class="ds-on"></span><span class="ds-on"></span><span class="ds-off"></span><span class="ds-off"></span></div></div></td>
+          <td class="center"><div class="dot-cell"><div class="dot-score"><span class="ds-on"></span><span class="ds-on"></span><span class="ds-on"></span><span class="ds-on"></span><span class="ds-on"></span></div></div></td>
+        </tr>
+        <tr>
+          <td>Multilingua (IT/DE/FR/EN)</td>
+          <td class="center"><div class="dot-cell"><div class="dot-score"><span class="ds-on"></span><span class="ds-on"></span><span class="ds-on"></span><span class="ds-on"></span><span class="ds-off"></span></div></div></td>
+          <td class="center"><div class="dot-cell"><div class="dot-score"><span class="ds-on"></span><span class="ds-on"></span><span class="ds-on"></span><span class="ds-on"></span><span class="ds-off"></span></div></div></td>
+          <td class="center"><div class="dot-cell"><div class="dot-score"><span class="ds-on"></span><span class="ds-on"></span><span class="ds-on"></span><span class="ds-off"></span><span class="ds-off"></span></div></div></td>
+          <td class="center"><div class="dot-cell"><div class="dot-score"><span class="ds-on"></span><span class="ds-on"></span><span class="ds-on"></span><span class="ds-off"></span><span class="ds-off"></span></div></div></td>
+          <td class="center"><div class="dot-cell"><div class="dot-score"><span class="ds-on"></span><span class="ds-on"></span><span class="ds-off"></span><span class="ds-off"></span><span class="ds-off"></span></div></div></td>
+          <td class="center"><div class="dot-cell"><div class="dot-score"><span class="ds-on"></span><span class="ds-on"></span><span class="ds-on"></span><span class="ds-on"></span><span class="ds-on"></span></div></div></td>
+        </tr>
+        <tr>
+          <td>Latenza (tokens/sec, hardware medio)</td>
+          <td class="center" style="color:var(--ink3);font-size:12px">~20–40 t/s</td>
+          <td class="center" style="color:var(--green);font-size:12px">~80–120 t/s</td>
+          <td class="center" style="color:var(--ink3);font-size:12px">~30–60 t/s</td>
+          <td class="center" style="color:var(--ink3);font-size:12px">~50–90 t/s</td>
+          <td class="center" style="color:var(--green);font-size:12px">~70–110 t/s</td>
+          <td class="center" style="color:var(--ink4);font-size:12px">variabile API</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <h3 id="cc-note">Note sul confronto</h3>
+    <p><strong>DeepSeek R1 sul ragionamento:</strong> è il caso più interessante. Su task di ragionamento tecnico multi-step, il modello distillato da 32B supera Llama 3.3 70B — a parità di VRAM necessaria o inferiore. Per task di analisi complessa, è la scelta da considerare seriamente.</p>
+    <p><strong>Latenza vs capability:</strong> Mistral Nemo e Phi-4 sono significativamente più veloci degli altri modelli a parità di hardware. Per applicazioni real-time o con molti utenti concorrenti, la latenza può essere il fattore decisivo — anche a scapito di qualche punto di capability.</p>
+    <p><strong>Il gap con GPT-4o:</strong> resta visibile su instruction following preciso, multilingua avanzato e generazione documenti complessi. Per molti task manifatturieri (Q&A documentale, classificazione, estrazione) il gap è trascurabile in pratica. Per task complessi e aperti, rimane significativo.</p>
+
+  </div>
+</div>
+
+
+<!-- ══════════════════════════════════════════
+     TAB 4 — MODEL VELOCITY
+══════════════════════════════════════════ -->
+<div class="tab-panel" id="t4">
+  <aside class="panel-aside">
+    <div class="aside-label">In questa sezione</div>
+    <nav>
+      <a href="#mv-def">Cos'è e perché conta</a>
+      <a href="#mv-storia">La storia recente</a>
+      <a href="#mv-sfide">Le sfide operative</a>
+    </nav>
+  </aside>
+  <div class="panel-content">
+
+    <h3 id="mv-def">Model velocity: il problema specifico del self-hosting</h3>
+    <p>Con "model velocity" si indica la velocità con cui i modelli open source vengono aggiornati e sostituiti da versioni migliori. È un fenomeno senza precedenti nel software enterprise: il componente centrale del sistema — il modello — cambia in modo sostanziale ogni pochi mesi, non ogni anno o ogni ciclo di release.</p>
+    <p>Chi usa API di un provider cloud non si pone questo problema: OpenAI aggiorna i suoi modelli e l'utente beneficia automaticamente del miglioramento. Chi fa self-hosting, invece, <strong>deve gestire attivamente questa evoluzione</strong> — e le implicazioni operative sono significative.</p>
+
+    <h3 id="mv-storia">La storia recente: quanto velocemente cambia il panorama</h3>
+
+    <div class="timeline">
+      <div class="timeline-line"></div>
+
+      <div class="timeline-item">
+        <div class="timeline-date">Lug 2023</div>
+        <div class="timeline-content major">
+          <h4>Llama 2 — il punto di svolta</h4>
+          <p>Prima release di Meta con licenza commerciale. Segna l'inizio dell'era del self-hosting enterprise. 7B, 13B, 70B.</p>
+        </div>
+      </div>
+
+      <div class="timeline-item">
+        <div class="timeline-date">Set 2023</div>
+        <div class="timeline-content">
+          <h4>Mistral 7B</h4>
+          <p>Supera Llama 2 13B pur avendo la metà dei parametri. Dimostra che la dimensione non è l'unico fattore. Apache 2.0.</p>
+        </div>
+      </div>
+
+      <div class="timeline-item">
+        <div class="timeline-date">Dic 2023</div>
+        <div class="timeline-content">
+          <h4>Mixtral 8×7B</h4>
+          <p>Prima architettura MoE ad alto impatto. Capability da 45B con costi da 13B. Rende obsoleto Llama 2 70B per molti task.</p>
+        </div>
+      </div>
+
+      <div class="timeline-item">
+        <div class="timeline-date">Apr 2024</div>
+        <div class="timeline-content major">
+          <h4>Llama 3 — salto generazionale</h4>
+          <p>Llama 3 8B supera Llama 2 70B. Chi aveva deployato Llama 2 70B si ritrova con hardware sovradimensionato. Migrazione necessaria.</p>
+        </div>
+      </div>
+
+      <div class="timeline-item">
+        <div class="timeline-date">Lug 2024</div>
+        <div class="timeline-content">
+          <h4>Llama 3.1 — context window estesa</h4>
+          <p>128K token di contesto. Cambia radicalmente le possibilità per RAG su documenti lunghi. Nuovo aggiornamento in 3 mesi.</p>
+        </div>
+      </div>
+
+      <div class="timeline-item">
+        <div class="timeline-date">Set 2024</div>
+        <div class="timeline-content">
+          <h4>Gemma 2, Qwen 2.5, Phi-3.5</h4>
+          <p>Tre famiglie di modelli avanzano simultaneamente. Chi segue solo Llama perde sviluppi significativi in altre famiglie.</p>
+        </div>
+      </div>
+
+      <div class="timeline-item">
+        <div class="timeline-date">Nov 2024</div>
+        <div class="timeline-content">
+          <h4>Llama 3.2 multimodale</h4>
+          <p>Llama acquisisce capacità visive. Nuova dimensione di capability non presente nelle versioni precedenti.</p>
+        </div>
+      </div>
+
+      <div class="timeline-item">
+        <div class="timeline-date">Dic 2024</div>
+        <div class="timeline-content major">
+          <h4>Llama 3.3 70B + DeepSeek V3/R1</h4>
+          <p>Due eventi simultanei: Llama 3.3 porta nuove capability, DeepSeek R1 ridefinisce il benchmark sul ragionamento. Chi era in produzione con Llama 3.1 ha già un divario di 6 mesi.</p>
+        </div>
+      </div>
+
+    </div>
+
+    <h3 id="mv-sfide">Le sfide operative della model velocity</h3>
+
+    <div class="challenge-list">
+      <div class="challenge-item">
+        <div class="ch-icon">📦</div>
+        <div class="ch-body">
+          <h4>Il sistema si costruisce attorno al modello</h4>
+          <p>Prompt, pipeline RAG, fine-tuning, integrazioni — tutto è costruito con un modello specifico come riferimento. <strong>Cambiare modello non è un'operazione trasparente</strong>: richiede re-testing di tutti i prompt, verifica del comportamento sulle edge case, possibile modifica delle pipeline. Un aggiornamento "minore" del modello può cambiare output che il sistema si aspettava stabili.</p>
+        </div>
+      </div>
+      <div class="challenge-item">
+        <div class="ch-icon">🔧</div>
+        <div class="ch-body">
+          <h4>Il fine-tuning non è portabile</h4>
+          <p>Se si è investito in fine-tuning su Llama 3.1, quel fine-tuning <strong>non si trasferisce automaticamente a Llama 3.3</strong>. Bisogna decidere: ripetere il fine-tuning sul nuovo modello (costo e tempo), oppure restare sul modello vecchio rinunciando ai miglioramenti. Questo vincolo tende a rallentare gli aggiornamenti nelle organizzazioni che hanno investito molto in specializzazione del modello.</p>
+        </div>
+      </div>
+      <div class="challenge-item">
+        <div class="ch-icon">⏱️</div>
+        <div class="ch-body">
+          <h4>Il gap si accumula rapidamente</h4>
+          <p>Un'organizzazione che congela il proprio sistema su Llama 3.1 a luglio 2024 si ritrova a distanza di un anno con una generazione di modelli di ritardo. <strong>In questo settore, una generazione di modelli rappresenta un gap qualitativo significativo</strong> — paragonabile a restare su un framework software di tre-quattro versioni indietro, ma con impatto sulla qualità degli output anziché sulla sicurezza.</p>
+        </div>
+      </div>
+      <div class="challenge-item">
+        <div class="ch-icon">💸</div>
+        <div class="ch-body">
+          <h4>L'hardware può diventare sovradimensionato o sottodimensionato</h4>
+          <p>Llama 3 8B supera Llama 2 70B. Chi aveva acquistato hardware per servire Llama 2 70B si ritrova con GPU costose usate per un modello che potrebbe girare su hardware molto più economico. Il fenomeno opposto esiste: nuove capability (context window lunga, multimodalità) richiedono più VRAM di quanto l'hardware acquistato supporti.</p>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+
+<!-- ══════════════════════════════════════════
+     TAB 5 — STRATEGIA DI AGGIORNAMENTO
+══════════════════════════════════════════ -->
+<div class="tab-panel" id="t5">
+  <aside class="panel-aside">
+    <div class="aside-label">In questa sezione</div>
+    <nav>
+      <a href="#sa-principi">Principi guida</a>
+      <a href="#sa-strategie">Le tre strategie</a>
+      <a href="#sa-processo">Il processo di migrazione</a>
+      <a href="#sa-mitigazioni">Mitigazioni tecniche</a>
+    </nav>
+  </aside>
+  <div class="panel-content">
+
+    <h3 id="sa-principi">Principi guida per gestire la model velocity</h3>
+    <p>Non esiste una strategia universalmente corretta — dipende dal profilo di rischio dell'organizzazione, dalla criticità del sistema in produzione e dalla capacità operativa del team. Ma esistono alcuni principi che si applicano in quasi tutti i contesti.</p>
+
+    <div class="ibox green">
+      <span class="ibox-label">Principio fondamentale</span>
+      <p><strong>Disaccoppiare il modello dal sistema il più possibile.</strong> Un sistema ben progettato può cambiare il modello sottostante con impatto minimo. Un sistema mal progettato richiede mesi di rework ad ogni aggiornamento. L'investimento in architettura pulita è la mitigazione più efficace alla model velocity.</p>
+    </div>
+
+    <h3 id="sa-strategie">Le tre strategie principali</h3>
+
+    <div class="strategy-grid">
+      <div class="strategy-card">
+        <span class="strategy-card-num">Strategia A</span>
+        <h4>Freeze and lag</h4>
+        <p>Si sceglie un modello, si deploya, si usa fino a quando il gap qualitativo diventa inaccettabile o emerge un problema di sicurezza. Aggiornamento deliberato ogni 12–18 mesi con processo formalizzato. <strong>Pro:</strong> massima stabilità operativa, minimo overhead di gestione. <strong>Contro:</strong> accumulo di gap qualitativo, possibile incompatibilità con nuove feature del framework di serving.</p>
+      </div>
+      <div class="strategy-card">
+        <span class="strategy-card-num">Strategia B</span>
+        <h4>Continuous evaluation</h4>
+        <p>Il team mantiene un ambiente di test su cui valuta ogni nuova release rilevante contro benchmark propri. Aggiornamento quando la nuova versione supera una soglia di miglioramento definita. <strong>Pro:</strong> accesso ai miglioramenti appena disponibili. <strong>Contro:</strong> overhead continuo di testing, rischio di instabilità da aggiornamenti frequenti.</p>
+      </div>
+      <div class="strategy-card">
+        <span class="strategy-card-num">Strategia C</span>
+        <h4>Multi-model routing</h4>
+        <p>L'architettura supporta più modelli simultaneamente. Task critici o in sviluppo usano il modello più recente; sistemi in produzione consolidati usano il modello stabile. Aggiornamento graduale per task, non per sistema. <strong>Pro:</strong> massima flessibilità. <strong>Contro:</strong> complessità infrastrutturale significativamente maggiore.</p>
+      </div>
+    </div>
+
+    <div class="ibox">
+      <span class="ibox-label">Raccomandazione per contesto manifatturiero</span>
+      <p>Per la maggior parte delle organizzazioni manifatturiere che iniziano oggi, <strong>la Strategia A è la più razionale</strong>: stabilità operativa prioritaria, aggiornamento pianificato ogni anno-anno e mezzo. La Strategia B ha senso quando il team ha competenze MLOps mature e i casi d'uso evolvono rapidamente. La Strategia C è per organizzazioni con team AI dedicato e molteplici sistemi in produzione simultanei.</p>
+    </div>
+
+    <h3 id="sa-processo">Il processo di migrazione: cosa fare ad ogni aggiornamento</h3>
+
+    <table class="guide-table">
+      <thead>
+        <tr>
+          <th>Fase</th>
+          <th>Attività</th>
+          <th>Responsabile</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>1. Valutazione release</td>
+          <td>Leggere le release notes del nuovo modello. Identificare cambiamenti rilevanti per i propri casi d'uso. Stimare il potenziale beneficio.</td>
+          <td>Tech lead AI</td>
+        </tr>
+        <tr>
+          <td>2. Benchmark interno</td>
+          <td>Eseguire i test case del proprio sistema (vedi C2, Tab 08) sul nuovo modello in ambiente isolato. Confrontare con il modello in produzione.</td>
+          <td>Team tecnico</td>
+        </tr>
+        <tr>
+          <td>3. Test prompt e pipeline</td>
+          <td>Verificare che tutti i prompt principali producano output accettabili con il nuovo modello. Identificare regressioni su edge case noti.</td>
+          <td>Team tecnico</td>
+        </tr>
+        <tr>
+          <td>4. Decisione go/no-go</td>
+          <td>Sulla base dei risultati dei test, decidere se procedere con la migrazione, rinviare o abortire. Criterio: il nuovo modello migliora senza introdurre regressioni inaccettabili.</td>
+          <td>Tech lead + management</td>
+        </tr>
+        <tr>
+          <td>5. Migrazione graduale</td>
+          <td>Deploy del nuovo modello in parallelo. Routing di una percentuale crescente del traffico (10% → 50% → 100%). Monitoraggio degli output in produzione.</td>
+          <td>DevOps / MLOps</td>
+        </tr>
+        <tr>
+          <td>6. Documentazione</td>
+          <td>Aggiornare la documentazione del sistema con la versione del modello, data di migrazione e principali differenze di comportamento osservate.</td>
+          <td>Team tecnico</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <h3 id="sa-mitigazioni">Mitigazioni tecniche per ridurre il costo degli aggiornamenti</h3>
+
+    <div class="challenge-list">
+      <div class="challenge-item">
+        <div class="ch-icon">🗂️</div>
+        <div class="ch-body">
+          <h4>Abstraction layer sul modello</h4>
+          <p>Non chiamare il modello direttamente dall'applicazione — interporré un layer di astrazione (es. LiteLLM, LangChain model abstraction) che permette di cambiare modello modificando una configurazione, non il codice. <strong>Il ROI di questa scelta si vede al primo aggiornamento.</strong></p>
+        </div>
+      </div>
+      <div class="challenge-item">
+        <div class="ch-icon">📋</div>
+        <div class="ch-body">
+          <h4>Test suite di regressione</h4>
+          <p>Mantenere un set di casi di test con output attesi (o range accettabili). Ad ogni aggiornamento del modello, eseguire la suite e verificare che le regressioni siano accettabili. <strong>Senza una suite di test, ogni aggiornamento è un salto nel buio.</strong></p>
+        </div>
+      </div>
+      <div class="challenge-item">
+        <div class="ch-icon">⚙️</div>
+        <div class="ch-body">
+          <h4>Minimizzare il fine-tuning</h4>
+          <p>Ogni euro investito in fine-tuning è un costo potenziale ad ogni aggiornamento del modello base. Dove RAG e prompt engineering sono sufficienti, non fare fine-tuning. <strong>Il fine-tuning crea dipendenza dalla versione specifica del modello base.</strong></p>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+
+<!-- ══════════════════════════════════════════
+     TAB 6 — COME SCEGLIERE
+══════════════════════════════════════════ -->
+<div class="tab-panel" id="t6">
+  <aside class="panel-aside">
+    <div class="aside-label">In questa sezione</div>
+    <nav>
+      <a href="#cs-criteri">I criteri di selezione</a>
+      <a href="#cs-scenari">Scenari tipici</a>
+      <a href="#cs-primo">Il primo modello</a>
+    </nav>
+  </aside>
+  <div class="panel-content">
+
+    <h3 id="cs-criteri">I criteri di selezione: come orientarsi</h3>
+    <p>Scegliere un modello per self-hosting non è come scegliere un software: non si può fare un benchmark completo di ogni opzione, il panorama cambia mentre si valuta, e la scelta "perfetta" oggi potrebbe essere obsoleta tra sei mesi. L'obiettivo non è trovare il modello ottimale in assoluto — è trovare il modello adeguato per i propri casi d'uso specifici, oggi, con il proprio hardware.</p>
+    <p>Quattro criteri, in ordine di priorità per la maggior parte dei contesti manifatturieri:</p>
+
+    <div class="challenge-list">
+      <div class="challenge-item">
+        <div class="ch-icon">1</div>
+        <div class="ch-body">
+          <h4>Adeguatezza per il task (dalla mappa C2)</h4>
+          <p>Il modello regge i casi d'uso identificati? La risposta viene dal Report C2 e da test diretti sui propri dati. Nessun altra considerazione ha senso prima di questa.</p>
+        </div>
+      </div>
+      <div class="challenge-item">
+        <div class="ch-icon">2</div>
+        <div class="ch-body">
+          <h4>Compatibilità con l'hardware disponibile o pianificato</h4>
+          <p>La VRAM necessaria rientra nel budget hardware? Il Report C4 (architetture) mappa le opzioni hardware in dettaglio. Un modello che non entra nell'hardware disponibile non è un'opzione, indipendentemente dalla sua qualità.</p>
+        </div>
+      </div>
+      <div class="challenge-item">
+        <div class="ch-icon">3</div>
+        <div class="ch-body">
+          <h4>Licenza compatibile con l'uso previsto</h4>
+          <p>Verificare le restrizioni della licenza come da Report C1, Tab 06. Per la maggior parte degli usi enterprise manifatturieri, Llama 3.x e Mistral (Apache) sono entrambi adeguati.</p>
+        </div>
+      </div>
+      <div class="challenge-item">
+        <div class="ch-icon">4</div>
+        <div class="ch-body">
+          <h4>Fiducia nel provider e giurisdizione</h4>
+          <p>Se i dati trattati sono molto sensibili e si ha una policy aziendale sulla provenienza dei componenti software, valutare la sede del provider del modello. Per molti contesti manifatturieri, Llama (Meta/USA) e Mistral (EU) sono le scelte con meno ambiguità.</p>
+        </div>
+      </div>
+    </div>
+
+    <h3 id="cs-scenari">Scenari tipici: quale modello per quale situazione</h3>
+
+    <table class="guide-table">
+      <thead>
+        <tr><th>Scenario</th><th>Modello consigliato</th><th>Motivazione</th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>Primo progetto / PoC, hardware limitato</td>
+          <td style="color:var(--violet);font-weight:500">Llama 3.2 8B</td>
+          <td>Setup rapido, hardware accessibile (RTX 3090), ecosistema ricco per il supporto, ottimo per validare il caso d'uso prima di investire</td>
+        </tr>
+        <tr>
+          <td>Q&A documentazione tecnica, uso intensivo</td>
+          <td style="color:var(--violet);font-weight:500">Llama 3.3 70B</td>
+          <td>Qualità massima per RAG complessi, instruction following affidabile, ecosistema maturo per produzione</td>
+        </tr>
+        <tr>
+          <td>Hardware limitato, qualità media richiesta</td>
+          <td style="color:var(--blue);font-weight:500">Mistral Nemo 12B</td>
+          <td>Miglior qualità per dimensione su Apache 2.0, provider EU, latenza eccellente, licenza senza restrizioni</td>
+        </tr>
+        <tr>
+          <td>Task di ragionamento e analisi tecnica</td>
+          <td style="color:var(--teal);font-weight:500">DeepSeek R1 32B distilled</td>
+          <td>Capacità di ragionamento superiore alla dimensione, chain-of-thought auditabile, ottimo per analisi causa radice e diagnosi</td>
+        </tr>
+        <tr>
+          <td>Edge / hardware molto limitato (no GPU dedicata)</td>
+          <td style="color:var(--green);font-weight:500">Phi-4 14B</td>
+          <td>Qualità sorprendente con poca VRAM, MIT license, ottimo per deployment su hardware industriale esistente</td>
+        </tr>
+        <tr>
+          <td>Contesto multinazionale, multilingua critico</td>
+          <td style="color:#f070b0;font-weight:500">Qwen 2.5 32B</td>
+          <td>Miglior supporto multilingua europeo tra i modelli open source, versioni specializzate per coding</td>
+        </tr>
+        <tr>
+          <td>Requisiti EU, massima licenza permissiva</td>
+          <td style="color:var(--blue);font-weight:500">Mistral (qualsiasi)</td>
+          <td>Unico provider EU rilevante, Apache 2.0 sui modelli base, nessuna ambiguità sulla giurisdizione</td>
+        </tr>
+        <tr>
+          <td>Sistema multi-task con volumi alti</td>
+          <td style="color:var(--violet);font-weight:500">Architettura ibrida</td>
+          <td>Llama 8B per task semplici e veloci + Llama 70B per task complessi. Routing intelligente per ottimizzare costo e qualità</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <h3 id="cs-primo">Il primo modello per una manifatturiera: raccomandazione pratica</h3>
+
+    <div class="ibox green">
+      <span class="ibox-label">Raccomandazione per il primo progetto</span>
+      <p>
+      <strong>Iniziare con Llama 3.2 8B su cloud privato (AWS/Azure).</strong><br><br>
+      Perché: hardware accessibile (~5GB VRAM, istanza GPU economica), ecosistema più ricco disponibile, documentazione abbondante, community attiva. Sufficiente per validare il PoC su Q&A documentale con RAG. Se il PoC dimostra valore, il passaggio a Llama 3.3 70B o a hardware on-premise è ben documentato e pianificabile.<br><br>
+      <strong>Alternativa se si preferisce licenza liberissima:</strong> Mistral Nemo 12B — Apache 2.0, nessuna restrizione, provider EU, qualità eccellente per la dimensione.<br><br>
+      <strong>Non iniziare con un modello da 70B</strong> a meno che il caso d'uso non lo richieda esplicitamente: i costi hardware sono molto più alti, il setup è più complesso, e il PoC richiede più tempo. Prima validare il caso d'uso, poi investire nell'infrastruttura.
+      </p>
+    </div>
+
+    <div class="ibox blue">
+      <span class="ibox-label">Prossimo report della serie</span>
+      <p>Il Report C4 copre le <strong>architetture di deployment</strong>: on-premise vs cloud privato vs ibrido, l'hardware necessario per ogni scenario, e i framework di serving (vLLM, Ollama, TGI). È la lettura naturale dopo aver scelto il modello.</p>
+    </div>
+
+  </div>
+</div>
+
+
+<footer>
+  <p>Report generato con Claude · Anthropic · 2026</p>
+  <p>Serie C: Self-Hosting LLM · Report C3 — I Modelli</p>
+</footer>
+
+<script>
+document.querySelectorAll('.tab-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    const target = btn.dataset.tab;
+    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+    document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+    btn.classList.add('active');
+    document.getElementById(target).classList.add('active');
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  });
+});
+</script>
+
+</body>
+</html>

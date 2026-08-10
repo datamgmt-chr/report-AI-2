@@ -1,0 +1,1567 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Self-Hosting LLM — C2: Mappa dei Task</title>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@300;400;500;700;900&family=JetBrains+Mono:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg:       #0c0c0f;
+  --bg2:      #13131a;
+  --bg3:      #1a1a24;
+  --bg4:      #22222e;
+  --border:   #2a2a38;
+  --border2:  #363648;
+
+  --ink:      #e4e4f0;
+  --ink2:     #a8a8c0;
+  --ink3:     #686880;
+  --ink4:     #404058;
+
+  --violet:   #a07ef0;
+  --violet-l: rgba(160,126,240,0.08);
+
+  --z-green:  #50e8a0;
+  --z-green-l: rgba(80,232,160,0.07);
+  --z-green-b: rgba(80,232,160,0.14);
+
+  --z-yellow: #d4e050;
+  --z-yellow-l: rgba(212,224,80,0.07);
+  --z-yellow-b: rgba(212,224,80,0.14);
+
+  --z-orange: #f0a050;
+  --z-orange-l: rgba(240,160,80,0.07);
+  --z-orange-b: rgba(240,160,80,0.14);
+
+  --z-red:    #f05a6a;
+  --z-red-l:  rgba(240,90,106,0.07);
+  --z-red-b:  rgba(240,90,106,0.14);
+
+  --blue:     #50b8f0;
+  --blue-l:   rgba(80,184,240,0.07);
+}
+
+* { margin:0; padding:0; box-sizing:border-box; }
+html { scroll-behavior:smooth; }
+
+body {
+  background: var(--bg);
+  color: var(--ink);
+  font-family: 'Archivo', sans-serif;
+  font-weight: 300;
+  font-size: 14px;
+  line-height: 1.78;
+}
+
+/* ── MASTHEAD ── */
+.masthead {
+  padding: 72px 64px 60px;
+  border-bottom: 1px solid var(--border);
+  position: relative;
+  overflow: hidden;
+  background: var(--bg2);
+}
+
+.masthead::before {
+  content: '';
+  position: absolute;
+  top: -200px; right: -200px;
+  width: 700px; height: 700px;
+  background: radial-gradient(circle, rgba(160,126,240,0.04) 0%, transparent 65%);
+  pointer-events: none;
+}
+
+.masthead::after {
+  content: 'C2';
+  position: absolute;
+  right: 48px; bottom: -30px;
+  font-weight: 900;
+  font-size: 280px;
+  line-height: 1;
+  color: rgba(160,126,240,0.04);
+  pointer-events: none;
+  letter-spacing: -12px;
+  font-family: 'Archivo', sans-serif;
+}
+
+.series-label {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px;
+  letter-spacing: 4px;
+  text-transform: uppercase;
+  color: var(--ink4);
+  margin-bottom: 6px;
+}
+
+.report-label {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  letter-spacing: 3px;
+  text-transform: uppercase;
+  color: var(--violet);
+  margin-bottom: 32px;
+}
+
+.masthead h1 {
+  font-weight: 900;
+  font-size: clamp(34px, 5vw, 62px);
+  line-height: 1.05;
+  letter-spacing: -2.5px;
+  max-width: 780px;
+}
+
+.masthead h1 em {
+  font-style: italic;
+  color: var(--violet);
+  font-weight: 400;
+}
+
+.masthead-sub {
+  margin-top: 24px;
+  font-size: 15px;
+  color: var(--ink3);
+  max-width: 640px;
+  line-height: 1.75;
+}
+
+.masthead-meta {
+  margin-top: 48px;
+  display: flex;
+  gap: 48px;
+  flex-wrap: wrap;
+  padding-top: 28px;
+  border-top: 1px solid var(--border);
+}
+
+.meta-item span {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 9px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: var(--ink4);
+  display: block;
+}
+
+.meta-item strong {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--ink2);
+  display: block;
+  margin-top: 3px;
+}
+
+/* ── TAB NAV ── */
+.tab-nav {
+  display: flex;
+  background: var(--bg2);
+  border-bottom: 1px solid var(--border);
+  overflow-x: auto;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  scrollbar-width: none;
+}
+.tab-nav::-webkit-scrollbar { display: none; }
+
+.tab-btn {
+  flex-shrink: 0;
+  padding: 0;
+  border: none;
+  cursor: pointer;
+  background: transparent;
+  border-right: 1px solid var(--border);
+  transition: background 0.2s;
+}
+.tab-btn:last-child { border-right: none; }
+
+.tab-btn-inner {
+  display: block;
+  padding: 13px 22px;
+  text-align: left;
+}
+
+.tab-num {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 9px;
+  letter-spacing: 2px;
+  color: var(--ink4);
+  display: block;
+  margin-bottom: 3px;
+}
+
+.tab-name {
+  font-weight: 700;
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--ink3);
+  display: block;
+  line-height: 1.25;
+  white-space: nowrap;
+  transition: color 0.2s;
+}
+
+.tab-btn.active .tab-name { color: var(--ink); }
+.tab-btn.active { position: relative; }
+.tab-btn.active::after {
+  content: '';
+  position: absolute;
+  bottom: 0; left: 0; right: 0;
+  height: 2px;
+  background: var(--violet);
+}
+.tab-btn:hover .tab-name { color: var(--ink2); }
+
+/* ── PANELS ── */
+.tab-panel { display: none; }
+.tab-panel.active {
+  display: grid;
+  grid-template-columns: 190px 1fr;
+  min-height: 80vh;
+  animation: fadeIn 0.3s ease;
+}
+
+@keyframes fadeIn {
+  from { opacity:0; transform:translateY(6px); }
+  to   { opacity:1; transform:translateY(0); }
+}
+
+/* ── ASIDE ── */
+.panel-aside {
+  border-right: 1px solid var(--border);
+  padding: 40px 24px 40px 40px;
+  position: sticky;
+  top: 48px;
+  height: calc(100vh - 48px);
+  overflow-y: auto;
+}
+
+.aside-label {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 9px;
+  letter-spacing: 3px;
+  text-transform: uppercase;
+  color: var(--ink4);
+  margin-bottom: 16px;
+}
+
+.panel-aside nav a {
+  display: block;
+  font-size: 12px;
+  color: var(--ink3);
+  text-decoration: none;
+  padding: 7px 0;
+  border-bottom: 1px solid var(--border);
+  line-height: 1.4;
+  transition: color 0.2s;
+}
+.panel-aside nav a:hover { color: var(--violet); }
+.panel-aside nav a:last-child { border: none; }
+
+/* ── CONTENT ── */
+.panel-content {
+  padding: 52px 64px 88px;
+  max-width: 920px;
+}
+
+/* ── TYPOGRAPHY ── */
+.panel-content h3 {
+  font-weight: 700;
+  font-size: 17px;
+  color: var(--ink);
+  margin: 44px 0 16px;
+  letter-spacing: -0.4px;
+  line-height: 1.3;
+}
+.panel-content h3:first-child { margin-top: 0; }
+
+.panel-content p {
+  font-size: 14px;
+  color: var(--ink2);
+  margin-bottom: 18px;
+  line-height: 1.82;
+}
+.panel-content p strong { color: var(--ink); font-weight: 500; }
+
+/* ── COMPONENT: ZONE LEGEND ── */
+.zone-legend {
+  display: flex;
+  gap: 2px;
+  margin: 24px 0 32px;
+}
+
+.zone-pill {
+  flex: 1;
+  padding: 12px 16px;
+  text-align: center;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  font-weight: 500;
+  cursor: pointer;
+  transition: opacity 0.2s;
+  border: 1px solid transparent;
+}
+
+.zone-pill.zg { background: var(--z-green-b);  color: var(--z-green);  border-color: rgba(80,232,160,0.2); }
+.zone-pill.zy { background: var(--z-yellow-b); color: var(--z-yellow); border-color: rgba(212,224,80,0.2); }
+.zone-pill.zo { background: var(--z-orange-b); color: var(--z-orange); border-color: rgba(240,160,80,0.2); }
+.zone-pill.zr { background: var(--z-red-b);    color: var(--z-red);    border-color: rgba(240,90,106,0.2); }
+
+/* ── COMPONENT: ZONE BLOCK ── */
+.zone-block {
+  border: 1px solid var(--border);
+  margin: 28px 0;
+  overflow: hidden;
+}
+
+.zone-header {
+  display: grid;
+  grid-template-columns: 6px 1fr;
+}
+
+.zone-stripe { }
+
+.zone-header-body {
+  padding: 22px 28px;
+  display: flex;
+  align-items: center;
+  gap: 20px;
+}
+
+.zone-block.zg .zone-stripe { background: var(--z-green); }
+.zone-block.zy .zone-stripe { background: var(--z-yellow); }
+.zone-block.zo .zone-stripe { background: var(--z-orange); }
+.zone-block.zr .zone-stripe { background: var(--z-red); }
+
+.zone-block.zg .zone-header { background: var(--z-green-b); border-bottom: 1px solid rgba(80,232,160,0.15); }
+.zone-block.zy .zone-header { background: var(--z-yellow-b); border-bottom: 1px solid rgba(212,224,80,0.15); }
+.zone-block.zo .zone-header { background: var(--z-orange-b); border-bottom: 1px solid rgba(240,160,80,0.15); }
+.zone-block.zr .zone-header { background: var(--z-red-b);    border-bottom: 1px solid rgba(240,90,106,0.15); }
+
+.zone-label {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 9px;
+  letter-spacing: 3px;
+  text-transform: uppercase;
+  font-weight: 500;
+}
+
+.zone-block.zg .zone-label { color: var(--z-green); }
+.zone-block.zy .zone-label { color: var(--z-yellow); }
+.zone-block.zo .zone-label { color: var(--z-orange); }
+.zone-block.zr .zone-label { color: var(--z-red); }
+
+.zone-title {
+  font-weight: 900;
+  font-size: 16px;
+  letter-spacing: -0.5px;
+  color: var(--ink);
+}
+
+.zone-subtitle {
+  font-size: 13px;
+  color: var(--ink3);
+  margin-left: auto;
+  font-style: italic;
+}
+
+.zone-body {
+  padding: 24px 28px;
+  background: var(--bg2);
+}
+
+.zone-desc {
+  font-size: 14px;
+  color: var(--ink2);
+  line-height: 1.8;
+  margin-bottom: 20px;
+}
+
+.zone-desc strong { color: var(--ink); font-weight: 500; }
+
+/* ── COMPONENT: TASK TAGS ── */
+.task-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin: 16px 0;
+}
+
+.task-tag {
+  font-size: 12px;
+  padding: 5px 12px;
+  border: 1px solid var(--border2);
+  color: var(--ink2);
+  background: var(--bg3);
+  line-height: 1;
+}
+
+.zone-block.zg .task-tag { border-color: rgba(80,232,160,0.2);  color: var(--z-green);  background: var(--z-green-b); }
+.zone-block.zy .task-tag { border-color: rgba(212,224,80,0.2);  color: var(--z-yellow); background: var(--z-yellow-b); }
+.zone-block.zo .task-tag { border-color: rgba(240,160,80,0.2);  color: var(--z-orange); background: var(--z-orange-b); }
+.zone-block.zr .task-tag { border-color: rgba(240,90,106,0.2);  color: var(--z-red);    background: var(--z-red-b); }
+
+.zone-condition {
+  margin-top: 18px;
+  padding-top: 18px;
+  border-top: 1px solid var(--border);
+  font-size: 13px;
+  color: var(--ink3);
+  line-height: 1.7;
+}
+
+.zone-condition strong { font-weight: 500; }
+
+.zone-block.zg .zone-condition strong { color: var(--z-green); }
+.zone-block.zy .zone-condition strong { color: var(--z-yellow); }
+.zone-block.zo .zone-condition strong { color: var(--z-orange); }
+.zone-block.zr .zone-condition strong { color: var(--z-red); }
+
+/* ── COMPONENT: VARIABLE EXPLAINER ── */
+.var-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 2px;
+  margin: 24px 0;
+}
+
+.var-card {
+  background: var(--bg2);
+  border: 1px solid var(--border);
+  padding: 24px 22px;
+}
+
+.var-num {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 9px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: var(--violet);
+  margin-bottom: 12px;
+  display: block;
+}
+
+.var-card h4 {
+  font-weight: 700;
+  font-size: 14px;
+  color: var(--ink);
+  margin-bottom: 10px;
+  letter-spacing: -0.3px;
+}
+
+.var-card p {
+  font-size: 13px;
+  color: var(--ink3);
+  line-height: 1.7;
+  margin: 0;
+}
+
+.var-card p strong { color: var(--ink2); font-weight: 500; }
+
+/* ── COMPONENT: MANIFATTURIERO TABLE ── */
+.mfg-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 24px 0;
+  font-size: 13px;
+}
+
+.mfg-table th {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 9px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: var(--ink4);
+  text-align: left;
+  padding: 10px 14px;
+  border-bottom: 1px solid var(--border2);
+  background: var(--bg3);
+}
+
+.mfg-table td {
+  padding: 13px 14px;
+  border-bottom: 1px solid var(--border);
+  vertical-align: top;
+  color: var(--ink2);
+  line-height: 1.65;
+}
+
+.mfg-table tr:hover td { background: var(--bg2); }
+.mfg-table td:first-child { font-weight: 500; color: var(--ink); }
+
+.zone-dot {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px;
+  letter-spacing: 1px;
+  font-weight: 500;
+}
+
+.zone-dot::before {
+  content: '';
+  display: inline-block;
+  width: 9px; height: 9px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.zone-dot.zg { color: var(--z-green);  }
+.zone-dot.zy { color: var(--z-yellow); }
+.zone-dot.zo { color: var(--z-orange); }
+.zone-dot.zr { color: var(--z-red);    }
+
+.zone-dot.zg::before { background: var(--z-green);  box-shadow: 0 0 6px var(--z-green); }
+.zone-dot.zy::before { background: var(--z-yellow); box-shadow: 0 0 6px var(--z-yellow); }
+.zone-dot.zo::before { background: var(--z-orange); box-shadow: 0 0 6px var(--z-orange); }
+.zone-dot.zr::before { background: var(--z-red);    box-shadow: 0 0 6px var(--z-red); }
+
+/* ── COMPONENT: INFO BOX ── */
+.ibox {
+  background: var(--bg2);
+  border: 1px solid var(--border);
+  border-left: 3px solid var(--violet);
+  padding: 22px 26px;
+  margin: 22px 0;
+}
+
+.ibox.green  { border-left-color: var(--z-green);  background: var(--z-green-l); }
+.ibox.amber  { border-left-color: var(--z-orange);  background: var(--z-orange-l); }
+.ibox.red    { border-left-color: var(--z-red);    background: var(--z-red-l); }
+.ibox.blue   { border-left-color: var(--blue);     background: var(--blue-l); }
+
+.ibox-label {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 9px;
+  letter-spacing: 2.5px;
+  text-transform: uppercase;
+  margin-bottom: 10px;
+  display: block;
+}
+
+.ibox       .ibox-label { color: var(--violet); }
+.ibox.green .ibox-label { color: var(--z-green); }
+.ibox.amber .ibox-label { color: var(--z-orange); }
+.ibox.red   .ibox-label { color: var(--z-red); }
+.ibox.blue  .ibox-label { color: var(--blue); }
+
+.ibox p { font-size: 13px; color: var(--ink2); margin: 0; line-height: 1.75; }
+.ibox p strong { color: var(--ink); font-weight: 500; }
+
+/* ── COMPONENT: SIZE-CAPABILITY BARS ── */
+.size-bars {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  margin: 24px 0;
+}
+
+.size-row {
+  display: grid;
+  grid-template-columns: 130px 1fr 100px;
+  align-items: center;
+  gap: 14px;
+  background: var(--bg2);
+  border: 1px solid var(--border);
+  padding: 14px 18px;
+}
+
+.size-label {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  color: var(--ink2);
+  font-weight: 500;
+}
+
+.size-bar-wrap {
+  height: 6px;
+  background: var(--bg4);
+  border-radius: 3px;
+  overflow: hidden;
+}
+
+.size-bar {
+  height: 100%;
+  border-radius: 3px;
+  transition: width 0.6s ease;
+}
+
+.size-bar.w20  { width: 20%; }
+.size-bar.w40  { width: 40%; }
+.size-bar.w60  { width: 60%; }
+.size-bar.w75  { width: 75%; }
+.size-bar.w88  { width: 88%; }
+.size-bar.w100 { width: 100%; }
+
+.size-bar.zg { background: var(--z-green); }
+.size-bar.zy { background: var(--z-yellow); }
+.size-bar.zo { background: var(--z-orange); }
+
+.size-note {
+  font-size: 11px;
+  color: var(--ink4);
+  text-align: right;
+  font-family: 'JetBrains Mono', monospace;
+}
+
+/* ── COMPONENT: EVALUATION METHOD ── */
+.eval-steps {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  margin: 24px 0;
+}
+
+.eval-step {
+  display: grid;
+  grid-template-columns: 44px 1fr;
+  background: var(--bg2);
+  border: 1px solid var(--border);
+  overflow: hidden;
+}
+
+.eval-num {
+  background: var(--violet-l);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--violet);
+  border-right: 1px solid var(--border);
+}
+
+.eval-body {
+  padding: 18px 22px;
+}
+
+.eval-body h4 {
+  font-weight: 700;
+  font-size: 13px;
+  color: var(--ink);
+  margin-bottom: 6px;
+}
+
+.eval-body p {
+  font-size: 13px;
+  color: var(--ink3);
+  line-height: 1.65;
+  margin: 0;
+}
+
+.eval-body p strong { color: var(--ink2); font-weight: 500; }
+
+/* ── COMPONENT: RAG-FINETUNE IMPACT ── */
+.impact-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 2px;
+  margin: 24px 0;
+}
+
+.impact-card {
+  background: var(--bg2);
+  border: 1px solid var(--border);
+  padding: 22px 22px;
+}
+
+.impact-card-label {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 9px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: var(--ink4);
+  margin-bottom: 14px;
+  display: block;
+}
+
+.impact-card h4 {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--ink);
+  margin-bottom: 10px;
+}
+
+.impact-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 6px 0;
+  border-bottom: 1px solid var(--border);
+  font-size: 12px;
+  color: var(--ink3);
+}
+
+.impact-row:last-child { border: none; }
+
+.impact-zone { flex-shrink: 0; }
+
+.arrow {
+  color: var(--ink4);
+  font-size: 14px;
+  flex-shrink: 0;
+}
+
+.impact-result {
+  font-size: 11px;
+  font-family: 'JetBrains Mono', monospace;
+  letter-spacing: 0.5px;
+}
+
+/* ── FOOTER ── */
+footer {
+  border-top: 1px solid var(--border);
+  background: var(--bg2);
+  padding: 28px 64px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+footer p {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  color: var(--ink4);
+  letter-spacing: 0.5px;
+}
+
+/* ── RESPONSIVE ── */
+@media (max-width: 860px) {
+  .masthead, .panel-content, footer { padding-left: 24px; padding-right: 24px; }
+  .tab-panel.active { grid-template-columns: 1fr; }
+  .panel-aside { display: none; }
+  .var-grid, .impact-grid { grid-template-columns: 1fr; }
+  .zone-legend { flex-wrap: wrap; }
+  .size-row { grid-template-columns: 100px 1fr 80px; }
+}
+</style>
+</head>
+<body>
+
+<!-- MASTHEAD -->
+<header class="masthead">
+  <div class="series-label">Serie C · Self-Hosting LLM</div>
+  <div class="report-label">Report C2 — Mappa dei Task</div>
+  <h1>Cosa sa fare<br>un modello <em>self-hosted</em></h1>
+  <p class="masthead-sub">Una mappa a quattro zone per capire quali task i modelli open source gestiscono bene, quali con condizioni, e quali non reggono — con focus specifico sui casi d'uso del settore manifatturiero.</p>
+  <div class="masthead-meta">
+    <div class="meta-item"><span>Serie</span><strong>C · Self-Hosting LLM</strong></div>
+    <div class="meta-item"><span>Report</span><strong>C2 di 7</strong></div>
+    <div class="meta-item"><span>Destinatari</span><strong>IT, CTO, Project Owner</strong></div>
+    <div class="meta-item"><span>Prerequisito</span><strong>Report C1 — La Decisione</strong></div>
+  </div>
+</header>
+
+<!-- TAB NAV -->
+<nav class="tab-nav">
+  <button class="tab-btn active" data-tab="t1">
+    <span class="tab-btn-inner">
+      <span class="tab-num">01</span>
+      <span class="tab-name">Il framework</span>
+    </span>
+  </button>
+  <button class="tab-btn" data-tab="t2">
+    <span class="tab-btn-inner">
+      <span class="tab-num">02</span>
+      <span class="tab-name">Zona Verde</span>
+    </span>
+  </button>
+  <button class="tab-btn" data-tab="t3">
+    <span class="tab-btn-inner">
+      <span class="tab-num">03</span>
+      <span class="tab-name">Zona Gialla</span>
+    </span>
+  </button>
+  <button class="tab-btn" data-tab="t4">
+    <span class="tab-btn-inner">
+      <span class="tab-num">04</span>
+      <span class="tab-name">Zona Arancione</span>
+    </span>
+  </button>
+  <button class="tab-btn" data-tab="t5">
+    <span class="tab-btn-inner">
+      <span class="tab-num">05</span>
+      <span class="tab-name">Zona Rossa</span>
+    </span>
+  </button>
+  <button class="tab-btn" data-tab="t6">
+    <span class="tab-btn-inner">
+      <span class="tab-num">06</span>
+      <span class="tab-name">Focus manifatturiero</span>
+    </span>
+  </button>
+  <button class="tab-btn" data-tab="t7">
+    <span class="tab-btn-inner">
+      <span class="tab-num">07</span>
+      <span class="tab-name">RAG e fine-tuning</span>
+    </span>
+  </button>
+  <button class="tab-btn" data-tab="t8">
+    <span class="tab-btn-inner">
+      <span class="tab-num">08</span>
+      <span class="tab-name">Come valutare</span>
+    </span>
+  </button>
+</nav>
+
+
+<!-- ══════════════════════════════════════════
+     TAB 1 — IL FRAMEWORK
+══════════════════════════════════════════ -->
+<div class="tab-panel active" id="t1">
+  <aside class="panel-aside">
+    <div class="aside-label">In questa sezione</div>
+    <nav>
+      <a href="#f1-premessa">La domanda giusta</a>
+      <a href="#f1-variabili">Le tre variabili</a>
+      <a href="#f1-zone">Le quattro zone</a>
+      <a href="#f1-dimensione">Il ruolo della dimensione</a>
+    </nav>
+  </aside>
+  <div class="panel-content">
+
+    <h3 id="f1-premessa">La domanda giusta da porsi</h3>
+    <p>La domanda sbagliata è: <em>"I modelli self-hosted sono buoni?"</em>. La risposta è inutile perché dipende interamente da cosa si intende fare con il modello.</p>
+    <p>La domanda giusta è: <em>"Per questo task specifico, con questa soglia di qualità accettabile, un modello self-hosted è sufficiente?"</em>. A questa domanda si può rispondere — e questo report fornisce il framework per farlo.</p>
+
+    <div class="ibox">
+      <span class="ibox-label">Principio di base</span>
+      <p>I modelli open source disponibili oggi per self-hosting sono <strong>eccellenti per task definiti e ripetibili, e progressivamente meno adeguati all'aumentare della complessità, dell'ambiguità e del livello di autonomia richiesti</strong>. Non è una questione di qualità assoluta — è una questione di adeguatezza al caso d'uso specifico.</p>
+    </div>
+
+    <h3 id="f1-variabili">Le tre variabili che determinano l'adeguatezza</h3>
+    <p>L'adeguatezza di un modello self-hosted per un task non dipende da una sola dimensione. Tre variabili si combinano e determinano il risultato — e tutte e tre vanno considerate nella valutazione.</p>
+
+    <div class="var-grid">
+      <div class="var-card">
+        <span class="var-num">Variabile 01</span>
+        <h4>Dimensione del modello</h4>
+        <p>Un modello da 8 miliardi di parametri e uno da 70 miliardi sono strumenti radicalmente diversi — paragonabili, per certi aspetti, a un apprendista e a un senior specialist. <strong>Molte valutazioni negative sui modelli open source si basano su modelli piccoli confrontati con GPT-4.</strong> La dimensione giusta dipende dal task e dall'hardware disponibile.</p>
+      </div>
+      <div class="var-card">
+        <span class="var-num">Variabile 02</span>
+        <h4>Specializzazione del task</h4>
+        <p>Un modello generico su un task generico complesso può essere mediocre. Lo stesso modello con RAG su documentazione di dominio, o dopo fine-tuning su esempi specifici, può essere eccellente sullo stesso task. <strong>La capability non è solo una proprietà del modello base — è una proprietà del sistema complessivo.</strong></p>
+      </div>
+      <div class="var-card">
+        <span class="var-num">Variabile 03</span>
+        <h4>Soglia di qualità accettabile</h4>
+        <p>Per certi task industriali, un tasso di errore del 2% è inaccettabile. Per altri, il 10% è perfettamente gestibile con revisione umana. <strong>Il benchmark rilevante non è il confronto assoluto con GPT-4 — è il confronto con il processo che si vuole migliorare</strong>, che nella maggior parte dei casi è manuale e ha un tasso di errore ben superiore.</p>
+      </div>
+    </div>
+
+    <h3 id="f1-zone">Le quattro zone</h3>
+    <p>Incrociando queste tre variabili sui task più comuni in ambito aziendale, emergono quattro zone di adeguatezza con caratteristiche distinte.</p>
+
+    <div class="zone-legend">
+      <div class="zone-pill zg">Verde · Pienamente adeguato</div>
+      <div class="zone-pill zy">Gialla · Adeguato con condizioni</div>
+      <div class="zone-pill zo">Arancione · Gap significativo</div>
+      <div class="zone-pill zr">Rossa · Non razionale oggi</div>
+    </div>
+
+    <p>Le zone non sono rigide — un task può spostarsi da una zona all'altra cambiando la dimensione del modello, aggiungendo RAG o fine-tuning, o rivedendo la soglia di qualità accettabile. Nelle tab successive ogni zona viene analizzata in dettaglio.</p>
+
+    <h3 id="f1-dimensione">Il ruolo della dimensione del modello</h3>
+    <p>Prima di entrare nelle zone, è utile avere un quadro chiaro di come la dimensione del modello influenza la capability — perché è la variabile più controllabile direttamente.</p>
+
+    <div class="size-bars">
+      <div class="size-row">
+        <div class="size-label">1B–3B params</div>
+        <div class="size-bar-wrap"><div class="size-bar zo w20"></div></div>
+        <div class="size-note">Task elementari</div>
+      </div>
+      <div class="size-row">
+        <div class="size-label">7B–8B params</div>
+        <div class="size-bar-wrap"><div class="size-bar zy w40"></div></div>
+        <div class="size-note">Zona verde base</div>
+      </div>
+      <div class="size-row">
+        <div class="size-label">13B–14B params</div>
+        <div class="size-bar-wrap"><div class="size-bar zy w55"></div></div>
+        <div class="size-note">Zona verde solida</div>
+      </div>
+      <div class="size-row">
+        <div class="size-label">32B–34B params</div>
+        <div class="size-bar-wrap"><div class="size-bar zg w72"></div></div>
+        <div class="size-note">Zona gialla piena</div>
+      </div>
+      <div class="size-row">
+        <div class="size-label">70B–72B params</div>
+        <div class="size-bar-wrap"><div class="size-bar zg w88"></div></div>
+        <div class="size-note">Zona arancione bassa</div>
+      </div>
+      <div class="size-row">
+        <div class="size-label">Frontier (GPT-4o, Claude)</div>
+        <div class="size-bar-wrap"><div class="size-bar zg w100"></div></div>
+        <div class="size-note">Riferimento</div>
+      </div>
+    </div>
+
+    <div class="ibox amber">
+      <span class="ibox-label">Nota pratica</span>
+      <p>Le barre sopra rappresentano capability generica su task diversificati. Su task specifici e ben definiti, un modello da 7B con RAG adeguato può superare un modello da 70B generico. <strong>La dimensione è una proxy utile, non una misura assoluta.</strong> Hardware richiesto: 7B → ~8GB VRAM, 14B → ~16GB, 32B → ~20GB in quantizzazione 4-bit, 70B → ~40GB.</p>
+    </div>
+
+  </div>
+</div>
+
+
+<!-- ══════════════════════════════════════════
+     TAB 2 — ZONA VERDE
+══════════════════════════════════════════ -->
+<div class="tab-panel" id="t2">
+  <aside class="panel-aside">
+    <div class="aside-label">In questa sezione</div>
+    <nav>
+      <a href="#zg-def">Definizione</a>
+      <a href="#zg-task">Task in zona verde</a>
+      <a href="#zg-perche">Perché funzionano</a>
+    </nav>
+  </aside>
+  <div class="panel-content">
+
+    <h3 id="zg-def">Zona Verde: pienamente adeguato</h3>
+    <p>I task in zona verde sono quelli dove i modelli open source hanno colmato quasi completamente il gap con i modelli frontier. Su queste attività, un modello self-hosted ben configurato produce risultati comparabili a GPT-4 o Claude — spesso indistinguibili per un utente finale.</p>
+    <p>La caratteristica comune di questi task è che sono <strong>ben definiti, con input e output chiari, e con una metrica di successo verificabile</strong>. Il modello non deve "inventare" — deve classificare, estrarre, riformulare o recuperare in modo affidabile.</p>
+
+    <div class="zone-block zg" id="zg-task">
+      <div class="zone-header">
+        <div class="zone-stripe"></div>
+        <div class="zone-header-body">
+          <div>
+            <div class="zone-label">Zona Verde</div>
+            <div class="zone-title">Task pienamente adeguati al self-hosting</div>
+          </div>
+          <div class="zone-subtitle">Modello da 7B in su</div>
+        </div>
+      </div>
+      <div class="zone-body">
+        <div class="zone-desc">Attività dove la qualità dei modelli open source è comparabile ai modelli frontier. Il self-hosting è razionale anche con modelli di dimensione moderata.</div>
+
+        <div class="task-tags">
+          <span class="task-tag">Classificazione e categorizzazione testi</span>
+          <span class="task-tag">Estrazione dati strutturati da documenti</span>
+          <span class="task-tag">Riassunto di testi lunghi</span>
+          <span class="task-tag">Traduzione e riformulazione</span>
+          <span class="task-tag">Q&amp;A su base documentale (RAG)</span>
+          <span class="task-tag">Correzione grammaticale e stilistica</span>
+          <span class="task-tag">Completamento di template e form</span>
+          <span class="task-tag">Smistamento e routing di richieste</span>
+          <span class="task-tag">Generazione di testi da dati strutturati</span>
+          <span class="task-tag">Sentiment analysis</span>
+          <span class="task-tag">Etichettatura e annotazione</span>
+          <span class="task-tag">Rilevamento anomalie in testi</span>
+        </div>
+
+        <div class="zone-condition">
+          <strong>Condizione necessaria:</strong> il task deve avere input ben definiti e un output verificabile. Se l'output è sempre diverso e non verificabile automaticamente, spostarsi nella zona gialla per una valutazione più attenta.
+        </div>
+      </div>
+    </div>
+
+    <h3 id="zg-perche">Perché questi task funzionano bene</h3>
+    <p>La ragione tecnica è che questi task sfruttano capacità che i modelli linguistici acquisiscono in modo robusto durante il pre-training su larga scala — comprensione semantica, riconoscimento di pattern, associazione concettuale. Non richiedono ragionamento profondo o pianificazione: richiedono comprensione e produzione linguistica affidabile, che è esattamente ciò che questi modelli fanno meglio.</p>
+    <p>In particolare, il <strong>Q&A su base documentale con RAG</strong> merita un'attenzione specifica: è il caso d'uso più immediatamente valorizzabile per il manifatturiero. Un modello da 7B con un sistema RAG ben costruito su documentazione tecnica interna può rispondere a domande su manuali, procedure e specifiche con qualità eccellente — e questo risultato è accessibile con hardware relativamente modesto.</p>
+
+    <div class="ibox green">
+      <span class="ibox-label">Caso d'uso emblematico</span>
+      <p>Un operatore chiede: <em>"Qual è la procedura di setup per la pressa idraulica modello X?"</em>. Un sistema RAG self-hosted recupera le pagine rilevanti dal manuale tecnico e le sintetizza in una risposta chiara. <strong>Questo task è in zona verde con un modello da 7B</strong> — non serve hardware costoso, non serve fine-tuning, e la qualità è comparabile ai modelli frontier se il sistema RAG è costruito correttamente.</p>
+    </div>
+
+  </div>
+</div>
+
+
+<!-- ══════════════════════════════════════════
+     TAB 3 — ZONA GIALLA
+══════════════════════════════════════════ -->
+<div class="tab-panel" id="t3">
+  <aside class="panel-aside">
+    <div class="aside-label">In questa sezione</div>
+    <nav>
+      <a href="#zy-def">Definizione</a>
+      <a href="#zy-task">Task in zona gialla</a>
+      <a href="#zy-condizioni">Le condizioni che contano</a>
+    </nav>
+  </aside>
+  <div class="panel-content">
+
+    <h3 id="zy-def">Zona Gialla: adeguato con condizioni</h3>
+    <p>I task in zona gialla sono quelli dove i modelli self-hosted reggono bene, ma con requisiti più precisi sulla dimensione del modello, sulla configurazione del sistema o sulla struttura del task. La qualità è accettabile per molti contesti industriali, ma non garantita in ogni configurazione.</p>
+    <p>La caratteristica comune è che questi task richiedono <strong>un livello moderato di ragionamento contestuale o di sintesi</strong> — il modello deve fare più che classificare o estrarre, ma non deve pianificare su problemi aperti o gestire molta ambiguità.</p>
+
+    <div class="zone-block zy" id="zy-task">
+      <div class="zone-header">
+        <div class="zone-stripe"></div>
+        <div class="zone-header-body">
+          <div>
+            <div class="zone-label">Zona Gialla</div>
+            <div class="zone-title">Task adeguati con le giuste condizioni</div>
+          </div>
+          <div class="zone-subtitle">Modello da 13B in su, preferibile 32B+</div>
+        </div>
+      </div>
+      <div class="zone-body">
+        <div class="zone-desc">Attività dove la qualità è buona ma dipende dalla dimensione del modello e dalla struttura del prompt. Risultati accettabili per molti contesti aziendali, con possibile revisione umana per casi critici.</div>
+
+        <div class="task-tags">
+          <span class="task-tag">Analisi di documenti con domande aperte</span>
+          <span class="task-tag">Generazione di report da template + dati</span>
+          <span class="task-tag">Stesura di email e comunicazioni</span>
+          <span class="task-tag">Coding su linguaggi comuni (Python, SQL)</span>
+          <span class="task-tag">Risposta a domande tecniche su documentazione proprietaria</span>
+          <span class="task-tag">Confronto e sintesi di più documenti</span>
+          <span class="task-tag">Revisione e miglioramento di testi esistenti</span>
+          <span class="task-tag">Generazione di FAQ da documentazione</span>
+          <span class="task-tag">Supporto alla compilazione di offerte standard</span>
+          <span class="task-tag">Analisi di non conformità con suggerimenti di causa radice</span>
+          <span class="task-tag">Traduzione tecnica specialistica</span>
+        </div>
+
+        <div class="zone-condition">
+          <strong>Condizioni che migliorano significativamente la qualità:</strong> modello da 32B o superiore, prompt strutturati con esempi (few-shot), RAG su documentazione di dominio, soglia di qualità accettabile con possibile revisione umana per output critici.
+        </div>
+      </div>
+    </div>
+
+    <h3 id="zy-condizioni">Le condizioni che fanno la differenza</h3>
+    <p>Per i task in zona gialla, tre leve operative possono migliorare sostanzialmente la qualità:</p>
+
+    <div class="ibox">
+      <span class="ibox-label">Leva 1 — Dimensione del modello</span>
+      <p>Su questi task, il salto da 7B a 32B è spesso molto più significativo del salto da 32B a 70B. Se l'hardware lo consente, preferire modelli da 32B o superiore. Modelli con architetture ottimizzate (Mixtral MoE, DeepSeek) offrono capability da modelli grandi con costi computazionali inferiori.</p>
+    </div>
+
+    <div class="ibox">
+      <span class="ibox-label">Leva 2 — Struttura del prompt</span>
+      <p>I modelli open source rispondono bene a prompt strutturati con istruzioni chiare, contesto esplicito e — quando possibile — due o tre esempi del formato atteso (few-shot prompting). Un prompt ben costruito può compensare parte del gap di capability rispetto ai modelli frontier.</p>
+    </div>
+
+    <div class="ibox green">
+      <span class="ibox-label">Leva 3 — Human in the loop</span>
+      <p>Per i task in zona gialla con output critico (es. offerte commerciali, analisi di non conformità), progettare il flusso di lavoro con un passaggio di revisione umana. <strong>Non è una debolezza del sistema — è design razionale.</strong> Un modello che produce una bozza di buona qualità, revisionata da un esperto, può ridurre il tempo di un task del 60-70% anche se non è infallibile.</p>
+    </div>
+
+  </div>
+</div>
+
+
+<!-- ══════════════════════════════════════════
+     TAB 4 — ZONA ARANCIONE
+══════════════════════════════════════════ -->
+<div class="tab-panel" id="t4">
+  <aside class="panel-aside">
+    <div class="aside-label">In questa sezione</div>
+    <nav>
+      <a href="#zo-def">Definizione</a>
+      <a href="#zo-task">Task in zona arancione</a>
+      <a href="#zo-quando">Quando è comunque accettabile</a>
+    </nav>
+  </aside>
+  <div class="panel-content">
+
+    <h3 id="zo-def">Zona Arancione: gap significativo ma non sempre bloccante</h3>
+    <p>I task in zona arancione mostrano un divario misurabile con i modelli frontier. La qualità dei modelli self-hosted è inferiore in modo percepibile, ma non necessariamente tale da rendere il sistema inutilizzabile — dipende dal contesto, dalla soglia di qualità accettabile e da come il sistema è integrato nel flusso di lavoro.</p>
+    <p>La caratteristica comune è che questi task richiedono <strong>ragionamento su problemi parzialmente aperti, sintesi di informazioni eterogenee o produzione di contenuti dove la qualità è difficilmente verificabile automaticamente</strong>.</p>
+
+    <div class="zone-block zo" id="zo-task">
+      <div class="zone-header">
+        <div class="zone-stripe"></div>
+        <div class="zone-header-body">
+          <div>
+            <div class="zone-label">Zona Arancione</div>
+            <div class="zone-title">Task con gap significativo</div>
+          </div>
+          <div class="zone-subtitle">Modello da 70B, valutare caso per caso</div>
+        </div>
+      </div>
+      <div class="zone-body">
+        <div class="zone-desc">Attività dove i modelli frontier mantengono un vantaggio misurabile. Usabili con supervisione umana attiva e in contesti dove la qualità "abbastanza buona" è accettabile.</div>
+
+        <div class="task-tags">
+          <span class="task-tag">Ragionamento su problemi tecnici complessi e aperti</span>
+          <span class="task-tag">Sintesi di informazioni da fonti molto eterogenee</span>
+          <span class="task-tag">Generazione di contenuti creativi (marketing, comunicazione)</span>
+          <span class="task-tag">Analisi strategica e supporto decisionale</span>
+          <span class="task-tag">Coding su sistemi legacy o linguaggi poco comuni</span>
+          <span class="task-tag">Interpretazione di dati ambigui o incompleti</span>
+          <span class="task-tag">Generazione di documentazione tecnica originale</span>
+          <span class="task-tag">Risposta a domande cross-domain molto ampie</span>
+        </div>
+
+        <div class="zone-condition">
+          <strong>Valutare attentamente:</strong> il gap con i modelli frontier è reale su questi task. Prima di deployare, testare la qualità effettiva sul caso d'uso specifico con il modello scelto. Se la revisione umana è comunque prevista, il gap può essere tollerabile.
+        </div>
+      </div>
+    </div>
+
+    <h3 id="zo-quando">Quando la zona arancione è comunque accettabile</h3>
+    <p>Il fatto che un task sia in zona arancione non significa automaticamente che il self-hosting sia la scelta sbagliata. Due condizioni lo rendono accettabile:</p>
+    <p><strong>Quando il confronto è con un processo manuale, non con un modello frontier.</strong> Se il task viene oggi eseguito completamente a mano — analisi di dati eterogenei, stesura di documentazione tecnica, interpretazione di situazioni ambigue — anche un modello in zona arancione può offrire un accelerazione significativa. Il riferimento non è GPT-4: è l'alternativa attuale.</p>
+    <p><strong>Quando è prevista revisione umana sistematica.</strong> Per output che richiedono un esperto di dominio per la verifica finale, il modello diventa un generatore di bozze — e anche una bozza di qualità arancione può ridurre il tempo di lavoro del 40-60% rispetto a partire da zero.</p>
+
+    <div class="ibox amber">
+      <span class="ibox-label">La domanda da porsi</span>
+      <p>Per ogni task in zona arancione: <strong>"Qual è il processo attuale, e quanto deve migliorare perché il sistema sia utile?"</strong>. Se il processo attuale è lento e soggetto a errori umani, anche un sistema in zona arancione è un miglioramento significativo. Se il processo attuale è già efficiente e preciso, il gap del modello self-hosted può essere inaccettabile.</p>
+    </div>
+
+  </div>
+</div>
+
+
+<!-- ══════════════════════════════════════════
+     TAB 5 — ZONA ROSSA
+══════════════════════════════════════════ -->
+<div class="tab-panel" id="t5">
+  <aside class="panel-aside">
+    <div class="aside-label">In questa sezione</div>
+    <nav>
+      <a href="#zr-def">Definizione</a>
+      <a href="#zr-task">Task in zona rossa</a>
+      <a href="#zr-perche">Perché il gap è strutturale</a>
+    </nav>
+  </aside>
+  <div class="panel-content">
+
+    <h3 id="zr-def">Zona Rossa: il self-hosting non è razionale oggi</h3>
+    <p>I task in zona rossa sono quelli dove il gap con i modelli frontier è abbastanza ampio e strutturale da rendere il self-hosting difficile da giustificare — indipendentemente dall'hardware disponibile e dalla configurazione del sistema.</p>
+    <p>"Non razionale oggi" non significa "impossibile per sempre". Il panorama evolve rapidamente e alcuni task oggi in zona rossa potrebbero spostarsi in zona arancione o gialla con i modelli della prossima generazione. Ma oggi, con i modelli disponibili, il gap è reale e operativamente rilevante.</p>
+
+    <div class="zone-block zr" id="zr-task">
+      <div class="zone-header">
+        <div class="zone-stripe"></div>
+        <div class="zone-header-body">
+          <div>
+            <div class="zone-label">Zona Rossa</div>
+            <div class="zone-title">Task dove il self-hosting non è razionale oggi</div>
+          </div>
+          <div class="zone-subtitle">Usare provider frontier</div>
+        </div>
+      </div>
+      <div class="zone-body">
+        <div class="zone-desc">Attività dove il gap con i modelli frontier è strutturale. Il costo del self-hosting non è giustificato dalla qualità ottenibile — meglio un piano enterprise con provider affidabile.</div>
+
+        <div class="task-tags">
+          <span class="task-tag">Ragionamento scientifico e matematico avanzato</span>
+          <span class="task-tag">Pianificazione complessa multi-step su problemi aperti</span>
+          <span class="task-tag">Agenti ad alta autonomia con molti strumenti</span>
+          <span class="task-tag">Ricerca e sintesi su domini molto ampi</span>
+          <span class="task-tag">Debugging di sistemi complessi senza contesto</span>
+          <span class="task-tag">Analisi legale e contrattuale critica</span>
+          <span class="task-tag">Generazione di contenuti dove errori sono inaccettabili e non verificabili</span>
+          <span class="task-tag">Task che richiedono conoscenza del mondo molto aggiornata</span>
+        </div>
+
+        <div class="zone-condition">
+          <strong>Raccomandazione:</strong> per questi task usare API con piano enterprise del provider scelto. Se il profilo di rischio dei dati lo impone, valutare un'architettura ibrida: self-hosted per i dati critici, frontier per i task che lo richiedono — con anonimizzazione prima dell'invio.
+        </div>
+      </div>
+    </div>
+
+    <h3 id="zr-perche">Perché il gap è strutturale su questi task</h3>
+    <p>Il divario nella zona rossa non è semplicemente una questione di parametri in più. È legato a caratteristiche che emergono in modo non lineare all'aumentare della scala del modello — la cosiddetta "emergenza" — e che i modelli open source di dimensioni praticamente deployabili non hanno ancora raggiunto in modo affidabile.</p>
+    <p><strong>Ragionamento multi-step affidabile.</strong> Su catene di ragionamento lunghe e complesse, i modelli più grandi mantengono la coerenza interna in modo molto più robusto. I modelli più piccoli tendono a "perdere il filo" su ragionamenti che richiedono molti passaggi logici consecutivi — un problema critico per applicazioni dove la correttezza conta.</p>
+    <p><strong>Calibrazione dell'incertezza.</strong> I modelli frontier sono significativamente migliori nel riconoscere i limiti della propria conoscenza e nel comunicare l'incertezza. I modelli più piccoli tendono ad "allucinare" con più confidenza — producono risposte plausibili ma errate senza segnalare il dubbio. Su task dove la precisione è critica, questo è un problema serio.</p>
+    <p><strong>Comportamento agentico con molti strumenti.</strong> La capacità di pianificare, usare strumenti in sequenza, gestire errori e adattare il piano in corso d'opera richiede un livello di ragionamento che i modelli frontier gestiscono significativamente meglio. Questo è il principale limite dei modelli self-hosted per applicazioni agentiche avanzate — approfondito nel Report C6.</p>
+
+    <div class="ibox red">
+      <span class="ibox-label">Il caso dell'architettura ibrida</span>
+      <p>Per molte organizzazioni, la soluzione più razionale non è "tutto self-hosted" o "tutto frontier", ma un'architettura ibrida dove i task in zona verde e gialla usano il modello self-hosted (con i dati più critici al sicuro), e i task in zona rossa — tipicamente meno dipendenti da dati riservati — usano le API frontier con piano enterprise. <strong>Il Report C4 esplora l'architettura ibrida in dettaglio.</strong></p>
+    </div>
+
+  </div>
+</div>
+
+
+<!-- ══════════════════════════════════════════
+     TAB 6 — FOCUS MANIFATTURIERO
+══════════════════════════════════════════ -->
+<div class="tab-panel" id="t6">
+  <aside class="panel-aside">
+    <div class="aside-label">In questa sezione</div>
+    <nav>
+      <a href="#mfg-intro">Panoramica</a>
+      <a href="#mfg-table">Mappa task specifici</a>
+      <a href="#mfg-priorita">Dove iniziare</a>
+    </nav>
+  </aside>
+  <div class="panel-content">
+
+    <h3 id="mfg-intro">Il manifatturiero: un profilo di task favorevole al self-hosting</h3>
+    <p>Il settore manifatturiero ha, in media, un profilo di task particolarmente favorevole al self-hosting. La ragione è che la maggior parte dei task AI ad alto valore in questo settore sono ben definiti, ripetibili, basati su documentazione strutturata e con metriche di successo verificabili — esattamente il profilo della zona verde e gialla.</p>
+    <p>I task che generano il maggior valore in una manifatturiera — Q&A su documentazione tecnica, analisi di non conformità, supporto alla qualità, generazione di documenti operativi — sono quasi tutti gestibili con modelli self-hosted di dimensione moderata, con RAG su documentazione interna.</p>
+
+    <h3 id="mfg-table">Mappa dei task specifici per il manifatturiero</h3>
+
+    <table class="mfg-table">
+      <thead>
+        <tr>
+          <th>Task specifico</th>
+          <th>Zona</th>
+          <th>Modello minimo</th>
+          <th>Note operative</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>Q&amp;A su manuali macchina e procedure operative</td>
+          <td><span class="zone-dot zg">Verde</span></td>
+          <td>7B + RAG</td>
+          <td>Caso d'uso ideale per iniziare. ROI elevato, complessità bassa.</td>
+        </tr>
+        <tr>
+          <td>Estrazione dati da schede tecniche PDF</td>
+          <td><span class="zone-dot zg">Verde</span></td>
+          <td>7B</td>
+          <td>Task di estrazione strutturata. Ottima qualità già con modelli piccoli.</td>
+        </tr>
+        <tr>
+          <td>Classificazione e routing di ticket qualità</td>
+          <td><span class="zone-dot zg">Verde</span></td>
+          <td>7B</td>
+          <td>Task di classificazione. Eventuale fine-tuning su ticket storici migliora ulteriormente.</td>
+        </tr>
+        <tr>
+          <td>Generazione di rapporti di non conformità</td>
+          <td><span class="zone-dot zg">Verde</span></td>
+          <td>7B + template</td>
+          <td>Con template strutturato e RAG su procedure. Revisione umana consigliata per NC critiche.</td>
+        </tr>
+        <tr>
+          <td>Traduzione di documentazione tecnica</td>
+          <td><span class="zone-dot zg">Verde</span></td>
+          <td>7B</td>
+          <td>Qualità eccellente per coppie di lingue principali. Verifica umana per terminologia critica.</td>
+        </tr>
+        <tr>
+          <td>Supporto alla compilazione di offerte standard</td>
+          <td><span class="zone-dot zy">Gialla</span></td>
+          <td>13B–32B</td>
+          <td>Buona qualità con template + RAG su listini e specifiche. Revisione commerciale necessaria.</td>
+        </tr>
+        <tr>
+          <td>Analisi cause radice da dati di qualità</td>
+          <td><span class="zone-dot zy">Gialla</span></td>
+          <td>32B</td>
+          <td>Funziona bene se i dati sono strutturati e il contesto storico è nel RAG. Richiede validazione esperto.</td>
+        </tr>
+        <tr>
+          <td>Stesura di procedure e istruzioni operative</td>
+          <td><span class="zone-dot zy">Gialla</span></td>
+          <td>13B–32B</td>
+          <td>Buona qualità come supporto alla redazione. L'esperto di processo rimane responsabile della validazione.</td>
+        </tr>
+        <tr>
+          <td>Risposta a domande tecniche cross-documento</td>
+          <td><span class="zone-dot zy">Gialla</span></td>
+          <td>32B + RAG</td>
+          <td>Richiede un sistema RAG robusto su tutta la documentazione. Qualità dipende molto dall'indicizzazione.</td>
+        </tr>
+        <tr>
+          <td>Analisi di dati di produzione e KPI</td>
+          <td><span class="zone-dot zy">Gialla</span></td>
+          <td>32B + integrazione</td>
+          <td>I dati strutturati vanno forniti nel contesto. Sintesi e interpretazione di buona qualità, non sostituisce BI.</td>
+        </tr>
+        <tr>
+          <td>Supporto alla pianificazione della produzione</td>
+          <td><span class="zone-dot zo">Arancione</span></td>
+          <td>70B</td>
+          <td>Ragionamento su vincoli complessi. Utile come supporto, non come strumento autonomo.</td>
+        </tr>
+        <tr>
+          <td>Analisi strategica di mercato e competitiva</td>
+          <td><span class="zone-dot zo">Arancione</span></td>
+          <td>70B</td>
+          <td>Gap di capability significativo. Meglio su API frontier con anonimizzazione dei dati interni.</td>
+        </tr>
+        <tr>
+          <td>Agenti autonomi multi-step su sistemi ERP/MES</td>
+          <td><span class="zone-dot zr">Rossa</span></td>
+          <td>Non raccomandato</td>
+          <td>Comportamento agentico complesso richiede modelli frontier. Architettura ibrida se i dati sono critici.</td>
+        </tr>
+        <tr>
+          <td>Analisi legale di contratti e clausole</td>
+          <td><span class="zone-dot zr">Rossa</span></td>
+          <td>Non raccomandato</td>
+          <td>Errori inaccettabili in contesto critico. Usare frontier con piano enterprise + anonimizzazione.</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <h3 id="mfg-priorita">Da dove iniziare: le priorità per una manifatturiera</h3>
+
+    <div class="ibox green">
+      <span class="ibox-label">Sequenza consigliata</span>
+      <p>
+      <strong>Primo progetto (PoC):</strong> Q&amp;A su documentazione tecnica interna con RAG. Modello da 7B su cloud privato. Complessità bassa, ROI alto, rischio basso. Permette di acquisire competenze sul sistema prima di task più complessi.<br><br>
+      <strong>Secondo progetto:</strong> Classificazione e routing di ticket qualità o non conformità. Eventuale fine-tuning su dati storici aziendali per migliorare la precisione sulla terminologia specifica.<br><br>
+      <strong>Terzo progetto:</strong> Supporto alla generazione di documenti operativi (NC, rapporti, istruzioni). Modello da 13B–32B, RAG su procedure, human in the loop per la validazione.<br><br>
+      <strong>Da valutare caso per caso:</strong> tutto ciò che è in zona gialla con requisiti di qualità elevata, e tutto ciò che è in zona arancione — testare prima la qualità effettiva sul caso d'uso reale.
+      </p>
+    </div>
+
+  </div>
+</div>
+
+
+<!-- ══════════════════════════════════════════
+     TAB 7 — RAG E FINE-TUNING
+══════════════════════════════════════════ -->
+<div class="tab-panel" id="t7">
+  <aside class="panel-aside">
+    <div class="aside-label">In questa sezione</div>
+    <nav>
+      <a href="#rf-spostamento">Come cambiano le zone</a>
+      <a href="#rf-rag">L'impatto del RAG</a>
+      <a href="#rf-ft">L'impatto del fine-tuning</a>
+      <a href="#rf-limiti">I limiti di entrambi</a>
+    </nav>
+  </aside>
+  <div class="panel-content">
+
+    <h3 id="rf-spostamento">Come RAG e fine-tuning spostano le zone</h3>
+    <p>Le quattro zone non sono fisse. RAG e fine-tuning possono spostare un task da una zona all'altra — in senso migliorativo. Capire quali task beneficiano di quale approccio è essenziale per progettare un sistema self-hosted efficace.</p>
+    <p>Il principio generale: <strong>RAG aggiunge conoscenza, fine-tuning cambia comportamento</strong>. Sono strumenti diversi che rispondono a problemi diversi e si combinano in modo complementare.</p>
+
+    <div class="impact-grid" id="rf-rag">
+      <div class="impact-card">
+        <span class="impact-card-label">Impatto del RAG</span>
+        <h4>Cosa sposta e di quanto</h4>
+        <div class="impact-row">
+          <span class="zone-dot zo impact-zone">Arancione</span>
+          <span class="arrow">→</span>
+          <span class="impact-result" style="color:var(--z-yellow)">Gialla</span>
+          <span style="font-size:11px;color:var(--ink4);margin-left:auto">su Q&amp;A documentale</span>
+        </div>
+        <div class="impact-row">
+          <span class="zone-dot zy impact-zone">Gialla</span>
+          <span class="arrow">→</span>
+          <span class="impact-result" style="color:var(--z-green)">Verde</span>
+          <span style="font-size:11px;color:var(--ink4);margin-left:auto">su analisi documenti interni</span>
+        </div>
+        <div class="impact-row">
+          <span class="zone-dot zg impact-zone">Verde</span>
+          <span class="arrow">→</span>
+          <span class="impact-result" style="color:var(--z-green)">Verde+</span>
+          <span style="font-size:11px;color:var(--ink4);margin-left:auto">qualità ulteriormente migliorata</span>
+        </div>
+        <div class="impact-row">
+          <span class="zone-dot zr impact-zone">Rossa</span>
+          <span class="arrow">→</span>
+          <span class="impact-result" style="color:var(--z-red)">Rossa</span>
+          <span style="font-size:11px;color:var(--ink4);margin-left:auto">non migliora il ragionamento</span>
+        </div>
+      </div>
+
+      <div class="impact-card" id="rf-ft">
+        <span class="impact-card-label">Impatto del Fine-tuning</span>
+        <h4>Cosa sposta e di quanto</h4>
+        <div class="impact-row">
+          <span class="zone-dot zy impact-zone">Gialla</span>
+          <span class="arrow">→</span>
+          <span class="impact-result" style="color:var(--z-green)">Verde</span>
+          <span style="font-size:11px;color:var(--ink4);margin-left:auto">su task ripetitivi specifici</span>
+        </div>
+        <div class="impact-row">
+          <span class="zone-dot zg impact-zone">Verde</span>
+          <span class="arrow">→</span>
+          <span class="impact-result" style="color:var(--z-green)">Verde+</span>
+          <span style="font-size:11px;color:var(--ink4);margin-left:auto">stile e terminologia aziendale</span>
+        </div>
+        <div class="impact-row">
+          <span class="zone-dot zo impact-zone">Arancione</span>
+          <span class="arrow">→</span>
+          <span class="impact-result" style="color:var(--z-yellow)">Gialla (parziale)</span>
+          <span style="font-size:11px;color:var(--ink4);margin-left:auto">solo su sotto-task specifici</span>
+        </div>
+        <div class="impact-row">
+          <span class="zone-dot zr impact-zone">Rossa</span>
+          <span class="arrow">→</span>
+          <span class="impact-result" style="color:var(--z-red)">Rossa</span>
+          <span style="font-size:11px;color:var(--ink4);margin-left:auto">non compensa gap strutturale</span>
+        </div>
+      </div>
+    </div>
+
+    <h3 id="rf-limiti">I limiti di entrambi gli approcci</h3>
+
+    <div class="ibox amber">
+      <span class="ibox-label">Limite critico del RAG</span>
+      <p>Il RAG migliora la qualità delle risposte su contenuto documentale, ma <strong>non migliora la capacità di ragionamento del modello</strong>. Se il task richiede sintesi complessa, pianificazione multi-step o gestione di ambiguità elevata, il RAG non sposta il task dalla zona rossa. Aggiunge informazione, non intelligenza.</p>
+    </div>
+
+    <div class="ibox amber">
+      <span class="ibox-label">Limite critico del fine-tuning</span>
+      <p>Il fine-tuning migliora il comportamento del modello su task simili agli esempi di training, ma <strong>può peggiorare le performance su task diversi</strong> (catastrophic forgetting parziale). Un modello fine-tuned su documentazione tecnica manifatturiera potrebbe degradare su task generali. Va usato con consapevolezza e testato sistematicamente su tutti i task previsti, non solo quelli per cui è stato ottimizzato.</p>
+    </div>
+
+    <div class="ibox green">
+      <span class="ibox-label">La combinazione ottimale</span>
+      <p>Per la maggior parte dei casi d'uso manifatturieri: <strong>RAG come primo intervento sempre, fine-tuning come ottimizzazione successiva solo se necessario</strong>. RAG + modello 32B copre la quasi totalità dei task in zona verde e buona parte della zona gialla, senza i rischi e i costi del fine-tuning. Il fine-tuning si aggiunge solo quando si identificano limitazioni specifiche che il RAG non risolve.</p>
+    </div>
+
+  </div>
+</div>
+
+
+<!-- ══════════════════════════════════════════
+     TAB 8 — COME VALUTARE
+══════════════════════════════════════════ -->
+<div class="tab-panel" id="t8">
+  <aside class="panel-aside">
+    <div class="aside-label">In questa sezione</div>
+    <nav>
+      <a href="#ev-metodo">Il metodo</a>
+      <a href="#ev-passi">I passi pratici</a>
+      <a href="#ev-metriche">Metriche di valutazione</a>
+      <a href="#ev-soglia">Definire la soglia</a>
+    </nav>
+  </aside>
+  <div class="panel-content">
+
+    <h3 id="ev-metodo">Un metodo pratico per valutare l'adeguatezza</h3>
+    <p>Le quattro zone sono un framework orientativo. La valutazione definitiva va fatta sul caso d'uso specifico, con il modello specifico che si intende deployare, sui dati reali dell'azienda. Non c'è alternativa a questo test — e prima lo si fa, meglio è, perché costa poco e informa tutto il resto.</p>
+    <p>La sequenza raccomandata è semplice: <strong>definire il task → raccogliere casi di test → scegliere il modello → misurare la qualità → confrontare con la soglia → decidere</strong>. Ogni passo è descritto di seguito.</p>
+
+    <div class="eval-steps" id="ev-passi">
+
+      <div class="eval-step">
+        <div class="eval-num">01</div>
+        <div class="eval-body">
+          <h4>Definire il task in modo preciso</h4>
+          <p>Specificare: <strong>cosa entra</strong> (tipo di input, formato, lunghezza tipica), <strong>cosa deve uscire</strong> (formato, lunghezza, struttura), <strong>cosa costituisce un errore</strong> (criteri di fallimento). Senza questa definizione, la valutazione non è possibile in modo rigoroso.</p>
+        </div>
+      </div>
+
+      <div class="eval-step">
+        <div class="eval-num">02</div>
+        <div class="eval-body">
+          <h4>Raccogliere un set di casi di test reali</h4>
+          <p>Minimo 20–50 esempi di input reali con l'output atteso (o con output di riferimento prodotti da un esperto umano). <strong>Usare casi reali, non esempi costruiti ad hoc</strong> — i modelli spesso performano bene su esempi semplici e peggio su input reali con tutte le loro irregolarità.</p>
+        </div>
+      </div>
+
+      <div class="eval-step">
+        <div class="eval-num">03</div>
+        <div class="eval-body">
+          <h4>Testare su un modello accessibile prima di investire</h4>
+          <p>Usare un servizio cloud (API OpenAI, Anthropic, Ollama su macchina locale) per testare la qualità del task <strong>prima di acquistare hardware o configurare infrastruttura</strong>. Questo permette di validare la feasibility in giorni, non mesi.</p>
+        </div>
+      </div>
+
+      <div class="eval-step">
+        <div class="eval-num">04</div>
+        <div class="eval-body">
+          <h4>Misurare la qualità in modo riproducibile</h4>
+          <p>Scegliere metriche appropriate al task (vedi sotto) e misurare su tutti i casi di test. <strong>Non basarsi su impressioni soggettive</strong> — un modello può sembrare ottimo su 5 esempi scelti a caso e fallire sul 20% dei casi reali. La valutazione sistematica è l'unica base affidabile per una decisione.</p>
+        </div>
+      </div>
+
+      <div class="eval-step">
+        <div class="eval-num">05</div>
+        <div class="eval-body">
+          <h4>Confrontare con la soglia di qualità accettabile</h4>
+          <p>La soglia deve essere definita prima del test, non dopo averlo visto. <strong>Decidere in anticipo: quale tasso di errore è accettabile per questo task?</strong> Con revisione umana? Senza? In produzione automatica? Questo criterio preesistente è l'unico modo per evitare il bias di conferma nella valutazione.</p>
+        </div>
+      </div>
+
+      <div class="eval-step">
+        <div class="eval-num">06</div>
+        <div class="eval-body">
+          <h4>Testare la stessa cosa con il modello self-hosted scelto</h4>
+          <p>Solo dopo aver definito la soglia e testato la qualità con modelli di riferimento, deployare il modello self-hosted candidato e misurare le stesse metriche sugli stessi casi di test. <strong>Il confronto deve essere rigoroso: stessi prompt, stessi input, stesse metriche.</strong></p>
+        </div>
+      </div>
+
+    </div>
+
+    <h3 id="ev-metriche">Metriche di valutazione per task tipici</h3>
+
+    <table class="mfg-table">
+      <thead>
+        <tr>
+          <th>Tipo di task</th>
+          <th>Metrica primaria</th>
+          <th>Come misurarla</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>Classificazione / routing</td>
+          <td>Accuracy, F1 score</td>
+          <td>Confronto automatico con etichette di riferimento</td>
+        </tr>
+        <tr>
+          <td>Estrazione dati strutturati</td>
+          <td>Precision, Recall su campi estratti</td>
+          <td>Confronto automatico con valori attesi per ogni campo</td>
+        </tr>
+        <tr>
+          <td>Q&amp;A su documentazione</td>
+          <td>Correttezza fattuale, assenza di allucinazioni</td>
+          <td>Revisione umana su campione + verifica automatica delle citazioni</td>
+        </tr>
+        <tr>
+          <td>Generazione di documenti</td>
+          <td>Completezza, correttezza, aderenza al template</td>
+          <td>Rubrica di valutazione con criteri espliciti, revisione esperto</td>
+        </tr>
+        <tr>
+          <td>Riassunto</td>
+          <td>ROUGE score + valutazione umana</td>
+          <td>ROUGE per copertura, valutazione umana per qualità</td>
+        </tr>
+        <tr>
+          <td>Traduzione tecnica</td>
+          <td>BLEU score + revisione terminologica</td>
+          <td>BLEU automatico + spot check su terminologia critica</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <h3 id="ev-soglia">Come definire la soglia di qualità accettabile</h3>
+
+    <div class="ibox">
+      <span class="ibox-label">Framework per la soglia</span>
+      <p>
+      <strong>1. Qual è il tasso di errore del processo attuale?</strong> Se il processo manuale ha un tasso di errore del 5%, un modello con il 3% è un miglioramento — anche se non è "perfetto".<br><br>
+      <strong>2. Qual è il costo di un errore?</strong> Per un rapporto di non conformità con revisione umana, un errore è un ritardo. Per un documento inviato direttamente a un cliente, un errore può essere un problema serio. La soglia deve riflettere questo costo.<br><br>
+      <strong>3. C'è revisione umana nel flusso?</strong> Con human in the loop, la soglia può essere più bassa perché gli errori vengono catturati prima di causare danno. Senza revisione, la soglia deve essere più alta.<br><br>
+      <strong>Regola pratica:</strong> per task con revisione umana, un'accuracy del 70–80% è spesso sufficiente per generare valore. Per task automatizzati senza revisione, sotto il 95% il sistema probabilmente causa più problemi di quanti ne risolve.
+      </p>
+    </div>
+
+  </div>
+</div>
+
+
+<footer>
+  <p>Report generato con Claude · Anthropic · 2026</p>
+  <p>Serie C: Self-Hosting LLM · Report C2 — Mappa dei Task</p>
+</footer>
+
+<script>
+document.querySelectorAll('.tab-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    const target = btn.dataset.tab;
+    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+    document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+    btn.classList.add('active');
+    document.getElementById(target).classList.add('active');
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  });
+});
+</script>
+
+</body>
+</html>

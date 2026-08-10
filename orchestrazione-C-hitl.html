@@ -1,0 +1,655 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Orchestrazione — C · Human-in-the-loop: controllo e interruzione</title>
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Outfit:wght@200;300;400;500;600;700;800;900&family=IBM+Plex+Mono:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg:     #faf8f5;
+  --bg2:    #f2efe9;
+  --bg3:    #e9e5dc;
+  --ink:    #1b1915;
+  --ink2:   #2e2b25;
+  --ink3:   #6d685c;
+  --ink4:   #a19c8f;
+  --border: #d9d4c8;
+  --border2:#cac4b6;
+
+  --accent:  #2e4a7a;
+  --accent2: #1a2e52;
+  --accent-light: #edf1f9;
+
+  --ok:   #3d7a45; --ok-l:  #f4faf5;
+  --bad:  #c0392b; --bad-l: #fdf5f5;
+  --warn: #b07d24; --warn-l:#fdf6e8;
+
+  --hitl: #5a6e3a; --hitl-l:#f2f6ec;
+}
+
+* { margin:0; padding:0; box-sizing:border-box; }
+html { scroll-behavior:smooth; }
+body { background:var(--bg); color:var(--ink); font-family:'Outfit',sans-serif; font-weight:300; font-size:14px; line-height:1.75; }
+
+.masthead { background:var(--ink); color:rgba(255,255,255,.9); padding:60px 56px 52px; position:relative; overflow:hidden; }
+.masthead::before { content:''; position:absolute; inset:0; background: repeating-linear-gradient(90deg,rgba(255,255,255,.012) 0,rgba(255,255,255,.012) 1px,transparent 1px,transparent 64px), repeating-linear-gradient(0deg,rgba(255,255,255,.012) 0,rgba(255,255,255,.012) 1px,transparent 1px,transparent 64px); pointer-events:none; }
+.masthead::after { content:'C'; position:absolute; right:44px; bottom:-28px; font-family:'Instrument Serif',serif; font-size:280px; line-height:1; color:rgba(255,255,255,.025); pointer-events:none; }
+.mh-eye { font-family:'IBM Plex Mono',monospace; font-size:10px; letter-spacing:3px; text-transform:uppercase; color:rgba(255,255,255,.25); margin-bottom:18px; position:relative; }
+.mh-cluster { display:inline-block; font-family:'IBM Plex Mono',monospace; font-size:10px; letter-spacing:2px; text-transform:uppercase; padding:4px 12px; border:1px solid var(--accent); color:var(--accent); margin-bottom:20px; position:relative; }
+.masthead h1 { font-family:'Instrument Serif',serif; font-weight:400; font-size:clamp(30px,4.5vw,54px); line-height:1.08; letter-spacing:-1px; max-width:700px; position:relative; }
+.mh-sub { margin-top:20px; font-size:15px; font-weight:300; color:rgba(255,255,255,.38); max-width:660px; line-height:1.7; position:relative; }
+.mh-meta { margin-top:32px; display:flex; gap:32px; flex-wrap:wrap; position:relative; }
+.mh-stat { display:flex; flex-direction:column; gap:4px; }
+.mh-stat-val { font-family:'IBM Plex Mono',monospace; font-size:22px; font-weight:500; color:rgba(255,255,255,.85); }
+.mh-stat-lbl { font-size:10px; letter-spacing:2px; text-transform:uppercase; color:rgba(255,255,255,.25); }
+
+.nav { background:var(--ink2); position:sticky; top:0; z-index:100; display:flex; overflow-x:auto; border-bottom:1px solid rgba(255,255,255,.06); }
+.nav-btn { flex:1; min-width:100px; padding:13px 12px; border:none; background:transparent; cursor:pointer; font-family:'Outfit',sans-serif; font-size:10.5px; font-weight:600; text-transform:uppercase; letter-spacing:.4px; color:rgba(255,255,255,.3); border-right:1px solid rgba(255,255,255,.06); transition:all .2s; white-space:nowrap; }
+.nav-btn:last-child { border-right:none; }
+.nav-btn:hover { color:rgba(255,255,255,.6); }
+.nav-btn.active { color:#fff; background:rgba(255,255,255,.05); }
+
+.sect { display:none; }
+.sect.active { display:block; animation:fadeIn .3s ease; }
+@keyframes fadeIn { from{opacity:0;transform:translateY(6px)} to{opacity:1;transform:translateY(0)} }
+.sect-head { padding:48px 56px 36px; border-bottom:1px solid var(--border); }
+.sect-num { font-family:'IBM Plex Mono',monospace; font-size:10px; letter-spacing:3px; text-transform:uppercase; color:var(--ink4); margin-bottom:10px; }
+.sect-head h2 { font-family:'Instrument Serif',serif; font-weight:400; font-size:clamp(26px,3.5vw,42px); line-height:1.1; letter-spacing:-.5px; max-width:640px; margin-bottom:14px; }
+.sect-head p { color:var(--ink3); max-width:700px; font-size:14.5px; }
+.wrap { padding:0 56px 64px; }
+
+.prose { max-width:760px; }
+.prose p { font-size:14.5px; color:var(--ink3); line-height:1.85; margin-bottom:16px; }
+.prose p strong { color:var(--ink2); font-weight:500; }
+.prose p em { font-style:italic; color:var(--ink2); }
+
+/* ── GL CARD ── */
+.gl-group { margin-top:36px; }
+.gl-group-title { font-family:'IBM Plex Mono',monospace; font-size:9px; letter-spacing:3px; text-transform:uppercase; color:var(--ink4); padding-bottom:10px; border-bottom:1px solid var(--border); }
+.gl-card { border:1px solid var(--border2); border-top:none; background:var(--bg); }
+.gl-header { display:grid; grid-template-columns:5px 52px 1fr auto; align-items:stretch; border-bottom:1px solid var(--border); }
+.gl-stripe { background:var(--accent); }
+.gl-num { font-family:'Outfit',sans-serif; font-weight:800; font-size:20px; color:var(--bg3); display:flex; align-items:center; justify-content:center; border-right:1px solid var(--border); }
+.gl-title-wrap { padding:16px 20px; }
+.gl-title { font-family:'Instrument Serif',serif; font-size:20px; color:var(--ink2); line-height:1.2; }
+.gl-subtitle { font-size:12px; color:var(--ink4); margin-top:3px; }
+.gl-impact-wrap { padding:14px 20px; display:flex; flex-direction:column; align-items:flex-end; justify-content:center; gap:4px; }
+.gl-impact-stars { font-size:14px; }
+.gl-impact-lbl { font-family:'IBM Plex Mono',monospace; font-size:8px; letter-spacing:1px; text-transform:uppercase; color:var(--ink4); }
+.gl-body { padding:0; }
+.gl-section { padding:20px 24px; border-bottom:1px solid var(--border); }
+.gl-section:last-child { border-bottom:none; }
+.gl-section-lbl { font-family:'IBM Plex Mono',monospace; font-size:9px; letter-spacing:2px; text-transform:uppercase; color:var(--ink4); margin-bottom:10px; padding-bottom:6px; border-bottom:1px solid var(--border); }
+.gl-section p { font-size:13.5px; color:var(--ink3); line-height:1.8; max-width:740px; }
+.gl-section p strong { color:var(--ink2); font-weight:500; }
+
+/* ── LEVEL CARDS ── */
+.level-stack { display:flex; flex-direction:column; gap:12px; margin-top:20px; }
+.level-card { border:1px solid var(--border2); background:var(--bg); overflow:hidden; }
+.lc-head { display:grid; grid-template-columns:5px 1fr; }
+.lc-stripe { }
+.lc-head-content { padding:14px 18px; background:var(--bg2); border-bottom:1px solid var(--border); }
+.lc-badge { font-family:'IBM Plex Mono',monospace; font-size:9px; letter-spacing:2px; text-transform:uppercase; margin-bottom:3px; }
+.lc-title { font-family:'Instrument Serif',serif; font-size:20px; color:var(--ink2); margin-bottom:3px; }
+.lc-tagline { font-size:12.5px; color:var(--ink3); }
+.lc-body { display:grid; grid-template-columns:1fr 1fr 1fr; gap:1px; background:var(--border); }
+.lc-col { background:var(--bg); padding:14px 16px; }
+.lc-col-title { font-family:'IBM Plex Mono',monospace; font-size:9px; letter-spacing:2px; text-transform:uppercase; color:var(--ink4); margin-bottom:8px; padding-bottom:5px; border-bottom:1px solid var(--border); }
+.lc-col p { font-size:13px; color:var(--ink3); line-height:1.6; }
+.lc-col p strong { color:var(--ink2); font-weight:500; }
+
+/* ── APPROVAL REQUEST ── */
+.approval-card { border:1px solid var(--border2); background:var(--bg); overflow:hidden; margin-top:16px; }
+.ar-head { padding:10px 16px; background:var(--hitl); border-bottom:1px solid rgba(255,255,255,.15); font-family:'IBM Plex Mono',monospace; font-size:9px; letter-spacing:2px; text-transform:uppercase; color:rgba(255,255,255,.7); }
+.ar-body { padding:16px 18px; font-family:'IBM Plex Mono',monospace; font-size:12px; line-height:1.8; white-space:pre-wrap; }
+.ar-label { color:rgba(90,110,58,.9); font-weight:700; font-size:10px; letter-spacing:1px; text-transform:uppercase; }
+.ar-content { color:var(--ink3); }
+.ar-highlight { color:var(--ink2); font-weight:500; }
+.ar-warn { color:#c0392b; font-weight:500; }
+.ar-options { padding:12px 18px; border-top:1px solid var(--border); background:var(--hitl-l); font-family:'IBM Plex Mono',monospace; font-size:11.5px; color:var(--hitl); line-height:1.7; }
+
+/* ── COMPARE GRID ── */
+.compare-grid { display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-top:12px; }
+.pex-lbl { font-family:'IBM Plex Mono',monospace; font-size:9px; letter-spacing:2px; text-transform:uppercase; margin-bottom:6px; }
+.pex-lbl.bad  { color:var(--bad); }
+.pex-lbl.good { color:var(--accent); }
+.pex-lbl.neutral { color:var(--ink4); }
+.prompt-box { font-family:'IBM Plex Mono',monospace; font-size:11.5px; line-height:1.75; padding:14px 18px; border:1px solid; white-space:pre-wrap; word-break:break-word; }
+.prompt-box.bad  { border-color:#e8c5c5; background:var(--bad-l); color:#6b3030; }
+.prompt-box.good { border-color:#a8b8d8; background:var(--accent-light); color:var(--accent2); }
+.prompt-box.neutral { border-color:var(--border2); background:var(--bg2); color:var(--ink3); }
+.prompt-box .hl { font-weight:500; color:var(--accent); }
+
+/* ── AUTONOMY SPECTRUM ── */
+.autonomy-bar { margin-top:20px; }
+.ab-scale { display:flex; height:32px; border-radius:3px; overflow:hidden; margin-bottom:8px; }
+.ab-seg { display:flex; align-items:center; justify-content:center; font-family:'IBM Plex Mono',monospace; font-size:9px; font-weight:700; color:#fff; letter-spacing:.5px; }
+.ab-labels { display:flex; justify-content:space-between; font-size:11px; color:var(--ink4); font-family:'IBM Plex Mono',monospace; margin-bottom:16px; }
+.ab-items { display:grid; grid-template-columns:1fr 1fr 1fr 1fr; gap:10px; }
+.ab-item { border:1px solid var(--border2); padding:10px 12px; }
+.ab-item-label { font-family:'IBM Plex Mono',monospace; font-size:8px; letter-spacing:2px; text-transform:uppercase; margin-bottom:4px; }
+.ab-item-name { font-weight:600; font-size:13px; color:var(--ink2); margin-bottom:4px; }
+.ab-item-desc { font-size:12px; color:var(--ink3); line-height:1.5; }
+
+/* ── TIMEOUT TABLE ── */
+.timeout-table { width:100%; border-collapse:collapse; margin-top:16px; border:1px solid var(--border2); }
+.timeout-table th, .timeout-table td { padding:11px 14px; border:1px solid var(--border); font-size:12.5px; line-height:1.5; vertical-align:top; text-align:left; }
+.timeout-table thead th { background:var(--ink); color:rgba(255,255,255,.82); font-family:'IBM Plex Mono',monospace; font-size:9px; letter-spacing:.5px; text-transform:uppercase; }
+.timeout-table tbody tr:nth-child(even) { background:var(--bg2); }
+.timeout-table td:first-child { font-weight:500; color:var(--ink2); width:160px; }
+.t-ok  { background:var(--ok-l);   color:#2e4a32; font-weight:600; font-family:'IBM Plex Mono',monospace; font-size:11px; }
+.t-bad { background:var(--bad-l);  color:#6b3030; font-weight:600; font-family:'IBM Plex Mono',monospace; font-size:11px; }
+.t-mid { background:var(--warn-l); color:#5a3a00; font-weight:600; font-family:'IBM Plex Mono',monospace; font-size:11px; }
+
+/* ── CHECKLIST ── */
+.checklist { margin-top:16px; }
+.check-item { display:flex; gap:12px; align-items:flex-start; padding:10px 0; border-bottom:1px solid var(--border); font-size:13.5px; color:var(--ink3); }
+.check-item:last-child { border-bottom:none; }
+.check-icon { width:20px; height:20px; border-radius:50%; background:var(--accent); color:#fff; display:flex; align-items:center; justify-content:center; font-size:11px; font-weight:700; flex-shrink:0; margin-top:1px; }
+.check-item strong { color:var(--ink2); font-weight:500; }
+
+/* ── MECHANISM / KP / INSIGHT ── */
+.mechanism { margin-top:14px; padding:14px 18px; border-left:3px solid var(--accent); background:var(--accent-light); }
+.mech-lbl { font-family:'IBM Plex Mono',monospace; font-size:9px; letter-spacing:2px; text-transform:uppercase; color:var(--accent); margin-bottom:6px; }
+.mechanism p { font-size:13px; color:var(--ink3); line-height:1.65; }
+.mechanism p strong { color:var(--ink2); font-weight:500; }
+.key-point { margin-top:36px; padding:24px 28px; border-left:4px solid var(--accent); background:var(--accent-light); }
+.kp-label { font-family:'IBM Plex Mono',monospace; font-size:9px; letter-spacing:2px; text-transform:uppercase; color:var(--accent); margin-bottom:8px; }
+.kp-text { font-family:'Instrument Serif',serif; font-size:18px; line-height:1.45; color:var(--ink2); }
+.kp-sub { margin-top:10px; font-size:13px; color:var(--ink3); line-height:1.65; }
+.insight { margin:16px 0; padding:16px 20px; border-left:4px solid var(--accent); background:var(--accent-light); }
+.insight-lbl { font-family:'IBM Plex Mono',monospace; font-size:9px; letter-spacing:2px; text-transform:uppercase; color:var(--accent); margin-bottom:6px; }
+.insight p { font-size:13.5px; color:var(--ink2); line-height:1.65; max-width:700px; }
+.insight p strong { font-weight:500; }
+
+.footer { padding:24px 56px; border-top:1px solid var(--border); display:flex; justify-content:space-between; align-items:center; font-family:'IBM Plex Mono',monospace; font-size:10px; letter-spacing:1px; text-transform:uppercase; color:var(--ink4); }
+
+@media (max-width:700px) {
+  .masthead,.sect-head,.wrap,.footer { padding-left:20px; padding-right:20px; }
+  .lc-body,.compare-grid,.ab-items { grid-template-columns:1fr; }
+  .gl-header { grid-template-columns:5px 40px 1fr; }
+  .gl-impact-wrap { display:none; }
+}
+</style>
+</head>
+<body>
+
+<div class="masthead">
+  <div class="mh-eye">Serie Agenti AI · Leva 05 · Orchestrazione</div>
+  <div class="mh-cluster">Report C</div>
+  <h1>Human-in-the-loop: controllo e interruzione</h1>
+  <p class="mh-sub">Dove e quando fermare l'agente per coinvolgere l'umano. Come strutturare richieste di approvazione utili invece che rumorose. Come calibrare il confine tra autonomia produttiva e rischio non controllato. E cosa fare quando l'umano non risponde.</p>
+  <div class="mh-meta">
+    <div class="mh-stat"><div class="mh-stat-val">3</div><div class="mh-stat-lbl">Livelli di intervento</div></div>
+    <div class="mh-stat"><div class="mh-stat-val">Approvazione</div><div class="mh-stat-lbl">Il pattern più usato</div></div>
+    <div class="mh-stat"><div class="mh-stat-value">Rumore</div><div class="mh-stat-lbl">Il rischio delle HITL mal progettate</div></div>
+    <div class="mh-stat"><div class="mh-stat-val">Timeout</div><div class="mh-stat-lbl">Il caso da non ignorare</div></div>
+  </div>
+</div>
+
+<div class="nav">
+  <button class="nav-btn active" onclick="show(1)">Perché HITL</button>
+  <button class="nav-btn" onclick="show(2)">3 livelli di intervento</button>
+  <button class="nav-btn" onclick="show(3)">Richieste di approvazione</button>
+  <button class="nav-btn" onclick="show(4)">Timeout e assenza di risposta</button>
+  <button class="nav-btn" onclick="show(5)">Il confine dell'autonomia</button>
+</div>
+
+
+<!-- ═══════════════════════════
+     S1 — PERCHÉ HITL
+═══════════════════════════ -->
+<div class="sect active" id="s1">
+  <div class="sect-head">
+    <div class="sect-num">Introduzione</div>
+    <h2>Perché inserire l'umano nel loop — e quando non farlo</h2>
+    <p>Il human-in-the-loop non è una sfiducia nell'agente. È un meccanismo di controllo deliberato che bilancia autonomia e responsabilità. Il problema non è se inserirlo — è dove e come.</p>
+  </div>
+  <div class="wrap">
+
+    <div class="prose" style="margin-top:28px;">
+      <p>Un agente completamente autonomo è teoricamente più efficiente — nessuna attesa, nessuna interruzione. In pratica, l'autonomia completa è appropriata solo per task dove il costo di un errore è basso e reversibile. Per tutto il resto, il human-in-the-loop è la differenza tra un sistema che accelera il lavoro umano e uno che produce danni che l'umano deve riparare.</p>
+      <p>Il problema più comune non è la mancanza di HITL — è il HITL <em>mal progettato</em>. Un sistema che chiede conferma per ogni azione, anche quelle banali, produce <strong>alert fatigue</strong>: l'utente inizia ad approvare meccanicamente senza leggere, vanificando completamente il valore del controllo. Un sistema che non chiede mai conferma per azioni ad alto rischio è un sistema potenzialmente pericoloso. Il design del HITL è trovare il punto giusto nel mezzo.</p>
+    </div>
+
+    <div class="key-point" style="margin-top:24px;">
+      <div class="kp-label">Il principio fondamentale</div>
+      <div class="kp-text">Il HITL deve essere selettivo per essere efficace. Chiedere approvazione per tutto è funzionalmente equivalente a non avere un agente. Chiedere approvazione per nulla è funzionalmente equivalente a non avere controllo.</div>
+      <div class="kp-sub">La regola pratica: riserva il HITL per le decisioni che l'umano è in una posizione unica di poter prendere — perché ha contesto che l'agente non può avere, perché la decisione ha conseguenze irreversibili, o perché l'errore avrebbe impatto su terzi. Per tutto il resto, l'agente dovrebbe essere abbastanza autonomo da non richiedere supervisione costante.</div>
+    </div>
+
+  </div>
+</div>
+
+
+<!-- ═══════════════════════════
+     S2 — 3 LIVELLI DI INTERVENTO
+═══════════════════════════ -->
+<div class="sect" id="s2">
+  <div class="sect-head">
+    <div class="sect-num">Sezione 02</div>
+    <h2>I 3 livelli di intervento umano</h2>
+    <p>Non tutti i HITL sono uguali. Tre livelli con caratteristiche operative diverse — da scegliere in base alla natura del task, non alle preferenze del developer.</p>
+  </div>
+  <div class="wrap">
+
+    <div class="level-stack" style="margin-top:28px;">
+
+      <!-- LIVELLO 1: APPROVAZIONE -->
+      <div class="level-card">
+        <div class="lc-head">
+          <div class="lc-stripe" style="background:var(--warn); width:5px;"></div>
+          <div class="lc-head-content">
+            <div class="lc-badge" style="color:var(--warn);">Livello 01 — Il più comune</div>
+            <div class="lc-title">Approvazione del piano</div>
+            <div class="lc-tagline">L'agente mostra cosa sta per fare prima di farlo — l'umano approva o modifica</div>
+          </div>
+        </div>
+        <div class="lc-body">
+          <div class="lc-col">
+            <div class="lc-col-title">Come funziona</div>
+            <p>Prima di eseguire un'azione significativa, l'agente presenta un <strong>piano di azione</strong> con le operazioni che intende compiere, i loro effetti attesi e i rischi. L'umano approva, modifica, o annulla. Solo dopo l'approvazione il workflow prosegue.</p>
+          </div>
+          <div class="lc-col">
+            <div class="lc-col-title">Quando usarlo</div>
+            <p>Azioni irreversibili (invio email, eliminazione record, transazioni finanziarie). <strong>Prima di qualsiasi azione che tocca terzi</strong> — clienti, colleghi, partner. Quando il contesto aziendale o relazionale è determinante e l'agente non lo conosce completamente.</p>
+          </div>
+          <div class="lc-col">
+            <div class="lc-col-title">Il rischio se mal progettato</div>
+            <p>Alert fatigue: se ogni piccola azione richiede approvazione, l'utente approva meccanicamente. <strong>Il piano di approvazione deve essere abbastanza informativo da permettere una decisione reale</strong> — non un muro di testo che nessuno legge.</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- LIVELLO 2: CORREZIONE -->
+      <div class="level-card">
+        <div class="lc-head">
+          <div class="lc-stripe" style="background:var(--accent); width:5px;"></div>
+          <div class="lc-head-content">
+            <div class="lc-badge" style="color:var(--accent);">Livello 02 — Il più interattivo</div>
+            <div class="lc-title">Checkpoint di correzione</div>
+            <div class="lc-tagline">L'agente si ferma a punti predefiniti e chiede input specifico prima di continuare</div>
+          </div>
+        </div>
+        <div class="lc-body">
+          <div class="lc-col">
+            <div class="lc-col-title">Come funziona</div>
+            <p>Il workflow ha checkpoint espliciti dove si sospende e attende input umano. Non è una generica richiesta di approvazione — è una <strong>domanda specifica</strong> su un aspetto del task che l'agente non può risolvere autonomamente, perché richiede giudizio contestuale o informazioni non disponibili.</p>
+          </div>
+          <div class="lc-col">
+            <div class="lc-col-title">Quando usarlo</div>
+            <p>Quando il workflow raggiunge un punto di ambiguità che l'agente riconosce esplicitamente ("non so quale dei due fornitori preferisci in questo contesto"). Quando l'agente ha bisogno di informazioni che l'utente possiede ma che non erano nell'input iniziale.</p>
+          </div>
+          <div class="lc-col">
+            <div class="lc-col-title">Il rischio se mal progettato</div>
+            <p>Checkpoint troppo frequenti frammentano il workflow e tolgono valore all'automazione. <strong>Il checkpoint deve essere su una domanda genuinamente risolvibile solo dall'umano</strong> — non su aspetti che l'agente potrebbe risolvere autonomamente con un prompt migliore.</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- LIVELLO 3: SUPERVISIONE -->
+      <div class="level-card">
+        <div class="lc-head">
+          <div class="lc-stripe" style="background:var(--ok); width:5px;"></div>
+          <div class="lc-head-content">
+            <div class="lc-badge" style="color:var(--ok);">Livello 03 — Il meno invasivo</div>
+            <div class="lc-title">Supervisione passiva</div>
+            <div class="lc-tagline">L'agente opera autonomamente — l'umano monitora e può intervenire, ma non è richiesto</div>
+          </div>
+        </div>
+        <div class="lc-body">
+          <div class="lc-col">
+            <div class="lc-col-title">Come funziona</div>
+            <p>L'agente opera in completa autonomia ma <strong>registra ogni azione in un log leggibile dall'umano</strong>. L'umano può monitorare in tempo reale, interrompere se necessario, e rivedere le azioni a posteriori. Non è richiesto alcun input durante l'esecuzione.</p>
+          </div>
+          <div class="lc-col">
+            <div class="lc-col-title">Quando usarlo</div>
+            <p>Task ripetitivi e a basso rischio dove l'agente ha dimostrato affidabilità nel tempo. Workflow dove la latenza dell'approvazione umana supera il beneficio del controllo. <strong>Richiede fiducia guadagnata — non è il punto di partenza ma il punto di arrivo dopo aver ridotto progressivamente il HITL.</strong></p>
+          </div>
+          <div class="lc-col">
+            <div class="lc-col-title">Il rischio se mal progettato</div>
+            <p>Il log non viene mai letto — il monitoring diventa nominale. <strong>La supervisione passiva richiede che il log sia actionable</strong>: l'umano deve poter vedere rapidamente se qualcosa è anomalo, non dover leggere ogni riga per capirlo.</p>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+  </div>
+</div>
+
+
+<!-- ═══════════════════════════
+     S3 — RICHIESTE DI APPROVAZIONE
+═══════════════════════════ -->
+<div class="sect" id="s3">
+  <div class="sect-head">
+    <div class="sect-num">Linea guida 01</div>
+    <h2>Come progettare richieste di approvazione efficaci</h2>
+    <p>Una richiesta di approvazione mal progettata è peggio di nessuna richiesta. Se l'utente non capisce cosa sta approvando, approva meccanicamente — e il HITL perde completamente il suo valore.</p>
+  </div>
+  <div class="wrap">
+
+    <!-- GL 01 -->
+    <div class="gl-group" style="margin-top:28px;">
+      <div class="gl-group-title">Linea guida 01</div>
+      <div class="gl-card">
+        <div class="gl-header">
+          <div class="gl-stripe"></div>
+          <div class="gl-num">01</div>
+          <div class="gl-title-wrap">
+            <div class="gl-title">Una richiesta di approvazione deve rispondere a 4 domande — se manca una, l'utente non può decidere</div>
+            <div class="gl-subtitle">Cosa farò · Perché · Quali effetti · Cosa succede se dici no</div>
+          </div>
+          <div class="gl-impact-wrap">
+            <div class="gl-impact-stars" style="color:var(--accent)">★★★</div>
+            <div class="gl-impact-lbl">Impatto</div>
+          </div>
+        </div>
+        <div class="gl-body">
+
+          <div class="gl-section">
+            <div class="gl-section-lbl">Confronto — approvazione vaga vs. approvazione efficace</div>
+            <div class="compare-grid">
+              <div>
+                <div class="pex-lbl bad">❌ Richiesta vaga — l'utente approva alla cieca</div>
+                <div class="prompt-box bad">Sto per inviare alcune email ai fornitori.
+Posso procedere? [Sì / No]
+
+→ L'utente non sa:
+  - A quanti fornitori
+  - Cosa contiene l'email
+  - Se ci sono allegati
+  - Cosa succede se dice no
+  → Approva meccanicamente o rifiuta
+    per paura. Entrambi i casi sono sbagliati.</div>
+              </div>
+              <div>
+                <div class="pex-lbl good">✓ Richiesta completa — l'utente può decidere</div>
+                <div class="prompt-box good">RICHIESTA DI APPROVAZIONE
+
+Azione: Invio email a 3 fornitori
+Chi: Rossi SpA, Tech Corp, MegaForn Srl
+Oggetto: "Richiesta preventivo Q2 2026"
+
+Contenuto: richiesta preventivi per forniture
+standard (nessun allegato, nessun dato
+sensibile, template approvato il 12/03).
+
+Rischio: BASSO — email standard, reversibile
+         con una risposta di annullamento.
+
+Se dici NO: salvo le bozze in Drafts e
+ti mostro il contenuto completo di ognuna.
+
+[APPROVA] [MODIFICA] [VEDI BOZZE]</div>
+              </div>
+            </div>
+          </div>
+
+          <div class="gl-section">
+            <div class="gl-section-lbl">Il template di approvazione — i 4 elementi obbligatori</div>
+            <div class="approval-card">
+              <div class="ar-head">Template approvazione — struttura raccomandata</div>
+              <div class="ar-body"><span class="ar-label">AZIONE DA ESEGUIRE</span>
+<span class="ar-content">Descrizione concreta in 1-2 frasi di cosa verrà fatto.
+Non "procederò con le operazioni necessarie" ma
+</span><span class="ar-highlight">"Eliminerò 3 record dal CRM con ID #4521, #4522, #4523"</span>
+
+<span class="ar-label">PERCHÉ</span>
+<span class="ar-content">Il motivo specifico che ha portato a questa azione nel contesto del task.
+Non "per completare il task" ma
+</span><span class="ar-highlight">"questi record risultano duplicati di #4510 creato il 15/03"</span>
+
+<span class="ar-label">EFFETTI E RISCHIO</span>
+<span class="ar-content">Cosa cambia nel sistema dopo questa azione.
+Livello di rischio: </span><span class="ar-warn">BASSO / MEDIO / ALTO / IRREVERSIBILE</span>
+<span class="ar-content">Se ALTO o IRREVERSIBILE: spiega esplicitamente cosa non si può annullare.</span>
+
+<span class="ar-label">SE DICI NO</span>
+<span class="ar-content">Cosa succede se l'utente rifiuta — il workflow si blocca? Si può
+continuare con un percorso alternativo? Cosa perde l'utente se rifiuta?</span></div>
+              <div class="ar-options">Opzioni da presentare sempre:
+[APPROVA] — esegue l'azione
+[MODIFICA] — l'utente può cambiare i parametri prima di procedere
+[VEDI DETTAGLIO] — mostra più informazioni prima di decidere
+[ANNULLA] — interrompe il workflow in modo pulito</div>
+            </div>
+          </div>
+
+          <div class="gl-section">
+            <div class="gl-section-lbl">Il livello di rischio — come comunicarlo chiaramente</div>
+            <p><strong>BASSO:</strong> l'azione è reversibile e ha impatto limitato. L'utente può annullare facilmente. Esempio: creazione di una bozza, ricerca di informazioni, calcolo.</p>
+            <p><strong>MEDIO:</strong> l'azione modifica lo stato di un sistema ma può essere annullata con sforzo ragionevole. Esempio: aggiornamento di un record, creazione di un ticket che può essere eliminato.</p>
+            <p><strong>ALTO:</strong> l'azione è difficilmente reversibile o ha impatto su terzi. Esempio: invio di email, creazione di ordini, modifiche a dati condivisi.</p>
+            <p><strong>IRREVERSIBILE:</strong> l'azione non può essere annullata. Esempio: eliminazione permanente di dati, transazioni finanziarie completate, notifiche a clienti.</p>
+            <div class="mechanism" style="margin-top:12px;">
+              <div class="mech-lbl">Perché il livello di rischio non può essere implicito</div>
+              <p>L'utente non conosce i dettagli tecnici dell'azione — non sa se un'API è idempotente, se un database ha soft-delete, se un'email può essere richiamata. <strong>Il livello di rischio deve essere dichiarato esplicitamente dall'agente che ha questa conoscenza tecnica</strong>. Un utente che vede "IRREVERSIBILE" in rosso presta molta più attenzione di uno che deve inferire il rischio dal testo della descrizione.</p>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+
+<!-- ═══════════════════════════
+     S4 — TIMEOUT E ASSENZA DI RISPOSTA
+═══════════════════════════ -->
+<div class="sect" id="s4">
+  <div class="sect-head">
+    <div class="sect-num">Linea guida 02</div>
+    <h2>Timeout — cosa fare quando l'umano non risponde</h2>
+    <p>Il HITL assume che l'umano sia disponibile e risponda. In produzione, questo non è sempre vero. Il workflow in attesa indefinita è un problema tanto quanto il workflow che non si ferma mai.</p>
+  </div>
+  <div class="wrap">
+
+    <!-- GL 02 -->
+    <div class="gl-group" style="margin-top:28px;">
+      <div class="gl-group-title">Linea guida 02</div>
+      <div class="gl-card">
+        <div class="gl-header">
+          <div class="gl-stripe"></div>
+          <div class="gl-num">02</div>
+          <div class="gl-title-wrap">
+            <div class="gl-title">Ogni punto HITL ha un timeout esplicito con un'azione di default definita in anticipo</div>
+            <div class="gl-subtitle">Il comportamento in caso di silenzio non si improvvisa — si progetta prima</div>
+          </div>
+          <div class="gl-impact-wrap">
+            <div class="gl-impact-stars" style="color:var(--accent)">★★★</div>
+            <div class="gl-impact-lbl">Impatto</div>
+          </div>
+        </div>
+        <div class="gl-body">
+
+          <div class="gl-section">
+            <div class="gl-section-lbl">Le 4 strategie per il timeout — e quando usare ognuna</div>
+            <table class="timeout-table">
+              <thead>
+                <tr><th>Strategia di timeout</th><th>Comportamento</th><th>Quando usarla</th><th>Rischio</th></tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>Default sicuro (no-action)</td>
+                  <td class="t-ok">Il workflow si sospende, nessuna azione viene eseguita. Il task rimane in stato "waiting_approval". Notifica di reminder all'utente.</td>
+                  <td>Azioni irreversibili o ad alto rischio. Quando l'inazione è preferibile all'azione non approvata.</td>
+                  <td>Il workflow rimane bloccato indefinitamente se nessuno risponde. Necessario un meccanismo di escalation.</td>
+                </tr>
+                <tr>
+                  <td>Proceed con avviso</td>
+                  <td class="t-mid">Dopo il timeout, il workflow procede con l'azione pianificata. L'utente riceve notifica che l'azione è stata eseguita automaticamente.</td>
+                  <td>Azioni a basso rischio con deadline reale. Quando l'inazione causa un danno maggiore dell'azione non approvata esplicitamente.</td>
+                  <td>L'utente potrebbe scoprire solo a posteriori un'azione che non voleva. Usare solo se il rischio è veramente basso.</td>
+                </tr>
+                <tr>
+                  <td>Escalation</td>
+                  <td class="t-ok">Dopo il timeout, la richiesta viene inoltrata a un utente alternativo (supervisore, backup designato). Il workflow rimane in attesa.</td>
+                  <td>Contesti aziendali con catene di approvazione. Quando l'azione è importante e qualcuno deve sempre rispondere.</td>
+                  <td>Richiede che il sistema abbia una catena di escalation configurata. Latenza aggiuntiva.</td>
+                </tr>
+                <tr>
+                  <td>Abort con cleanup</td>
+                  <td class="t-bad">Il workflow viene annullato, lo stato viene ripristinato. Nessuna azione viene eseguita. L'utente riceve notifica che il task è scaduto.</td>
+                  <td>Task con deadline strette dove un'approvazione tardiva è inutile. Task con costo di mantenimento dello stato elevato.</td>
+                  <td>Il lavoro già fatto nel workflow viene perso. L'utente deve ricominciare da capo.</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <div class="gl-section">
+            <div class="gl-section-lbl">La sequenza di reminder — come notificare senza spammare</div>
+            <p>Invece di un singolo timeout, una sequenza progressiva di reminder è più efficace e meno aggressiva. Il principio: ogni reminder aumenta l'urgenza e aggiunge informazioni utili senza ripetere tutto da capo.</p>
+            <div class="compare-grid">
+              <div>
+                <div class="pex-lbl bad">❌ Reminder identici — ignorati come spam</div>
+                <div class="prompt-box bad">T+0:   "Approvazione richiesta: [azione]"
+T+30m: "Approvazione richiesta: [azione]"
+T+60m: "Approvazione richiesta: [azione]"
+T+90m: "Approvazione richiesta: [azione]"
+
+→ L'utente ignora dopo il secondo.
+→ Nessuna urgenza crescente.
+→ Nessun contesto aggiuntivo.</div>
+              </div>
+              <div>
+                <div class="pex-lbl good">✓ Reminder progressivi — utili e urgenti</div>
+                <div class="prompt-box good">T+0:   "Richiesta approvazione: [azione]
+         Timeout in 2 ore. [APPROVA]"
+
+T+60m: "Ancora in attesa. 1 ora rimasta.
+         Se non approvi, il task si sospende.
+         [APPROVA] [VEDI DETTAGLIO]"
+
+T+110m:"Urgente: 10 minuti al timeout.
+         Dopo: [descrizione default action].
+         [APPROVA ORA] [ANNULLA TASK]"
+
+T+120m: [esegue default action, notifica esito]</div>
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+
+<!-- ═══════════════════════════
+     S5 — IL CONFINE DELL'AUTONOMIA
+═══════════════════════════ -->
+<div class="sect" id="s5">
+  <div class="sect-head">
+    <div class="sect-num">Sezione finale</div>
+    <h2>Il confine dell'autonomia — e la checklist</h2>
+    <p>Come calibrare il livello giusto di HITL per il proprio sistema. Lo spettro dall'autonomia minima a quella massima, con le condizioni per spostarsi lungo di esso.</p>
+  </div>
+  <div class="wrap">
+
+    <div class="prose" style="margin-top:28px;">
+      <p>Il livello di autonomia di un agente non è fisso — si guadagna con il tempo e si misura con i risultati. Un sistema nuovo dovrebbe iniziare con più supervisione e ridurla progressivamente man mano che l'affidabilità è dimostrata. Un sistema che ha prodotto errori dovrebbe tornare temporaneamente a più supervisione.</p>
+    </div>
+
+    <div class="autonomy-bar" style="margin-top:20px;">
+      <div class="ab-scale">
+        <div class="ab-seg" style="width:25%; background:#c0392b;">APPROVAZIONE TOTALE</div>
+        <div class="ab-seg" style="width:25%; background:#b07d24;">CHECKPOINT FREQUENTI</div>
+        <div class="ab-seg" style="width:25%; background:#2e4a7a;">CHECKPOINT SELETTIVI</div>
+        <div class="ab-seg" style="width:25%; background:#3d7a45;">SUPERVISIONE PASSIVA</div>
+      </div>
+      <div class="ab-labels">
+        <span>Autonomia minima</span>
+        <span>Autonomia massima</span>
+      </div>
+      <div class="ab-items">
+        <div class="ab-item" style="border-color:#c0392b;">
+          <div class="ab-item-label" style="color:#c0392b;">Zona 1</div>
+          <div class="ab-item-name">Ogni azione approvata</div>
+          <div class="ab-item-desc">Per sistemi nuovi, task ad altissimo rischio, o dopo un errore significativo. Latenza alta, massimo controllo.</div>
+        </div>
+        <div class="ab-item" style="border-color:#b07d24;">
+          <div class="ab-item-label" style="color:#b07d24;">Zona 2</div>
+          <div class="ab-item-name">Approvazione per azioni significative</div>
+          <div class="ab-item-desc">Il punto di partenza per la maggior parte dei sistemi. HITL sui passi con side effect o alto rischio. Autonomia sui passi di lettura e analisi.</div>
+        </div>
+        <div class="ab-item" style="border-color:#2e4a7a;">
+          <div class="ab-item-label" style="color:#2e4a7a;">Zona 3</div>
+          <div class="ab-item-name">Approvazione solo per azioni irreversibili</div>
+          <div class="ab-item-desc">Per sistemi con affidabilità dimostrata. HITL solo per le azioni che non possono essere annullate. Tutto il resto è autonomo.</div>
+        </div>
+        <div class="ab-item" style="border-color:#3d7a45;">
+          <div class="ab-item-label" style="color:#3d7a45;">Zona 4</div>
+          <div class="ab-item-name">Supervisione passiva</div>
+          <div class="ab-item-desc">Solo per task a basso rischio con affidabilità alta e dimostrata. Log sempre disponibile. Intervento umano on-demand.</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="insight" style="margin-top:24px;">
+      <div class="insight-lbl">Come spostarsi verso più autonomia — in modo sicuro</div>
+      <p>Ridurre il HITL è un processo graduale, non una decisione. Le condizioni per spostarsi da Zona 2 a Zona 3: <strong>1)</strong> il sistema ha operato in Zona 2 per almeno 30 giorni senza errori significativi, <strong>2)</strong> il tasso di approvazione dell'utente è alto e costante (>95% senza modifiche), <strong>3)</strong> il team ha rivisto un campione delle azioni autonome e le ha trovate corrette, <strong>4)</strong> esiste un meccanismo per tornare rapidamente a Zona 2 se necessario. <strong>Non ridurre l'autonomia per ottimismo — ridurla per evidenza.</strong></p>
+    </div>
+
+    <div class="prose" style="margin-top:28px;">
+      <p style="font-size:15px; font-weight:500; color:var(--ink2);">Checklist — HITL progettato correttamente?</p>
+    </div>
+
+    <div class="checklist" style="margin-top:12px;">
+      <div class="check-item">
+        <div class="check-icon">1</div>
+        <div><strong>Livello di intervento scelto per ogni passo:</strong> per ogni passo del workflow, è stato deciso esplicitamente il livello (approvazione, checkpoint, supervisione) in base al rischio — non al default del sistema.</div>
+      </div>
+      <div class="check-item">
+        <div class="check-icon">2</div>
+        <div><strong>Richieste di approvazione con i 4 elementi:</strong> ogni richiesta risponde a "cosa farò, perché, quali effetti, cosa succede se dici no" — e mostra il livello di rischio esplicitamente.</div>
+      </div>
+      <div class="check-item">
+        <div class="check-icon">3</div>
+        <div><strong>Opzioni sempre presenti:</strong> ogni richiesta offre almeno [APPROVA], [MODIFICA], e [ANNULLA]. L'utente non è mai di fronte a una scelta binaria senza alternative.</div>
+      </div>
+      <div class="check-item">
+        <div class="check-icon">4</div>
+        <div><strong>Timeout configurato per ogni punto HITL:</strong> ogni punto di attesa ha un timeout esplicito con una delle 4 strategie definite (no-action, proceed, escalation, abort). Il comportamento al timeout non si improvvisa in produzione.</div>
+      </div>
+      <div class="check-item">
+        <div class="check-icon">5</div>
+        <div><strong>Reminder progressivi:</strong> se il timeout è lungo (>30 minuti), la sequenza di reminder è progressiva in urgenza e contenuto — non ripete lo stesso messaggio.</div>
+      </div>
+      <div class="check-item">
+        <div class="check-icon">✓</div>
+        <div><strong>Autonomia calibrata su affidabilità dimostrata:</strong> il livello di HITL è stato scelto in base all'affidabilità del sistema misurata nel tempo, non alle preferenze iniziali del developer. Esiste un piano per aumentare progressivamente l'autonomia se i risultati lo giustificano.</div>
+      </div>
+    </div>
+
+    <div class="insight" style="margin-top:28px; border-color:var(--bad); background:var(--bad-l);">
+      <div class="insight-lbl" style="color:var(--bad);">Prossimo — Report D</div>
+      <p>Con il controllo umano progettato, il Report D chiude la serie con la dimensione dell'<strong>osservabilità</strong>: come rendere un sistema di orchestrazione comprensibile — cosa loggare, come correlare i log tra agenti diversi, come testare un workflow, e come diagnosticare i problemi più comuni.</p>
+    </div>
+
+  </div>
+</div>
+
+<div class="footer">
+  <span>Serie Agenti AI — Leva 05 · Orchestrazione · Report C · Human-in-the-loop</span>
+  <span>Marzo 2026</span>
+</div>
+
+<script>
+function show(n) {
+  document.querySelectorAll('.sect').forEach(s => s.classList.remove('active'));
+  document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('s'+n).classList.add('active');
+  document.querySelectorAll('.nav-btn')[n-1].classList.add('active');
+  window.scrollTo({top:0, behavior:'smooth'});
+}
+</script>
+</body>
+</html>

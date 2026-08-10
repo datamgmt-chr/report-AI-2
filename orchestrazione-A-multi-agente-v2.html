@@ -1,0 +1,842 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Orchestrazione — A · Sistemi multi-agente: topologie e comunicazione</title>
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Outfit:wght@200;300;400;500;600;700;800;900&family=IBM+Plex+Mono:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg:     #faf8f5;
+  --bg2:    #f2efe9;
+  --bg3:    #e9e5dc;
+  --ink:    #1b1915;
+  --ink2:   #2e2b25;
+  --ink3:   #6d685c;
+  --ink4:   #a19c8f;
+  --border: #d9d4c8;
+  --border2:#cac4b6;
+
+  --accent:  #2e4a7a;
+  --accent2: #1a2e52;
+  --accent-light: #edf1f9;
+
+  --ok:  #3d7a45; --ok-l:#f4faf5;
+  --bad: #c0392b; --bad-l:#fdf5f5;
+  --warn:#b07d24; --warn-l:#fdf6e8;
+}
+
+* { margin:0; padding:0; box-sizing:border-box; }
+html { scroll-behavior:smooth; }
+body { background:var(--bg); color:var(--ink); font-family:'Outfit',sans-serif; font-weight:300; font-size:14px; line-height:1.75; }
+
+.masthead { background:var(--ink); color:rgba(255,255,255,.9); padding:60px 56px 52px; position:relative; overflow:hidden; }
+.masthead::before { content:''; position:absolute; inset:0; background: repeating-linear-gradient(90deg,rgba(255,255,255,.012) 0,rgba(255,255,255,.012) 1px,transparent 1px,transparent 64px), repeating-linear-gradient(0deg,rgba(255,255,255,.012) 0,rgba(255,255,255,.012) 1px,transparent 1px,transparent 64px); pointer-events:none; }
+.masthead::after { content:'A'; position:absolute; right:44px; bottom:-28px; font-family:'Instrument Serif',serif; font-size:280px; line-height:1; color:rgba(255,255,255,.025); pointer-events:none; }
+.mh-eye { font-family:'IBM Plex Mono',monospace; font-size:10px; letter-spacing:3px; text-transform:uppercase; color:rgba(255,255,255,.25); margin-bottom:18px; position:relative; }
+.mh-cluster { display:inline-block; font-family:'IBM Plex Mono',monospace; font-size:10px; letter-spacing:2px; text-transform:uppercase; padding:4px 12px; border:1px solid var(--accent); color:var(--accent); margin-bottom:20px; position:relative; }
+.masthead h1 { font-family:'Instrument Serif',serif; font-weight:400; font-size:clamp(30px,4.5vw,54px); line-height:1.08; letter-spacing:-1px; max-width:700px; position:relative; }
+.mh-sub { margin-top:20px; font-size:15px; font-weight:300; color:rgba(255,255,255,.38); max-width:660px; line-height:1.7; position:relative; }
+.mh-meta { margin-top:32px; display:flex; gap:32px; flex-wrap:wrap; position:relative; }
+.mh-stat { display:flex; flex-direction:column; gap:4px; }
+.mh-stat-val { font-family:'IBM Plex Mono',monospace; font-size:22px; font-weight:500; color:rgba(255,255,255,.85); }
+.mh-stat-lbl { font-size:10px; letter-spacing:2px; text-transform:uppercase; color:rgba(255,255,255,.25); }
+
+.nav { background:var(--ink2); position:sticky; top:0; z-index:100; display:flex; overflow-x:auto; border-bottom:1px solid rgba(255,255,255,.06); }
+.nav-btn { flex:1; min-width:100px; padding:13px 12px; border:none; background:transparent; cursor:pointer; font-family:'Outfit',sans-serif; font-size:10.5px; font-weight:600; text-transform:uppercase; letter-spacing:.4px; color:rgba(255,255,255,.3); border-right:1px solid rgba(255,255,255,.06); transition:all .2s; white-space:nowrap; }
+.nav-btn:last-child { border-right:none; }
+.nav-btn:hover { color:rgba(255,255,255,.6); }
+.nav-btn.active { color:#fff; background:rgba(255,255,255,.05); }
+
+.sect { display:none; }
+.sect.active { display:block; animation:fadeIn .3s ease; }
+@keyframes fadeIn { from{opacity:0;transform:translateY(6px)} to{opacity:1;transform:translateY(0)} }
+.sect-head { padding:48px 56px 36px; border-bottom:1px solid var(--border); }
+.sect-num { font-family:'IBM Plex Mono',monospace; font-size:10px; letter-spacing:3px; text-transform:uppercase; color:var(--ink4); margin-bottom:10px; }
+.sect-head h2 { font-family:'Instrument Serif',serif; font-weight:400; font-size:clamp(26px,3.5vw,42px); line-height:1.1; letter-spacing:-.5px; max-width:640px; margin-bottom:14px; }
+.sect-head p { color:var(--ink3); max-width:700px; font-size:14.5px; }
+.wrap { padding:0 56px 64px; }
+
+.prose { max-width:760px; }
+.prose p { font-size:14.5px; color:var(--ink3); line-height:1.85; margin-bottom:16px; }
+.prose p strong { color:var(--ink2); font-weight:500; }
+.prose p em { font-style:italic; color:var(--ink2); }
+
+/* ── GL CARD ── */
+.gl-group { margin-top:36px; }
+.gl-group-title { font-family:'IBM Plex Mono',monospace; font-size:9px; letter-spacing:3px; text-transform:uppercase; color:var(--ink4); padding-bottom:10px; border-bottom:1px solid var(--border); }
+.gl-card { border:1px solid var(--border2); border-top:none; background:var(--bg); }
+.gl-header { display:grid; grid-template-columns:5px 52px 1fr auto; align-items:stretch; border-bottom:1px solid var(--border); }
+.gl-stripe { background:var(--accent); }
+.gl-num { font-family:'Outfit',sans-serif; font-weight:800; font-size:20px; color:var(--bg3); display:flex; align-items:center; justify-content:center; border-right:1px solid var(--border); }
+.gl-title-wrap { padding:16px 20px; }
+.gl-title { font-family:'Instrument Serif',serif; font-size:20px; color:var(--ink2); line-height:1.2; }
+.gl-subtitle { font-size:12px; color:var(--ink4); margin-top:3px; }
+.gl-impact-wrap { padding:14px 20px; display:flex; flex-direction:column; align-items:flex-end; justify-content:center; gap:4px; }
+.gl-impact-stars { font-size:14px; }
+.gl-impact-lbl { font-family:'IBM Plex Mono',monospace; font-size:8px; letter-spacing:1px; text-transform:uppercase; color:var(--ink4); }
+.gl-body { padding:0; }
+.gl-section { padding:20px 24px; border-bottom:1px solid var(--border); }
+.gl-section:last-child { border-bottom:none; }
+.gl-section-lbl { font-family:'IBM Plex Mono',monospace; font-size:9px; letter-spacing:2px; text-transform:uppercase; color:var(--ink4); margin-bottom:10px; padding-bottom:6px; border-bottom:1px solid var(--border); }
+.gl-section p { font-size:13.5px; color:var(--ink3); line-height:1.8; max-width:740px; }
+.gl-section p strong { color:var(--ink2); font-weight:500; }
+
+/* ── TOPOLOGY CARD ── */
+.topo-card { border:1px solid var(--border2); background:var(--bg); overflow:hidden; margin-top:24px; }
+.tc-bar { height:5px; }
+.tc-head { padding:14px 20px; background:var(--bg2); border-bottom:1px solid var(--border); display:flex; align-items:center; gap:14px; }
+.tc-badge { font-family:'IBM Plex Mono',monospace; font-size:10px; font-weight:700; letter-spacing:2px; padding:4px 10px; color:#fff; flex-shrink:0; }
+.tc-title-area {}
+.tc-name { font-family:'Instrument Serif',serif; font-size:22px; color:var(--ink2); }
+.tc-tagline { font-size:13px; color:var(--ink4); margin-top:2px; }
+.tc-body { display:grid; grid-template-columns:280px 1fr; }
+.tc-diagram-col { border-right:1px solid var(--border); background:var(--ink); padding:20px; }
+.tc-diagram-col svg { display:block; }
+.tc-detail-col { padding:18px 20px; }
+.tc-props { display:flex; flex-direction:column; gap:10px; }
+.tc-prop { }
+.tc-prop-label { font-family:'IBM Plex Mono',monospace; font-size:9px; letter-spacing:2px; text-transform:uppercase; color:var(--ink4); margin-bottom:3px; }
+.tc-prop-val { font-size:13px; color:var(--ink3); line-height:1.6; }
+.tc-prop-val strong { color:var(--ink2); font-weight:500; }
+.tc-footer { padding:13px 20px; border-top:1px solid var(--border); display:grid; grid-template-columns:1fr 1fr; gap:12px; }
+.tcf-col {}
+.tcf-label { font-family:'IBM Plex Mono',monospace; font-size:9px; letter-spacing:2px; text-transform:uppercase; margin-bottom:4px; }
+.tcf-label.good { color:var(--ok); }
+.tcf-label.bad  { color:var(--bad); }
+.tcf-text { font-size:12.5px; line-height:1.55; }
+.tcf-text.good { color:#2e4a32; }
+.tcf-text.bad  { color:#6b3030; }
+
+/* ── COMMUNICATION ── */
+.comm-grid { display:grid; grid-template-columns:1fr 1fr; gap:14px; margin-top:16px; }
+.cg-card { border:1px solid var(--border2); background:var(--bg); padding:16px 18px; overflow:hidden; }
+.cg-label { font-family:'IBM Plex Mono',monospace; font-size:9px; letter-spacing:2px; text-transform:uppercase; color:var(--ink4); margin-bottom:5px; }
+.cg-name { font-weight:600; font-size:14px; color:var(--ink2); margin-bottom:8px; }
+.cg-desc { font-size:13px; color:var(--ink3); line-height:1.6; margin-bottom:8px; }
+.cg-desc strong { color:var(--ink2); font-weight:500; }
+.cg-code { font-family:'IBM Plex Mono',monospace; font-size:11px; padding:8px 10px; background:var(--ink); color:rgba(255,255,255,.7); line-height:1.6; }
+
+/* ── FAILURE MODES ── */
+.failure-table { width:100%; border-collapse:collapse; margin-top:16px; border:1px solid var(--border2); }
+.failure-table th, .failure-table td { padding:11px 14px; border:1px solid var(--border); font-size:12.5px; line-height:1.5; vertical-align:top; text-align:left; }
+.failure-table thead th { background:var(--ink); color:rgba(255,255,255,.82); font-family:'IBM Plex Mono',monospace; font-size:9px; letter-spacing:.5px; text-transform:uppercase; }
+.failure-table tbody tr:nth-child(even) { background:var(--bg2); }
+.failure-table td:first-child { font-weight:500; color:var(--ink2); width:160px; }
+.f-crit  { background:var(--bad-l);  color:#6b3030; font-weight:600; font-family:'IBM Plex Mono',monospace; font-size:11px; }
+.f-warn  { background:var(--warn-l); color:#5a3a00; font-weight:600; font-family:'IBM Plex Mono',monospace; font-size:11px; }
+
+/* ── COST TABLE ── */
+.cost-table { width:100%; border-collapse:collapse; margin-top:16px; border:1px solid var(--border2); }
+.cost-table th, .cost-table td { padding:10px 14px; border:1px solid var(--border); font-size:12.5px; line-height:1.4; vertical-align:middle; text-align:left; }
+.cost-table thead th { background:var(--ink); color:rgba(255,255,255,.82); font-family:'IBM Plex Mono',monospace; font-size:9px; letter-spacing:.5px; text-transform:uppercase; }
+.cost-table tbody tr:nth-child(even) { background:var(--bg2); }
+.cost-table td:first-child { font-weight:500; color:var(--ink2); }
+.c-low  { color:var(--ok);  font-weight:600; font-family:'IBM Plex Mono',monospace; font-size:11px; }
+.c-med  { color:var(--warn); font-weight:600; font-family:'IBM Plex Mono',monospace; font-size:11px; }
+.c-high { color:var(--bad);  font-weight:600; font-family:'IBM Plex Mono',monospace; font-size:11px; }
+
+/* ── COMPARE / PROMPT BOXES ── */
+.compare-grid { display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-top:12px; }
+.pex-lbl { font-family:'IBM Plex Mono',monospace; font-size:9px; letter-spacing:2px; text-transform:uppercase; margin-bottom:6px; }
+.pex-lbl.bad  { color:var(--bad); }
+.pex-lbl.good { color:var(--accent); }
+.pex-lbl.neutral { color:var(--ink4); }
+.prompt-box { font-family:'IBM Plex Mono',monospace; font-size:11.5px; line-height:1.75; padding:14px 18px; border:1px solid; white-space:pre-wrap; word-break:break-word; }
+.prompt-box.bad  { border-color:#e8c5c5; background:var(--bad-l); color:#6b3030; }
+.prompt-box.good { border-color:#a8bcd8; background:var(--accent-light); color:var(--accent2); }
+.prompt-box.neutral { border-color:var(--border2); background:var(--bg2); color:var(--ink3); }
+.prompt-box .hl { font-weight:500; color:var(--accent); }
+
+/* ── CHECKLIST ── */
+.checklist { margin-top:16px; }
+.check-item { display:flex; gap:12px; align-items:flex-start; padding:10px 0; border-bottom:1px solid var(--border); font-size:13.5px; color:var(--ink3); }
+.check-item:last-child { border-bottom:none; }
+.check-icon { width:20px; height:20px; border-radius:50%; background:var(--accent); color:#fff; display:flex; align-items:center; justify-content:center; font-size:11px; font-weight:700; flex-shrink:0; margin-top:1px; }
+.check-item strong { color:var(--ink2); font-weight:500; }
+
+/* ── MECHANISM / KP / INSIGHT ── */
+.mechanism { margin-top:14px; padding:14px 18px; border-left:3px solid var(--accent); background:var(--accent-light); }
+.mech-lbl { font-family:'IBM Plex Mono',monospace; font-size:9px; letter-spacing:2px; text-transform:uppercase; color:var(--accent); margin-bottom:6px; }
+.mechanism p { font-size:13px; color:var(--ink3); line-height:1.65; }
+.mechanism p strong { color:var(--ink2); font-weight:500; }
+.key-point { margin-top:36px; padding:24px 28px; border-left:4px solid var(--accent); background:var(--accent-light); }
+.kp-label { font-family:'IBM Plex Mono',monospace; font-size:9px; letter-spacing:2px; text-transform:uppercase; color:var(--accent); margin-bottom:8px; }
+.kp-text { font-family:'Instrument Serif',serif; font-size:18px; line-height:1.45; color:var(--ink2); }
+.kp-sub { margin-top:10px; font-size:13px; color:var(--ink3); line-height:1.65; }
+.insight { margin:16px 0; padding:16px 20px; border-left:4px solid var(--accent); background:var(--accent-light); }
+.insight-lbl { font-family:'IBM Plex Mono',monospace; font-size:9px; letter-spacing:2px; text-transform:uppercase; color:var(--accent); margin-bottom:6px; }
+.insight p { font-size:13.5px; color:var(--ink2); line-height:1.65; max-width:700px; }
+.insight p strong { font-weight:500; }
+
+.footer { padding:24px 56px; border-top:1px solid var(--border); display:flex; justify-content:space-between; align-items:center; font-family:'IBM Plex Mono',monospace; font-size:10px; letter-spacing:1px; text-transform:uppercase; color:var(--ink4); }
+
+@media (max-width:700px) {
+  .masthead,.sect-head,.wrap,.footer { padding-left:20px; padding-right:20px; }
+  .tc-body,.compare-grid,.comm-grid { grid-template-columns:1fr; }
+  .tc-footer,.cost-table th:nth-child(n+3),.cost-table td:nth-child(n+3) { display:none; }
+  .gl-header { grid-template-columns:5px 40px 1fr; }
+  .gl-impact-wrap { display:none; }
+}
+</style>
+</head>
+<body>
+
+<div class="masthead">
+  <div class="mh-eye">Serie Agenti AI · Leva 05 · Orchestrazione</div>
+  <div class="mh-cluster">Report A</div>
+  <h1>Sistemi multi-agente: topologie e comunicazione</h1>
+  <p class="mh-sub">Tre topologie con caratteristiche operative radicalmente diverse. Come passa l'informazione tra agenti. Cosa succede quando un agente produce un output inatteso. E il confronto onesto tra costo e beneficio di ogni architettura.</p>
+  <div class="mh-meta">
+    <div class="mh-stat"><div class="mh-stat-val">3</div><div class="mh-stat-lbl">Topologie</div></div>
+    <div class="mh-stat"><div class="mh-stat-val">Pipeline</div><div class="mh-stat-lbl">La più comune</div></div>
+    <div class="mh-stat"><div class="mh-stat-val">Supervisore</div><div class="mh-stat-lbl">La più flessibile</div></div>
+    <div class="mh-stat"><div class="mh-stat-val">Comunicazione</div><div class="mh-stat-lbl">Il problema centrale</div></div>
+  </div>
+</div>
+
+<div class="nav">
+  <button class="nav-btn active" onclick="show(1)">Topologia 1: Pipeline</button>
+  <button class="nav-btn" onclick="show(2)">Topologia 2: Supervisore</button>
+  <button class="nav-btn" onclick="show(3)">Topologia 3: Rete P2P</button>
+  <button class="nav-btn" onclick="show(4)">Comunicazione tra agenti</button>
+  <button class="nav-btn" onclick="show(5)">Confronto e scelta</button>
+</div>
+
+
+<!-- ═══════════════════════════
+     S1 — PIPELINE
+═══════════════════════════ -->
+<div class="sect active" id="s1">
+  <div class="sect-head">
+    <div class="sect-num">Topologia 01</div>
+    <h2>Pipeline — la catena lineare di agenti specializzati</h2>
+    <p>La topologia più semplice e più usata. L'output di ogni agente diventa l'input del successivo. Facile da progettare, facile da debuggare, e con un failure mode molto preciso: il collo di bottiglia.</p>
+  </div>
+  <div class="wrap">
+
+    <div class="topo-card" style="margin-top:28px;">
+      <div class="tc-bar" style="background:#2e7d9c"></div>
+      <div class="tc-head">
+        <div class="tc-badge" style="background:#2e7d9c">Topologia 1</div>
+        <div class="tc-title-area">
+          <div class="tc-name">Pipeline</div>
+          <div class="tc-tagline">Agenti in sequenza — l'output di uno è l'input del successivo</div>
+        </div>
+      </div>
+      <div class="tc-body">
+        <div class="tc-diagram-col">
+          <svg viewBox="0 0 240 260" width="240" height="260" xmlns="http://www.w3.org/2000/svg" font-family="IBM Plex Mono, monospace">
+            <text x="120" y="18" fill="rgba(255,255,255,.35)" font-size="8" letter-spacing="1" text-anchor="middle">FLUSSO PIPELINE</text>
+
+            <!-- Input -->
+            <rect x="60" y="28" width="120" height="28" rx="3" fill="#1a2438" stroke="#2e7d9c" stroke-width="1.5"/>
+            <text x="120" y="47" fill="rgba(255,255,255,.7)" font-size="9" text-anchor="middle">INPUT UTENTE</text>
+
+            <line x1="120" y1="56" x2="120" y2="72" stroke="#2e7d9c" stroke-width="1.5" marker-end="url(#ap1)"/>
+
+            <!-- Agente 1 -->
+            <rect x="40" y="72" width="160" height="36" rx="3" fill="#1a2438" stroke="#2e7d9c" stroke-width="1.5"/>
+            <text x="120" y="87" fill="#93c5e8" font-size="9" text-anchor="middle" font-weight="700">AGENTE 1</text>
+            <text x="120" y="100" fill="rgba(255,255,255,.45)" font-size="8" text-anchor="middle">Raccolta dati / ricerca</text>
+
+            <line x1="120" y1="108" x2="120" y2="124" stroke="#2e7d9c" stroke-width="1.5" marker-end="url(#ap1)"/>
+            <text x="134" y="119" fill="rgba(255,255,255,.3)" font-size="7">output_1</text>
+
+            <!-- Agente 2 -->
+            <rect x="40" y="124" width="160" height="36" rx="3" fill="#1a2438" stroke="#2e7d9c" stroke-width="1.5"/>
+            <text x="120" y="139" fill="#93c5e8" font-size="9" text-anchor="middle" font-weight="700">AGENTE 2</text>
+            <text x="120" y="152" fill="rgba(255,255,255,.45)" font-size="8" text-anchor="middle">Analisi / elaborazione</text>
+
+            <line x1="120" y1="160" x2="120" y2="176" stroke="#2e7d9c" stroke-width="1.5" marker-end="url(#ap1)"/>
+            <text x="134" y="171" fill="rgba(255,255,255,.3)" font-size="7">output_2</text>
+
+            <!-- Agente 3 -->
+            <rect x="40" y="176" width="160" height="36" rx="3" fill="#1a2438" stroke="#2e7d9c" stroke-width="1.5"/>
+            <text x="120" y="191" fill="#93c5e8" font-size="9" text-anchor="middle" font-weight="700">AGENTE 3</text>
+            <text x="120" y="204" fill="rgba(255,255,255,.45)" font-size="8" text-anchor="middle">Sintesi / formattazione</text>
+
+            <line x1="120" y1="212" x2="120" y2="228" stroke="#3d7a45" stroke-width="1.5" marker-end="url(#ap2)"/>
+
+            <!-- Output -->
+            <rect x="60" y="228" width="120" height="28" rx="3" fill="#1a2a18" stroke="#3d7a45" stroke-width="1.5"/>
+            <text x="120" y="247" fill="#7dd3a8" font-size="9" text-anchor="middle">OUTPUT FINALE</text>
+
+            <defs>
+              <marker id="ap1" markerWidth="6" markerHeight="6" refX="5" refY="3" orient="auto"><path d="M0,0 L6,3 L0,6 Z" fill="#2e7d9c"/></marker>
+              <marker id="ap2" markerWidth="6" markerHeight="6" refX="5" refY="3" orient="auto"><path d="M0,0 L6,3 L0,6 Z" fill="#3d7a45"/></marker>
+            </defs>
+          </svg>
+        </div>
+        <div class="tc-detail-col">
+          <div class="tc-props">
+            <div class="tc-prop">
+              <div class="tc-prop-label">Come funziona</div>
+              <div class="tc-prop-val">Ogni agente riceve l'output dell'agente precedente come input. La struttura è fissa — l'ordine non varia in base al contenuto. Ogni agente è specializzato per un passo specifico del workflow.</div>
+            </div>
+            <div class="tc-prop">
+              <div class="tc-prop-label">Il failure mode principale — collo di bottiglia</div>
+              <div class="tc-prop-val"><strong>Se un agente intermedio produce output di scarsa qualità, tutti gli agenti successivi lavorano su una base difettosa</strong> — e il problema si amplifica lungo la catena. L'agente 3 non può compensare un output scadente dell'agente 1. La pipeline è forte quanto il suo anello più debole.</div>
+            </div>
+            <div class="tc-prop">
+              <div class="tc-prop-label">Il failure mode secondario — propagazione silenziosa</div>
+              <div class="tc-prop-val">Un errore nell'agente 2 può produrre output che sembra plausibile ma è sbagliato. L'agente 3 lo elabora senza sapere che è difettoso. L'output finale sembra corretto ma è costruito su una premessa falsa. Difficile da rilevare senza ispezione dei passi intermedi.</div>
+            </div>
+            <div class="tc-prop">
+              <div class="tc-prop-label">Quando funziona bene</div>
+              <div class="tc-prop-val">Task con fasi distinte e dipendenti in sequenza: raccogliere dati → analizzarli → sintetizzarli. Ogni fase richiede competenze diverse — ma le competenze si attivano sempre nello stesso ordine.</div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="tc-footer">
+        <div class="tcf-col">
+          <div class="tcf-label good">✓ Punti di forza</div>
+          <div class="tcf-text good">Semplice da progettare. Facile da debuggare (un log per agente, catena lineare). Ogni agente è testabile in isolamento con input fissi. Nessun overhead di coordinamento tra agenti.</div>
+        </div>
+        <div class="tcf-col">
+          <div class="tcf-label bad">✗ Limiti</div>
+          <div class="tcf-text bad">Latenza accumulata (A + B + C). Nessuna recovery parziale se un agente fallisce. L'errore si propaga silenziosamente. Non scala su task che richiedono iterazione o feedback tra passi.</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="gl-group">
+      <div class="gl-group-title">Linea guida operativa</div>
+      <div class="gl-card">
+        <div class="gl-header">
+          <div class="gl-stripe"></div>
+          <div class="gl-num">01</div>
+          <div class="gl-title-wrap">
+            <div class="gl-title">Valida l'output di ogni agente prima di passarlo al successivo</div>
+            <div class="gl-subtitle">La validazione intermedia è il guardrail principale contro la propagazione silenziosa degli errori</div>
+          </div>
+          <div class="gl-impact-wrap">
+            <div class="gl-impact-stars" style="color:var(--accent)">★★★</div>
+            <div class="gl-impact-lbl">Critico</div>
+          </div>
+        </div>
+        <div class="gl-body">
+          <div class="gl-section">
+            <div class="gl-section-lbl">Come implementare la validazione tra passi</div>
+            <div class="compare-grid">
+              <div>
+                <div class="pex-lbl bad">❌ Pipeline senza validazione — errori propagati</div>
+                <div class="prompt-box bad">Agente 1 → output (non validato)
+Agente 2 → riceve output difettoso
+           → produce analisi difettosa
+Agente 3 → produce sintesi difettosa
+
+→ Il risultato finale sembra plausibile
+  ma è costruito su dati sbagliati.
+  Difficile da rilevare nell'output finale.</div>
+              </div>
+              <div>
+                <div class="pex-lbl good">✓ Pipeline con validazione intermedia</div>
+                <div class="prompt-box good">Agente 1 → output
+Validazione: ha tutti i campi richiesti?
+  → Se no: ri-invoca Agente 1 (max 1 retry)
+  → Se sì: passa ad Agente 2
+
+Agente 2 → output
+Validazione: è coerente con l'input?
+  → Se no: interrompe con errore esplicito
+  → Se sì: passa ad Agente 3
+
+→ Gli errori emergono nel passo corretto,
+  non nell'output finale.</div>
+              </div>
+            </div>
+          </div>
+          <div class="gl-section">
+            <div class="gl-section-lbl">Schema di validazione minimo tra passi</div>
+            <div class="prompt-box neutral" style="margin-top:10px; font-size:11.5px;">Per ogni output intermedio, verificare:
+1. Struttura: ha tutti i campi obbligatori previsti?
+2. Completezza: ha risposto a tutte le parti della richiesta?
+3. Coerenza: è compatibile con l'input ricevuto?
+   (nessun campo inventato non presente nell'input)
+
+Se fallisce: retry una volta con prompt correttivo.
+Se fallisce ancora: interrompi con errore esplicito.
+→ NON passare output difettoso al passo successivo.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+
+<!-- ═══════════════════════════
+     S2 — SUPERVISORE
+═══════════════════════════ -->
+<div class="sect" id="s2">
+  <div class="sect-head">
+    <div class="sect-num">Topologia 02</div>
+    <h2>Supervisore — un orchestratore che dirige i worker</h2>
+    <p>Un agente supervisore riceve il task, lo scompone, assegna i sub-task agli agenti worker, raccoglie i risultati e produce l'output finale. Più flessibile della pipeline, con un overhead di coordinamento reale.</p>
+  </div>
+  <div class="wrap">
+
+    <div class="topo-card" style="margin-top:28px;">
+      <div class="tc-bar" style="background:#7b5ea7"></div>
+      <div class="tc-head">
+        <div class="tc-badge" style="background:#7b5ea7">Topologia 2</div>
+        <div class="tc-title-area">
+          <div class="tc-name">Supervisore</div>
+          <div class="tc-tagline">Un orchestratore centrale che dirige agenti worker specializzati</div>
+        </div>
+      </div>
+      <div class="tc-body">
+        <div class="tc-diagram-col">
+          <svg viewBox="0 0 240 220" width="240" height="220" xmlns="http://www.w3.org/2000/svg" font-family="IBM Plex Mono, monospace">
+            <text x="120" y="18" fill="rgba(255,255,255,.35)" font-size="8" letter-spacing="1" text-anchor="middle">STRUTTURA SUPERVISORE</text>
+
+            <!-- Input -->
+            <rect x="70" y="28" width="100" height="24" rx="3" fill="#1a2438" stroke="#5a6e8a" stroke-width="1"/>
+            <text x="120" y="44" fill="rgba(255,255,255,.6)" font-size="8" text-anchor="middle">INPUT UTENTE</text>
+
+            <line x1="120" y1="52" x2="120" y2="65" stroke="#7b5ea7" stroke-width="1.5" marker-end="url(#asup1)"/>
+
+            <!-- Supervisore -->
+            <rect x="30" y="65" width="180" height="38" rx="4" fill="#1e1a2e" stroke="#7b5ea7" stroke-width="2"/>
+            <text x="120" y="82" fill="#c4a8e8" font-size="10" text-anchor="middle" font-weight="700">SUPERVISORE</text>
+            <text x="120" y="96" fill="rgba(255,255,255,.45)" font-size="8" text-anchor="middle">pianifica · assegna · aggrega</text>
+
+            <!-- Frecce verso worker -->
+            <line x1="60" y1="103" x2="50" y2="132" stroke="#7b5ea7" stroke-width="1.2" marker-end="url(#asup1)"/>
+            <line x1="120" y1="103" x2="120" y2="132" stroke="#7b5ea7" stroke-width="1.2" marker-end="url(#asup1)"/>
+            <line x1="180" y1="103" x2="190" y2="132" stroke="#7b5ea7" stroke-width="1.2" marker-end="url(#asup1)"/>
+
+            <!-- Worker A -->
+            <rect x="10" y="132" width="80" height="30" rx="3" fill="#1a2438" stroke="#5a6e8a" stroke-width="1.2"/>
+            <text x="50" y="148" fill="rgba(255,255,255,.7)" font-size="8" text-anchor="middle">Worker A</text>
+            <text x="50" y="159" fill="rgba(255,255,255,.35)" font-size="7" text-anchor="middle">ricerca</text>
+
+            <!-- Worker B -->
+            <rect x="80" y="132" width="80" height="30" rx="3" fill="#1a2438" stroke="#5a6e8a" stroke-width="1.2"/>
+            <text x="120" y="148" fill="rgba(255,255,255,.7)" font-size="8" text-anchor="middle">Worker B</text>
+            <text x="120" y="159" fill="rgba(255,255,255,.35)" font-size="7" text-anchor="middle">analisi</text>
+
+            <!-- Worker C -->
+            <rect x="150" y="132" width="80" height="30" rx="3" fill="#1a2438" stroke="#5a6e8a" stroke-width="1.2"/>
+            <text x="190" y="148" fill="rgba(255,255,255,.7)" font-size="8" text-anchor="middle">Worker C</text>
+            <text x="190" y="159" fill="rgba(255,255,255,.35)" font-size="7" text-anchor="middle">formattazione</text>
+
+            <!-- Frecce di ritorno -->
+            <line x1="50"  y1="162" x2="90"  y2="178" stroke="rgba(123,94,167,.5)" stroke-width="1" stroke-dasharray="3,2"/>
+            <line x1="120" y1="162" x2="120" y2="178" stroke="rgba(123,94,167,.5)" stroke-width="1" stroke-dasharray="3,2"/>
+            <line x1="190" y1="162" x2="150" y2="178" stroke="rgba(123,94,167,.5)" stroke-width="1" stroke-dasharray="3,2"/>
+
+            <!-- Output -->
+            <rect x="70" y="178" width="100" height="28" rx="3" fill="#1a2a18" stroke="#3d7a45" stroke-width="1.5"/>
+            <text x="120" y="196" fill="#7dd3a8" font-size="8" text-anchor="middle">OUTPUT AGGREGATO</text>
+
+            <defs>
+              <marker id="asup1" markerWidth="6" markerHeight="6" refX="5" refY="3" orient="auto"><path d="M0,0 L6,3 L0,6 Z" fill="#7b5ea7"/></marker>
+            </defs>
+          </svg>
+        </div>
+        <div class="tc-detail-col">
+          <div class="tc-props">
+            <div class="tc-prop">
+              <div class="tc-prop-label">Come funziona</div>
+              <div class="tc-prop-val">Il supervisore riceve il task, lo scompone in sub-task, assegna ogni sub-task al worker specializzato più appropriato, raccoglie i risultati e produce l'output finale. A differenza della pipeline, il supervisore <strong>può assegnare i task in qualsiasi ordine e combinazione</strong> — non esiste un percorso fisso.</div>
+            </div>
+            <div class="tc-prop">
+              <div class="tc-prop-label">Il failure mode principale — il supervisore come single point of failure</div>
+              <div class="tc-prop-val"><strong>Se il supervisore fa una scomposizione errata del task, tutti i worker lavorano su sub-task sbagliati.</strong> Un supervisore che non capisce i confini tra i worker produce assegnazioni ambigue — e i worker producono output sovrapposti o incompleti. La qualità del sistema dipende in modo sproporzionato dalla qualità del supervisore.</div>
+            </div>
+            <div class="tc-prop">
+              <div class="tc-prop-label">Il failure mode secondario — comunicazione implicita</div>
+              <div class="tc-prop-val">Il supervisore deve comunicare a ogni worker esattamente cosa ci si aspetta — ma spesso le istruzioni sono ambigue o incomplete. Il worker A produce X; il worker B produce Y che presuppone che A abbia prodotto anche Z, ma il supervisore non ha esplicitato la dipendenza.</div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="tc-footer">
+        <div class="tcf-col">
+          <div class="tcf-label good">✓ Punti di forza</div>
+          <div class="tcf-text good">Adattivo — il supervisore può scegliere quali worker usare in base al task specifico. Worker eseguibili in parallelo dove appropriato. Più flessibile della pipeline per task con struttura variabile.</div>
+        </div>
+        <div class="tcf-col">
+          <div class="tcf-label bad">✗ Limiti</div>
+          <div class="tcf-text bad">Il supervisore è single point of failure. Overhead di coordinamento significativo. Difficile debuggare il reasoning del supervisore. Il contesto non fluisce automaticamente tra worker — deve essere esplicitamente inviato dal supervisore.</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="gl-group">
+      <div class="gl-group-title">Linea guida operativa</div>
+      <div class="gl-card">
+        <div class="gl-header">
+          <div class="gl-stripe"></div>
+          <div class="gl-num">02</div>
+          <div class="gl-title-wrap">
+            <div class="gl-title">Il supervisore deve avere un sistema prompt che descrive esplicitamente le capacità di ogni worker</div>
+            <div class="gl-subtitle">Il supervisore non può assegnare correttamente ciò che non sa fare i worker — le capacità devono essere documentate</div>
+          </div>
+          <div class="gl-impact-wrap">
+            <div class="gl-impact-stars" style="color:var(--accent)">★★★</div>
+            <div class="gl-impact-lbl">Impatto critico</div>
+          </div>
+        </div>
+        <div class="gl-body">
+          <div class="gl-section">
+            <div class="gl-section-lbl">Come documentare le capacità dei worker nel prompt del supervisore</div>
+            <div class="prompt-box neutral" style="margin-top:12px; font-size:11.5px;">Hai accesso ai seguenti worker specializzati:
+
+worker_ricerca: Cerca informazioni da fonti esterne
+  (web, documenti interni). Input: query di ricerca.
+  Output: lista di risultati con fonte.
+  NON usa per: analisi, calcoli, o formattazione.
+
+worker_analisi: Analizza dati e trae conclusioni.
+  Input: dati strutturati o testo da analizzare.
+  Output: analisi strutturata con reasoning.
+  NON usa per: ricerca o raccolta di nuovi dati.
+
+worker_formatter: Formatta il contenuto in output
+  leggibile. Input: contenuto grezzo da formattare.
+  Output: testo formattato per l'utente finale.
+  NON usa per: generare nuovo contenuto.
+
+Per ogni sub-task: scegli il worker corretto,
+specifica esattamente cosa deve fare, e quale
+output ti aspetti in quale formato.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+
+<!-- ═══════════════════════════
+     S3 — RETE P2P
+═══════════════════════════ -->
+<div class="sect" id="s3">
+  <div class="sect-head">
+    <div class="sect-num">Topologia 03</div>
+    <h2>Rete peer-to-peer — agenti che si comunicano direttamente</h2>
+    <p>La topologia più potente sulla carta. Anche la più difficile da gestire in pratica. Nessun coordinatore centrale — gli agenti si comunicano direttamente secondo necessità.</p>
+  </div>
+  <div class="wrap">
+
+    <div class="topo-card" style="margin-top:28px;">
+      <div class="tc-bar" style="background:#b07d24"></div>
+      <div class="tc-head">
+        <div class="tc-badge" style="background:#b07d24">Topologia 3</div>
+        <div class="tc-title-area">
+          <div class="tc-name">Rete peer-to-peer</div>
+          <div class="tc-tagline">Agenti che si comunicano direttamente — nessun coordinatore centrale</div>
+        </div>
+      </div>
+      <div class="tc-body">
+        <div class="tc-diagram-col">
+          <svg viewBox="0 0 240 220" width="240" height="220" xmlns="http://www.w3.org/2000/svg" font-family="IBM Plex Mono, monospace">
+            <text x="120" y="18" fill="rgba(255,255,255,.35)" font-size="8" letter-spacing="1" text-anchor="middle">RETE PEER-TO-PEER</text>
+
+            <!-- Agenti in rete -->
+            <circle cx="120" cy="90" r="26" fill="#2a1e0a" stroke="#b07d24" stroke-width="2"/>
+            <text x="120" y="87" fill="#f4c87a" font-size="8" text-anchor="middle" font-weight="700">Agente A</text>
+            <text x="120" y="99" fill="rgba(255,255,255,.4)" font-size="7" text-anchor="middle">coordinator</text>
+
+            <circle cx="48" cy="150" r="24" fill="#2a1e0a" stroke="#b07d24" stroke-width="1.5"/>
+            <text x="48" y="147" fill="rgba(255,255,255,.65)" font-size="8" text-anchor="middle">Agente B</text>
+            <text x="48" y="159" fill="rgba(255,255,255,.4)" font-size="7" text-anchor="middle">research</text>
+
+            <circle cx="192" cy="150" r="24" fill="#2a1e0a" stroke="#b07d24" stroke-width="1.5"/>
+            <text x="192" y="147" fill="rgba(255,255,255,.65)" font-size="8" text-anchor="middle">Agente C</text>
+            <text x="192" y="159" fill="rgba(255,255,255,.4)" font-size="7" text-anchor="middle">analysis</text>
+
+            <circle cx="120" cy="195" r="22" fill="#2a1e0a" stroke="#b07d24" stroke-width="1.5"/>
+            <text x="120" y="192" fill="rgba(255,255,255,.65)" font-size="8" text-anchor="middle">Agente D</text>
+            <text x="120" y="204" fill="rgba(255,255,255,.4)" font-size="7" text-anchor="middle">output</text>
+
+            <!-- Connessioni bidirezionali -->
+            <line x1="97" y1="107" x2="68" y2="130" stroke="rgba(176,125,36,.7)" stroke-width="1.2"/>
+            <line x1="143" y1="107" x2="170" y2="130" stroke="rgba(176,125,36,.7)" stroke-width="1.2"/>
+            <line x1="120" y1="116" x2="120" y2="173" stroke="rgba(176,125,36,.7)" stroke-width="1.2"/>
+            <line x1="71" y1="163" x2="100" y2="183" stroke="rgba(176,125,36,.4)" stroke-width="1" stroke-dasharray="3,2"/>
+            <line x1="169" y1="163" x2="140" y2="183" stroke="rgba(176,125,36,.4)" stroke-width="1" stroke-dasharray="3,2"/>
+            <line x1="72" y1="150" x2="168" y2="150" stroke="rgba(176,125,36,.4)" stroke-width="1" stroke-dasharray="3,2"/>
+
+            <!-- Input/Output -->
+            <rect x="80" y="28" width="80" height="22" rx="3" fill="#1a2438" stroke="#5a6e8a" stroke-width="1"/>
+            <text x="120" y="43" fill="rgba(255,255,255,.5)" font-size="8" text-anchor="middle">INPUT</text>
+            <line x1="120" y1="50" x2="120" y2="64" stroke="rgba(176,125,36,.6)" stroke-width="1.2" marker-end="url(#ap2p)"/>
+
+            <defs>
+              <marker id="ap2p" markerWidth="6" markerHeight="6" refX="5" refY="3" orient="auto"><path d="M0,0 L6,3 L0,6 Z" fill="rgba(176,125,36,.6)"/></marker>
+            </defs>
+          </svg>
+        </div>
+        <div class="tc-detail-col">
+          <div class="tc-props">
+            <div class="tc-prop">
+              <div class="tc-prop-label">Come funziona</div>
+              <div class="tc-prop-val">Gli agenti si comunicano direttamente tra loro, senza un coordinatore centrale. Ogni agente può richiedere aiuto ad altri agenti, ricevere richieste, e partecipare a più conversazioni simultaneamente. Non c'è un percorso fisso.</div>
+            </div>
+            <div class="tc-prop">
+              <div class="tc-prop-label">Perché è rara in produzione</div>
+              <div class="tc-prop-val"><strong>È quasi impossibile da debuggare e testare.</strong> Senza un flusso lineare, tracciare il ragionamento che ha portato all'output finale richiede di seguire le comunicazioni tra tutti gli agenti simultaneamente. Un bug può emergere da una combinazione di messaggi tra due agenti che si attiva solo in certi contesti.</div>
+            </div>
+            <div class="tc-prop">
+              <div class="tc-prop-label">Il failure mode principale</div>
+              <div class="tc-prop-val">Cicli di comunicazione tra agenti — l'agente A chiede aiuto a B, che chiede aiuto a C, che chiede aiuto ad A. Senza meccanismi di rilevamento dei cicli, il sistema si blocca indefinitamente. Anche con il rilevamento, i cicli indicano spesso un problema nel design delle responsabilità degli agenti.</div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="tc-footer">
+        <div class="tcf-col">
+          <div class="tcf-label good">✓ Punti di forza</div>
+          <div class="tcf-text good">Massima flessibilità — ogni agente collabora con gli altri secondo necessità. Potenzialmente la topologia più efficiente per task che richiedono collaborazione dinamica tra specialisti.</div>
+        </div>
+        <div class="tcf-col">
+          <div class="tcf-label bad">✗ Limiti (severi)</div>
+          <div class="tcf-text bad">Quasi impossibile da debuggare. Cicli difficili da prevenire. Comportamento non deterministico. Richiede infrastruttura di messaging complessa. In pratica quasi mai usata — un supervisore con worker paralleli raggiunge il 90% dei benefici con il 20% della complessità.</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="insight" style="margin-top:20px;">
+      <div class="insight-lbl">Consiglio pratico sulla topologia P2P</div>
+      <p>Se stai valutando la rete peer-to-peer, chiediti prima se un sistema supervisore con worker eseguiti in parallelo risolve lo stesso problema. In quasi tutti i casi pratici, la risposta è sì — con un overhead di debugging e manutenzione drasticamente inferiore. <strong>La topologia P2P è teoricamente potente ma operativamente fragile.</strong> Usarla solo quando il task richiede genuinamente collaborazione bidirezionale e dinamica tra agenti che nessuna delle altre topologie può modellare.</p>
+    </div>
+
+  </div>
+</div>
+
+
+<!-- ═══════════════════════════
+     S4 — COMUNICAZIONE
+═══════════════════════════ -->
+<div class="sect" id="s4">
+  <div class="sect-head">
+    <div class="sect-num">Sezione 04</div>
+    <h2>Comunicazione tra agenti — il problema centrale</h2>
+    <p>Come passa l'informazione tra agenti è la decisione tecnica più impattante nei sistemi multi-agente. Formato sbagliato, contesto perso, output inatteso — tutti nascono qui.</p>
+  </div>
+  <div class="wrap">
+
+    <!-- GL 03 -->
+    <div class="gl-group" style="margin-top:28px;">
+      <div class="gl-group-title">Linea guida 03</div>
+      <div class="gl-card">
+        <div class="gl-header">
+          <div class="gl-stripe"></div>
+          <div class="gl-num">03</div>
+          <div class="gl-title-wrap">
+            <div class="gl-title">Usa un contratto di interfaccia esplicito tra agenti — input e output tipizzati, non testo libero</div>
+            <div class="gl-subtitle">Il testo libero tra agenti è la causa numero uno di errori difficili da diagnosticare nei sistemi multi-agente</div>
+          </div>
+          <div class="gl-impact-wrap">
+            <div class="gl-impact-stars" style="color:var(--accent)">★★★</div>
+            <div class="gl-impact-lbl">Impatto critico</div>
+          </div>
+        </div>
+        <div class="gl-body">
+
+          <div class="gl-section">
+            <div class="gl-section-lbl">I due meccanismi di comunicazione — con i loro trade-off</div>
+            <div class="comm-grid">
+              <div class="cg-card">
+                <div class="cg-label">Meccanismo 1 — preferibile</div>
+                <div class="cg-name">Contratto JSON strutturato</div>
+                <div class="cg-desc">Ogni agente produce output in un formato JSON definito a priori. L'agente successivo sa esattamente quali campi aspettarsi. <strong>La validazione è automatizzabile.</strong></div>
+                <div class="cg-code">// Output atteso da Agente 1:
+{
+  "sources": [...],
+  "query_used": "...",
+  "confidence": 0.85,
+  "error": null
+}
+// Agente 2 legge sources.
+// Se error != null: gestisce il failure.</div>
+              </div>
+              <div class="cg-card">
+                <div class="cg-label">Meccanismo 2 — da evitare per output critici</div>
+                <div class="cg-name">Testo libero</div>
+                <div class="cg-desc">L'agente produce risposta in linguaggio naturale che l'agente successivo deve interpretare. <strong>Introduce ambiguità e varianza</strong> — l'interpretazione del testo può variare tra run diverse.</div>
+                <div class="cg-code">// Output dell'Agente 1:
+"Ho trovato 3 fonti rilevanti:
+la prima riguarda X, la seconda Y..."
+
+// Agente 2 deve parsare questo testo.
+// Diversi run → diversi parsing.
+// Un formato diverso → crash silenzioso.</div>
+              </div>
+            </div>
+          </div>
+
+          <div class="gl-section">
+            <div class="gl-section-lbl">Come gestire output inatteso — il contratto di errore tra agenti</div>
+            <p>Ogni agente deve avere un contratto di errore esplicito: cosa restituire quando non riesce a completare il sub-task assegnato. Senza questo, un agente che fallisce può restituire un output parziale o un messaggio di errore in testo libero che l'agente successivo non sa interpretare.</p>
+            <table class="failure-table">
+              <thead>
+                <tr><th>Scenario</th><th>Gravità</th><th>Come gestirlo</th></tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>Output di formato corretto ma contenuto vuoto</td>
+                  <td class="f-warn">Media</td>
+                  <td>Il contratto JSON prevede un campo <code>items: []</code> vuoto — non null. L'agente successivo lo tratta come "nessun risultato trovato" e adatta il comportamento.</td>
+                </tr>
+                <tr>
+                  <td>Output di formato scorretto</td>
+                  <td class="f-warn">Media</td>
+                  <td>Validazione intercetta il problema prima del passo successivo. Retry una volta con prompt correttivo. Se persiste, interrompi con errore esplicito.</td>
+                </tr>
+                <tr>
+                  <td>Agente non risponde (timeout)</td>
+                  <td class="f-crit">Alta</td>
+                  <td>Timeout esplicito per ogni chiamata ad agente worker. Se scade: fallback (usa un risultato cached se disponibile) o interruzione del workflow con stato parziale.</td>
+                </tr>
+                <tr>
+                  <td>Agente produce output plausibile ma semanticamente errato</td>
+                  <td class="f-crit">Alta — difficile da rilevare</td>
+                  <td>Questo è il failure mode più difficile. La validazione strutturale non lo intercetta. Richiede un passo di cross-check (il supervisore verifica la coerenza dell'output col sub-task assegnato) o review umana sui casi campione.</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+
+<!-- ═══════════════════════════
+     S5 — CONFRONTO E SCELTA
+═══════════════════════════ -->
+<div class="sect" id="s5">
+  <div class="sect-head">
+    <div class="sect-num">Sezione 05</div>
+    <h2>Confronto operativo e guida alla scelta</h2>
+    <p>Le tre topologie a confronto sulle dimensioni che contano in produzione — e la guida per scegliere quella giusta per il proprio caso d'uso.</p>
+  </div>
+  <div class="wrap">
+
+    <table class="cost-table" style="margin-top:28px;">
+      <thead>
+        <tr>
+          <th>Dimensione</th>
+          <th>Pipeline</th>
+          <th>Supervisore</th>
+          <th>Rete P2P</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>Complessità di setup</td>
+          <td class="c-low">Bassa</td>
+          <td class="c-med">Media</td>
+          <td class="c-high">Alta</td>
+        </tr>
+        <tr>
+          <td>Debugging e osservabilità</td>
+          <td class="c-low">Facile — flusso lineare</td>
+          <td class="c-med">Moderato — supervisore ispezionabile</td>
+          <td class="c-high">Molto difficile — nessun flusso lineare</td>
+        </tr>
+        <tr>
+          <td>Flessibilità sul task</td>
+          <td class="c-low">Rigida — ordine fisso</td>
+          <td class="c-med">Media — supervisore adatta il percorso</td>
+          <td class="c-low">Teoricamente alta — praticamente ingestibile</td>
+        </tr>
+        <tr>
+          <td>Latenza su task parallelizzabili</td>
+          <td class="c-high">Alta — sempre sequenziale</td>
+          <td class="c-low">Bassa — worker in parallelo</td>
+          <td class="c-low">Potenzialmente bassa</td>
+        </tr>
+        <tr>
+          <td>Rischio di failure silenzioso</td>
+          <td class="c-med">Medio — propagazione lungo catena</td>
+          <td class="c-med">Medio — scomposizione errata del supervisore</td>
+          <td class="c-high">Alto — cicli difficili da rilevare</td>
+        </tr>
+        <tr>
+          <td>Testing e CI/CD</td>
+          <td class="c-low">Semplice — test per passo</td>
+          <td class="c-med">Moderato — test supervisore + worker</td>
+          <td class="c-high">Molto difficile — interazioni non deterministiche</td>
+        </tr>
+        <tr>
+          <td>Adatta per produzione</td>
+          <td class="c-low">✓ Molto adatta</td>
+          <td class="c-low">✓ Adatta con attenzione</td>
+          <td class="c-high">✗ Raramente consigliata</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <div class="key-point" style="margin-top:24px;">
+      <div class="kp-label">La regola pratica di selezione</div>
+      <div class="kp-text">Inizia con la pipeline. Se hai bisogno di flessibilità o parallelismo, usa il supervisore. Usa la rete P2P solo se hai un motivo specifico e misurabile che le altre due topologie non possono soddisfare.</div>
+      <div class="kp-sub">In produzione, la grande maggioranza dei sistemi multi-agente funziona con pipeline o supervisore. La pipeline è la scelta di default per task con fasi chiare e dipendenze note. Il supervisore aggiunge valore quando il percorso non è fisso o quando il parallelismo delle esecuzioni riduce significativamente la latenza. La rete P2P rimane una topologia teoricamente interessante ma operativamente costosa — il suo vantaggio reale in produzione è raro e difficile da giustificare rispetto alla complessità di debugging che introduce.</div>
+    </div>
+
+    <div class="prose" style="margin-top:28px;">
+      <p style="font-size:15px; font-weight:500; color:var(--ink2);">Checklist — sistema multi-agente configurato correttamente?</p>
+    </div>
+
+    <div class="checklist" style="margin-top:12px;">
+      <div class="check-item">
+        <div class="check-icon">1</div>
+        <div><strong>Topologia scelta con criterio:</strong> la scelta tra pipeline, supervisore e P2P è stata motivata da requisiti concreti (latenza, flessibilità, parallelismo) — non da preferenza estetica o abitudine.</div>
+      </div>
+      <div class="check-item">
+        <div class="check-icon">2</div>
+        <div><strong>Contratto JSON tra agenti:</strong> ogni agente ha un output contract esplicito (struttura JSON definita) — nessuna comunicazione in testo libero per output critici.</div>
+      </div>
+      <div class="check-item">
+        <div class="check-icon">3</div>
+        <div><strong>Validazione intermedia:</strong> nella pipeline, ogni output viene validato prima di essere passato all'agente successivo. Il supervisore verifica la coerenza dell'output dei worker col sub-task assegnato.</div>
+      </div>
+      <div class="check-item">
+        <div class="check-icon">4</div>
+        <div><strong>Contratto di errore tra agenti:</strong> ogni agente sa cosa restituire in caso di failure — e l'agente ricevente sa come interpretare il segnale di errore e come comportarsi.</div>
+      </div>
+      <div class="check-item">
+        <div class="check-icon">5</div>
+        <div><strong>Capacità dei worker documentate (supervisore):</strong> il prompt del supervisore descrive esplicitamente le capacità e i limiti di ogni worker — incluso il "NON usa per".</div>
+      </div>
+      <div class="check-item">
+        <div class="check-icon">✓</div>
+        <div><strong>Baseline singolo agente validata:</strong> prima di deploy del multi-agente, è stata verificata che un singolo agente ben configurato non fosse sufficiente — la complessità aggiuntiva è giustificata da benefici misurabili.</div>
+      </div>
+    </div>
+
+    <div class="insight" style="margin-top:28px; border-color:#b07d24; background:var(--warn-l);">
+      <div class="insight-lbl" style="color:#b07d24;">Prossimo — Report B</div>
+      <p>Con le topologie definite, il Report B affronta la dimensione spesso più trascurata: <strong>come il workflow ricorda dove è arrivato</strong>. Lo stato tra i passi, le strategie per mantenerlo, e cosa fare quando un passo intermedio fallisce in un workflow che è già a metà.</p>
+    </div>
+
+  </div>
+</div>
+
+<div class="footer">
+  <span>Serie Agenti AI — Leva 05 · Orchestrazione · Report A · Sistemi multi-agente</span>
+  <span>Marzo 2026</span>
+</div>
+
+<script>
+function show(n) {
+  document.querySelectorAll('.sect').forEach(s => s.classList.remove('active'));
+  document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('s'+n).classList.add('active');
+  document.querySelectorAll('.nav-btn')[n-1].classList.add('active');
+  window.scrollTo({top:0, behavior:'smooth'});
+}
+</script>
+</body>
+</html>

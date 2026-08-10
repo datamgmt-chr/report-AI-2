@@ -1,0 +1,1123 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Prompt Engineering — Report Quadro</title>
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Outfit:wght@200;300;400;500;600;700;800;900&family=IBM+Plex+Mono:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg:     #faf8f5;
+  --bg2:    #f2efe9;
+  --bg3:    #e9e5dc;
+  --ink:    #1b1915;
+  --ink2:   #2e2b25;
+  --ink3:   #6d685c;
+  --ink4:   #a19c8f;
+  --border: #d9d4c8;
+  --border2:#cac4b6;
+
+  /* Colori dei 7 cluster */
+  --cA: #3d7a45;   /* Identità — verde */
+  --cB: #2e7d9c;   /* Obiettivo — teal */
+  --cC: #7b5ea7;   /* Ragionamento — viola */
+  --cD: #b07d24;   /* Output — oro */
+  --cE: #c0562b;   /* Few-shot — terracotta */
+  --cF: #3a6b8c;   /* Casi limite — blu */
+  --cG: #8b5c3a;   /* Agentic — marrone */
+
+  --accent: #c0562b;
+}
+
+* { margin:0; padding:0; box-sizing:border-box; }
+html { scroll-behavior:smooth; }
+
+body {
+  background: var(--bg);
+  color: var(--ink);
+  font-family: 'Outfit', sans-serif;
+  font-weight: 300;
+  font-size: 14px;
+  line-height: 1.75;
+}
+
+/* ── HEADER ── */
+.masthead {
+  background: var(--ink);
+  color: rgba(255,255,255,0.9);
+  padding: 60px 56px 52px;
+  position: relative;
+  overflow: hidden;
+}
+.masthead::before {
+  content:'';
+  position:absolute; inset:0;
+  background:
+    repeating-linear-gradient(90deg, rgba(255,255,255,0.012) 0, rgba(255,255,255,0.012) 1px, transparent 1px, transparent 64px),
+    repeating-linear-gradient(0deg,  rgba(255,255,255,0.012) 0, rgba(255,255,255,0.012) 1px, transparent 1px, transparent 64px);
+  pointer-events:none;
+}
+.masthead::after {
+  content:'P';
+  position:absolute; right:48px; bottom:-20px;
+  font-family:'Instrument Serif', serif;
+  font-size:260px; line-height:1;
+  color:rgba(255,255,255,0.025);
+  pointer-events:none;
+}
+.mh-eye {
+  font-family:'IBM Plex Mono', monospace;
+  font-size:10px; letter-spacing:3px; text-transform:uppercase;
+  color:rgba(255,255,255,0.25); margin-bottom:18px; position:relative;
+}
+.masthead h1 {
+  font-family:'Instrument Serif', serif;
+  font-weight:400;
+  font-size: clamp(30px,4.5vw,54px);
+  line-height:1.08; letter-spacing:-1px;
+  max-width:700px; position:relative;
+}
+.mh-sub {
+  margin-top:20px; font-size:15px; font-weight:300;
+  color:rgba(255,255,255,0.38); max-width:660px;
+  line-height:1.7; position:relative;
+}
+.mh-meta {
+  margin-top:32px; display:flex; gap:32px; flex-wrap:wrap;
+  position:relative;
+}
+.mh-stat {
+  display:flex; flex-direction:column; gap:4px;
+}
+.mh-stat-val {
+  font-family:'IBM Plex Mono', monospace;
+  font-size:22px; font-weight:500;
+  color:rgba(255,255,255,0.85);
+}
+.mh-stat-lbl {
+  font-size:10px; letter-spacing:2px; text-transform:uppercase;
+  color:rgba(255,255,255,0.25);
+}
+
+/* ── NAV ── */
+.nav {
+  background:var(--ink2);
+  position:sticky; top:0; z-index:100;
+  display:flex; overflow-x:auto;
+  border-bottom:1px solid rgba(255,255,255,0.06);
+}
+.nav-btn {
+  flex:1; min-width:110px; padding:13px 12px;
+  border:none; background:transparent; cursor:pointer;
+  font-family:'Outfit', sans-serif;
+  font-size:10.5px; font-weight:600;
+  text-transform:uppercase; letter-spacing:0.4px;
+  color:rgba(255,255,255,0.3);
+  border-right:1px solid rgba(255,255,255,0.06);
+  transition:all 0.2s; white-space:nowrap;
+}
+.nav-btn:last-child { border-right:none; }
+.nav-btn:hover { color:rgba(255,255,255,0.6); }
+.nav-btn.active { color:#fff; background:rgba(255,255,255,0.05); }
+
+/* ── SECTIONS ── */
+.sect { display:none; }
+.sect.active { display:block; animation:fadeIn 0.3s ease; }
+@keyframes fadeIn { from { opacity:0; transform:translateY(6px); } to { opacity:1; transform:translateY(0); } }
+
+.sect-head { padding:48px 56px 36px; border-bottom:1px solid var(--border); }
+.sect-num {
+  font-family:'IBM Plex Mono', monospace;
+  font-size:10px; letter-spacing:3px; text-transform:uppercase;
+  color:var(--ink4); margin-bottom:10px;
+}
+.sect-head h2 {
+  font-family:'Instrument Serif', serif; font-weight:400;
+  font-size:clamp(26px,3.5vw,42px);
+  line-height:1.1; letter-spacing:-0.5px;
+  max-width:640px; margin-bottom:14px;
+}
+.sect-head p { color:var(--ink3); max-width:700px; font-size:14.5px; }
+.wrap { padding:0 56px 56px; }
+
+/* ── PROSE ── */
+.prose { max-width:760px; }
+.prose p { font-size:14.5px; color:var(--ink3); line-height:1.85; margin-bottom:16px; }
+.prose p strong { color:var(--ink2); font-weight:500; }
+.prose p em { font-style:italic; color:var(--ink2); }
+
+/* ── KEY POINT ── */
+.key-point {
+  margin-top:36px; padding:24px 28px;
+  border-left:4px solid var(--accent);
+  background:var(--bg2);
+}
+.kp-label {
+  font-family:'IBM Plex Mono', monospace;
+  font-size:9px; letter-spacing:2px; text-transform:uppercase;
+  color:var(--accent); margin-bottom:8px;
+}
+.kp-text {
+  font-family:'Instrument Serif', serif;
+  font-size:18px; line-height:1.45; color:var(--ink2);
+}
+.kp-sub { margin-top:10px; font-size:13px; color:var(--ink3); line-height:1.65; }
+
+/* ── INSIGHT ── */
+.insight {
+  margin:16px 0; padding:16px 20px;
+  border-left:4px solid; background:var(--bg2);
+}
+.insight-label {
+  font-family:'IBM Plex Mono', monospace;
+  font-size:9px; letter-spacing:2px; text-transform:uppercase;
+  margin-bottom:6px;
+}
+.insight p { font-size:13.5px; line-height:1.65; color:var(--ink2); max-width:700px; }
+.insight p strong { font-weight:500; }
+
+/* ── MODELLO MENTALE ── */
+.mental-model {
+  margin-top:36px;
+  border:1px solid var(--border2);
+  background:var(--bg);
+}
+.mm-head {
+  padding:20px 24px; background:var(--ink);
+  display:flex; align-items:center; gap:16px;
+}
+.mm-head-title {
+  font-family:'IBM Plex Mono', monospace;
+  font-size:10px; letter-spacing:3px; text-transform:uppercase;
+  color:rgba(255,255,255,0.5);
+}
+.mm-body { padding:28px 24px; }
+
+/* ── ANATOMIA DEL PROMPT ── */
+.anatomy {
+  display:flex; flex-direction:column; gap:2px;
+  margin-top:28px;
+}
+.anat-layer {
+  display:grid;
+  grid-template-columns: 32px 180px 1fr;
+  border:1px solid var(--border);
+  cursor:pointer;
+  transition:all 0.15s;
+}
+.anat-layer:hover { border-color:var(--border2); background:var(--bg2); }
+.anat-stripe { width:32px; }
+.anat-label-wrap {
+  padding:14px 16px;
+  border-right:1px solid var(--border);
+  display:flex; flex-direction:column; justify-content:center;
+}
+.anat-code {
+  font-family:'IBM Plex Mono', monospace;
+  font-size:9px; letter-spacing:2px; text-transform:uppercase;
+  color:var(--ink4); margin-bottom:3px;
+}
+.anat-name {
+  font-family:'Instrument Serif', serif;
+  font-size:16px; color:var(--ink2);
+}
+.anat-content { padding:14px 18px; }
+.anat-desc { font-size:13px; color:var(--ink3); line-height:1.6; }
+.anat-desc strong { color:var(--ink2); font-weight:500; }
+
+/* ── CLUSTER CARDS ── */
+.cluster-grid {
+  display:grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap:16px; margin-top:28px;
+}
+.cluster-card {
+  border:1px solid var(--border2);
+  background:var(--bg); overflow:hidden;
+}
+.cc-head {
+  display:flex; align-items:stretch;
+  border-bottom:1px solid var(--border);
+}
+.cc-stripe { width:5px; flex-shrink:0; }
+.cc-num {
+  font-family:'Outfit', sans-serif; font-weight:800;
+  font-size:32px; color:var(--bg3);
+  padding:14px 12px; min-width:56px; text-align:center;
+  line-height:1;
+}
+.cc-title-wrap { padding:14px 12px; }
+.cc-id {
+  font-family:'IBM Plex Mono', monospace;
+  font-size:9px; letter-spacing:2px; text-transform:uppercase;
+  color:var(--ink4); margin-bottom:3px;
+}
+.cc-name {
+  font-family:'Instrument Serif', serif;
+  font-size:17px; line-height:1.2;
+}
+.cc-body { padding:14px 16px; }
+.cc-body p { font-size:13px; color:var(--ink3); line-height:1.65; }
+.cc-body p strong { color:var(--ink2); font-weight:500; }
+.cc-impact {
+  padding:10px 16px;
+  border-top:1px solid var(--border);
+  display:flex; gap:16px; flex-wrap:wrap;
+}
+.cc-tag {
+  font-family:'IBM Plex Mono', monospace;
+  font-size:9px; letter-spacing:1px; text-transform:uppercase;
+  padding:3px 8px; border:1px solid var(--border2);
+  color:var(--ink4);
+}
+.cc-tag.hi { color:#fff; border-color:transparent; }
+
+/* ── PERCHÉ IL PROMPT FUNZIONA ── */
+.mechanism {
+  margin-top:36px;
+  border:1px solid var(--border2);
+}
+.mech-header {
+  padding:18px 24px; background:var(--bg2);
+  border-bottom:1px solid var(--border);
+}
+.mech-header h3 {
+  font-family:'Instrument Serif', serif; font-size:20px; color:var(--ink2);
+}
+.mech-header p { font-size:13px; color:var(--ink3); margin-top:4px; }
+.mech-grid {
+  display:grid; grid-template-columns:1fr 1fr;
+  gap:1px; background:var(--border);
+}
+.mech-item {
+  background:var(--bg); padding:20px 22px;
+}
+.mech-num {
+  font-family:'IBM Plex Mono', monospace;
+  font-size:22px; font-weight:500;
+  color:var(--bg3); line-height:1; margin-bottom:10px;
+}
+.mech-title { font-weight:600; font-size:13.5px; color:var(--ink2); margin-bottom:6px; }
+.mech-text { font-size:13px; color:var(--ink3); line-height:1.65; }
+.mech-text strong { color:var(--ink2); font-weight:500; }
+
+/* ── MATRICE IMPATTO ── */
+.impact-table {
+  width:100%; border-collapse:collapse;
+  font-size:12.5px; margin-top:20px;
+  border:1px solid var(--border2);
+}
+.impact-table th, .impact-table td {
+  padding:11px 14px; border:1px solid var(--border);
+  text-align:left; vertical-align:top;
+}
+.impact-table thead th {
+  background:var(--ink); color:rgba(255,255,255,0.82);
+  font-weight:600; font-size:10px; letter-spacing:0.5px;
+}
+.impact-table tbody tr:nth-child(even) { background:var(--bg2); }
+.impact-table td:first-child { font-weight:500; color:var(--ink2); }
+.badge {
+  display:inline-block;
+  font-family:'IBM Plex Mono', monospace;
+  font-size:8px; letter-spacing:1px; text-transform:uppercase;
+  padding:2px 7px; border:1px solid;
+  vertical-align:middle; margin-left:6px;
+}
+
+/* ── ROADMAP ── */
+.roadmap { margin-top:28px; }
+.rm-item {
+  display:grid; grid-template-columns:48px 1fr;
+  gap:0; margin-bottom:2px;
+}
+.rm-step {
+  display:flex; flex-direction:column; align-items:center;
+}
+.rm-circle {
+  width:36px; height:36px; border-radius:50%;
+  display:flex; align-items:center; justify-content:center;
+  font-family:'IBM Plex Mono', monospace; font-weight:500;
+  font-size:11px; color:#fff; flex-shrink:0;
+}
+.rm-line {
+  width:2px; flex:1; background:var(--border);
+  margin:4px 0; min-height:16px;
+}
+.rm-content {
+  padding:6px 0 20px 16px;
+}
+.rm-id {
+  font-family:'IBM Plex Mono', monospace;
+  font-size:9px; letter-spacing:2px; text-transform:uppercase;
+  color:var(--ink4); margin-bottom:2px;
+}
+.rm-title {
+  font-family:'Instrument Serif', serif; font-size:18px;
+  color:var(--ink2); margin-bottom:4px;
+}
+.rm-desc { font-size:13px; color:var(--ink3); line-height:1.6; }
+
+/* ── ERRORI COMUNI ── */
+.errors-grid {
+  display:grid; grid-template-columns:repeat(auto-fill, minmax(260px,1fr));
+  gap:16px; margin-top:24px;
+}
+.error-card {
+  border:1px solid var(--border2);
+  border-top:3px solid #c0392b;
+  background:var(--bg); padding:18px 20px;
+}
+.ec-num {
+  font-family:'IBM Plex Mono', monospace;
+  font-size:10px; letter-spacing:2px; text-transform:uppercase;
+  color:#c0392b; margin-bottom:6px;
+}
+.ec-title { font-weight:600; font-size:13.5px; color:var(--ink2); margin-bottom:8px; }
+.ec-desc { font-size:13px; color:var(--ink3); line-height:1.6; }
+.ec-desc strong { color:var(--ink2); font-weight:500; }
+.ec-fix {
+  margin-top:10px; padding:10px 12px;
+  background:var(--bg2); border-left:3px solid #3d7a45;
+  font-size:12px; color:var(--ink3); line-height:1.55;
+}
+.ec-fix strong { color:#3d7a45; font-weight:600; }
+
+/* ── FOOTER ── */
+.footer {
+  padding:24px 56px;
+  border-top:1px solid var(--border);
+  display:flex; justify-content:space-between; align-items:center;
+  font-family:'IBM Plex Mono', monospace;
+  font-size:10px; letter-spacing:1px; text-transform:uppercase;
+  color:var(--ink4);
+}
+
+@media (max-width: 640px) {
+  .masthead, .sect-head, .wrap, .footer { padding-left:24px; padding-right:24px; }
+  .mech-grid { grid-template-columns:1fr; }
+  .cluster-grid { grid-template-columns:1fr; }
+  .anat-layer { grid-template-columns:12px 1fr; }
+  .anat-label-wrap { display:none; }
+}
+</style>
+</head>
+<body>
+
+<!-- HEADER -->
+<div class="masthead">
+  <div class="mh-eye">Serie Agenti AI · Leva 01 · Report Quadro</div>
+  <h1>Prompt Engineering — La mappa completa</h1>
+  <p class="mh-sub">Cos'è un prompt, perché ha impatto sul comportamento del modello, come si struttura e come si approccia il miglioramento sistematico. La base per tutti i report successivi.</p>
+  <div class="mh-meta">
+    <div class="mh-stat">
+      <div class="mh-stat-val">7</div>
+      <div class="mh-stat-lbl">Cluster di linee guida</div>
+    </div>
+    <div class="mh-stat">
+      <div class="mh-stat-val">6</div>
+      <div class="mh-stat-lbl">Meccanismi LLM</div>
+    </div>
+    <div class="mh-stat">
+      <div class="mh-stat-val">#1</div>
+      <div class="mh-stat-lbl">Leva per impatto</div>
+    </div>
+    <div class="mh-stat">
+      <div class="mh-stat-val">∞</div>
+      <div class="mh-stat-lbl">Iterazioni possibili</div>
+    </div>
+  </div>
+</div>
+
+<!-- NAV -->
+<div class="nav">
+  <button class="nav-btn active" onclick="show(1)">Cos'è un prompt</button>
+  <button class="nav-btn" onclick="show(2)">Perché funziona</button>
+  <button class="nav-btn" onclick="show(3)">I 7 cluster</button>
+  <button class="nav-btn" onclick="show(4)">Anatomia</button>
+  <button class="nav-btn" onclick="show(5)">Impatto e priorità</button>
+  <button class="nav-btn" onclick="show(6)">Errori comuni</button>
+  <button class="nav-btn" onclick="show(7)">Come migliorare</button>
+</div>
+
+
+<!-- ═══════════════════════════
+     S1 — COS'È UN PROMPT
+═══════════════════════════ -->
+<div class="sect active" id="s1">
+  <div class="sect-head">
+    <div class="sect-num">Sezione 01</div>
+    <h2>Cos'è davvero un prompt</h2>
+    <p>Più di un testo di istruzione. Il prompt è il principale canale di comunicazione tra te e il modello — e trasporta molto più di quello che sembra.</p>
+  </div>
+  <div class="wrap">
+
+    <div class="prose" style="margin-top:28px;">
+      <p>Un prompt è l'insieme di tutto il testo che un modello LLM riceve come input prima di generare la sua risposta. Ma questa definizione tecnica rischia di sminuirne la portata. Un prompt non è una semplice "istruzione": è il <strong>contesto completo</strong> dentro cui il modello deve costruire la sua risposta — chi è, cosa deve fare, come deve ragionare, cosa ci si aspetta da lui.</p>
+      <p>La differenza tra un prompt mediocre e uno eccellente sullo stesso task può essere abissale: risposte generiche vs. risposte precise, output malformati vs. output usabili direttamente, comportamenti incoerenti vs. comportamenti affidabili e ripetibili. Questa varianza è il motivo per cui il prompt engineering è classificata come <strong>la leva #1 per specializzare un agente AI</strong>.</p>
+    </div>
+
+    <div class="mental-model">
+      <div class="mm-head">
+        <div class="mm-head-title">Modello mentale</div>
+      </div>
+      <div class="mm-body">
+        <div class="insight" style="border-color:var(--accent);">
+          <div class="insight-label" style="color:var(--accent);">L'analogia giusta</div>
+          <p>Pensa al modello LLM come a un <strong>collaboratore straordinariamente capace ma con amnesia totale</strong>. Ad ogni chiamata ricomincia da zero. Non ricorda la conversazione precedente, non conosce il tuo contesto, non sa chi sei, non ha idea del tuo settore o del tuo obiettivo. Il prompt è <em>tutto ciò che sa di te e del task</em> in quel preciso momento. La qualità del prompt è la qualità del briefing che dai a questo collaboratore.</p>
+        </div>
+        <div class="insight" style="border-color:var(--cB); margin-top:12px;">
+          <div class="insight-label" style="color:var(--cB);">Una seconda analogia</div>
+          <p>Il modello LLM non "esegue" il prompt come farebbe un computer con del codice. Lo <strong>interpreta</strong>, come farebbe un essere umano intelligente. Questo significa che ambiguità, vaghezza e contraddizioni nel prompt vengono risolte — ma non necessariamente come tu vorresti. Un prompt ben scritto <em>chiude lo spazio di interpretazione</em> verso i comportamenti che vuoi.</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="prose" style="margin-top:32px;">
+      <p>Un prompt per un agente AI è tipicamente più lungo e strutturato di un semplice messaggio di chat, perché deve coprire più dimensioni simultaneamente: definire il ruolo, il task, il ragionamento atteso, il formato dell'output, la gestione dei casi limite, e — quando il modello opera in loop con strumenti — anche le regole di utilizzo di quei strumenti.</p>
+    </div>
+
+    <div class="key-point" style="margin-top:28px;">
+      <div class="kp-label">Il principio fondamentale</div>
+      <div class="kp-text">Un prompt non descrive cosa vuoi che il modello produca. Descrive il mondo in cui il modello opera, e da quel mondo la risposta giusta emerge naturalmente.</div>
+      <div class="kp-sub">La differenza pratica: "rispondi in modo conciso" è una istruzione sull'output. "Sei un analista finanziario che lavora per un fondo di private equity; i tuoi interlocutori sono senior partner con 20 anni di esperienza che non hanno tempo da perdere" è la definizione di un mondo — dalla quale la concisione emerge automaticamente, insieme a decine di altri comportamenti che non hai esplicitato.</div>
+    </div>
+
+    <div class="prose" style="margin-top:32px;">
+      <p><strong>System prompt vs. user message.</strong> I moderni LLM distinguono tra due slot principali: il <em>system prompt</em> (le istruzioni stabili, il contesto permanente, il "chi sei e come funzioni") e il <em>user message</em> (il task specifico di questa chiamata). Per agenti AI ben progettati, il grosso del lavoro di engineering va nel system prompt — che rimane costante attraverso tutte le invocazioni — mentre la user message porta solo i dati variabili di ogni chiamata.</p>
+    </div>
+
+  </div>
+</div>
+
+
+<!-- ═══════════════════════════
+     S2 — PERCHÉ FUNZIONA
+═══════════════════════════ -->
+<div class="sect" id="s2">
+  <div class="sect-head">
+    <div class="sect-num">Sezione 02</div>
+    <h2>Perché il prompt ha impatto: i meccanismi LLM</h2>
+    <p>Per scrivere prompt efficaci non serve essere un ML engineer, ma capire i meccanismi di base aiuta enormemente a intuire perché certe tecniche funzionano.</p>
+  </div>
+  <div class="wrap">
+
+    <div class="prose" style="margin-top:28px;">
+      <p>I modelli LLM generano testo <strong>un token alla volta</strong>, stimando quale token è più probabile date le sequenze precedenti. Ma questa stima è profondamente influenzata dal contesto: tutto il testo che il modello ha già letto (il prompt + la conversazione) orienta la distribuzione di probabilità dei token successivi. Il prompt, in questo senso, <em>modella lo spazio delle risposte possibili</em>.</p>
+    </div>
+
+    <div class="mechanism" style="margin-top:28px;">
+      <div class="mech-header">
+        <h3>I 6 meccanismi principali</h3>
+        <p>Perché cambiare il prompt cambia il comportamento del modello</p>
+      </div>
+      <div class="mech-grid">
+
+        <div class="mech-item">
+          <div class="mech-num">01</div>
+          <div class="mech-title">Attivazione di pattern appresi</div>
+          <div class="mech-text">Durante il pre-training il modello ha visto miliardi di testi in miliardi di contesti diversi. Quando il prompt evoca un certo ruolo ("sei un avvocato"), un certo tono ("formale, preciso, senza iperboli") o un certo tipo di documento ("contratto NDA"), il modello <strong>attiva i pattern linguistici e di ragionamento</strong> che ha associato a quei contesti. Un prompt che descrive il contesto in modo ricco e preciso attiva pattern più specifici — e quindi più utili.</div>
+        </div>
+
+        <div class="mech-item">
+          <div class="mech-num">02</div>
+          <div class="mech-title">Riduzione dell'ambiguità</div>
+          <div class="mech-text">Quasi ogni task ha interpretazioni multiple. "Riassumi questo documento" può significare: un paragrafo o tre pagine? Per un esperto o per un non-tecnico? Mantenendo i numeri o arrotondando? Il modello <em>deve</em> fare una scelta. Senza istruzioni, la fa in base alle frequenze che ha visto nel training — che spesso non corrispondono a quello che vuoi tu. <strong>Un prompt preciso chiude queste ambiguità</strong> prima che il modello le risolva a modo suo.</div>
+        </div>
+
+        <div class="mech-item">
+          <div class="mech-num">03</div>
+          <div class="mech-title">Strutturazione del ragionamento</div>
+          <div class="mech-text">I modelli tendono a "pensare mentre scrivono": la generazione token-per-token significa che ogni parola prodotta diventa contesto per la parola successiva. Se forzi il modello a ragionare esplicitamente prima di dare una risposta (<em>chain-of-thought</em>), stai letteralmente migliorando la qualità del contesto interno su cui si basa la risposta finale. <strong>Le istruzioni sul processo di ragionamento migliorano la qualità dell'output</strong> in modo non intuitivo ma molto efficace.</div>
+        </div>
+
+        <div class="mech-item">
+          <div class="mech-num">04</div>
+          <div class="mech-title">Ancoraggio del formato</div>
+          <div class="mech-text">Il modello ha una forte tendenza a continuare il pattern che ha già iniziato — e a replicare i pattern che ha visto più frequentemente nel training. Specificare il formato dell'output (JSON, lista puntata, tabella Markdown, testo libero) <strong>ancora il modello a quel pattern</strong>, riducendo la varianza e rendendo l'output direttamente utilizzabile nei passaggi successivi della pipeline.</div>
+        </div>
+
+        <div class="mech-item">
+          <div class="mech-num">05</div>
+          <div class="mech-title">Apprendimento in-context</div>
+          <div class="mech-text">Gli LLM sono in grado di inferire il comportamento atteso da pochi esempi nel prompt (<em>few-shot learning</em>), senza alcuna modifica ai pesi. Mostrare 2-5 esempi di input/output è spesso più efficace di descrivere verbalmente le stesse regole, perché il modello cattura sfumature difficili da esplicitare. <strong>Gli esempi parlano una lingua che il modello comprende meglio delle regole astratte.</strong></div>
+        </div>
+
+        <div class="mech-item">
+          <div class="mech-num">06</div>
+          <div class="mech-title">Gestione dell'incertezza</div>
+          <div class="mech-text">In assenza di istruzioni sui casi limite, il modello tende a fare assunzioni implicite o — peggio — a "inventare" informazioni per riempire i buchi (<em>hallucination</em>). Specificare esplicitamente come comportarsi di fronte a dati mancanti, ambiguità o richieste fuori scope <strong>riduce drasticamente le allucinazioni e i comportamenti imprevisti</strong>, perché il modello ha una strategia esplicita a cui fare riferimento.</div>
+        </div>
+
+      </div>
+    </div>
+
+    <div class="key-point" style="margin-top:32px;">
+      <div class="kp-label">Il takeaway</div>
+      <div class="kp-text">Il prompt non "programma" il modello. Lo posiziona in uno spazio di probabilità più o meno favorevole.</div>
+      <div class="kp-sub">Un prompt ben scritto non garantisce la risposta giusta. Sposta la distribuzione dei comportamenti possibili verso quelli che vuoi — riducendo la varianza, aumentando la precisione, rendendo il modello più prevedibile e quindi più utile in produzione. Il prompt engineering è l'arte di manipolare questa distribuzione in modo sistematico.</div>
+    </div>
+
+  </div>
+</div>
+
+
+<!-- ═══════════════════════════
+     S3 — I 7 CLUSTER
+═══════════════════════════ -->
+<div class="sect" id="s3">
+  <div class="sect-head">
+    <div class="sect-num">Sezione 03</div>
+    <h2>I 7 cluster di linee guida</h2>
+    <p>Le best practice del prompt engineering non sono una lista piatta. Si aggregano in 7 cluster, ciascuno dei quali governa una dimensione diversa del comportamento del modello.</p>
+  </div>
+  <div class="wrap">
+
+    <div class="prose" style="margin-top:28px;">
+      <p>Il prompt deve comunicare simultaneamente su più livelli: chi è il modello, cosa deve fare, come deve ragionare, come deve rispondere, come deve imparare dagli esempi, cosa fare quando le cose non vanno come previsto, e — per gli agenti — come comportarsi in loop autonomo con strumenti. Questi livelli corrispondono a 7 cluster di linee guida, ciascuno con le proprie best practice specifiche.</p>
+    </div>
+
+    <div class="cluster-grid" style="margin-top:28px;">
+
+      <div class="cluster-card">
+        <div class="cc-head">
+          <div class="cc-stripe" style="background:var(--cA)"></div>
+          <div class="cc-num">A</div>
+          <div class="cc-title-wrap">
+            <div class="cc-id">Cluster A</div>
+            <div class="cc-name">Identità e ruolo</div>
+          </div>
+        </div>
+        <div class="cc-body">
+          <p>Chi è il modello, in quale contesto opera, qual è la sua persona. <strong>La base da cui tutto il resto deriva il suo significato.</strong> Un ruolo ben definito orienta automaticamente decine di comportamenti impliciti — tono, livello tecnico, registro linguistico, proattività — senza bisogno di esplicitarli uno per uno.</p>
+        </div>
+        <div class="cc-impact">
+          <span class="cc-tag hi" style="background:var(--cA); border-color:var(--cA);">Impatto alto</span>
+          <span class="cc-tag">Report A</span>
+        </div>
+      </div>
+
+      <div class="cluster-card">
+        <div class="cc-head">
+          <div class="cc-stripe" style="background:var(--cB)"></div>
+          <div class="cc-num">B</div>
+          <div class="cc-title-wrap">
+            <div class="cc-id">Cluster B</div>
+            <div class="cc-name">Obiettivo e vincoli</div>
+          </div>
+        </div>
+        <div class="cc-body">
+          <p>Cosa deve fare il modello, con quale criterio di successo, entro quali limiti. <strong>La differenza tra un obiettivo vago e uno operazionalizzato è spesso la differenza tra un output inutile e uno usabile.</strong> Include anche i "guardrail": cosa il modello non deve fare.</p>
+        </div>
+        <div class="cc-impact">
+          <span class="cc-tag hi" style="background:var(--cB); border-color:var(--cB);">Impatto alto</span>
+          <span class="cc-tag">Report B</span>
+        </div>
+      </div>
+
+      <div class="cluster-card">
+        <div class="cc-head">
+          <div class="cc-stripe" style="background:var(--cC)"></div>
+          <div class="cc-num">C</div>
+          <div class="cc-title-wrap">
+            <div class="cc-id">Cluster C</div>
+            <div class="cc-name">Guidare il ragionamento</div>
+          </div>
+        </div>
+        <div class="cc-body">
+          <p>Come il modello deve pensare per arrivare alla risposta. <strong>Istruzioni sul processo, non solo sull'output.</strong> Chain-of-thought, decomposizione di task complessi, self-check prima di rispondere. Particolarmente impattante su task di analisi, ragionamento multi-step e decisioni complesse.</p>
+        </div>
+        <div class="cc-impact">
+          <span class="cc-tag hi" style="background:var(--cC); border-color:var(--cC);">Impatto medio-alto</span>
+          <span class="cc-tag">Report C</span>
+        </div>
+      </div>
+
+      <div class="cluster-card">
+        <div class="cc-head">
+          <div class="cc-stripe" style="background:var(--cD)"></div>
+          <div class="cc-num">D</div>
+          <div class="cc-title-wrap">
+            <div class="cc-id">Cluster D</div>
+            <div class="cc-name">Formato dell'output</div>
+          </div>
+        </div>
+        <div class="cc-body">
+          <p>Struttura, formato, lunghezza, lingua, tono attesi. <strong>Un output nel formato sbagliato può essere inutilizzabile anche se il contenuto è corretto.</strong> In pipeline automatizzate, il formato è critico quanto il contenuto — un JSON malformato rompe il downstream.</p>
+        </div>
+        <div class="cc-impact">
+          <span class="cc-tag hi" style="background:var(--cD); border-color:var(--cD);">Impatto medio</span>
+          <span class="cc-tag">Report D</span>
+        </div>
+      </div>
+
+      <div class="cluster-card">
+        <div class="cc-head">
+          <div class="cc-stripe" style="background:var(--cE)"></div>
+          <div class="cc-num">E</div>
+          <div class="cc-title-wrap">
+            <div class="cc-id">Cluster E</div>
+            <div class="cc-name">Esempi (few-shot)</div>
+          </div>
+        </div>
+        <div class="cc-body">
+          <p>Quando e come usare esempi nel prompt per guidare il comportamento. <strong>Gli esempi spesso fanno più delle regole</strong>: catturano sfumature difficili da verbalizzare. Ma vanno scelti con cura — un esempio sbagliato fa più danno di nessun esempio.</p>
+        </div>
+        <div class="cc-impact">
+          <span class="cc-tag hi" style="background:var(--cE); border-color:var(--cE);">Impatto medio-alto</span>
+          <span class="cc-tag">Report E</span>
+        </div>
+      </div>
+
+      <div class="cluster-card">
+        <div class="cc-head">
+          <div class="cc-stripe" style="background:var(--cF)"></div>
+          <div class="cc-num">F</div>
+          <div class="cc-title-wrap">
+            <div class="cc-id">Cluster F</div>
+            <div class="cc-name">Casi limite e robustezza</div>
+          </div>
+        </div>
+        <div class="cc-body">
+          <p>Cosa fare se i dati mancano, l'input è ambiguo o il task è fuori scope. <strong>Un agente in produzione incontra inevitabilmente input che il suo progettista non aveva previsto.</strong> Il modo in cui si comporta in questi momenti definisce la sua affidabilità reale.</p>
+        </div>
+        <div class="cc-impact">
+          <span class="cc-tag hi" style="background:var(--cF); border-color:var(--cF);">Impatto alto in produzione</span>
+          <span class="cc-tag">Report F</span>
+        </div>
+      </div>
+
+      <div class="cluster-card">
+        <div class="cc-head">
+          <div class="cc-stripe" style="background:var(--cG)"></div>
+          <div class="cc-num">G</div>
+          <div class="cc-title-wrap">
+            <div class="cc-id">Cluster G</div>
+            <div class="cc-name">Prompt per agenti agentic</div>
+          </div>
+        </div>
+        <div class="cc-body">
+          <p>Come il prompt cambia quando il modello agisce in loop autonomo con strumenti. <strong>Il prompt agentic ha requisiti specifici</strong>: istruzioni sull'uso dei tool, criteri di terminazione, gestione degli errori nel loop, e — criticamente — i guardrail per evitare che l'agente faccia danni irreversibili.</p>
+        </div>
+        <div class="cc-impact">
+          <span class="cc-tag hi" style="background:var(--cG); border-color:var(--cG);">Specifico per agenti</span>
+          <span class="cc-tag">Report G</span>
+        </div>
+      </div>
+
+    </div>
+
+    <div class="key-point" style="margin-top:32px;">
+      <div class="kp-label">Come usare questi cluster</div>
+      <div class="kp-text">Non tutti i cluster contano ugualmente per ogni tipo di task.</div>
+      <div class="kp-sub">Per un task di classificazione, B (obiettivo preciso) e E (esempi) sono i più impattanti. Per un task di analisi complessa, C (ragionamento) diventa critico. Per un agente in produzione, F (robustezza) e G (agentic) diventano irrinunciabili. I report successivi approfondiscono ciascun cluster, e il report finale mostra come le priorità cambiano per tipo di task.</div>
+    </div>
+
+  </div>
+</div>
+
+
+<!-- ═══════════════════════════
+     S4 — ANATOMIA
+═══════════════════════════ -->
+<div class="sect" id="s4">
+  <div class="sect-head">
+    <div class="sect-num">Sezione 04</div>
+    <h2>Anatomia di un prompt completo</h2>
+    <p>Come si traduce concretamente la struttura a 7 cluster in un prompt scritto? Ogni cluster corrisponde a uno o più layer del testo.</p>
+  </div>
+  <div class="wrap">
+
+    <div class="prose" style="margin-top:28px;">
+      <p>Un prompt per un agente AI ben progettato non è un testo libero. Ha una struttura precisa, dove ogni sezione serve a un cluster diverso. Di seguito l'anatomia di un prompt completo per un agente tipico — ogni layer è clickabile per approfondire cosa contiene e perché.</p>
+    </div>
+
+    <div class="anatomy" style="margin-top:24px;">
+
+      <div class="anat-layer">
+        <div class="anat-stripe" style="background:var(--cA)"></div>
+        <div class="anat-label-wrap">
+          <div class="anat-code">Cluster A</div>
+          <div class="anat-name">Identità</div>
+        </div>
+        <div class="anat-content">
+          <div class="anat-desc"><strong>Chi sei, in quale contesto operativo ti trovi, per chi lavori.</strong> "Sei l'assistente di analisi creditizia di [Banca X]. Il tuo interlocutore è sempre un analista senior del team rischio." Definisce il punto di vista da cui tutto il resto viene interpretato.</div>
+        </div>
+      </div>
+
+      <div class="anat-layer">
+        <div class="anat-stripe" style="background:var(--cB)"></div>
+        <div class="anat-label-wrap">
+          <div class="anat-code">Cluster B</div>
+          <div class="anat-name">Obiettivo</div>
+        </div>
+        <div class="anat-content">
+          <div class="anat-desc"><strong>Il task principale e il criterio di successo.</strong> "Il tuo compito è analizzare i bilanci allegati e identificare i tre principali rischi creditizi, ordinati per severità. L'output deve essere azionabile dal team rischio entro 24h." Include anche i vincoli: cosa non fare, cosa non assumere.</div>
+        </div>
+      </div>
+
+      <div class="anat-layer">
+        <div class="anat-stripe" style="background:var(--cC)"></div>
+        <div class="anat-label-wrap">
+          <div class="anat-code">Cluster C</div>
+          <div class="anat-name">Ragionamento</div>
+        </div>
+        <div class="anat-content">
+          <div class="anat-desc"><strong>Come ragionare prima di rispondere.</strong> "Prima di identificare i rischi, analizza sistematicamente: (1) liquidità a breve termine, (2) struttura del debito, (3) dipendenza da pochi clienti/fornitori. Solo dopo formula i rischi principali." Struttura il processo interno del modello.</div>
+        </div>
+      </div>
+
+      <div class="anat-layer">
+        <div class="anat-stripe" style="background:var(--cD)"></div>
+        <div class="anat-label-wrap">
+          <div class="anat-code">Cluster D</div>
+          <div class="anat-name">Output</div>
+        </div>
+        <div class="anat-content">
+          <div class="anat-desc"><strong>Il formato preciso della risposta attesa.</strong> "Rispondi con una lista numerata di 3 rischi. Per ognuno: nome del rischio (max 5 parole), severità (Alta/Media/Bassa), evidenza dal bilancio (max 2 righe), azione consigliata (max 1 riga)." Elimina varianza nel formato.</div>
+        </div>
+      </div>
+
+      <div class="anat-layer">
+        <div class="anat-stripe" style="background:var(--cE)"></div>
+        <div class="anat-label-wrap">
+          <div class="anat-code">Cluster E</div>
+          <div class="anat-name">Esempi</div>
+        </div>
+        <div class="anat-content">
+          <div class="anat-desc"><strong>1-5 esempi di input/output nel formato atteso.</strong> Mostrano concretamente la forma e il tono dell'output desiderato. Particolarmente utili per task con sfumature difficili da descrivere a parole — qualità del tono, livello di dettaglio, come gestire un caso specifico.</div>
+        </div>
+      </div>
+
+      <div class="anat-layer">
+        <div class="anat-stripe" style="background:var(--cF)"></div>
+        <div class="anat-label-wrap">
+          <div class="anat-code">Cluster F</div>
+          <div class="anat-name">Casi limite</div>
+        </div>
+        <div class="anat-content">
+          <div class="anat-desc"><strong>Istruzioni esplicite per situazioni anomale.</strong> "Se il bilancio è incompleto o mancano dati per uno dei tre assi di analisi, indica esplicitamente il dato mancante invece di stimare. Se il documento allegato non è un bilancio, chiedi conferma prima di procedere." Previene comportamenti imprevisti in produzione.</div>
+        </div>
+      </div>
+
+      <div class="anat-layer">
+        <div class="anat-stripe" style="background:var(--cG)"></div>
+        <div class="anat-label-wrap">
+          <div class="anat-code">Cluster G</div>
+          <div class="anat-name">Tool / Agentic</div>
+        </div>
+        <div class="anat-content">
+          <div class="anat-desc"><strong>Solo per agenti agentic: istruzioni sull'uso dei tool e sui criteri di terminazione.</strong> Quando chiamare quale tool, in quale ordine, quante volte riprovare in caso di errore, quando fermarsi e chiedere all'utente invece di procedere in autonomia. Sezione assente nei prompt per task non-agentic.</div>
+        </div>
+      </div>
+
+    </div>
+
+    <div class="insight" style="border-color:var(--accent); margin-top:28px;">
+      <div class="insight-label" style="color:var(--accent);">Nota importante</div>
+      <p>Non tutti i prompt devono contenere tutti i layer. Un prompt semplice per un task di classificazione potrebbe avere solo B (obiettivo) + D (formato) + E (esempi) ed essere già molto efficace. La struttura completa a 7 layer è il caso più completo — quello di un agente in produzione su un task critico. <strong>Il principio è: includi solo i layer che servono, ma includi sempre quelli che servono per intero.</strong></p>
+    </div>
+
+  </div>
+</div>
+
+
+<!-- ═══════════════════════════
+     S5 — IMPATTO E PRIORITÀ
+═══════════════════════════ -->
+<div class="sect" id="s5">
+  <div class="sect-head">
+    <div class="sect-num">Sezione 05</div>
+    <h2>Impatto per dimensione e priorità di intervento</h2>
+    <p>Non tutte le linee guida hanno lo stesso peso. Dove conviene investire il tempo prima?</p>
+  </div>
+  <div class="wrap">
+
+    <div class="prose" style="margin-top:28px;">
+      <p>Il prompt engineering ha rendimenti molto asimmetrici: alcune scelte hanno impatto enorme sulla qualità dell'output, altre sono ottimizzazioni marginali. Prima di scrivere 40 regole di stile minuziose, vale la pena chiedersi se il ruolo è definito, se l'obiettivo è chiaro e se i casi limite sono coperti.</p>
+    </div>
+
+    <table class="impact-table" style="margin-top:24px;">
+      <thead>
+        <tr>
+          <th>Cluster</th>
+          <th>Impatto tipico</th>
+          <th>Dove si vede il beneficio</th>
+          <th>Costo di implementazione</th>
+          <th>Priorità</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td style="color:var(--cA)">A — Identità e ruolo</td>
+          <td>Alto</td>
+          <td>Tono, registro, proattività, coerenza complessiva</td>
+          <td>Basso (2-5 righe)</td>
+          <td><span class="badge" style="color:var(--cA); border-color:var(--cA);">Sempre primo</span></td>
+        </tr>
+        <tr>
+          <td style="color:var(--cB)">B — Obiettivo e vincoli</td>
+          <td>Molto alto</td>
+          <td>Pertinenza, precisione, assenza di deviazioni</td>
+          <td>Medio (richiede riflessione sul task)</td>
+          <td><span class="badge" style="color:var(--cB); border-color:var(--cB);">Sempre secondo</span></td>
+        </tr>
+        <tr>
+          <td style="color:var(--cC)">C — Ragionamento</td>
+          <td>Medio-alto su task complessi</td>
+          <td>Qualità del ragionamento, riduzione di errori logici</td>
+          <td>Medio-basso</td>
+          <td><span class="badge" style="color:var(--cC); border-color:var(--cC);">Terzo se task complesso</span></td>
+        </tr>
+        <tr>
+          <td style="color:var(--cD)">D — Formato output</td>
+          <td>Critico in pipeline</td>
+          <td>Usabilità diretta dell'output, parsing automatico</td>
+          <td>Basso</td>
+          <td><span class="badge" style="color:var(--cD); border-color:var(--cD);">Sempre se output strutturato</span></td>
+        </tr>
+        <tr>
+          <td style="color:var(--cE)">E — Few-shot</td>
+          <td>Medio-alto</td>
+          <td>Precisione su sfumature, riduzione della varianza</td>
+          <td>Medio (costruire esempi buoni richiede cura)</td>
+          <td><span class="badge" style="color:var(--cE); border-color:var(--cE);">Quando le regole non bastano</span></td>
+        </tr>
+        <tr>
+          <td style="color:var(--cF)">F — Casi limite</td>
+          <td>Alto in produzione</td>
+          <td>Affidabilità, riduzione di allucinazioni, prevedibilità</td>
+          <td>Medio (richiede anticipare i casi limite)</td>
+          <td><span class="badge" style="color:var(--cF); border-color:var(--cF);">Irrinunciabile in prod</span></td>
+        </tr>
+        <tr>
+          <td style="color:var(--cG)">G — Agentic</td>
+          <td>Critico per agenti</td>
+          <td>Sicurezza, terminazione corretta, gestione errori</td>
+          <td>Alto (richiede capire profondamente il task)</td>
+          <td><span class="badge" style="color:var(--cG); border-color:var(--cG);">Solo per agenti agentic</span></td>
+        </tr>
+      </tbody>
+    </table>
+
+    <div class="key-point" style="margin-top:32px;">
+      <div class="kp-label">La regola delle priorità</div>
+      <div class="kp-text">A e B prima di tutto. Poi D. Poi gli altri in base al tipo di task.</div>
+      <div class="kp-sub">Nella pratica: la maggior parte dei prompt mediocri fallisce su A e B — il ruolo è vago, l'obiettivo è underspecified. Sistemarli porta benefici enormi a basso costo. Il cluster F è spesso trascurato in fase di sviluppo e si rivela critico quando il prompt va in produzione e incontra input reali. Il cluster G non è mai necessario per task non-agentic — non aggiungerlo per completezza.</div>
+    </div>
+
+  </div>
+</div>
+
+
+<!-- ═══════════════════════════
+     S6 — ERRORI COMUNI
+═══════════════════════════ -->
+<div class="sect" id="s6">
+  <div class="sect-head">
+    <div class="sect-num">Sezione 06</div>
+    <h2>Gli errori più comuni nel prompt engineering</h2>
+    <p>Prima ancora delle best practice, vale la pena conoscere i pattern che portano sistematicamente a prompt inefficaci.</p>
+  </div>
+  <div class="wrap">
+
+    <div class="errors-grid" style="margin-top:28px;">
+
+      <div class="error-card">
+        <div class="ec-num">Errore 01</div>
+        <div class="ec-title">Obiettivo vago</div>
+        <div class="ec-desc">Scrivere "analizza questo documento" senza specificare <strong>cosa cercare, a quale livello di dettaglio, per quale scopo, in quale formato</strong>. Il modello riempie il vuoto con la sua interpretazione — spesso generica e non allineata a ciò che si voleva.</div>
+        <div class="ec-fix"><strong>Fix:</strong> Operazionalizza l'obiettivo. Cosa deve contenere un output perfetto? Descrivilo concretamente.</div>
+      </div>
+
+      <div class="error-card">
+        <div class="ec-num">Errore 02</div>
+        <div class="ec-title">Zero ruolo, zero contesto</div>
+        <div class="ec-desc">Iniziare il prompt direttamente con l'istruzione del task senza definire chi è il modello, chi è l'interlocutore, in quale contesto si opera. Il modello assume un ruolo di default — solitamente un <strong>assistente generico</strong> — che raramente corrisponde a quello che serve.</div>
+        <div class="ec-fix"><strong>Fix:</strong> Tre righe di identità all'inizio del system prompt cambiano tutto il registro e la specializzazione dell'output.</div>
+      </div>
+
+      <div class="error-card">
+        <div class="ec-num">Errore 03</div>
+        <div class="ec-title">Istruzioni negative senza alternative</div>
+        <div class="ec-desc">Scrivere "non fare X" senza dire cosa fare invece. <strong>Il modello tende a "pensare" a X</strong> anche quando gli è stato detto di non farlo (il meccanismo è simile al "non pensare all'elefante rosa").</div>
+        <div class="ec-fix"><strong>Fix:</strong> "Non fare X, fai Y invece." Sostituire sempre la proibizione con l'alternativa preferita.</div>
+      </div>
+
+      <div class="error-card">
+        <div class="ec-num">Errore 04</div>
+        <div class="ec-title">Lunghezza come proxy di qualità</div>
+        <div class="ec-desc">Credere che un prompt più lungo sia necessariamente migliore. Un prompt lungo con istruzioni contraddittorie, ridondanti o irrilevanti <strong>peggiora l'output</strong> — il modello fatica a dare peso alle istruzioni più importanti.</div>
+        <div class="ec-fix"><strong>Fix:</strong> Ogni frase nel prompt deve guadagnarsi il suo posto. Se una regola non cambia l'output, rimuoverla.</div>
+      </div>
+
+      <div class="error-card">
+        <div class="ec-num">Errore 05</div>
+        <div class="ec-title">Nessuna gestione dei casi limite</div>
+        <div class="ec-desc">Scrivere il prompt immaginando solo gli input "normali". In produzione il modello incontrerà inevitabilmente <strong>input ambigui, incompleti, fuori scope o mal formati</strong>. Senza istruzioni esplicite, il suo comportamento in questi casi è imprevedibile.</div>
+        <div class="ec-fix"><strong>Fix:</strong> Dedicare sempre una sezione del prompt ai "what if": cosa fare se mancano dati, se l'input è ambiguo, se il task è fuori scope.</div>
+      </div>
+
+      <div class="error-card">
+        <div class="ec-num">Errore 06</div>
+        <div class="ec-title">Prompt scritto una volta e mai iterato</div>
+        <div class="ec-desc">Trattare il prompt come un artefatto statico invece che come qualcosa da evolvere. <strong>Il prompt perfetto al primo tentativo non esiste.</strong> Ogni prompt è un'ipotesi su cosa funziona — da testare sistematicamente su casi reali.</div>
+        <div class="ec-fix"><strong>Fix:</strong> Costruire una piccola suite di test con input rappresentativi e casi limite. Ogni modifica al prompt va valutata su quella suite.</div>
+      </div>
+
+      <div class="error-card">
+        <div class="ec-num">Errore 07</div>
+        <div class="ec-title">Confondere istruzione e esempio</div>
+        <div class="ec-desc">Scrivere regole molto dettagliate invece di mostrare un esempio del comportamento atteso. Per sfumature di tono, stile o formato, <strong>un esempio vale dieci regole</strong>. E viceversa: un singolo esempio malformato può sovrascrivere regole scritte correttamente.</div>
+        <div class="ec-fix"><strong>Fix:</strong> Usa regole per i vincoli logici, usa esempi per stile/tono/formato. Non sono intercambiabili.</div>
+      </div>
+
+      <div class="error-card">
+        <div class="ec-num">Errore 08</div>
+        <div class="ec-title">Istruzioni contraddittorie</div>
+        <div class="ec-desc">Inserire nel prompt istruzioni che si contraddicono — "sii conciso" e "copri tutti gli aspetti", "usa un tono informale" e "usa terminologia tecnica precisa". Il modello <strong>deve scegliere quale istruzione privilegiare</strong>, e la scelta non è prevedibile.</div>
+        <div class="ec-fix"><strong>Fix:</strong> Rileggere il prompt cercando attivamente contraddizioni prima di usarlo. Gerarchizzare le istruzioni quando sono in tensione.</div>
+      </div>
+
+    </div>
+
+  </div>
+</div>
+
+
+<!-- ═══════════════════════════
+     S7 — COME MIGLIORARE
+═══════════════════════════ -->
+<div class="sect" id="s7">
+  <div class="sect-head">
+    <div class="sect-num">Sezione 07</div>
+    <h2>Come approcciare il miglioramento sistematico</h2>
+    <p>Il prompt engineering non è una skill creativa — è una disciplina empirica. Si migliora con un metodo, non con l'intuizione.</p>
+  </div>
+  <div class="wrap">
+
+    <div class="prose" style="margin-top:28px;">
+      <p>Il ciclo di sviluppo di un prompt efficace segue sempre la stessa logica: formulare un'ipotesi su cosa migliorerà l'output, testarla su un insieme rappresentativo di input, misurare il risultato, aggiornare il prompt. Non ci sono scorciatoie.</p>
+    </div>
+
+    <div class="roadmap" style="margin-top:32px;">
+
+      <div class="rm-item">
+        <div class="rm-step">
+          <div class="rm-circle" style="background:var(--cA)">01</div>
+          <div class="rm-line"></div>
+        </div>
+        <div class="rm-content">
+          <div class="rm-id">Prima cosa</div>
+          <div class="rm-title">Definisci cos'è un buon output</div>
+          <div class="rm-desc">Prima ancora di scrivere il prompt, chiarisci il criterio di successo. Come si distingue un output eccellente da uno mediocre? Riesci a descriverlo a parole? Potresti mostrarlo come esempio? Senza questo, non puoi sapere se il tuo prompt sta migliorando o no.</div>
+        </div>
+      </div>
+
+      <div class="rm-item">
+        <div class="rm-step">
+          <div class="rm-circle" style="background:var(--cB)">02</div>
+          <div class="rm-line"></div>
+        </div>
+        <div class="rm-content">
+          <div class="rm-id">Secondo</div>
+          <div class="rm-title">Costruisci una suite di test minima</div>
+          <div class="rm-desc">Raccogli 10-20 input rappresentativi: i casi tipici che l'agente incontrerà, qualche caso limite prevedibile, qualche input "strano". Questa suite è la pietra di paragone contro cui misurare ogni versione del prompt.</div>
+        </div>
+      </div>
+
+      <div class="rm-item">
+        <div class="rm-step">
+          <div class="rm-circle" style="background:var(--cC)">03</div>
+          <div class="rm-line"></div>
+        </div>
+        <div class="rm-content">
+          <div class="rm-id">Terzo</div>
+          <div class="rm-title">Scrivi la prima versione del prompt seguendo la struttura A→G</div>
+          <div class="rm-desc">Non cercare la perfezione al primo tentativo. Scrivi una versione che copra almeno i cluster A (identità), B (obiettivo) e D (formato). Poi testa su tutta la suite.</div>
+        </div>
+      </div>
+
+      <div class="rm-item">
+        <div class="rm-step">
+          <div class="rm-circle" style="background:var(--cD)">04</div>
+          <div class="rm-line"></div>
+        </div>
+        <div class="rm-content">
+          <div class="rm-id">Quarto</div>
+          <div class="rm-title">Identifica il pattern di fallimento dominante</div>
+          <div class="rm-desc">Guarda dove il prompt fallisce sulla suite di test. C'è un pattern ricorrente? Formato sbagliato? Ragionamento errato su casi complessi? Comportamento imprevisto su input anomali? Il cluster che copre quel pattern è quello su cui lavorare per primo.</div>
+        </div>
+      </div>
+
+      <div class="rm-item">
+        <div class="rm-step">
+          <div class="rm-circle" style="background:var(--cE)">05</div>
+          <div class="rm-line"></div>
+        </div>
+        <div class="rm-content">
+          <div class="rm-id">Quinto</div>
+          <div class="rm-title">Modifica una cosa alla volta</div>
+          <div class="rm-desc">Mai cambiare 5 cose contemporaneamente nel prompt — non puoi attribuire il miglioramento (o il peggioramento) a nessuna di esse. Ogni iterazione cambia una sola variabile. Testa. Registra il risultato. Poi procedi.</div>
+        </div>
+      </div>
+
+      <div class="rm-item">
+        <div class="rm-step">
+          <div class="rm-circle" style="background:var(--cF)">06</div>
+          <div class="rm-line"></div>
+        </div>
+        <div class="rm-content">
+          <div class="rm-id">Sesto</div>
+          <div class="rm-title">Aggiungi casi limite alla suite man mano che li scopri</div>
+          <div class="rm-desc">Ogni volta che il prompt in produzione genera un output inatteso, aggiungi quell'input alla suite di test. Nel tempo la suite diventa sempre più ricca e il prompt sempre più robusto. Questo è il vero ciclo di miglioramento continuo.</div>
+        </div>
+      </div>
+
+      <div class="rm-item">
+        <div class="rm-step">
+          <div class="rm-circle" style="background:var(--cG)">07</div>
+        </div>
+        <div class="rm-content">
+          <div class="rm-id">Settimo</div>
+          <div class="rm-title">Documenta il rationale di ogni scelta</div>
+          <div class="rm-desc">Un prompt senza documentazione delle scelte è fragile. Quando torni a modificarlo dopo 3 mesi, non ricordi perché quella regola c'è, e rischi di rimuoverla senza capirne le conseguenze. Tieni un changelog minimo: perché è stata aggiunta ogni sezione significativa del prompt.</div>
+        </div>
+      </div>
+
+    </div>
+
+    <div class="key-point" style="margin-top:32px;">
+      <div class="kp-label">Il punto di arrivo</div>
+      <div class="kp-text">Un prompt maturo non è quello che funziona meglio in media. È quello che fallisce raramente e in modo prevedibile.</div>
+      <div class="kp-sub">In produzione, la cosa più pericolosa non è un output mediocre — è un output sbagliato che sembra giusto. Il prompt maturo è quello che, quando non sa come rispondere, lo dice chiaramente. Questa robustezza si costruisce lavorando sul cluster F (casi limite) e, per gli agenti, sul cluster G — e si misura con una suite di test che include i casi difficili, non solo quelli facili.</div>
+    </div>
+
+    <div class="insight" style="border-color:var(--cB); margin-top:24px;">
+      <div class="insight-label" style="color:var(--cB);">I report che seguono</div>
+      <p>I prossimi 7 report (A → G) approfondiscono ciascun cluster con <strong>linee guida pratiche, esempi concreti e spiegazione del meccanismo LLM sottostante</strong>. Ogni report è autonomo e può essere letto indipendentemente. Il report finale trasversale mostra come le priorità e le tecniche cambiano per tipo di task (classificazione, generazione, ragionamento, agentic).</p>
+    </div>
+
+  </div>
+</div>
+
+
+<!-- FOOTER -->
+<div class="footer">
+  <span>Serie Agenti AI — Leva 01 · Prompt Engineering · Report Quadro</span>
+  <span>Marzo 2026</span>
+</div>
+
+
+<script>
+function show(n) {
+  document.querySelectorAll('.sect').forEach(s => s.classList.remove('active'));
+  document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('s'+n).classList.add('active');
+  document.querySelectorAll('.nav-btn')[n-1].classList.add('active');
+  window.scrollTo({top:0, behavior:'smooth'});
+}
+</script>
+
+</body>
+</html>

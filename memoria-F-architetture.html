@@ -1,0 +1,629 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Memoria — F · Architetture integrate</title>
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Outfit:wght@200;300;400;500;600;700;800;900&family=IBM+Plex+Mono:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg:     #faf8f5;
+  --bg2:    #f2efe9;
+  --bg3:    #e9e5dc;
+  --ink:    #1b1915;
+  --ink2:   #2e2b25;
+  --ink3:   #6d685c;
+  --ink4:   #a19c8f;
+  --border: #d9d4c8;
+  --border2:#cac4b6;
+
+  --accent:  #6b4fa0;
+  --accent2: #4a3070;
+  --accent-light: #f3effa;
+
+  --t-ctx: #2e7d9c; --t-ctx-l:#edf4f9;
+  --t-epi: #b07d24; --t-epi-l:#fdf6e8;
+  --t-sem: #3d7a45; --t-sem-l:#f4faf5;
+  --t-pro: #c0392b; --t-pro-l:#fdf5f5;
+
+  --ok:  #3d7a45; --ok-l:#f4faf5;
+  --bad: #c0392b; --bad-l:#fdf5f5;
+  --warn:#b07d24; --warn-l:#fdf6e8;
+}
+
+* { margin:0; padding:0; box-sizing:border-box; }
+html { scroll-behavior:smooth; }
+body { background:var(--bg); color:var(--ink); font-family:'Outfit',sans-serif; font-weight:300; font-size:14px; line-height:1.75; }
+
+.masthead { background:var(--ink); color:rgba(255,255,255,.9); padding:60px 56px 52px; position:relative; overflow:hidden; }
+.masthead::before { content:''; position:absolute; inset:0; background: repeating-linear-gradient(90deg,rgba(255,255,255,.012) 0,rgba(255,255,255,.012) 1px,transparent 1px,transparent 64px), repeating-linear-gradient(0deg,rgba(255,255,255,.012) 0,rgba(255,255,255,.012) 1px,transparent 1px,transparent 64px); pointer-events:none; }
+.masthead::after { content:'F'; position:absolute; right:44px; bottom:-28px; font-family:'Instrument Serif',serif; font-size:280px; line-height:1; color:rgba(255,255,255,.025); pointer-events:none; }
+.mh-eye { font-family:'IBM Plex Mono',monospace; font-size:10px; letter-spacing:3px; text-transform:uppercase; color:rgba(255,255,255,.25); margin-bottom:18px; position:relative; }
+.mh-cluster { display:inline-block; font-family:'IBM Plex Mono',monospace; font-size:10px; letter-spacing:2px; text-transform:uppercase; padding:4px 12px; border:1px solid var(--accent); color:var(--accent); margin-bottom:20px; position:relative; }
+.masthead h1 { font-family:'Instrument Serif',serif; font-weight:400; font-size:clamp(30px,4.5vw,54px); line-height:1.08; letter-spacing:-1px; max-width:700px; position:relative; }
+.mh-sub { margin-top:20px; font-size:15px; font-weight:300; color:rgba(255,255,255,.38); max-width:660px; line-height:1.7; position:relative; }
+.mh-meta { margin-top:32px; display:flex; gap:32px; flex-wrap:wrap; position:relative; }
+.mh-stat { display:flex; flex-direction:column; gap:4px; }
+.mh-stat-val { font-family:'IBM Plex Mono',monospace; font-size:22px; font-weight:500; color:rgba(255,255,255,.85); }
+.mh-stat-lbl { font-size:10px; letter-spacing:2px; text-transform:uppercase; color:rgba(255,255,255,.25); }
+
+.nav { background:var(--ink2); position:sticky; top:0; z-index:100; display:flex; overflow-x:auto; border-bottom:1px solid rgba(255,255,255,.06); }
+.nav-btn { flex:1; min-width:100px; padding:13px 12px; border:none; background:transparent; cursor:pointer; font-family:'Outfit',sans-serif; font-size:10.5px; font-weight:600; text-transform:uppercase; letter-spacing:.4px; color:rgba(255,255,255,.3); border-right:1px solid rgba(255,255,255,.06); transition:all .2s; white-space:nowrap; }
+.nav-btn:last-child { border-right:none; }
+.nav-btn:hover { color:rgba(255,255,255,.6); }
+.nav-btn.active { color:#fff; background:rgba(255,255,255,.05); }
+
+.sect { display:none; }
+.sect.active { display:block; animation:fadeIn .3s ease; }
+@keyframes fadeIn { from{opacity:0;transform:translateY(6px)} to{opacity:1;transform:translateY(0)} }
+.sect-head { padding:48px 56px 36px; border-bottom:1px solid var(--border); }
+.sect-num { font-family:'IBM Plex Mono',monospace; font-size:10px; letter-spacing:3px; text-transform:uppercase; color:var(--ink4); margin-bottom:10px; }
+.sect-head h2 { font-family:'Instrument Serif',serif; font-weight:400; font-size:clamp(26px,3.5vw,42px); line-height:1.1; letter-spacing:-.5px; max-width:640px; margin-bottom:14px; }
+.sect-head p { color:var(--ink3); max-width:700px; font-size:14.5px; }
+.wrap { padding:0 56px 64px; }
+
+.prose { max-width:760px; }
+.prose p { font-size:14.5px; color:var(--ink3); line-height:1.85; margin-bottom:16px; }
+.prose p strong { color:var(--ink2); font-weight:500; }
+.prose p em { font-style:italic; color:var(--ink2); }
+
+/* ── ARCHITECTURE CARD ── */
+.arch-card { border:1px solid var(--border2); background:var(--bg); overflow:hidden; margin-top:24px; }
+.ac-bar { height:5px; }
+.ac-head { padding:16px 22px; background:var(--bg2); border-bottom:1px solid var(--border); display:flex; align-items:flex-start; gap:14px; }
+.ac-badge { font-family:'IBM Plex Mono',monospace; font-size:10px; font-weight:700; letter-spacing:2px; padding:4px 10px; color:#fff; flex-shrink:0; margin-top:2px; }
+.ac-title-col {}
+.ac-label { font-family:'IBM Plex Mono',monospace; font-size:9px; letter-spacing:2px; text-transform:uppercase; color:var(--ink4); margin-bottom:3px; }
+.ac-title { font-family:'Instrument Serif',serif; font-size:22px; color:var(--ink2); margin-bottom:3px; }
+.ac-tagline { font-size:13px; color:var(--ink3); }
+.ac-body { display:grid; grid-template-columns:220px 1fr; }
+.ac-types { border-right:1px solid var(--border); padding:16px 18px; background:var(--bg2); }
+.ac-types-title { font-family:'IBM Plex Mono',monospace; font-size:9px; letter-spacing:2px; text-transform:uppercase; color:var(--ink4); margin-bottom:10px; padding-bottom:6px; border-bottom:1px solid var(--border); }
+.ac-type-item { display:flex; align-items:center; gap:8px; padding:5px 0; border-bottom:1px solid var(--border); font-size:12.5px; color:var(--ink3); }
+.ac-type-item:last-child { border-bottom:none; }
+.ac-dot { width:10px; height:10px; border-radius:50%; flex-shrink:0; }
+.ac-type-name { font-weight:500; color:var(--ink2); }
+.ac-type-note { font-size:11.5px; color:var(--ink4); }
+.ac-detail { padding:16px 20px; }
+.ac-detail-title { font-family:'IBM Plex Mono',monospace; font-size:9px; letter-spacing:2px; text-transform:uppercase; color:var(--ink4); margin-bottom:10px; padding-bottom:6px; border-bottom:1px solid var(--border); }
+.ac-detail p { font-size:13px; color:var(--ink3); line-height:1.65; margin-bottom:8px; }
+.ac-detail p strong { color:var(--ink2); font-weight:500; }
+.ac-footer { padding:14px 20px; border-top:1px solid var(--border); background:var(--accent-light); }
+.ac-when-label { font-family:'IBM Plex Mono',monospace; font-size:9px; letter-spacing:2px; text-transform:uppercase; color:var(--accent); margin-bottom:4px; }
+.ac-when-text { font-size:13px; color:var(--accent2); line-height:1.6; }
+
+/* ── RRW CYCLE ── */
+.rrw-diagram { background:var(--ink); border:1px solid var(--border2); padding:24px; margin-top:20px; overflow-x:auto; }
+.rrw-diagram svg { display:block; margin:0 auto; }
+
+/* ── RRW DETAIL ── */
+.rrw-phases { display:grid; grid-template-columns:1fr 1fr 1fr; gap:12px; margin-top:16px; }
+.rrw-phase { border:1px solid var(--border2); background:var(--bg); padding:16px 18px; overflow:hidden; }
+.rp-icon { font-family:'IBM Plex Mono',monospace; font-size:18px; font-weight:700; margin-bottom:6px; }
+.rp-name { font-weight:600; font-size:14px; color:var(--ink2); margin-bottom:8px; }
+.rp-desc { font-size:13px; color:var(--ink3); line-height:1.6; }
+.rp-desc strong { color:var(--ink2); font-weight:500; }
+.rp-example { margin-top:8px; padding:8px 10px; font-family:'IBM Plex Mono',monospace; font-size:10.5px; line-height:1.6; }
+
+/* ── EVAL TABLE ── */
+.eval-table { width:100%; border-collapse:collapse; margin-top:16px; border:1px solid var(--border2); }
+.eval-table th, .eval-table td { padding:11px 14px; border:1px solid var(--border); font-size:12.5px; line-height:1.5; vertical-align:top; text-align:left; }
+.eval-table thead th { background:var(--ink); color:rgba(255,255,255,.82); font-family:'IBM Plex Mono',monospace; font-size:9px; letter-spacing:.5px; text-transform:uppercase; }
+.eval-table tbody tr:nth-child(even) { background:var(--bg2); }
+.eval-table td:first-child { font-weight:500; color:var(--ink2); width:180px; }
+.ev-ok   { color:var(--ok); font-weight:600; font-family:'IBM Plex Mono',monospace; font-size:11px; }
+.ev-warn { color:var(--warn); font-weight:600; font-family:'IBM Plex Mono',monospace; font-size:11px; }
+.ev-bad  { color:var(--bad); font-weight:600; font-family:'IBM Plex Mono',monospace; font-size:11px; }
+
+/* ── SERIES RECAP ── */
+.series-grid { display:grid; grid-template-columns:repeat(6,1fr); gap:1px; background:var(--border); margin-top:24px; border:1px solid var(--border2); }
+.sg-cell { background:var(--bg); padding:14px 12px; }
+.sg-label { font-family:'IBM Plex Mono',monospace; font-size:8px; letter-spacing:2px; text-transform:uppercase; color:var(--ink4); margin-bottom:4px; }
+.sg-title { font-family:'Instrument Serif',serif; font-size:14px; color:var(--ink2); margin-bottom:3px; }
+.sg-desc { font-size:11px; color:var(--ink3); line-height:1.5; }
+
+/* ── CHECKLIST ── */
+.checklist { margin-top:16px; }
+.check-item { display:flex; gap:12px; align-items:flex-start; padding:10px 0; border-bottom:1px solid var(--border); font-size:13.5px; color:var(--ink3); }
+.check-item:last-child { border-bottom:none; }
+.check-icon { width:20px; height:20px; border-radius:50%; background:var(--accent); color:#fff; display:flex; align-items:center; justify-content:center; font-size:11px; font-weight:700; flex-shrink:0; margin-top:1px; }
+.check-item strong { color:var(--ink2); font-weight:500; }
+
+/* ── MECHANISM / KP / INSIGHT ── */
+.mechanism { margin-top:14px; padding:14px 18px; border-left:3px solid var(--accent); background:var(--accent-light); }
+.mech-lbl { font-family:'IBM Plex Mono',monospace; font-size:9px; letter-spacing:2px; text-transform:uppercase; color:var(--accent); margin-bottom:6px; }
+.mechanism p { font-size:13px; color:var(--ink3); line-height:1.65; }
+.mechanism p strong { color:var(--ink2); font-weight:500; }
+.key-point { margin-top:36px; padding:24px 28px; border-left:4px solid var(--accent); background:var(--accent-light); }
+.kp-label { font-family:'IBM Plex Mono',monospace; font-size:9px; letter-spacing:2px; text-transform:uppercase; color:var(--accent); margin-bottom:8px; }
+.kp-text { font-family:'Instrument Serif',serif; font-size:18px; line-height:1.45; color:var(--ink2); }
+.kp-sub { margin-top:10px; font-size:13px; color:var(--ink3); line-height:1.65; }
+.insight { margin:16px 0; padding:16px 20px; border-left:4px solid var(--accent); background:var(--accent-light); }
+.insight-lbl { font-family:'IBM Plex Mono',monospace; font-size:9px; letter-spacing:2px; text-transform:uppercase; color:var(--accent); margin-bottom:6px; }
+.insight p { font-size:13.5px; color:var(--ink2); line-height:1.65; max-width:700px; }
+.insight p strong { font-weight:500; }
+
+.footer { padding:24px 56px; border-top:1px solid var(--border); display:flex; justify-content:space-between; align-items:center; font-family:'IBM Plex Mono',monospace; font-size:10px; letter-spacing:1px; text-transform:uppercase; color:var(--ink4); }
+
+@media (max-width:700px) {
+  .masthead,.sect-head,.wrap,.footer { padding-left:20px; padding-right:20px; }
+  .ac-body,.rrw-phases { grid-template-columns:1fr; }
+  .series-grid { grid-template-columns:1fr 1fr; }
+}
+</style>
+</head>
+<body>
+
+<div class="masthead">
+  <div class="mh-eye">Serie Agenti AI · Leva Memoria</div>
+  <div class="mh-cluster">Report F — Finale</div>
+  <h1>Architetture integrate</h1>
+  <p class="mh-sub">Tre architetture tipo che combinano i quattro tipi di memoria in sistemi coerenti. Il ciclo read→reason→write che le governa. Come misurare se il sistema di memoria funziona. La chiusura della serie.</p>
+  <div class="mh-meta">
+    <div class="mh-stat"><div class="mh-stat-val">3</div><div class="mh-stat-lbl">Architetture tipo</div></div>
+    <div class="mh-stat"><div class="mh-stat-val">Read→Write</div><div class="mh-stat-lbl">Il ciclo fondamentale</div></div>
+    <div class="mh-stat"><div class="mh-stat-val">Valutazione</div><div class="mh-stat-lbl">Come misurare</div></div>
+    <div class="mh-stat"><div class="mh-stat-val">Fine serie</div><div class="mh-stat-lbl">Report 7/7</div></div>
+  </div>
+</div>
+
+<div class="nav">
+  <button class="nav-btn active" onclick="show(1)">Il ciclo fondamentale</button>
+  <button class="nav-btn" onclick="show(2)">Architettura 1: semplice</button>
+  <button class="nav-btn" onclick="show(3)">Architettura 2: persistente</button>
+  <button class="nav-btn" onclick="show(4)">Architettura 3: multi-utente</button>
+  <button class="nav-btn" onclick="show(5)">Valutazione</button>
+  <button class="nav-btn" onclick="show(6)">La serie completa</button>
+</div>
+
+
+<!-- ═══════════════════════════
+     S1 — IL CICLO FONDAMENTALE
+═══════════════════════════ -->
+<div class="sect active" id="s1">
+  <div class="sect-head">
+    <div class="sect-num">Sezione 01</div>
+    <h2>Il ciclo read → reason → write</h2>
+    <p>Prima di scegliere quale architettura costruire, serve capire il ciclo che governa qualsiasi sistema di memoria: come il modello legge la memoria, la usa nel ragionamento, e la aggiorna a fine turno.</p>
+  </div>
+  <div class="wrap">
+
+    <div class="prose" style="margin-top:28px;">
+      <p>Ogni interazione di un agente con memoria segue lo stesso ciclo in tre fasi. <em>Read</em>: recupera la memoria rilevante e la inietta nel context window prima di generare la risposta. <em>Reason</em>: usa il contesto recuperato nel ragionamento insieme all'input corrente. <em>Write</em>: a fine turno o a fine sessione, aggiorna la memoria con ciò che è emerso dall'interazione. Nelle tre architetture che seguono, le fasi del ciclo sono le stesse — cambia cosa si legge, quanto spesso si scrive, e quali tipi di memoria sono coinvolti.</p>
+    </div>
+
+    <div class="rrw-diagram">
+      <svg viewBox="0 0 720 200" width="100%" xmlns="http://www.w3.org/2000/svg" font-family="IBM Plex Mono, monospace">
+        <text x="20" y="20" fill="rgba(255,255,255,.35)" font-size="9" letter-spacing="2">IL CICLO READ → REASON → WRITE — OGNI TURNO O SESSIONE</text>
+
+        <!-- READ -->
+        <rect x="30" y="48" width="170" height="120" rx="4" fill="#0e1e2a" stroke="#2e7d9c" stroke-width="2"/>
+        <text x="115" y="76" fill="#93c5e8" font-size="11" text-anchor="middle" font-weight="700">READ</text>
+        <text x="115" y="94"  fill="rgba(255,255,255,.55)" font-size="9" text-anchor="middle">1. Carica profilo semantico</text>
+        <text x="115" y="108" fill="rgba(255,255,255,.55)" font-size="9" text-anchor="middle">2. Recupera task aperti</text>
+        <text x="115" y="122" fill="rgba(255,255,255,.55)" font-size="9" text-anchor="middle">3. Retrieval episodico</text>
+        <text x="115" y="136" fill="rgba(255,255,255,.55)" font-size="9" text-anchor="middle">4. Applica procedure</text>
+        <text x="115" y="150" fill="rgba(255,255,255,.3)" font-size="8" text-anchor="middle">→ tutto nel context window</text>
+        <text x="115" y="163" fill="rgba(255,255,255,.25)" font-size="8" text-anchor="middle">avvio sessione / avvio turno</text>
+
+        <!-- Arrow R→R -->
+        <line x1="200" y1="108" x2="260" y2="108" stroke="#6b4fa0" stroke-width="2" marker-end="url(#aw1)"/>
+
+        <!-- REASON -->
+        <rect x="260" y="48" width="170" height="120" rx="4" fill="#1a1428" stroke="#6b4fa0" stroke-width="2"/>
+        <text x="345" y="76" fill="#c4a8e8" font-size="11" text-anchor="middle" font-weight="700">REASON</text>
+        <text x="345" y="94"  fill="rgba(255,255,255,.55)" font-size="9" text-anchor="middle">Risponde usando:</text>
+        <text x="345" y="108" fill="rgba(255,255,255,.55)" font-size="9" text-anchor="middle">• profilo utente</text>
+        <text x="345" y="122" fill="rgba(255,255,255,.55)" font-size="9" text-anchor="middle">• episodi rilevanti</text>
+        <text x="345" y="136" fill="rgba(255,255,255,.55)" font-size="9" text-anchor="middle">• procedure attive</text>
+        <text x="345" y="150" fill="rgba(255,255,255,.55)" font-size="9" text-anchor="middle">• input corrente</text>
+        <text x="345" y="163" fill="rgba(255,255,255,.25)" font-size="8" text-anchor="middle">durante il turno</text>
+
+        <!-- Arrow R→W -->
+        <line x1="430" y1="108" x2="490" y2="108" stroke="#3d7a45" stroke-width="2" marker-end="url(#aw2)"/>
+
+        <!-- WRITE -->
+        <rect x="490" y="48" width="190" height="120" rx="4" fill="#1a2e1e" stroke="#3d7a45" stroke-width="2"/>
+        <text x="585" y="76" fill="#7dd3a8" font-size="11" text-anchor="middle" font-weight="700">WRITE</text>
+        <text x="585" y="94"  fill="rgba(255,255,255,.55)" font-size="9" text-anchor="middle">Fine turno: aggiorna in-context</text>
+        <text x="585" y="108" fill="rgba(255,255,255,.55)" font-size="9" text-anchor="middle">Fine sessione:</text>
+        <text x="585" y="122" fill="rgba(255,255,255,.55)" font-size="9" text-anchor="middle">• estrai episodio</text>
+        <text x="585" y="136" fill="rgba(255,255,255,.55)" font-size="9" text-anchor="middle">• consolida in semantica</text>
+        <text x="585" y="150" fill="rgba(255,255,255,.55)" font-size="9" text-anchor="middle">• aggiorna procedure (se)</text>
+        <text x="585" y="163" fill="rgba(255,255,255,.25)" font-size="8" text-anchor="middle">fine turno / fine sessione</text>
+
+        <!-- Loop arrow back -->
+        <path d="M 585,168 Q 585,185 345,185 Q 115,185 115,168" fill="none" stroke="rgba(107,79,160,.4)" stroke-width="1.5" stroke-dasharray="5,3" marker-end="url(#aw3)"/>
+        <text x="345" y="196" fill="rgba(255,255,255,.2)" font-size="8" text-anchor="middle">sessione successiva</text>
+
+        <defs>
+          <marker id="aw1" markerWidth="6" markerHeight="6" refX="5" refY="3" orient="auto"><path d="M0,0 L6,3 L0,6 Z" fill="#6b4fa0"/></marker>
+          <marker id="aw2" markerWidth="6" markerHeight="6" refX="5" refY="3" orient="auto"><path d="M0,0 L6,3 L0,6 Z" fill="#3d7a45"/></marker>
+          <marker id="aw3" markerWidth="6" markerHeight="6" refX="5" refY="3" orient="auto"><path d="M0,0 L6,3 L0,6 Z" fill="rgba(107,79,160,.4)"/></marker>
+        </defs>
+      </svg>
+    </div>
+
+    <div class="rrw-phases">
+      <div class="rrw-phase">
+        <div class="rp-icon" style="color:var(--t-ctx)">R↓</div>
+        <div class="rp-name">Read — all'avvio della sessione</div>
+        <div class="rp-desc">Inietta nel context window, nell'ordine: <strong>1)</strong> system prompt con procedure attive, <strong>2)</strong> profilo semantico compatto, <strong>3)</strong> task aperti da sessioni precedenti, <strong>4)</strong> episodi rilevanti recuperati per retrieval semantico. Tutto questo avviene prima del primo messaggio dell'utente — è invisibile all'utente ma determina il comportamento dell'intera sessione.</div>
+        <div class="rp-example" style="border-left:3px solid var(--t-ctx); background:var(--t-ctx-l); color:#1d3f5e;">Latenza aggiunta: 50–200ms per il retrieval episodico. Il profilo semantico è un lookup O(1) — trascurabile.</div>
+      </div>
+      <div class="rrw-phase">
+        <div class="rp-icon" style="color:var(--accent)">◇</div>
+        <div class="rp-name">Reason — durante la sessione</div>
+        <div class="rp-desc">Il modello usa tutto il contesto disponibile nel context window: le procedure attive (layer 1–3 dal Report D), il profilo semantico (Report C), gli episodi rilevanti (Report B), e l'input corrente. La gestione del context window (Report A) garantisce che questo contesto rimanga gestibile anche in sessioni lunghe.</div>
+        <div class="rp-example" style="border-left:3px solid var(--accent); background:var(--accent-light); color:var(--accent2);">Il Reason non richiede azioni speciali — è il normale funzionamento del modello. La qualità dipende da quanto bene è stato progettato il Read.</div>
+      </div>
+      <div class="rrw-phase">
+        <div class="rp-icon" style="color:var(--t-sem)">W↑</div>
+        <div class="rp-name">Write — a fine sessione</div>
+        <div class="rp-desc">Tre operazioni: <strong>1)</strong> Estrazione episodica (Report B) — il riassunto strutturato della sessione viene salvato con embedding nel vector store. <strong>2)</strong> Consolidamento semantico (Report C) — se sono emersi nuovi segnali, aggiorna o metti in staging attributi del profilo. <strong>3)</strong> Aggiornamento procedurale (Report D) — solo se necessario e dopo verifica.</div>
+        <div class="rp-example" style="border-left:3px solid var(--t-sem); background:var(--t-sem-l); color:#2e4a32;">Eseguito in background dopo la chiusura della sessione — non blocca la risposta corrente. Timeout di inattività: trigger automatico.</div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+
+<!-- ═══════════════════════════
+     S2 — ARCHITETTURA 1
+═══════════════════════════ -->
+<div class="sect" id="s2">
+  <div class="sect-head">
+    <div class="sect-num">Architettura 01</div>
+    <h2>Agente conversazionale semplice</h2>
+    <p>La maggior parte degli agenti in produzione. Memoria in-context ottimizzata e memoria episodica leggera — senza profilo semantico completo né sistema procedurale stratificato.</p>
+  </div>
+  <div class="wrap">
+
+    <div class="arch-card" style="margin-top:28px;">
+      <div class="ac-bar" style="background:var(--t-ctx)"></div>
+      <div class="ac-head">
+        <div class="ac-badge" style="background:var(--t-ctx)">Arch. 1</div>
+        <div class="ac-title-col">
+          <div class="ac-label">Complessità bassa — infrastruttura minima</div>
+          <div class="ac-title">Agente conversazionale semplice</div>
+          <div class="ac-tagline">Continuità di base tra sessioni senza infrastruttura complessa</div>
+        </div>
+      </div>
+      <div class="ac-body">
+        <div class="ac-types">
+          <div class="ac-types-title">Tipi di memoria attivi</div>
+          <div class="ac-type-item">
+            <div class="ac-dot" style="background:var(--t-ctx)"></div>
+            <div><div class="ac-type-name">In-context</div><div class="ac-type-note">Completa — con summarization</div></div>
+          </div>
+          <div class="ac-type-item">
+            <div class="ac-dot" style="background:var(--t-epi)"></div>
+            <div><div class="ac-type-name">Episodica</div><div class="ac-type-note">Leggera — solo task aperti + ultime 5–10 sessioni</div></div>
+          </div>
+          <div class="ac-type-item">
+            <div class="ac-dot" style="background:#c8c0d0"></div>
+            <div><div class="ac-type-name" style="color:var(--ink4)">Semantica</div><div class="ac-type-note">Assente o minima (solo preferenze esplicite)</div></div>
+          </div>
+          <div class="ac-type-item">
+            <div class="ac-dot" style="background:var(--t-pro)"></div>
+            <div><div class="ac-type-name">Procedurale</div><div class="ac-type-note">Layer 1 + 2 nel prompt — no layer 3</div></div>
+          </div>
+        </div>
+        <div class="ac-detail">
+          <div class="ac-detail-title">Come funziona il ciclo RRW in questa architettura</div>
+          <p><strong>Read:</strong> all'avvio della sessione, recupera solo i task aperti e le ultime N sessioni rilevanti (senza retrieval semantico completo — basta un lookup temporale). Il profilo semantico non c'è o è un oggetto minimale con lingua e stile se dichiarati esplicitamente.</p>
+          <p><strong>Reason:</strong> la sessione usa il contesto recuperato + la gestione in-context (summarization progressiva se la sessione si allunga). La procedurale nel prompt garantisce comportamento coerente senza personalizzazione avanzata.</p>
+          <p><strong>Write:</strong> a fine sessione, estrazione episodica semplificata — solo task aperti e decisioni chiave. Nessun consolidamento semantico automatico. La raccolta dei task aperti è sufficiente per la continuità di base.</p>
+          <p><strong>Infrastruttura:</strong> nessun vector store necessario — un semplice database con gli episodi recenti filtrato per data è sufficiente. La memoria episodica leggera non richiede embedding.</p>
+        </div>
+      </div>
+      <div class="ac-footer">
+        <div class="ac-when-label">Quando è sufficiente</div>
+        <div class="ac-when-text">Agenti di supporto con conversazioni relativamente indipendenti, chatbot con interazioni brevi e non specializzate, agenti dove la personalizzazione profonda non è un requisito. <strong>Regola pratica: se l'utente medio interagisce meno di 2–3 volte alla settimana e i task non si accumulano, questa architettura è sufficiente.</strong></div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+
+<!-- ═══════════════════════════
+     S3 — ARCHITETTURA 2
+═══════════════════════════ -->
+<div class="sect" id="s3">
+  <div class="sect-head">
+    <div class="sect-num">Architettura 02</div>
+    <h2>Assistente personale persistente</h2>
+    <p>Tutti e quattro i tipi di memoria integrati. L'architettura per sistemi dove la relazione con l'utente è il nucleo del valore — dove ogni sessione costruisce sulla precedente e l'agente diventa genuinamente più utile nel tempo.</p>
+  </div>
+  <div class="wrap">
+
+    <div class="arch-card" style="margin-top:28px;">
+      <div class="ac-bar" style="background:var(--accent)"></div>
+      <div class="ac-head">
+        <div class="ac-badge" style="background:var(--accent)">Arch. 2</div>
+        <div class="ac-title-col">
+          <div class="ac-label">Complessità media — infrastruttura completa</div>
+          <div class="ac-title">Assistente personale persistente</div>
+          <div class="ac-tagline">Quattro tipi di memoria integrati — il sistema diventa più utile ad ogni sessione</div>
+        </div>
+      </div>
+      <div class="ac-body">
+        <div class="ac-types">
+          <div class="ac-types-title">Tipi di memoria attivi</div>
+          <div class="ac-type-item">
+            <div class="ac-dot" style="background:var(--t-ctx)"></div>
+            <div><div class="ac-type-name">In-context</div><div class="ac-type-note">Completa — strategia ibrida (summarization + selective retention)</div></div>
+          </div>
+          <div class="ac-type-item">
+            <div class="ac-dot" style="background:var(--t-epi)"></div>
+            <div><div class="ac-type-name">Episodica</div><div class="ac-type-note">Completa — vector store + retrieval semantico + TTL</div></div>
+          </div>
+          <div class="ac-type-item">
+            <div class="ac-dot" style="background:var(--t-sem)"></div>
+            <div><div class="ac-type-name">Semantica</div><div class="ac-type-note">Profilo a 4 categorie con staging e aggiornamento automatico</div></div>
+          </div>
+          <div class="ac-type-item">
+            <div class="ac-dot" style="background:var(--t-pro)"></div>
+            <div><div class="ac-type-name">Procedurale</div><div class="ac-type-note">Tutti e 3 i layer — il layer 3 si adatta al profilo semantico</div></div>
+          </div>
+        </div>
+        <div class="ac-detail">
+          <div class="ac-detail-title">Come funziona il ciclo RRW in questa architettura</div>
+          <p><strong>Read:</strong> all'avvio, inietta sistema procedurale completo (layer 1–3) + profilo semantico compatto + task aperti + top-3–5 episodi rilevanti per retrieval semantico. Il contesto iniziale è tipicamente 2.000–5.000 token.</p>
+          <p><strong>Reason:</strong> il modello opera con piena personalizzazione. Le procedure del layer 3 si adattano automaticamente al profilo semantico dell'utente. La selective retention mantiene denso il context window durante la sessione.</p>
+          <p><strong>Write:</strong> estrazione episodica completa → consolidamento semantico (nuovi segnali → staging o update) → aggiornamento layer 3 se il profilo è cambiato abbastanza. La write è un processo asincrono che non blocca la risposta.</p>
+          <p><strong>Infrastruttura:</strong> vector store (per episodica), key-value store (per semantica), sistema di embedding (per retrieval), pipeline asincrona di consolidamento.</p>
+        </div>
+      </div>
+      <div class="ac-footer">
+        <div class="ac-when-label">Quando usarla</div>
+        <div class="ac-when-text">Agenti di lavoro usati quotidianamente dallo stesso utente, assistenti personali dove la personalizzazione è un differenziatore chiave, sistemi dove l'utente investe tempo a costruire un rapporto con l'agente e si aspetta che l'agente lo ricordi. <strong>L'architettura giustificata quando "mi ricordi" è una promessa del prodotto, non un'opzione.</strong></div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+
+<!-- ═══════════════════════════
+     S4 — ARCHITETTURA 3
+═══════════════════════════ -->
+<div class="sect" id="s4">
+  <div class="sect-head">
+    <div class="sect-num">Architettura 03</div>
+    <h2>Agente aziendale multi-utente</h2>
+    <p>Memoria per-utente per l'episodica e la semantica — memoria condivisa per la procedurale e le conoscenze di dominio. La struttura per sistemi aziendali dove molti utenti usano lo stesso agente con esperienze personalizzate ma procedure condivise.</p>
+  </div>
+  <div class="wrap">
+
+    <div class="arch-card" style="margin-top:28px;">
+      <div class="ac-bar" style="background:var(--t-sem)"></div>
+      <div class="ac-head">
+        <div class="ac-badge" style="background:var(--t-sem)">Arch. 3</div>
+        <div class="ac-title-col">
+          <div class="ac-label">Complessità alta — infrastruttura multi-tenant</div>
+          <div class="ac-title">Agente aziendale multi-utente</div>
+          <div class="ac-tagline">Memoria per-utente + conoscenza condivisa — personalizzazione individuale su base organizzativa comune</div>
+        </div>
+      </div>
+      <div class="ac-body">
+        <div class="ac-types">
+          <div class="ac-types-title">Struttura della memoria</div>
+          <div class="ac-type-item" style="padding:8px 0;">
+            <div class="ac-dot" style="background:#2e5f8a"></div>
+            <div><div class="ac-type-name">Condivisa (org)</div><div class="ac-type-note">Procedure layer 1+2, RAG aziendale, policy, knowledge base</div></div>
+          </div>
+          <div class="ac-type-item" style="padding:8px 0;">
+            <div class="ac-dot" style="background:var(--accent)"></div>
+            <div><div class="ac-type-name">Per-utente</div><div class="ac-type-note">Episodica, semantica (profilo), procedure layer 3</div></div>
+          </div>
+          <div class="ac-type-item" style="padding:8px 0;">
+            <div class="ac-dot" style="background:var(--t-epi)"></div>
+            <div><div class="ac-type-name">Per-team (opz.)</div><div class="ac-type-note">Episodi e preferenze condivisi dal team, non dall'intera org</div></div>
+          </div>
+        </div>
+        <div class="ac-detail">
+          <div class="ac-detail-title">La separazione condiviso / per-utente — la decisione chiave</div>
+          <p>Ogni livello di memoria richiede una decisione esplicita su chi "possiede" quella memoria e chi può accedervi. La regola generale: <strong>ciò che riguarda l'organizzazione è condiviso; ciò che riguarda la persona è per-utente.</strong></p>
+          <p>La procedura "come analizzare un contratto" è condivisa — tutti gli utenti dell'org beneficiano dello stesso framework. Il profilo "Mario preferisce risposte concise" è per-utente — le preferenze di Mario non riguardano gli altri.</p>
+          <p>Il livello team (opzionale) copre i casi intermedi: le preferenze di un reparto specifico (es. il team legale vuole sempre il risk score in cima), le sessioni su progetti condivisi (tutti i membri del team hanno accesso agli episodi del progetto).</p>
+          <p><strong>Attenzione privacy:</strong> la memoria di team richiede consenso esplicito degli utenti — non si può condividere memoria individuale senza consenso, anche se l'obiettivo è la collaborazione.</p>
+        </div>
+      </div>
+      <div class="ac-footer">
+        <div class="ac-when-label">Quando usarla</div>
+        <div class="ac-when-text">Agenti aziendali usati da decine o centinaia di utenti nella stessa organizzazione. Sistemi dove la coerenza procedurale cross-utente è un requisito (tutti usano lo stesso framework) ma la personalizzazione individuale è valorizzata. Sistemi con RAG aziendale (Leva 4) che si integra con la memoria degli utenti.</div>
+      </div>
+    </div>
+
+    <div class="insight" style="margin-top:20px;">
+      <div class="insight-lbl">Il confine critico — cosa isolare tra utenti</div>
+      <p>In un sistema multi-utente, il rischio principale è il <strong>cross-contamination della memoria</strong>: informazioni di un utente che influenzano l'esperienza di un altro. Ogni query al vector store degli episodi deve filtrare per <code>user_id</code> — non per organizzazione. Ogni aggiornamento del profilo semantico deve avvenire sullo spazio per-utente. <strong>Il sistema deve essere progettato in modo che sia fisicamente impossibile per la memoria di un utente influenzare le risposte a un altro.</strong></p>
+    </div>
+
+  </div>
+</div>
+
+
+<!-- ═══════════════════════════
+     S5 — VALUTAZIONE
+═══════════════════════════ -->
+<div class="sect" id="s5">
+  <div class="sect-head">
+    <div class="sect-num">Sezione 05</div>
+    <h2>Come misurare se il sistema di memoria funziona</h2>
+    <p>La memoria non si valuta solo con metriche tecniche. Le metriche più importanti sono comportamentali: il sistema ricorda le cose giuste nel momento giusto?</p>
+  </div>
+  <div class="wrap">
+
+    <div class="prose" style="margin-top:28px;">
+      <p>Valutare un sistema di memoria è diverso dal valutare un sistema RAG (Leva 4) o la qualità delle risposte (Leva 6). Non si misura la precision/recall dei chunk o la faithfulness della risposta — si misura se il sistema ha il comportamento atteso rispetto alla storia dell'utente.</p>
+    </div>
+
+    <table class="eval-table" style="margin-top:20px;">
+      <thead>
+        <tr><th>Metrica</th><th>Cosa misura</th><th>Come misurare</th><th>Target</th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>Task recall rate</td>
+          <td>L'agente ricorda i task aperti nelle sessioni successive senza che l'utente li ripeta?</td>
+          <td>Test case: apri un task in sessione 1, inizia sessione 2 su argomento correlato, verifica se il task aperto emerge nel contesto della risposta.</td>
+          <td class="ev-ok">≥ 0.95 — quasi tutti i task aperti devono essere ricordati</td>
+        </tr>
+        <tr>
+          <td>Preference application rate</td>
+          <td>L'agente applica le preferenze del profilo semantico in modo coerente?</td>
+          <td>Con un profilo che dichiara "risposte concise + bullet point", genera 10 risposte su argomenti diversi e verifica quante rispettano le preferenze senza che l'utente le ripeta.</td>
+          <td class="ev-ok">≥ 0.90 — le preferenze devono applicarsi in modo stabile</td>
+        </tr>
+        <tr>
+          <td>False memory rate</td>
+          <td>L'agente "ricorda" cose che non sono mai state dette?</td>
+          <td>Test: usa un profilo con attributi precisi e verifica che l'agente non inferisca o inventi attributi non presenti. Controlla i casi in cui cita la memoria per fondare una risposta.</td>
+          <td class="ev-ok">≤ 0.02 — meno del 2% dei riferimenti alla memoria devono essere inventati</td>
+        </tr>
+        <tr>
+          <td>Memory override compliance</td>
+          <td>L'agente sovrascrive correttamente la memoria con l'input corrente?</td>
+          <td>Con un profilo che dice "risposte in italiano", chiedi esplicitamente "rispondimi in inglese" e verifica che la risposta sia in inglese. Testa diversi tipi di override.</td>
+          <td class="ev-ok">1.00 — l'input corrente deve sempre prevalere sulla memoria</td>
+        </tr>
+        <tr>
+          <td>Profile accuracy (valutazione umana)</td>
+          <td>Il profilo semantico riflette accuratamente le preferenze reali dell'utente?</td>
+          <td>Mostra il profilo a un utente reale dopo 10+ sessioni e chiedi se lo riconosce come accurato. Conta la percentuale di attributi che l'utente conferma come corretti.</td>
+          <td class="ev-warn">≥ 0.80 — almeno l'80% degli attributi deve essere riconosciuto come accurato</td>
+        </tr>
+        <tr>
+          <td>Memory staleness rate</td>
+          <td>Il sistema mantiene in memoria informazioni obsolete che producono comportamenti sbagliati?</td>
+          <td>Aggiorna una preferenza esplicitamente, poi verifica che il vecchio comportamento non emerga nelle sessioni successive. Test anche dopo 30 e 90 giorni.</td>
+          <td class="ev-ok">≤ 0.05 — meno del 5% dei casi con preferenza aggiornata deve mostrare il vecchio comportamento</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <div class="mechanism" style="margin-top:20px;">
+      <div class="mech-lbl">La metrica più importante è qualitativa</div>
+      <p>Nessuna delle metriche sopra cattura la dimensione più importante: l'utente percepisce il sistema come un collaboratore che lo conosce, o come uno strumento da dover reinizializzare? Questa percezione emerge dall'<strong>esperienza cumulativa di molte sessioni</strong> — non è misurabile con un singolo test. Il proxy migliore è il comportamento degli utenti nel tempo: ritornano? Ripetono le stesse istruzioni ogni sessione? Commentano spontaneamente che "l'agente li ricorda"? Questi segnali comportamentali sono la vera metrica del successo della memoria.</p>
+    </div>
+
+  </div>
+</div>
+
+
+<!-- ═══════════════════════════
+     S6 — LA SERIE COMPLETA
+═══════════════════════════ -->
+<div class="sect" id="s6">
+  <div class="sect-head">
+    <div class="sect-num">Chiusura della serie</div>
+    <h2>La serie completa — mappa e principi</h2>
+    <p>Una vista d'insieme dei 7 report della Leva Memoria e i principi trasversali che li unificano.</p>
+  </div>
+  <div class="wrap">
+
+    <div class="series-grid" style="margin-top:28px;">
+      <div class="sg-cell">
+        <div class="sg-label">Quadro</div>
+        <div class="sg-title">I 4 tipi</div>
+        <div class="sg-desc">In-context, episodica, semantica, procedurale. La mappa concettuale.</div>
+      </div>
+      <div class="sg-cell">
+        <div class="sg-label" style="color:var(--t-ctx)">Report A</div>
+        <div class="sg-title">In-context</div>
+        <div class="sg-desc">Summarization, sliding window, selective retention. Il budget per componente.</div>
+      </div>
+      <div class="sg-cell">
+        <div class="sg-label" style="color:var(--t-epi)">Report B</div>
+        <div class="sg-title">Episodica</div>
+        <div class="sg-desc">Cosa memorizzare, schema JSON, retrieval in 4 fasi, iniezione all'avvio.</div>
+      </div>
+      <div class="sg-cell">
+        <div class="sg-label" style="color:var(--t-sem)">Report C</div>
+        <div class="sg-title">Semantica</div>
+        <div class="sg-desc">Consolidamento, profilo a 4 categorie, aggiornamento, conflitti.</div>
+      </div>
+      <div class="sg-cell">
+        <div class="sg-label" style="color:var(--t-pro)">Report D</div>
+        <div class="sg-title">Procedurale</div>
+        <div class="sg-desc">3 layer, trigger+sequenza+output, aggiornamento deliberato, prompt vs. training.</div>
+      </div>
+      <div class="sg-cell">
+        <div class="sg-label" style="color:#5a6e8a">Report E</div>
+        <div class="sg-title">Selezione</div>
+        <div class="sg-desc">4 criteri, TTL, GDPR, diritto cancellazione, 4 bias della memoria.</div>
+      </div>
+    </div>
+
+    <div class="key-point" style="margin-top:32px;">
+      <div class="kp-label">I 5 principi trasversali della serie</div>
+      <div class="kp-text">La memoria non è un feature da aggiungere — è un'architettura da progettare. E progettarla bene significa decidere anche cosa non ricordare.</div>
+      <div class="kp-sub" style="margin-top:14px;">
+        <strong>1. Quattro tipi distinti, quattro soluzioni distinte.</strong> In-context, episodica, semantica e procedurale non sono varianti dello stesso meccanismo. Ognuna risolve un problema diverso su una scala temporale diversa — confonderle produce soluzioni che funzionano per un tipo e trascurano gli altri.
+        <br><br>
+        <strong>2. Il ciclo read→reason→write è il fondamento.</strong> Qualsiasi architettura di memoria si riduce a questo ciclo. La qualità del sistema dipende da quanto bene si esegue ogni fase: cosa si legge all'avvio, come si usa nel ragionamento, cosa si scrive a fine sessione.
+        <br><br>
+        <strong>3. Dimenticare è design, non fallimento.</strong> Un sistema che ricorda tutto è un sistema che degrada nel tempo. I TTL, le politiche di retention e il decadimento intenzionale sono componenti del design — non ottimizzazioni secondarie.
+        <br><br>
+        <strong>4. La memoria è un servizio, non un vincolo.</strong> Il profilo semantico e la memoria episodica esistono per migliorare il servizio all'utente. Non sono contratti che limitano il comportamento futuro. L'utente può sempre sovrascrivere la memoria con l'input corrente — senza dover spiegare perché.
+        <br><br>
+        <strong>5. La privacy è parte del design, non un vincolo esterno.</strong> Le categorie GDPR, il diritto alla cancellazione e il principio della memoria minima necessaria non sono ostacoli al design — sono criteri di design. Un sistema che rispetta la privacy è anche un sistema più efficiente, più mantenibile, e più fidato dagli utenti.
+      </div>
+    </div>
+
+    <div class="checklist" style="margin-top:28px;">
+      <div style="font-family:'IBM Plex Mono',monospace; font-size:9px; letter-spacing:3px; text-transform:uppercase; color:var(--ink4); padding-bottom:10px; border-bottom:1px solid var(--border); margin-bottom:0;">Checklist finale — sistema di memoria completo?</div>
+      <div class="check-item">
+        <div class="check-icon" style="background:var(--t-ctx)">A</div>
+        <div><strong>In-context:</strong> strategia di compressione definita, trigger configurato, gerarchia di priorità per componente, system prompt protetto dalla compressione.</div>
+      </div>
+      <div class="check-item">
+        <div class="check-icon" style="background:var(--t-epi)">B</div>
+        <div><strong>Episodica:</strong> estrazione automatica a fine sessione, schema JSON con embed_text, retrieval in 4 fasi (task aperti + semantico + decay + dedup), iniezione strutturata all'avvio.</div>
+      </div>
+      <div class="check-item">
+        <div class="check-icon" style="background:var(--t-sem)">C</div>
+        <div><strong>Semantica:</strong> profilo a 4 categorie, regola ≥2 segnali, staging, 3 strategie di aggiornamento, conflitti gestiti (memoria come servizio, non vincolo).</div>
+      </div>
+      <div class="check-item">
+        <div class="check-icon" style="background:var(--t-pro)">D</div>
+        <div><strong>Procedurale:</strong> 3 layer separati, ogni procedura con trigger + sequenza + output, aggiornamento deliberato con ciclo di test, decisione prompt vs. training valutata.</div>
+      </div>
+      <div class="check-item">
+        <div class="check-icon" style="background:#5a6e8a">E</div>
+        <div><strong>Selezione:</strong> 4 criteri applicati, TTL assegnati per tipo, categorie GDPR escluse, diritto alla cancellazione implementato, 4 bias mitigati.</div>
+      </div>
+      <div class="check-item">
+        <div class="check-icon">F</div>
+        <div><strong>Architettura:</strong> architettura scelta in base al caso d'uso (semplice / persistente / multi-utente), ciclo RRW implementato, metriche di valutazione definite.</div>
+      </div>
+    </div>
+
+    <div class="prose" style="margin-top:32px; padding-top:24px; border-top:1px solid var(--border);">
+      <p style="color:var(--ink4); font-size:13px;">Serie Agenti AI · Leva Memoria · 7 report (Quadro + A–F) · Marzo 2026</p>
+      <p style="font-size:13px; color:var(--ink4);">Quadro · A · B · C · D · E · <strong style="color:var(--ink2);">F ← questo report · Fine serie Leva Memoria</strong></p>
+    </div>
+
+  </div>
+</div>
+
+<div class="footer">
+  <span>Serie Agenti AI — Leva Memoria · Report F · Architetture integrate · Fine serie</span>
+  <span>Marzo 2026</span>
+</div>
+
+<script>
+function show(n) {
+  document.querySelectorAll('.sect').forEach(s => s.classList.remove('active'));
+  document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('s'+n).classList.add('active');
+  document.querySelectorAll('.nav-btn')[n-1].classList.add('active');
+  window.scrollTo({top:0, behavior:'smooth'});
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,1088 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Prompt Engineering — A · Identità e Ruolo</title>
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Outfit:wght@200;300;400;500;600;700;800;900&family=IBM+Plex+Mono:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg:     #faf8f5;
+  --bg2:    #f2efe9;
+  --bg3:    #e9e5dc;
+  --ink:    #1b1915;
+  --ink2:   #2e2b25;
+  --ink3:   #6d685c;
+  --ink4:   #a19c8f;
+  --border: #d9d4c8;
+  --border2:#cac4b6;
+
+  --accent: #3d7a45;   /* verde — cluster A */
+  --accent2: #2e5c33;
+}
+
+* { margin:0; padding:0; box-sizing:border-box; }
+html { scroll-behavior:smooth; }
+
+body {
+  background: var(--bg);
+  color: var(--ink);
+  font-family: 'Outfit', sans-serif;
+  font-weight: 300;
+  font-size: 14px;
+  line-height: 1.75;
+}
+
+/* ── HEADER ── */
+.masthead {
+  background: var(--ink);
+  color: rgba(255,255,255,0.9);
+  padding: 60px 56px 52px;
+  position: relative;
+  overflow: hidden;
+}
+.masthead::before {
+  content:'';
+  position:absolute; inset:0;
+  background:
+    repeating-linear-gradient(90deg, rgba(255,255,255,0.012) 0, rgba(255,255,255,0.012) 1px, transparent 1px, transparent 64px),
+    repeating-linear-gradient(0deg,  rgba(255,255,255,0.012) 0, rgba(255,255,255,0.012) 1px, transparent 1px, transparent 64px);
+  pointer-events:none;
+}
+.masthead::after {
+  content:'A';
+  position:absolute; right:44px; bottom:-28px;
+  font-family:'Instrument Serif', serif;
+  font-size:280px; line-height:1;
+  color:rgba(255,255,255,0.025);
+  pointer-events:none;
+}
+.mh-eye {
+  font-family:'IBM Plex Mono', monospace;
+  font-size:10px; letter-spacing:3px; text-transform:uppercase;
+  color:rgba(255,255,255,0.25); margin-bottom:18px; position:relative;
+}
+.mh-cluster {
+  display:inline-block;
+  font-family:'IBM Plex Mono', monospace;
+  font-size:10px; letter-spacing:2px; text-transform:uppercase;
+  padding:4px 12px; border:1px solid var(--accent);
+  color:var(--accent); margin-bottom:20px; position:relative;
+}
+.masthead h1 {
+  font-family:'Instrument Serif', serif;
+  font-weight:400;
+  font-size: clamp(30px,4.5vw,54px);
+  line-height:1.08; letter-spacing:-1px;
+  max-width:700px; position:relative;
+}
+.mh-sub {
+  margin-top:20px; font-size:15px; font-weight:300;
+  color:rgba(255,255,255,0.38); max-width:660px;
+  line-height:1.7; position:relative;
+}
+.mh-meta {
+  margin-top:32px; display:flex; gap:32px; flex-wrap:wrap;
+  position:relative;
+}
+.mh-stat { display:flex; flex-direction:column; gap:4px; }
+.mh-stat-val {
+  font-family:'IBM Plex Mono', monospace;
+  font-size:22px; font-weight:500;
+  color:rgba(255,255,255,0.85);
+}
+.mh-stat-lbl {
+  font-size:10px; letter-spacing:2px; text-transform:uppercase;
+  color:rgba(255,255,255,0.25);
+}
+
+/* ── NAV ── */
+.nav {
+  background:var(--ink2);
+  position:sticky; top:0; z-index:100;
+  display:flex; overflow-x:auto;
+  border-bottom:1px solid rgba(255,255,255,0.06);
+}
+.nav-btn {
+  flex:1; min-width:120px; padding:13px 12px;
+  border:none; background:transparent; cursor:pointer;
+  font-family:'Outfit', sans-serif;
+  font-size:10.5px; font-weight:600;
+  text-transform:uppercase; letter-spacing:0.4px;
+  color:rgba(255,255,255,0.3);
+  border-right:1px solid rgba(255,255,255,0.06);
+  transition:all 0.2s; white-space:nowrap;
+}
+.nav-btn:last-child { border-right:none; }
+.nav-btn:hover { color:rgba(255,255,255,0.6); }
+.nav-btn.active { color:#fff; background:rgba(255,255,255,0.05); }
+
+/* ── SECTIONS ── */
+.sect { display:none; }
+.sect.active { display:block; animation:fadeIn 0.3s ease; }
+@keyframes fadeIn { from { opacity:0; transform:translateY(6px); } to { opacity:1; transform:translateY(0); } }
+
+.sect-head { padding:48px 56px 36px; border-bottom:1px solid var(--border); }
+.sect-num {
+  font-family:'IBM Plex Mono', monospace;
+  font-size:10px; letter-spacing:3px; text-transform:uppercase;
+  color:var(--ink4); margin-bottom:10px;
+}
+.sect-head h2 {
+  font-family:'Instrument Serif', serif; font-weight:400;
+  font-size:clamp(26px,3.5vw,42px);
+  line-height:1.1; letter-spacing:-0.5px;
+  max-width:640px; margin-bottom:14px;
+}
+.sect-head p { color:var(--ink3); max-width:700px; font-size:14.5px; }
+.wrap { padding:0 56px 64px; }
+
+/* ── PROSE ── */
+.prose { max-width:760px; }
+.prose p { font-size:14.5px; color:var(--ink3); line-height:1.85; margin-bottom:16px; }
+.prose p strong { color:var(--ink2); font-weight:500; }
+.prose p em { font-style:italic; color:var(--ink2); }
+
+/* ── GUIDELINE CARD ── */
+.gl-group { margin-top:40px; }
+.gl-group-title {
+  font-family:'IBM Plex Mono', monospace;
+  font-size:9px; letter-spacing:3px; text-transform:uppercase;
+  color:var(--ink4); padding-bottom:10px;
+  border-bottom:1px solid var(--border);
+  margin-bottom:0;
+}
+.gl-card {
+  border:1px solid var(--border2);
+  border-top:none;
+  background:var(--bg);
+}
+.gl-card + .gl-card { border-top:none; }
+
+.gl-header {
+  display:grid;
+  grid-template-columns: 5px 52px 1fr auto;
+  align-items:stretch;
+  border-bottom:1px solid var(--border);
+  cursor:pointer;
+}
+.gl-stripe { background:var(--accent); }
+.gl-num {
+  font-family:'Outfit', sans-serif; font-weight:800;
+  font-size:20px; color:var(--bg3);
+  display:flex; align-items:center; justify-content:center;
+  border-right:1px solid var(--border);
+}
+.gl-title-wrap { padding:16px 20px; }
+.gl-title {
+  font-family:'Instrument Serif', serif;
+  font-size:20px; color:var(--ink2); line-height:1.2;
+}
+.gl-subtitle { font-size:12px; color:var(--ink4); margin-top:3px; }
+.gl-impact-wrap {
+  padding:14px 20px;
+  display:flex; flex-direction:column;
+  align-items:flex-end; justify-content:center; gap:4px;
+}
+.gl-impact-stars { font-size:14px; }
+.gl-impact-lbl {
+  font-family:'IBM Plex Mono', monospace;
+  font-size:8px; letter-spacing:1px; text-transform:uppercase;
+  color:var(--ink4);
+}
+
+.gl-body { padding:0; }
+
+.gl-section {
+  padding:20px 24px;
+  border-bottom:1px solid var(--border);
+}
+.gl-section:last-child { border-bottom:none; }
+.gl-section-lbl {
+  font-family:'IBM Plex Mono', monospace;
+  font-size:9px; letter-spacing:2px; text-transform:uppercase;
+  color:var(--ink4); margin-bottom:10px;
+  padding-bottom:6px; border-bottom:1px solid var(--border);
+}
+.gl-section p { font-size:13.5px; color:var(--ink3); line-height:1.8; max-width:740px; }
+.gl-section p strong { color:var(--ink2); font-weight:500; }
+.gl-section p em { font-style:italic; color:var(--ink2); }
+
+/* ── PROMPT EXAMPLE ── */
+.prompt-ex {
+  margin-top:12px;
+}
+.prompt-ex-label {
+  font-family:'IBM Plex Mono', monospace;
+  font-size:9px; letter-spacing:2px; text-transform:uppercase;
+  margin-bottom:6px;
+}
+.prompt-ex-label.bad { color:#c0392b; }
+.prompt-ex-label.good { color:var(--accent); }
+
+.prompt-box {
+  font-family:'IBM Plex Mono', monospace;
+  font-size:12px; line-height:1.7;
+  padding:14px 18px;
+  border:1px solid;
+  white-space:pre-wrap; word-break:break-word;
+  position:relative;
+}
+.prompt-box.bad {
+  border-color:#e8c5c5; background:#fdf5f5; color:#6b3030;
+}
+.prompt-box.good {
+  border-color:#b8d4bc; background:#f4faf5; color:#2e4a32;
+}
+.prompt-box .hl { font-weight:500; }
+.prompt-box.good .hl { color:var(--accent2); }
+.prompt-box.bad .hl { color:#8b3030; }
+
+.compare-grid {
+  display:grid; grid-template-columns:1fr 1fr; gap:12px;
+  margin-top:12px;
+}
+
+/* ── MECHANISM BOX ── */
+.mechanism {
+  margin-top:14px; padding:14px 18px;
+  border-left:3px solid var(--accent);
+  background:var(--bg2);
+}
+.mech-lbl {
+  font-family:'IBM Plex Mono', monospace;
+  font-size:9px; letter-spacing:2px; text-transform:uppercase;
+  color:var(--accent); margin-bottom:6px;
+}
+.mechanism p { font-size:13px; color:var(--ink3); line-height:1.65; }
+.mechanism p strong { color:var(--ink2); font-weight:500; }
+
+/* ── SPECTRUM ── */
+.spectrum {
+  margin-top:16px;
+  border:1px solid var(--border);
+  overflow:hidden;
+}
+.spectrum-row {
+  display:grid;
+  grid-template-columns:140px 1fr 1fr 1fr;
+  border-bottom:1px solid var(--border);
+  font-size:12.5px;
+}
+.spectrum-row:last-child { border-bottom:none; }
+.spectrum-row.head {
+  background:var(--ink);
+  color:rgba(255,255,255,0.7);
+  font-family:'IBM Plex Mono', monospace;
+  font-size:9px; letter-spacing:1px; text-transform:uppercase;
+}
+.spectrum-cell {
+  padding:12px 14px;
+  border-right:1px solid var(--border);
+  color:var(--ink3);
+  line-height:1.5;
+}
+.spectrum-cell:last-child { border-right:none; }
+.spectrum-cell.lbl {
+  font-weight:500; color:var(--ink2);
+  background:var(--bg2);
+}
+.spectrum-cell.hi { background:#f4faf5; color:var(--accent2); }
+.spectrum-cell.lo { background:#fdf5f5; color:#8b3030; }
+
+/* ── CHECKLIST ── */
+.checklist { margin-top:20px; }
+.check-item {
+  display:flex; gap:12px; align-items:flex-start;
+  padding:10px 0; border-bottom:1px solid var(--border);
+  font-size:13.5px; color:var(--ink3);
+}
+.check-item:last-child { border-bottom:none; }
+.check-icon {
+  width:20px; height:20px; border-radius:50%;
+  background:var(--accent); color:#fff;
+  display:flex; align-items:center; justify-content:center;
+  font-size:11px; font-weight:700; flex-shrink:0;
+  margin-top:1px;
+}
+.check-item strong { color:var(--ink2); font-weight:500; }
+
+/* ── KEY POINT ── */
+.key-point {
+  margin-top:36px; padding:24px 28px;
+  border-left:4px solid var(--accent);
+  background:var(--bg2);
+}
+.kp-label {
+  font-family:'IBM Plex Mono', monospace;
+  font-size:9px; letter-spacing:2px; text-transform:uppercase;
+  color:var(--accent); margin-bottom:8px;
+}
+.kp-text {
+  font-family:'Instrument Serif', serif;
+  font-size:18px; line-height:1.45; color:var(--ink2);
+}
+.kp-sub { margin-top:10px; font-size:13px; color:var(--ink3); line-height:1.65; }
+
+/* ── INSIGHT ── */
+.insight {
+  margin:16px 0; padding:16px 20px;
+  border-left:4px solid var(--accent);
+  background:var(--bg2);
+}
+.insight-lbl {
+  font-family:'IBM Plex Mono', monospace;
+  font-size:9px; letter-spacing:2px; text-transform:uppercase;
+  color:var(--accent); margin-bottom:6px;
+}
+.insight p { font-size:13.5px; color:var(--ink2); line-height:1.65; max-width:700px; }
+.insight p strong { font-weight:500; }
+
+/* ── TEMPLATE ── */
+.template-box {
+  margin-top:20px;
+  border:1px solid var(--border2);
+  background:var(--ink);
+  padding:28px 32px;
+  font-family:'IBM Plex Mono', monospace;
+  font-size:12.5px; line-height:1.9;
+  color:rgba(255,255,255,0.75);
+  white-space:pre-wrap; word-break:break-word;
+}
+.template-box .t-comment { color:rgba(255,255,255,0.28); }
+.template-box .t-key { color:#7dd3a8; }
+.template-box .t-val { color:rgba(255,255,255,0.85); }
+.template-box .t-bracket { color:rgba(255,255,255,0.35); }
+
+/* ── FOOTER ── */
+.footer {
+  padding:24px 56px;
+  border-top:1px solid var(--border);
+  display:flex; justify-content:space-between; align-items:center;
+  font-family:'IBM Plex Mono', monospace;
+  font-size:10px; letter-spacing:1px; text-transform:uppercase;
+  color:var(--ink4);
+}
+
+@media (max-width:700px) {
+  .masthead, .sect-head, .wrap, .footer { padding-left:20px; padding-right:20px; }
+  .compare-grid { grid-template-columns:1fr; }
+  .spectrum-row { grid-template-columns:100px 1fr 1fr; }
+  .gl-header { grid-template-columns:5px 40px 1fr; }
+  .gl-impact-wrap { display:none; }
+}
+</style>
+</head>
+<body>
+
+<!-- HEADER -->
+<div class="masthead">
+  <div class="mh-eye">Serie Agenti AI · Leva 01 · Prompt Engineering</div>
+  <div class="mh-cluster">Cluster A</div>
+  <h1>Identità e Ruolo</h1>
+  <p class="mh-sub">Come definire chi è il modello, in quale contesto opera e per chi lavora. La prima sezione del prompt — e la più trascurata. Da qui derivano automaticamente decine di comportamenti che non dovrai mai esplicitare.</p>
+  <div class="mh-meta">
+    <div class="mh-stat">
+      <div class="mh-stat-val">6</div>
+      <div class="mh-stat-lbl">Linee guida</div>
+    </div>
+    <div class="mh-stat">
+      <div class="mh-stat-val">Alto</div>
+      <div class="mh-stat-lbl">Impatto</div>
+    </div>
+    <div class="mh-stat">
+      <div class="mh-stat-val">Basso</div>
+      <div class="mh-stat-lbl">Costo implementazione</div>
+    </div>
+    <div class="mh-stat">
+      <div class="mh-stat-val">#1</div>
+      <div class="mh-stat-lbl">Priorità nel prompt</div>
+    </div>
+  </div>
+</div>
+
+<!-- NAV -->
+<div class="nav">
+  <button class="nav-btn active" onclick="show(1)">Perché conta</button>
+  <button class="nav-btn" onclick="show(2)">Il ruolo</button>
+  <button class="nav-btn" onclick="show(3)">Il contesto</button>
+  <button class="nav-btn" onclick="show(4)">L'interlocutore</button>
+  <button class="nav-btn" onclick="show(5)">Tono e persona</button>
+  <button class="nav-btn" onclick="show(6)">Template</button>
+</div>
+
+
+<!-- ═══════════════════════════
+     S1 — PERCHÉ CONTA
+═══════════════════════════ -->
+<div class="sect active" id="s1">
+  <div class="sect-head">
+    <div class="sect-num">Introduzione</div>
+    <h2>Perché l'identità è la linea guida più importante</h2>
+    <p>Non perché cambia cosa il modello sa fare — ma perché cambia come usa tutto quello che sa.</p>
+  </div>
+  <div class="wrap">
+
+    <div class="prose" style="margin-top:28px;">
+      <p>La prima cosa che scrivi nel system prompt è la più importante. Non perché il modello legga il prompt dall'alto verso il basso dando più peso all'inizio — ma perché <strong>l'identità definisce il frame interpretativo</strong> dentro cui tutto il resto del prompt viene letto e applicato.</p>
+      <p>Un modello a cui dici "sei un assistente generico" processerà le stesse istruzioni successive in modo diverso rispetto a uno a cui dici "sei un analista del rischio di credito senior con 15 anni di esperienza nel settore bancario". Non perché abbia conoscenze diverse — ma perché <em>attiva pattern diversi</em> per interpretare le istruzioni, scegliere le parole, gestire l'incertezza, decidere cosa approfondire.</p>
+      <p>Il cluster A risponde alla domanda: <strong>da quale punto di vista il modello deve guardare il task?</strong> Comprende tre elementi distinti — il ruolo del modello, il contesto operativo in cui si trova, e chi è l'interlocutore che riceverà l'output.</p>
+    </div>
+
+    <div class="insight" style="margin-top:28px;">
+      <div class="insight-lbl">Il meccanismo chiave</div>
+      <p>Durante il pre-training il modello ha letto miliardi di testi scritti da persone con ruoli, competenze e contesti diversissimi. Definire un ruolo preciso nel prompt è come <strong>attivare un sottoinsieme specifico di quei pattern</strong>: il modello "si comporta come si comporterebbe chi ha scritto testi simili". Un ruolo ricco e contestualizzato attiva pattern più specifici e utili di un ruolo generico.</p>
+    </div>
+
+    <div class="key-point" style="margin-top:28px;">
+      <div class="kp-label">Il principio del cluster A</div>
+      <div class="kp-text">Definire bene l'identità è l'intervento a più alto ritorno nel prompt engineering: poche righe, impatto su tutto.</div>
+      <div class="kp-sub">Un ruolo ben definito orienta automaticamente: tono e registro linguistico, livello tecnico dell'output, grado di proattività, cosa menzionare e cosa omettere, come gestire l'incertezza, come bilanciare precisione e leggibilità. Senza definire l'identità, devi esplicitare ognuno di questi aspetti. Con un'identità ben definita, molti emergono naturalmente.</div>
+    </div>
+
+  </div>
+</div>
+
+
+<!-- ═══════════════════════════
+     S2 — IL RUOLO
+═══════════════════════════ -->
+<div class="sect" id="s2">
+  <div class="sect-head">
+    <div class="sect-num">Linee guida 01 – 02</div>
+    <h2>Definire il ruolo del modello</h2>
+    <p>Chi è il modello: la sua funzione, le sue competenze, il suo punto di vista sul task.</p>
+  </div>
+  <div class="wrap">
+
+    <!-- GL 01 -->
+    <div class="gl-group" style="margin-top:32px;">
+      <div class="gl-group-title">Linea guida 01</div>
+      <div class="gl-card">
+        <div class="gl-header">
+          <div class="gl-stripe"></div>
+          <div class="gl-num">01</div>
+          <div class="gl-title-wrap">
+            <div class="gl-title">Definisci un ruolo specifico, non generico</div>
+            <div class="gl-subtitle">Il livello di specificità del ruolo determina il livello di specificità dell'output</div>
+          </div>
+          <div class="gl-impact-wrap">
+            <div class="gl-impact-stars" style="color:var(--accent)">★★★</div>
+            <div class="gl-impact-lbl">Impatto</div>
+          </div>
+        </div>
+        <div class="gl-body">
+
+          <div class="gl-section">
+            <div class="gl-section-lbl">La linea guida</div>
+            <p>Evita ruoli generici come "assistente AI" o "esperto". Definisci il ruolo con la stessa precisione con cui definiresti una job description: <strong>funzione + dominio + contesto organizzativo</strong>. Più il ruolo è specifico, più il modello può attivare pattern pertinenti e produrre output specializzati.</p>
+          </div>
+
+          <div class="gl-section">
+            <div class="gl-section-lbl">Esempi — dal generico allo specifico</div>
+            <div class="compare-grid">
+              <div>
+                <div class="prompt-ex-label bad">❌ Troppo generico</div>
+                <div class="prompt-box bad">Sei un assistente AI utile e preciso.</div>
+              </div>
+              <div>
+                <div class="prompt-ex-label good">✓ Specifico e contestualizzato</div>
+                <div class="prompt-box good"><span class="hl">Sei l'analista di rischio creditizio</span> di una banca commerciale italiana di medie dimensioni. <span class="hl">Ti occupi di valutare le richieste di affidamento</span> delle PMI del Nord-Est, con focus su bilanci degli ultimi 3 anni e centrale rischi.</div>
+              </div>
+            </div>
+            <div class="compare-grid" style="margin-top:12px;">
+              <div>
+                <div class="prompt-ex-label bad">❌ Dominio senza funzione</div>
+                <div class="prompt-box bad">Sei un esperto di marketing digitale.</div>
+              </div>
+              <div>
+                <div class="prompt-ex-label good">✓ Funzione + dominio + contesto</div>
+                <div class="prompt-box good"><span class="hl">Sei il responsabile della strategia di contenuto</span> per un e-commerce B2C di abbigliamento sportivo. <span class="hl">Il tuo obiettivo principale</span> è aumentare il traffico organico e il tasso di conversione dalle categorie di prodotto.</div>
+              </div>
+            </div>
+          </div>
+
+          <div class="gl-section">
+            <div class="gl-section-lbl">Perché funziona — il meccanismo LLM</div>
+            <div class="mechanism">
+              <div class="mech-lbl">Attivazione di pattern contestuali</div>
+              <p>Il modello ha appreso associazioni tra ruoli/contesti e stili di comunicazione, livelli di dettaglio, vocabolario, approcci al problema. Un ruolo specifico attiva un sottoinsieme ristretto e pertinente di questi pattern. <strong>"Analista di rischio bancario" attiva pattern diversi da "esperto di finanza"</strong>: diverso vocabolario (covenant, NPL, DSCR), diversa soglia di prudenza, diverso modo di comunicare l'incertezza.</p>
+            </div>
+          </div>
+
+          <div class="gl-section">
+            <div class="gl-section-lbl">La formula di base</div>
+            <div class="prompt-box good" style="margin-top:0;">Sei <span class="hl">[titolo/funzione]</span> di/per <span class="hl">[organizzazione o tipo di organizzazione]</span>. Ti occupi di <span class="hl">[area di responsabilità principale]</span>.</div>
+          </div>
+
+        </div>
+      </div>
+    </div>
+
+    <!-- GL 02 -->
+    <div class="gl-group" style="margin-top:8px;">
+      <div class="gl-group-title">Linea guida 02</div>
+      <div class="gl-card">
+        <div class="gl-header">
+          <div class="gl-stripe"></div>
+          <div class="gl-num">02</div>
+          <div class="gl-title-wrap">
+            <div class="gl-title">Includi competenze rilevanti, non curriculum completo</div>
+            <div class="gl-subtitle">Menziona solo le competenze che cambiano come il modello affronta il task</div>
+          </div>
+          <div class="gl-impact-wrap">
+            <div class="gl-impact-stars" style="color:var(--accent)">★★☆</div>
+            <div class="gl-impact-lbl">Impatto</div>
+          </div>
+        </div>
+        <div class="gl-body">
+
+          <div class="gl-section">
+            <div class="gl-section-lbl">La linea guida</div>
+            <p>Puoi arricchire il ruolo con competenze specifiche — ma solo quelle che sono <strong>funzionali al task</strong>. Non costruire un curriculum dettagliato: ogni competenza che menzioni deve orientare concretamente il comportamento del modello. Se non cambia l'output, non serve inserirla.</p>
+          </div>
+
+          <div class="gl-section">
+            <div class="gl-section-lbl">Esempi</div>
+            <div class="compare-grid">
+              <div>
+                <div class="prompt-ex-label bad">❌ Curriculum irrilevante</div>
+                <div class="prompt-box bad">Hai una laurea in economia, un MBA alla Bocconi, 15 anni di esperienza nel settore bancario, hai lavorato in 5 banche diverse, parli 3 lingue e hai pubblicato articoli su riviste di settore.</div>
+              </div>
+              <div>
+                <div class="prompt-ex-label good">✓ Competenze funzionali al task</div>
+                <div class="prompt-box good">Hai esperienza specifica nella <span class="hl">lettura di bilanci di PMI manifatturiere</span> e nella <span class="hl">valutazione del rischio di concentrazione</span>. Sai riconoscere le pratiche contabili che mascherano tensioni di liquidità.</div>
+              </div>
+            </div>
+          </div>
+
+          <div class="gl-section">
+            <div class="gl-section-lbl">Perché funziona — il meccanismo LLM</div>
+            <div class="mechanism">
+              <div class="mech-lbl">Segnalazione di expertise su sotto-domini</div>
+              <p>Menzionare competenze specifiche funziona come un segnale al modello di <strong>quale sottoinsieme della sua conoscenza privilegiare</strong>. "Hai esperienza nella lettura di bilanci di PMI manifatturiere" dice al modello: usa la terminologia di quel dominio, applica le euristiche tipiche di quell'ambito, e tratta il lettore come qualcuno che condivide quel background. Le competenze generiche non hanno questo effetto — il modello le ignora o le applica in modo superficiale.</p>
+            </div>
+          </div>
+
+          <div class="gl-section">
+            <div class="gl-section-lbl">Il test di utilità</div>
+            <p>Per ogni competenza che stai per inserire, chiediti: <em>"Se rimuovessi questa frase, l'output cambierebbe?"</em> Se la risposta è no, non inserirla. I prompt lunghi con informazioni irrilevanti diluiscono il peso delle informazioni importanti.</p>
+          </div>
+
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+
+<!-- ═══════════════════════════
+     S3 — IL CONTESTO
+═══════════════════════════ -->
+<div class="sect" id="s3">
+  <div class="sect-head">
+    <div class="sect-num">Linee guida 03 – 04</div>
+    <h2>Definire il contesto operativo</h2>
+    <p>In quale sistema il modello è inserito, con quale scopo, con quali vincoli di contesto.</p>
+  </div>
+  <div class="wrap">
+
+    <!-- GL 03 -->
+    <div class="gl-group" style="margin-top:32px;">
+      <div class="gl-group-title">Linea guida 03</div>
+      <div class="gl-card">
+        <div class="gl-header">
+          <div class="gl-stripe"></div>
+          <div class="gl-num">03</div>
+          <div class="gl-title-wrap">
+            <div class="gl-title">Descrivi il contesto di deployment, non solo il task</div>
+            <div class="gl-subtitle">Dove vive l'agente? In quale sistema è inserito? Qual è il suo scopo nell'architettura?</div>
+          </div>
+          <div class="gl-impact-wrap">
+            <div class="gl-impact-stars" style="color:var(--accent)">★★★</div>
+            <div class="gl-impact-lbl">Impatto</div>
+          </div>
+        </div>
+        <div class="gl-body">
+
+          <div class="gl-section">
+            <div class="gl-section-lbl">La linea guida</div>
+            <p>Il modello non deve sapere solo cosa fare, ma <strong>dove si trova</strong>: in quale applicazione è integrato, in quale flusso di lavoro si inserisce, quali sono le aspettative del sistema intorno a lui. Questo contesto cambia radicalmente molte decisioni implicite — quanto essere prolisso, quanto essere cauto, se chiedere conferma o procedere, se assumere che l'utente sia esperto o no.</p>
+          </div>
+
+          <div class="gl-section">
+            <div class="gl-section-lbl">Esempi di contesti diversi e impatto sul comportamento</div>
+            <div class="spectrum" style="margin-top:12px;">
+              <div class="spectrum-row head">
+                <div class="spectrum-cell">Contesto</div>
+                <div class="spectrum-cell">Cosa cambia nell'output</div>
+                <div class="spectrum-cell">Esempio di prompt</div>
+              </div>
+              <div class="spectrum-row">
+                <div class="spectrum-cell lbl">Chatbot su sito pubblico</div>
+                <div class="spectrum-cell">Tono accessibile, no jargon, risposte brevi, escalation a umano se dubbi</div>
+                <div class="spectrum-cell" style="font-family:'IBM Plex Mono',monospace; font-size:11px; color:var(--ink3);">Sei integrato nel sito di supporto clienti di [Azienda]. Gli utenti sono clienti retail con poca dimestichezza tecnica.</div>
+              </div>
+              <div class="spectrum-row">
+                <div class="spectrum-cell lbl">Tool interno per analisti</div>
+                <div class="spectrum-cell">Jargon tecnico OK, risposte dense, no spiegazioni ovvie, focus su precisione</div>
+                <div class="spectrum-cell" style="font-family:'IBM Plex Mono',monospace; font-size:11px; color:var(--ink3);">Sei un tool interno usato dal team di credit risk. I tuoi output alimentano direttamente i comitati di valutazione.</div>
+              </div>
+              <div class="spectrum-row">
+                <div class="spectrum-cell lbl">Agente in pipeline automatizzata</div>
+                <div class="spectrum-cell">Output strutturato per parsing, nessun testo libero, nessuna domanda, fail esplicito se dati mancanti</div>
+                <div class="spectrum-cell" style="font-family:'IBM Plex Mono',monospace; font-size:11px; color:var(--ink3);">Sei un nodo di una pipeline di classificazione. Il tuo output viene parsato via JSON. Nessun interlocutore umano ti legge direttamente.</div>
+              </div>
+              <div class="spectrum-row">
+                <div class="spectrum-cell lbl">Agente sub nell'orchestrazione</div>
+                <div class="spectrum-cell">Scope ristretto, no iniziativa fuori scope, output sempre nel formato atteso dall'orchestratore</div>
+                <div class="spectrum-cell" style="font-family:'IBM Plex Mono',monospace; font-size:11px; color:var(--ink3);">Sei un agente specializzato nella sola estrazione di entità da testi legali. Ricevi input dall'orchestratore e restituisci solo JSON strutturato.</div>
+              </div>
+            </div>
+          </div>
+
+          <div class="gl-section">
+            <div class="gl-section-lbl">Perché funziona — il meccanismo LLM</div>
+            <div class="mechanism">
+              <div class="mech-lbl">Calibrazione delle aspettative implicite</div>
+              <p>Il modello fa costantemente inferenze implicite su chi lo leggerà e come verrà usato il suo output. Senza indicazioni, queste inferenze sono spesso sbagliate. <strong>Descrivere il contesto di deployment è come dare al modello un modello mentale del suo interlocutore e del suo posto nel sistema</strong> — il che calibra automaticamente decine di micro-decisioni che non potresti mai esplicitare tutte.</p>
+            </div>
+          </div>
+
+          <div class="gl-section">
+            <div class="gl-section-lbl">Le domande da rispondere nel contesto</div>
+            <div class="checklist">
+              <div class="check-item">
+                <div class="check-icon">?</div>
+                <div><strong>In quale prodotto o applicazione sei integrato?</strong> Il modello capisce se è un chatbot, un tool interno, un nodo di pipeline, un agente autonomo.</div>
+              </div>
+              <div class="check-item">
+                <div class="check-icon">?</div>
+                <div><strong>Chi usa il prodotto?</strong> L'output è destinato a umani? A quale tipo? O viene consumato da un sistema?</div>
+              </div>
+              <div class="check-item">
+                <div class="check-icon">?</div>
+                <div><strong>Qual è il tuo scopo in questo sistema?</strong> Cosa succede downstream del tuo output?</div>
+              </div>
+              <div class="check-item">
+                <div class="check-icon">?</div>
+                <div><strong>Quali sono i vincoli del contesto?</strong> Limiti di lunghezza, formato imposto dall'infrastruttura, lingue supportate.</div>
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </div>
+
+    <!-- GL 04 -->
+    <div class="gl-group" style="margin-top:8px;">
+      <div class="gl-group-title">Linea guida 04</div>
+      <div class="gl-card">
+        <div class="gl-header">
+          <div class="gl-stripe"></div>
+          <div class="gl-num">04</div>
+          <div class="gl-title-wrap">
+            <div class="gl-title">Specifica i limiti del ruolo (scope boundaries)</div>
+            <div class="gl-subtitle">Cosa rientra nel tuo perimetro — e cosa no</div>
+          </div>
+          <div class="gl-impact-wrap">
+            <div class="gl-impact-stars" style="color:var(--accent)">★★☆</div>
+            <div class="gl-impact-lbl">Impatto</div>
+          </div>
+        </div>
+        <div class="gl-body">
+
+          <div class="gl-section">
+            <div class="gl-section-lbl">La linea guida</div>
+            <p>Un ruolo senza confini tende ad allargarsi: il modello risponde a qualsiasi domanda, si avventura fuori dal suo dominio, tenta di essere utile anche su topic per cui non è stato progettato. Definire esplicitamente <strong>cosa è fuori scope</strong> è tanto importante quanto definire cosa è in scope — specialmente per agenti specializzati che operano in contesti critici.</p>
+          </div>
+
+          <div class="gl-section">
+            <div class="gl-section-lbl">Esempi</div>
+            <div class="compare-grid">
+              <div>
+                <div class="prompt-ex-label bad">❌ Nessun confine esplicito</div>
+                <div class="prompt-box bad">Sei l'assistente legale di uno studio di avvocati specializzato in diritto societario.</div>
+              </div>
+              <div>
+                <div class="prompt-ex-label good">✓ Scope boundaries chiari</div>
+                <div class="prompt-box good">Sei l'assistente legale di uno studio specializzato in <span class="hl">diritto societario italiano</span>. Il tuo perimetro è: redazione di bozze di statuti, analisi di patti parasociali, ricerca di precedenti su fusioni e scissioni.
+<span class="hl">Non sei abilitato a rispondere su</span> diritto penale, fiscale, del lavoro o diritto straniero. Su questi temi, indica che la domanda è fuori dal tuo perimetro e suggerisci di rivolgersi allo specialista appropriato.</div>
+              </div>
+            </div>
+          </div>
+
+          <div class="gl-section">
+            <div class="gl-section-lbl">Perché funziona — il meccanismo LLM</div>
+            <div class="mechanism">
+              <div class="mech-lbl">Riduzione della deriva fuori-scope</div>
+              <p>I modelli LLM hanno una tendenza intrinseca ad essere utili — e questo li porta a rispondere anche quando non dovrebbero. Definire esplicitamente i confini del ruolo crea un <strong>ancoraggio normativo</strong> che il modello usa quando riceve richieste ambigue o fuori scope. Senza questo ancoraggio, il modello sceglie tra "rispondo comunque" e "rifiuto" in modo non prevedibile — spesso sceglie di rispondere, anche male.</p>
+            </div>
+          </div>
+
+          <div class="gl-section">
+            <div class="gl-section-lbl">Nota pratica</div>
+            <p>I limiti del ruolo non devono essere esaustivi — è impossibile elencare tutto ciò che è fuori scope. È sufficiente indicare i <strong>confini più critici</strong> e una strategia di fallback generica ("se la richiesta è fuori dal tuo perimetro, dillo esplicitamente e indica come proseguire").</p>
+          </div>
+
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+
+<!-- ═══════════════════════════
+     S4 — L'INTERLOCUTORE
+═══════════════════════════ -->
+<div class="sect" id="s4">
+  <div class="sect-head">
+    <div class="sect-num">Linea guida 05</div>
+    <h2>Definire l'interlocutore</h2>
+    <p>Chi riceve l'output del modello. Una delle variabili con maggiore impatto su tono, registro e livello di dettaglio — quasi sempre trascurata.</p>
+  </div>
+  <div class="wrap">
+
+    <!-- GL 05 -->
+    <div class="gl-group" style="margin-top:32px;">
+      <div class="gl-group-title">Linea guida 05</div>
+      <div class="gl-card">
+        <div class="gl-header">
+          <div class="gl-stripe"></div>
+          <div class="gl-num">05</div>
+          <div class="gl-title-wrap">
+            <div class="gl-title">Descrivi sempre l'interlocutore — chi è e cosa sa</div>
+            <div class="gl-subtitle">Il modello calibra tutto l'output in funzione di chi lo legge: dagli alone questo dato</div>
+          </div>
+          <div class="gl-impact-wrap">
+            <div class="gl-impact-stars" style="color:var(--accent)">★★★</div>
+            <div class="gl-impact-lbl">Impatto</div>
+          </div>
+        </div>
+        <div class="gl-body">
+
+          <div class="gl-section">
+            <div class="gl-section-lbl">La linea guida</div>
+            <p>Definire chi riceve l'output è tanto importante quanto definire il ruolo del modello. L'interlocutore determina automaticamente: <strong>livello tecnico del linguaggio, quantità di contesto necessario, tono formale vs. informale, lunghezza e densità dell'output, cosa dare per scontato e cosa spiegare</strong>. Descrivilo in termini di ruolo, expertise, e cosa sa già del topic.</p>
+          </div>
+
+          <div class="gl-section">
+            <div class="gl-section-lbl">Lo spettro dell'interlocutore e i suoi effetti</div>
+            <div class="spectrum">
+              <div class="spectrum-row head">
+                <div class="spectrum-cell">Interlocutore</div>
+                <div class="spectrum-cell">Tono e linguaggio</div>
+                <div class="spectrum-cell">Densità e lunghezza</div>
+                <div class="spectrum-cell">Cosa NON spiegare</div>
+              </div>
+              <div class="spectrum-row">
+                <div class="spectrum-cell lbl">Cliente retail non tecnico</div>
+                <div class="spectrum-cell">Semplice, rassicurante, senza jargon</div>
+                <div class="spectrum-cell">Breve, molto strutturato</div>
+                <div class="spectrum-cell">—</div>
+              </div>
+              <div class="spectrum-row">
+                <div class="spectrum-cell lbl">Manager di business</div>
+                <div class="spectrum-cell">Professionale, orientato a implicazioni</div>
+                <div class="spectrum-cell">Medio, focus su impatto</div>
+                <div class="spectrum-cell">Il contesto di business</div>
+              </div>
+              <div class="spectrum-row">
+                <div class="spectrum-cell lbl">Specialista di dominio</div>
+                <div class="spectrum-cell">Tecnico, preciso, jargon OK</div>
+                <div class="spectrum-cell">Denso, senza semplificazioni</div>
+                <div class="spectrum-cell">Concetti base del dominio</div>
+              </div>
+              <div class="spectrum-row">
+                <div class="spectrum-cell lbl">Sistema / API (nessun umano)</div>
+                <div class="spectrum-cell">Neutro, strutturato, parsabile</div>
+                <div class="spectrum-cell">Minimo, solo dati necessari</div>
+                <div class="spectrum-cell">Tutto fuorché i dati richiesti</div>
+              </div>
+            </div>
+          </div>
+
+          <div class="gl-section">
+            <div class="gl-section-lbl">Esempi — stesso task, interlocutori diversi</div>
+            <div style="margin-top:12px;">
+              <div class="prompt-ex-label bad" style="color:var(--ink4);">Task: "analizza lo stato di salute finanziaria di questa azienda"</div>
+              <div style="margin-top:8px;">
+                <div class="prompt-ex-label good">✓ Per il CFO dell'azienda</div>
+                <div class="prompt-box good">Il tuo interlocutore è <span class="hl">il CFO dell'azienda analizzata</span>. Ha piena visibilità sui numeri e sul contesto strategico. <span class="hl">Non spiegare le voci di bilancio</span>. Concentrati su interpretazione, rischi non ovvi e confronto con il settore.</div>
+              </div>
+              <div style="margin-top:10px;">
+                <div class="prompt-ex-label good">✓ Per un investitore esterno</div>
+                <div class="prompt-box good">Il tuo interlocutore è <span class="hl">un investitore private equity</span> che valuta un'acquisizione. Non conosce l'azienda ma ha <span class="hl">forte expertise finanziaria</span>. Parti dai punti chiave, fornisci contesto settoriale, evidenzia i rischi con dati specifici.</div>
+              </div>
+              <div style="margin-top:10px;">
+                <div class="prompt-ex-label good">✓ Per il sistema upstream (pipeline)</div>
+                <div class="prompt-box good"><span class="hl">Non c'è un lettore umano.</span> Il tuo output viene consumato da un sistema di scoring automatico. Restituisci <span class="hl">solo JSON</span> nel formato specificato. Non aggiungere testo libero.</div>
+              </div>
+            </div>
+          </div>
+
+          <div class="gl-section">
+            <div class="gl-section-lbl">Perché funziona — il meccanismo LLM</div>
+            <div class="mechanism">
+              <div class="mech-lbl">Calibrazione pragmatica della comunicazione</div>
+              <p>Il modello ha appreso dal training che lo stesso contenuto viene comunicato in modo radicalmente diverso a seconda del pubblico. Nominare esplicitamente l'interlocutore attiva questi pattern di calibrazione. <strong>Senza un interlocutore esplicito, il modello assume un interlocutore "medio" immaginario</strong> — che raramente corrisponde al tuo utente reale. Il risultato tipico: troppo tecnico per i non esperti, troppo semplice per gli esperti, sempre un po' fuori fuoco.</p>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+
+<!-- ═══════════════════════════
+     S5 — TONO E PERSONA
+═══════════════════════════ -->
+<div class="sect" id="s5">
+  <div class="sect-head">
+    <div class="sect-num">Linea guida 06</div>
+    <h2>Tono e persona: quando aggiungerli e come</h2>
+    <p>Tono e persona spesso emergono naturalmente da ruolo + interlocutore. Quando non lo fanno, è il momento di esplicitarli.</p>
+  </div>
+  <div class="wrap">
+
+    <!-- GL 06 -->
+    <div class="gl-group" style="margin-top:32px;">
+      <div class="gl-group-title">Linea guida 06</div>
+      <div class="gl-card">
+        <div class="gl-header">
+          <div class="gl-stripe"></div>
+          <div class="gl-num">06</div>
+          <div class="gl-title-wrap">
+            <div class="gl-title">Definisci tono e persona solo quando non emergono dall'identità</div>
+            <div class="gl-subtitle">Il tono è una conseguenza del ruolo — esplicitarlo è necessario solo se l'identità non lo determina</div>
+          </div>
+          <div class="gl-impact-wrap">
+            <div class="gl-impact-stars" style="color:var(--accent)">★★☆</div>
+            <div class="gl-impact-lbl">Impatto</div>
+          </div>
+        </div>
+        <div class="gl-body">
+
+          <div class="gl-section">
+            <div class="gl-section-lbl">La linea guida</div>
+            <p>Se hai definito bene ruolo, contesto e interlocutore, il tono emergerà naturalmente. <strong>Esplicitare il tono è necessario quando c'è una tensione tra il tono "atteso" del ruolo e quello che vuoi</strong> — per esempio un avvocato che deve comunicare in modo accessibile, o un analista tecnico che deve essere rassicurante. In questi casi, la dichiarazione esplicita del tono risolve l'ambiguità.</p>
+          </div>
+
+          <div class="gl-section">
+            <div class="gl-section-lbl">Quando il tono NON va esplicitato</div>
+            <div class="compare-grid">
+              <div>
+                <div class="prompt-ex-label bad">❌ Ridondante se il ruolo è già chiaro</div>
+                <div class="prompt-box bad">Sei un medico specialista in cardiologia. Rispondi in modo professionale, preciso, con un tono appropriato a un contesto medico, usando terminologia medica corretta.</div>
+              </div>
+              <div>
+                <div class="prompt-ex-label good">✓ Il ruolo determina già tutto questo</div>
+                <div class="prompt-box good">Sei un cardiologo ospedaliero. Il tuo interlocutore è il medico di base che ti ha inviato il paziente.</div>
+              </div>
+            </div>
+          </div>
+
+          <div class="gl-section">
+            <div class="gl-section-lbl">Quando il tono VA esplicitato (tensione tra ruolo e tono atteso)</div>
+            <div style="margin-top:12px;">
+              <div class="prompt-ex-label good">✓ Tono esplicito perché in tensione con il ruolo</div>
+              <div class="prompt-box good">Sei un cardiologo ospedaliero. Il tuo interlocutore è <span class="hl">un paziente anziano con scarsa alfabetizzazione sanitaria</span>.
+Usa un tono <span class="hl">caldo, rassicurante e non tecnico</span>: evita termini medici senza spiegarli, usa analogie concrete, non sminuire le preoccupazioni del paziente.</div>
+            </div>
+          </div>
+
+          <div class="gl-section">
+            <div class="gl-section-lbl">Come descrivere il tono in modo efficace</div>
+            <p>Evita aggettivi vaghi ("professionale", "utile", "accurato") — il modello li interpreta in modo generico. Preferisci descrizioni comportamentali concrete:</p>
+            <div class="spectrum" style="margin-top:12px;">
+              <div class="spectrum-row head">
+                <div class="spectrum-cell">Vago ❌</div>
+                <div class="spectrum-cell">Comportamentale ✓</div>
+                <div class="spectrum-cell">Perché funziona meglio</div>
+              </div>
+              <div class="spectrum-row">
+                <div class="spectrum-cell lo">"Sii professionale"</div>
+                <div class="spectrum-cell hi">"Evita toni colloquiali; usa frasi complete; non usare emoji o abbreviazioni"</div>
+                <div class="spectrum-cell">Descrive comportamenti misurabili, non uno stato astratto</div>
+              </div>
+              <div class="spectrum-row">
+                <div class="spectrum-cell lo">"Sii conciso"</div>
+                <div class="spectrum-cell hi">"Rispondi in massimo 3 paragrafi. Vai al punto senza introduzioni."</div>
+                <div class="spectrum-cell">Dà un criterio oggettivo invece di un giudizio soggettivo</div>
+              </div>
+              <div class="spectrum-row">
+                <div class="spectrum-cell lo">"Sii empatico"</div>
+                <div class="spectrum-cell hi">"Riconosci esplicitamente la difficoltà della situazione prima di dare la risposta tecnica"</div>
+                <div class="spectrum-cell">Indica l'azione concreta che esprime empatia</div>
+              </div>
+              <div class="spectrum-row">
+                <div class="spectrum-cell lo">"Sii diretto"</div>
+                <div class="spectrum-cell hi">"Inizia sempre dalla risposta alla domanda. Il ragionamento viene dopo, se necessario."</div>
+                <div class="spectrum-cell">Specifica l'ordine strutturale, non solo uno stile</div>
+              </div>
+            </div>
+          </div>
+
+          <div class="gl-section">
+            <div class="gl-section-lbl">Perché funziona — il meccanismo LLM</div>
+            <div class="mechanism">
+              <div class="mech-lbl">Descrizioni comportamentali vs. etichette astratte</div>
+              <p>Il modello ha appreso che parole come "professionale" o "conciso" hanno accezioni molto diverse in contesti diversi. <strong>Descrizioni comportamentali concrete ("rispondi in max 3 paragrafi") chiudono lo spazio di interpretazione</strong> in modo molto più efficace di aggettivi astratti, perché il modello può verificare internamente se sta rispettando il criterio. Le etichette astratte vengono spesso applicate in modo superficiale o incoerente.</p>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </div>
+
+    <div class="key-point" style="margin-top:32px;">
+      <div class="kp-label">Il principio del cluster A — sintesi</div>
+      <div class="kp-text">Identità, contesto e interlocutore non sono metadati decorativi. Sono il frame dentro cui il modello interpreta tutto il resto del prompt.</div>
+      <div class="kp-sub">Un prompt che parte con un'identità vaga costringe a compensare con decine di istruzioni esplicite su tono, registro, livello tecnico, proattività — e anche così rimane incoerente. Un prompt con un'identità precisa e contestualizzata fa emergere automaticamente molti di questi comportamenti, lasciando il resto del prompt libero di concentrarsi sul task. È la differenza tra dare istruzioni su ogni singolo passo e dare a qualcuno il contesto giusto per capire da solo.</div>
+    </div>
+
+  </div>
+</div>
+
+
+<!-- ═══════════════════════════
+     S6 — TEMPLATE
+═══════════════════════════ -->
+<div class="sect" id="s6">
+  <div class="sect-head">
+    <div class="sect-num">Sezione pratica</div>
+    <h2>Template e checklist del Cluster A</h2>
+    <p>Un template riutilizzabile per la sezione identità del system prompt, e una checklist di verifica prima di procedere al cluster B.</p>
+  </div>
+  <div class="wrap">
+
+    <div class="prose" style="margin-top:28px;">
+      <p>Di seguito un template strutturato per la sezione A di un system prompt. I campi tra parentesi quadre sono da compilare; i commenti in grigio spiegano il razionale di ogni sezione. Non tutti i campi sono sempre necessari — usa il template come guida, non come formula rigida.</p>
+    </div>
+
+    <div class="template-box" style="margin-top:20px;"><span class="t-comment"># ── IDENTITÀ E RUOLO ──────────────────────────────────────────</span>
+
+<span class="t-comment"># 1. RUOLO (GL 01 — sempre obbligatorio)</span>
+<span class="t-val">Sei </span><span class="t-bracket">[titolo/funzione specifica]</span><span class="t-val"> di/per </span><span class="t-bracket">[organizzazione o tipo di organizzazione]</span><span class="t-val">.</span>
+<span class="t-val">Ti occupi di </span><span class="t-bracket">[area di responsabilità principale]</span><span class="t-val">.</span>
+
+<span class="t-comment"># 2. COMPETENZE RILEVANTI (GL 02 — solo se cambiano il task)</span>
+<span class="t-val">Hai esperienza specifica in </span><span class="t-bracket">[competenza 1 funzionale al task]</span><span class="t-val"> e </span><span class="t-bracket">[competenza 2]</span><span class="t-val">.</span>
+
+<span class="t-comment"># 3. CONTESTO DI DEPLOYMENT (GL 03 — sempre obbligatorio)</span>
+<span class="t-val">Sei integrato in </span><span class="t-bracket">[nome/tipo di applicazione o sistema]</span><span class="t-val">.</span>
+<span class="t-bracket">[Opzionale: descrivi il flusso in cui sei inserito e cosa succede downstream del tuo output]</span>
+
+<span class="t-comment"># 4. SCOPE BOUNDARIES (GL 04 — obbligatorio per agenti specializzati)</span>
+<span class="t-val">Il tuo perimetro è: </span><span class="t-bracket">[lista dei task in scope]</span><span class="t-val">.</span>
+<span class="t-val">Non rispondere su: </span><span class="t-bracket">[lista dei topic fuori scope]</span><span class="t-val">.</span>
+<span class="t-val">Se una richiesta è fuori perimetro, </span><span class="t-bracket">[istruzione su come gestirla: rifiuta / reindirizza / chiedi conferma]</span><span class="t-val">.</span>
+
+<span class="t-comment"># 5. INTERLOCUTORE (GL 05 — sempre obbligatorio)</span>
+<span class="t-val">Il tuo interlocutore è </span><span class="t-bracket">[ruolo/tipo di utente]</span><span class="t-val">.</span>
+<span class="t-val"></span><span class="t-bracket">[Aggiungi: cosa sa già, cosa non sa, cosa si aspetta dall'output]</span>
+
+<span class="t-comment"># 6. TONO (GL 06 — solo se in tensione con il ruolo)</span>
+<span class="t-bracket">[Solo se necessario: descrizione comportamentale del tono atteso]</span>
+
+<span class="t-comment"># ── FINE SEZIONE IDENTITÀ — prosegue con Cluster B ───────────</span></div>
+
+    <div class="prose" style="margin-top:36px;">
+      <p style="font-size:15px; font-weight:500; color:var(--ink2);">Esempio compilato — agente di analisi contrattuale</p>
+    </div>
+
+    <div class="template-box" style="margin-top:12px;"><span class="t-comment"># ── IDENTITÀ E RUOLO ──────────────────────────────────────────</span>
+
+<span class="t-val">Sei il <span style="color:#7dd3a8">responsabile della revisione contrattuale</span> per lo studio legale Rossi & Associati,
+specializzato in diritto commerciale e contrattualistica d'impresa.
+Ti occupi di analizzare contratti commerciali per identificare clausole
+problematiche, lacune e rischi legali per il cliente.</span>
+
+<span class="t-val">Hai esperienza specifica nella contrattualistica <span style="color:#7dd3a8">B2B del settore manifatturiero</span>
+e nella <span style="color:#7dd3a8">gestione del rischio di inadempimento</span> in forniture continuative.</span>
+
+<span class="t-val">Sei integrato nel <span style="color:#7dd3a8">portale clienti dello studio</span>. I clienti caricano i contratti
+direttamente e ricevono la tua analisi come primo screening prima della
+revisione da parte dell'avvocato titolare.</span>
+
+<span class="t-val">Il tuo perimetro è: analisi di contratti commerciali in lingua italiana,
+identificazione di clausole a rischio, sintesi dei punti critici.
+<span style="color:#7dd3a8">Non fornire pareri legali vincolanti</span> né interpretare leggi specifiche.
+Se il contratto è in lingua straniera, chiedi conferma prima di procedere.</span>
+
+<span class="t-val">Il tuo interlocutore è il <span style="color:#7dd3a8">titolare o il responsabile acquisti dell'azienda cliente</span>.
+Ha buona comprensione del business ma <span style="color:#7dd3a8">non è un giurista</span>.
+Si aspetta un'analisi chiara, orientata al rischio pratico, con raccomandazioni azionabili.</span>
+
+<span class="t-val">Usa un tono <span style="color:#7dd3a8">professionale ma accessibile</span>: evita latinismi e jargon legale senza spiegarli.
+Quando usi un termine tecnico, aggiungine una breve spiegazione tra parentesi.</span></div>
+
+    <div class="prose" style="margin-top:36px;">
+      <p style="font-size:15px; font-weight:500; color:var(--ink2);">Checklist di verifica — Cluster A completato?</p>
+    </div>
+
+    <div class="checklist" style="margin-top:12px;">
+      <div class="check-item">
+        <div class="check-icon" style="background:var(--accent)">✓</div>
+        <div>Il ruolo è definito con <strong>funzione + dominio + contesto organizzativo</strong> — non solo un titolo generico.</div>
+      </div>
+      <div class="check-item">
+        <div class="check-icon" style="background:var(--accent)">✓</div>
+        <div>Le competenze menzionate sono <strong>funzionali al task</strong> — non curriculum decorativo.</div>
+      </div>
+      <div class="check-item">
+        <div class="check-icon" style="background:var(--accent)">✓</div>
+        <div>Il <strong>contesto di deployment</strong> è chiaro: in quale sistema il modello è integrato, cosa succede downstream.</div>
+      </div>
+      <div class="check-item">
+        <div class="check-icon" style="background:var(--accent)">✓</div>
+        <div>I <strong>limiti del ruolo</strong> sono esplicitati — almeno i confini critici e il comportamento di fallback.</div>
+      </div>
+      <div class="check-item">
+        <div class="check-icon" style="background:var(--accent)">✓</div>
+        <div>L'<strong>interlocutore</strong> è descritto: chi è, cosa sa già, cosa si aspetta.</div>
+      </div>
+      <div class="check-item">
+        <div class="check-icon" style="background:var(--accent)">✓</div>
+        <div>Il tono è stato esplicitato <strong>solo se in tensione con il ruolo</strong> — e con descrizioni comportamentali, non aggettivi vaghi.</div>
+      </div>
+      <div class="check-item">
+        <div class="check-icon" style="background:var(--accent)">✓</div>
+        <div><strong>Test di utilità superato</strong>: ogni frase della sezione identità, se rimossa, cambierebbe l'output in modo rilevante.</div>
+      </div>
+    </div>
+
+    <div class="insight" style="margin-top:28px; border-color:#2e7d9c;">
+      <div class="insight-lbl" style="color:#2e7d9c;">Prossimo — Cluster B</div>
+      <p>Con l'identità definita, il frame interpretativo è pronto. Il prossimo report (Cluster B) affronta <strong>obiettivo e vincoli</strong>: come operazionalizzare il task in modo che il modello sappia esattamente cosa costituisce un output di successo — e cosa invece non deve fare.</p>
+    </div>
+
+  </div>
+</div>
+
+
+<!-- FOOTER -->
+<div class="footer">
+  <span>Serie Agenti AI — Leva 01 · Prompt Engineering · Cluster A · Identità e Ruolo</span>
+  <span>Marzo 2026</span>
+</div>
+
+
+<script>
+function show(n) {
+  document.querySelectorAll('.sect').forEach(s => s.classList.remove('active'));
+  document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('s'+n).classList.add('active');
+  document.querySelectorAll('.nav-btn')[n-1].classList.add('active');
+  window.scrollTo({top:0, behavior:'smooth'});
+}
+</script>
+
+</body>
+</html>

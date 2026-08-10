@@ -1,0 +1,908 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>LLM e Sicurezza dei Dati — Executive Summary</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=IBM+Plex+Mono:wght@400;600&family=IBM+Plex+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg:           #0e0e0e;
+  --surface:      #161616;
+  --surface2:     #1f1f1f;
+  --border:       #2a2a2a;
+  --accent:       #f0a44a;   /* ambra — distinto dal verde delle chat precedenti */
+  --accent2:      #f04a6a;   /* rosso-allarme per rischi */
+  --accent3:      #4af0a4;   /* verde-ok per mitigazioni */
+  --text:         #e8e8e0;
+  --text-muted:   #888880;
+  --text-dim:     #555550;
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+html { scroll-behavior: smooth; }
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: 'IBM Plex Sans', sans-serif;
+  font-weight: 300;
+  line-height: 1.7;
+  min-height: 100vh;
+}
+
+/* ── HERO ── */
+.hero {
+  padding: 80px 64px 64px;
+  border-bottom: 1px solid var(--border);
+  position: relative;
+  overflow: hidden;
+}
+
+.hero::before {
+  content: '';
+  position: absolute;
+  top: -120px; right: -120px;
+  width: 600px; height: 600px;
+  background: radial-gradient(circle, rgba(240,164,74,0.06) 0%, transparent 70%);
+  pointer-events: none;
+}
+
+.hero-series {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 10px;
+  letter-spacing: 4px;
+  text-transform: uppercase;
+  color: var(--text-dim);
+  margin-bottom: 8px;
+  opacity: 0;
+  animation: fadeUp 0.5s ease forwards 0.05s;
+}
+
+.hero-label {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 11px;
+  letter-spacing: 3px;
+  text-transform: uppercase;
+  color: var(--accent);
+  margin-bottom: 28px;
+  opacity: 0;
+  animation: fadeUp 0.5s ease forwards 0.15s;
+}
+
+.hero h1 {
+  font-family: 'Playfair Display', serif;
+  font-size: clamp(36px, 5.5vw, 64px);
+  font-weight: 700;
+  line-height: 1.1;
+  letter-spacing: -1px;
+  max-width: 720px;
+  opacity: 0;
+  animation: fadeUp 0.6s ease forwards 0.25s;
+}
+
+.hero h1 em {
+  font-style: italic;
+  color: var(--accent);
+}
+
+.hero-sub {
+  margin-top: 24px;
+  font-size: 16px;
+  color: var(--text-muted);
+  max-width: 560px;
+  line-height: 1.75;
+  opacity: 0;
+  animation: fadeUp 0.6s ease forwards 0.4s;
+}
+
+.hero-meta {
+  margin-top: 52px;
+  display: flex;
+  gap: 48px;
+  flex-wrap: wrap;
+  opacity: 0;
+  animation: fadeUp 0.6s ease forwards 0.55s;
+}
+
+.hero-meta-item span {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 10px;
+  color: var(--text-dim);
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  display: block;
+}
+
+.hero-meta-item strong {
+  font-family: 'IBM Plex Sans', sans-serif;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text-muted);
+  display: block;
+  margin-top: 3px;
+}
+
+/* ── LAYOUT ── */
+.layout {
+  display: grid;
+  grid-template-columns: 200px 1fr;
+  min-height: calc(100vh - 320px);
+}
+
+.sidebar {
+  border-right: 1px solid var(--border);
+  padding: 48px 28px 48px 64px;
+  position: sticky;
+  top: 0;
+  height: 100vh;
+  overflow-y: auto;
+}
+
+.sidebar-label {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 10px;
+  letter-spacing: 3px;
+  text-transform: uppercase;
+  color: var(--text-dim);
+  margin-bottom: 20px;
+}
+
+.sidebar nav a {
+  display: block;
+  font-size: 12px;
+  color: var(--text-muted);
+  text-decoration: none;
+  padding: 8px 0;
+  border-bottom: 1px solid var(--border);
+  transition: color 0.2s;
+  line-height: 1.4;
+}
+
+.sidebar nav a:hover { color: var(--accent); }
+.sidebar nav a:last-child { border-bottom: none; }
+
+.content {
+  padding: 56px 64px 96px;
+  max-width: 860px;
+}
+
+/* ── SECTIONS ── */
+.section {
+  margin-bottom: 88px;
+  opacity: 0;
+  transform: translateY(18px);
+  animation: fadeUp 0.6s ease forwards;
+}
+
+.section:nth-child(1) { animation-delay: 0.1s; }
+.section:nth-child(2) { animation-delay: 0.2s; }
+.section:nth-child(3) { animation-delay: 0.3s; }
+.section:nth-child(4) { animation-delay: 0.4s; }
+.section:nth-child(5) { animation-delay: 0.5s; }
+
+.section-header {
+  display: flex;
+  align-items: baseline;
+  gap: 16px;
+  margin-bottom: 32px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid var(--border);
+}
+
+.section-num {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 11px;
+  color: var(--accent);
+  letter-spacing: 1px;
+  flex-shrink: 0;
+}
+
+.section h2 {
+  font-family: 'Playfair Display', serif;
+  font-size: clamp(22px, 2.8vw, 30px);
+  font-weight: 700;
+  letter-spacing: -0.5px;
+  line-height: 1.2;
+}
+
+.section > p {
+  font-size: 15px;
+  color: var(--text-muted);
+  margin-bottom: 24px;
+  max-width: 680px;
+  line-height: 1.8;
+}
+
+.section > p strong {
+  color: var(--text);
+  font-weight: 500;
+}
+
+/* ── SCENARI DI DANNO ── */
+.scenario-list {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  margin-bottom: 32px;
+}
+
+.scenario {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-left: 3px solid var(--accent2);
+  padding: 28px 32px;
+  transition: border-color 0.2s, background 0.2s;
+  cursor: default;
+}
+
+.scenario:hover {
+  background: var(--surface2);
+  border-left-color: var(--accent);
+}
+
+.scenario-header {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 12px;
+}
+
+.scenario-icon {
+  font-size: 20px;
+  flex-shrink: 0;
+}
+
+.scenario-tag {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 9px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: var(--accent2);
+  background: rgba(240,74,106,0.08);
+  padding: 3px 8px;
+  border-radius: 2px;
+}
+
+.scenario h3 {
+  font-family: 'IBM Plex Sans', sans-serif;
+  font-size: 15px;
+  font-weight: 500;
+  color: var(--text);
+  margin-left: auto;
+  flex: 1;
+}
+
+.scenario p {
+  font-size: 14px;
+  color: var(--text-muted);
+  line-height: 1.75;
+}
+
+.scenario p strong {
+  color: var(--text);
+  font-weight: 500;
+}
+
+/* ── BOX CHIARIMENTO (mito vs realtà) ── */
+.myth-box {
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-top: 3px solid var(--accent);
+  padding: 32px;
+  margin: 36px 0;
+}
+
+.myth-box-label {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 10px;
+  letter-spacing: 3px;
+  text-transform: uppercase;
+  color: var(--accent);
+  margin-bottom: 20px;
+}
+
+.myth-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 2px;
+  margin-bottom: 2px;
+}
+
+.myth-cell {
+  padding: 16px 20px;
+  font-size: 14px;
+  line-height: 1.65;
+}
+
+.myth-cell.fear {
+  background: rgba(240,74,106,0.06);
+  border: 1px solid rgba(240,74,106,0.15);
+  color: var(--text-muted);
+}
+
+.myth-cell.reality {
+  background: rgba(74,240,164,0.05);
+  border: 1px solid rgba(74,240,164,0.12);
+  color: var(--text-muted);
+}
+
+.myth-cell-label {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 9px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  margin-bottom: 8px;
+  display: block;
+}
+
+.myth-cell.fear .myth-cell-label { color: var(--accent2); }
+.myth-cell.reality .myth-cell-label { color: var(--accent3); }
+
+.myth-cell strong { color: var(--text); font-weight: 500; }
+
+/* ── FLUSSO DATI ── */
+.flow-diagram {
+  margin: 32px 0;
+  position: relative;
+}
+
+.flow-steps {
+  display: flex;
+  align-items: stretch;
+  gap: 0;
+}
+
+.flow-step {
+  flex: 1;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  padding: 20px 16px;
+  text-align: center;
+  position: relative;
+}
+
+.flow-step::after {
+  content: '→';
+  position: absolute;
+  right: -14px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--text-dim);
+  font-size: 16px;
+  z-index: 1;
+  background: var(--bg);
+  padding: 0 2px;
+}
+
+.flow-step:last-child::after { display: none; }
+
+.flow-step-num {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 9px;
+  color: var(--text-dim);
+  letter-spacing: 1px;
+  margin-bottom: 8px;
+}
+
+.flow-step-icon {
+  font-size: 22px;
+  margin-bottom: 8px;
+  display: block;
+}
+
+.flow-step-label {
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--text);
+  margin-bottom: 6px;
+  line-height: 1.3;
+}
+
+.flow-step-desc {
+  font-size: 11px;
+  color: var(--text-dim);
+  line-height: 1.5;
+}
+
+.flow-step.risk {
+  border-color: rgba(240,74,106,0.3);
+  background: rgba(240,74,106,0.04);
+}
+
+.flow-step.risk .flow-step-label { color: var(--accent2); }
+
+/* ── SEMAFORO OPZIONI ── */
+.options-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 2px;
+  margin: 32px 0;
+}
+
+.option-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  padding: 28px 24px;
+}
+
+.option-light {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  margin-bottom: 20px;
+  box-shadow: 0 0 12px currentColor;
+}
+
+.option-light.red   { background: #f04a6a; color: #f04a6a; }
+.option-light.amber { background: #f0a44a; color: #f0a44a; }
+.option-light.green { background: #4af0a4; color: #4af0a4; }
+
+.option-card h3 {
+  font-family: 'IBM Plex Sans', sans-serif;
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--text);
+  margin-bottom: 8px;
+}
+
+.option-card .option-subtitle {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 10px;
+  color: var(--text-dim);
+  letter-spacing: 1px;
+  margin-bottom: 16px;
+}
+
+.option-card p {
+  font-size: 13px;
+  color: var(--text-muted);
+  line-height: 1.65;
+  margin-bottom: 16px;
+}
+
+.option-pros-cons {
+  border-top: 1px solid var(--border);
+  padding-top: 14px;
+}
+
+.pro-con-item {
+  font-size: 12px;
+  color: var(--text-dim);
+  padding: 3px 0;
+  padding-left: 16px;
+  position: relative;
+  line-height: 1.5;
+}
+
+.pro-con-item::before {
+  position: absolute;
+  left: 0;
+  font-size: 10px;
+}
+
+.pro-con-item.pro::before { content: '+'; color: var(--accent3); }
+.pro-con-item.con::before { content: '−'; color: var(--accent2); }
+
+/* ── RACCOMANDAZIONE FINALE ── */
+.rec-box {
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-left: 4px solid var(--accent3);
+  padding: 36px 40px;
+  margin-top: 40px;
+}
+
+.rec-box-label {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 10px;
+  letter-spacing: 3px;
+  text-transform: uppercase;
+  color: var(--accent3);
+  margin-bottom: 20px;
+}
+
+.rec-steps {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  margin: 24px 0;
+}
+
+.rec-step {
+  display: flex;
+  gap: 20px;
+  align-items: flex-start;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  padding: 18px 22px;
+}
+
+.rec-step-num {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 11px;
+  color: var(--accent);
+  flex-shrink: 0;
+  padding-top: 1px;
+}
+
+.rec-step-content h4 {
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--text);
+  margin-bottom: 4px;
+}
+
+.rec-step-content p {
+  font-size: 13px;
+  color: var(--text-muted);
+  line-height: 1.6;
+  margin: 0;
+}
+
+.rec-note {
+  font-size: 13px;
+  color: var(--text-dim);
+  font-style: italic;
+  margin-top: 20px;
+  line-height: 1.7;
+  border-top: 1px solid var(--border);
+  padding-top: 20px;
+}
+
+/* ── FOOTER ── */
+footer {
+  border-top: 1px solid var(--border);
+  padding: 32px 64px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+footer p {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 11px;
+  color: var(--text-dim);
+  letter-spacing: 0.5px;
+}
+
+/* ── ANIMATIONS ── */
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(18px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* ── RESPONSIVE ── */
+@media (max-width: 900px) {
+  .layout { grid-template-columns: 1fr; }
+  .sidebar { display: none; }
+  .hero, .content, footer { padding-left: 28px; padding-right: 28px; }
+  .options-grid { grid-template-columns: 1fr; }
+  .myth-row { grid-template-columns: 1fr; }
+  .flow-steps { flex-direction: column; }
+  .flow-step::after { content: '↓'; right: auto; bottom: -16px; top: auto; left: 50%; transform: translateX(-50%); }
+}
+</style>
+</head>
+<body>
+
+<!-- HERO -->
+<header class="hero">
+  <div class="hero-series">Serie · LLM e Sicurezza dei Dati</div>
+  <div class="hero-label">Report A — Executive Summary</div>
+  <h1>Usare l'AI in azienda:<br>i rischi che <em>contano davvero</em></h1>
+  <p class="hero-sub">Una guida non tecnica per capire cosa succede ai dati aziendali quando si usano strumenti AI come ChatGPT o Claude, e come gestire il rischio in modo razionale.</p>
+  <div class="hero-meta">
+    <div class="hero-meta-item">
+      <span>Destinatari</span>
+      <strong>Management, Direzione</strong>
+    </div>
+    <div class="hero-meta-item">
+      <span>Settore</span>
+      <strong>Manifatturiero / Industriale</strong>
+    </div>
+    <div class="hero-meta-item">
+      <span>Argomento</span>
+      <strong>Sicurezza dati e LLM</strong>
+    </div>
+    <div class="hero-meta-item">
+      <span>Anno</span>
+      <strong>2026</strong>
+    </div>
+  </div>
+</header>
+
+<div class="layout">
+
+  <!-- SIDEBAR -->
+  <aside class="sidebar">
+    <div class="sidebar-label">Contenuti</div>
+    <nav>
+      <a href="#scenario">01 · Il problema reale</a>
+      <a href="#cosa-succede">02 · Cosa succede ai tuoi dati</a>
+      <a href="#la-paura">03 · La paura più comune</a>
+      <a href="#opzioni">04 · Le tue opzioni</a>
+      <a href="#raccomandazione">05 · Cosa fare</a>
+    </nav>
+  </aside>
+
+  <!-- MAIN CONTENT -->
+  <main class="content">
+
+    <!-- SEZIONE 1 -->
+    <section class="section" id="scenario">
+      <div class="section-header">
+        <span class="section-num">01</span>
+        <h2>Il problema reale: sta già succedendo</h2>
+      </div>
+
+      <p>In molte aziende manifatturiere la situazione è questa: alcuni strumenti AI sono stati introdotti in modo strutturato, ma molti dipendenti usano anche strumenti personali — ChatGPT, Claude, Gemini — in autonomia, senza che l'azienda lo sappia o lo abbia regolamentato.</p>
+
+      <p>Questa non è una colpa dei dipendenti. Questi strumenti sono utili, gratuiti e immediatamente accessibili. Il problema è che <strong>nessuno ha definito le regole</strong>, e senza regole ogni persona decide da sola cosa è accettabile condividere. Il risultato sono tre scenari di danno concreti.</p>
+
+      <div class="scenario-list">
+
+        <div class="scenario">
+          <div class="scenario-header">
+            <span class="scenario-icon">📐</span>
+            <span class="scenario-tag">Scenario 01</span>
+            <h3>Proprietà intellettuale fuori controllo</h3>
+          </div>
+          <p>Un ingegnere incolla una specifica tecnica o un disegno di prodotto su ChatGPT per farsi aiutare a scrivere una documentazione. In quel momento, <strong>quella specifica tecnica ha lasciato il perimetro aziendale</strong> ed è sui server di un'azienda americana. Non c'è modo di "ritirarla". Se quella specifica è il cuore del vantaggio competitivo dell'azienda — un processo produttivo esclusivo, una formulazione, un design brevettato — il danno potenziale è significativo.</p>
+        </div>
+
+        <div class="scenario">
+          <div class="scenario-header">
+            <span class="scenario-icon">🤝</span>
+            <span class="scenario-tag">Scenario 02</span>
+            <h3>Violazione di NDA con clienti e fornitori</h3>
+          </div>
+          <p>Un commerciale o un responsabile acquisti condivide dettagli di un'offerta riservata, di un accordo contrattuale o di specifiche di un cliente per farsi aiutare a preparare una presentazione. Se esiste un NDA che vieta la condivisione di quelle informazioni con terze parti, <strong>la violazione è già avvenuta nell'atto stesso dell'invio</strong> — indipendentemente da cosa il provider AI faccia con quei dati. Non serve che i dati vengano "rubati": il contratto è già stato infranto.</p>
+        </div>
+
+        <div class="scenario">
+          <div class="scenario-header">
+            <span class="scenario-icon">👥</span>
+            <span class="scenario-tag">Scenario 03</span>
+            <h3>Dati personali e rischio GDPR</h3>
+          </div>
+          <p>Un HR o un manager condivide dati di dipendenti — nomi, valutazioni, dati contrattuali — per farsi aiutare in una comunicazione interna. I principali provider AI hanno server principalmente negli Stati Uniti. <strong>Trasferire dati personali di dipendenti europei su server extra-UE senza le garanzie contrattuali richieste dal GDPR è una violazione normativa</strong>, anche se nessuno lo ha fatto con cattive intenzioni.</p>
+        </div>
+
+      </div>
+
+      <p>Questi tre scenari non sono ipotetici. Stanno accadendo in aziende di ogni dimensione, ogni giorno. La buona notizia è che sono tutti e tre gestibili con interventi relativamente semplici.</p>
+
+    </section>
+
+    <!-- SEZIONE 2 -->
+    <section class="section" id="cosa-succede">
+      <div class="section-header">
+        <span class="section-num">02</span>
+        <h2>Cosa succede ai tuoi dati: il flusso reale</h2>
+      </div>
+
+      <p>Per decidere bene come gestire il rischio, è utile avere un'idea chiara — senza tecnicismi — di cosa succede concretamente quando un dipendente invia un testo a un sistema AI esterno.</p>
+
+      <div class="flow-diagram">
+        <div class="flow-steps">
+          <div class="flow-step">
+            <div class="flow-step-num">STEP 01</div>
+            <span class="flow-step-icon">💬</span>
+            <div class="flow-step-label">Invio del testo</div>
+            <div class="flow-step-desc">Il dipendente scrive o incolla il testo nel chatbox</div>
+          </div>
+          <div class="flow-step risk">
+            <div class="flow-step-num">STEP 02</div>
+            <span class="flow-step-icon">🌐</span>
+            <div class="flow-step-label">Trasmissione a server esterni</div>
+            <div class="flow-step-desc">Il testo viaggia su server del provider (spesso USA)</div>
+          </div>
+          <div class="flow-step risk">
+            <div class="flow-step-num">STEP 03</div>
+            <span class="flow-step-icon">📋</span>
+            <div class="flow-step-label">Conservazione nei log</div>
+            <div class="flow-step-desc">Il testo viene conservato per 30-90 giorni (dipende dal piano)</div>
+          </div>
+          <div class="flow-step">
+            <div class="flow-step-num">STEP 04</div>
+            <span class="flow-step-icon">🤖</span>
+            <div class="flow-step-label">Elaborazione e risposta</div>
+            <div class="flow-step-desc">Il modello elabora e restituisce la risposta</div>
+          </div>
+        </div>
+      </div>
+
+      <p>Il punto critico sono gli <strong>Step 2 e 3</strong>: i dati escono dal perimetro aziendale e vengono conservati su server esterni per un periodo che dipende dal tipo di contratto che l'azienda ha (o non ha) con il provider.</p>
+
+      <p>C'è una differenza enorme tra i piani disponibili che poche aziende conoscono:</p>
+
+      <div class="myth-box">
+        <div class="myth-box-label">La differenza tra i piani: quello che cambia davvero</div>
+        <div class="myth-row">
+          <div class="myth-cell fear">
+            <span class="myth-cell-label">⚠ Piano gratuito / consumer</span>
+            <strong>Quello che usa un dipendente che si registra da solo</strong><br>
+            I dati possono essere conservati e potenzialmente usati per addestrare il modello. Nessun contratto aziendale, nessuna garanzia. È il piano più rischioso ed è quasi certamente quello in uso nell'utilizzo informale non regolamentato.
+          </div>
+          <div class="myth-cell reality">
+            <span class="myth-cell-label">✓ Piano enterprise</span>
+            <strong>Quello progettato per le aziende</strong><br>
+            Zero conservazione dei dati, zero uso per training, contratto DPA conforme al GDPR, spesso con datacenter in Europa. Risolve la maggior parte dei rischi normativi e contrattuali in modo pratico.
+          </div>
+        </div>
+      </div>
+
+    </section>
+
+    <!-- SEZIONE 3 -->
+    <section class="section" id="la-paura">
+      <div class="section-header">
+        <span class="section-num">03</span>
+        <h2>La paura più comune — e la risposta onesta</h2>
+      </div>
+
+      <p>In molte aziende circola questa preoccupazione: <em>"Se un nostro dipendente incolla una specifica tecnica su ChatGPT, quella specifica potrebbe essere restituita a un concorrente."</em> È una paura legittima. Ma il meccanismo reale è diverso da come viene immaginato — e capirlo è importante per rispondere in modo proporzionato.</p>
+
+      <div class="myth-box">
+        <div class="myth-box-label">Paura vs. realtà: tre scenari distinti</div>
+
+        <div class="myth-row">
+          <div class="myth-cell fear">
+            <span class="myth-cell-label">✗ La paura</span>
+            <strong>"I miei dati vengono consegnati direttamente a un competitor"</strong><br>
+            Il sistema AI riceve le mie specifiche e le restituisce come risposta a un'altra azienda.
+          </div>
+          <div class="myth-cell reality">
+            <span class="myth-cell-label">✓ La realtà</span>
+            <strong>Non è il funzionamento ordinario del sistema</strong><br>
+            Le conversazioni degli utenti sono isolate tra loro. Questo scenario specifico — dati di un utente restituiti direttamente a un altro — non avviene nel normale funzionamento dei principali provider e viene escluso esplicitamente nei loro termini di servizio.
+          </div>
+        </div>
+
+        <div class="myth-row" style="margin-top: 2px;">
+          <div class="myth-cell fear">
+            <span class="myth-cell-label">⚠ Il rischio reale 1</span>
+            <strong>Uso per il training del modello</strong><br>
+            Sul piano gratuito, i tuoi dati possono contribuire all'addestramento di versioni future del modello — in modo indiretto, non come documento letterale restituito ad altri.
+          </div>
+          <div class="myth-cell reality">
+            <span class="myth-cell-label">✓ Come si mitiga</span>
+            <strong>Contratto enterprise</strong><br>
+            I piani enterprise di tutti i principali provider escludono esplicitamente e contrattualmente l'uso dei dati per il training. È una clausola standard di questi contratti.
+          </div>
+        </div>
+
+        <div class="myth-row" style="margin-top: 2px;">
+          <div class="myth-cell fear">
+            <span class="myth-cell-label">⚠ Il rischio reale 2</span>
+            <strong>Breach lato provider</strong><br>
+            Se i server del provider subiscono una violazione, i dati conservati nei log — incluse le conversazioni dei dipendenti — potrebbero essere accessibili. Questo è il canale reale attraverso cui i dati potrebbero teoricamente raggiungere terzi non autorizzati.
+          </div>
+          <div class="myth-cell reality">
+            <span class="myth-cell-label">✓ Come si mitiga</span>
+            <strong>Zero retention + anonimizzazione</strong><br>
+            Con un piano enterprise a zero retention, i dati non vengono conservati dopo l'elaborazione. In aggiunta, formare i dipendenti ad anonimizzare i dati sensibili prima dell'invio riduce ulteriormente il rischio residuo.
+          </div>
+        </div>
+      </div>
+
+      <p>Il messaggio da portare in azienda è questo: <strong>il rischio che i tuoi dati vengano consegnati direttamente a un competitor non è il funzionamento normale di questi sistemi.</strong> Ma il rischio che escano dal perimetro aziendale — e che da lì possano essere esposti in modi non previsti — è reale, dipende da come si usa lo strumento, e si gestisce con misure concrete.</p>
+
+    </section>
+
+    <!-- SEZIONE 4 -->
+    <section class="section" id="opzioni">
+      <div class="section-header">
+        <span class="section-num">04</span>
+        <h2>Le tue opzioni: un confronto diretto</h2>
+      </div>
+
+      <p>Non esiste un'unica risposta giusta. Le opzioni disponibili differiscono per livello di protezione, costo e complessità. Ecco un confronto diretto per orientarsi.</p>
+
+      <div class="options-grid">
+
+        <div class="option-card">
+          <div class="option-light red"></div>
+          <h3>Uso non regolamentato</h3>
+          <div class="option-subtitle">La situazione attuale in molte aziende</div>
+          <p>Dipendenti che usano liberamente strumenti AI gratuiti con i propri account personali, senza regole né formazione.</p>
+          <div class="option-pros-cons">
+            <div class="pro-con-item con">Nessuna protezione contrattuale</div>
+            <div class="pro-con-item con">Possibile uso per training del modello</div>
+            <div class="pro-con-item con">Violazioni NDA e GDPR probabili</div>
+            <div class="pro-con-item con">Zero visibilità su cosa viene condiviso</div>
+          </div>
+        </div>
+
+        <div class="option-card">
+          <div class="option-light amber"></div>
+          <h3>Policy + piano enterprise</h3>
+          <div class="option-subtitle">La soluzione pratica per la maggior parte dei casi</div>
+          <p>Si definiscono regole chiare sull'uso degli LLM e si adotta un piano enterprise del provider scelto, con le garanzie contrattuali necessarie.</p>
+          <div class="option-pros-cons">
+            <div class="pro-con-item pro">Zero data retention e zero training</div>
+            <div class="pro-con-item pro">Contratto DPA conforme al GDPR</div>
+            <div class="pro-con-item pro">Implementazione rapida</div>
+            <div class="pro-con-item con">I dati escono comunque dal perimetro aziendale</div>
+            <div class="pro-con-item con">Costi superiori al piano standard</div>
+          </div>
+        </div>
+
+        <div class="option-card">
+          <div class="option-light green"></div>
+          <h3>Soluzione self-hosted</h3>
+          <div class="option-subtitle">Il massimo controllo, per i casi più critici</div>
+          <p>Il modello AI gira su server propri (fisici o cloud privato). I dati non escono mai dal perimetro aziendale.</p>
+          <div class="option-pros-cons">
+            <div class="pro-con-item pro">Dati sempre sotto controllo diretto</div>
+            <div class="pro-con-item pro">Nessuna dipendenza da provider esterni</div>
+            <div class="pro-con-item con">Costi e complessità significativi</div>
+            <div class="pro-con-item con">Capacità del modello inferiore ai top provider</div>
+            <div class="pro-con-item con">Richiede competenze IT dedicate</div>
+          </div>
+        </div>
+
+      </div>
+
+      <p style="margin-top: 8px;">Per la maggior parte delle realtà manifatturiere, la combinazione <strong>policy interna + piano enterprise</strong> risolve la quasi totalità dei rischi normativi e contrattuali. Il self-hosting diventa rilevante quando l'IP aziendale è talmente critico da non poter uscire dal perimetro in nessuna forma.</p>
+
+    </section>
+
+    <!-- SEZIONE 5 -->
+    <section class="section" id="raccomandazione">
+      <div class="section-header">
+        <span class="section-num">05</span>
+        <h2>Cosa fare: una roadmap in tre passi</h2>
+      </div>
+
+      <p>Non serve aspettare una strategia AI completa per ridurre il rischio. Tre interventi concreti, in sequenza, portano la situazione sotto controllo in tempi ragionevoli.</p>
+
+      <div class="rec-box">
+        <div class="rec-box-label">Roadmap consigliata</div>
+
+        <div class="rec-steps">
+
+          <div class="rec-step">
+            <div class="rec-step-num">01 · Immediato</div>
+            <div class="rec-step-content">
+              <h4>Definire e comunicare una policy di utilizzo</h4>
+              <p>Classificare i dati aziendali in tre categorie: liberamente condivisibili con strumenti AI, condivisibili solo dopo anonimizzazione, mai condivisibili. Tradurre questa classificazione in regole concrete e comunicarle a tutti i dipendenti. Non è un documento legale — è una guida pratica per chi usa questi strumenti ogni giorno. Questo intervento non richiede investimenti tecnologici ed elimina la quota principale di rischio derivante dall'uso inconsapevole.</p>
+            </div>
+          </div>
+
+          <div class="rec-step">
+            <div class="rec-step-num">02 · Breve termine</div>
+            <div class="rec-step-content">
+              <h4>Adottare un piano enterprise per gli strumenti in uso</h4>
+              <p>Per gli strumenti AI già in uso in modo strutturato, verificare o aggiornare il contratto con il provider per includere le garanzie enterprise: zero data retention, zero uso per training, DPA conforme al GDPR, preferibilmente con datacenter europei. Questo intervento risolve il rischio normativo e la maggior parte del rischio contrattuale.</p>
+            </div>
+          </div>
+
+          <div class="rec-step">
+            <div class="rec-step-num">03 · Medio termine</div>
+            <div class="rec-step-content">
+              <h4>Valutare il self-hosting per i casi d'uso più critici</h4>
+              <p>Per i flussi di lavoro che coinvolgono IP industriale particolarmente sensibile — specifiche di prodotto, processi produttivi esclusivi, dati coperti da NDA stringenti — valutare se un modello AI su infrastruttura propria sia giustificato. Questo richiede un'analisi costi-benefici più approfondita che sarà oggetto di un report dedicato.</p>
+            </div>
+          </div>
+
+        </div>
+
+        <div class="rec-note">
+          Il rischio zero non esiste — né con gli LLM, né con qualsiasi altro strumento digitale. L'obiettivo è un rischio gestito consapevolmente, proporzionato al valore dei dati coinvolti e alle risorse disponibili. Partire dal Passo 1 oggi è già un passo significativo.
+        </div>
+      </div>
+
+    </section>
+
+  </main>
+</div>
+
+<footer>
+  <p>Report generato con Claude · Anthropic · 2026</p>
+  <p>Serie: LLM e Sicurezza dei Dati · Report A — Executive Summary</p>
+</footer>
+
+</body>
+</html>

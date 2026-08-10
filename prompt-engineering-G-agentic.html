@@ -1,0 +1,1112 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Prompt Engineering — G · Agenti Agentic</title>
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Outfit:wght@200;300;400;500;600;700;800;900&family=IBM+Plex+Mono:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg:     #faf8f5;
+  --bg2:    #f2efe9;
+  --bg3:    #e9e5dc;
+  --ink:    #1b1915;
+  --ink2:   #2e2b25;
+  --ink3:   #6d685c;
+  --ink4:   #a19c8f;
+  --border: #d9d4c8;
+  --border2:#cac4b6;
+
+  --accent:  #8b5c3a;
+  --accent2: #623f26;
+  --accent-light: #faf3ee;
+  --danger:  #c0392b;
+  --danger-light: #fdf5f5;
+  --safe:    #3d7a45;
+  --safe-light: #f4faf5;
+}
+
+* { margin:0; padding:0; box-sizing:border-box; }
+html { scroll-behavior:smooth; }
+body {
+  background:var(--bg); color:var(--ink);
+  font-family:'Outfit',sans-serif; font-weight:300;
+  font-size:14px; line-height:1.75;
+}
+
+/* ── HEADER ── */
+.masthead {
+  background:var(--ink); color:rgba(255,255,255,.9);
+  padding:60px 56px 52px; position:relative; overflow:hidden;
+}
+.masthead::before {
+  content:''; position:absolute; inset:0;
+  background:
+    repeating-linear-gradient(90deg,rgba(255,255,255,.012) 0,rgba(255,255,255,.012) 1px,transparent 1px,transparent 64px),
+    repeating-linear-gradient(0deg,rgba(255,255,255,.012) 0,rgba(255,255,255,.012) 1px,transparent 1px,transparent 64px);
+  pointer-events:none;
+}
+.masthead::after {
+  content:'G'; position:absolute; right:44px; bottom:-28px;
+  font-family:'Instrument Serif',serif; font-size:280px; line-height:1;
+  color:rgba(255,255,255,.025); pointer-events:none;
+}
+.mh-eye {
+  font-family:'IBM Plex Mono',monospace; font-size:10px;
+  letter-spacing:3px; text-transform:uppercase;
+  color:rgba(255,255,255,.25); margin-bottom:18px; position:relative;
+}
+.mh-cluster {
+  display:inline-block; font-family:'IBM Plex Mono',monospace;
+  font-size:10px; letter-spacing:2px; text-transform:uppercase;
+  padding:4px 12px; border:1px solid var(--accent);
+  color:var(--accent); margin-bottom:20px; position:relative;
+}
+.masthead h1 {
+  font-family:'Instrument Serif',serif; font-weight:400;
+  font-size:clamp(30px,4.5vw,54px); line-height:1.08;
+  letter-spacing:-1px; max-width:700px; position:relative;
+}
+.mh-sub {
+  margin-top:20px; font-size:15px; font-weight:300;
+  color:rgba(255,255,255,.38); max-width:660px;
+  line-height:1.7; position:relative;
+}
+.mh-meta {
+  margin-top:32px; display:flex; gap:32px; flex-wrap:wrap; position:relative;
+}
+.mh-stat { display:flex; flex-direction:column; gap:4px; }
+.mh-stat-val {
+  font-family:'IBM Plex Mono',monospace; font-size:22px; font-weight:500;
+  color:rgba(255,255,255,.85);
+}
+.mh-stat-lbl {
+  font-size:10px; letter-spacing:2px; text-transform:uppercase;
+  color:rgba(255,255,255,.25);
+}
+
+/* ── NAV ── */
+.nav {
+  background:var(--ink2); position:sticky; top:0; z-index:100;
+  display:flex; overflow-x:auto;
+  border-bottom:1px solid rgba(255,255,255,.06);
+}
+.nav-btn {
+  flex:1; min-width:120px; padding:13px 12px;
+  border:none; background:transparent; cursor:pointer;
+  font-family:'Outfit',sans-serif; font-size:10.5px; font-weight:600;
+  text-transform:uppercase; letter-spacing:.4px;
+  color:rgba(255,255,255,.3);
+  border-right:1px solid rgba(255,255,255,.06);
+  transition:all .2s; white-space:nowrap;
+}
+.nav-btn:last-child { border-right:none; }
+.nav-btn:hover { color:rgba(255,255,255,.6); }
+.nav-btn.active { color:#fff; background:rgba(255,255,255,.05); }
+
+/* ── SECTIONS ── */
+.sect { display:none; }
+.sect.active { display:block; animation:fadeIn .3s ease; }
+@keyframes fadeIn { from{opacity:0;transform:translateY(6px)} to{opacity:1;transform:translateY(0)} }
+
+.sect-head { padding:48px 56px 36px; border-bottom:1px solid var(--border); }
+.sect-num {
+  font-family:'IBM Plex Mono',monospace; font-size:10px;
+  letter-spacing:3px; text-transform:uppercase; color:var(--ink4); margin-bottom:10px;
+}
+.sect-head h2 {
+  font-family:'Instrument Serif',serif; font-weight:400;
+  font-size:clamp(26px,3.5vw,42px); line-height:1.1;
+  letter-spacing:-.5px; max-width:640px; margin-bottom:14px;
+}
+.sect-head p { color:var(--ink3); max-width:700px; font-size:14.5px; }
+.wrap { padding:0 56px 64px; }
+
+/* ── PROSE ── */
+.prose { max-width:760px; }
+.prose p { font-size:14.5px; color:var(--ink3); line-height:1.85; margin-bottom:16px; }
+.prose p strong { color:var(--ink2); font-weight:500; }
+.prose p em { font-style:italic; color:var(--ink2); }
+
+/* ── GUIDELINE CARD ── */
+.gl-group { margin-top:40px; }
+.gl-group-title {
+  font-family:'IBM Plex Mono',monospace; font-size:9px;
+  letter-spacing:3px; text-transform:uppercase;
+  color:var(--ink4); padding-bottom:10px; border-bottom:1px solid var(--border);
+}
+.gl-card { border:1px solid var(--border2); border-top:none; background:var(--bg); }
+.gl-header {
+  display:grid; grid-template-columns:5px 52px 1fr auto;
+  align-items:stretch; border-bottom:1px solid var(--border);
+}
+.gl-stripe { background:var(--accent); }
+.gl-num {
+  font-family:'Outfit',sans-serif; font-weight:800; font-size:20px; color:var(--bg3);
+  display:flex; align-items:center; justify-content:center;
+  border-right:1px solid var(--border);
+}
+.gl-title-wrap { padding:16px 20px; }
+.gl-title { font-family:'Instrument Serif',serif; font-size:20px; color:var(--ink2); line-height:1.2; }
+.gl-subtitle { font-size:12px; color:var(--ink4); margin-top:3px; }
+.gl-impact-wrap {
+  padding:14px 20px; display:flex; flex-direction:column;
+  align-items:flex-end; justify-content:center; gap:4px;
+}
+.gl-impact-stars { font-size:14px; }
+.gl-impact-lbl {
+  font-family:'IBM Plex Mono',monospace; font-size:8px;
+  letter-spacing:1px; text-transform:uppercase; color:var(--ink4);
+}
+.gl-body { padding:0; }
+.gl-section { padding:20px 24px; border-bottom:1px solid var(--border); }
+.gl-section:last-child { border-bottom:none; }
+.gl-section-lbl {
+  font-family:'IBM Plex Mono',monospace; font-size:9px;
+  letter-spacing:2px; text-transform:uppercase; color:var(--ink4);
+  margin-bottom:10px; padding-bottom:6px; border-bottom:1px solid var(--border);
+}
+.gl-section p { font-size:13.5px; color:var(--ink3); line-height:1.8; max-width:740px; }
+.gl-section p strong { color:var(--ink2); font-weight:500; }
+.gl-section p em { font-style:italic; color:var(--ink2); }
+
+/* ── PROMPT BOXES ── */
+.pex-lbl {
+  font-family:'IBM Plex Mono',monospace; font-size:9px;
+  letter-spacing:2px; text-transform:uppercase; margin-bottom:6px;
+}
+.pex-lbl.bad     { color:var(--danger); }
+.pex-lbl.good    { color:var(--accent); }
+.pex-lbl.neutral { color:var(--ink4); }
+.pex-lbl.danger  { color:var(--danger); }
+
+.prompt-box {
+  font-family:'IBM Plex Mono',monospace; font-size:12px; line-height:1.75;
+  padding:14px 18px; border:1px solid; white-space:pre-wrap; word-break:break-word;
+}
+.prompt-box.bad     { border-color:#e8c5c5; background:var(--danger-light); color:#6b3030; }
+.prompt-box.good    { border-color:#d4b8a0; background:var(--accent-light); color:var(--accent2); }
+.prompt-box.neutral { border-color:var(--border2); background:var(--bg2); color:var(--ink3); }
+.prompt-box.danger  { border-color:#e8c5c5; background:var(--danger-light); color:#6b3030; }
+.prompt-box .hl     { font-weight:500; }
+.prompt-box.good .hl { color:var(--accent2); text-decoration:underline; text-decoration-color:rgba(139,92,58,.3); }
+.prompt-box.bad  .hl  { color:#8b3030; }
+
+.compare-grid { display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-top:12px; }
+
+/* ── MECHANISM ── */
+.mechanism {
+  margin-top:14px; padding:14px 18px;
+  border-left:3px solid var(--accent); background:var(--accent-light);
+}
+.mech-lbl {
+  font-family:'IBM Plex Mono',monospace; font-size:9px;
+  letter-spacing:2px; text-transform:uppercase; color:var(--accent); margin-bottom:6px;
+}
+.mechanism p { font-size:13px; color:var(--ink3); line-height:1.65; }
+.mechanism p strong { color:var(--ink2); font-weight:500; }
+
+/* ── LOOP DIAGRAM ── */
+.loop-diagram {
+  background:var(--ink); padding:28px 24px; margin-top:20px;
+  border:1px solid var(--border2); overflow-x:auto;
+}
+.loop-diagram svg { display:block; margin:0 auto; }
+
+/* ── TOOL TABLE ── */
+.tool-table { width:100%; border-collapse:collapse; margin-top:16px; border:1px solid var(--border2); }
+.tool-table th, .tool-table td {
+  padding:11px 14px; border:1px solid var(--border);
+  text-align:left; vertical-align:top; font-size:12.5px;
+}
+.tool-table thead th {
+  background:var(--ink); color:rgba(255,255,255,.82);
+  font-weight:600; font-size:10px; letter-spacing:.5px;
+  font-family:'IBM Plex Mono',monospace; text-transform:uppercase;
+}
+.tool-table tbody tr:nth-child(even) { background:var(--bg2); }
+.tool-table td:first-child { font-weight:500; color:var(--ink2); }
+.tool-table .mono { font-family:'IBM Plex Mono',monospace; font-size:11px; color:var(--ink3); }
+
+/* ── RISK MATRIX ── */
+.risk-matrix { margin-top:16px; border:1px solid var(--border2); }
+.rm-head {
+  display:grid; grid-template-columns:1fr 80px 80px;
+  background:var(--ink); border-bottom:1px solid rgba(255,255,255,.06);
+}
+.rm-head-cell {
+  padding:10px 14px; font-family:'IBM Plex Mono',monospace;
+  font-size:9px; letter-spacing:1.5px; text-transform:uppercase;
+  color:rgba(255,255,255,.5); border-right:1px solid rgba(255,255,255,.06);
+}
+.rm-head-cell:last-child { border-right:none; }
+.rm-row {
+  display:grid; grid-template-columns:1fr 80px 80px;
+  border-bottom:1px solid var(--border);
+}
+.rm-row:last-child { border-bottom:none; }
+.rm-cell {
+  padding:12px 14px; border-right:1px solid var(--border);
+  font-size:12.5px; color:var(--ink3); line-height:1.5;
+}
+.rm-cell:last-child { border-right:none; }
+.rm-cell.action { color:var(--ink2); font-weight:500; }
+.rm-rev   { background:var(--danger-light); color:var(--danger); font-weight:600; font-family:'IBM Plex Mono',monospace; font-size:11px; text-align:center; }
+.rm-irrev { background:#fef9ec; color:#8a6000; font-weight:600; font-family:'IBM Plex Mono',monospace; font-size:11px; text-align:center; }
+.rm-auto  { background:var(--safe-light); color:var(--safe); font-weight:600; font-family:'IBM Plex Mono',monospace; font-size:11px; text-align:center; }
+.rm-ask   { background:var(--accent-light); color:var(--accent2); font-weight:600; font-family:'IBM Plex Mono',monospace; font-size:11px; text-align:center; }
+
+/* ── SPECTRUM ── */
+.spectrum { margin-top:16px; border:1px solid var(--border); overflow:hidden; }
+.spectrum-row { display:grid; border-bottom:1px solid var(--border); font-size:12.5px; }
+.spectrum-row:last-child { border-bottom:none; }
+.spectrum-row.head {
+  background:var(--ink); color:rgba(255,255,255,.7);
+  font-family:'IBM Plex Mono',monospace; font-size:9px;
+  letter-spacing:1px; text-transform:uppercase;
+}
+.spectrum-row.col3 { grid-template-columns:200px 1fr 1fr; }
+.spectrum-row.col4 { grid-template-columns:170px 1fr 1fr 1fr; }
+.s-cell {
+  padding:11px 14px; border-right:1px solid var(--border);
+  color:var(--ink3); line-height:1.5;
+}
+.s-cell:last-child { border-right:none; }
+.s-cell.lbl { font-weight:500; color:var(--ink2); background:var(--bg2); }
+.s-cell.hi  { background:var(--accent-light); color:var(--accent2); }
+.s-cell.lo  { background:var(--danger-light); color:#8b3030; }
+
+/* ── CHECKLIST ── */
+.checklist { margin-top:16px; }
+.check-item {
+  display:flex; gap:12px; align-items:flex-start;
+  padding:10px 0; border-bottom:1px solid var(--border);
+  font-size:13.5px; color:var(--ink3);
+}
+.check-item:last-child { border-bottom:none; }
+.check-icon {
+  width:20px; height:20px; border-radius:50%;
+  background:var(--accent); color:#fff;
+  display:flex; align-items:center; justify-content:center;
+  font-size:11px; font-weight:700; flex-shrink:0; margin-top:1px;
+}
+.check-item strong { color:var(--ink2); font-weight:500; }
+
+/* ── KEY POINT ── */
+.key-point {
+  margin-top:36px; padding:24px 28px;
+  border-left:4px solid var(--accent); background:var(--accent-light);
+}
+.kp-label {
+  font-family:'IBM Plex Mono',monospace; font-size:9px;
+  letter-spacing:2px; text-transform:uppercase; color:var(--accent); margin-bottom:8px;
+}
+.kp-text {
+  font-family:'Instrument Serif',serif; font-size:18px; line-height:1.45; color:var(--ink2);
+}
+.kp-sub { margin-top:10px; font-size:13px; color:var(--ink3); line-height:1.65; }
+
+/* ── INSIGHT ── */
+.insight {
+  margin:16px 0; padding:16px 20px;
+  border-left:4px solid; background:var(--accent-light);
+}
+.insight-lbl {
+  font-family:'IBM Plex Mono',monospace; font-size:9px;
+  letter-spacing:2px; text-transform:uppercase; margin-bottom:6px;
+}
+.insight p { font-size:13.5px; color:var(--ink2); line-height:1.65; max-width:700px; }
+.insight p strong { font-weight:500; }
+
+/* ── WARNING BOX ── */
+.warning-box {
+  margin:16px 0; padding:16px 20px;
+  border-left:4px solid var(--danger); background:var(--danger-light);
+}
+.warning-lbl {
+  font-family:'IBM Plex Mono',monospace; font-size:9px;
+  letter-spacing:2px; text-transform:uppercase; color:var(--danger); margin-bottom:6px;
+}
+.warning-box p { font-size:13.5px; color:#5a2020; line-height:1.65; max-width:700px; }
+.warning-box p strong { color:var(--danger); font-weight:600; }
+
+/* ── TEMPLATE BOX ── */
+.template-box {
+  margin-top:20px; border:1px solid var(--border2); background:var(--ink);
+  padding:28px 32px; font-family:'IBM Plex Mono',monospace;
+  font-size:12.5px; line-height:1.9; color:rgba(255,255,255,.75);
+  white-space:pre-wrap; word-break:break-word;
+}
+.template-box .t-comment { color:rgba(255,255,255,.28); }
+.template-box .t-hl      { color:#d4a574; }
+.template-box .t-bracket { color:rgba(255,255,255,.35); }
+.template-box .t-val     { color:rgba(255,255,255,.85); }
+.template-box .t-str     { color:#7dd3a8; }
+.template-box .t-warn    { color:#f4a0a0; }
+
+/* ── FOOTER ── */
+.footer {
+  padding:24px 56px; border-top:1px solid var(--border);
+  display:flex; justify-content:space-between; align-items:center;
+  font-family:'IBM Plex Mono',monospace; font-size:10px;
+  letter-spacing:1px; text-transform:uppercase; color:var(--ink4);
+}
+
+@media (max-width:700px) {
+  .masthead,.sect-head,.wrap,.footer { padding-left:20px; padding-right:20px; }
+  .compare-grid { grid-template-columns:1fr; }
+  .spectrum-row.col3,.spectrum-row.col4 { grid-template-columns:1fr; }
+  .gl-header { grid-template-columns:5px 40px 1fr; }
+  .gl-impact-wrap { display:none; }
+  .rm-head,.rm-row { grid-template-columns:1fr; }
+}
+</style>
+</head>
+<body>
+
+<!-- HEADER -->
+<div class="masthead">
+  <div class="mh-eye">Serie Agenti AI · Leva 01 · Prompt Engineering</div>
+  <div class="mh-cluster">Cluster G</div>
+  <h1>Prompt per Agenti Agentic</h1>
+  <p class="mh-sub">Come il prompt cambia radicalmente quando il modello non risponde a una domanda ma agisce in loop autonomo con strumenti. Un cluster a sé: requisiti nuovi, rischi nuovi, e una regola fondamentale che non vale per nessun altro cluster.</p>
+  <div class="mh-meta">
+    <div class="mh-stat"><div class="mh-stat-val">6</div><div class="mh-stat-lbl">Linee guida</div></div>
+    <div class="mh-stat"><div class="mh-stat-val">Critico</div><div class="mh-stat-lbl">Per agenti agentic</div></div>
+    <div class="mh-stat"><div class="mh-stat-val">Alto</div><div class="mh-stat-lbl">Costo se ignorato</div></div>
+    <div class="mh-stat"><div class="mh-stat-val">Solo agenti</div><div class="mh-stat-lbl">Non per task statici</div></div>
+  </div>
+</div>
+
+<!-- NAV -->
+<div class="nav">
+  <button class="nav-btn active" onclick="show(1)">Perché è diverso</button>
+  <button class="nav-btn" onclick="show(2)">Uso dei tool</button>
+  <button class="nav-btn" onclick="show(3)">Terminazione</button>
+  <button class="nav-btn" onclick="show(4)">Errori nel loop</button>
+  <button class="nav-btn" onclick="show(5)">Guardrail agentic</button>
+  <button class="nav-btn" onclick="show(6)">Template</button>
+</div>
+
+
+<!-- ═══════════════════════════
+     S1 — PERCHÉ È DIVERSO
+═══════════════════════════ -->
+<div class="sect active" id="s1">
+  <div class="sect-head">
+    <div class="sect-num">Introduzione</div>
+    <h2>Perché il prompt agentic è un problema diverso</h2>
+    <p>Un agente che agisce in loop con strumenti non è un LLM che risponde a domande. Le differenze non sono graduali — sono categoriali. Il prompt deve coprire dimensioni che nei cluster A–F non esistevano.</p>
+  </div>
+  <div class="wrap">
+
+    <div class="prose" style="margin-top:28px;">
+      <p>I cluster A–F coprono la scrittura di prompt per modelli che ricevono un input e producono un output testuale — anche complesso, anche multi-step nel ragionamento interno, ma sempre un singolo atto di generazione. Il cluster G affronta un caso strutturalmente diverso: un agente che opera in un <strong>loop di azione-osservazione-decisione</strong>, eseguendo azioni nel mondo reale attraverso strumenti.</p>
+      <p>La differenza non è di grado — è di natura. Un output testuale sbagliato si corregge rileggendolo. Un'azione eseguita da un agente — un'email inviata, un record modificato, un file cancellato, un'API chiamata — può essere <strong>irreversibile</strong>. Il costo dell'errore è completamente diverso, e il prompt deve riflettere questa asimmetria.</p>
+    </div>
+
+    <div class="loop-diagram">
+      <svg viewBox="0 0 720 210" width="100%" xmlns="http://www.w3.org/2000/svg" font-family="IBM Plex Mono, monospace">
+        <!-- Loop agentic -->
+        <text x="20" y="22" fill="rgba(255,255,255,.35)" font-size="9" letter-spacing="2">IL LOOP AGENTIC — COSA DEVE COPRIRE IL PROMPT</text>
+
+        <!-- Boxes -->
+        <rect x="20"  y="40" width="120" height="50" fill="#2e2b25" stroke="#8b5c3a" stroke-width="1.5"/>
+        <text x="80"  y="62" fill="rgba(255,255,255,.8)" font-size="10" text-anchor="middle">OBIETTIVO</text>
+        <text x="80"  y="77" fill="rgba(255,255,255,.45)" font-size="9" text-anchor="middle">+ contesto iniziale</text>
+
+        <rect x="190" y="40" width="130" height="50" fill="#2e2b25" stroke="#8b5c3a" stroke-width="1.5"/>
+        <text x="255" y="62" fill="rgba(255,255,255,.8)" font-size="10" text-anchor="middle">RAGIONAMENTO</text>
+        <text x="255" y="77" fill="rgba(255,255,255,.45)" font-size="9" text-anchor="middle">quale tool? come?</text>
+
+        <rect x="380" y="40" width="130" height="50" fill="#2e2b25" stroke="#8b5c3a" stroke-width="1.5"/>
+        <text x="445" y="62" fill="rgba(255,255,255,.8)" font-size="10" text-anchor="middle">AZIONE</text>
+        <text x="445" y="77" fill="rgba(255,255,255,.45)" font-size="9" text-anchor="middle">chiamata tool</text>
+
+        <rect x="570" y="40" width="130" height="50" fill="#2e2b25" stroke="#8b5c3a" stroke-width="1.5"/>
+        <text x="635" y="62" fill="rgba(255,255,255,.8)" font-size="10" text-anchor="middle">OSSERVAZIONE</text>
+        <text x="635" y="77" fill="rgba(255,255,255,.45)" font-size="9" text-anchor="middle">risultato tool</text>
+
+        <!-- Arrows top -->
+        <line x1="140" y1="65" x2="188" y2="65" stroke="#8b5c3a" stroke-width="1.5" marker-end="url(#arr)"/>
+        <line x1="320" y1="65" x2="378" y2="65" stroke="#8b5c3a" stroke-width="1.5" marker-end="url(#arr)"/>
+        <line x1="510" y1="65" x2="568" y2="65" stroke="#8b5c3a" stroke-width="1.5" marker-end="url(#arr)"/>
+
+        <!-- Loop back arrow -->
+        <path d="M 635,90 L 635,150 L 255,150 L 255,92" fill="none" stroke="#8b5c3a" stroke-width="1.5" stroke-dasharray="5,3" marker-end="url(#arr)"/>
+        <text x="445" y="168" fill="rgba(255,255,255,.3)" font-size="9" text-anchor="middle">loop — finché obiettivo non raggiunto o criterio di stop</text>
+
+        <!-- Annotation boxes under each step -->
+        <rect x="155" y="102" width="200" height="28" fill="none" stroke="rgba(139,92,58,.4)" stroke-width="1"/>
+        <text x="255" y="119" fill="rgba(139,92,58,.8)" font-size="9" text-anchor="middle">cluster G: istruzioni uso tool</text>
+
+        <rect x="345" y="102" width="200" height="28" fill="none" stroke="rgba(192,57,43,.4)" stroke-width="1"/>
+        <text x="445" y="119" fill="rgba(192,57,43,.7)" font-size="9" text-anchor="middle">cluster G: guardrail azioni irreversibili</text>
+
+        <rect x="535" y="102" width="180" height="28" fill="none" stroke="rgba(61,122,69,.4)" stroke-width="1"/>
+        <text x="625" y="119" fill="rgba(61,122,69,.7)" font-size="9" text-anchor="middle">cluster G: gestione errori</text>
+
+        <defs>
+          <marker id="arr" markerWidth="6" markerHeight="6" refX="5" refY="3" orient="auto">
+            <path d="M0,0 L6,3 L0,6 Z" fill="#8b5c3a"/>
+          </marker>
+        </defs>
+      </svg>
+    </div>
+
+    <div class="prose" style="margin-top:28px;">
+      <p>Il prompt agentic deve coprire <strong>quattro dimensioni assenti nei cluster A–F</strong>: come usare i tool disponibili (quando, con quali parametri, in quale ordine), quando terminare il loop (criteri di completamento vs. criteri di stop per errore), come gestire errori e risultati inattesi nel loop, e — la dimensione più critica — quali azioni richiedono autorizzazione umana prima di essere eseguite.</p>
+    </div>
+
+    <div class="warning-box" style="margin-top:4px;">
+      <div class="warning-lbl">⚠ La regola fondamentale del cluster G</div>
+      <p>A differenza di tutti gli altri cluster, il cluster G ha una regola assoluta che non ammette eccezioni: <strong>ogni azione irreversibile richiede una pausa e la conferma esplicita dell'utente prima di essere eseguita.</strong> Nessuna inferenza sul "sicuramente l'utente voleva questo" è sufficiente. Se l'azione non può essere annullata, il modello chiede. Sempre.</p>
+    </div>
+
+    <div class="key-point" style="margin-top:24px;">
+      <div class="kp-label">Il principio del cluster G</div>
+      <div class="kp-text">Un agente competente non è quello che fa di più in autonomia. È quello che sa esattamente dove fermarsi.</div>
+      <div class="kp-sub">L'obiettivo del prompt agentic non è massimizzare l'autonomia — è calibrarla. Un agente ben promptato sa quando procedere senza chiedere, quando chiedere conferma, e quando fermarsi del tutto. Questa calibrazione non emerge dall'identità (cluster A) o dall'obiettivo (cluster B): richiede istruzioni specifiche su azioni, tool, terminazione e guardrail.</div>
+    </div>
+
+  </div>
+</div>
+
+
+<!-- ═══════════════════════════
+     S2 — USO DEI TOOL
+═══════════════════════════ -->
+<div class="sect" id="s2">
+  <div class="sect-head">
+    <div class="sect-num">Linee guida 01 – 02</div>
+    <h2>Istruzioni sull'uso dei tool</h2>
+    <p>Il modello conosce i tool disponibili dalla loro definizione tecnica. Ma quando usarli, in quale ordine, con quali criteri — questo viene dal prompt.</p>
+  </div>
+  <div class="wrap">
+
+    <!-- GL 01 -->
+    <div class="gl-group" style="margin-top:32px;">
+      <div class="gl-group-title">Linea guida 01</div>
+      <div class="gl-card">
+        <div class="gl-header">
+          <div class="gl-stripe"></div>
+          <div class="gl-num">01</div>
+          <div class="gl-title-wrap">
+            <div class="gl-title">Definisci quando usare ogni tool — non solo cosa fa</div>
+            <div class="gl-subtitle">La descrizione tecnica del tool dice cosa può fare. Il prompt dice quando deve farlo.</div>
+          </div>
+          <div class="gl-impact-wrap">
+            <div class="gl-impact-stars" style="color:var(--accent)">★★★</div>
+            <div class="gl-impact-lbl">Impatto</div>
+          </div>
+        </div>
+        <div class="gl-body">
+
+          <div class="gl-section">
+            <div class="gl-section-lbl">La linea guida</div>
+            <p>Ogni tool disponibile ha una descrizione che spiega le sue capacità tecniche. Ma il modello ha anche bisogno di sapere <strong>il criterio decisionale</strong>: in quale situazione usarlo, quale alternativa preferire quando più tool sono applicabili, quando non usarlo nonostante sia tecnicamente applicabile. Senza questo, il modello sceglie il tool in base alla sua salienza — non in base alla logica del workflow.</p>
+          </div>
+
+          <div class="gl-section">
+            <div class="gl-section-lbl">Come strutturare le istruzioni per ogni tool</div>
+            <div class="prompt-box good" style="margin-top:12px;">Per ogni tool disponibile, segui questa logica decisionale:
+
+<span class="hl">search_web</span>:
+  Usa quando: hai bisogno di informazioni recenti o non disponibili nel contesto
+  Non usare quando: le informazioni necessarie sono già nel contesto fornito
+  Limite: max 3 ricerche per task — se non trovi dopo 3, segnala l'impossibilità
+
+<span class="hl">read_file</span>:
+  Usa quando: il task richiede accesso a contenuti di file specifici
+  Usa prima di write_file: verifica sempre il contenuto esistente prima di sovrascrivere
+  Non usare su: file di sistema, file fuori dalla directory di lavoro assegnata
+
+<span class="hl">write_file</span>:
+  Usa quando: devi salvare output che l'utente ha esplicitamente richiesto di salvare
+  <span class="hl">Non usare mai senza</span>: aver prima letto il file (se esiste) e confermato con l'utente il percorso
+
+<span class="hl">send_email</span>:
+  Usa solo quando: l'utente ha esplicitamente confermato destinatario, oggetto e contenuto
+  <span class="hl">Non inviare mai in autonomia</span>: mostra sempre bozza e attendi conferma esplicita</div>
+          </div>
+
+          <div class="gl-section">
+            <div class="gl-section-lbl">Il principio di minimo privilegio applicato ai tool</div>
+            <p>Per ogni task, usa il tool con il <strong>minore impatto possibile</strong> che permette di completarlo. Se puoi rispondere senza usare un tool — perché le informazioni necessarie sono già nel contesto — non usarlo. <strong>Il tool va usato perché serve, non perché è disponibile.</strong></p>
+            <div class="compare-grid">
+              <div>
+                <div class="pex-lbl bad">❌ Uso non necessario di tool</div>
+                <div class="prompt-box bad">Utente: "Qual è la capitale dell'Italia?"
+Agente [chiama search_web("capitale Italia")]
+→ Spreco di latenza e risorse per un'informazione già disponibile nel training</div>
+              </div>
+              <div>
+                <div class="pex-lbl good">✓ Uso tool solo se necessario</div>
+                <div class="prompt-box good">Utente: "Qual è la capitale dell'Italia?"
+Agente: "Roma." [risponde direttamente — nessun tool necessario]
+
+Utente: "Qual è il tasso di inflazione in Italia questo mese?"
+Agente [chiama search_web — dato non disponibile nel training recente]</div>
+              </div>
+            </div>
+          </div>
+
+          <div class="gl-section">
+            <div class="gl-section-lbl">Perché funziona — il meccanismo LLM</div>
+            <div class="mechanism">
+              <div class="mech-lbl">Criteri decisionali vs. descrizioni tecniche</div>
+              <p>Il modello decide se usare un tool valutando la pertinenza della sua descrizione tecnica rispetto al task corrente. Senza criteri espliciti, questa valutazione è basata sulla salienza semantica — il tool che "sembra più rilevante". <strong>Istruzioni esplicite su quando usare e quando non usare ogni tool sovrascrivono questa euristica</strong> con criteri precisi, riducendo l'uso ridondante, l'uso prematuro e l'omissione di tool necessari.</p>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </div>
+
+    <!-- GL 02 -->
+    <div class="gl-group" style="margin-top:8px;">
+      <div class="gl-group-title">Linea guida 02</div>
+      <div class="gl-card">
+        <div class="gl-header">
+          <div class="gl-stripe"></div>
+          <div class="gl-num">02</div>
+          <div class="gl-title-wrap">
+            <div class="gl-title">Definisci l'ordine di preferenza quando più tool sono applicabili</div>
+            <div class="gl-subtitle">In un workflow con tool sovrapposti, l'ordine di preferenza evita ambiguità e inconsistenze</div>
+          </div>
+          <div class="gl-impact-wrap">
+            <div class="gl-impact-stars" style="color:var(--accent)">★★☆</div>
+            <div class="gl-impact-lbl">Impatto</div>
+          </div>
+        </div>
+        <div class="gl-body">
+
+          <div class="gl-section">
+            <div class="gl-section-lbl">La linea guida</div>
+            <p>Quando il task può essere completato con tool alternativi (es. cercare un'informazione nella knowledge base interna vs. sul web), definire un <strong>ordine esplicito di preferenza</strong> evita che il modello scelga in modo variabile tra invocazioni diverse. Questo è critico per la consistenza del comportamento e per ottimizzare costi e latenza.</p>
+          </div>
+
+          <div class="gl-section">
+            <div class="gl-section-lbl">Esempio — gerarchia di preferenza per la ricerca informazioni</div>
+            <div class="prompt-box good" style="margin-top:12px;">Quando hai bisogno di informazioni, segui <span class="hl">questa gerarchia nell'ordine</span>:
+
+1. <span class="hl">Contesto fornito</span>: usa prima i dati già presenti nel messaggio o nei documenti allegati
+2. <span class="hl">knowledge_base_search</span>: cerca nella base di conoscenza interna aziendale
+3. <span class="hl">search_web</span>: solo se le prime due fonti non bastano
+
+<span class="hl">Non saltare livelli</span>: non cercare sul web se le informazioni sono già nel contesto. Non usare search_web se la knowledge base contiene la risposta.</div>
+          </div>
+
+          <div class="gl-section">
+            <div class="gl-section-lbl">Perché funziona — il meccanismo LLM</div>
+            <div class="mechanism">
+              <div class="mech-lbl">Riduzione della varianza decisionale nel loop</div>
+              <p>In un loop agentic, ogni decisione sul tool crea un branch point. Senza gerarchia esplicita, il modello può scegliere tool diversi in situazioni simili — producendo comportamenti inconsistenti difficili da debuggare. <strong>La gerarchia esplicita converte questi branch point in decisioni deterministiche</strong>, rendendo il comportamento prevedibile e il debugging possibile.</p>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+
+<!-- ═══════════════════════════
+     S3 — TERMINAZIONE
+═══════════════════════════ -->
+<div class="sect" id="s3">
+  <div class="sect-head">
+    <div class="sect-num">Linea guida 03</div>
+    <h2>Criteri di terminazione del loop</h2>
+    <p>Quando ha finito? Quando si ferma per errore? Quando chiede all'utente invece di continuare? Senza criteri espliciti, il loop non sa dove andare a parare.</p>
+  </div>
+  <div class="wrap">
+
+    <!-- GL 03 -->
+    <div class="gl-group" style="margin-top:32px;">
+      <div class="gl-group-title">Linea guida 03</div>
+      <div class="gl-card">
+        <div class="gl-header">
+          <div class="gl-stripe"></div>
+          <div class="gl-num">03</div>
+          <div class="gl-title-wrap">
+            <div class="gl-title">Definisci tre criteri di uscita: completamento, errore bloccante, escalation</div>
+            <div class="gl-subtitle">Un loop senza criteri di uscita espliciti gira indefinitamente o si ferma in modo imprevedibile</div>
+          </div>
+          <div class="gl-impact-wrap">
+            <div class="gl-impact-stars" style="color:var(--accent)">★★★</div>
+            <div class="gl-impact-lbl">Impatto</div>
+          </div>
+        </div>
+        <div class="gl-body">
+
+          <div class="gl-section">
+            <div class="gl-section-lbl">La linea guida</div>
+            <p>Il loop agentic deve avere <strong>tre criteri di uscita distinti</strong>: (1) <em>completamento</em> — l'obiettivo è stato raggiunto e l'output è pronto; (2) <em>errore bloccante</em> — si è verificato qualcosa che impedisce il completamento in sicurezza; (3) <em>escalation</em> — il task ha raggiunto un punto che richiede decisione umana. Ognuno produce un output diverso e un comportamento diverso del sistema downstream.</p>
+          </div>
+
+          <div class="gl-section">
+            <div class="gl-section-lbl">I tre criteri — struttura e esempi</div>
+
+            <div style="margin-top:12px;">
+              <div class="pex-lbl neutral">Criterio 1 — Completamento</div>
+              <div class="prompt-box good" style="margin-top:6px;">Hai completato il task quando: <span class="hl">tutti i sotto-obiettivi sono stati soddisfatti</span>, l'output è nel formato richiesto, e hai verificato internamente la coerenza del risultato.
+
+Al completamento: fornisci l'output finale e indica con [COMPLETATO] in testa alla risposta.</div>
+            </div>
+
+            <div style="margin-top:12px;">
+              <div class="pex-lbl neutral">Criterio 2 — Errore bloccante</div>
+              <div class="prompt-box good" style="margin-top:6px;">Interrompi il loop e segnala errore quando: <span class="hl">un tool restituisce errore per 3 volte consecutive</span>, mancano dati critici non recuperabili, o si verifica un'inconsistenza che invalida i risultati precedenti.
+
+Al blocco: indica [ERRORE], descrivi cosa è andato storto, quali passi sono stati completati e cosa resta da fare. <span class="hl">Non procedere oltre.</span></div>
+            </div>
+
+            <div style="margin-top:12px;">
+              <div class="pex-lbl neutral">Criterio 3 — Escalation (richiesta di input umano)</div>
+              <div class="prompt-box good" style="margin-top:6px;">Interrompi e chiedi all'utente quando: <span class="hl">il passo successivo ha impatti irreversibili</span>, hai trovato informazioni che cambiano materialmente l'obiettivo originale, o il task richiede una scelta che non hai autorità di fare autonomamente.
+
+All'escalation: indica [IN ATTESA], descrivi la situazione, specifica esattamente la decisione che richiede input umano.</div>
+            </div>
+          </div>
+
+          <div class="gl-section">
+            <div class="gl-section-lbl">Limite di passi come safety net</div>
+            <p>Indipendentemente dai criteri sopra, definisci sempre un <strong>limite massimo di iterazioni</strong> come safety net contro loop infiniti.</p>
+            <div class="prompt-box good" style="margin-top:12px;">Limite massimo: <span class="hl">20 passi</span> (chiamate a tool o cicli di ragionamento).
+Se raggiungi il limite senza completare: indica [LIMITE RAGGIUNTO], fornisci lo stato attuale del task e cosa resta da completare. Non continuare.</div>
+          </div>
+
+          <div class="gl-section">
+            <div class="gl-section-lbl">Perché funziona — il meccanismo LLM</div>
+            <div class="mechanism">
+              <div class="mech-lbl">Disambiguazione degli stati terminali</div>
+              <p>Il modello in un loop agentic deve decidere ad ogni passo se continuare o fermarsi. Senza criteri espliciti, questa decisione si basa su euristiche implicite — spesso "continua finché l'obiettivo non sembra raggiunto". <strong>Criteri espliciti di terminazione convertono questa valutazione fuzzy in condizioni verificabili</strong>, rendendo prevedibile quando e perché il loop termina — e in quale stato.</p>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+
+<!-- ═══════════════════════════
+     S4 — ERRORI NEL LOOP
+═══════════════════════════ -->
+<div class="sect" id="s4">
+  <div class="sect-head">
+    <div class="sect-num">Linea guida 04</div>
+    <h2>Gestire errori e risultati inattesi nel loop</h2>
+    <p>In un loop agentic, ogni errore non gestito può propagarsi — o peggio, può essere ignorato mentre l'agente continua producendo risultati basati su dati sbagliati.</p>
+  </div>
+  <div class="wrap">
+
+    <!-- GL 04 -->
+    <div class="gl-group" style="margin-top:32px;">
+      <div class="gl-group-title">Linea guida 04</div>
+      <div class="gl-card">
+        <div class="gl-header">
+          <div class="gl-stripe"></div>
+          <div class="gl-num">04</div>
+          <div class="gl-title-wrap">
+            <div class="gl-title">Definisci la strategia di retry e il comportamento in caso di errore persistente</div>
+            <div class="gl-subtitle">Quanti tentativi, con quale variazione, e quando arrendersi</div>
+          </div>
+          <div class="gl-impact-wrap">
+            <div class="gl-impact-stars" style="color:var(--accent)">★★★</div>
+            <div class="gl-impact-lbl">Impatto</div>
+          </div>
+        </div>
+        <div class="gl-body">
+
+          <div class="gl-section">
+            <div class="gl-section-lbl">La linea guida</div>
+            <p>Quando una chiamata a un tool fallisce, il modello deve sapere: <strong>quante volte riprovare, se e come variare i parametri al retry, e cosa fare se tutti i tentativi falliscono</strong>. Senza questa struttura, il modello tipicamente riprova infinite volte con gli stessi parametri — o, peggio, continua con dati parziali o errati senza segnalarlo.</p>
+          </div>
+
+          <div class="gl-section">
+            <div class="gl-section-lbl">Struttura di una strategia di retry</div>
+            <div class="prompt-box good" style="margin-top:12px;">Strategia di retry per errori su tool:
+
+<span class="hl">Tentativo 1</span>: esegui la chiamata originale
+<span class="hl">Tentativo 2</span>: se errore, modifica i parametri (es. query più semplice, scope ridotto)
+<span class="hl">Tentativo 3</span>: se ancora errore, prova approccio alternativo (tool diverso se disponibile)
+
+<span class="hl">Dopo 3 tentativi falliti</span>: non continuare a riprovare.
+  - Se il dato era critico: [ERRORE] — descrivi il problema e fermati
+  - Se il dato era utile ma non critico: procedi e segnala [DATO NON DISPONIBILE: motivo]
+
+<span class="hl">Non modificare mai</span> parametri che potrebbero rendere l'azione più invasiva al retry
+(es: non allargare scope di accesso per aggirare un permesso negato).</div>
+          </div>
+
+          <div class="gl-section">
+            <div class="gl-section-lbl">Gestire risultati inattesi (non errori tecnici)</div>
+            <p>Diverso dall'errore tecnico: il tool ha risposto correttamente ma il risultato è inatteso — non trovato, vuoto, contraddittorio con lo stato precedente. Questi casi sono più insidiosi perché il modello li interpreta come successo tecnico.</p>
+            <div class="prompt-box good" style="margin-top:12px;">Se un tool risponde con successo ma il risultato è:
+
+<span class="hl">Vuoto o non trovato</span>: segnalalo esplicitamente. Non assumere che "vuoto" significhi "non esiste" — potrebbe indicare un problema di query. Prova con parametri alternativi prima di concludere l'assenza.
+
+<span class="hl">Contraddittorio con passi precedenti</span>: interrompi il loop. Non proseguire su dati inconsistenti. Segnala la contraddizione e chiedi all'utente di verificare.
+
+<span class="hl">Molto diverso dalle aspettative</span>: segnalalo prima di usarlo. "Ho trovato X invece di Y atteso. Procedo comunque?"</div>
+          </div>
+
+          <div class="gl-section">
+            <div class="gl-section-lbl">Perché funziona — il meccanismo LLM</div>
+            <div class="mechanism">
+              <div class="mech-lbl">Propagazione silenziosa degli errori</div>
+              <p>Il rischio principale in un loop agentic non è il crash — è la <strong>propagazione silenziosa</strong>: il modello riceve un risultato inatteso, lo accetta implicitamente, e costruisce i passi successivi su una base errata. Alla fine del loop, l'output sembra coerente ma è fondato su un'assunzione sbagliata introdotta a metà. Istruzioni esplicite su come reagire a risultati inattesi creano checkpoint di verifica che interrompono questa catena prima che si consolidi.</p>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+
+<!-- ═══════════════════════════
+     S5 — GUARDRAIL AGENTIC
+═══════════════════════════ -->
+<div class="sect" id="s5">
+  <div class="sect-head">
+    <div class="sect-num">Linee guida 05 – 06</div>
+    <h2>Guardrail per azioni agentic</h2>
+    <p>La dimensione più critica del cluster G. Non tutti i guardrail hanno lo stesso peso — quelli sulle azioni irreversibili sono assoluti.</p>
+  </div>
+  <div class="wrap">
+
+    <!-- GL 05 -->
+    <div class="gl-group" style="margin-top:32px;">
+      <div class="gl-group-title">Linea guida 05</div>
+      <div class="gl-card">
+        <div class="gl-header">
+          <div class="gl-stripe"></div>
+          <div class="gl-num">05</div>
+          <div class="gl-title-wrap">
+            <div class="gl-title">Classifica ogni azione per reversibilità — e trattale diversamente</div>
+            <div class="gl-subtitle">La distinzione reversibile / irreversibile è il discriminante più importante di tutto il prompt agentic</div>
+          </div>
+          <div class="gl-impact-wrap">
+            <div class="gl-impact-stars" style="color:var(--accent)">★★★</div>
+            <div class="gl-impact-lbl">Impatto critico</div>
+          </div>
+        </div>
+        <div class="gl-body">
+
+          <div class="gl-section">
+            <div class="gl-section-lbl">La linea guida</div>
+            <p>Ogni azione che un agente può eseguire cade in una di queste categorie: <strong>reversibile</strong> (si può annullare facilmente), <strong>parzialmente reversibile</strong> (si può annullare con costo), <strong>irreversibile</strong> (non si può annullare). La regola è semplice: <em>più un'azione è irreversibile, più richiede supervisione umana prima di essere eseguita</em>. Nessuna inferenza sull'intenzione dell'utente è sufficiente per bypassare questa regola.</p>
+          </div>
+
+          <div class="gl-section">
+            <div class="gl-section-lbl">Matrice azioni per reversibilità</div>
+            <div class="risk-matrix">
+              <div class="rm-head">
+                <div class="rm-head-cell">Azione</div>
+                <div class="rm-head-cell">Tipo</div>
+                <div class="rm-head-cell">Comportamento</div>
+              </div>
+              <div class="rm-row">
+                <div class="rm-cell action">Leggere file / database</div>
+                <div class="rm-auto">Reversibile</div>
+                <div class="rm-auto">Procedi autonomamente</div>
+              </div>
+              <div class="rm-row">
+                <div class="rm-cell action">Ricerca web / API read-only</div>
+                <div class="rm-auto">Reversibile</div>
+                <div class="rm-auto">Procedi autonomamente</div>
+              </div>
+              <div class="rm-row">
+                <div class="rm-cell action">Creare file o record</div>
+                <div class="rm-rev">Parz. reversibile</div>
+                <div class="rm-ask">Conferma se non esplicitamente richiesto</div>
+              </div>
+              <div class="rm-row">
+                <div class="rm-cell action">Modificare file / record esistente</div>
+                <div class="rm-rev">Parz. reversibile</div>
+                <div class="rm-ask">Mostra diff e chiedi conferma</div>
+              </div>
+              <div class="rm-row">
+                <div class="rm-cell action">Inviare comunicazioni (email, messaggi)</div>
+                <div class="rm-irrev">Irreversibile</div>
+                <div class="rm-irrev">Mostra bozza, attendi conferma esplicita</div>
+              </div>
+              <div class="rm-row">
+                <div class="rm-cell action">Eliminare file / record</div>
+                <div class="rm-irrev">Irreversibile</div>
+                <div class="rm-irrev">Chiedi sempre, anche se sembra ovvio</div>
+              </div>
+              <div class="rm-row">
+                <div class="rm-cell action">Chiamate API che modificano stato esterno</div>
+                <div class="rm-irrev">Irreversibile</div>
+                <div class="rm-irrev">Mostra parametri, attendi conferma esplicita</div>
+              </div>
+              <div class="rm-row">
+                <div class="rm-cell action">Acquisti / transazioni finanziarie</div>
+                <div class="rm-irrev">Irreversibile</div>
+                <div class="rm-irrev">Chiedi sempre, indipendentemente dall'importo</div>
+              </div>
+            </div>
+          </div>
+
+          <div class="gl-section">
+            <div class="gl-section-lbl">Come scrivere il guardrail per azioni irreversibili</div>
+            <div class="compare-grid">
+              <div>
+                <div class="pex-lbl bad">❌ Guardrail troppo vago</div>
+                <div class="prompt-box bad">Sii cauto con le azioni che non possono essere annullate.</div>
+              </div>
+              <div>
+                <div class="pex-lbl good">✓ Guardrail operativo e specifico</div>
+                <div class="prompt-box good">Prima di eseguire qualsiasi azione in questa lista, <span class="hl">fermati e mostra all'utente</span>:
+- L'azione che stai per eseguire (descrizione precisa)
+- I parametri specifici (destinatario, percorso file, ID record)
+- Le conseguenze se confermata
+
+<span class="hl">Attendi una conferma esplicita</span> ("sì", "confermo", "procedi") prima di continuare.
+<span class="hl">Non interpretare il silenzio o risposte ambigue come conferma.</span>
+
+Azioni che richiedono questo processo:
+• Invio di email o messaggi
+• Eliminazione di qualsiasi file o record
+• Modifica di record in database di produzione
+• Chiamate a API che modificano stato esterno</div>
+              </div>
+            </div>
+          </div>
+
+          <div class="gl-section">
+            <div class="gl-section-lbl">Perché funziona — il meccanismo LLM</div>
+            <div class="mechanism">
+              <div class="mech-lbl">Il bias verso il completamento dell'obiettivo</div>
+              <p>Un agente LLM ha un forte bias verso il completamento dell'obiettivo assegnato — tende a interpretare qualsiasi ambiguità a favore del procedere invece del fermarsi. Questo è desiderabile per le azioni reversibili (la proattività aumenta l'utilità), ma pericoloso per le irreversibili. <strong>Il guardrail esplicito sulle azioni irreversibili crea una soglia di interruzione che il bias verso il completamento non può superare</strong> — a patto che il guardrail sia specifico e operativo, non vago.</p>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </div>
+
+    <!-- GL 06 -->
+    <div class="gl-group" style="margin-top:8px;">
+      <div class="gl-group-title">Linea guida 06</div>
+      <div class="gl-card">
+        <div class="gl-header">
+          <div class="gl-stripe"></div>
+          <div class="gl-num">06</div>
+          <div class="gl-title-wrap">
+            <div class="gl-title">Definisci il perimetro di accesso minimo necessario</div>
+            <div class="gl-subtitle">Principle of least privilege: l'agente accede solo a ciò che serve per completare il task — niente di più</div>
+          </div>
+          <div class="gl-impact-wrap">
+            <div class="gl-impact-stars" style="color:var(--accent)">★★☆</div>
+            <div class="gl-impact-lbl">Impatto</div>
+          </div>
+        </div>
+        <div class="gl-body">
+
+          <div class="gl-section">
+            <div class="gl-section-lbl">La linea guida</div>
+            <p>Anche con le migliori istruzioni, un agente che ha accesso a più sistemi e dati del necessario è un rischio. <strong>Il prompt deve definire esplicitamente il perimetro di accesso</strong>: quali directory, quali database, quali API, quali account — e limitare ogni azione a questo perimetro. Questo non è solo buona ingegneria — è un guardrail che riduce l'impatto di ogni eventuale errore del modello.</p>
+          </div>
+
+          <div class="gl-section">
+            <div class="gl-section-lbl">Esempio di perimetro di accesso nel prompt</div>
+            <div class="prompt-box good" style="margin-top:12px;">Perimetro di accesso autorizzato:
+
+<span class="hl">File system</span>: solo la directory /workspace/progetto-xyz e le sue sottodirectory
+<span class="hl">Database</span>: solo le tabelle orders e customers in sola lettura; nessun accesso a users o payments
+<span class="hl">Email</span>: solo l'account noreply@company.com; mai account personali
+<span class="hl">API esterne</span>: solo quelle in questa lista: [...]
+
+<span class="hl">Se una richiesta richiede l'accesso a risorse fuori da questo perimetro</span>: non procedere autonomamente. Segnala che la risorsa è fuori perimetro e chiedi all'utente di concedere l'accesso esplicitamente.</div>
+          </div>
+
+          <div class="gl-section">
+            <div class="gl-section-lbl">Perché funziona — il meccanismo LLM</div>
+            <div class="mechanism">
+              <div class="mech-lbl">Contenimento dell'impatto degli errori</div>
+              <p>Nessun prompt elimina completamente la possibilità di un comportamento inatteso. <strong>Definire il perimetro minimo di accesso limita l'impatto massimo di un errore</strong>: anche se l'agente fa qualcosa di non intenzionale, il danno è confinato al perimetro definito. È il principio di "defense in depth" applicato al prompting: le istruzioni sono il primo layer di difesa; il perimetro ristretto è il secondo.</p>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </div>
+
+    <div class="key-point" style="margin-top:32px;">
+      <div class="kp-label">Il principio del cluster G — sintesi</div>
+      <div class="kp-text">Autonomia calibrata: procedi dove puoi, fermati dove devi, chiedi dove non sei sicuro.</div>
+      <div class="kp-sub">Un agente agentic ben promptato non ha comportamento fisso — ha una gerarchia di comportamenti in funzione del tipo di azione e del suo grado di certezza. Azioni reversibili + alta certezza = procedi. Azioni irreversibili = chiedi sempre. Incertezza sul perimetro = fermati. Alta certezza ma dati inattesi = segnala. Questa gerarchia non emerge spontaneamente dal modello — va costruita esplicitamente nel prompt.</div>
+    </div>
+
+  </div>
+</div>
+
+
+<!-- ═══════════════════════════
+     S6 — TEMPLATE
+═══════════════════════════ -->
+<div class="sect" id="s6">
+  <div class="sect-head">
+    <div class="sect-num">Sezione pratica</div>
+    <h2>Template e checklist del Cluster G</h2>
+    <p>Template per la sezione agentic del system prompt, con esempio di agente di gestione email e checklist finale dell'intero prompt A–G.</p>
+  </div>
+  <div class="wrap">
+
+    <div class="template-box" style="margin-top:28px;"><span class="t-comment"># ── ISTRUZIONI AGENTIC (Cluster G) ───────────────────────────</span>
+<span class="t-comment"># Aggiungi solo per agenti che agiscono in loop con tool</span>
+<span class="t-comment"># Questo cluster NON è necessario per task di sola generazione testuale</span>
+
+<span class="t-comment"># 1. USO DEI TOOL (GL 01+02)</span>
+<span class="t-val">Tool disponibili e criteri di utilizzo:</span>
+<span class="t-hl">[nome_tool_1]</span><span class="t-val">:
+  Usa quando: </span><span class="t-bracket">[condizione specifica]</span>
+<span class="t-val">  Non usare quando: </span><span class="t-bracket">[condizione di esclusione]</span>
+<span class="t-val">  Limite: </span><span class="t-bracket">[max N chiamate per task, se applicabile]</span>
+
+<span class="t-comment"># Gerarchia se più tool applicabili:</span>
+<span class="t-val">Ordine di preferenza: </span><span class="t-bracket">[1. fonte locale → 2. tool A → 3. tool B]</span>
+<span class="t-val">Principio: usa il tool con il minore impatto che completa il task.</span>
+
+<span class="t-comment"># 2. CRITERI DI TERMINAZIONE (GL 03)</span>
+<span class="t-hl">COMPLETAMENTO</span><span class="t-val">: quando </span><span class="t-bracket">[criteri oggettivi di completamento]</span><span class="t-val">. Output: [COMPLETATO] + risultato.</span>
+<span class="t-hl">ERRORE BLOCCANTE</span><span class="t-val">: quando </span><span class="t-bracket">[condizioni di blocco]</span><span class="t-val">. Output: [ERRORE] + stato + cosa resta.</span>
+<span class="t-hl">ESCALATION</span><span class="t-val">: quando </span><span class="t-bracket">[situazioni che richiedono input umano]</span><span class="t-val">. Output: [IN ATTESA] + domanda specifica.</span>
+<span class="t-val">Limite massimo di passi: </span><span class="t-bracket">[N]</span><span class="t-val">. Oltre: [LIMITE RAGGIUNTO] + stato.</span>
+
+<span class="t-comment"># 3. GESTIONE ERRORI E RISULTATI INATTESI (GL 04)</span>
+<span class="t-val">Retry su errore tool: max </span><span class="t-bracket">[N]</span><span class="t-val"> tentativi con variazione parametri.
+Dopo </span><span class="t-bracket">[N]</span><span class="t-val"> fallimenti: </span><span class="t-bracket">[comportamento — fermarsi / procedere parzialmente]</span>
+<span class="t-val">Risultato vuoto: </span><span class="t-bracket">[comportamento — non assumere assenza, prova alternativa]</span>
+<span class="t-val">Risultato contraddittorio: </span><span class="t-bracket">[comportamento — interrompi e segnala]</span>
+
+<span class="t-comment"># 4. GUARDRAIL AZIONI IRREVERSIBILI (GL 05) — OBBLIGATORIO</span>
+<span class="t-warn">Prima di eseguire queste azioni, FERMATI e chiedi conferma esplicita:</span>
+<span class="t-bracket">- [lista azioni irreversibili specifiche del tuo agente]</span>
+<span class="t-val">Mostra: azione + parametri + conseguenze.
+Attendi conferma esplicita. Non interpretare il silenzio come conferma.</span>
+
+<span class="t-comment"># 5. PERIMETRO DI ACCESSO (GL 06)</span>
+<span class="t-val">Accesso autorizzato:
+  File system: </span><span class="t-bracket">[directory specifiche]</span>
+<span class="t-val">  Database: </span><span class="t-bracket">[tabelle e permessi]</span>
+<span class="t-val">  API: </span><span class="t-bracket">[endpoint autorizzati]</span>
+<span class="t-val">Fuori perimetro: non accedere autonomamente — segnala e chiedi.</span>
+
+<span class="t-comment"># ── FINE CLUSTER G — prompt completo ─────────────────────────</span></div>
+
+    <div class="prose" style="margin-top:36px;">
+      <p style="font-size:15px; font-weight:500; color:var(--ink2);">Esempio compilato — agente di gestione inbox email</p>
+    </div>
+
+    <div class="template-box" style="margin-top:12px;"><span class="t-comment"># ── ISTRUZIONI AGENTIC ───────────────────────────────────────</span>
+
+<span class="t-val">Tool disponibili:</span>
+
+<span class="t-hl">read_emails</span><span class="t-val">:
+  Usa per: leggere messaggi non letti e il loro contenuto
+  Non usare per: accedere ad archivi o cartelle di sistema oltre Inbox e Sent</span>
+
+<span class="t-hl">classify_email</span><span class="t-val">:
+  Usa per: classificare ogni email nelle categorie (Azione richiesta / FYI / Spam / Newsletter)
+  Usa sempre prima di draft_reply o archive</span>
+
+<span class="t-hl">draft_reply</span><span class="t-val">:
+  Usa per: creare bozze di risposta per email "Azione richiesta"
+  Non inviare mai autonomamente — produci solo bozze</span>
+
+<span class="t-hl">send_email</span><span class="t-val">:
+  <span class="t-warn">Richiede conferma esplicita dell'utente in ogni caso.</span>
+  Non usare prima di aver mostrato la bozza e ricevuto "confermo" esplicito.</span>
+
+<span class="t-hl">archive_email</span><span class="t-val">:
+  Usa per: archiviare email classificate come FYI o Newsletter dopo elaborazione
+  Non archiviare email "Azione richiesta" senza conferma</span>
+
+<span class="t-val">Ordine di preferenza: leggi → classifica → (bozza se necessario) → mostra all'utente → attendi conferma → archivia</span>
+
+<span class="t-hl">COMPLETAMENTO</span><span class="t-val">: tutte le email non lette classificate, bozze prodotte per quelle ad azione richiesta, sommario presentato all'utente. Output: [COMPLETATO] + sommario.</span>
+<span class="t-hl">ERRORE BLOCCANTE</span><span class="t-val">: accesso all'API email fallisce per 3 volte. Output: [ERRORE] + descrizione.</span>
+<span class="t-hl">ESCALATION</span><span class="t-val">: email con contenuto sensibile o ambiguo che non sai come classificare. Output: [IN ATTESA] + mostra email + chiedi istruzione.</span>
+<span class="t-val">Limite: max 50 email per sessione. Oltre: avvisa e chiedi se continuare.</span>
+
+<span class="t-warn">GUARDRAIL ASSOLUTO</span><span class="t-val">: prima di ogni invio email, mostra destinatario + oggetto + corpo e attendi "confermo" esplicito. Nessuna eccezione, anche per risposte brevi o ovvie.</span>
+
+<span class="t-val">Perimetro: solo cartelle Inbox e Sent dell'account di lavoro. Nessun accesso ad altri account, cartelle di archivio storico o contatti.</span></div>
+
+    <div class="prose" style="margin-top:36px;">
+      <p style="font-size:15px; font-weight:500; color:var(--ink2);">Checklist finale — prompt agentic completo (A–G)</p>
+    </div>
+
+    <div class="checklist" style="margin-top:12px;">
+      <div class="check-item">
+        <div class="check-icon" style="background:var(--accent)">A</div>
+        <div><strong>Identità e ruolo</strong>: ruolo specifico, competenze funzionali, contesto di deployment, limiti di scope, interlocutore.</div>
+      </div>
+      <div class="check-item">
+        <div class="check-icon" style="background:var(--accent)">B</div>
+        <div><strong>Obiettivo e vincoli</strong>: output operazionalizzato, criterio di successo, vincoli necessari, guardrail sui comportamenti indesiderati.</div>
+      </div>
+      <div class="check-item">
+        <div class="check-icon" style="background:var(--accent)">C</div>
+        <div><strong>Ragionamento</strong> (se task complesso): CoT, decomposizione, auto-verifica, confidenza — proporzionali alla complessità.</div>
+      </div>
+      <div class="check-item">
+        <div class="check-icon" style="background:var(--accent)">D</div>
+        <div><strong>Formato</strong>: struttura, tipo (prosa/lista/JSON), lunghezza con unità concrete, tono comportamentale, lingua.</div>
+      </div>
+      <div class="check-item">
+        <div class="check-icon" style="background:var(--accent)">E</div>
+        <div><strong>Esempi</strong> (se sfumature non catturabili con regole): 2–5 esempi realistici, gold standard, coerenti con A–D, ordine corretto.</div>
+      </div>
+      <div class="check-item">
+        <div class="check-icon" style="background:var(--accent)">F</div>
+        <div><strong>Robustezza</strong>: dati critici vs. utili, strategia ambiguità, comportamento fuori scope, fallback generale.</div>
+      </div>
+      <div class="check-item">
+        <div class="check-icon" style="background:var(--accent)">G</div>
+        <div><strong>Agentic</strong> (solo se loop con tool): criteri uso tool, gerarchia preferenza, terminazione in 3 condizioni, retry, guardrail irreversibili, perimetro accesso.</div>
+      </div>
+      <div class="check-item">
+        <div class="check-icon" style="background:var(--danger)">⚠</div>
+        <div><strong>Guardrail irreversibili verificati</strong>: ogni azione irreversibile ha un punto di conferma esplicita. Nessuna eccezione. Testato su casi reali.</div>
+      </div>
+    </div>
+
+    <div class="insight" style="margin-top:28px; border-color:#2e7d9c; background:#edf4f9;">
+      <div class="insight-lbl" style="color:#2e7d9c;">Prossimo — Report trasversale</div>
+      <p>Con A–G la serie di report per cluster è completa. Il prossimo e ultimo report affronta la dimensione trasversale: <strong>come le priorità e le tecniche cambiano per tipo di task</strong> — classificazione, generazione, ragionamento, agentic. Quale cluster conta di più per quale tipo di task, e come costruire il prompt in modo diverso in base alla natura dell'obiettivo.</p>
+    </div>
+
+  </div>
+</div>
+
+
+<!-- FOOTER -->
+<div class="footer">
+  <span>Serie Agenti AI — Leva 01 · Prompt Engineering · Cluster G · Agenti Agentic</span>
+  <span>Marzo 2026</span>
+</div>
+
+<script>
+function show(n) {
+  document.querySelectorAll('.sect').forEach(s => s.classList.remove('active'));
+  document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('s'+n).classList.add('active');
+  document.querySelectorAll('.nav-btn')[n-1].classList.add('active');
+  window.scrollTo({top:0, behavior:'smooth'});
+}
+</script>
+</body>
+</html>

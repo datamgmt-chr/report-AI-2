@@ -1,0 +1,1163 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Kit Operativo — Policy AI Aziendale · Documento E2</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;700&family=DM+Serif+Display:ital@0;1&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg:       #f7f5f0;
+  --surface:  #ffffff;
+  --surface2: #f0ede6;
+  --border:   #e0dbd0;
+  --border2:  #ccc8be;
+  --ink:      #1a1916;
+  --ink2:     #4a4840;
+  --ink3:     #8a8780;
+  --ink4:     #b8b5ae;
+
+  --green:    #1a7a4a;
+  --green-l:  #e8f5ee;
+  --green-b:  #b8e0cc;
+  --amber:    #b85c00;
+  --amber-l:  #fff3e6;
+  --amber-b:  #ffc880;
+  --red:      #c02020;
+  --red-l:    #fdeaea;
+  --red-b:    #f0a0a0;
+  --blue:     #1a5a9a;
+  --blue-l:   #e8f0fa;
+  --blue-b:   #a8c8f0;
+  --violet:   #6040b0;
+  --violet-l: #f0eaff;
+}
+
+* { margin:0; padding:0; box-sizing:border-box; }
+html { scroll-behavior:smooth; }
+
+body {
+  background: var(--bg);
+  color: var(--ink);
+  font-family: 'DM Sans', sans-serif;
+  font-weight: 400;
+  font-size: 16px;
+  line-height: 1.78;
+}
+
+/* ── COVER ── */
+.cover {
+  background: #2a2820;
+  color: #fff;
+  padding: 72px 72px 60px;
+  position: relative; overflow: hidden;
+}
+.cover::before {
+  content: '';
+  position: absolute; inset:0;
+  background: repeating-linear-gradient(-45deg,rgba(255,255,255,0.012) 0px,rgba(255,255,255,0.012) 1px,transparent 1px,transparent 14px);
+  pointer-events: none;
+}
+.cover-label { font-family:'DM Mono',monospace; font-size:10px; letter-spacing:4px; text-transform:uppercase; color:rgba(255,255,255,0.35); margin-bottom:22px; }
+.cover h1 { font-family:'DM Serif Display',serif; font-size:clamp(28px,4vw,50px); font-weight:400; line-height:1.08; letter-spacing:-1px; max-width:720px; margin-bottom:24px; }
+.cover h1 em { font-style:italic; color:rgba(255,255,255,0.55); }
+.cover-sub { font-size:15px; color:rgba(255,255,255,0.48); max-width:560px; line-height:1.72; margin-bottom:44px; }
+.cover-meta { display:flex; gap:48px; flex-wrap:wrap; padding-top:28px; border-top:1px solid rgba(255,255,255,0.12); }
+.cover-meta-item span { font-family:'DM Mono',monospace; font-size:10px; letter-spacing:2px; text-transform:uppercase; color:rgba(255,255,255,0.28); display:block; }
+.cover-meta-item strong { font-size:13px; font-weight:500; color:rgba(255,255,255,0.65); display:block; margin-top:3px; }
+
+/* ── TAB NAV ── */
+.tab-nav {
+  background: var(--surface); border-bottom:1px solid var(--border);
+  padding:0 72px; display:flex; gap:0; overflow-x:auto; scrollbar-width:none;
+  position:sticky; top:0; z-index:100;
+}
+.tab-nav::-webkit-scrollbar { display:none; }
+.tab-btn {
+  display:block; padding:14px 18px;
+  font-size:12px; font-weight:500; color:var(--ink3);
+  border:none; background:transparent; cursor:pointer;
+  border-bottom:2px solid transparent; white-space:nowrap; transition:all 0.2s;
+}
+.tab-btn:hover { color:var(--ink); }
+.tab-btn.active { color:var(--ink); border-bottom-color:var(--ink); }
+
+/* ── PANELS ── */
+.tab-panel { display:none; }
+.tab-panel.active { display:block; animation:fadeIn 0.25s ease; }
+@keyframes fadeIn { from{opacity:0;transform:translateY(4px)} to{opacity:1;transform:translateY(0)} }
+
+.panel-body { max-width:860px; margin:0 auto; padding:52px 56px 88px; }
+
+/* ── TYPOGRAPHY ── */
+.panel-body h2 { font-family:'DM Serif Display',serif; font-size:clamp(22px,3.2vw,34px); font-weight:400; letter-spacing:-0.3px; line-height:1.2; margin-bottom:18px; color:var(--ink); }
+.panel-body h3 { font-size:17px; font-weight:700; color:var(--ink); margin:36px 0 12px; letter-spacing:-0.2px; }
+.panel-body p  { font-size:15px; color:var(--ink2); margin-bottom:16px; line-height:1.82; }
+.panel-body p strong { color:var(--ink); font-weight:500; }
+
+/* ── TOOL HEADER ── */
+.tool-header {
+  display:flex; align-items:baseline; gap:14px;
+  padding-bottom:16px; margin-bottom:28px;
+  border-bottom:2px solid var(--ink);
+}
+.tool-num { font-family:'DM Mono',monospace; font-size:10px; letter-spacing:2px; color:var(--ink4); flex-shrink:0; }
+
+/* ── CHECKLIST ── */
+.checklist { display:flex; flex-direction:column; gap:2px; margin:24px 0; }
+
+.cl-group {
+  font-family:'DM Mono',monospace; font-size:9px; letter-spacing:2.5px;
+  text-transform:uppercase; color:var(--ink4);
+  padding:12px 0 6px; border-bottom:1px solid var(--border); margin-bottom:2px;
+}
+
+.cl-item {
+  display:flex; gap:12px; align-items:flex-start;
+  background:var(--surface); border:1px solid var(--border);
+  padding:12px 16px; cursor:pointer; transition:background 0.15s; user-select:none;
+}
+.cl-item:hover { background:var(--surface2); }
+.cl-item.done { opacity:0.5; }
+
+.cl-box {
+  width:17px; height:17px; border:1.5px solid var(--border2);
+  border-radius:3px; flex-shrink:0; margin-top:2px;
+  display:flex; align-items:center; justify-content:center;
+  font-size:10px; color:var(--green); transition:all 0.15s;
+}
+.cl-item.done .cl-box { background:var(--green-l); border-color:var(--green); }
+
+.cl-text { font-size:14px; color:var(--ink2); line-height:1.6; }
+.cl-text strong { color:var(--ink); font-weight:500; }
+
+/* ── DATA MAP TEMPLATE ── */
+.datamap { width:100%; border-collapse:collapse; margin:24px 0; font-size:13px; }
+.datamap th {
+  font-family:'DM Mono',monospace; font-size:9px; letter-spacing:2px; text-transform:uppercase;
+  color:var(--ink4); text-align:left; padding:10px 12px;
+  border-bottom:1px solid var(--border2); background:var(--surface2);
+}
+.datamap td { padding:12px 12px; border-bottom:1px solid var(--border); color:var(--ink2); vertical-align:top; line-height:1.6; font-size:13px; }
+.datamap tr:hover td { background:var(--surface); }
+.datamap td:first-child { font-weight:500; color:var(--ink); width:160px; }
+.datamap td.editable {
+  background:var(--bg); border:1px dashed var(--border2);
+  color:var(--ink3); font-style:italic; min-width:180px;
+  position:relative;
+}
+.datamap td.editable::after { content:attr(data-hint); font-size:10px; display:block; color:var(--ink4); font-style:normal; font-family:'DM Mono',monospace; margin-top:2px; letter-spacing:0.5px; }
+
+.lv-badge { display:inline-block; font-family:'DM Mono',monospace; font-size:9px; letter-spacing:1.5px; text-transform:uppercase; padding:3px 8px; border-radius:2px; }
+.lv1 { background:var(--green-l); color:var(--green); }
+.lv2 { background:var(--amber-l); color:var(--amber); }
+.lv3 { background:var(--red-l);   color:var(--red); }
+
+/* ── RULES TEMPLATE ── */
+.rules-section { margin:28px 0; }
+.rules-section-title {
+  font-family:'DM Mono',monospace; font-size:10px; letter-spacing:2.5px;
+  text-transform:uppercase; color:var(--ink4); margin-bottom:12px; display:block;
+}
+
+.rule-block { display:flex; flex-direction:column; gap:2px; margin-bottom:24px; }
+
+.rule-item {
+  display:grid; grid-template-columns:6px 1fr;
+  background:var(--surface); border:1px solid var(--border); overflow:hidden;
+}
+.rule-sig { }
+.rule-item.ok   .rule-sig { background:var(--green); }
+.rule-item.warn .rule-sig { background:var(--amber); }
+.rule-item.stop .rule-sig { background:var(--red); }
+.rule-item.fill .rule-sig { background:var(--border2); }
+
+.rule-cnt { padding:12px 16px; }
+.rule-cnt strong { font-size:14px; font-weight:600; color:var(--ink); display:block; margin-bottom:3px; }
+.rule-cnt span   { font-size:13px; color:var(--ink2); line-height:1.6; }
+.rule-cnt .fill-hint { font-size:12px; color:var(--ink4); font-style:italic; font-family:'DM Mono',monospace; }
+
+/* ── POLICY TEMPLATE ── */
+.policy-doc {
+  background:var(--surface); border:2px solid var(--ink);
+  margin:24px 0; overflow:hidden;
+}
+.policy-doc-header {
+  background:var(--ink); color:#fff; padding:20px 28px;
+}
+.policy-doc-header h3 { font-size:16px; font-weight:700; color:#fff; margin:0 0 4px; }
+.policy-doc-header p  { font-size:12px; color:rgba(255,255,255,0.5); margin:0; font-family:'DM Mono',monospace; }
+
+.policy-section { border-bottom:1px solid var(--border); padding:20px 28px; }
+.policy-section:last-child { border:none; }
+.policy-section-num { font-family:'DM Mono',monospace; font-size:9px; letter-spacing:2.5px; text-transform:uppercase; color:var(--ink4); margin-bottom:6px; display:block; }
+.policy-section h4 { font-size:15px; font-weight:700; color:var(--ink); margin-bottom:10px; }
+.policy-section p  { font-size:13px; color:var(--ink2); line-height:1.75; margin-bottom:10px; }
+.policy-section p:last-child { margin:0; }
+.policy-section p strong { color:var(--ink); font-weight:500; }
+
+.policy-fill {
+  background:var(--bg); border:1px dashed var(--border2);
+  padding:10px 14px; margin:8px 0;
+  font-size:13px; color:var(--ink3); font-style:italic; line-height:1.6;
+}
+
+/* ── TRAINING OUTLINE ── */
+.training-block { display:flex; flex-direction:column; gap:2px; margin:24px 0; }
+
+.training-item {
+  display:grid; grid-template-columns:72px 1fr;
+  background:var(--surface); border:1px solid var(--border); overflow:hidden;
+}
+.ti-time {
+  background:var(--surface2); padding:14px 10px;
+  display:flex; flex-direction:column; align-items:center;
+  justify-content:center; gap:3px; border-right:1px solid var(--border); text-align:center;
+}
+.ti-time span { font-family:'DM Mono',monospace; font-size:10px; color:var(--ink4); }
+.ti-time strong { font-family:'DM Mono',monospace; font-size:13px; font-weight:600; color:var(--ink); }
+.ti-body { padding:14px 18px; }
+.ti-body h4 { font-size:13px; font-weight:700; color:var(--ink); margin-bottom:4px; }
+.ti-body p  { font-size:13px; color:var(--ink2); line-height:1.6; margin:0; }
+.ti-body p strong { color:var(--ink); font-weight:500; }
+
+/* ── INCIDENT TEMPLATE ── */
+.incident-form { background:var(--surface); border:1px solid var(--border); margin:24px 0; overflow:hidden; }
+.incident-form-header { background:var(--red-l); border-bottom:1px solid var(--red-b); padding:14px 20px; display:flex; align-items:center; gap:10px; }
+.incident-form-header h4 { font-size:14px; font-weight:700; color:var(--red); margin:0; }
+.if-section { padding:16px 20px; border-bottom:1px solid var(--border); }
+.if-section:last-child { border:none; }
+.if-label { font-family:'DM Mono',monospace; font-size:9px; letter-spacing:2px; text-transform:uppercase; color:var(--ink4); margin-bottom:8px; display:block; }
+.if-field { background:var(--bg); border:1px solid var(--border); padding:10px 14px; font-size:13px; color:var(--ink3); font-style:italic; line-height:1.5; min-height:44px; }
+.if-options { display:flex; gap:8px; flex-wrap:wrap; }
+.if-option { background:var(--surface2); border:1px solid var(--border); padding:7px 14px; font-size:13px; color:var(--ink2); cursor:pointer; transition:all 0.15s; }
+.if-option:hover { background:var(--ink); color:#fff; }
+.if-option.selected { background:var(--ink); color:#fff; }
+.if-scale { display:flex; gap:2px; }
+.if-scale-item {
+  flex:1; height:32px; display:flex; align-items:center; justify-content:center;
+  border:1px solid var(--border); font-size:12px; cursor:pointer;
+  font-family:'DM Mono',monospace; font-weight:500; transition:all 0.15s;
+  background:var(--surface); color:var(--ink3);
+}
+.if-scale-item:hover { background:var(--surface2); }
+.if-scale-item.sel-1 { background:var(--green-l); color:var(--green); border-color:var(--green-b); }
+.if-scale-item.sel-2 { background:#fff3e0; color:#c08000; border-color:#ffd080; }
+.if-scale-item.sel-3 { background:var(--red-l); color:var(--red); border-color:var(--red-b); }
+
+/* ── FAQ TEMPLATE ── */
+.faq-list { margin:24px 0; }
+.faq-item { border-bottom:1px solid var(--border); }
+.faq-item:first-child { border-top:1px solid var(--border); }
+.faq-q { display:flex; align-items:center; justify-content:space-between; padding:16px 0; cursor:pointer; gap:12px; user-select:none; }
+.faq-q-text { font-size:14px; font-weight:500; color:var(--ink); line-height:1.4; }
+.faq-arrow { font-size:18px; color:var(--ink4); flex-shrink:0; transition:transform 0.25s; }
+.faq-item.open .faq-arrow { transform:rotate(90deg); }
+.faq-a { display:none; padding:0 0 18px; font-size:14px; color:var(--ink2); line-height:1.78; }
+.faq-item.open .faq-a { display:block; }
+.faq-a strong { color:var(--ink); font-weight:500; }
+
+/* ── CALENDAR ── */
+.cal-grid { display:flex; flex-direction:column; gap:2px; margin:24px 0; }
+.cal-item { display:grid; grid-template-columns:110px 1fr; background:var(--surface); border:1px solid var(--border); overflow:hidden; }
+.cal-when { background:var(--surface2); padding:14px 12px; border-right:1px solid var(--border); display:flex; flex-direction:column; gap:3px; }
+.cal-when span { font-family:'DM Mono',monospace; font-size:10px; color:var(--ink4); letter-spacing:1px; }
+.cal-when strong { font-size:13px; font-weight:700; color:var(--ink); line-height:1.2; }
+.cal-body { padding:14px 18px; }
+.cal-body h4 { font-size:13px; font-weight:700; color:var(--ink); margin-bottom:4px; }
+.cal-body p  { font-size:13px; color:var(--ink2); line-height:1.6; margin:0; }
+.cal-owner {
+  font-family:'DM Mono',monospace; font-size:10px; color:var(--ink4);
+  margin-top:6px; padding-top:6px; border-top:1px solid var(--border);
+}
+
+/* ── INFO BOX ── */
+.ibox { padding:18px 22px; margin:22px 0; font-size:14px; color:var(--ink2); line-height:1.72; border:1px solid; border-left-width:4px; }
+.ibox strong { color:var(--ink); font-weight:500; }
+.ibox.blue   { background:var(--blue-l);   border-color:var(--blue-b);   border-left-color:var(--blue); }
+.ibox.amber  { background:var(--amber-l);  border-color:var(--amber-b);  border-left-color:var(--amber); }
+.ibox.green  { background:var(--green-l);  border-color:var(--green-b);  border-left-color:var(--green); }
+.ibox-label  { font-family:'DM Mono',monospace; font-size:9px; letter-spacing:2.5px; text-transform:uppercase; margin-bottom:8px; display:block; }
+.ibox.blue  .ibox-label { color:var(--blue); }
+.ibox.amber .ibox-label { color:var(--amber); }
+.ibox.green .ibox-label { color:var(--green); }
+
+/* ── FOOTER ── */
+footer { border-top:1px solid var(--border); background:var(--surface); padding:32px 72px; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px; }
+footer p { font-family:'DM Mono',monospace; font-size:11px; color:var(--ink4); }
+
+@media (max-width:760px) {
+  .cover, footer { padding-left:28px; padding-right:28px; }
+  .tab-nav { padding:0 16px; }
+  .panel-body { padding:36px 20px 60px; }
+}
+</style>
+</head>
+<body>
+
+<header class="cover">
+  <div class="cover-label">Kit operativo · Documento E2</div>
+  <h1>Strumenti pratici<br>per costruire la <em>policy AI</em></h1>
+  <p class="cover-sub">Template, checklist e bozze pronte all'uso per chi ha il compito di redigere e implementare la policy. Da usare in parallelo con il Documento E1 — Guida strategica.</p>
+  <div class="cover-meta">
+    <div class="cover-meta-item"><span>Destinatari</span><strong>Chi redige e implementa la policy</strong></div>
+    <div class="cover-meta-item"><span>Natura</span><strong>Kit di strumenti operativi</strong></div>
+    <div class="cover-meta-item"><span>Prerequisito</span><strong>Documento E1 — Guida strategica</strong></div>
+    <div class="cover-meta-item"><span>Anno</span><strong>2026</strong></div>
+  </div>
+</header>
+
+<nav class="tab-nav">
+  <button class="tab-btn active" data-tab="t1" onclick="switchTab('t1')">T1 · Checklist avvio</button>
+  <button class="tab-btn" data-tab="t2" onclick="switchTab('t2')">T2 · Mappa dati</button>
+  <button class="tab-btn" data-tab="t3" onclick="switchTab('t3')">T3 · Regole operative</button>
+  <button class="tab-btn" data-tab="t4" onclick="switchTab('t4')">T4 · Template policy</button>
+  <button class="tab-btn" data-tab="t5" onclick="switchTab('t5')">T5 · Sessione formativa</button>
+  <button class="tab-btn" data-tab="t6" onclick="switchTab('t6')">T6 · FAQ pronte</button>
+  <button class="tab-btn" data-tab="t7" onclick="switchTab('t7')">T7 · Incidenti</button>
+  <button class="tab-btn" data-tab="t8" onclick="switchTab('t8')">T8 · Calendario revisioni</button>
+</nav>
+
+
+<!-- ══════════════════════
+     T1 — CHECKLIST AVVIO
+══════════════════════ -->
+<div class="tab-panel active" id="t1">
+<div class="panel-body">
+
+  <div class="tool-header">
+    <span class="tool-num">Strumento 01</span>
+    <h2>Checklist di avvio progetto</h2>
+  </div>
+
+  <p>Prima di iniziare a classificare i dati o a scrivere le regole, verificare che siano in posto le condizioni necessarie. Spuntare ogni voce solo quando è effettivamente completata — non quando è "in corso".</p>
+
+  <div class="checklist">
+
+    <div class="cl-group">Persone e ruoli</div>
+    <div class="cl-item" onclick="toggleCl(this)"><div class="cl-box"></div><div class="cl-text"><strong>Sponsor della policy identificato</strong> — un membro della direzione che la promuove attivamente, non solo la approva formalmente</div></div>
+    <div class="cl-item" onclick="toggleCl(this)"><div class="cl-box"></div><div class="cl-text"><strong>Responsabile della policy nominato</strong> — la persona che la redige, la mantiene e gestisce le segnalazioni. Può essere IT, HR o un profilo ibrido.</div></div>
+    <div class="cl-item" onclick="toggleCl(this)"><div class="cl-box"></div><div class="cl-text"><strong>DPO consultato</strong> — il responsabile della protezione dei dati è stato informato dell'iniziativa e ha confermato disponibilità a validare le sezioni GDPR</div></div>
+    <div class="cl-item" onclick="toggleCl(this)"><div class="cl-box"></div><div class="cl-text"><strong>Referenti delle funzioni chiave identificati</strong> — almeno un referente per ufficio tecnico/R&D e commerciale (le funzioni con il profilo di rischio più alto), da coinvolgere nella classificazione dei dati</div></div>
+    <div class="cl-item" onclick="toggleCl(this)"><div class="cl-box"></div><div class="cl-text"><strong>Team legale/compliance allineato</strong> — se esiste, ha preso visione dell'iniziativa e non ha obiezioni di principio alla struttura proposta</div></div>
+
+    <div class="cl-group">Conoscenza del contesto attuale</div>
+    <div class="cl-item" onclick="toggleCl(this)"><div class="cl-box"></div><div class="cl-text"><strong>Censimento degli strumenti AI in uso completato</strong> — sia quelli aziendali strutturati che quelli usati informalmente dai dipendenti (ChatGPT personale, Copilot, Gemini, ecc.)</div></div>
+    <div class="cl-item" onclick="toggleCl(this)"><div class="cl-box"></div><div class="cl-text"><strong>Contratti con provider AI verificati</strong> — per ogni strumento attualmente in uso, è stato verificato se esiste un contratto enterprise con DPA e zero data retention</div></div>
+    <div class="cl-item" onclick="toggleCl(this)"><div class="cl-box"></div><div class="cl-text"><strong>NDA attivi con clienti e fornitori identificati</strong> — almeno i principali accordi di riservatezza che potrebbero essere impattati dall'uso di AI su dati di commessa</div></div>
+    <div class="cl-item" onclick="toggleCl(this)"><div class="cl-box"></div><div class="cl-text"><strong>Incidenti o situazioni problematiche già verificati documentati</strong> — se ci sono stati casi di condivisione accidentale o dubbi rilevanti, raccoglierli prima di iniziare: aiutano a calibrare le regole</div></div>
+
+    <div class="cl-group">Prerequisiti tecnici</div>
+    <div class="cl-item" onclick="toggleCl(this)"><div class="cl-box"></div><div class="cl-text"><strong>Lista degli strumenti da approvare definita</strong> — l'IT ha identificato quali strumenti saranno classificati come "approvati", "in valutazione" e "non approvati" per uso aziendale</div></div>
+    <div class="cl-item" onclick="toggleCl(this)"><div class="cl-box"></div><div class="cl-text"><strong>Canale di segnalazione incidenti predisposto</strong> — c'è un indirizzo email, un modulo o un referente nominato a cui i dipendenti possono segnalare condivisioni accidentali</div></div>
+
+    <div class="cl-group">Comunicazione e tempistica</div>
+    <div class="cl-item" onclick="toggleCl(this)"><div class="cl-box"></div><div class="cl-text"><strong>Calendario di progetto definito</strong> — classificazione dati, stesura policy, approvazione, formazione manager, comunicazione generale: con date e responsabili per ciascuna fase</div></div>
+    <div class="cl-item" onclick="toggleCl(this)"><div class="cl-box"></div><div class="cl-text"><strong>Materiali di comunicazione identificati</strong> — i Documenti D1 (guida dipendenti), D2 (guida manager), D3 (scheda tascabile) sono pronti o in corso di preparazione</div></div>
+
+  </div>
+
+  <div class="ibox amber">
+    <span class="ibox-label">Prima di procedere</span>
+    Se più di tre voci nelle prime due sezioni non sono ancora spuntate, il progetto non è ancora pronto per partire. <strong>Le condizioni iniziali mancanti tendono a diventare problemi più grandi nelle fasi successive.</strong> Meglio investire una settimana in più nella preparazione che accelerare su basi instabili.
+  </div>
+
+</div>
+</div>
+
+
+<!-- ══════════════════════
+     T2 — MAPPA DATI
+══════════════════════ -->
+<div class="tab-panel" id="t2">
+<div class="panel-body">
+
+  <div class="tool-header">
+    <span class="tool-num">Strumento 02</span>
+    <h2>Template di mappatura dati per funzione</h2>
+  </div>
+
+  <p>Compilare una riga per ogni categoria di dato significativa della funzione. Non è necessario essere esaustivi — bastano le categorie principali (5–8 per funzione). Le colonne "Esempi concreti" e "Note/eccezioni" sono le più utili in fase operativa.</p>
+
+  <div class="ibox blue">
+    <span class="ibox-label">Come usare questo template</span>
+    Condurre un workshop di 60–90 minuti con i referenti di ogni funzione. Partire dalla colonna "Categoria di dato" con domande come: "Quali sono i documenti più critici che gestite?" e "Cosa non vorreste mai che uscisse dall'azienda?". Compilare insieme, non in anticipo.
+  </div>
+
+  <h3>Ufficio Tecnico / R&D / Ingegneria</h3>
+
+  <table class="datamap">
+    <thead>
+      <tr>
+        <th>Categoria di dato</th>
+        <th>Livello</th>
+        <th>Esempi concreti (da compilare)</th>
+        <th>Note / eccezioni</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>Specifiche tecniche di prodotto</td>
+        <td><span class="lv-badge lv3">Livello 3</span></td>
+        <td class="editable" data-hint="→ es. schede tecniche serie XY, disegni CAD prodotti A/B/C">Inserire i tipi di documento specifici della vostra realtà</td>
+        <td class="editable" data-hint="→ es. schede già pubblicate sul catalogo = Livello 1">Eccezioni o casi particolari</td>
+      </tr>
+      <tr>
+        <td>Disegni e modelli CAD</td>
+        <td><span class="lv-badge lv3">Livello 3</span></td>
+        <td class="editable" data-hint="→ es. assembly principali, componentistica custom">Inserire esempi specifici</td>
+        <td class="editable" data-hint="→ es. disegni di componenti standard di mercato">Eccezioni</td>
+      </tr>
+      <tr>
+        <td>Processi produttivi e ricette</td>
+        <td><span class="lv-badge lv3">Livello 3</span></td>
+        <td class="editable" data-hint="→ es. parametri di processo linea X, ricette trattamenti">Inserire esempi</td>
+        <td class="editable" data-hint="">—</td>
+      </tr>
+      <tr>
+        <td>R&D e progetti in sviluppo</td>
+        <td><span class="lv-badge lv3">Livello 3</span></td>
+        <td class="editable" data-hint="→ es. prototipo progetto Y, risultati test Q1 2026">Inserire esempi</td>
+        <td class="editable" data-hint="→ es. dopo brevettazione: rivalutare il livello">Ciclo di vita del dato</td>
+      </tr>
+      <tr>
+        <td>Normative e standard pubblici</td>
+        <td><span class="lv-badge lv1">Livello 1</span></td>
+        <td class="editable" data-hint="→ es. ISO 9001, EN 13001, UNI specifiche">Inserire le normative rilevanti</td>
+        <td class="editable" data-hint="">—</td>
+      </tr>
+      <tr>
+        <td>Calcoli tecnici con parametri reali</td>
+        <td><span class="lv-badge lv3">Livello 3</span></td>
+        <td class="editable" data-hint="→ es. FEM con geometrie e carichi reali del prodotto">Inserire esempi</td>
+        <td class="editable" data-hint="→ calcoli con valori fittizi = Livello 1">Versione anonimizzata = Livello 1</td>
+      </tr>
+      <tr>
+        <td>Comunicazioni tecniche con clienti (NDA)</td>
+        <td><span class="lv-badge lv3">Livello 3</span></td>
+        <td class="editable" data-hint="→ es. scambi tecnici su commessa cliente Z">Inserire esempi</td>
+        <td class="editable" data-hint="">—</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <h3>Commerciale / Vendite / Customer Service</h3>
+
+  <table class="datamap">
+    <thead>
+      <tr>
+        <th>Categoria di dato</th>
+        <th>Livello</th>
+        <th>Esempi concreti (da compilare)</th>
+        <th>Note / eccezioni</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>Offerte e listini riservati</td>
+        <td><span class="lv-badge lv3">Livello 3</span></td>
+        <td class="editable" data-hint="→ es. offerte cliente A con sconti negoziati">Inserire esempi</td>
+        <td class="editable" data-hint="→ listino pubblico standard = Livello 1">Listino pubblico ≠ offerta riservata</td>
+      </tr>
+      <tr>
+        <td>Email e comunicazioni con clienti</td>
+        <td><span class="lv-badge lv3">Livello 3</span></td>
+        <td class="editable" data-hint="→ es. corrispondenza con account strategici">Inserire esempi</td>
+        <td class="editable" data-hint="→ descrizione anonima della situazione = Livello 2">Anonimizzata = Livello 2</td>
+      </tr>
+      <tr>
+        <td>Dati anagrafici clienti</td>
+        <td><span class="lv-badge lv3">Livello 3</span></td>
+        <td class="editable" data-hint="→ es. contatti CRM, email nominali, recapiti">Inserire esempi</td>
+        <td class="editable" data-hint="">Dati personali — anche GDPR</td>
+      </tr>
+      <tr>
+        <td>Specifiche di commessa clienti</td>
+        <td><span class="lv-badge lv3">Livello 3</span></td>
+        <td class="editable" data-hint="→ es. requisiti tecnici ricevuti su RFQ">Inserire esempi</td>
+        <td class="editable" data-hint="">Spesso coperte da NDA</td>
+      </tr>
+      <tr>
+        <td>Pipeline commerciale e forecast</td>
+        <td><span class="lv-badge lv3">Livello 3</span></td>
+        <td class="editable" data-hint="→ es. report CRM, previsioni vendita per area">Inserire esempi</td>
+        <td class="editable" data-hint="→ dati aggregati anonimi = Livello 2">Aggregati anonimi = Livello 2</td>
+      </tr>
+      <tr>
+        <td>Contenuti marketing pubblici</td>
+        <td><span class="lv-badge lv1">Livello 1</span></td>
+        <td class="editable" data-hint="→ es. brochure, presentazioni istituzionali, case study approvati">Inserire esempi</td>
+        <td class="editable" data-hint="">—</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <h3>HR / Risorse Umane</h3>
+
+  <table class="datamap">
+    <thead>
+      <tr>
+        <th>Categoria di dato</th>
+        <th>Livello</th>
+        <th>Esempi concreti (da compilare)</th>
+        <th>Note / eccezioni</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>Dati personali dipendenti</td>
+        <td><span class="lv-badge lv3">Livello 3</span></td>
+        <td class="editable" data-hint="→ es. buste paga, dati contrattuali, fascicoli personale">Inserire esempi</td>
+        <td class="editable" data-hint="">GDPR — anche obbligo normativo</td>
+      </tr>
+      <tr>
+        <td>Valutazioni e performance</td>
+        <td><span class="lv-badge lv3">Livello 3</span></td>
+        <td class="editable" data-hint="→ es. schede MBO, feedback 360, note disciplinari">Inserire esempi</td>
+        <td class="editable" data-hint="">—</td>
+      </tr>
+      <tr>
+        <td>Dati candidati e CV</td>
+        <td><span class="lv-badge lv3">Livello 3</span></td>
+        <td class="editable" data-hint="→ es. CV ricevuti, note colloqui, valutazioni">Inserire esempi</td>
+        <td class="editable" data-hint="">Consultare DPO prima di qualsiasi uso AI</td>
+      </tr>
+      <tr>
+        <td>Situazioni e comunicazioni anonime</td>
+        <td><span class="lv-badge lv2">Livello 2</span></td>
+        <td class="editable" data-hint="→ es. situazione HR descritta senza nominativi">Solo se nessun elemento identificativo</td>
+        <td class="editable" data-hint="">—</td>
+      </tr>
+      <tr>
+        <td>Normativa lavoro e contratti collettivi</td>
+        <td><span class="lv-badge lv1">Livello 1</span></td>
+        <td class="editable" data-hint="→ es. CCNL pubblici, circolari ministeriali">Inserire esempi</td>
+        <td class="editable" data-hint="">—</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <div class="ibox green">
+    <span class="ibox-label">Per le altre funzioni</span>
+    Usare lo stesso schema per Qualità, Produzione/Manutenzione e Acquisti. Le categorie di dato e i livelli per queste funzioni sono descritti in dettaglio nel Documento D2 (Guida per manager e responsabili di funzione), Tab corrispondente.
+  </div>
+
+</div>
+</div>
+
+
+<!-- ══════════════════════
+     T3 — REGOLE OPERATIVE
+══════════════════════ -->
+<div class="tab-panel" id="t3">
+<div class="panel-body">
+
+  <div class="tool-header">
+    <span class="tool-num">Strumento 03</span>
+    <h2>Bozza di regole operative</h2>
+  </div>
+
+  <p>Bozza pronta da adattare al contesto specifico. Le regole marcate in verde sono permissive, in giallo richiedono una condizione, in rosso sono divieti. Le regole con fondo tratteggiato vanno completate o adattate prima dell'uso.</p>
+
+  <div class="rules-section">
+    <span class="rules-section-title">Sezione A — Regole trasversali (tutti i dipendenti)</span>
+
+    <div class="rule-block">
+      <div class="rule-item ok">
+        <div class="rule-sig"></div>
+        <div class="rule-cnt">
+          <strong>Uso per struttura, metodo e linguaggio</strong>
+          <span>È consentito usare strumenti AI approvati per migliorare la struttura e il linguaggio di documenti, imparare metodi e tecniche, rispondere a domande su concetti generali, e svolgere qualsiasi task che non richieda di condividere dati aziendali specifici.</span>
+        </div>
+      </div>
+      <div class="rule-item ok">
+        <div class="rule-sig"></div>
+        <div class="rule-cnt">
+          <strong>Uso con dati Livello 1</strong>
+          <span>I dati classificati Livello 1 (informazioni pubbliche o non specificamente aziendali) possono essere condivisi liberamente con gli strumenti AI approvati.</span>
+        </div>
+      </div>
+      <div class="rule-item warn">
+        <div class="rule-sig"></div>
+        <div class="rule-cnt">
+          <strong>Uso con dati Livello 2 — solo dopo anonimizzazione</strong>
+          <span>I dati Livello 2 possono essere condivisi con strumenti AI approvati solo dopo aver rimosso tutti gli elementi identificativi: nomi di clienti, prodotti, fornitori, cifre specifiche, riferimenti a commesse o accordi. Il testo risultante deve essere non riconducibile all'azienda, ai suoi clienti o ai suoi prodotti.</span>
+        </div>
+      </div>
+      <div class="rule-item warn">
+        <div class="rule-sig"></div>
+        <div class="rule-cnt">
+          <strong>Verifica degli output su informazioni critiche</strong>
+          <span>Qualsiasi informazione prodotta da uno strumento AI che viene utilizzata in contesti tecnici, legali, commerciali o normativi deve essere verificata su fonti primarie autorevoli prima dell'uso.</span>
+        </div>
+      </div>
+      <div class="rule-item stop">
+        <div class="rule-sig"></div>
+        <div class="rule-cnt">
+          <strong>Divieto di uso con dati Livello 3</strong>
+          <span>È vietato condividere dati classificati Livello 3 con qualsiasi strumento AI esterno non approvato. L'elenco degli strumenti approvati è disponibile [indicare dove — intranet, IT, ecc.].</span>
+        </div>
+      </div>
+      <div class="rule-item stop">
+        <div class="rule-sig"></div>
+        <div class="rule-cnt">
+          <strong>Divieto di uso di account personali per dati aziendali</strong>
+          <span>È vietato utilizzare account AI personali e gratuiti (es. ChatGPT gratuito, Claude free) per svolgere attività lavorative che coinvolgano qualsiasi dato aziendale, anche di Livello 1 e 2. Per uso lavorativo, utilizzare esclusivamente gli strumenti indicati dall'IT.</span>
+        </div>
+      </div>
+      <div class="rule-item stop">
+        <div class="rule-sig"></div>
+        <div class="rule-cnt">
+          <strong>Obbligo di segnalazione incidenti</strong>
+          <span>Qualsiasi condivisione accidentale di dati Livello 3 con uno strumento AI deve essere segnalata immediatamente al proprio responsabile. Nessun dipendente sarà soggetto a provvedimenti disciplinari per aver segnalato in buona fede un errore accidentale.</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="rules-section">
+    <span class="rules-section-title">Sezione B — Regole specifiche Ufficio Tecnico (adattare e integrare)</span>
+
+    <div class="rule-block">
+      <div class="rule-item stop">
+        <div class="rule-sig"></div>
+        <div class="rule-cnt">
+          <strong>Divieto di caricamento di file tecnici</strong>
+          <span>È vietato caricare file tecnici di qualsiasi formato (PDF, DWG, STEP, XLSX con dati di prodotto) su strumenti AI non approvati, indipendentemente dal task da svolgere. Per ottenere aiuto su un calcolo, usare parametri fittizi; per strutturare un documento tecnico, partire da una bozza senza dati specifici.</span>
+        </div>
+      </div>
+      <div class="rule-item fill">
+        <div class="rule-sig"></div>
+        <div class="rule-cnt">
+          <strong>[Aggiungere regola specifica per la funzione]</strong>
+          <span class="fill-hint">→ Inserire qui eventuali regole aggiuntive emerse dal workshop di classificazione dati</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="rules-section">
+    <span class="rules-section-title">Sezione C — Regole specifiche Commerciale (adattare e integrare)</span>
+
+    <div class="rule-block">
+      <div class="rule-item stop">
+        <div class="rule-sig"></div>
+        <div class="rule-cnt">
+          <strong>Divieto di incollare comunicazioni di clienti</strong>
+          <span>È vietato copiare e incollare email, messaggi o qualsiasi comunicazione ricevuta da clienti su strumenti AI non approvati. Per ottenere aiuto nella risposta, descrivere la situazione in modo generico e anonimo.</span>
+        </div>
+      </div>
+      <div class="rule-item stop">
+        <div class="rule-sig"></div>
+        <div class="rule-cnt">
+          <strong>Verifica NDA su dati di commessa</strong>
+          <span>Prima di usare uno strumento AI su qualsiasi documento relativo a una commessa specifica, verificare se esiste un accordo di riservatezza (NDA) con il cliente. In caso di dubbio, trattare i dati come Livello 3.</span>
+        </div>
+      </div>
+      <div class="rule-item fill">
+        <div class="rule-sig"></div>
+        <div class="rule-cnt">
+          <strong>[Aggiungere regola specifica per la funzione]</strong>
+          <span class="fill-hint">→ Inserire qui eventuali regole aggiuntive emerse dal workshop di classificazione dati</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="ibox amber">
+    <span class="ibox-label">Come usare questa bozza</span>
+    Questa bozza copre le situazioni più frequenti. Dopo il workshop di classificazione dati (T2), aggiungere le regole specifiche che emergono per ogni funzione nella sezione corrispondente. Non rimuovere le regole trasversali della Sezione A — sono il nucleo vincolante comune a tutta l'azienda.
+  </div>
+
+</div>
+</div>
+
+
+<!-- ══════════════════════
+     T4 — TEMPLATE POLICY
+══════════════════════ -->
+<div class="tab-panel" id="t4">
+<div class="panel-body">
+
+  <div class="tool-header">
+    <span class="tool-num">Strumento 04</span>
+    <h2>Template di policy AI completo</h2>
+  </div>
+
+  <p>Struttura completa della policy aziendale sull'uso degli strumenti AI. I campi con sfondo tratteggiato sono da compilare con i dati specifici dell'azienda. Rimuovere questa nota prima della pubblicazione.</p>
+
+  <div class="policy-doc">
+
+    <div class="policy-doc-header">
+      <h3>Policy Aziendale: Uso Responsabile degli Strumenti di Intelligenza Artificiale</h3>
+      <p>Versione 1.0 · [Data di emissione] · Sostituisce: nessun documento precedente</p>
+    </div>
+
+    <div class="policy-section">
+      <span class="policy-section-num">Sezione 1</span>
+      <h4>Scopo e campo di applicazione</h4>
+      <p>La presente policy definisce le regole per l'uso responsabile degli strumenti di intelligenza artificiale generativa nell'ambito delle attività lavorative presso <strong>[Nome Azienda]</strong>.</p>
+      <p>La policy si applica a:</p>
+      <div class="policy-fill">[ ] Tutti i dipendenti<br>[ ] I collaboratori esterni con accesso ai sistemi aziendali<br>[ ] I consulenti che operano in nome e per conto dell'azienda</div>
+      <p>La policy copre l'uso di strumenti AI generativi — sistemi in grado di produrre testo, codice, immagini o analisi a partire da input testuali — sia quelli forniti direttamente dall'azienda che quelli accessibili autonomamente dai dipendenti.</p>
+      <p>L'obiettivo non è vietare l'uso degli strumenti AI, ma garantire che siano usati in modo che protegga le informazioni aziendali, rispetti gli obblighi normativi e contrattuali, e non esponga l'azienda a rischi non necessari.</p>
+    </div>
+
+    <div class="policy-section">
+      <span class="policy-section-num">Sezione 2</span>
+      <h4>Classificazione delle informazioni aziendali</h4>
+      <p>Le informazioni gestite dall'azienda sono classificate in tre livelli in base al loro grado di riservatezza:</p>
+      <p><strong>Livello 1 — Condivisibile liberamente:</strong> informazioni già disponibili pubblicamente o che non contengono dati specifici dell'azienda, dei suoi clienti, fornitori o processi. Esempi: contenuti del sito web, normative pubbliche, testi generici senza riferimenti aziendali.</p>
+      <p><strong>Livello 2 — Condivisibile solo dopo anonimizzazione:</strong> informazioni interne che possono essere condivise con strumenti AI solo dopo aver rimosso tutti gli elementi identificativi (nomi, cifre specifiche, riferimenti a prodotti o accordi). Esempi: situazioni lavorative descritte in modo generico, strutture di documenti senza dati specifici.</p>
+      <p><strong>Livello 3 — Mai condivisibile con strumenti AI esterni:</strong> informazioni altamente riservate che non devono in nessuna forma raggiungere sistemi AI esterni non approvati.</p>
+      <div class="policy-fill">Inserire qui il riferimento alla mappa dati per funzione (Allegato A) o riprodurre le categorie principali per funzione</div>
+    </div>
+
+    <div class="policy-section">
+      <span class="policy-section-num">Sezione 3</span>
+      <h4>Strumenti approvati</h4>
+      <p>L'uso di strumenti AI per attività lavorative è consentito esclusivamente con gli strumenti indicati di seguito:</p>
+      <div class="policy-fill">
+        Strumenti approvati:<br>
+        · [Nome strumento 1] — condizioni d'uso: [specificare]<br>
+        · [Nome strumento 2] — condizioni d'uso: [specificare]<br><br>
+        Strumenti in valutazione (solo per dati Livello 1):<br>
+        · [Se applicabile]<br><br>
+        L'elenco degli strumenti approvati è aggiornato dall'IT e disponibile su [specificare dove].
+      </div>
+      <p>È vietato l'uso di account AI personali e gratuiti per qualsiasi attività lavorativa che coinvolga dati aziendali.</p>
+    </div>
+
+    <div class="policy-section">
+      <span class="policy-section-num">Sezione 4</span>
+      <h4>Regole d'uso</h4>
+      <p>Per le regole operative complete, fare riferimento all'allegato "Regole d'uso per funzione" (Allegato B), che costituisce parte integrante della presente policy.</p>
+      <p>Le regole trasversali applicabili a tutti i dipendenti sono:</p>
+      <div class="policy-fill">Inserire qui le regole trasversali della Sezione A del Template T3, adattate al linguaggio aziendale</div>
+    </div>
+
+    <div class="policy-section">
+      <span class="policy-section-num">Sezione 5</span>
+      <h4>Procedura di segnalazione incidenti</h4>
+      <p>In caso di condivisione accidentale di informazioni Livello 3 con uno strumento AI non approvato, o di qualsiasi situazione che si ritenga possa aver esposto dati aziendali riservati:</p>
+      <p><strong>1.</strong> Segnalare immediatamente al proprio responsabile diretto, descrivendo cosa è stato condiviso, con quale strumento e in quale contesto. <strong>2.</strong> Il responsabile informa [IT / DPO] entro [specificare — es. 4 ore lavorative]. <strong>3.</strong> [IT / DPO] valuta la situazione e comunica le eventuali azioni necessarie.</p>
+      <p>Nessun dipendente sarà soggetto a provvedimenti disciplinari per aver segnalato in buona fede un errore accidentale. La segnalazione tempestiva è considerata comportamento corretto e responsabile.</p>
+    </div>
+
+    <div class="policy-section">
+      <span class="policy-section-num">Sezione 6</span>
+      <h4>Responsabilità, revisione e aggiornamento</h4>
+      <p><strong>Responsabile della policy:</strong> <span style="background:var(--bg);padding:0 8px;border:1px dashed var(--border2);font-style:italic;color:var(--ink3)">[Nome e ruolo]</span></p>
+      <p><strong>Data di emissione:</strong> <span style="background:var(--bg);padding:0 8px;border:1px dashed var(--border2);font-style:italic;color:var(--ink3)">[Data]</span></p>
+      <p><strong>Data prossima revisione:</strong> <span style="background:var(--bg);padding:0 8px;border:1px dashed var(--border2);font-style:italic;color:var(--ink3)">[Data — tipicamente 12 mesi]</span></p>
+      <p>La policy è soggetta a revisione straordinaria in caso di: adozione di nuovi strumenti AI significativi, incidenti rilevanti, cambiamenti normativi applicabili, o cambiamenti organizzativi che impattano i dati gestiti.</p>
+      <p>Per domande sull'applicazione della policy: <span style="background:var(--bg);padding:0 8px;border:1px dashed var(--border2);font-style:italic;color:var(--ink3)">[email o referente]</span></p>
+    </div>
+
+  </div>
+
+  <div class="ibox green">
+    <span class="ibox-label">Allegati consigliati</span>
+    <strong>Allegato A:</strong> Mappa dati per funzione (dal Template T2, compilato) · <strong>Allegato B:</strong> Regole d'uso per funzione (dal Template T3, adattato) · <strong>Allegato C:</strong> Lista strumenti approvati aggiornata (mantenuta dall'IT) · <strong>Allegato D:</strong> Guida rapida per i dipendenti (Documento D1 o D3)
+  </div>
+
+</div>
+</div>
+
+
+<!-- ══════════════════════
+     T5 — SESSIONE FORMATIVA
+══════════════════════ -->
+<div class="tab-panel" id="t5">
+<div class="panel-body">
+
+  <div class="tool-header">
+    <span class="tool-num">Strumento 05</span>
+    <h2>Scaletta per la sessione formativa</h2>
+  </div>
+
+  <p>Scaletta per una sessione di 45 minuti con un team di 8–15 persone. Adattabile a sessioni più brevi (30 minuti) riducendo la parte degli esempi, o più lunghe (60 minuti) ampliando la parte delle domande. Pensata per essere condotta dal responsabile della funzione, non necessariamente dall'IT.</p>
+
+  <div class="ibox blue">
+    <span class="ibox-label">Prima della sessione</span>
+    Distribuire il Documento D1 (guida per tutti i dipendenti) almeno due giorni prima. La sessione non deve spiegare da zero — deve consolidare, chiarire e rispondere alle domande. Chi arriva senza aver letto nulla rallenterà il gruppo.
+  </div>
+
+  <div class="training-block">
+    <div class="training-item">
+      <div class="ti-time"><span>min</span><strong>0–5</strong></div>
+      <div class="ti-body">
+        <h4>Apertura: perché siamo qui</h4>
+        <p>Due o tre frasi per contestualizzare la sessione. Non iniziare con "oggi vi spiego la policy" — iniziare con una domanda: <strong>"Quanti di voi hanno già usato ChatGPT o uno strumento simile per il lavoro?"</strong> La risposta apre una conversazione reale invece di un monologo.</p>
+      </div>
+    </div>
+    <div class="training-item">
+      <div class="ti-time"><span>min</span><strong>5–15</strong></div>
+      <div class="ti-body">
+        <h4>Il rischio spiegato in modo concreto</h4>
+        <p>Non partire dalla normativa — partire da un esempio riconoscibile per quella funzione. Per il commerciale: la storia di Sara che incolla un'email del cliente. Per il tecnico: Marco che carica una specifica tecnica. <strong>L'obiettivo è far dire mentalmente "ah, anch'io l'ho fatto" — non giudicare, ma far emergere la consapevolezza.</strong></p>
+      </div>
+    </div>
+    <div class="training-item">
+      <div class="ti-time"><span>min</span><strong>15–25</strong></div>
+      <div class="ti-body">
+        <h4>Le regole: il semaforo verde/giallo/rosso</h4>
+        <p>Presentare le tre categorie usando il semaforo del Documento D3 (scheda tascabile). Non leggere la policy — mostrare il semaforo e fare 2–3 esempi concreti per quella funzione. Chiedere al gruppo: <strong>"Questo esempio vi sembra verde, giallo o rosso?"</strong> La risposta collettiva è più efficace di qualsiasi spiegazione.</p>
+      </div>
+    </div>
+    <div class="training-item">
+      <div class="ti-time"><span>min</span><strong>25–35</strong></div>
+      <div class="ti-body">
+        <h4>I casi grigi: domande e ragionamento insieme</h4>
+        <p>Portare 2–3 casi concreti di quella funzione che non sono immediatamente ovvi e ragionarli insieme. Per esempio: "Se voglio usare l'AI per migliorare una relazione tecnica che ho già scritto, ma la relazione contiene parametri reali del prodotto, cosa faccio?" <strong>Il ragionamento ad alta voce vale più della risposta giusta.</strong></p>
+      </div>
+    </div>
+    <div class="training-item">
+      <div class="ti-time"><span>min</span><strong>35–42</strong></div>
+      <div class="ti-body">
+        <h4>Cosa fare se hai un dubbio o se sbagli</h4>
+        <p>I tre passi: fermati, anonimizza, chiedi. E se hai già sbagliato: <strong>segnala subito, senza aspettare.</strong> Ribadire che chi segnala fa la cosa giusta e non viene penalizzato. Questo punto è più importante di qualsiasi regola specifica — se le persone non segnalano gli errori, il sistema non funziona.</p>
+      </div>
+    </div>
+    <div class="training-item">
+      <div class="ti-time"><span>min</span><strong>42–45</strong></div>
+      <div class="ti-body">
+        <h4>Chiusura e domande aperte</h4>
+        <p>Consegnare fisicamente la scheda tascabile (Documento D3 stampato). Ricordare dove trovare la policy completa. Lasciare un canale aperto per domande successive — email del responsabile o dell'IT. <strong>Non chiudere con "domande?" generico — chiudere con "avete già una situazione specifica in mente su cui volete un parere?"</strong></p>
+      </div>
+    </div>
+  </div>
+
+  <h3>Materiali necessari per la sessione</h3>
+  <div class="checklist">
+    <div class="cl-item" onclick="toggleCl(this)"><div class="cl-box"></div><div class="cl-text">Documento D3 (scheda tascabile) stampato — una copia per partecipante</div></div>
+    <div class="cl-item" onclick="toggleCl(this)"><div class="cl-box"></div><div class="cl-text">2–3 esempi concreti preparati per quella funzione specifica (non generici)</div></div>
+    <div class="cl-item" onclick="toggleCl(this)"><div class="cl-box"></div><div class="cl-text">2–3 casi grigi preparati per quella funzione (da ragionare insieme)</div></div>
+    <div class="cl-item" onclick="toggleCl(this)"><div class="cl-box"></div><div class="cl-text">Riferimento al canale di segnalazione incidenti (email o referente)</div></div>
+    <div class="cl-item" onclick="toggleCl(this)"><div class="cl-box"></div><div class="cl-text">Link o posizione della policy completa nell'intranet aziendale</div></div>
+  </div>
+
+</div>
+</div>
+
+
+<!-- ══════════════════════
+     T6 — FAQ PRONTE
+══════════════════════ -->
+<div class="tab-panel" id="t6">
+<div class="panel-body">
+
+  <div class="tool-header">
+    <span class="tool-num">Strumento 06</span>
+    <h2>FAQ pronte per i dipendenti</h2>
+  </div>
+
+  <p>Domande e risposte pronte da pubblicare sull'intranet, da distribuire come allegato alla policy, o da usare come base per la sessione formativa. Adattare il tono al registro aziendale.</p>
+
+  <div class="faq-list">
+
+    <div class="faq-item">
+      <div class="faq-q" onclick="toggleFaq(this)">
+        <span class="faq-q-text">Posso usare ChatGPT per scrivere un'email a un cliente?</span>
+        <span class="faq-arrow">›</span>
+      </div>
+      <div class="faq-a">
+        Sì, ma con attenzione. Puoi chiedere all'AI di aiutarti con la struttura e il tono dell'email — descrivi la situazione in modo generico. <strong>Non incollare l'email del cliente e non menzionare nome del cliente, dettagli contrattuali o cifre specifiche.</strong> Esempio corretto: "Devo rispondere a un cliente che si lamenta di un ritardo e chiede uno sconto. Come mi esprimo in modo professionale?" — nessun dato riservato condiviso, aiuto concreto ricevuto.
+      </div>
+    </div>
+
+    <div class="faq-item">
+      <div class="faq-q" onclick="toggleFaq(this)">
+        <span class="faq-q-text">Ho un account ChatGPT personale che uso da mesi per lavoro. Devo smettere?</span>
+        <span class="faq-arrow">›</span>
+      </div>
+      <div class="faq-a">
+        Per dati aziendali, sì. Gli account personali gratuiti non hanno le garanzie contrattuali necessarie — i dati possono essere conservati e potenzialmente usati per addestrare versioni future del modello. <strong>Per attività lavorative che coinvolgono dati aziendali, usa solo gli strumenti indicati dall'IT.</strong> Se hai bisogno di uno strumento approvato e non lo hai ancora, contatta l'IT.
+      </div>
+    </div>
+
+    <div class="faq-item">
+      <div class="faq-q" onclick="toggleFaq(this)">
+        <span class="faq-q-text">Posso usare Copilot integrato in Word o Outlook?</span>
+        <span class="faq-arrow">›</span>
+      </div>
+      <div class="faq-a">
+        Dipende da come è configurato nella vostra azienda. Se è stato attivato dall'IT con licenza Microsoft 365 enterprise, ha protezioni significativamente maggiori degli strumenti consumer — i dati rimangono nel tenant aziendale. <strong>Verifica con l'IT se Copilot è stato attivato nella versione enterprise e con quali condizioni d'uso.</strong> In caso di dubbio, trattalo come uno strumento "in valutazione" e usalo solo con dati Livello 1.
+      </div>
+    </div>
+
+    <div class="faq-item">
+      <div class="faq-q" onclick="toggleFaq(this)">
+        <span class="faq-q-text">Cosa significa "anonimizzare" prima di condividere?</span>
+        <span class="faq-arrow">›</span>
+      </div>
+      <div class="faq-a">
+        Significa rimuovere o sostituire tutti gli elementi che permettono di identificare un soggetto specifico (cliente, prodotto, fornitore, dipendente) o di ricondurre l'informazione all'azienda. <strong>Sostituisci "Cliente Rossi SpA" con "un cliente del settore automotive", i prezzi reali con valori di esempio, i codici prodotto con denominazioni generiche.</strong> Il testo risultante deve sembrare un caso generico del settore, non un caso specifico della tua azienda. Se non riesci a togliere abbastanza senza svuotare il senso della domanda, il dato è probabilmente Livello 3 e non va condiviso.
+      </div>
+    </div>
+
+    <div class="faq-item">
+      <div class="faq-q" onclick="toggleFaq(this)">
+        <span class="faq-q-text">I miei dati finiscono a un concorrente tramite l'AI?</span>
+        <span class="faq-arrow">›</span>
+      </div>
+      <div class="faq-a">
+        Non è il funzionamento normale di questi sistemi. Le conversazioni degli utenti sono isolate tra loro — un'altra azienda non riceve i tuoi dati come risposta. <strong>Il rischio reale è diverso: i dati che invii vengono conservati sui server del provider per un certo periodo, e potrebbero essere accessibili in caso di violazione dei loro sistemi o in scenari legali specifici.</strong> Per questo i dati più critici non devono uscire dal perimetro aziendale — non perché finiscano sicuramente a un concorrente, ma perché escono da un perimetro che controlliamo.
+      </div>
+    </div>
+
+    <div class="faq-item">
+      <div class="faq-q" onclick="toggleFaq(this)">
+        <span class="faq-q-text">Ho condiviso per sbaglio un documento riservato. Cosa succede adesso?</span>
+        <span class="faq-arrow">›</span>
+      </div>
+      <div class="faq-a">
+        La cosa più importante è segnalarlo subito al tuo responsabile — <strong>non aspettare, non ignorarlo</strong>. Descrivi cosa hai condiviso, con quale strumento e in quale contesto. Il tuo responsabile avviserà l'IT per valutare la situazione. <strong>Non riceverai provvedimenti disciplinari per aver segnalato in buona fede un errore accidentale</strong> — anzi, segnalare è il comportamento corretto. Chi tace trasforma un incidente gestibile in un rischio che cresce nel tempo.
+      </div>
+    </div>
+
+    <div class="faq-item">
+      <div class="faq-q" onclick="toggleFaq(this)">
+        <span class="faq-q-text">Posso fare domande all'AI su normative tecniche e standard di settore?</span>
+        <span class="faq-arrow">›</span>
+      </div>
+      <div class="faq-a">
+        Sì — le normative e gli standard pubblici (ISO, EN, UNI, direttive europee) sono informazioni Livello 1 e possono essere condivisi liberamente. <strong>Attenzione però a non mescolare la domanda sulla normativa con dati specifici del prodotto.</strong> "Come si interpreta l'articolo X della norma EN Y?" è corretto. "Il nostro prodotto Z con queste specifiche è conforme alla EN Y?" richiede di condividere le specifiche del prodotto — che sono Livello 3.
+      </div>
+    </div>
+
+    <div class="faq-item">
+      <div class="faq-q" onclick="toggleFaq(this)">
+        <span class="faq-q-text">Come faccio a sapere se uno strumento AI è "approvato"?</span>
+        <span class="faq-arrow">›</span>
+      </div>
+      <div class="faq-a">
+        L'elenco degli strumenti approvati è disponibile su <strong>[specificare — intranet, pagina IT, email IT]</strong>. Se uno strumento non è in elenco, prima di usarlo contatta l'IT. La regola semplice: se non è nell'elenco e non sai se è approvato, usalo solo per dati Livello 1 o non usarlo per dati di lavoro finché non hai conferma.
+      </div>
+    </div>
+
+  </div>
+
+</div>
+</div>
+
+
+<!-- ══════════════════════
+     T7 — INCIDENTI
+══════════════════════ -->
+<div class="tab-panel" id="t7">
+<div class="panel-body">
+
+  <div class="tool-header">
+    <span class="tool-num">Strumento 07</span>
+    <h2>Modulo di segnalazione incidenti AI</h2>
+  </div>
+
+  <p>Modulo da compilare in caso di condivisione accidentale di dati riservati con uno strumento AI non approvato. Può essere usato in versione digitale (modulo online) o stampato. Le informazioni raccolte servono a valutare il rischio e decidere le azioni necessarie — non ad attribuire responsabilità.</p>
+
+  <div class="ibox amber">
+    <span class="ibox-label">A chi inviare il modulo compilato</span>
+    <strong>[Nome o ruolo del responsabile incidenti AI]</strong> — email: <strong>[indirizzo]</strong><br>
+    Tempo di risposta atteso: <strong>[es. entro 24 ore lavorative]</strong><br>
+    In caso di urgenza (es. dati sensibili GDPR o NDA critici): <strong>[canale di escalation rapida]</strong>
+  </div>
+
+  <div class="incident-form">
+
+    <div class="incident-form-header">
+      <h4>⚠ Modulo segnalazione incidente — Uso AI</h4>
+    </div>
+
+    <div class="if-section">
+      <span class="if-label">Data e ora dell'incidente</span>
+      <div class="if-field">gg/mm/aaaa — hh:mm</div>
+    </div>
+
+    <div class="if-section">
+      <span class="if-label">Segnalato da (nome e funzione)</span>
+      <div class="if-field">Nome cognome — Funzione / reparto</div>
+    </div>
+
+    <div class="if-section">
+      <span class="if-label">Strumento AI utilizzato</span>
+      <div class="if-options" id="tool-options">
+        <div class="if-option" onclick="selectOpt(this,'tool-options')">ChatGPT (free)</div>
+        <div class="if-option" onclick="selectOpt(this,'tool-options')">ChatGPT (Plus/Team)</div>
+        <div class="if-option" onclick="selectOpt(this,'tool-options')">Claude</div>
+        <div class="if-option" onclick="selectOpt(this,'tool-options')">Gemini</div>
+        <div class="if-option" onclick="selectOpt(this,'tool-options')">Copilot</div>
+        <div class="if-option" onclick="selectOpt(this,'tool-options')">Altro (specificare)</div>
+      </div>
+    </div>
+
+    <div class="if-section">
+      <span class="if-label">Tipo di dato condiviso (selezionare tutto ciò che si applica)</span>
+      <div class="if-options" id="data-options">
+        <div class="if-option" onclick="selectMulti(this)">Specifica tecnica / disegno</div>
+        <div class="if-option" onclick="selectMulti(this)">Dati di processo / ricetta</div>
+        <div class="if-option" onclick="selectMulti(this)">Comunicazione cliente</div>
+        <div class="if-option" onclick="selectMulti(this)">Offerta / prezzo</div>
+        <div class="if-option" onclick="selectMulti(this)">Dato personale dipendente</div>
+        <div class="if-option" onclick="selectMulti(this)">Documento coperto da NDA</div>
+        <div class="if-option" onclick="selectMulti(this)">Altro</div>
+      </div>
+    </div>
+
+    <div class="if-section">
+      <span class="if-label">Descrizione dell'accaduto</span>
+      <div class="if-field" style="min-height:80px;">Descrivere brevemente cosa stava facendo, cosa è stato condiviso per errore e come ci si è accorti dell'errore</div>
+    </div>
+
+    <div class="if-section">
+      <span class="if-label">Valutazione preliminare della gravità</span>
+      <div class="if-scale" id="scale-opts">
+        <div class="if-scale-item" onclick="selectScale(this,'scale-opts',1)">1 — Bassa</div>
+        <div class="if-scale-item" onclick="selectScale(this,'scale-opts',2)">2 — Media</div>
+        <div class="if-scale-item" onclick="selectScale(this,'scale-opts',3)">3 — Alta</div>
+      </div>
+      <p style="font-size:12px;color:var(--ink4);margin-top:6px;font-family:'DM Mono',monospace;">1 = dato Livello 2 condiviso senza anonimizzazione completa · 2 = dato Livello 3 non critico · 3 = dato Livello 3 critico (NDA, brevetti, dati personali)</p>
+    </div>
+
+    <div class="if-section">
+      <span class="if-label">Azioni già intraprese (se applicabile)</span>
+      <div class="if-field">Specificare eventuali azioni già fatte (es. eliminazione della conversazione, notifica al responsabile)</div>
+    </div>
+
+    <div class="if-section" style="background:var(--surface2);">
+      <span class="if-label">Uso interno — Note del responsabile incidenti</span>
+      <div class="if-field" style="min-height:80px;background:var(--bg);">Valutazione del responsabile, azioni intraprese, esito, eventuale notifica DPO</div>
+    </div>
+
+  </div>
+
+  <div class="ibox green">
+    <span class="ibox-label">Registro degli incidenti</span>
+    Ogni modulo compilato va archiviato nel registro degli incidenti AI — un file o database centralizzato che consente di analizzare i pattern nel tempo. Un incidente isolato è un caso; tre incidenti simili nello stesso mese indicano una lacuna nella formazione o nella policy che va indirizzata.
+  </div>
+
+</div>
+</div>
+
+
+<!-- ══════════════════════
+     T8 — CALENDARIO
+══════════════════════ -->
+<div class="tab-panel" id="t8">
+<div class="panel-body">
+
+  <div class="tool-header">
+    <span class="tool-num">Strumento 08</span>
+    <h2>Calendario di revisione e manutenzione</h2>
+  </div>
+
+  <p>Pianificazione delle attività di manutenzione della policy nel tempo. Adattare le date all'anno di riferimento. Il responsabile della policy è responsabile dell'esecuzione di ciascuna attività o della sua delega.</p>
+
+  <div class="cal-grid">
+
+    <div class="cal-item">
+      <div class="cal-when"><span>Mensile</span><strong>Ogni mese</strong></div>
+      <div class="cal-body">
+        <h4>Verifica incidenti e segnalazioni</h4>
+        <p>Revisione del registro incidenti del mese. Se sono state ricevute segnalazioni, verificare se rivelano lacune nella policy o nella formazione. Se sono emersi nuovi strumenti AI in uso non approvato, valutare azione immediata.</p>
+        <div class="cal-owner">Responsabile: [Nome] · Durata stimata: 30 min</div>
+      </div>
+    </div>
+
+    <div class="cal-item">
+      <div class="cal-when"><span>Trimestrale</span><strong>Ogni 3 mesi</strong></div>
+      <div class="cal-body">
+        <h4>Aggiornamento lista strumenti approvati</h4>
+        <p>Verificare se sono stati adottati nuovi strumenti AI o se la situazione contrattuale degli strumenti esistenti è cambiata. Aggiornare la lista pubblicata sull'intranet. Comunicare le variazioni ai dipendenti se significative.</p>
+        <div class="cal-owner">Responsabile: [IT] · Durata stimata: 1 ora</div>
+      </div>
+    </div>
+
+    <div class="cal-item">
+      <div class="cal-when"><span>Semestrale</span><strong>Ogni 6 mesi</strong></div>
+      <div class="cal-body">
+        <h4>Verifica aggiornamenti normativi</h4>
+        <p>Controllare se ci sono stati aggiornamenti rilevanti al framework normativo: linee guida EDPB su AI e GDPR, provvedimenti del Garante italiano, nuove scadenze dell'AI Act europeo, aggiornamenti dei ToS dei principali provider AI usati in azienda.</p>
+        <div class="cal-owner">Responsabile: [DPO / Legale] · Durata stimata: 2 ore</div>
+      </div>
+    </div>
+
+    <div class="cal-item">
+      <div class="cal-when"><span>Annuale</span><strong>[Mese da definire]</strong></div>
+      <div class="cal-body">
+        <h4>Revisione completa della policy</h4>
+        <p>Revisione sistematica di tutte le sezioni della policy. Domande guida: le regole sono ancora accurate? La classificazione riflette i dati attuali? Ci sono stati cambiamenti organizzativi che impattano la policy? La formazione è stata efficace? Aggiornare la policy, comunicare le variazioni, pianificare eventuale rinforzo della formazione.</p>
+        <div class="cal-owner">Responsabile: [Responsabile policy] con IT, DPO, referenti funzioni · Durata stimata: 4–6 ore distribuite</div>
+      </div>
+    </div>
+
+    <div class="cal-item">
+      <div class="cal-when"><span>Al bisogno</span><strong>Evento scatenante</strong></div>
+      <div class="cal-body">
+        <h4>Revisione straordinaria</h4>
+        <p>Da attivare al verificarsi di: adozione di nuovo strumento AI significativo, incidente di gravità media o alta, cambiamento normativo rilevante, cambiamento organizzativo (acquisizione, nuova business unit, nuovi clienti con NDA specifici). La revisione straordinaria non sostituisce quella annuale.</p>
+        <div class="cal-owner">Responsabile: [Responsabile policy] · Tempistica: entro 2 settimane dall'evento</div>
+      </div>
+    </div>
+
+    <div class="cal-item">
+      <div class="cal-when"><span>Ogni nuovo strumento</span><strong>Onboarding AI</strong></div>
+      <div class="cal-body">
+        <h4>Procedura di valutazione nuovo strumento</h4>
+        <p>Prima che un nuovo strumento AI venga adottato in modo diffuso: <strong>1.</strong> Richiesta formale all'IT con descrizione del caso d'uso. <strong>2.</strong> Valutazione IT (sicurezza, contratto, garanzie). <strong>3.</strong> Classificazione del livello di dato consentito con quello strumento. <strong>4.</strong> Aggiornamento lista strumenti approvati. <strong>5.</strong> Comunicazione ai dipendenti interessati.</p>
+        <div class="cal-owner">Responsabile: [IT] · Tempistica target: 5–10 giorni lavorativi</div>
+      </div>
+    </div>
+
+  </div>
+
+  <div class="ibox green">
+    <span class="ibox-label">Il responsabile della policy</span>
+    Tutte le attività di questo calendario fanno capo a un unico responsabile nominato. <strong>Senza un responsabile nominato con tempo dedicato, il calendario rimane un documento — non un sistema di governance.</strong> Il responsabile non deve svolgere tutto da solo: delega, coordina e verifica. Ma deve essere identificabile e raggiungibile quando serve.
+  </div>
+
+</div>
+</div>
+
+
+<footer>
+  <p>Kit operativo · Policy AI aziendale · Documento E2 · 2026</p>
+  <p>Da usare insieme a: Documento E1 — Guida strategica per il management</p>
+</footer>
+
+<script>
+function switchTab(id) {
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+  document.querySelector(`[data-tab="${id}"]`).classList.add('active');
+  document.getElementById(id).classList.add('active');
+  window.scrollTo({top:0, behavior:'smooth'});
+}
+
+function toggleCl(item) {
+  item.classList.toggle('done');
+  item.querySelector('.cl-box').textContent = item.classList.contains('done') ? '✓' : '';
+}
+
+function toggleFaq(el) {
+  el.parentElement.classList.toggle('open');
+}
+
+function selectOpt(el, groupId) {
+  document.querySelectorAll(`#${groupId} .if-option`).forEach(o => o.classList.remove('selected'));
+  el.classList.add('selected');
+}
+
+function selectMulti(el) {
+  el.classList.toggle('selected');
+}
+
+function selectScale(el, groupId, level) {
+  document.querySelectorAll(`#${groupId} .if-scale-item`).forEach(i => {
+    i.classList.remove('sel-1','sel-2','sel-3');
+  });
+  el.classList.add(`sel-${level}`);
+}
+</script>
+
+</body>
+</html>

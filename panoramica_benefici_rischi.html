@@ -1,0 +1,1094 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AI in Azienda — Benefici e Rischi per Contesto d'Uso</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --ink:         #111318;
+    --ink-mid:     #3D4251;
+    --ink-light:   #6B7280;
+    --ink-faint:   #9CA3AF;
+    --surface:     #F9FAFB;
+    --surface-2:   #F3F4F6;
+    --surface-3:   #E5E7EB;
+    --border:      #E5E7EB;
+    --border-mid:  #D1D5DB;
+
+    --benefit:     #166534;
+    --benefit-bg:  #F0FDF4;
+    --benefit-bd:  #BBF7D0;
+    --benefit-dot: #22C55E;
+
+    --risk:        #991B1B;
+    --risk-bg:     #FEF2F2;
+    --risk-bd:     #FECACA;
+    --risk-dot:    #EF4444;
+
+    --cond:        #92400E;
+    --cond-bg:     #FFFBEB;
+    --cond-bd:     #FDE68A;
+    --cond-dot:    #F59E0B;
+
+    --active:      #1D4ED8;
+    --active-bg:   #EFF6FF;
+    --active-bd:   #BFDBFE;
+
+    --sidebar-w:   280px;
+  }
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  html { scroll-behavior: smooth; }
+
+  body {
+    font-family: 'DM Sans', sans-serif;
+    font-size: 15px;
+    line-height: 1.65;
+    color: var(--ink);
+    background: var(--surface);
+    display: flex;
+    min-height: 100vh;
+  }
+
+  /* ── SIDEBAR ── */
+  nav#sidebar {
+    width: var(--sidebar-w);
+    min-height: 100vh;
+    background: var(--ink);
+    position: fixed;
+    top: 0; left: 0;
+    display: flex;
+    flex-direction: column;
+    z-index: 100;
+    overflow-y: auto;
+  }
+
+  .nav-top {
+    padding: 28px 24px 24px;
+    border-bottom: 1px solid rgba(255,255,255,.08);
+  }
+  .nav-series {
+    font-size: 9px; font-weight: 600; letter-spacing: .22em;
+    text-transform: uppercase; color: rgba(255,255,255,.3);
+    margin-bottom: 6px;
+  }
+  .nav-title {
+    font-family: 'DM Serif Display', serif;
+    font-size: 16px; color: #fff; line-height: 1.3;
+  }
+
+  .nav-legend {
+    padding: 16px 24px;
+    border-bottom: 1px solid rgba(255,255,255,.08);
+    display: flex; flex-direction: column; gap: 8px;
+  }
+  .nav-legend-title {
+    font-size: 9px; font-weight: 600; letter-spacing: .18em;
+    text-transform: uppercase; color: rgba(255,255,255,.3);
+    margin-bottom: 2px;
+  }
+  .legend-item {
+    display: flex; align-items: center; gap: 8px;
+    font-size: 12px; color: rgba(255,255,255,.55);
+  }
+  .legend-dot {
+    width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0;
+  }
+
+  .nav-links { padding: 12px 0 24px; flex: 1; }
+  .nav-group-label {
+    font-size: 9px; font-weight: 600; letter-spacing: .18em;
+    text-transform: uppercase; color: rgba(255,255,255,.25);
+    padding: 12px 24px 4px;
+  }
+  .nav-link {
+    display: flex; align-items: center; gap: 10px;
+    padding: 9px 24px;
+    text-decoration: none;
+    font-size: 13px; font-weight: 400;
+    color: rgba(255,255,255,.5);
+    border-left: 2px solid transparent;
+    transition: all .18s;
+    line-height: 1.35;
+  }
+  .nav-link:hover {
+    color: rgba(255,255,255,.85);
+    background: rgba(255,255,255,.04);
+  }
+  .nav-link.active {
+    color: #fff;
+    border-left-color: var(--active);
+    background: rgba(29,78,216,.12);
+  }
+  .nav-link-num {
+    font-family: 'DM Mono', monospace;
+    font-size: 11px; color: rgba(255,255,255,.22);
+    min-width: 20px;
+  }
+  .nav-link.active .nav-link-num { color: rgba(29,78,216,.8); }
+
+  .nav-footer {
+    padding: 16px 24px;
+    border-top: 1px solid rgba(255,255,255,.08);
+  }
+  .nav-footer-label {
+    font-size: 9px; font-weight: 600; letter-spacing: .18em;
+    text-transform: uppercase; color: rgba(255,255,255,.25);
+    margin-bottom: 8px;
+  }
+  .nav-footer a {
+    display: block;
+    font-size: 12px; color: rgba(255,255,255,.38);
+    text-decoration: none;
+    padding: 3px 0;
+    transition: color .15s;
+  }
+  .nav-footer a:hover { color: rgba(255,255,255,.65); }
+
+  /* ── MAIN ── */
+  main {
+    margin-left: var(--sidebar-w);
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+  }
+
+  /* Header */
+  .page-header {
+    background: var(--ink);
+    padding: 56px 60px 48px;
+    position: relative;
+    overflow: hidden;
+  }
+  .page-header::after {
+    content: '';
+    position: absolute;
+    bottom: 0; left: 0; right: 0;
+    height: 1px;
+    background: linear-gradient(90deg, var(--active), transparent 60%);
+  }
+  .page-header::before {
+    content: '';
+    position: absolute;
+    top: 0; right: 0;
+    width: 400px; height: 100%;
+    background: radial-gradient(ellipse at top right, rgba(29,78,216,.15) 0%, transparent 65%);
+    pointer-events: none;
+  }
+  .header-eyebrow {
+    font-size: 10px; font-weight: 600; letter-spacing: .22em;
+    text-transform: uppercase; color: rgba(29,78,216,.8);
+    margin-bottom: 14px;
+  }
+  .page-header h1 {
+    font-family: 'DM Serif Display', serif;
+    font-size: clamp(26px, 3.5vw, 40px);
+    font-weight: 400;
+    color: #fff;
+    line-height: 1.15;
+    margin-bottom: 18px;
+    max-width: 620px;
+  }
+  .page-header p {
+    font-size: 16px; font-weight: 300;
+    color: rgba(255,255,255,.5);
+    max-width: 560px; line-height: 1.65;
+  }
+
+  /* Legend bar */
+  .legend-bar {
+    background: var(--surface-2);
+    border-bottom: 1px solid var(--border);
+    padding: 12px 60px;
+    display: flex;
+    align-items: center;
+    gap: 28px;
+    flex-wrap: wrap;
+  }
+  .legend-bar-label {
+    font-size: 10px; font-weight: 600; letter-spacing: .14em;
+    text-transform: uppercase; color: var(--ink-faint);
+    margin-right: 4px;
+  }
+  .legend-chip {
+    display: flex; align-items: center; gap: 7px;
+    font-size: 12px; font-weight: 500;
+  }
+  .chip-dot {
+    width: 9px; height: 9px; border-radius: 50%;
+  }
+
+  /* Content area */
+  .content {
+    padding: 48px 60px 80px;
+    max-width: 1100px;
+  }
+
+  /* Context card */
+  .context-card {
+    background: #fff;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    margin-bottom: 32px;
+    overflow: hidden;
+    box-shadow: 0 1px 8px rgba(0,0,0,.04);
+    transition: box-shadow .2s;
+    scroll-margin-top: 24px;
+  }
+  .context-card:hover {
+    box-shadow: 0 4px 20px rgba(0,0,0,.08);
+  }
+
+  /* Card header */
+  .card-header {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    padding: 20px 28px;
+    background: var(--surface-2);
+    border-bottom: 1px solid var(--border);
+    cursor: pointer;
+    user-select: none;
+  }
+  .card-num {
+    font-family: 'DM Mono', monospace;
+    font-size: 12px; font-weight: 500;
+    color: var(--ink-faint);
+    min-width: 24px;
+  }
+  .card-title {
+    font-family: 'DM Serif Display', serif;
+    font-size: 18px; font-weight: 400;
+    color: var(--ink);
+    flex: 1;
+    line-height: 1.3;
+  }
+  .card-functions {
+    display: flex; flex-wrap: wrap; gap: 6px;
+  }
+  .fn-tag {
+    font-size: 10px; font-weight: 600; letter-spacing: .06em;
+    text-transform: uppercase;
+    padding: 3px 9px; border-radius: 2px;
+    background: var(--surface-3);
+    color: var(--ink-light);
+    border: 1px solid var(--border-mid);
+  }
+  .card-toggle {
+    font-size: 18px; color: var(--ink-faint);
+    transition: transform .25s;
+    min-width: 20px;
+    text-align: center;
+  }
+  .context-card.open .card-toggle {
+    transform: rotate(180deg);
+  }
+
+  /* Card body */
+  .card-body {
+    display: none;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 0;
+  }
+  .context-card.open .card-body {
+    display: grid;
+  }
+
+  .card-col {
+    padding: 24px 28px;
+    border-right: 1px solid var(--border);
+  }
+  .card-col:last-child { border-right: none; }
+
+  .col-label {
+    font-size: 9.5px; font-weight: 700; letter-spacing: .18em;
+    text-transform: uppercase; margin-bottom: 14px;
+    display: flex; align-items: center; gap: 8px;
+  }
+  .col-label-dot {
+    width: 8px; height: 8px; border-radius: 50%;
+  }
+
+  .col-label.benefit { color: var(--benefit); }
+  .col-label.risk    { color: var(--risk); }
+  .col-label.cond    { color: var(--cond); }
+
+  ul.col-list { list-style: none; padding: 0; }
+  ul.col-list li {
+    font-size: 13.5px;
+    line-height: 1.5;
+    padding: 7px 0 7px 18px;
+    position: relative;
+    border-bottom: 1px solid var(--border);
+    color: var(--ink-mid);
+  }
+  ul.col-list li:last-child { border-bottom: none; }
+  ul.col-list li::before {
+    content: '';
+    position: absolute;
+    left: 0; top: 14px;
+    width: 7px; height: 7px;
+    border-radius: 50%;
+  }
+  .benefit-list li::before { background: var(--benefit-dot); }
+  .risk-list    li::before { background: var(--risk-dot); }
+  .cond-list    li::before { background: var(--cond-dot); }
+
+  .risk-ref {
+    font-family: 'DM Mono', monospace;
+    font-size: 10px; font-weight: 500;
+    color: var(--ink-faint);
+    margin-left: 4px;
+  }
+
+  /* Summary strip */
+  .card-summary {
+    padding: 12px 28px;
+    background: var(--surface-2);
+    border-top: 1px solid var(--border);
+    font-size: 12.5px;
+    color: var(--ink-light);
+    display: none;
+    align-items: center;
+    gap: 8px;
+  }
+  .context-card.open .card-summary { display: flex; }
+  .summary-balance {
+    font-weight: 600; font-size: 12px;
+    padding: 2px 10px; border-radius: 12px;
+    border: 1px solid;
+  }
+  .balance-favorable  { color: var(--benefit); background: var(--benefit-bg); border-color: var(--benefit-bd); }
+  .balance-moderate   { color: var(--cond);    background: var(--cond-bg);    border-color: var(--cond-bd); }
+  .balance-high-risk  { color: var(--risk);    background: var(--risk-bg);    border-color: var(--risk-bd); }
+
+  /* Intro section */
+  .intro-section {
+    margin-bottom: 40px;
+    padding-bottom: 36px;
+    border-bottom: 1px solid var(--border);
+  }
+  .intro-section h2 {
+    font-family: 'DM Serif Display', serif;
+    font-size: 22px; font-weight: 400;
+    color: var(--ink);
+    margin-bottom: 12px;
+  }
+  .intro-section p {
+    font-size: 14.5px; color: var(--ink-mid);
+    max-width: 760px; line-height: 1.7;
+    margin-bottom: 12px;
+  }
+  .intro-section p:last-child { margin-bottom: 0; }
+
+  /* How to read */
+  .how-to-read {
+    display: flex; gap: 12px; flex-wrap: wrap;
+    margin-top: 20px;
+  }
+  .htr-card {
+    flex: 1; min-width: 160px;
+    padding: 14px 16px;
+    border-radius: 4px;
+    border: 1px solid;
+  }
+  .htr-card.benefit { background: var(--benefit-bg); border-color: var(--benefit-bd); }
+  .htr-card.risk    { background: var(--risk-bg);    border-color: var(--risk-bd); }
+  .htr-card.cond    { background: var(--cond-bg);    border-color: var(--cond-bd); }
+  .htr-label {
+    font-size: 10px; font-weight: 700; letter-spacing: .14em;
+    text-transform: uppercase; margin-bottom: 4px;
+  }
+  .htr-card.benefit .htr-label { color: var(--benefit); }
+  .htr-card.risk    .htr-label { color: var(--risk); }
+  .htr-card.cond    .htr-label { color: var(--cond); }
+  .htr-desc { font-size: 12.5px; color: var(--ink-mid); line-height: 1.45; }
+
+  /* Section label */
+  .section-label {
+    font-size: 9.5px; font-weight: 700; letter-spacing: .2em;
+    text-transform: uppercase; color: var(--ink-faint);
+    margin-bottom: 16px;
+    display: flex; align-items: center; gap: 10px;
+  }
+  .section-label::after {
+    content: ''; flex: 1; height: 1px; background: var(--border);
+  }
+
+  /* Progress bar */
+  #progress-bar {
+    position: fixed; top: 0; left: var(--sidebar-w); right: 0;
+    height: 2px; background: var(--active);
+    transform-origin: left; transform: scaleX(0);
+    z-index: 200; transition: transform .1s linear;
+  }
+
+  @media (max-width: 1000px) {
+    nav#sidebar { display: none; }
+    main { margin-left: 0; }
+    .page-header, .content, .legend-bar { padding-left: 28px; padding-right: 28px; }
+    .card-body { grid-template-columns: 1fr; }
+    .card-col { border-right: none; border-bottom: 1px solid var(--border); }
+    .card-col:last-child { border-bottom: none; }
+  }
+</style>
+</head>
+<body>
+
+<div id="progress-bar"></div>
+
+<!-- SIDEBAR -->
+<nav id="sidebar">
+  <div class="nav-top">
+    <div class="nav-series">Serie: Rischi AI in Azienda</div>
+    <div class="nav-title">Panoramica Benefici &amp; Rischi per Contesto d'Uso</div>
+  </div>
+
+  <div class="nav-legend">
+    <div class="nav-legend-title">Legenda colonne</div>
+    <div class="legend-item">
+      <div class="legend-dot" style="background: var(--benefit-dot)"></div>
+      Benefici principali
+    </div>
+    <div class="legend-item">
+      <div class="legend-dot" style="background: var(--risk-dot)"></div>
+      Rischi da considerare
+    </div>
+    <div class="legend-item">
+      <div class="legend-dot" style="background: var(--cond-dot)"></div>
+      Condizioni per un uso efficace
+    </div>
+  </div>
+
+  <div class="nav-links">
+    <div class="nav-group-label">Contesti d'uso</div>
+    <a href="#c01" class="nav-link">
+      <span class="nav-link-num">01</span>Ricerca e sintesi di informazioni
+    </a>
+    <a href="#c02" class="nav-link">
+      <span class="nav-link-num">02</span>Analisi di mercato e trend scouting
+    </a>
+    <a href="#c03" class="nav-link">
+      <span class="nav-link-num">03</span>Produzione di contenuti e documenti
+    </a>
+    <a href="#c04" class="nav-link">
+      <span class="nav-link-num">04</span>Comunicazione esterna e social media
+    </a>
+    <a href="#c05" class="nav-link">
+      <span class="nav-link-num">05</span>Sintesi di documenti interni
+    </a>
+    <a href="#c06" class="nav-link">
+      <span class="nav-link-num">06</span>Proposte commerciali e selezione prodotti
+    </a>
+    <a href="#c07" class="nav-link">
+      <span class="nav-link-num">07</span>Render fotorealistici di prodotto
+    </a>
+    <a href="#c08" class="nav-link">
+      <span class="nav-link-num">08</span>Verifica di conformità alle blacklist
+    </a>
+    <a href="#c09" class="nav-link">
+      <span class="nav-link-num">09</span>Scrittura di script e automazioni
+    </a>
+    <a href="#c10" class="nav-link">
+      <span class="nav-link-num">10</span>Configurazione di tool e programmi
+    </a>
+    <a href="#c11" class="nav-link">
+      <span class="nav-link-num">11</span>Piani strategici e operativi
+    </a>
+  </div>
+
+  <div class="nav-footer">
+    <div class="nav-footer-label">Report di approfondimento</div>
+    <a href="Tutti%20i%20report%20html/report_01_qualita_output.html">01 · Qualità degli output</a>
+    <a href="Tutti%20i%20report%20html/report_02_dati_compliance.html">02 · Dati e compliance</a>
+    <a href="Tutti%20i%20report%20html/report_03_reputazione.html">03 · Reputazione</a>
+    <a href="Tutti%20i%20report%20html/report_04_rischi_strategici.html">04 · Rischi strategici</a>
+    <a href="Tutti%20i%20report%20html/report_05_sicurezza.html">05 · Sicurezza</a>
+  </div>
+</nav>
+
+<!-- MAIN -->
+<main>
+  <div class="page-header">
+    <div class="header-eyebrow">Serie: Rischi AI in Azienda · Documento di sintesi</div>
+    <h1>Benefici e Rischi dell'AI per Contesto d'Uso</h1>
+    <p>Una mappa operativa per valutare il rapporto tra valore e rischio in undici contesti d'uso rilevanti per la nostra realtà aziendale. Per ogni contesto: cosa si guadagna, cosa si rischia, e le condizioni essenziali per un uso efficace.</p>
+  </div>
+
+  <div class="legend-bar">
+    <span class="legend-bar-label">Legenda</span>
+    <span class="legend-chip"><span class="chip-dot" style="background:var(--benefit-dot)"></span>Benefici</span>
+    <span class="legend-chip"><span class="chip-dot" style="background:var(--risk-dot)"></span>Rischi</span>
+    <span class="legend-chip"><span class="chip-dot" style="background:var(--cond-dot)"></span>Condizioni per un uso efficace</span>
+    <span style="margin-left:auto; font-size:12px; color:var(--ink-faint)">Fare clic su una scheda per espanderla</span>
+  </div>
+
+  <div class="content">
+
+    <div class="intro-section">
+      <h2>Come leggere questo documento</h2>
+      <p>Ogni scheda rappresenta un contesto d'uso specifico. La colonna verde elenca i benefici concreti che l'AI porta in quel contesto. La colonna rossa identifica i rischi principali — con riferimento al report di approfondimento dove sono trattati nel dettaglio. La colonna gialla indica le condizioni operative essenziali per trasformare un uso rischioso in un uso consapevole.</p>
+      <p>Il documento non sostituisce i report tematici: è una bussola per orientarsi rapidamente. Per ogni rischio citato, il codice tra parentesi rimanda al cluster di approfondimento corrispondente.</p>
+      <div class="how-to-read">
+        <div class="htr-card benefit">
+          <div class="htr-label">Benefici</div>
+          <div class="htr-desc">Valore concreto che l'AI porta in quel contesto specifico — velocità, qualità, accesso a competenze</div>
+        </div>
+        <div class="htr-card risk">
+          <div class="htr-label">Rischi</div>
+          <div class="htr-desc">I rischi più rilevanti per quel contesto — non tutti i rischi possibili, ma quelli con impatto più alto</div>
+        </div>
+        <div class="htr-card cond">
+          <div class="htr-label">Condizioni</div>
+          <div class="htr-desc">Le precauzioni essenziali senza le quali il rischio supera il beneficio in quel contesto</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="section-label">Undici contesti d'uso</div>
+
+    <!-- C01 -->
+    <div class="context-card" id="c01">
+      <div class="card-header" onclick="toggleCard(this)">
+        <span class="card-num">01</span>
+        <span class="card-title">Ricerca e sintesi di informazioni generali</span>
+        <div class="card-functions">
+          <span class="fn-tag">Tutte le funzioni</span>
+        </div>
+        <span class="card-toggle">▾</span>
+      </div>
+      <div class="card-body">
+        <div class="card-col">
+          <div class="col-label benefit"><span class="col-label-dot" style="background:var(--benefit-dot)"></span>Benefici</div>
+          <ul class="col-list benefit-list">
+            <li>Riduce drasticamente il tempo per orientarsi su un argomento nuovo</li>
+            <li>Sintetizza grandi quantità di testo in modo rapido e strutturato</li>
+            <li>Accessibile a tutti, senza competenze specialistiche</li>
+            <li>Utile per preparare riunioni, brief, presentazioni in tempi ridotti</li>
+          </ul>
+        </div>
+        <div class="card-col">
+          <div class="col-label risk"><span class="col-label-dot" style="background:var(--risk-dot)"></span>Rischi</div>
+          <ul class="col-list risk-list">
+            <li>Dati numerici e statistiche possono essere inventati <span class="risk-ref">[R01]</span></li>
+            <li>Fonti citate potrebbero non esistere o non contenere l'informazione indicata <span class="risk-ref">[R01]</span></li>
+            <li>Informazioni normative o tecniche possono essere obsolete <span class="risk-ref">[R01]</span></li>
+            <li>Uso sistematico riduce la lettura diretta delle fonti primarie <span class="risk-ref">[R04]</span></li>
+          </ul>
+        </div>
+        <div class="card-col">
+          <div class="col-label cond"><span class="col-label-dot" style="background:var(--cond-dot)"></span>Condizioni per un uso efficace</div>
+          <ul class="col-list cond-list">
+            <li>Verificare sempre dati numerici e fonti su fonti primarie prima di usarli</li>
+            <li>Chiedere all'AI di segnalare esplicitamente le proprie incertezze</li>
+            <li>Usare come punto di partenza, non come risposta definitiva</li>
+            <li>Mantenere il contatto diretto con le fonti primarie per argomenti strategici</li>
+          </ul>
+        </div>
+      </div>
+      <div class="card-summary">
+        <span class="summary-balance balance-favorable">Rapporto favorevole</span>
+        <span>contesto a bassa posta, alto volume d'uso — la verifica delle fonti è la precauzione essenziale</span>
+      </div>
+    </div>
+
+    <!-- C02 -->
+    <div class="context-card" id="c02">
+      <div class="card-header" onclick="toggleCard(this)">
+        <span class="card-num">02</span>
+        <span class="card-title">Analisi di mercato e trend scouting</span>
+        <div class="card-functions">
+          <span class="fn-tag">NPD</span>
+          <span class="fn-tag">Innovation</span>
+          <span class="fn-tag">Sales</span>
+        </div>
+        <span class="card-toggle">▾</span>
+      </div>
+      <div class="card-body">
+        <div class="card-col">
+          <div class="col-label benefit"><span class="col-label-dot" style="background:var(--benefit-dot)"></span>Benefici</div>
+          <ul class="col-list benefit-list">
+            <li>Accelera la raccolta e la sintesi di informazioni su mercati e competitor</li>
+            <li>Aiuta a strutturare e confrontare scenari di mercato complessi</li>
+            <li>Può identificare connessioni tra trend in settori diversi</li>
+            <li>Riduce il tempo di preparazione per analisi e presentazioni strategiche</li>
+          </ul>
+        </div>
+        <div class="card-col">
+          <div class="col-label risk"><span class="col-label-dot" style="background:var(--risk-dot)"></span>Rischi</div>
+          <ul class="col-list risk-list">
+            <li>Dati di mercato (quote, CAGR, volumi) frequentemente inventati <span class="risk-ref">[R01]</span></li>
+            <li>I modelli conoscono solo trend già nel mainstream al momento del training <span class="risk-ref">[R04]</span></li>
+            <li>Tutti i competitor che usano gli stessi tool arrivano alle stesse conclusioni <span class="risk-ref">[R04]</span></li>
+            <li>Sostituzione sistematica delle fonti primarie erode la lettura autonoma del mercato <span class="risk-ref">[R04]</span></li>
+          </ul>
+        </div>
+        <div class="card-col">
+          <div class="col-label cond"><span class="col-label-dot" style="background:var(--cond-dot)"></span>Condizioni per un uso efficace</div>
+          <ul class="col-list cond-list">
+            <li>Verificare tutti i dati quantitativi su database specializzati (Mintel, Euromonitor)</li>
+            <li>Esplorare le fonti primarie prima di usare l'AI — non dopo</li>
+            <li>Alimentare l'AI con osservazioni originali per ottenere output meno convenzionali</li>
+            <li>Usare l'AI per strutturare e verificare, non per generare la lettura di mercato</li>
+          </ul>
+        </div>
+      </div>
+      <div class="card-summary">
+        <span class="summary-balance balance-moderate">Rapporto moderato</span>
+        <span>alto valore se usata per strutturare, alto rischio se usata come fonte primaria di insight</span>
+      </div>
+    </div>
+
+    <!-- C03 -->
+    <div class="context-card" id="c03">
+      <div class="card-header" onclick="toggleCard(this)">
+        <span class="card-num">03</span>
+        <span class="card-title">Produzione di contenuti e documenti</span>
+        <div class="card-functions">
+          <span class="fn-tag">Tutte le funzioni</span>
+        </div>
+        <span class="card-toggle">▾</span>
+      </div>
+      <div class="card-body">
+        <div class="card-col">
+          <div class="col-label benefit"><span class="col-label-dot" style="background:var(--benefit-dot)"></span>Benefici</div>
+          <ul class="col-list benefit-list">
+            <li>Accelera drasticamente la produzione di bozze di testi, report, presentazioni</li>
+            <li>Migliora la qualità formale (struttura, chiarezza, registro) di documenti interni</li>
+            <li>Utile per superare il "blocco della pagina bianca" su argomenti complessi</li>
+            <li>Facilita la rielaborazione e l'adattamento di contenuti esistenti</li>
+            <li>Supporta chi non ha italiano o inglese come prima lingua</li>
+          </ul>
+        </div>
+        <div class="card-col">
+          <div class="col-label risk"><span class="col-label-dot" style="background:var(--risk-dot)"></span>Rischi</div>
+          <ul class="col-list risk-list">
+            <li>Contenuti generici, privi del punto di vista e dello stile distintivo dell'autore <span class="risk-ref">[R04]</span></li>
+            <li>Affermazioni tecniche o fattuali non verificate inserite nel documento <span class="risk-ref">[R01]</span></li>
+            <li>Dati aziendali riservati condivisi se si incolla contenuto interno nel prompt <span class="risk-ref">[R02]</span></li>
+            <li>Perdita progressiva della capacità di scrittura autonoma <span class="risk-ref">[R04]</span></li>
+          </ul>
+        </div>
+        <div class="card-col">
+          <div class="col-label cond"><span class="col-label-dot" style="background:var(--cond-dot)"></span>Condizioni per un uso efficace</div>
+          <ul class="col-list cond-list">
+            <li>Usare l'AI per la bozza, riscrivere nella propria voce — specialmente per comunicazioni esterne</li>
+            <li>Non incollare documenti interni con dati riservati nel prompt</li>
+            <li>Verificare tutte le affermazioni fattuali prima di condividere il documento</li>
+            <li>Fornire sempre un contesto ricco nel prompt: obiettivo, destinatario, tono desiderato</li>
+          </ul>
+        </div>
+      </div>
+      <div class="card-summary">
+        <span class="summary-balance balance-favorable">Rapporto favorevole</span>
+        <span>massimo valore per documenti interni e bozze — più attenzione per contenuti destinati all'esterno</span>
+      </div>
+    </div>
+
+    <!-- C04 -->
+    <div class="context-card" id="c04">
+      <div class="card-header" onclick="toggleCard(this)">
+        <span class="card-num">04</span>
+        <span class="card-title">Comunicazione esterna e social media</span>
+        <div class="card-functions">
+          <span class="fn-tag">Mktg Comunicazione</span>
+          <span class="fn-tag">Sales</span>
+        </div>
+        <span class="card-toggle">▾</span>
+      </div>
+      <div class="card-body">
+        <div class="card-col">
+          <div class="col-label benefit"><span class="col-label-dot" style="background:var(--benefit-dot)"></span>Benefici</div>
+          <ul class="col-list benefit-list">
+            <li>Accelera la produzione di testi per post, comunicati, materiali evento</li>
+            <li>Aiuta a mantenere un ritmo di pubblicazione consistente</li>
+            <li>Utile per generare varianti di un messaggio per canali diversi</li>
+            <li>Supporta la traduzione e l'adattamento culturale dei contenuti</li>
+          </ul>
+        </div>
+        <div class="card-col">
+          <div class="col-label risk"><span class="col-label-dot" style="background:var(--risk-dot)"></span>Rischi</div>
+          <ul class="col-list risk-list">
+            <li>Affermazioni tecniche su ingredienti o prodotti errate o non verificabili <span class="risk-ref">[R01, R03]</span></li>
+            <li>Tono e stile non coerenti con il posizionamento del brand <span class="risk-ref">[R03]</span></li>
+            <li>Contenuti visivi generati con AI con potenziali problemi di copyright <span class="risk-ref">[R02]</span></li>
+            <li>Output indistinguibili da quelli dei competitor che usano gli stessi tool <span class="risk-ref">[R04]</span></li>
+          </ul>
+        </div>
+        <div class="card-col">
+          <div class="col-label cond"><span class="col-label-dot" style="background:var(--cond-dot)"></span>Condizioni per un uso efficace</div>
+          <ul class="col-list cond-list">
+            <li>Nessun contenuto pubblicato senza revisione umana da parte di chi conosce il brand</li>
+            <li>Verificare le affermazioni tecniche con R&D prima della pubblicazione</li>
+            <li>Fornire all'AI le linee guida di comunicazione come parte del prompt</li>
+            <li>Per immagini AI: verificare i termini d'uso del provider per l'uso commerciale</li>
+          </ul>
+        </div>
+      </div>
+      <div class="card-summary">
+        <span class="summary-balance balance-moderate">Rapporto moderato</span>
+        <span>la velocità di diffusione esterna rende la revisione pre-pubblicazione non negoziabile</span>
+      </div>
+    </div>
+
+    <!-- C05 -->
+    <div class="context-card" id="c05">
+      <div class="card-header" onclick="toggleCard(this)">
+        <span class="card-num">05</span>
+        <span class="card-title">Sintesi e interrogazione di documenti interni</span>
+        <div class="card-functions">
+          <span class="fn-tag">R&D</span>
+          <span class="fn-tag">Sales</span>
+          <span class="fn-tag">Supply Chain</span>
+        </div>
+        <span class="card-toggle">▾</span>
+      </div>
+      <div class="card-body">
+        <div class="card-col">
+          <div class="col-label benefit"><span class="col-label-dot" style="background:var(--benefit-dot)"></span>Benefici</div>
+          <ul class="col-list benefit-list">
+            <li>Riduce il tempo di lettura e analisi di documenti lunghi e tecnici</li>
+            <li>Permette di interrogare un documento con domande specifiche in linguaggio naturale</li>
+            <li>Utile per estrarre informazioni rilevanti da contratti, brief, specifiche tecniche</li>
+            <li>Facilita il confronto tra versioni diverse di un documento</li>
+          </ul>
+        </div>
+        <div class="card-col">
+          <div class="col-label risk"><span class="col-label-dot" style="background:var(--risk-dot)"></span>Rischi</div>
+          <ul class="col-list risk-list">
+            <li>Dati riservati (formule, condizioni commerciali) escono dal perimetro aziendale <span class="risk-ref">[R02]</span></li>
+            <li>La sintesi può omettere elementi critici non riconoscibili come tali dall'AI <span class="risk-ref">[R01]</span></li>
+            <li>Decisioni prese sulla base della sintesi senza leggere le parti rilevanti dell'originale <span class="risk-ref">[R02]</span></li>
+          </ul>
+        </div>
+        <div class="card-col">
+          <div class="col-label cond"><span class="col-label-dot" style="background:var(--cond-dot)"></span>Condizioni per un uso efficace</div>
+          <ul class="col-list cond-list">
+            <li>Non caricare documenti con formule, condizioni commerciali o dati personali su AI consumer</li>
+            <li>Per decisioni rilevanti, leggere direttamente le sezioni critiche del documento originale</li>
+            <li>Usare strumenti con accordi contrattuali adeguati per documenti riservati</li>
+            <li>Verificare che la sintesi non abbia omesso elementi significativi</li>
+          </ul>
+        </div>
+      </div>
+      <div class="card-summary">
+        <span class="summary-balance balance-moderate">Rapporto moderato</span>
+        <span>alto valore operativo, ma il rischio di dato è concreto per la maggior parte dei documenti interni rilevanti</span>
+      </div>
+    </div>
+
+    <!-- C06 -->
+    <div class="context-card" id="c06">
+      <div class="card-header" onclick="toggleCard(this)">
+        <span class="card-num">06</span>
+        <span class="card-title">Proposte commerciali e selezione prodotti per il cliente</span>
+        <div class="card-functions">
+          <span class="fn-tag">Sales</span>
+          <span class="fn-tag">NPD</span>
+        </div>
+        <span class="card-toggle">▾</span>
+      </div>
+      <div class="card-body">
+        <div class="card-col">
+          <div class="col-label benefit"><span class="col-label-dot" style="background:var(--benefit-dot)"></span>Benefici</div>
+          <ul class="col-list benefit-list">
+            <li>Accelera la strutturazione di proposte complesse e articolate</li>
+            <li>Aiuta a identificare argomenti e leve commerciali rilevanti per il cliente</li>
+            <li>Utile per migliorare la qualità formale di presentazioni e documenti di offerta</li>
+            <li>Supporta il confronto tra opzioni di prodotto da proporre</li>
+          </ul>
+        </div>
+        <div class="card-col">
+          <div class="col-label risk"><span class="col-label-dot" style="background:var(--risk-dot)"></span>Rischi</div>
+          <ul class="col-list risk-list">
+            <li>L'AI non conosce la storia del cliente, i margini, le priorità strategiche <span class="risk-ref">[R01]</span></li>
+            <li>Dati commerciali riservati condivisi nel prompt per contestualizzare la proposta <span class="risk-ref">[R02]</span></li>
+            <li>Selezione prodotti basata su criteri generici, non sulle specificità del cliente <span class="risk-ref">[R01]</span></li>
+            <li>Proposte indistinguibili dalla concorrenza per contenuto e stile <span class="risk-ref">[R04]</span></li>
+          </ul>
+        </div>
+        <div class="card-col">
+          <div class="col-label cond"><span class="col-label-dot" style="background:var(--cond-dot)"></span>Condizioni per un uso efficace</div>
+          <ul class="col-list cond-list">
+            <li>Fornire il massimo contesto nel prompt: storia cliente, vincoli, blacklist, priorità</li>
+            <li>Non condividere condizioni commerciali riservate con AI consumer</li>
+            <li>La selezione finale dei prodotti deve essere validata da chi conosce il cliente</li>
+            <li>Rivedere la proposta per assicurarsi che rifletta il punto di vista specifico dell'azienda</li>
+          </ul>
+        </div>
+      </div>
+      <div class="card-summary">
+        <span class="summary-balance balance-moderate">Rapporto moderato</span>
+        <span>utile per strutturare e formalizzare, rischioso se usata per sostituire la conoscenza del cliente</span>
+      </div>
+    </div>
+
+    <!-- C07 -->
+    <div class="context-card" id="c07">
+      <div class="card-header" onclick="toggleCard(this)">
+        <span class="card-num">07</span>
+        <span class="card-title">Render fotorealistici di prodotto</span>
+        <div class="card-functions">
+          <span class="fn-tag">Sales</span>
+          <span class="fn-tag">Mktg Comunicazione</span>
+        </div>
+        <span class="card-toggle">▾</span>
+      </div>
+      <div class="card-body">
+        <div class="card-col">
+          <div class="col-label benefit"><span class="col-label-dot" style="background:var(--benefit-dot)"></span>Benefici</div>
+          <ul class="col-list benefit-list">
+            <li>Riduce drasticamente i tempi e i costi di produzione delle immagini di prodotto</li>
+            <li>Permette di generare varianti (colori, packaging, mood) in modo rapido</li>
+            <li>Utile per presentare concept a clienti prima della produzione fisica dei campioni</li>
+            <li>Qualità visiva elevata per materiali commerciali e fieristici</li>
+          </ul>
+        </div>
+        <div class="card-col">
+          <div class="col-label risk"><span class="col-label-dot" style="background:var(--risk-dot)"></span>Rischi</div>
+          <ul class="col-list risk-list">
+            <li>Il render può non corrispondere al prodotto reale, creando aspettative non mantenute <span class="risk-ref">[R03]</span></li>
+            <li>Potenziali problemi di copyright su elementi visivi generati <span class="risk-ref">[R02]</span></li>
+            <li>Assenza di tracciabilità su chi ha approvato il render e con quali specifiche <span class="risk-ref">[R02]</span></li>
+            <li>Rischio legale se il cliente contesta una discrepanza tra render e prodotto consegnato <span class="risk-ref">[R02]</span></li>
+          </ul>
+        </div>
+        <div class="card-col">
+          <div class="col-label cond"><span class="col-label-dot" style="background:var(--cond-dot)"></span>Condizioni per un uso efficace</div>
+          <ul class="col-list cond-list">
+            <li>Validare ogni render rispetto alle specifiche tecniche reali del prodotto prima dell'invio al cliente</li>
+            <li>Documentare chi ha approvato il render e le specifiche usate come input</li>
+            <li>Verificare i termini d'uso del provider per l'uso commerciale delle immagini</li>
+            <li>Comunicare al cliente che si tratta di render concettuali, non di immagini del prodotto finale</li>
+          </ul>
+        </div>
+      </div>
+      <div class="card-summary">
+        <span class="summary-balance balance-moderate">Rapporto moderato</span>
+        <span>alto valore visivo, ma richiede un processo di validazione e approvazione prima dell'uso commerciale</span>
+      </div>
+    </div>
+
+    <!-- C08 -->
+    <div class="context-card" id="c08">
+      <div class="card-header" onclick="toggleCard(this)">
+        <span class="card-num">08</span>
+        <span class="card-title">Verifica di conformità alle blacklist ingredienti</span>
+        <div class="card-functions">
+          <span class="fn-tag">R&D</span>
+        </div>
+        <span class="card-toggle">▾</span>
+      </div>
+      <div class="card-body">
+        <div class="card-col">
+          <div class="col-label benefit"><span class="col-label-dot" style="background:var(--benefit-dot)"></span>Benefici</div>
+          <ul class="col-list benefit-list">
+            <li>Può accelerare una parte del processo di verifica su liste standard ben note</li>
+            <li>Utile per un primo screening prima della verifica manuale approfondita</li>
+            <li>Aiuta a identificare potenziali criticità su cui concentrare l'attenzione</li>
+          </ul>
+        </div>
+        <div class="card-col">
+          <div class="col-label risk"><span class="col-label-dot" style="background:var(--risk-dot)"></span>Rischi</div>
+          <ul class="col-list risk-list">
+            <li>Falsi negativi: ingredienti vietati non rilevati, con conseguenze dirette sulla sicurezza <span class="risk-ref">[R01]</span></li>
+            <li>L'AI può non conoscere le blacklist specifiche e aggiornate di ciascun cliente <span class="risk-ref">[R01]</span></li>
+            <li>Chi usa l'AI per questa verifica potrebbe non avere le competenze per valutarne i limiti <span class="risk-ref">[R01]</span></li>
+            <li>Formule proprietarie condivise con sistemi AI esterni <span class="risk-ref">[R02]</span></li>
+            <li>Rischio di dipendenza: erosione della competenza di verifica manuale <span class="risk-ref">[R04]</span></li>
+          </ul>
+        </div>
+        <div class="card-col">
+          <div class="col-label cond"><span class="col-label-dot" style="background:var(--cond-dot)"></span>Condizioni per un uso efficace</div>
+          <ul class="col-list cond-list">
+            <li>L'AI può supportare ma non sostituire la verifica manuale di un chimico esperto</li>
+            <li>Non usare AI consumer per caricare formule complete — usare solo sistemi con accordi di riservatezza</li>
+            <li>Verificare che le blacklist usate come riferimento siano quelle aggiornate del cliente specifico</li>
+            <li>Documentare sempre chi ha effettuato la verifica finale e con quali strumenti</li>
+          </ul>
+        </div>
+      </div>
+      <div class="card-summary">
+        <span class="summary-balance balance-high-risk">Rischio elevato</span>
+        <span>contesto ad alta posta — l'AI può supportare il processo ma la responsabilità della verifica resta umana</span>
+      </div>
+    </div>
+
+    <!-- C09 -->
+    <div class="context-card" id="c09">
+      <div class="card-header" onclick="toggleCard(this)">
+        <span class="card-num">09</span>
+        <span class="card-title">Scrittura di script e automazioni</span>
+        <div class="card-functions">
+          <span class="fn-tag">Supply Chain</span>
+          <span class="fn-tag">R&D</span>
+          <span class="fn-tag">Innovation</span>
+        </div>
+        <span class="card-toggle">▾</span>
+      </div>
+      <div class="card-body">
+        <div class="card-col">
+          <div class="col-label benefit"><span class="col-label-dot" style="background:var(--benefit-dot)"></span>Benefici</div>
+          <ul class="col-list benefit-list">
+            <li>Permette a chi non è programmatore di creare automazioni utili</li>
+            <li>Accelera notevolmente lo sviluppo di script anche per chi sa già programmare</li>
+            <li>Riduce il tempo dedicato a task ripetitivi e manuali</li>
+            <li>Abbassa la barriera all'automazione di processi operativi</li>
+          </ul>
+        </div>
+        <div class="card-col">
+          <div class="col-label risk"><span class="col-label-dot" style="background:var(--risk-dot)"></span>Rischi</div>
+          <ul class="col-list risk-list">
+            <li>Vulnerabilità di sicurezza nel codice: credenziali esposte, accessi non controllati <span class="risk-ref">[R05]</span></li>
+            <li>Bug silenziosi che emergono solo in condizioni anomale o di picco <span class="risk-ref">[R01]</span></li>
+            <li>Chi usa lo script non comprende come funziona e non sa quando fallisce <span class="risk-ref">[R01]</span></li>
+            <li>Dipendenze esterne non sicure o non aggiornate nel codice generato <span class="risk-ref">[R05]</span></li>
+          </ul>
+        </div>
+        <div class="card-col">
+          <div class="col-label cond"><span class="col-label-dot" style="background:var(--cond-dot)"></span>Condizioni per un uso efficace</div>
+          <ul class="col-list cond-list">
+            <li>Far revisionare il codice da IT o da un esperto prima del deployment in produzione</li>
+            <li>Non usare in produzione script che non si è in grado di spiegare e testare</li>
+            <li>Specificare i requisiti di sicurezza esplicitamente nel prompt (no credenziali nel codice)</li>
+            <li>Testare sempre con casi limite e scenari anomali prima dell'uso operativo</li>
+          </ul>
+        </div>
+      </div>
+      <div class="card-summary">
+        <span class="summary-balance balance-high-risk">Rischio elevato</span>
+        <span>alto potenziale di efficienza, ma richiede revisione tecnica prima dell'uso in processi operativi reali</span>
+      </div>
+    </div>
+
+    <!-- C10 -->
+    <div class="context-card" id="c10">
+      <div class="card-header" onclick="toggleCard(this)">
+        <span class="card-num">10</span>
+        <span class="card-title">Guida nella configurazione di tool e programmi</span>
+        <div class="card-functions">
+          <span class="fn-tag">Tutte le funzioni</span>
+        </div>
+        <span class="card-toggle">▾</span>
+      </div>
+      <div class="card-body">
+        <div class="card-col">
+          <div class="col-label benefit"><span class="col-label-dot" style="background:var(--benefit-dot)"></span>Benefici</div>
+          <ul class="col-list benefit-list">
+            <li>Riduce la dipendenza dall'IT per operazioni di configurazione standard</li>
+            <li>Fornisce istruzioni passo per passo in linguaggio accessibile</li>
+            <li>Utile per imparare a usare nuovi strumenti in modo autonomo</li>
+            <li>Permette di risolvere problemi tecnici comuni senza attendere supporto</li>
+          </ul>
+        </div>
+        <div class="card-col">
+          <div class="col-label risk"><span class="col-label-dot" style="background:var(--risk-dot)"></span>Rischi</div>
+          <ul class="col-list risk-list">
+            <li>Le istruzioni possono riferirsi a versioni obsolete dei software <span class="risk-ref">[R01]</span></li>
+            <li>Configurazioni errate di strumenti con accesso a dati aziendali possono creare vulnerabilità <span class="risk-ref">[R05]</span></li>
+            <li>L'utente potrebbe non capire le implicazioni di sicurezza di certe configurazioni <span class="risk-ref">[R01]</span></li>
+          </ul>
+        </div>
+        <div class="card-col">
+          <div class="col-label cond"><span class="col-label-dot" style="background:var(--cond-dot)"></span>Condizioni per un uso efficace</div>
+          <ul class="col-list cond-list">
+            <li>Verificare che le istruzioni si riferiscano alla versione corrente del software</li>
+            <li>Per configurazioni che riguardano sicurezza, accessi o dati aziendali: coinvolgere IT</li>
+            <li>Testare la configurazione in un ambiente non critico prima di applicarla in produzione</li>
+          </ul>
+        </div>
+      </div>
+      <div class="card-summary">
+        <span class="summary-balance balance-favorable">Rapporto favorevole</span>
+        <span>contesto a bassa posta per attività standard — attenzione per configurazioni con implicazioni di sicurezza</span>
+      </div>
+    </div>
+
+    <!-- C11 -->
+    <div class="context-card" id="c11">
+      <div class="card-header" onclick="toggleCard(this)">
+        <span class="card-num">11</span>
+        <span class="card-title">Elaborazione di piani strategici e operativi</span>
+        <div class="card-functions">
+          <span class="fn-tag">Management</span>
+          <span class="fn-tag">Supply Chain</span>
+          <span class="fn-tag">NPD</span>
+        </div>
+        <span class="card-toggle">▾</span>
+      </div>
+      <div class="card-body">
+        <div class="card-col">
+          <div class="col-label benefit"><span class="col-label-dot" style="background:var(--benefit-dot)"></span>Benefici</div>
+          <ul class="col-list benefit-list">
+            <li>Utile per strutturare un piano complesso e assicurarsi di non aver dimenticato aree rilevanti</li>
+            <li>Aiuta a esplorare scenari alternativi e identificare variabili trascurate</li>
+            <li>Accelera la produzione della bozza iniziale di un piano</li>
+            <li>Può fare da sparring partner per testare la solidità di un ragionamento strategico</li>
+          </ul>
+        </div>
+        <div class="card-col">
+          <div class="col-label risk"><span class="col-label-dot" style="background:var(--risk-dot)"></span>Rischi</div>
+          <ul class="col-list risk-list">
+            <li>L'AI non conosce i vincoli operativi, la cultura aziendale, le dinamiche interne <span class="risk-ref">[R01]</span></li>
+            <li>Piani generici che non riflettono le specificità e il contesto reale dell'azienda <span class="risk-ref">[R04]</span></li>
+            <li>Dati strategici riservati condivisi nel prompt per contestualizzare il piano <span class="risk-ref">[R02]</span></li>
+            <li>Falsa oggettività: il piano dell'AI viene percepito come più neutro e solido di quanto sia <span class="risk-ref">[R01]</span></li>
+          </ul>
+        </div>
+        <div class="card-col">
+          <div class="col-label cond"><span class="col-label-dot" style="background:var(--cond-dot)"></span>Condizioni per un uso efficace</div>
+          <ul class="col-list cond-list">
+            <li>Fornire il massimo contesto: vincoli, risorse, priorità, storia dell'organizzazione</li>
+            <li>Usare l'AI per la struttura e l'esplorazione di scenari, non per le scelte strategiche finali</li>
+            <li>Non condividere dati strategici riservati con AI consumer</li>
+            <li>Validare il piano con chi ha il contesto operativo reale prima di adottarlo</li>
+          </ul>
+        </div>
+      </div>
+      <div class="card-summary">
+        <span class="summary-balance balance-moderate">Rapporto moderato</span>
+        <span>alto valore come supporto alla strutturazione — le decisioni strategiche restano in capo a chi ha il contesto</span>
+      </div>
+    </div>
+
+  </div><!-- /content -->
+</main>
+
+<script>
+  // Toggle cards
+  function toggleCard(header) {
+    const card = header.closest('.context-card');
+    card.classList.toggle('open');
+  }
+
+  // Open all by default
+  document.querySelectorAll('.context-card').forEach(c => c.classList.add('open'));
+
+  // Progress bar
+  window.addEventListener('scroll', () => {
+    const doc = document.documentElement;
+    const scrolled = doc.scrollTop / (doc.scrollHeight - doc.clientHeight);
+    document.getElementById('progress-bar').style.transform = `scaleX(${scrolled})`;
+  });
+
+  // Active nav link
+  const cards = document.querySelectorAll('.context-card[id]');
+  const navLinks = document.querySelectorAll('nav#sidebar .nav-link');
+
+  const observer = new IntersectionObserver(entries => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        const id = entry.target.id;
+        navLinks.forEach(a => {
+          a.classList.toggle('active', a.getAttribute('href') === '#' + id);
+        });
+      }
+    });
+  }, { rootMargin: '-10% 0px -80% 0px' });
+
+  cards.forEach(c => observer.observe(c));
+</script>
+</body>
+</html>

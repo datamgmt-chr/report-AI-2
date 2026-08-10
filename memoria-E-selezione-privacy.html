@@ -1,0 +1,778 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Memoria — E · Cosa ricordare e cosa dimenticare</title>
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Outfit:wght@200;300;400;500;600;700;800;900&family=IBM+Plex+Mono:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg:     #faf8f5;
+  --bg2:    #f2efe9;
+  --bg3:    #e9e5dc;
+  --ink:    #1b1915;
+  --ink2:   #2e2b25;
+  --ink3:   #6d685c;
+  --ink4:   #a19c8f;
+  --border: #d9d4c8;
+  --border2:#cac4b6;
+
+  --accent:  #5a6e8a;
+  --accent2: #2e3a4a;
+  --accent-light: #f0f3f7;
+
+  --ok:   #3d7a45; --ok-l:  #f4faf5;
+  --bad:  #c0392b; --bad-l: #fdf5f5;
+  --warn: #b07d24; --warn-l:#fdf6e8;
+  --priv: #8a3a5a; --priv-l:#faf0f4;
+}
+
+* { margin:0; padding:0; box-sizing:border-box; }
+html { scroll-behavior:smooth; }
+body { background:var(--bg); color:var(--ink); font-family:'Outfit',sans-serif; font-weight:300; font-size:14px; line-height:1.75; }
+
+.masthead { background:var(--ink); color:rgba(255,255,255,.9); padding:60px 56px 52px; position:relative; overflow:hidden; }
+.masthead::before { content:''; position:absolute; inset:0; background: repeating-linear-gradient(90deg,rgba(255,255,255,.012) 0,rgba(255,255,255,.012) 1px,transparent 1px,transparent 64px), repeating-linear-gradient(0deg,rgba(255,255,255,.012) 0,rgba(255,255,255,.012) 1px,transparent 1px,transparent 64px); pointer-events:none; }
+.masthead::after { content:'E'; position:absolute; right:44px; bottom:-28px; font-family:'Instrument Serif',serif; font-size:280px; line-height:1; color:rgba(255,255,255,.025); pointer-events:none; }
+.mh-eye { font-family:'IBM Plex Mono',monospace; font-size:10px; letter-spacing:3px; text-transform:uppercase; color:rgba(255,255,255,.25); margin-bottom:18px; position:relative; }
+.mh-cluster { display:inline-block; font-family:'IBM Plex Mono',monospace; font-size:10px; letter-spacing:2px; text-transform:uppercase; padding:4px 12px; border:1px solid var(--accent); color:var(--accent); margin-bottom:20px; position:relative; }
+.masthead h1 { font-family:'Instrument Serif',serif; font-weight:400; font-size:clamp(30px,4.5vw,54px); line-height:1.08; letter-spacing:-1px; max-width:700px; position:relative; }
+.mh-sub { margin-top:20px; font-size:15px; font-weight:300; color:rgba(255,255,255,.38); max-width:660px; line-height:1.7; position:relative; }
+.mh-meta { margin-top:32px; display:flex; gap:32px; flex-wrap:wrap; position:relative; }
+.mh-stat { display:flex; flex-direction:column; gap:4px; }
+.mh-stat-val { font-family:'IBM Plex Mono',monospace; font-size:22px; font-weight:500; color:rgba(255,255,255,.85); }
+.mh-stat-lbl { font-size:10px; letter-spacing:2px; text-transform:uppercase; color:rgba(255,255,255,.25); }
+
+.nav { background:var(--ink2); position:sticky; top:0; z-index:100; display:flex; overflow-x:auto; border-bottom:1px solid rgba(255,255,255,.06); }
+.nav-btn { flex:1; min-width:100px; padding:13px 12px; border:none; background:transparent; cursor:pointer; font-family:'Outfit',sans-serif; font-size:10.5px; font-weight:600; text-transform:uppercase; letter-spacing:.4px; color:rgba(255,255,255,.3); border-right:1px solid rgba(255,255,255,.06); transition:all .2s; white-space:nowrap; }
+.nav-btn:last-child { border-right:none; }
+.nav-btn:hover { color:rgba(255,255,255,.6); }
+.nav-btn.active { color:#fff; background:rgba(255,255,255,.05); }
+
+.sect { display:none; }
+.sect.active { display:block; animation:fadeIn .3s ease; }
+@keyframes fadeIn { from{opacity:0;transform:translateY(6px)} to{opacity:1;transform:translateY(0)} }
+.sect-head { padding:48px 56px 36px; border-bottom:1px solid var(--border); }
+.sect-num { font-family:'IBM Plex Mono',monospace; font-size:10px; letter-spacing:3px; text-transform:uppercase; color:var(--ink4); margin-bottom:10px; }
+.sect-head h2 { font-family:'Instrument Serif',serif; font-weight:400; font-size:clamp(26px,3.5vw,42px); line-height:1.1; letter-spacing:-.5px; max-width:640px; margin-bottom:14px; }
+.sect-head p { color:var(--ink3); max-width:700px; font-size:14.5px; }
+.wrap { padding:0 56px 64px; }
+
+.prose { max-width:760px; }
+.prose p { font-size:14.5px; color:var(--ink3); line-height:1.85; margin-bottom:16px; }
+.prose p strong { color:var(--ink2); font-weight:500; }
+.prose p em { font-style:italic; color:var(--ink2); }
+
+/* ── GL CARD ── */
+.gl-group { margin-top:36px; }
+.gl-group-title { font-family:'IBM Plex Mono',monospace; font-size:9px; letter-spacing:3px; text-transform:uppercase; color:var(--ink4); padding-bottom:10px; border-bottom:1px solid var(--border); }
+.gl-card { border:1px solid var(--border2); border-top:none; background:var(--bg); }
+.gl-header { display:grid; grid-template-columns:5px 52px 1fr auto; align-items:stretch; border-bottom:1px solid var(--border); }
+.gl-stripe { background:var(--accent); }
+.gl-num { font-family:'Outfit',sans-serif; font-weight:800; font-size:20px; color:var(--bg3); display:flex; align-items:center; justify-content:center; border-right:1px solid var(--border); }
+.gl-title-wrap { padding:16px 20px; }
+.gl-title { font-family:'Instrument Serif',serif; font-size:20px; color:var(--ink2); line-height:1.2; }
+.gl-subtitle { font-size:12px; color:var(--ink4); margin-top:3px; }
+.gl-impact-wrap { padding:14px 20px; display:flex; flex-direction:column; align-items:flex-end; justify-content:center; gap:4px; }
+.gl-impact-stars { font-size:14px; }
+.gl-impact-lbl { font-family:'IBM Plex Mono',monospace; font-size:8px; letter-spacing:1px; text-transform:uppercase; color:var(--ink4); }
+.gl-body { padding:0; }
+.gl-section { padding:20px 24px; border-bottom:1px solid var(--border); }
+.gl-section:last-child { border-bottom:none; }
+.gl-section-lbl { font-family:'IBM Plex Mono',monospace; font-size:9px; letter-spacing:2px; text-transform:uppercase; color:var(--ink4); margin-bottom:10px; padding-bottom:6px; border-bottom:1px solid var(--border); }
+.gl-section p { font-size:13.5px; color:var(--ink3); line-height:1.8; max-width:740px; }
+.gl-section p strong { color:var(--ink2); font-weight:500; }
+
+/* ── SELECTION MATRIX ── */
+.sel-matrix { width:100%; border-collapse:collapse; margin-top:16px; border:1px solid var(--border2); }
+.sel-matrix th, .sel-matrix td { padding:11px 14px; border:1px solid var(--border); font-size:12.5px; line-height:1.5; vertical-align:top; text-align:left; }
+.sel-matrix thead th { background:var(--ink); color:rgba(255,255,255,.82); font-family:'IBM Plex Mono',monospace; font-size:9px; letter-spacing:.5px; text-transform:uppercase; }
+.sel-matrix tbody tr:nth-child(even) { background:var(--bg2); }
+.sel-matrix td:first-child { font-weight:500; color:var(--ink2); width:180px; }
+.m-ctx  { background:#edf4f9; color:#1d3f5e; font-family:'IBM Plex Mono',monospace; font-size:11px; font-weight:600; }
+.m-epi  { background:#fdf6e8; color:#5a3a00; font-family:'IBM Plex Mono',monospace; font-size:11px; font-weight:600; }
+.m-sem  { background:#f4faf5; color:#2e4a32; font-family:'IBM Plex Mono',monospace; font-size:11px; font-weight:600; }
+.m-no   { background:#fdf5f5; color:#6b3030; font-family:'IBM Plex Mono',monospace; font-size:11px; font-weight:600; }
+
+/* ── DECAY TIMELINE ── */
+.decay-timeline { margin-top:16px; background:var(--ink); border:1px solid var(--border2); padding:22px; overflow-x:auto; }
+.decay-timeline svg { display:block; margin:0 auto; }
+
+/* ── RETENTION POLICY ── */
+.retention-grid { display:grid; grid-template-columns:1fr 1fr 1fr; gap:12px; margin-top:16px; }
+.rg-card { border:1px solid var(--border2); background:var(--bg); padding:14px 16px; overflow:hidden; }
+.rg-type { font-family:'IBM Plex Mono',monospace; font-size:8px; letter-spacing:2px; text-transform:uppercase; margin-bottom:4px; }
+.rg-name { font-weight:600; font-size:13.5px; color:var(--ink2); margin-bottom:6px; }
+.rg-policy { font-size:13px; color:var(--ink3); line-height:1.6; }
+.rg-policy strong { color:var(--ink2); font-weight:500; }
+.rg-ttl { margin-top:8px; font-family:'IBM Plex Mono',monospace; font-size:10.5px; padding:5px 9px; border-left:3px solid; }
+
+/* ── PRIVACY CARDS ── */
+.privacy-grid { display:grid; grid-template-columns:1fr 1fr; gap:14px; margin-top:16px; }
+.priv-card { border:1px solid var(--border2); background:var(--bg); overflow:hidden; }
+.priv-head { padding:12px 16px; border-bottom:1px solid var(--border); }
+.priv-category { font-family:'IBM Plex Mono',monospace; font-size:9px; letter-spacing:2px; text-transform:uppercase; margin-bottom:3px; }
+.priv-title { font-weight:600; font-size:14px; color:var(--ink2); }
+.priv-body { padding:14px 16px; }
+.priv-rule { font-size:13px; color:var(--ink3); line-height:1.65; margin-bottom:8px; }
+.priv-rule strong { color:var(--ink2); font-weight:500; }
+.priv-example { padding:8px 12px; font-family:'IBM Plex Mono',monospace; font-size:11px; line-height:1.6; border-left:3px solid; }
+.priv-card.no { border-color:#e8c5c5; }
+.priv-card.no .priv-head { background:var(--bad-l); }
+.priv-card.no .priv-category { color:var(--bad); }
+.priv-card.no .priv-example { border-color:var(--bad); background:var(--bad-l); color:#6b3030; }
+.priv-card.yes { border-color:#a8d4c0; }
+.priv-card.yes .priv-head { background:var(--ok-l); }
+.priv-card.yes .priv-category { color:var(--ok); }
+.priv-card.yes .priv-example { border-color:var(--ok); background:var(--ok-l); color:#2e4a32; }
+
+/* ── DELETION FLOW ── */
+.del-flow { margin-top:16px; border:1px solid var(--border2); }
+.df-head { padding:10px 16px; background:var(--priv); border-bottom:1px solid rgba(255,255,255,.15); font-family:'IBM Plex Mono',monospace; font-size:9px; letter-spacing:2px; text-transform:uppercase; color:rgba(255,255,255,.7); }
+.df-step { display:grid; grid-template-columns:36px 1fr; border-bottom:1px solid var(--border); }
+.df-step:last-child { border-bottom:none; }
+.df-num { background:var(--priv); color:#fff; font-family:'IBM Plex Mono',monospace; font-size:11px; font-weight:500; display:flex; align-items:center; justify-content:center; }
+.df-content { padding:12px 16px; }
+.df-action { font-family:'IBM Plex Mono',monospace; font-size:11px; font-weight:600; color:var(--ink2); margin-bottom:3px; }
+.df-detail { font-size:12.5px; color:var(--ink3); line-height:1.5; }
+.df-detail strong { color:var(--ink2); font-weight:500; }
+
+/* ── BIAS PANEL ── */
+.bias-grid { display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-top:16px; }
+.bias-card { border:1px solid var(--border2); background:var(--bg); padding:14px 16px; }
+.bc-label { font-family:'IBM Plex Mono',monospace; font-size:9px; letter-spacing:2px; text-transform:uppercase; color:var(--ink4); margin-bottom:5px; }
+.bc-name { font-weight:600; font-size:14px; color:var(--ink2); margin-bottom:6px; }
+.bc-desc { font-size:13px; color:var(--ink3); line-height:1.6; }
+.bc-desc strong { color:var(--ink2); font-weight:500; }
+.bc-fix { margin-top:8px; padding:7px 10px; background:var(--accent-light); border-left:3px solid var(--accent); font-size:12px; color:var(--accent2); line-height:1.5; }
+
+/* ── PROMPT TEMPLATE ── */
+.pt { margin-top:14px; font-family:'IBM Plex Mono',monospace; font-size:11.5px; line-height:1.85; padding:16px 20px; border:1px solid var(--border2); background:var(--ink); color:rgba(255,255,255,.75); white-space:pre-wrap; word-break:break-word; }
+.pt .sec { color:#f4a87a; font-weight:500; }
+.pt .ins { color:#7dd3a8; }
+.pt .var { color:#93c5e8; }
+.pt .cmt { color:rgba(255,255,255,.28); }
+
+/* ── CHECKLIST ── */
+.checklist { margin-top:16px; }
+.check-item { display:flex; gap:12px; align-items:flex-start; padding:10px 0; border-bottom:1px solid var(--border); font-size:13.5px; color:var(--ink3); }
+.check-item:last-child { border-bottom:none; }
+.check-icon { width:20px; height:20px; border-radius:50%; background:var(--accent); color:#fff; display:flex; align-items:center; justify-content:center; font-size:11px; font-weight:700; flex-shrink:0; margin-top:1px; }
+.check-item strong { color:var(--ink2); font-weight:500; }
+
+/* ── MECHANISM / KP / INSIGHT ── */
+.mechanism { margin-top:14px; padding:14px 18px; border-left:3px solid var(--accent); background:var(--accent-light); }
+.mech-lbl { font-family:'IBM Plex Mono',monospace; font-size:9px; letter-spacing:2px; text-transform:uppercase; color:var(--accent); margin-bottom:6px; }
+.mechanism p { font-size:13px; color:var(--ink3); line-height:1.65; }
+.mechanism p strong { color:var(--ink2); font-weight:500; }
+.key-point { margin-top:36px; padding:24px 28px; border-left:4px solid var(--accent); background:var(--accent-light); }
+.kp-label { font-family:'IBM Plex Mono',monospace; font-size:9px; letter-spacing:2px; text-transform:uppercase; color:var(--accent); margin-bottom:8px; }
+.kp-text { font-family:'Instrument Serif',serif; font-size:18px; line-height:1.45; color:var(--ink2); }
+.kp-sub { margin-top:10px; font-size:13px; color:var(--ink3); line-height:1.65; }
+.insight { margin:16px 0; padding:16px 20px; border-left:4px solid var(--accent); background:var(--accent-light); }
+.insight-lbl { font-family:'IBM Plex Mono',monospace; font-size:9px; letter-spacing:2px; text-transform:uppercase; color:var(--accent); margin-bottom:6px; }
+.insight p { font-size:13.5px; color:var(--ink2); line-height:1.65; max-width:700px; }
+.insight p strong { font-weight:500; }
+
+.footer { padding:24px 56px; border-top:1px solid var(--border); display:flex; justify-content:space-between; align-items:center; font-family:'IBM Plex Mono',monospace; font-size:10px; letter-spacing:1px; text-transform:uppercase; color:var(--ink4); }
+
+@media (max-width:700px) {
+  .masthead,.sect-head,.wrap,.footer { padding-left:20px; padding-right:20px; }
+  .retention-grid,.privacy-grid,.bias-grid { grid-template-columns:1fr; }
+  .gl-header { grid-template-columns:5px 40px 1fr; }
+  .gl-impact-wrap { display:none; }
+  .df-step { grid-template-columns:1fr; }
+}
+</style>
+</head>
+<body>
+
+<div class="masthead">
+  <div class="mh-eye">Serie Agenti AI · Leva Memoria</div>
+  <div class="mh-cluster">Report E</div>
+  <h1>Cosa ricordare e cosa dimenticare</h1>
+  <p class="mh-sub">Il tema più trascurato del design della memoria. Non tutto merita di essere ricordato — e alcune cose non possono esserlo. Criteri di selezione, decadimento intenzionale, politiche di retention, privacy e GDPR, e come evitare che la memoria rinforzi pattern obsoleti o dannosi.</p>
+  <div class="mh-meta">
+    <div class="mh-stat"><div class="mh-stat-val">4</div><div class="mh-stat-lbl">Criteri di selezione</div></div>
+    <div class="mh-stat"><div class="mh-stat-val">Decay</div><div class="mh-stat-lbl">Dimenticare deliberatamente</div></div>
+    <div class="mh-stat"><div class="mh-stat-val">GDPR</div><div class="mh-stat-lbl">Vincolo non opzionale</div></div>
+    <div class="mh-stat"><div class="mh-stat-val">Bias</div><div class="mh-stat-lbl">Il rischio silenzioso</div></div>
+  </div>
+</div>
+
+<div class="nav">
+  <button class="nav-btn active" onclick="show(1)">Perché dimenticare</button>
+  <button class="nav-btn" onclick="show(2)">Cosa memorizzare</button>
+  <button class="nav-btn" onclick="show(3)">Decadimento e retention</button>
+  <button class="nav-btn" onclick="show(4)">Privacy e GDPR</button>
+  <button class="nav-btn" onclick="show(5)">I bias della memoria</button>
+  <button class="nav-btn" onclick="show(6)">Checklist</button>
+</div>
+
+
+<!-- ═══════════════════════════
+     S1 — PERCHÉ DIMENTICARE
+═══════════════════════════ -->
+<div class="sect active" id="s1">
+  <div class="sect-head">
+    <div class="sect-num">Introduzione</div>
+    <h2>Il valore del dimenticare</h2>
+    <p>Ricordare tutto non è un obiettivo — è un problema. Una memoria che accumula senza dimenticare produce sistemi lenti, imprecisi, e potenzialmente dannosi per la privacy degli utenti.</p>
+  </div>
+  <div class="wrap">
+
+    <div class="prose" style="margin-top:28px;">
+      <p>Nei report precedenti abbiamo trattato i quattro tipi di memoria dal punto di vista di <em>cosa aggiungere</em>. Questo report affronta la dimensione opposta — altrettanto importante ma quasi sempre ignorata nel design: <em>cosa non aggiungere, cosa lasciare scadere, cosa cancellare attivamente</em>.</p>
+      <p>Il dimenticare deliberato serve tre scopi distinti. Il primo è <strong>la qualità del retrieval</strong>: un'episodic memory che accumula migliaia di episodi nel corso di anni degrada la qualità del retrieval — i ricordi rilevanti vengono sommersi da ricordi irrilevanti di uguale o maggiore anzianità. Il secondo è <strong>la correttezza del profilo semantico</strong>: preferenze cambiate, contesti lavorativi abbandonati, informazioni superate continuano ad influenzare il comportamento dell'agente se non vengono eliminate o aggiornate. Il terzo è <strong>la conformità legale</strong>: il GDPR e le normative equivalenti attribuiscono all'utente diritti specifici sulla propria memoria — incluso il diritto alla cancellazione.</p>
+    </div>
+
+    <div class="key-point" style="margin-top:24px;">
+      <div class="kp-label">Il principio della memoria minima necessaria</div>
+      <div class="kp-text">Memorizza solo ciò che serve per migliorare il servizio all'utente. Non ciò che potrebbe servire un giorno. Non ciò che è interessante. Ciò che serve.</div>
+      <div class="kp-sub">Questo principio è sia pratico (meno dati = retrieval migliore, manutenzione più semplice) sia etico (meno dati = rischio di privacy minore, maggiore fiducia dell'utente). I due obiettivi convergono: il design della memoria che minimizza il dato non necessario produce sistemi sia più performanti sia più rispettosi della privacy.</div>
+    </div>
+
+  </div>
+</div>
+
+
+<!-- ═══════════════════════════
+     S2 — COSA MEMORIZZARE
+═══════════════════════════ -->
+<div class="sect" id="s2">
+  <div class="sect-head">
+    <div class="sect-num">Linea guida 01</div>
+    <h2>I criteri di selezione — cosa merita di essere ricordato</h2>
+    <p>Quattro criteri per decidere se un'informazione entra in memoria. Non è sufficiente che sia "potenzialmente utile" — deve superare tutti e quattro i test.</p>
+  </div>
+  <div class="wrap">
+
+    <!-- GL 01 -->
+    <div class="gl-group" style="margin-top:28px;">
+      <div class="gl-group-title">Linea guida 01</div>
+      <div class="gl-card">
+        <div class="gl-header">
+          <div class="gl-stripe"></div>
+          <div class="gl-num">01</div>
+          <div class="gl-title-wrap">
+            <div class="gl-title">Applica i 4 criteri di selezione prima di qualsiasi memorizzazione</div>
+            <div class="gl-subtitle">Rilevanza, unicità, persistenza e proporzionalità — tutti e quattro, non uno o due</div>
+          </div>
+          <div class="gl-impact-wrap">
+            <div class="gl-impact-stars" style="color:var(--accent)">★★★</div>
+            <div class="gl-impact-lbl">Impatto</div>
+          </div>
+        </div>
+        <div class="gl-body">
+
+          <div class="gl-section">
+            <div class="gl-section-lbl">I 4 criteri</div>
+            <p><strong>Criterio 1 — Rilevanza futura:</strong> questa informazione cambierà il comportamento dell'agente in sessioni future? Se la risposta è "no" o "forse", non memorizzare. Una conversazione su un film non cambierà come l'agente gestisce i contratti. Un'informazione sul settore di lavoro dell'utente sì.</p>
+            <p><strong>Criterio 2 — Unicità:</strong> questa informazione è specifica per questo utente e non ricavabile da contesti generali? Le informazioni di background generale (es. "l'IVA è al 22%") non devono entrare nella memoria personale dell'utente — sono già nella conoscenza del modello. Le informazioni specifiche ("l'utente applica un regime IVA agevolato per via dell'attività non profit") sì.</p>
+            <p><strong>Criterio 3 — Persistenza attesa:</strong> questa informazione sarà probabilmente vera anche tra 3–6 mesi? Informazioni legate a un task specifico o a una situazione contingente non meritano memorizzazione permanente — meritano al massimo un episodio con TTL breve. Il ruolo professionale di una persona è stabile; la posizione su un contratto specifico no.</p>
+            <p><strong>Criterio 4 — Proporzionalità:</strong> il beneficio di ricordare questa informazione è proporzionato alla sensibilità e al rischio di tenerla? Dati molto sensibili (salute, situazione finanziaria personale, relazioni personali) richiedono un beneficio molto alto e chiaro per giustificare la memorizzazione. Per molte applicazioni, il beneficio non lo giustifica.</p>
+          </div>
+
+          <div class="gl-section">
+            <div class="gl-section-lbl">La matrice di decisione — per tipo di informazione e tipo di memoria</div>
+            <table class="sel-matrix">
+              <thead>
+                <tr><th>Tipo di informazione</th><th>In-context</th><th>Episodica</th><th>Semantica</th></tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>Preferenze di stile dichiarate dall'utente</td>
+                  <td class="m-ctx">Usa nella sessione</td>
+                  <td class="m-epi">Se nuova, episodio</td>
+                  <td class="m-sem">✓ Consolida nel profilo</td>
+                </tr>
+                <tr>
+                  <td>Task completato con risultato concreto</td>
+                  <td class="m-ctx">Usa nella sessione</td>
+                  <td class="m-epi">✓ Salva episodio</td>
+                  <td class="m-no">Non astrae in semantica</td>
+                </tr>
+                <tr>
+                  <td>Task aperto non completato</td>
+                  <td class="m-ctx">Usa nella sessione</td>
+                  <td class="m-epi">✓ Salva con flag "open"</td>
+                  <td class="m-no">Non semantica</td>
+                </tr>
+                <tr>
+                  <td>Informazione di background generale (es. normativa)</td>
+                  <td class="m-no">Non serve</td>
+                  <td class="m-no">Non memorizzare</td>
+                  <td class="m-no">Non memorizzare</td>
+                </tr>
+                <tr>
+                  <td>Stato emotivo/umore nella sessione</td>
+                  <td class="m-no">Non memorizzare</td>
+                  <td class="m-no">Non memorizzare</td>
+                  <td class="m-no">Non memorizzare</td>
+                </tr>
+                <tr>
+                  <td>Area di lavoro e settore professionale</td>
+                  <td class="m-ctx">Usa se rilevante</td>
+                  <td class="m-no">Non serve episodio</td>
+                  <td class="m-sem">✓ Consolida nel profilo</td>
+                </tr>
+                <tr>
+                  <td>Dati di terze parti menzionati dall'utente (nomi clienti, importi)</td>
+                  <td class="m-ctx">Usa nella sessione</td>
+                  <td class="m-epi">Solo se rilevante per il task</td>
+                  <td class="m-no">Non semantica</td>
+                </tr>
+                <tr>
+                  <td>Dati sensibili (salute, finanza personale)</td>
+                  <td class="m-ctx">Solo se necessario</td>
+                  <td class="m-no">Evitare</td>
+                  <td class="m-no">Mai</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+
+<!-- ═══════════════════════════
+     S3 — DECADIMENTO E RETENTION
+═══════════════════════════ -->
+<div class="sect" id="s3">
+  <div class="sect-head">
+    <div class="sect-num">Linea guida 02</div>
+    <h2>Decadimento intenzionale e politiche di retention</h2>
+    <p>I ricordi devono scadere. Non tutti allo stesso modo — alcune informazioni hanno vita breve per natura, altre sono stabili nel tempo. La politica di retention definisce le regole di decadimento per ogni tipo.</p>
+  </div>
+  <div class="wrap">
+
+    <div class="prose" style="margin-top:28px;">
+      <p>Il decadimento non è una scelta facoltativa — è un componente del design della memoria. Senza scadenze esplicite, la memoria episodica accumula indefinitamente, il retrieval degrada progressivamente, e informazioni obsolete continuano a influenzare il comportamento anni dopo che hanno perso rilevanza.</p>
+    </div>
+
+    <!-- Timeline decay -->
+    <div class="decay-timeline">
+      <svg viewBox="0 0 700 190" width="100%" xmlns="http://www.w3.org/2000/svg" font-family="IBM Plex Mono, monospace">
+        <text x="20" y="20" fill="rgba(255,255,255,.35)" font-size="9" letter-spacing="2">DECADIMENTO DELLA RILEVANZA NEL TEMPO — PER TIPO DI EPISODIO</text>
+
+        <!-- Asse X tempo -->
+        <line x1="40" y1="160" x2="680" y2="160" stroke="rgba(255,255,255,.2)" stroke-width="1"/>
+        <text x="40"  y="175" fill="rgba(255,255,255,.3)" font-size="8" text-anchor="middle">oggi</text>
+        <text x="170" y="175" fill="rgba(255,255,255,.3)" font-size="8" text-anchor="middle">1 settimana</text>
+        <text x="300" y="175" fill="rgba(255,255,255,.3)" font-size="8" text-anchor="middle">1 mese</text>
+        <text x="430" y="175" fill="rgba(255,255,255,.3)" font-size="8" text-anchor="middle">3 mesi</text>
+        <text x="560" y="175" fill="rgba(255,255,255,.3)" font-size="8" text-anchor="middle">6 mesi</text>
+        <text x="670" y="175" fill="rgba(255,255,255,.3)" font-size="8" text-anchor="middle">1 anno</text>
+
+        <!-- Tick marks -->
+        <line x1="170" y1="156" x2="170" y2="164" stroke="rgba(255,255,255,.2)" stroke-width="1"/>
+        <line x1="300" y1="156" x2="300" y2="164" stroke="rgba(255,255,255,.2)" stroke-width="1"/>
+        <line x1="430" y1="156" x2="430" y2="164" stroke="rgba(255,255,255,.2)" stroke-width="1"/>
+        <line x1="560" y1="156" x2="560" y2="164" stroke="rgba(255,255,255,.2)" stroke-width="1"/>
+
+        <!-- Asse Y rilevanza -->
+        <line x1="40" y1="30" x2="40" y2="160" stroke="rgba(255,255,255,.2)" stroke-width="1"/>
+        <text x="35" y="34"  fill="rgba(255,255,255,.3)" font-size="8" text-anchor="end">100%</text>
+        <text x="35" y="97"  fill="rgba(255,255,255,.3)" font-size="8" text-anchor="end">50%</text>
+        <text x="35" y="160" fill="rgba(255,255,255,.3)" font-size="8" text-anchor="end">0%</text>
+
+        <!-- Curva task contestuali (declino rapido) -->
+        <path d="M40,34 Q100,35 170,80 Q230,115 300,140 Q370,152 430,157 Q500,159 680,160" fill="none" stroke="#c0392b" stroke-width="2"/>
+        <circle cx="300" cy="140" r="3" fill="#c0392b"/>
+        <text x="310" y="136" fill="#c0392b" font-size="8">scade ~30 giorni</text>
+
+        <!-- Curva preferenze generali (declino lento) -->
+        <path d="M40,34 Q170,36 300,60 Q430,80 560,100 Q620,110 680,118" fill="none" stroke="#b07d24" stroke-width="2"/>
+        <circle cx="560" cy="100" r="3" fill="#b07d24"/>
+        <text x="410" y="78" fill="#b07d24" font-size="8">preferenze → scadono in 6–12 mesi</text>
+
+        <!-- Curva profilo stabile (quasi piatta) -->
+        <path d="M40,34 Q300,36 560,38 Q620,39 680,40" fill="none" stroke="#3d7a45" stroke-width="2"/>
+        <text x="500" y="32" fill="#3d7a45" font-size="8">profilo identità → quasi permanente</text>
+
+        <!-- Legenda -->
+        <line x1="50" y1="185" x2="70" y2="185" stroke="#c0392b" stroke-width="2"/>
+        <text x="74" y="188" fill="rgba(255,255,255,.5)" font-size="8">Task/decisioni contestuali</text>
+        <line x1="220" y1="185" x2="240" y2="185" stroke="#b07d24" stroke-width="2"/>
+        <text x="244" y="188" fill="rgba(255,255,255,.5)" font-size="8">Preferenze comportamentali</text>
+        <line x1="400" y1="185" x2="420" y2="185" stroke="#3d7a45" stroke-width="2"/>
+        <text x="424" y="188" fill="rgba(255,255,255,.5)" font-size="8">Profilo identità stabile</text>
+      </svg>
+    </div>
+
+    <!-- GL 02 -->
+    <div class="gl-group">
+      <div class="gl-group-title">Linea guida 02</div>
+      <div class="gl-card">
+        <div class="gl-header">
+          <div class="gl-stripe"></div>
+          <div class="gl-num">02</div>
+          <div class="gl-title-wrap">
+            <div class="gl-title">Assegna un TTL a ogni informazione memorizzata — non lasciare nulla senza scadenza</div>
+            <div class="gl-subtitle">TTL diversi per informazioni con diversa persistenza attesa — non un TTL unico per tutto</div>
+          </div>
+          <div class="gl-impact-wrap">
+            <div class="gl-impact-stars" style="color:var(--accent)">★★★</div>
+            <div class="gl-impact-lbl">Impatto</div>
+          </div>
+        </div>
+        <div class="gl-body">
+
+          <div class="gl-section">
+            <div class="gl-section-lbl">Politiche di retention per tipo di informazione</div>
+            <div class="retention-grid">
+
+              <div class="rg-card">
+                <div class="rg-type" style="color:var(--bad)">Breve durata</div>
+                <div class="rg-name">Task contestuali e decisioni situazionali</div>
+                <div class="rg-policy">Episodi legati a un task specifico, decisioni prese per una situazione contingente, problemi risolti che non hanno follow-up.</div>
+                <div class="rg-ttl" style="border-color:var(--bad); background:var(--bad-l); color:#6b3030;">TTL: 14–30 giorni</div>
+              </div>
+
+              <div class="rg-card">
+                <div class="rg-type" style="color:var(--warn)">Durata media</div>
+                <div class="rg-name">Task aperti e preferenze comportamentali</div>
+                <div class="rg-policy">Task non completati (scadono se non vengono richiamati), preferenze di stile che potrebbero cambiare, contesto lavorativo che potrebbe evolvere.</div>
+                <div class="rg-ttl" style="border-color:var(--warn); background:var(--warn-l); color:#5a3a00;">TTL: 90–180 giorni con rinnovo automatico se usato</div>
+              </div>
+
+              <div class="rg-card">
+                <div class="rg-type" style="color:var(--ok)">Lunga durata</div>
+                <div class="rg-name">Profilo identità e expertise di dominio</div>
+                <div class="rg-policy">Settore professionale, expertise, lingua, ruolo, azienda. Cambiano raramente — ma non sono eterni: un cambio di lavoro o carriera le rende obsolete.</div>
+                <div class="rg-ttl" style="border-color:var(--ok); background:var(--ok-l); color:#2e4a32;">TTL: 12–24 mesi o fino a override esplicito</div>
+              </div>
+
+            </div>
+          </div>
+
+          <div class="gl-section">
+            <div class="gl-section-lbl">Il rinnovo automatico del TTL — use-based extension</div>
+            <p>Il TTL di un episodio si azzera ogni volta che l'episodio viene recuperato e usato in una sessione. Questo garantisce che i ricordi rilevanti non scadano per il solo passare del tempo — scadono quando smettono di essere usati. <strong>Un episodio su un task completato 3 mesi fa che viene citato spesso nelle sessioni successive rimane vivo; uno che non viene mai recuperato scade.</strong></p>
+            <div class="pt" style="margin-top:12px;"><span class="cmt">// Logica di rinnovo TTL in pseudocodice</span>
+
+<span class="ins">quando episodio viene recuperato e usato nella sessione:
+    episodio.last_accessed = now()
+    episodio.access_count += 1
+    
+    <span class="cmt">// Rinnova il TTL solo se è già oltre il 50% della scadenza</span>
+    se (now() - episodio.created_at) > (episodio.ttl * 0.5):
+        episodio.expires_at = now() + episodio.ttl_base
+        
+quando episodio.expires_at < now():
+    archivia o elimina (dipende dalla politica privacy)</span></div>
+          </div>
+
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+
+<!-- ═══════════════════════════
+     S4 — PRIVACY E GDPR
+═══════════════════════════ -->
+<div class="sect" id="s4">
+  <div class="sect-head">
+    <div class="sect-num">Linea guida 03</div>
+    <h2>Privacy e GDPR — cosa non si può ricordare</h2>
+    <p>La conformità privacy non è un vincolo esterno al design della memoria — è parte integrante di esso. Cosa il GDPR impone, il diritto alla cancellazione, e i dati che non devono mai entrare in memoria.</p>
+  </div>
+  <div class="wrap">
+
+    <!-- GL 03 -->
+    <div class="gl-group" style="margin-top:28px;">
+      <div class="gl-group-title">Linea guida 03</div>
+      <div class="gl-card">
+        <div class="gl-header">
+          <div class="gl-stripe" style="background:var(--priv)"></div>
+          <div class="gl-num">03</div>
+          <div class="gl-title-wrap">
+            <div class="gl-title">Non memorizzare dati di categoria speciale e rispetta il diritto alla cancellazione</div>
+            <div class="gl-subtitle">Il GDPR non è negoziabile — la memoria personale degli utenti è un trattamento di dati personali con obblighi precisi</div>
+          </div>
+          <div class="gl-impact-wrap">
+            <div class="gl-impact-stars" style="color:var(--priv)">★★★</div>
+            <div class="gl-impact-lbl">Obbligatorio</div>
+          </div>
+        </div>
+        <div class="gl-body">
+
+          <div class="gl-section">
+            <div class="gl-section-lbl">Cosa NON memorizzare mai — categorie speciali GDPR Art. 9</div>
+            <div class="privacy-grid">
+
+              <div class="priv-card no">
+                <div class="priv-head">
+                  <div class="priv-category">Mai memorizzare</div>
+                  <div class="priv-title">Dati di salute e condizione medica</div>
+                </div>
+                <div class="priv-body">
+                  <div class="priv-rule">Se l'utente menziona una condizione medica nel corso di una conversazione, questa informazione <strong>non deve entrare nel profilo semantico o nella memoria episodica persistente</strong>, nemmeno se sembra rilevante per personalizzare il servizio.</div>
+                  <div class="priv-example">"Ho la schiena a pezzi, quindi lavoro
+da casa la maggior parte del tempo"
+
+→ NON memorizzare nel profilo:
+   salute = "problemi alla schiena"
+→ Usa nella sessione corrente se serve,
+   poi dimentica.</div>
+                </div>
+              </div>
+
+              <div class="priv-card no">
+                <div class="priv-head">
+                  <div class="priv-category">Mai memorizzare</div>
+                  <div class="priv-title">Convinzioni religiose, politiche, orientamento</div>
+                </div>
+                <div class="priv-body">
+                  <div class="priv-rule">Le categorie protette dall'Art. 9 GDPR — origine etnica, opinioni politiche, credenze religiose, orientamento sessuale — <strong>non devono mai essere memorizzate</strong>, nemmeno se dichiarate esplicitamente dall'utente in un contesto di normale conversazione.</div>
+                  <div class="priv-example">"Come osservante della religione X,
+ho alcune restrizioni su Y"
+
+→ NON memorizzare la credenza religiosa
+→ Se rilevante per il task, usa
+   nella sessione, poi dimentica.</div>
+                </div>
+              </div>
+
+              <div class="priv-card yes">
+                <div class="priv-head">
+                  <div class="priv-category">Memorizzabile con cautela</div>
+                  <div class="priv-title">Dati professionali e di contesto lavorativo</div>
+                </div>
+                <div class="priv-body">
+                  <div class="priv-rule">Settore professionale, ruolo, area di lavoro, competenze tecniche: <strong>memorizzabili se l'utente li ha condivisi volontariamente</strong> in un contesto professionale, e se il trattamento è coperto dalla base giuridica adeguata (consenso o legittimo interesse).</div>
+                  <div class="priv-example">"Sono responsabile acquisti di una PMI
+nel settore manifatturiero"
+
+→ ✓ Memorizzabile nel profilo:
+   ruolo = "responsabile acquisti"
+   settore = "manifatturiero"</div>
+                </div>
+              </div>
+
+              <div class="priv-card yes">
+                <div class="priv-head">
+                  <div class="priv-category">Memorizzabile</div>
+                  <div class="priv-title">Preferenze di interazione e stile</div>
+                </div>
+                <div class="priv-body">
+                  <div class="priv-rule">Le preferenze di stile (lingua, formato, lunghezza, livello di dettaglio) sono <strong>dati di interazione che l'utente ha espresso per migliorare il servizio</strong>. Memorizzabili con TTL adeguato e diritto alla cancellazione garantito.</div>
+                  <div class="priv-example">"Preferisco risposte in italiano
+e in formato bullet point"
+
+→ ✓ Memorizzabile:
+   lingua = "italiano"
+   formato = "bullet point"</div>
+                </div>
+              </div>
+
+            </div>
+          </div>
+
+          <div class="gl-section">
+            <div class="gl-section-lbl">Il diritto alla cancellazione — come implementarlo</div>
+            <p>Il GDPR Art. 17 ("diritto all'oblio") garantisce all'utente il diritto di chiedere la cancellazione di tutti i dati memorizzati. Il sistema deve essere progettato per rispettare questo diritto in modo completo e verificabile — non solo eliminando i dati dall'interfaccia ma dall'intero sistema di storage.</p>
+            <div class="del-flow">
+              <div class="df-head">Flusso di cancellazione completa — risposta a una richiesta Art. 17</div>
+              <div class="df-step">
+                <div class="df-num">1</div>
+                <div class="df-content">
+                  <div class="df-action">Identificazione e inventario</div>
+                  <div class="df-detail">Identifica tutti i luoghi dove i dati dell'utente sono memorizzati: memoria episodica (vector store), profilo semantico (key-value store), memoria procedurale personalizzata (layer 3 del prompt se presente). <strong>Nessun sistema secondario deve essere dimenticato.</strong></div>
+                </div>
+              </div>
+              <div class="df-step">
+                <div class="df-num">2</div>
+                <div class="df-content">
+                  <div class="df-action">Cancellazione da tutti i sistemi</div>
+                  <div class="df-detail">Elimina tutti gli episodi, il profilo semantico, e le personalizzazioni procedurali per quell'utente_id. L'eliminazione deve essere permanente — non una "soft delete" che mantiene i dati in un archivio.</div>
+                </div>
+              </div>
+              <div class="df-step">
+                <div class="df-num">3</div>
+                <div class="df-content">
+                  <div class="df-action">Verifica e conferma</div>
+                  <div class="df-detail">Esegui una query di verifica su tutti i sistemi per confermare che non esistano dati residui associati all'utente_id. <strong>Documenta la cancellazione</strong> con timestamp — per dimostrazione di conformità in caso di audit.</div>
+                </div>
+              </div>
+              <div class="df-step">
+                <div class="df-num">4</div>
+                <div class="df-content">
+                  <div class="df-action">Comunicazione all'utente</div>
+                  <div class="df-detail">Conferma all'utente che la cancellazione è avvenuta, specificando quali categorie di dati sono state eliminate. Il GDPR richiede una risposta entro 30 giorni dalla richiesta.</div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="gl-section">
+            <div class="gl-section-lbl">Trasparenza — l'utente deve sapere cosa si ricorda di lui</div>
+            <p>Un buon sistema di memoria include un meccanismo di <em>trasparenza attiva</em>: l'utente può chiedere "cosa ricordi di me?" e ricevere un elenco completo delle informazioni memorizzate. Non come obbligo legale (anche se in alcuni casi lo è) ma come scelta di design che costruisce fiducia. <strong>Un utente che sa cosa è memorizzato e può modificarlo o cancellarlo si fida del sistema; un utente che non sa è un utente che potrebbe scegliere di non usarlo.</strong></p>
+          </div>
+
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+
+<!-- ═══════════════════════════
+     S5 — I BIAS DELLA MEMORIA
+═══════════════════════════ -->
+<div class="sect" id="s5">
+  <div class="sect-head">
+    <div class="sect-num">Linea guida 04</div>
+    <h2>I bias della memoria — il rischio silenzioso</h2>
+    <p>Un sistema di memoria ben progettato tecnicamente può ancora produrre comportamenti sbagliati se rinforza pattern obsoleti, amplifica prima impressioni, o generalizza in modo eccessivo da episodi atipici.</p>
+  </div>
+  <div class="wrap">
+
+    <!-- GL 04 -->
+    <div class="gl-group" style="margin-top:28px;">
+      <div class="gl-group-title">Linea guida 04</div>
+      <div class="gl-card">
+        <div class="gl-header">
+          <div class="gl-stripe"></div>
+          <div class="gl-num">04</div>
+          <div class="gl-title-wrap">
+            <div class="gl-title">Progetta la memoria per resistere ai 4 bias principali — non solo per essere tecnicamente corretta</div>
+            <div class="gl-subtitle">Un sistema senza bias di memoria è più utile per l'utente — e riduce il rischio di comportamenti iniqui o fuorvianti</div>
+          </div>
+          <div class="gl-impact-wrap">
+            <div class="gl-impact-stars" style="color:var(--accent)">★★★</div>
+            <div class="gl-impact-lbl">Impatto</div>
+          </div>
+        </div>
+        <div class="gl-body">
+
+          <div class="gl-section">
+            <div class="gl-section-lbl">I 4 bias principali e come mitigarli</div>
+            <div class="bias-grid">
+
+              <div class="bias-card">
+                <div class="bc-label">Bias 01</div>
+                <div class="bc-name">Ancoraggio alla prima impressione</div>
+                <div class="bc-desc">Le informazioni memorizzate nelle prime sessioni hanno un peso sproporzionato rispetto a quelle recenti — perché sono più "consolidate". Se l'utente nella prima sessione sembrava junior, il profilo potrebbe continuare a trattarlo come tale anche dopo anni di interazione avanzata.</div>
+                <div class="bc-fix"><strong>Mitigazione:</strong> dare peso crescente alle informazioni recenti nelle decisioni di aggiornamento del profilo. Le informazioni di più di 6 mesi fa sul livello di expertise dovrebbero essere considerate meno affidabili di quelle recenti.</div>
+              </div>
+
+              <div class="bias-card">
+                <div class="bc-label">Bias 02</div>
+                <div class="bc-name">Rinforzo delle preferenze obsolete</div>
+                <div class="bc-desc">Il sistema continua ad applicare preferenze che l'utente aveva espresso ma non ha più, perché non le ha esplicitamente revocate. Le preferenze di stile cambiano nel tempo — un utente che preferiva risposte verbose due anni fa potrebbe preferire ora risposte concise.</div>
+                <div class="bc-fix"><strong>Mitigazione:</strong> TTL sulle preferenze comportamentali (non sul profilo identità). Segnale di conferma periodico: se una preferenza non è stata confermata negli ultimi 90 giorni, abbassarne il peso prima di cancellarla definitivamente.</div>
+              </div>
+
+              <div class="bias-card">
+                <div class="bc-label">Bias 03</div>
+                <div class="bc-name">Overfitting da episodio atipico</div>
+                <div class="bc-desc">Un episodio insolito o atipico viene generalizzato nel profilo semantico come se fosse rappresentativo del comportamento dell'utente. "In quella sessione di lunedì ha risposto male a una risposta lunga" → il sistema impara "non vuole risposte lunghe", ignorando che poteva essere stanco.</div>
+                <div class="bc-fix"><strong>Mitigazione:</strong> la regola dei ≥2 segnali indipendenti del Report C. Non consolidare in semantica da un episodio singolo per le preferenze comportamentali — solo per i fatti dichiarativi espliciti.</div>
+              </div>
+
+              <div class="bias-card">
+                <div class="bc-label">Bias 04</div>
+                <div class="bc-name">Generalizzazione eccessiva del contesto</div>
+                <div class="bc-desc">Il sistema inferisce attributi generali da contesti specifici. "Ha usato terminologia avanzata quando parlava di contratti" non implica che sia esperto di finanza, medicina o informatica. La competenza è di dominio — non generalizzabile.</div>
+                <div class="bc-fix"><strong>Mitigazione:</strong> il campo expertise_dominio nel profilo semantico (Report C) deve essere specifico al dominio dove il segnale è stato osservato — non generico. "expertise_dominio: [diritto commerciale]" non implica expertise in altri domini.</div>
+              </div>
+
+            </div>
+          </div>
+
+          <div class="gl-section">
+            <div class="gl-section-lbl">Il controllo periodico del profilo — come rilevare i bias</div>
+            <p>I bias della memoria non sono sempre visibili nell'output quotidiano — emergono nel tempo, lentamente. Un sistema di memoria maturo include un processo periodico di revisione del profilo: guardare le informazioni memorizzate e chiedersi se sono ancora accurate, rappresentative, e proporzionate. <strong>Non è una revisione tecnica — è una revisione editoriale: stai ritraendo l'utente in modo corretto?</strong></p>
+            <div class="mechanism">
+              <div class="mech-lbl">Il test di accuratezza del profilo</div>
+              <p>Per ogni attributo nel profilo semantico: da quanti segnali è supportato? Quando è stato l'ultimo segnale di conferma? Esiste un segnale contrario che non è stato adeguatamente pesato? Se l'utente leggesse il proprio profilo, lo riconoscerebbe come accurato? <strong>Un profilo che l'utente non riconoscerebbe come accurato è un profilo che produce comportamenti sbagliati</strong> — anche se tecnicamente coerente con i dati memorizzati.</p>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+
+<!-- ═══════════════════════════
+     S6 — CHECKLIST
+═══════════════════════════ -->
+<div class="sect" id="s6">
+  <div class="sect-head">
+    <div class="sect-num">Sezione finale</div>
+    <h2>Checklist e prossimo report</h2>
+  </div>
+  <div class="wrap">
+
+    <div class="prose" style="margin-top:28px;">
+      <p style="font-size:15px; font-weight:500; color:var(--ink2);">Checklist — politica di memoria progettata correttamente?</p>
+    </div>
+
+    <div class="checklist" style="margin-top:12px;">
+      <div class="check-item">
+        <div class="check-icon">1</div>
+        <div><strong>4 criteri di selezione:</strong> ogni informazione che entra in memoria ha superato i test di rilevanza futura, unicità, persistenza attesa, e proporzionalità rispetto alla sensibilità.</div>
+      </div>
+      <div class="check-item">
+        <div class="check-icon">2</div>
+        <div><strong>TTL assegnati per tipo:</strong> task contestuali (14–30 giorni), preferenze comportamentali (90–180 giorni con rinnovo), profilo identità (12–24 mesi). Nessuna informazione senza scadenza.</div>
+      </div>
+      <div class="check-item">
+        <div class="check-icon">3</div>
+        <div><strong>Rinnovo use-based:</strong> il TTL di un episodio si estende automaticamente quando viene usato — i ricordi rilevanti non scadono per il solo passare del tempo.</div>
+      </div>
+      <div class="check-item">
+        <div class="check-icon" style="background:var(--priv)">P</div>
+        <div><strong>Categorie speciali GDPR escluse:</strong> nessun dato di salute, convinzioni religiose/politiche, orientamento sessuale o altra categoria Art. 9 GDPR viene memorizzato nel profilo persistente.</div>
+      </div>
+      <div class="check-item">
+        <div class="check-icon" style="background:var(--priv)">P</div>
+        <div><strong>Diritto alla cancellazione implementato:</strong> esiste un meccanismo per cancellare completamente tutti i dati di un utente da tutti i sistemi (vector store, key-value store, personalizzazioni procedurali) con documentazione del processo.</div>
+      </div>
+      <div class="check-item">
+        <div class="check-icon" style="background:var(--priv)">P</div>
+        <div><strong>Trasparenza attiva:</strong> l'utente può richiedere un elenco completo di cosa è memorizzato su di lui e può modificare o cancellare singoli attributi.</div>
+      </div>
+      <div class="check-item">
+        <div class="check-icon">B</div>
+        <div><strong>Mitigazioni dei 4 bias:</strong> ancoraggio alla prima impressione (peso crescente per info recenti), preferenze obsolete (TTL + segnale periodico di conferma), overfitting episodico (regola ≥2 segnali), generalizzazione eccessiva (expertise per dominio specifico).</div>
+      </div>
+    </div>
+
+    <div class="insight" style="margin-top:28px; border-color:#5a6e8a; background:var(--accent-light);">
+      <div class="insight-lbl" style="color:#5a6e8a;">Prossimo — Report F</div>
+      <p>Con tutti e 4 i tipi di memoria trattati e la politica di selezione definita, il Report F conclude la serie con le <strong>architetture integrate</strong>: come combinare in-context, episodica, semantica e procedurale in sistemi coerenti. Tre architetture tipo (conversazionale semplice, assistente personale persistente, agente aziendale multi-utente) e il ciclo read→reason→write che le governa tutte.</p>
+    </div>
+
+  </div>
+</div>
+
+<div class="footer">
+  <span>Serie Agenti AI — Leva Memoria · Report E · Cosa ricordare e cosa dimenticare</span>
+  <span>Marzo 2026</span>
+</div>
+
+<script>
+function show(n) {
+  document.querySelectorAll('.sect').forEach(s => s.classList.remove('active'));
+  document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('s'+n).classList.add('active');
+  document.querySelectorAll('.nav-btn')[n-1].classList.add('active');
+  window.scrollTo({top:0, behavior:'smooth'});
+}
+</script>
+</body>
+</html>

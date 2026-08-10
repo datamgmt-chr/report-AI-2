@@ -1,0 +1,799 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Interrogare un database — Report 2 · Ricerca su testi aperti</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:ital,wght@0,300;0,400;0,500;0,600;1,300;1,400&family=DM+Mono:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg:      #fafaf7;
+  --bg2:     #f2f1ec;
+  --bg3:     #e8e6df;
+  --ink:     #1a1916;
+  --ink2:    #2d2b26;
+  --ink3:    #5c5a52;
+  --ink4:    #9c9a90;
+  --border:  #dddbd2;
+  --border2: #cbc9bf;
+
+  --accent:  #1a5a3a;
+  --accent2: #e8f5ee;
+  --accent3: #a8d4b8;
+
+  --teal:    #1a5f5f;
+  --teal-bg: #e5f3f3;
+  --teal-bd: #8ecece;
+
+  --warm:    #7a4a10;
+  --warm-bg: #fdf3e3;
+  --warm-bd: #e8c878;
+
+  --ok:      #2d6040;
+  --ok-bg:   #eaf4ee;
+  --ok-bd:   #a8d4b4;
+
+  --bad:     #8a1a1a;
+  --bad-bg:  #fdf0f0;
+  --bad-bd:  #e8a8a8;
+
+  --note:    #4a2d7a;
+  --note-bg: #f0ecfb;
+  --note-bd: #c4aef0;
+
+  --navy:    #1a3a5c;
+  --navy-bg: #e8eef6;
+  --navy-bd: #b0c8e0;
+}
+
+* { margin:0; padding:0; box-sizing:border-box; }
+html { scroll-behavior:smooth; }
+body {
+  background: var(--bg);
+  color: var(--ink);
+  font-family: 'DM Sans', sans-serif;
+  font-weight: 300;
+  font-size: 15px;
+  line-height: 1.75;
+}
+
+.masthead {
+  background: var(--accent);
+  color: #fff;
+  padding: 56px 60px 52px;
+  position: relative;
+  overflow: hidden;
+}
+.masthead::before {
+  content: '';
+  position: absolute;
+  top: -80px; right: -80px;
+  width: 380px; height: 380px;
+  border-radius: 50%;
+  border: 1px solid rgba(255,255,255,.06);
+  pointer-events: none;
+}
+.mh-series {
+  font-family: 'DM Mono', monospace;
+  font-size: 10px; letter-spacing: 3px;
+  text-transform: uppercase; color: rgba(255,255,255,.35);
+  margin-bottom: 20px;
+}
+.mh-num {
+  font-family: 'DM Serif Display', serif;
+  font-size: 80px; line-height: 1;
+  color: rgba(255,255,255,.07);
+  position: absolute; right: 60px; top: 36px;
+  letter-spacing: -4px; user-select: none;
+}
+.masthead h1 {
+  font-family: 'DM Serif Display', serif;
+  font-size: clamp(26px, 3.8vw, 44px);
+  font-weight: 400; line-height: 1.1;
+  letter-spacing: -.5px; max-width: 740px; position: relative;
+}
+.masthead h1 em { font-style: italic; color: rgba(255,255,255,.68); }
+.mh-sub {
+  margin-top: 20px; font-size: 15px; font-weight: 300;
+  color: rgba(255,255,255,.42); max-width: 640px;
+  line-height: 1.7; position: relative;
+}
+.mh-pills {
+  margin-top: 28px; display: flex; gap: 8px;
+  flex-wrap: wrap; position: relative;
+}
+.mh-pill {
+  font-family: 'DM Mono', monospace; font-size: 10px;
+  letter-spacing: 1px; padding: 4px 12px;
+  border: 1px solid rgba(255,255,255,.2);
+  color: rgba(255,255,255,.48); border-radius: 20px;
+}
+
+.nav {
+  position: sticky; top: 0; z-index: 100;
+  background: var(--ink); display: flex; overflow-x: auto;
+  border-bottom: 1px solid rgba(255,255,255,.08);
+}
+.nav-btn {
+  flex-shrink: 0; padding: 14px 20px;
+  border: none; background: transparent; cursor: pointer;
+  font-family: 'DM Mono', monospace; font-size: 10px;
+  letter-spacing: 1px; text-transform: uppercase;
+  color: rgba(255,255,255,.3);
+  border-right: 1px solid rgba(255,255,255,.06);
+  transition: color .2s; white-space: nowrap;
+}
+.nav-btn:hover { color: rgba(255,255,255,.65); }
+.nav-btn.active { color: #fff; background: rgba(255,255,255,.06); }
+
+.sect { display: none; }
+.sect.active { display: block; animation: fadeUp .3s ease; }
+@keyframes fadeUp { from{opacity:0;transform:translateY(5px)} to{opacity:1;transform:translateY(0)} }
+
+.cw { max-width: 860px; margin: 0 auto; padding: 52px 60px 64px; }
+
+.s-eyebrow {
+  font-family: 'DM Mono', monospace; font-size: 10px;
+  letter-spacing: 3px; text-transform: uppercase;
+  color: var(--ink4); margin-bottom: 8px;
+}
+.s-title {
+  font-family: 'DM Serif Display', serif; font-size: 30px;
+  font-weight: 400; letter-spacing: -.3px; color: var(--ink);
+  line-height: 1.15; margin-bottom: 28px;
+}
+
+p { margin-bottom: 18px; color: var(--ink2); }
+p:last-child { margin-bottom: 0; }
+p strong { font-weight: 600; color: var(--ink); }
+code {
+  font-family: 'DM Mono', monospace;
+  background: var(--bg3); padding: 1px 6px;
+  border-radius: 3px; font-size: 13px; color: var(--ink2);
+}
+
+.callout {
+  padding: 20px 24px; border-left: 3px solid;
+  margin: 28px 0; border-radius: 0 6px 6px 0;
+}
+.callout-warn   { background: var(--warm-bg); border-color: var(--warm); }
+.callout-ok     { background: var(--ok-bg);   border-color: var(--ok);   }
+.callout-bad    { background: var(--bad-bg);  border-color: var(--bad);  }
+.callout-note   { background: var(--note-bg); border-color: var(--note); }
+.callout-accent { background: var(--accent2); border-color: var(--accent); }
+.callout-teal   { background: var(--teal-bg); border-color: var(--teal); }
+.callout-navy   { background: var(--navy-bg); border-color: var(--navy); }
+.callout-title {
+  font-family: 'DM Mono', monospace; font-size: 10px;
+  letter-spacing: 2px; text-transform: uppercase; margin-bottom: 8px;
+}
+.callout-warn .callout-title   { color: var(--warm); }
+.callout-ok .callout-title     { color: var(--ok);   }
+.callout-bad .callout-title    { color: var(--bad);  }
+.callout-note .callout-title   { color: var(--note); }
+.callout-accent .callout-title { color: var(--accent); }
+.callout-teal .callout-title   { color: var(--teal); }
+.callout-navy .callout-title   { color: var(--navy); }
+.callout p { font-size: 14px; line-height: 1.65; margin-bottom: 8px; }
+.callout p:last-child { margin-bottom: 0; }
+
+.diagram {
+  background: var(--bg2); border: 1px solid var(--border2);
+  padding: 28px 32px; margin: 28px 0;
+}
+.diagram-title {
+  font-family: 'DM Mono', monospace; font-size: 10px;
+  letter-spacing: 2px; text-transform: uppercase; color: var(--ink4);
+  margin-bottom: 20px; padding-bottom: 12px; border-bottom: 1px solid var(--border);
+}
+
+/* ── STRATEGY CARDS ── */
+.strategy-card {
+  border: 1.5px solid var(--border2);
+  border-radius: 6px; overflow: hidden; margin: 20px 0;
+}
+.sc-head {
+  display: flex; align-items: center; gap: 14px;
+  padding: 14px 20px; border-bottom: 1px solid var(--border);
+}
+.sc-badge {
+  font-family: 'DM Mono', monospace; font-size: 9px;
+  letter-spacing: 2px; text-transform: uppercase;
+  padding: 3px 10px; border-radius: 20px; flex-shrink: 0;
+}
+.sc-name {
+  font-family: 'DM Serif Display', serif;
+  font-size: 17px; color: var(--ink); line-height: 1.1;
+}
+.sc-tag {
+  margin-left: auto;
+  font-family: 'DM Mono', monospace; font-size: 9.5px; color: var(--ink4);
+}
+.sc-body {
+  padding: 18px 20px;
+  display: grid; grid-template-columns: 1fr 1fr; gap: 20px;
+}
+.sc-col-label {
+  font-family: 'DM Mono', monospace; font-size: 9px;
+  letter-spacing: 2px; text-transform: uppercase; color: var(--ink4);
+  margin-bottom: 10px; padding-bottom: 6px; border-bottom: 1px solid var(--border);
+}
+.sc-list { display: flex; flex-direction: column; gap: 6px; }
+.sc-item {
+  display: grid; grid-template-columns: 12px 1fr; gap: 6px;
+  font-size: 13px; color: var(--ink2); line-height: 1.45; align-items: start;
+}
+.sc-dot { width: 5px; height: 5px; border-radius: 50%; margin-top: 5px; flex-shrink: 0; }
+
+/* ── SQL BLOCK ── */
+.sql-block {
+  background: var(--ink); border-radius: 5px;
+  overflow: hidden; margin: 12px 0;
+  font-family: 'DM Mono', monospace;
+}
+.sql-head {
+  padding: 7px 14px; background: rgba(255,255,255,.05);
+  border-bottom: 1px solid rgba(255,255,255,.06);
+  font-size: 9px; letter-spacing: 1px; text-transform: uppercase;
+  color: rgba(255,255,255,.28);
+}
+.sql-body {
+  padding: 12px 14px; font-size: 12px;
+  line-height: 1.8; color: rgba(255,255,255,.75); overflow-x: auto;
+}
+.sql-kw  { color: #7ec8e3; font-weight: 500; }
+.sql-str { color: #e8c87e; }
+.sql-cmt { color: rgba(255,255,255,.25); }
+.sql-fn  { color: #c8a8e8; }
+
+/* ── SEARCH RESULTS ── */
+.search-comparison {
+  display: grid; grid-template-columns: 1fr 1fr; gap: 1px;
+  background: var(--border2); border-radius: 6px;
+  border: 1px solid var(--border2); overflow: hidden; margin: 20px 0;
+}
+.sc-side { background: var(--bg); padding: 16px 18px; }
+.sc-side-label {
+  font-family: 'DM Mono', monospace; font-size: 9px;
+  letter-spacing: 2px; text-transform: uppercase; margin-bottom: 10px;
+}
+.result-row {
+  display: flex; align-items: center; gap: 8px;
+  padding: 6px 0; border-bottom: 1px solid var(--border);
+  font-size: 12.5px;
+}
+.result-row:last-child { border-bottom: none; }
+.r-name { flex: 1; color: var(--ink2); }
+.r-found { color: var(--ok); font-family: 'DM Mono', monospace; font-size: 10px; }
+.r-miss  { color: var(--bad); font-family: 'DM Mono', monospace; font-size: 10px; }
+.r-score { font-family: 'DM Mono', monospace; font-size: 11px; color: var(--ink4); min-width: 36px; text-align: right; }
+
+/* ── THRESHOLD DIAGRAM ── */
+.threshold-grid {
+  display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin: 20px 0;
+}
+.tg-cell {
+  border: 1px solid var(--border2); border-radius: 4px;
+  overflow: hidden; display: flex; flex-direction: column;
+}
+.tg-head {
+  padding: 8px 12px; font-family: 'DM Mono', monospace;
+  font-size: 9px; letter-spacing: 1.5px; text-transform: uppercase;
+  color: rgba(255,255,255,.85); border-bottom: 1px solid rgba(255,255,255,.1);
+}
+.tg-body {
+  padding: 10px 12px; font-size: 12px; color: var(--ink3);
+  line-height: 1.55; flex: 1;
+}
+.tg-verdict {
+  padding: 7px 12px; font-size: 11.5px; font-weight: 500;
+  border-top: 1px solid var(--border);
+}
+
+/* ── KEY INSIGHT ── */
+.key-insight {
+  background: var(--ink); color: #fff;
+  padding: 28px 32px; margin: 32px 0; border-radius: 6px;
+  position: relative; overflow: hidden;
+}
+.key-insight::before {
+  content: '"'; position: absolute; right: 24px; top: -10px;
+  font-family: 'DM Serif Display', serif; font-size: 100px;
+  color: rgba(255,255,255,.06); line-height: 1; pointer-events: none;
+}
+.ki-label {
+  font-family: 'DM Mono', monospace; font-size: 9px;
+  letter-spacing: 2.5px; text-transform: uppercase;
+  color: rgba(255,255,255,.3); margin-bottom: 12px;
+}
+.ki-text {
+  font-family: 'DM Serif Display', serif; font-size: 20px;
+  font-weight: 400; line-height: 1.4;
+  color: rgba(255,255,255,.9); max-width: 680px;
+}
+
+/* ── DECISION MATRIX ── */
+.decision-matrix {
+  width: 100%; border-collapse: collapse; margin: 20px 0; font-size: 13px;
+}
+.decision-matrix th {
+  background: var(--accent); color: rgba(255,255,255,.85);
+  font-family: 'DM Mono', monospace; font-size: 9.5px;
+  letter-spacing: 1.5px; text-transform: uppercase;
+  padding: 10px 14px; text-align: left; font-weight: 400;
+}
+.decision-matrix td {
+  padding: 10px 14px; border: 1px solid var(--border);
+  vertical-align: top; line-height: 1.55; color: var(--ink2);
+}
+.decision-matrix tr:nth-child(even) td { background: var(--bg2); }
+.decision-matrix td:first-child { font-weight: 500; color: var(--ink); }
+.td-s1 { color: var(--ok) !important; }
+.td-s2 { color: var(--navy) !important; }
+.td-s3 { color: var(--note) !important; }
+
+/* ── NEXT REPORT ── */
+.next-report {
+  border-top: 1px solid var(--border); margin-top: 52px;
+  padding-top: 32px; display: flex;
+  justify-content: space-between; align-items: center; gap: 20px;
+}
+.nr-label {
+  font-family: 'DM Mono', monospace; font-size: 9px;
+  letter-spacing: 2px; text-transform: uppercase;
+  color: var(--ink4); margin-bottom: 6px;
+}
+.nr-title { font-family: 'DM Serif Display', serif; font-size: 18px; color: var(--ink); line-height: 1.2; }
+.nr-sub { font-size: 13px; color: var(--ink4); margin-top: 4px; }
+.nr-arrow { font-family: 'DM Mono', monospace; font-size: 22px; color: var(--accent); flex-shrink: 0; }
+
+.footer {
+  padding: 22px 60px; border-top: 1px solid var(--border);
+  display: flex; justify-content: space-between; align-items: center;
+  font-family: 'DM Mono', monospace; font-size: 10px;
+  letter-spacing: 1px; text-transform: uppercase; color: var(--ink4);
+}
+
+@media (max-width: 720px) {
+  .masthead, .cw, .footer { padding-left: 24px; padding-right: 24px; }
+  .mh-num { display: none; }
+  .sc-body { grid-template-columns: 1fr; }
+  .search-comparison { grid-template-columns: 1fr; }
+  .threshold-grid { grid-template-columns: 1fr 1fr; }
+}
+</style>
+</head>
+<body>
+
+<div class="masthead">
+  <div class="mh-series">Interrogare un database · Report 2 di 4</div>
+  <div class="mh-num">02</div>
+  <h1>Ricerca su testi aperti:<br><em>tre strategie a confronto</em></h1>
+  <p class="mh-sub">Quando il campo contiene testo libero, SQL non è più sufficiente. Esistono tre approcci con caratteristiche, costi e limiti molto diversi. La scelta giusta dipende da variabili che non riguardano solo la lunghezza del testo.</p>
+  <div class="mh-pills">
+    <span class="mh-pill">Full-text search</span>
+    <span class="mh-pill">tsvector / BM25</span>
+    <span class="mh-pill">Embedding + vector search</span>
+    <span class="mh-pill">LLM diretto</span>
+    <span class="mh-pill">Vocabulary mismatch</span>
+    <span class="mh-pill">Soglia tra le strategie</span>
+  </div>
+</div>
+
+<div class="nav">
+  <button class="nav-btn active" onclick="show(0)">1 · Il problema</button>
+  <button class="nav-btn" onclick="show(1)">2 · Strategia 1 · Full-text</button>
+  <button class="nav-btn" onclick="show(2)">3 · Strategia 2 · Embedding</button>
+  <button class="nav-btn" onclick="show(3)">4 · Strategia 3 · LLM diretto</button>
+  <button class="nav-btn" onclick="show(4)">5 · La soglia tra le tre</button>
+</div>
+
+
+<!-- ══════════════════════════════════
+     S0 — IL PROBLEMA
+══════════════════════════════════ -->
+<div class="sect active" id="s0">
+<div class="cw">
+
+  <div class="s-eyebrow">Perché il testo aperto è diverso</div>
+  <div class="s-title">Il problema della ricerca su testo libero</div>
+
+  <p>Nel Report 1 abbiamo visto che SQL funziona bene su numeri, date, booleani e valori codificati. Il limite emerge con i testi aperti: descrizioni, note, commenti, schede prodotto. Non perché SQL non possa cercarci dentro — può farlo, con <code>LIKE</code> e <code>ILIKE</code> — ma perché la ricerca per corrispondenza di testo letterale non è la stessa cosa della ricerca per significato.</p>
+
+  <p>Il problema fondamentale è il <strong>vocabulary mismatch</strong>: il testo nel database e la query dell'utente usano parole diverse per descrivere la stessa cosa. Una scheda prodotto dice "resistenza idrica garantita anche dopo lavaggi ripetuti". Il brief dell'utente dice "impermeabile". SQL non trova nessuna corrispondenza — i termini non si sovrappongono.</p>
+
+  <div class="diagram">
+    <div class="diagram-title">Vocabulary mismatch in azione — stessa scheda, tre query diverse</div>
+
+    <div style="margin-bottom:16px; padding:14px 18px; background:var(--bg); border:1px solid var(--border2); border-radius:4px;">
+      <div style="font-family:'DM Mono',monospace; font-size:9px; letter-spacing:1.5px; text-transform:uppercase; color:var(--ink4); margin-bottom:8px;">Testo della scheda prodotto (estratto)</div>
+      <div style="font-size:13.5px; color:var(--ink2); line-height:1.7; font-style:italic;">"…la membrana a tre strati garantisce una barriera efficace contro la pioggia e il vento. Il trattamento DWR rinnovabile mantiene le proprietà idrorepellenti nel tempo. Pensata per alpinisti e guide di montagna che operano in condizioni meteorologiche avverse…"</div>
+    </div>
+
+    <div style="display:flex; flex-direction:column; gap:8px;">
+      <div style="display:grid; grid-template-columns:220px 1fr auto; gap:12px; align-items:center; padding:10px 14px; border:1px solid var(--border2); border-radius:4px; background:var(--bg);">
+        <div style="font-size:13px; font-style:italic; color:var(--ink3);">"giacca impermeabile"</div>
+        <div style="font-size:12px; color:var(--bad);">→ <code>LIKE '%impermeabile%'</code> → <strong>NESSUN RISULTATO</strong> — la parola non compare nel testo</div>
+        <div style="font-family:'DM Mono',monospace; font-size:10px; color:var(--bad);">SQL FAIL</div>
+      </div>
+      <div style="display:grid; grid-template-columns:220px 1fr auto; gap:12px; align-items:center; padding:10px 14px; border:1px solid var(--border2); border-radius:4px; background:var(--bg);">
+        <div style="font-size:13px; font-style:italic; color:var(--ink3);">"resiste alla pioggia"</div>
+        <div style="font-size:12px; color:var(--ok);">→ <code>LIKE '%pioggia%'</code> → <strong>TROVATO</strong> — il termine "pioggia" è nel testo</div>
+        <div style="font-family:'DM Mono',monospace; font-size:10px; color:var(--ok);">SQL OK</div>
+      </div>
+      <div style="display:grid; grid-template-columns:220px 1fr auto; gap:12px; align-items:center; padding:10px 14px; border:1px solid var(--border2); border-radius:4px; background:var(--bg);">
+        <div style="font-size:13px; font-style:italic; color:var(--ink3);">"per uso professionale alta quota"</div>
+        <div style="font-size:12px; color:var(--ok);">→ embedding semantico → <strong>TROVATO</strong> — "guide di montagna, condizioni meteorologiche avverse" è concettualmente vicino</div>
+        <div style="font-family:'DM Mono',monospace; font-size:10px; color:var(--accent);">EMBEDDING OK</div>
+      </div>
+    </div>
+  </div>
+
+  <p>Le tre righe mostrano tre situazioni diverse: la prima query fallisce perché usa un sinonimo non presente; la seconda funziona perché usa esattamente le stesse parole del testo; la terza funziona con l'embedding perché cattura la vicinanza semantica tra "uso professionale alta quota" e "guide di montagna, condizioni avverse".</p>
+
+  <p>Queste tre situazioni corrispondono a tre strategie distinte, con caratteristiche, costi e limiti molto diversi. La scelta tra loro non è solo tecnica — è una decisione che dipende da quante righe hai, che tipo di query aspetti, e quanto sei disposto a investire in infrastruttura.</p>
+
+  <div class="key-insight">
+    <div class="ki-label">Il punto di partenza</div>
+    <div class="ki-text">Non esiste una strategia universalmente migliore per la ricerca su testi aperti. Esiste quella più adatta al tuo volume di dati, al tipo di query e alla tolleranza per la complessità infrastrutturale.</div>
+  </div>
+
+</div>
+</div>
+
+
+<!-- ══════════════════════════════════
+     S1 — STRATEGIA 1: FULL-TEXT
+══════════════════════════════════ -->
+<div class="sect" id="s1">
+<div class="cw">
+
+  <div class="s-eyebrow">La prima strategia</div>
+  <div class="s-title">Strategia 1 — Full-text search: ricerca per termini</div>
+
+  <p>Il full-text search è la forma di ricerca su testo più diffusa e più semplice da implementare. Cerca corrispondenze di termini — parole o frasi — nel testo dei documenti. Va oltre <code>LIKE</code> perché normalizza il testo (rimuove le stop word, applica lo stemming, gestisce la punteggiatura) e produce un ranking per rilevanza invece di un semplice sì/no.</p>
+
+  <div class="strategy-card">
+    <div class="sc-head">
+      <div class="sc-badge" style="background:var(--ok-bg); color:var(--ok);">Strategia 1</div>
+      <div class="sc-name">Full-text search</div>
+      <div class="sc-tag">Nessuna infrastruttura aggiuntiva · Integrato nel database</div>
+    </div>
+    <div class="sc-body">
+      <div>
+        <div class="sc-col-label">Come funziona</div>
+        <p style="font-size:13px; color:var(--ink3); line-height:1.65; margin-bottom:10px;">Il testo viene pre-processato al momento dell'inserimento: si tokenizza (si spezza in parole), si rimuovono le stop word ("il", "di", "che"), si applica lo stemming (riduzione alla radice — "impermeabili" → "impermeabil"). Il risultato è un vettore di token pesati per frequenza — in PostgreSQL, il tipo <code>tsvector</code>.</p>
+        <p style="font-size:13px; color:var(--ink3); line-height:1.65; margin-bottom:10px;">La query viene pre-processata allo stesso modo e trasformata in un <code>tsquery</code>. Il matching avviene tra i vettori — molto più veloce di <code>LIKE</code>, con ranking per rilevanza tramite la funzione <code>ts_rank</code>.</p>
+
+        <div class="sql-block">
+          <div class="sql-head">PostgreSQL — full-text search con tsvector</div>
+          <div class="sql-body"><span class="sql-cmt">-- Creazione dell'indice GIN sul testo</span>
+<span class="sql-kw">CREATE INDEX</span> idx_fts <span class="sql-kw">ON</span> prodotti
+  <span class="sql-kw">USING</span> GIN(<span class="sql-fn">to_tsvector</span>(<span class="sql-str">'italian'</span>, descrizione));
+
+<span class="sql-cmt">-- Query con ranking per rilevanza</span>
+<span class="sql-kw">SELECT</span> nome,
+  <span class="sql-fn">ts_rank</span>(<span class="sql-fn">to_tsvector</span>(<span class="sql-str">'italian'</span>, descrizione),
+           <span class="sql-fn">plainto_tsquery</span>(<span class="sql-str">'italian'</span>, <span class="sql-str">'giacca impermeabile montagna'</span>)) <span class="sql-kw">AS</span> score
+<span class="sql-kw">FROM</span> prodotti
+<span class="sql-kw">WHERE</span> <span class="sql-fn">to_tsvector</span>(<span class="sql-str">'italian'</span>, descrizione) @@
+      <span class="sql-fn">plainto_tsquery</span>(<span class="sql-str">'italian'</span>, <span class="sql-str">'giacca impermeabile montagna'</span>)
+<span class="sql-kw">ORDER BY</span> score <span class="sql-kw">DESC</span>;</div>
+        </div>
+      </div>
+      <div>
+        <div class="sc-col-label">Vantaggi e limiti</div>
+        <div class="sc-list" style="margin-bottom:14px;">
+          <div class="sc-item"><div class="sc-dot" style="background:var(--ok)"></div><div>Integrato nel database — zero infrastruttura aggiuntiva</div></div>
+          <div class="sc-item"><div class="sc-dot" style="background:var(--ok)"></div><div>Veloce con indice GIN — funziona bene anche su milioni di righe</div></div>
+          <div class="sc-item"><div class="sc-dot" style="background:var(--ok)"></div><div>Stemming: "impermeabili" trova "impermeabile", "impermeabilità"</div></div>
+          <div class="sc-item"><div class="sc-dot" style="background:var(--ok)"></div><div>Nessuna fase di indicizzazione offline — aggiornamenti in tempo reale</div></div>
+          <div class="sc-item"><div class="sc-dot" style="background:var(--bad)"></div><div><strong>Non capisce il significato:</strong> "impermeabile" non trova "idrorepellente" né "resistente all'acqua"</div></div>
+          <div class="sc-item"><div class="sc-dot" style="background:var(--bad)"></div><div>Dipende dalla lingua — serve il dizionario corretto (italian, english…)</div></div>
+          <div class="sc-item"><div class="sc-dot" style="background:var(--bad)"></div><div>Termini tecnici e nomi propri spesso non sono nello stemmer</div></div>
+        </div>
+        <div style="padding:10px 14px; background:var(--ok-bg); border:1px solid var(--ok-bd); border-radius:3px; font-size:12.5px; color:var(--ok);">
+          <strong>Ideale quando:</strong> le query usano gli stessi termini del testo, il vocabulary mismatch è limitato, il corpus è grande e la velocità è prioritaria.
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="callout callout-note">
+    <div class="callout-title">BM25 — la versione più sofisticata del full-text search</div>
+    <p>BM25 (Best Match 25) è l'algoritmo di ranking usato da Elasticsearch e da molti motori di ricerca moderni. Migliora il semplice conteggio delle occorrenze pesando la frequenza del termine nel documento rispetto alla sua rarità nell'intero corpus — un termine che compare raramente nei documenti è più discriminante di uno comune.</p>
+    <p>PostgreSQL con l'estensione <code>pg_bm25</code> (o Elasticsearch) offre BM25 nativo. Per la maggior parte dei casi d'uso con testi in italiano, il tsvector di PostgreSQL è sufficiente. BM25 vale la pena quando hai corpus molto grandi (milioni di documenti) o quando il ranking di rilevanza è critico.</p>
+  </div>
+
+  <div class="diagram">
+    <div class="diagram-title">Confronto risultati — full-text search vs. embedding, stessa query</div>
+    <p style="font-size:13px; color:var(--ink3); margin-bottom:16px; margin-top:0;">Query: <em>"capo tecnico impermeabile per alpinismo professionale"</em></p>
+    <div class="search-comparison">
+      <div class="sc-side">
+        <div class="sc-side-label" style="color:var(--ok);">Full-text search (tsvector)</div>
+        <div class="result-row"><div class="r-name">Alpentech Pro — "tessuto idrorepellente per alpinismo"</div><div class="r-found">✓</div><div class="r-score">0.82</div></div>
+        <div class="result-row"><div class="r-name">TrailGuide Shell — "per alpinisti e guide tecniche"</div><div class="r-found">✓</div><div class="r-score">0.71</div></div>
+        <div class="result-row"><div class="r-name">SummitPro — "membrana impermeabile 3L"</div><div class="r-found">✓</div><div class="r-score">0.65</div></div>
+        <div class="result-row" style="opacity:.5;"><div class="r-name">ArcticShell — "barriera contro pioggia e vento"</div><div class="r-miss">✗</div><div class="r-score">—</div></div>
+        <div class="result-row" style="opacity:.5;"><div class="r-name">ProGuide — "condizioni avverse, uso professionale"</div><div class="r-miss">✗</div><div class="r-score">—</div></div>
+        <div style="margin-top:10px; font-size:11.5px; color:var(--bad);">Perde i prodotti che usano sinonimi ("barriera contro pioggia" invece di "impermeabile")</div>
+      </div>
+      <div class="sc-side" style="background:var(--navy-bg);">
+        <div class="sc-side-label" style="color:var(--navy);">Embedding + vector search</div>
+        <div class="result-row"><div class="r-name">Alpentech Pro — "tessuto idrorepellente per alpinismo"</div><div class="r-found">✓</div><div class="r-score">0.91</div></div>
+        <div class="result-row"><div class="r-name">ArcticShell — "barriera contro pioggia e vento"</div><div class="r-found">✓</div><div class="r-score">0.87</div></div>
+        <div class="result-row"><div class="r-name">ProGuide — "condizioni avverse, uso professionale"</div><div class="r-found">✓</div><div class="r-score">0.84</div></div>
+        <div class="result-row"><div class="r-name">TrailGuide Shell — "per alpinisti e guide tecniche"</div><div class="r-found">✓</div><div class="r-score">0.81</div></div>
+        <div class="result-row"><div class="r-name">SummitPro — "membrana impermeabile 3L"</div><div class="r-found">✓</div><div class="r-score">0.79</div></div>
+        <div style="margin-top:10px; font-size:11.5px; color:var(--navy);">Trova tutti i prodotti rilevanti indipendentemente dal vocabolario usato</div>
+      </div>
+    </div>
+  </div>
+
+</div>
+</div>
+
+
+<!-- ══════════════════════════════════
+     S2 — STRATEGIA 2: EMBEDDING
+══════════════════════════════════ -->
+<div class="sect" id="s2">
+<div class="cw">
+
+  <div class="s-eyebrow">La seconda strategia</div>
+  <div class="s-title">Strategia 2 — Embedding + vector search: ricerca per significato</div>
+
+  <p>L'embedding trasforma ogni testo in un vettore numerico che rappresenta il suo significato. Testi con significato simile producono vettori vicini nello spazio multidimensionale — indipendentemente dalle parole usate. La ricerca non è più "trova i documenti che contengono questa parola" ma "trova i documenti che parlano di questo concetto".</p>
+
+  <p>Il meccanismo è lo stesso descritto in dettaglio nella serie RAG precedente. Qui il contesto è diverso: non stiamo parlando di documenti lunghi da indicizzare in un vector store separato, ma di un campo di testo in una tabella di database. La domanda pratica è: come si applica l'embedding a un campo testuale in una tabella relazionale?</p>
+
+  <div class="strategy-card">
+    <div class="sc-head">
+      <div class="sc-badge" style="background:var(--navy-bg); color:var(--navy);">Strategia 2</div>
+      <div class="sc-name">Embedding + vector search</div>
+      <div class="sc-tag">Richiede vector store o pgvector · Fase di indicizzazione offline</div>
+    </div>
+    <div class="sc-body">
+      <div>
+        <div class="sc-col-label">Come si implementa su un campo di database</div>
+        <p style="font-size:13px; color:var(--ink3); line-height:1.65; margin-bottom:10px;">Ci sono due approcci architetturali per applicare l'embedding a un campo testuale di una tabella:</p>
+
+        <div style="display:flex; flex-direction:column; gap:10px; margin-bottom:12px;">
+          <div style="padding:12px 14px; border:1px solid var(--navy-bd); border-radius:4px; background:var(--bg);">
+            <div style="font-family:'DM Mono',monospace; font-size:9.5px; letter-spacing:1px; text-transform:uppercase; color:var(--navy); margin-bottom:6px;">Approccio A — Colonna embedding nella stessa tabella</div>
+            <div style="font-size:12.5px; color:var(--ink3); line-height:1.6; margin-bottom:8px;">Si aggiunge una colonna <code>descrizione_embedding VECTOR(1536)</code> alla tabella prodotti (con pgvector). Ogni volta che la descrizione cambia, si ricalcola l'embedding. La ricerca usa operatori vettoriali direttamente nella query SQL.</div>
+            <div class="sql-block" style="margin:0;">
+              <div class="sql-head">Con pgvector — ricerca nella stessa tabella</div>
+              <div class="sql-body"><span class="sql-kw">SELECT</span> nome, prezzo,
+  descrizione_embedding <span class="sql-fn">&lt;=&gt;</span> <span class="sql-fn">embed</span>(<span class="sql-str">'capo impermeabile alpinismo'</span>) <span class="sql-kw">AS</span> dist
+<span class="sql-kw">FROM</span> prodotti
+<span class="sql-kw">ORDER BY</span> dist <span class="sql-kw">ASC</span>
+<span class="sql-kw">LIMIT</span> <span class="sql-fn">10</span>;</div>
+            </div>
+          </div>
+
+          <div style="padding:12px 14px; border:1px solid var(--border2); border-radius:4px; background:var(--bg);">
+            <div style="font-family:'DM Mono',monospace; font-size:9.5px; letter-spacing:1px; text-transform:uppercase; color:var(--ink4); margin-bottom:6px;">Approccio B — Vector store separato con metadati</div>
+            <div style="font-size:12.5px; color:var(--ink3); line-height:1.6;">Si indicizzano i testi in un vector store separato (Chroma, Pinecone, Qdrant) con i metadati delle righe del database. La ricerca avviene nel vector store, restituisce gli ID, e poi una query SQL recupera le righe complete. Più flessibile, più complessità infrastrutturale.</div>
+          </div>
+        </div>
+      </div>
+      <div>
+        <div class="sc-col-label">Vantaggi e limiti</div>
+        <div class="sc-list" style="margin-bottom:14px;">
+          <div class="sc-item"><div class="sc-dot" style="background:var(--ok)"></div><div>Supera il vocabulary mismatch — "impermeabile" trova "idrorepellente"</div></div>
+          <div class="sc-item"><div class="sc-dot" style="background:var(--ok)"></div><div>Cattura sfumature semantiche — "uso professionale" trova "guide di montagna"</div></div>
+          <div class="sc-item"><div class="sc-dot" style="background:var(--ok)"></div><div>Con pgvector: ricerca vettoriale combinabile con filtri SQL nella stessa query</div></div>
+          <div class="sc-item"><div class="sc-dot" style="background:var(--bad)"></div><div>Richiede fase di indicizzazione offline — ogni nuovo testo deve essere embeddato</div></div>
+          <div class="sc-item"><div class="sc-dot" style="background:var(--bad)"></div><div>Costo API per gli embedding (o GPU per modelli self-hosted)</div></div>
+          <div class="sc-item"><div class="sc-dot" style="background:var(--bad)"></div><div>Fallisce su termini tecnici proprietari, codici, nomi specifici non nel training</div></div>
+          <div class="sc-item"><div class="sc-dot" style="background:var(--bad)"></div><div>Dimensione di storage aggiuntiva (1.536 float per ogni testo indicizzato)</div></div>
+        </div>
+        <div style="padding:10px 14px; background:var(--navy-bg); border:1px solid var(--navy-bd); border-radius:3px; font-size:12.5px; color:var(--navy);">
+          <strong>Ideale quando:</strong> il vocabulary mismatch è un problema concreto, i testi sono abbastanza lunghi da avere densità semantica (50+ parole), il volume di righe è troppo grande per mandare tutto al modello.
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="callout callout-accent">
+    <div class="callout-title">Quando serve l'embedding su un campo di database — la regola pratica</div>
+    <p>Non ogni campo di testo aperto richiede embedding. La domanda da porsi è: <strong>le query che farò su questo campo usano termini diversi da quelli presenti nel testo?</strong></p>
+    <p>Se le query usano quasi sempre gli stessi termini del testo (per esempio un campo "note" con parole chiave specifiche del dominio), il full-text search è sufficiente. Se le query possono usare concetti espressi con vocabolario diverso — "impermeabile" vs. "idrorepellente", "cliente premium" vs. "segmento alto di gamma" — l'embedding aggiunge valore reale.</p>
+    <p>Un test pratico: prendi 10 query reali che vorresti fare su quel campo. Quante usano termini che non compaiono quasi mai nel testo? Se più di 3–4, il vocabulary mismatch è un problema concreto e l'embedding vale l'investimento.</p>
+  </div>
+
+</div>
+</div>
+
+
+<!-- ══════════════════════════════════
+     S3 — STRATEGIA 3: LLM DIRETTO
+══════════════════════════════════ -->
+<div class="sect" id="s3">
+<div class="cw">
+
+  <div class="s-eyebrow">La terza strategia</div>
+  <div class="s-title">Strategia 3 — LLM diretto sul testo: quando l'infrastruttura non serve</div>
+
+  <p>C'è un terzo approccio, raramente menzionato ma spesso la soluzione più pragmatica per corpus piccoli: mandare il testo direttamente al modello LLM nel contesto della chiamata e lasciare che sia lui a valutare la rilevanza rispetto alla query. Nessun embedding, nessun vector store, nessun indice full-text — solo il modello che legge e giudica.</p>
+
+  <div class="strategy-card">
+    <div class="sc-head">
+      <div class="sc-badge" style="background:var(--note-bg); color:var(--note);">Strategia 3</div>
+      <div class="sc-name">LLM diretto sul testo</div>
+      <div class="sc-tag">Solo per corpus piccoli · Nessuna infrastruttura · Alta qualità</div>
+    </div>
+    <div class="sc-body">
+      <div>
+        <div class="sc-col-label">Come funziona</div>
+        <p style="font-size:13px; color:var(--ink3); line-height:1.65; margin-bottom:10px;">Si recuperano le righe candidate dal database (eventualmente pre-filtrate con SQL sui campi strutturati), si passano i testi nel contesto del modello insieme alla query, e si chiede al modello di identificare quelle rilevanti e di rankarle.</p>
+        <p style="font-size:13px; color:var(--ink3); line-height:1.65; margin-bottom:10px;">Il modello può fare inferenze semantiche sofisticate che né il full-text search né l'embedding catturano — può capire il tono, identificare sottotesti, valutare la corrispondenza su dimensioni multiple contemporaneamente.</p>
+        <div style="padding:12px 14px; background:var(--bg); border:1px solid var(--border2); border-radius:4px; font-family:'DM Mono',monospace; font-size:12px; color:var(--ink2); line-height:1.7; margin-bottom:4px;">
+          <span style="color:var(--note); font-size:9.5px; letter-spacing:1px; text-transform:uppercase; display:block; margin-bottom:6px;">Struttura del prompt</span>
+          Query: "cerco un capo per alta montagna professionale"<br><br>
+          Valuta questi prodotti e identifica quelli rilevanti:<br>
+          [1] Alpentech Pro: "membrana a tre strati…"<br>
+          [2] TrailGuide: "per alpinisti e guide…"<br>
+          [3] CityWalk Jacket: "stile urbano, impermeabile leggero…"<br>
+          …<br><br>
+          Per ogni prodotto: rilevante sì/no + motivazione breve.
+        </div>
+      </div>
+      <div>
+        <div class="sc-col-label">Vantaggi, limiti e quando usarlo</div>
+        <div class="sc-list" style="margin-bottom:14px;">
+          <div class="sc-item"><div class="sc-dot" style="background:var(--ok)"></div><div>Qualità di valutazione superiore — il modello capisce sfumature che embedding e FTS perdono</div></div>
+          <div class="sc-item"><div class="sc-dot" style="background:var(--ok)"></div><div>Zero infrastruttura — nessun vector store, nessun indice aggiuntivo</div></div>
+          <div class="sc-item"><div class="sc-dot" style="background:var(--ok)"></div><div>Aggiornamenti istantanei — non c'è nessun indice da aggiornare</div></div>
+          <div class="sc-item"><div class="sc-dot" style="background:var(--bad)"></div><div><strong>Non scala:</strong> con 500 prodotti da 2 pagine ciascuno, non entrano nel context window</div></div>
+          <div class="sc-item"><div class="sc-dot" style="background:var(--bad)"></div><div>Costoso — ogni chiamata paga per tutti i token dei testi nel contesto</div></div>
+          <div class="sc-item"><div class="sc-dot" style="background:var(--bad)"></div><div>Lento — la latenza cresce con il volume di testo da elaborare</div></div>
+        </div>
+        <div style="padding:10px 14px; background:var(--note-bg); border:1px solid var(--note-bd); border-radius:3px; font-size:12.5px; color:var(--note);">
+          <strong>Ideale quando:</strong> il corpus è piccolo (meno di 50–80 righe con testi brevi), la qualità della valutazione è più importante della velocità, non si vuole investire in infrastruttura per un sistema in fase prototipale.
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="callout callout-warn">
+    <div class="callout-title">Il limite pratico della strategia 3 — il calcolo dei token</div>
+    <p>Con testi di 500 parole per riga (circa 650 token), il limite pratico è:</p>
+    <p><strong>Context window 128K token (GPT-4o):</strong> circa 180–190 righe, togliendo spazio per il prompt e l'output. Con testi da 2 pagine (~1.300 token): circa 90 righe massimo.</p>
+    <p><strong>Context window 200K token (Claude):</strong> circa 280–300 righe con testi corti, circa 140 righe con testi da 2 pagine.</p>
+    <p>Questi sono i limiti teorici — in pratica, mandare 100 testi lunghi in un unico contesto produce il fenomeno del "lost in the middle": il modello valuta molto meglio i testi all'inizio e alla fine della lista, e tende a trascurare quelli nel mezzo.</p>
+  </div>
+
+</div>
+</div>
+
+
+<!-- ══════════════════════════════════
+     S4 — LA SOGLIA TRA LE TRE
+══════════════════════════════════ -->
+<div class="sect" id="s4">
+<div class="cw">
+
+  <div class="s-eyebrow">La guida decisionale</div>
+  <div class="s-title">La soglia tra le tre strategie: come scegliere</div>
+
+  <p>Le tre strategie non si escludono — spesso la soluzione migliore le combina. Ma per capire come combinarle, prima bisogna capire quando ciascuna è la scelta primaria e quando deve essere affiancata da un'altra.</p>
+
+  <p>La scelta dipende da quattro variabili. La <strong>lunghezza del testo</strong> — un paragrafo o più pagine? Il <strong>volume di righe</strong> — decine o migliaia? La <strong>natura del vocabulary mismatch</strong> — le query useranno gli stessi termini del testo o concetti diversi? E la <strong>tolleranza per la complessità</strong> — si può investire in infrastruttura o si cerca la soluzione più semplice possibile?</p>
+
+  <div class="threshold-grid">
+    <div class="tg-cell">
+      <div class="tg-head" style="background:var(--ink3);">Testo &lt; 50 parole<br>Volume qualsiasi</div>
+      <div class="tg-body">Note, commenti brevi, tag. Il testo è troppo corto per essere semanticamente ricco — l'embedding non aggiunge molto.</div>
+      <div class="tg-verdict" style="color:var(--ok); background:var(--ok-bg);">→ Full-text search</div>
+    </div>
+    <div class="tg-cell">
+      <div class="tg-head" style="background:var(--ok);">Testo 50–500 parole<br>Volume &lt; 100 righe</div>
+      <div class="tg-body">Descrizioni medie, schede brevi. Il volume è gestibile nel context window. Se la qualità è prioritaria, il LLM diretto batte tutto.</div>
+      <div class="tg-verdict" style="color:var(--note); background:var(--note-bg);">→ LLM diretto (o FTS)</div>
+    </div>
+    <div class="tg-cell">
+      <div class="tg-head" style="background:var(--navy);">Testo 50–500 parole<br>Volume 100–10.000 righe</div>
+      <div class="tg-body">Il caso più comune in produzione. Il volume non entra nel context window — serve retrieval. Il mismatch semantico giustifica l'embedding.</div>
+      <div class="tg-verdict" style="color:var(--navy); background:var(--navy-bg);">→ Embedding + FTS ibrido</div>
+    </div>
+    <div class="tg-cell">
+      <div class="tg-head" style="background:var(--note);">Testo &gt; 500 parole<br>Volume qualsiasi</div>
+      <div class="tg-body">Schede prodotto lunghe, articoli, documenti. Il chunking diventa necessario — un solo embedding per testo lungo è impreciso.</div>
+      <div class="tg-verdict" style="color:var(--note); background:var(--note-bg);">→ Chunking + embedding (RAG)</div>
+    </div>
+  </div>
+
+  <div class="diagram">
+    <div class="diagram-title">Matrice decisionale completa — tre strategie per tipo di situazione</div>
+    <table class="decision-matrix">
+      <thead>
+        <tr>
+          <th>Situazione</th>
+          <th>Strategia primaria</th>
+          <th>Strategia complementare</th>
+          <th>Perché</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>Testo corto, query esatte o parziali</td>
+          <td class="td-s1">Full-text search</td>
+          <td>—</td>
+          <td>Sufficiente, veloce, nessun overhead</td>
+        </tr>
+        <tr>
+          <td>Testo corto, query semantiche</td>
+          <td class="td-s1">Full-text search + FTS fuzzy</td>
+          <td class="td-s2">Embedding se FTS non basta</td>
+          <td>FTS con stemming copre spesso i sinonimi più comuni</td>
+        </tr>
+        <tr>
+          <td>Testo medio, &lt; 80 righe</td>
+          <td class="td-s3">LLM diretto</td>
+          <td class="td-s1">Pre-filtro SQL sui campi strutturati</td>
+          <td>Qualità massima, volume gestibile nel contesto</td>
+        </tr>
+        <tr>
+          <td>Testo medio, 100–5.000 righe</td>
+          <td class="td-s2">Embedding (pgvector)</td>
+          <td class="td-s1">FTS per parole chiave esatte in parallelo</td>
+          <td>Volume incompatibile con LLM diretto; mismatch semantico reale</td>
+        </tr>
+        <tr>
+          <td>Testo lungo (&gt; 500 parole), qualsiasi volume</td>
+          <td class="td-s2">Chunking + embedding (RAG)</td>
+          <td class="td-s3">LLM sul sottoinsieme recuperato</td>
+          <td>Un solo embedding per testo lungo è impreciso — serve chunking</td>
+        </tr>
+        <tr>
+          <td>Mix di query esatte e semantiche</td>
+          <td class="td-s2">Ricerca ibrida (FTS + embedding)</td>
+          <td>Fusione con RRF</td>
+          <td>FTS trova i match esatti (codici, nomi propri); embedding trova i match semantici</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="callout callout-teal">
+    <div class="callout-title">La soglia più importante — e più spesso ignorata</div>
+    <p>La variabile più determinante non è la lunghezza del testo — è il <strong>tipo di vocabulary mismatch</strong> che affronti. Se le query dei tuoi utenti usano quasi sempre gli stessi termini presenti nel testo (dominio tecnico chiuso, utenti esperti che conoscono la terminologia), il full-text search basta quasi sempre, anche su testi lunghi.</p>
+    <p>L'embedding vale l'investimento infrastrutturale quando esiste un divario sistematico tra il modo in cui il testo è scritto (linguaggio tecnico, formale, di prodotto) e il modo in cui le query vengono formulate (linguaggio naturale, conversazionale, con sinonimi). Il tuo caso — brief commerciali in linguaggio naturale che cercano schede prodotto scritte in linguaggio tecnico — è esattamente questo scenario.</p>
+  </div>
+
+  <div class="key-insight">
+    <div class="ki-label">Il principio che guida la scelta</div>
+    <div class="ki-text">Scegli la strategia più semplice che risolve il problema che hai davvero. Il vocabulary mismatch è il test: se le query usano gli stessi termini del testo, full-text search. Se usano concetti diversi, embedding. Se il corpus è piccolo e la qualità è prioritaria, LLM diretto.</div>
+  </div>
+
+  <!-- NEXT REPORT -->
+  <div class="next-report">
+    <div>
+      <div class="nr-label">Prossimo report</div>
+      <div class="nr-title">Database misti: quando i criteri attraversano campi strutturati e testi aperti</div>
+      <div class="nr-sub">Architettura a due stadi · Come combinare SQL e retrieval semantico · Ranking con score eterogenei</div>
+    </div>
+    <div class="nr-arrow">→</div>
+  </div>
+
+</div>
+</div>
+
+<div class="footer">
+  <span>Interrogare un database · Report 2 · Ricerca su testi aperti</span>
+  <span>2026</span>
+</div>
+
+<script>
+function show(n) {
+  document.querySelectorAll('.sect').forEach(s => s.classList.remove('active'));
+  document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('s'+n).classList.add('active');
+  document.querySelectorAll('.nav-btn')[n].classList.add('active');
+  window.scrollTo({top:0, behavior:'smooth'});
+}
+</script>
+</body>
+</html>

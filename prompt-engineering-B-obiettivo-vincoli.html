@@ -1,0 +1,1195 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Prompt Engineering — B · Obiettivo e Vincoli</title>
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Outfit:wght@200;300;400;500;600;700;800;900&family=IBM+Plex+Mono:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg:     #faf8f5;
+  --bg2:    #f2efe9;
+  --bg3:    #e9e5dc;
+  --ink:    #1b1915;
+  --ink2:   #2e2b25;
+  --ink3:   #6d685c;
+  --ink4:   #a19c8f;
+  --border: #d9d4c8;
+  --border2:#cac4b6;
+
+  --accent: #2e7d9c;   /* teal — cluster B */
+  --accent2: #1f5a72;
+  --accent-light: #e8f4f9;
+}
+
+* { margin:0; padding:0; box-sizing:border-box; }
+html { scroll-behavior:smooth; }
+
+body {
+  background: var(--bg);
+  color: var(--ink);
+  font-family: 'Outfit', sans-serif;
+  font-weight: 300;
+  font-size: 14px;
+  line-height: 1.75;
+}
+
+/* ── HEADER ── */
+.masthead {
+  background: var(--ink);
+  color: rgba(255,255,255,0.9);
+  padding: 60px 56px 52px;
+  position: relative;
+  overflow: hidden;
+}
+.masthead::before {
+  content:'';
+  position:absolute; inset:0;
+  background:
+    repeating-linear-gradient(90deg, rgba(255,255,255,0.012) 0, rgba(255,255,255,0.012) 1px, transparent 1px, transparent 64px),
+    repeating-linear-gradient(0deg,  rgba(255,255,255,0.012) 0, rgba(255,255,255,0.012) 1px, transparent 1px, transparent 64px);
+  pointer-events:none;
+}
+.masthead::after {
+  content:'B';
+  position:absolute; right:44px; bottom:-28px;
+  font-family:'Instrument Serif', serif;
+  font-size:280px; line-height:1;
+  color:rgba(255,255,255,0.025);
+  pointer-events:none;
+}
+.mh-eye {
+  font-family:'IBM Plex Mono', monospace;
+  font-size:10px; letter-spacing:3px; text-transform:uppercase;
+  color:rgba(255,255,255,0.25); margin-bottom:18px; position:relative;
+}
+.mh-cluster {
+  display:inline-block;
+  font-family:'IBM Plex Mono', monospace;
+  font-size:10px; letter-spacing:2px; text-transform:uppercase;
+  padding:4px 12px; border:1px solid var(--accent);
+  color:var(--accent); margin-bottom:20px; position:relative;
+}
+.masthead h1 {
+  font-family:'Instrument Serif', serif;
+  font-weight:400;
+  font-size: clamp(30px,4.5vw,54px);
+  line-height:1.08; letter-spacing:-1px;
+  max-width:700px; position:relative;
+}
+.mh-sub {
+  margin-top:20px; font-size:15px; font-weight:300;
+  color:rgba(255,255,255,0.38); max-width:660px;
+  line-height:1.7; position:relative;
+}
+.mh-meta {
+  margin-top:32px; display:flex; gap:32px; flex-wrap:wrap;
+  position:relative;
+}
+.mh-stat { display:flex; flex-direction:column; gap:4px; }
+.mh-stat-val {
+  font-family:'IBM Plex Mono', monospace;
+  font-size:22px; font-weight:500;
+  color:rgba(255,255,255,0.85);
+}
+.mh-stat-lbl {
+  font-size:10px; letter-spacing:2px; text-transform:uppercase;
+  color:rgba(255,255,255,0.25);
+}
+
+/* ── NAV ── */
+.nav {
+  background:var(--ink2);
+  position:sticky; top:0; z-index:100;
+  display:flex; overflow-x:auto;
+  border-bottom:1px solid rgba(255,255,255,0.06);
+}
+.nav-btn {
+  flex:1; min-width:120px; padding:13px 12px;
+  border:none; background:transparent; cursor:pointer;
+  font-family:'Outfit', sans-serif;
+  font-size:10.5px; font-weight:600;
+  text-transform:uppercase; letter-spacing:0.4px;
+  color:rgba(255,255,255,0.3);
+  border-right:1px solid rgba(255,255,255,0.06);
+  transition:all 0.2s; white-space:nowrap;
+}
+.nav-btn:last-child { border-right:none; }
+.nav-btn:hover { color:rgba(255,255,255,0.6); }
+.nav-btn.active { color:#fff; background:rgba(255,255,255,0.05); }
+
+/* ── SECTIONS ── */
+.sect { display:none; }
+.sect.active { display:block; animation:fadeIn 0.3s ease; }
+@keyframes fadeIn { from { opacity:0; transform:translateY(6px); } to { opacity:1; transform:translateY(0); } }
+
+.sect-head { padding:48px 56px 36px; border-bottom:1px solid var(--border); }
+.sect-num {
+  font-family:'IBM Plex Mono', monospace;
+  font-size:10px; letter-spacing:3px; text-transform:uppercase;
+  color:var(--ink4); margin-bottom:10px;
+}
+.sect-head h2 {
+  font-family:'Instrument Serif', serif; font-weight:400;
+  font-size:clamp(26px,3.5vw,42px);
+  line-height:1.1; letter-spacing:-0.5px;
+  max-width:640px; margin-bottom:14px;
+}
+.sect-head p { color:var(--ink3); max-width:700px; font-size:14.5px; }
+.wrap { padding:0 56px 64px; }
+
+/* ── PROSE ── */
+.prose { max-width:760px; }
+.prose p { font-size:14.5px; color:var(--ink3); line-height:1.85; margin-bottom:16px; }
+.prose p strong { color:var(--ink2); font-weight:500; }
+.prose p em { font-style:italic; color:var(--ink2); }
+
+/* ── GUIDELINE CARD ── */
+.gl-group { margin-top:40px; }
+.gl-group-title {
+  font-family:'IBM Plex Mono', monospace;
+  font-size:9px; letter-spacing:3px; text-transform:uppercase;
+  color:var(--ink4); padding-bottom:10px;
+  border-bottom:1px solid var(--border);
+}
+.gl-card {
+  border:1px solid var(--border2);
+  border-top:none;
+  background:var(--bg);
+}
+.gl-header {
+  display:grid;
+  grid-template-columns: 5px 52px 1fr auto;
+  align-items:stretch;
+  border-bottom:1px solid var(--border);
+}
+.gl-stripe { background:var(--accent); }
+.gl-num {
+  font-family:'Outfit', sans-serif; font-weight:800;
+  font-size:20px; color:var(--bg3);
+  display:flex; align-items:center; justify-content:center;
+  border-right:1px solid var(--border);
+}
+.gl-title-wrap { padding:16px 20px; }
+.gl-title {
+  font-family:'Instrument Serif', serif;
+  font-size:20px; color:var(--ink2); line-height:1.2;
+}
+.gl-subtitle { font-size:12px; color:var(--ink4); margin-top:3px; }
+.gl-impact-wrap {
+  padding:14px 20px;
+  display:flex; flex-direction:column;
+  align-items:flex-end; justify-content:center; gap:4px;
+}
+.gl-impact-stars { font-size:14px; }
+.gl-impact-lbl {
+  font-family:'IBM Plex Mono', monospace;
+  font-size:8px; letter-spacing:1px; text-transform:uppercase;
+  color:var(--ink4);
+}
+.gl-body { padding:0; }
+.gl-section {
+  padding:20px 24px;
+  border-bottom:1px solid var(--border);
+}
+.gl-section:last-child { border-bottom:none; }
+.gl-section-lbl {
+  font-family:'IBM Plex Mono', monospace;
+  font-size:9px; letter-spacing:2px; text-transform:uppercase;
+  color:var(--ink4); margin-bottom:10px;
+  padding-bottom:6px; border-bottom:1px solid var(--border);
+}
+.gl-section p { font-size:13.5px; color:var(--ink3); line-height:1.8; max-width:740px; }
+.gl-section p strong { color:var(--ink2); font-weight:500; }
+.gl-section p em { font-style:italic; color:var(--ink2); }
+
+/* ── PROMPT BOXES ── */
+.prompt-ex-label {
+  font-family:'IBM Plex Mono', monospace;
+  font-size:9px; letter-spacing:2px; text-transform:uppercase;
+  margin-bottom:6px;
+}
+.prompt-ex-label.bad { color:#c0392b; }
+.prompt-ex-label.good { color:#2e7d9c; }
+.prompt-ex-label.neutral { color:var(--ink4); }
+
+.prompt-box {
+  font-family:'IBM Plex Mono', monospace;
+  font-size:12px; line-height:1.7;
+  padding:14px 18px;
+  border:1px solid;
+  white-space:pre-wrap; word-break:break-word;
+}
+.prompt-box.bad  { border-color:#e8c5c5; background:#fdf5f5; color:#6b3030; }
+.prompt-box.good { border-color:#b8d4e0; background:#f0f8fc; color:#1f4a5c; }
+.prompt-box.neutral { border-color:var(--border2); background:var(--bg2); color:var(--ink3); }
+.prompt-box .hl { font-weight:500; }
+.prompt-box.good .hl { color:var(--accent2); }
+.prompt-box.bad  .hl { color:#8b3030; }
+
+.compare-grid {
+  display:grid; grid-template-columns:1fr 1fr; gap:12px;
+  margin-top:12px;
+}
+
+/* ── MECHANISM BOX ── */
+.mechanism {
+  margin-top:14px; padding:14px 18px;
+  border-left:3px solid var(--accent);
+  background:var(--accent-light);
+}
+.mech-lbl {
+  font-family:'IBM Plex Mono', monospace;
+  font-size:9px; letter-spacing:2px; text-transform:uppercase;
+  color:var(--accent); margin-bottom:6px;
+}
+.mechanism p { font-size:13px; color:var(--ink3); line-height:1.65; }
+.mechanism p strong { color:var(--ink2); font-weight:500; }
+
+/* ── OPERAZIONE STEP ── */
+.op-steps { margin-top:16px; display:flex; flex-direction:column; gap:2px; }
+.op-step {
+  display:grid; grid-template-columns:40px 1fr;
+  border:1px solid var(--border); background:var(--bg);
+}
+.op-step-num {
+  background:var(--accent); color:#fff;
+  font-family:'IBM Plex Mono', monospace;
+  font-size:13px; font-weight:500;
+  display:flex; align-items:center; justify-content:center;
+}
+.op-step-body { padding:14px 18px; }
+.op-step-title { font-weight:600; font-size:13.5px; color:var(--ink2); margin-bottom:4px; }
+.op-step-desc { font-size:13px; color:var(--ink3); line-height:1.6; }
+.op-step-desc strong { color:var(--ink2); font-weight:500; }
+
+/* ── TRANSFORMATION PANEL ── */
+.transform-panel {
+  margin-top:16px;
+  border:1px solid var(--border2);
+}
+.tp-head {
+  padding:14px 18px;
+  background:var(--bg2);
+  border-bottom:1px solid var(--border);
+  font-family:'IBM Plex Mono', monospace;
+  font-size:9px; letter-spacing:2px; text-transform:uppercase;
+  color:var(--ink4);
+}
+.tp-row {
+  display:grid; grid-template-columns:1fr 36px 1fr;
+  border-bottom:1px solid var(--border);
+}
+.tp-row:last-child { border-bottom:none; }
+.tp-cell {
+  padding:12px 16px;
+  font-size:12.5px; color:var(--ink3); line-height:1.5;
+}
+.tp-cell.vague { background:#fdf5f5; color:#6b3030; }
+.tp-cell.precise { background:#f0f8fc; color:#1f4a5c; }
+.tp-cell strong { font-weight:500; }
+.tp-arrow {
+  display:flex; align-items:center; justify-content:center;
+  background:var(--bg2); border-left:1px solid var(--border);
+  border-right:1px solid var(--border);
+  color:var(--accent); font-size:14px; font-weight:700;
+}
+
+/* ── VINCOLI GRID ── */
+.vincoli-grid {
+  display:grid; grid-template-columns:1fr 1fr; gap:16px;
+  margin-top:16px;
+}
+.vincolo-card {
+  border:1px solid var(--border2);
+  background:var(--bg); overflow:hidden;
+}
+.vc-head {
+  padding:12px 16px;
+  border-bottom:1px solid var(--border);
+  background:var(--bg2);
+}
+.vc-type {
+  font-family:'IBM Plex Mono', monospace;
+  font-size:9px; letter-spacing:2px; text-transform:uppercase;
+  color:var(--accent); margin-bottom:3px;
+}
+.vc-title { font-weight:600; font-size:13.5px; color:var(--ink2); }
+.vc-body { padding:14px 16px; }
+.vc-body p { font-size:13px; color:var(--ink3); line-height:1.6; }
+.vc-body p strong { color:var(--ink2); font-weight:500; }
+.vc-example {
+  margin-top:10px;
+  font-family:'IBM Plex Mono', monospace;
+  font-size:11.5px; line-height:1.6;
+  padding:10px 12px;
+  background:var(--accent-light);
+  border-left:3px solid var(--accent);
+  color:var(--accent2);
+}
+
+/* ── SPECTRUM ── */
+.spectrum {
+  margin-top:16px;
+  border:1px solid var(--border);
+  overflow:hidden;
+}
+.spectrum-row {
+  display:grid;
+  border-bottom:1px solid var(--border);
+  font-size:12.5px;
+}
+.spectrum-row:last-child { border-bottom:none; }
+.spectrum-row.head {
+  background:var(--ink);
+  color:rgba(255,255,255,0.7);
+  font-family:'IBM Plex Mono', monospace;
+  font-size:9px; letter-spacing:1px; text-transform:uppercase;
+}
+.spectrum-row.col3 { grid-template-columns:160px 1fr 1fr; }
+.spectrum-row.col4 { grid-template-columns:160px 1fr 1fr 1fr; }
+.spectrum-cell {
+  padding:12px 14px;
+  border-right:1px solid var(--border);
+  color:var(--ink3); line-height:1.5;
+}
+.spectrum-cell:last-child { border-right:none; }
+.spectrum-cell.lbl { font-weight:500; color:var(--ink2); background:var(--bg2); }
+.spectrum-cell.hi { background:#f0f8fc; color:var(--accent2); }
+.spectrum-cell.lo { background:#fdf5f5; color:#8b3030; }
+
+/* ── CHECKLIST ── */
+.checklist { margin-top:16px; }
+.check-item {
+  display:flex; gap:12px; align-items:flex-start;
+  padding:10px 0; border-bottom:1px solid var(--border);
+  font-size:13.5px; color:var(--ink3);
+}
+.check-item:last-child { border-bottom:none; }
+.check-icon {
+  width:20px; height:20px; border-radius:50%;
+  background:var(--accent); color:#fff;
+  display:flex; align-items:center; justify-content:center;
+  font-size:11px; font-weight:700; flex-shrink:0; margin-top:1px;
+}
+.check-item strong { color:var(--ink2); font-weight:500; }
+
+/* ── KEY POINT ── */
+.key-point {
+  margin-top:36px; padding:24px 28px;
+  border-left:4px solid var(--accent);
+  background:var(--accent-light);
+}
+.kp-label {
+  font-family:'IBM Plex Mono', monospace;
+  font-size:9px; letter-spacing:2px; text-transform:uppercase;
+  color:var(--accent); margin-bottom:8px;
+}
+.kp-text {
+  font-family:'Instrument Serif', serif;
+  font-size:18px; line-height:1.45; color:var(--ink2);
+}
+.kp-sub { margin-top:10px; font-size:13px; color:var(--ink3); line-height:1.65; }
+
+/* ── INSIGHT ── */
+.insight {
+  margin:16px 0; padding:16px 20px;
+  border-left:4px solid var(--accent);
+  background:var(--accent-light);
+}
+.insight-lbl {
+  font-family:'IBM Plex Mono', monospace;
+  font-size:9px; letter-spacing:2px; text-transform:uppercase;
+  color:var(--accent); margin-bottom:6px;
+}
+.insight p { font-size:13.5px; color:var(--ink2); line-height:1.65; max-width:700px; }
+.insight p strong { font-weight:500; }
+
+/* ── TEMPLATE ── */
+.template-box {
+  margin-top:20px;
+  border:1px solid var(--border2);
+  background:var(--ink);
+  padding:28px 32px;
+  font-family:'IBM Plex Mono', monospace;
+  font-size:12.5px; line-height:1.9;
+  color:rgba(255,255,255,0.75);
+  white-space:pre-wrap; word-break:break-word;
+}
+.template-box .t-comment { color:rgba(255,255,255,0.28); }
+.template-box .t-key { color:#7dd3a8; }
+.template-box .t-val { color:rgba(255,255,255,0.85); }
+.template-box .t-bracket { color:rgba(255,255,255,0.35); }
+.template-box .t-hl { color:#93c5e8; }
+
+/* ── FOOTER ── */
+.footer {
+  padding:24px 56px;
+  border-top:1px solid var(--border);
+  display:flex; justify-content:space-between; align-items:center;
+  font-family:'IBM Plex Mono', monospace;
+  font-size:10px; letter-spacing:1px; text-transform:uppercase;
+  color:var(--ink4);
+}
+
+@media (max-width:700px) {
+  .masthead, .sect-head, .wrap, .footer { padding-left:20px; padding-right:20px; }
+  .compare-grid { grid-template-columns:1fr; }
+  .vincoli-grid { grid-template-columns:1fr; }
+  .spectrum-row.col3, .spectrum-row.col4 { grid-template-columns:1fr; }
+  .gl-header { grid-template-columns:5px 40px 1fr; }
+  .gl-impact-wrap { display:none; }
+  .tp-row { grid-template-columns:1fr; }
+  .tp-arrow { display:none; }
+}
+</style>
+</head>
+<body>
+
+<!-- HEADER -->
+<div class="masthead">
+  <div class="mh-eye">Serie Agenti AI · Leva 01 · Prompt Engineering</div>
+  <div class="mh-cluster">Cluster B</div>
+  <h1>Obiettivo e Vincoli</h1>
+  <p class="mh-sub">Come definire con precisione cosa deve fare il modello, con quale criterio di successo, entro quali limiti. Il cluster con il più alto impatto diretto sulla qualità e pertinenza dell'output — e il più frequentemente underspecified.</p>
+  <div class="mh-meta">
+    <div class="mh-stat">
+      <div class="mh-stat-val">6</div>
+      <div class="mh-stat-lbl">Linee guida</div>
+    </div>
+    <div class="mh-stat">
+      <div class="mh-stat-val">Molto alto</div>
+      <div class="mh-stat-lbl">Impatto</div>
+    </div>
+    <div class="mh-stat">
+      <div class="mh-stat-val">Medio</div>
+      <div class="mh-stat-lbl">Costo implementazione</div>
+    </div>
+    <div class="mh-stat">
+      <div class="mh-stat-val">#2</div>
+      <div class="mh-stat-lbl">Priorità nel prompt</div>
+    </div>
+  </div>
+</div>
+
+<!-- NAV -->
+<div class="nav">
+  <button class="nav-btn active" onclick="show(1)">Perché conta</button>
+  <button class="nav-btn" onclick="show(2)">Operazionalizzare</button>
+  <button class="nav-btn" onclick="show(3)">Criterio di successo</button>
+  <button class="nav-btn" onclick="show(4)">I vincoli</button>
+  <button class="nav-btn" onclick="show(5)">Guardrail</button>
+  <button class="nav-btn" onclick="show(6)">Template</button>
+</div>
+
+
+<!-- ═══════════════════════════
+     S1 — PERCHÉ CONTA
+═══════════════════════════ -->
+<div class="sect active" id="s1">
+  <div class="sect-head">
+    <div class="sect-num">Introduzione</div>
+    <h2>Il problema dell'obiettivo vago</h2>
+    <p>Il cluster B è quello con il più alto impatto diretto sull'output — e quello dove la maggior parte dei prompt fallisce. Non per mancanza di istruzioni, ma per mancanza di precisione.</p>
+  </div>
+  <div class="wrap">
+
+    <div class="prose" style="margin-top:28px;">
+      <p>Il Cluster A ha definito il <em>punto di vista</em> del modello. Il Cluster B definisce il <em>task</em>: cosa il modello deve concretamente produrre, con quale criterio si misura il successo, entro quali confini deve restare. È la sezione del prompt che risponde alla domanda "cosa vuoi?", e la risposta a questa domanda è sorprendentemente difficile da formulare con precisione.</p>
+      <p>Il problema più comune non è la mancanza di istruzioni — è la <strong>vaghezza dell'obiettivo</strong>. "Analizza questo documento" sembra un'istruzione chiara, ma per un modello è ambigua su quasi tutto: quanto in profondità? Con quale focus? Per quale scopo? In quale formato? Cosa fare se il documento è incompleto? Il modello riempie questi vuoti con inferenze — spesso ragionevoli, quasi mai esatte.</p>
+    </div>
+
+    <div class="insight" style="margin-top:28px;">
+      <div class="insight-lbl">Il test della specificità</div>
+      <p>Prendi l'obiettivo che hai scritto nel tuo prompt e chiediti: <strong>se lo mostrassi a cinque persone diverse, lo interpreterebbero tutte nello stesso modo?</strong> Se la risposta è no, l'obiettivo è ancora vago. Un obiettivo ben specificato ha un'unica interpretazione ragionevole.</p>
+    </div>
+
+    <div class="key-point" style="margin-top:28px;">
+      <div class="kp-label">Il principio del cluster B</div>
+      <div class="kp-text">Non descrivere il task. Descrivere come appare un output perfetto del task.</div>
+      <div class="kp-sub">La differenza non è semantica — è operativa. "Analizza i rischi del contratto" è un task. "Produci una lista di massimo 5 rischi legali, ordinati per severità, ognuno con: nome del rischio (max 5 parole), clausola di riferimento, impatto potenziale (max 2 righe)" è un output. Il modello non deve indovinare cosa vuoi: lo vede già costruito nell'istruzione.</div>
+    </div>
+
+    <div class="prose" style="margin-top:28px;">
+      <p>Il Cluster B si divide in tre aree distinte: <strong>operazionalizzare l'obiettivo</strong> (come trasformare un task vago in un output preciso), <strong>definire il criterio di successo</strong> (come il modello sa quando ha finito bene), e <strong>definire i vincoli e i guardrail</strong> (cosa non deve fare e cosa fare quando è tentato di farlo).</p>
+    </div>
+
+  </div>
+</div>
+
+
+<!-- ═══════════════════════════
+     S2 — OPERAZIONALIZZARE
+═══════════════════════════ -->
+<div class="sect" id="s2">
+  <div class="sect-head">
+    <div class="sect-num">Linee guida 01 – 02</div>
+    <h2>Operazionalizzare l'obiettivo</h2>
+    <p>Come trasformare un task generico in un obiettivo che il modello può effettivamente perseguire — e che puoi misurare.</p>
+  </div>
+  <div class="wrap">
+
+    <!-- GL 01 -->
+    <div class="gl-group" style="margin-top:32px;">
+      <div class="gl-group-title">Linea guida 01</div>
+      <div class="gl-card">
+        <div class="gl-header">
+          <div class="gl-stripe"></div>
+          <div class="gl-num">01</div>
+          <div class="gl-title-wrap">
+            <div class="gl-title">Descrivi l'output atteso, non solo il task</div>
+            <div class="gl-subtitle">Il modello deve vedere dove deve arrivare, non solo da dove parte</div>
+          </div>
+          <div class="gl-impact-wrap">
+            <div class="gl-impact-stars" style="color:var(--accent)">★★★</div>
+            <div class="gl-impact-lbl">Impatto</div>
+          </div>
+        </div>
+        <div class="gl-body">
+
+          <div class="gl-section">
+            <div class="gl-section-lbl">La linea guida</div>
+            <p>Invece di descrivere solo il task ("fai X"), descrivi come si presenta l'output quando il task è completato bene. Questo include: <strong>cosa deve contenere, in quale forma, a quale granularità, con quale scopo</strong>. Non stai dando più istruzioni — stai rendendo l'obiettivo concreto e verificabile.</p>
+          </div>
+
+          <div class="gl-section">
+            <div class="gl-section-lbl">La trasformazione — da task a output</div>
+            <div class="transform-panel">
+              <div class="tp-head">Task generico → Output operazionalizzato</div>
+              <div class="tp-row" style="grid-template-columns:1fr 36px 1fr;">
+                <div class="tp-cell vague"><strong>Analizza questo contratto.</strong></div>
+                <div class="tp-arrow">→</div>
+                <div class="tp-cell precise"><strong>Identifica le clausole che espongono il cliente a rischio finanziario o operativo significativo.</strong> Per ognuna: nome della clausola, numero articolo, rischio specifico (max 2 righe), severità (Alta/Media/Bassa). Lista ordinata per severità decrescente, max 7 clausole.</div>
+              </div>
+              <div class="tp-row" style="grid-template-columns:1fr 36px 1fr;">
+                <div class="tp-cell vague"><strong>Riassumi questa email.</strong></div>
+                <div class="tp-arrow">→</div>
+                <div class="tp-cell precise"><strong>Estrai dall'email:</strong> (1) la richiesta principale del mittente (1 frase), (2) le informazioni chiave fornite (lista puntata, max 5), (3) le azioni richieste al destinatario con eventuali scadenze (lista puntata). Massimo 150 parole totali.</div>
+              </div>
+              <div class="tp-row" style="grid-template-columns:1fr 36px 1fr;">
+                <div class="tp-cell vague"><strong>Scrivi una proposta commerciale.</strong></div>
+                <div class="tp-arrow">→</div>
+                <div class="tp-cell precise"><strong>Scrivi una proposta di 400-500 parole</strong> strutturata in: (1) problema del cliente (2 paragrafi), (2) soluzione proposta con 3 benefici chiave (3 paragrafi), (3) call to action con passo successivo concreto (1 paragrafo). Tono: professionale ma diretto. No gergo tecnico.</div>
+              </div>
+              <div class="tp-row" style="grid-template-columns:1fr 36px 1fr;">
+                <div class="tp-cell vague"><strong>Classifica queste recensioni.</strong></div>
+                <div class="tp-arrow">→</div>
+                <div class="tp-cell precise">Per ogni recensione: <strong>sentiment</strong> (Positivo / Neutro / Negativo), <strong>topic principale</strong> (Prodotto / Servizio / Consegna / Prezzo / Altro), <strong>priorità di intervento</strong> (Alta se negativo + topic Prodotto o Servizio, altrimenti Bassa). Restituisci solo JSON array, nessun testo libero.</div>
+              </div>
+            </div>
+          </div>
+
+          <div class="gl-section">
+            <div class="gl-section-lbl">Le domande per operazionalizzare</div>
+            <div class="op-steps">
+              <div class="op-step">
+                <div class="op-step-num">1</div>
+                <div class="op-step-body">
+                  <div class="op-step-title">Cosa deve contenere l'output?</div>
+                  <div class="op-step-desc">Elenca gli elementi informativi che devono essere presenti. Se li puoi elencare, il task è operazionalizzato; se non riesci, il task è ancora troppo vago.</div>
+                </div>
+              </div>
+              <div class="op-step">
+                <div class="op-step-num">2</div>
+                <div class="op-step-body">
+                  <div class="op-step-title">A quale granularità?</div>
+                  <div class="op-step-desc">Quante righe, quanti elementi, quanto dettaglio per elemento. <strong>La granularità non specificata porta sempre a output troppo generici</strong> — il modello di default tende a coprire tutto superficialmente.</div>
+                </div>
+              </div>
+              <div class="op-step">
+                <div class="op-step-num">3</div>
+                <div class="op-step-body">
+                  <div class="op-step-title">Per quale scopo viene usato l'output?</div>
+                  <div class="op-step-desc">Un output "per una presentazione al board" è diverso da uno "per il team tecnico" anche se il task è lo stesso. Lo scopo d'uso calibra il livello di dettaglio, il tono e cosa enfatizzare.</div>
+                </div>
+              </div>
+              <div class="op-step">
+                <div class="op-step-num">4</div>
+                <div class="op-step-body">
+                  <div class="op-step-title">Come si presenta un output eccellente vs. uno mediocre?</div>
+                  <div class="op-step-desc">Se riesci a rispondere a questa domanda, hai già le informazioni per operazionalizzare l'obiettivo. Se non riesci, il task non è ancora abbastanza chiaro nella tua testa — e non lo sarà nemmeno per il modello.</div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="gl-section">
+            <div class="gl-section-lbl">Perché funziona — il meccanismo LLM</div>
+            <div class="mechanism">
+              <div class="mech-lbl">Riduzione dello spazio di ricerca</div>
+              <p>Un modello LLM genera l'output esplorando uno spazio di possibili risposte. Un task vago definisce uno spazio enorme — ci sono mille modi validi di "analizzare un contratto". <strong>Descrivere l'output atteso restringe drasticamente questo spazio</strong>, guidando il modello verso la regione di risposte che vuoi. Non stai limitando le capacità del modello — stai orientando dove applicarle.</p>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </div>
+
+    <!-- GL 02 -->
+    <div class="gl-group" style="margin-top:8px;">
+      <div class="gl-group-title">Linea guida 02</div>
+      <div class="gl-card">
+        <div class="gl-header">
+          <div class="gl-stripe"></div>
+          <div class="gl-num">02</div>
+          <div class="gl-title-wrap">
+            <div class="gl-title">Scomponi task complessi in sotto-obiettivi sequenziali</div>
+            <div class="gl-subtitle">Un task con più fasi distinte funziona meglio se le fasi sono esplicite</div>
+          </div>
+          <div class="gl-impact-wrap">
+            <div class="gl-impact-stars" style="color:var(--accent)">★★☆</div>
+            <div class="gl-impact-lbl">Impatto</div>
+          </div>
+        </div>
+        <div class="gl-body">
+
+          <div class="gl-section">
+            <div class="gl-section-lbl">La linea guida</div>
+            <p>Quando il task ha più fasi distinte (es: prima leggi, poi valuta, poi scrivi), dichiarare esplicitamente la sequenza è molto più efficace che descrivere il task finale come un blocco unico. <strong>La sequenza esplicita struttura il processo di generazione del modello</strong>, riducendo il rischio che salti fasi o le esegua nell'ordine sbagliato.</p>
+          </div>
+
+          <div class="gl-section">
+            <div class="gl-section-lbl">Esempi</div>
+            <div class="compare-grid">
+              <div>
+                <div class="prompt-ex-label bad">❌ Task multi-fase come blocco unico</div>
+                <div class="prompt-box bad">Leggi il CV allegato, valuta se il candidato è adatto al ruolo di Sales Manager e scrivi un feedback per il recruiter.</div>
+              </div>
+              <div>
+                <div class="prompt-ex-label good">✓ Sotto-obiettivi sequenziali espliciti</div>
+                <div class="prompt-box good">Analizza il CV allegato in tre fasi:
+
+<span class="hl">1. ESTRAI</span> le esperienze rilevanti per un ruolo Sales Manager B2B: team gestiti, target raggiunti, settori, durata dei ruoli di vendita.
+
+<span class="hl">2. VALUTA</span> la coerenza con i requisiti minimi: 5+ anni in vendite B2B, esperienza di gestione team, track record misurabile. Esprimi un giudizio: Adatto / Parzialmente adatto / Non adatto + motivazione in 2 righe.
+
+<span class="hl">3. SCRIVI</span> un feedback per il recruiter di max 150 parole: punti di forza, gap critici, suggerimento su come procedere.</div>
+              </div>
+            </div>
+          </div>
+
+          <div class="gl-section">
+            <div class="gl-section-lbl">Perché funziona — il meccanismo LLM</div>
+            <div class="mechanism">
+              <div class="mech-lbl">Strutturazione del processo di generazione token-per-token</div>
+              <p>Il modello genera testo sequenzialmente: ogni token prodotto diventa contesto per il successivo. Se il task ha più fasi, <strong>dichiarare la sequenza esplicitamente orienta la generazione</strong> in modo che ogni fase si costruisca correttamente sulla precedente. Senza questa struttura, il modello tende a "comprimere" le fasi — producendo un output che sembra completo ma che ha saltato passaggi intermedi critici.</p>
+            </div>
+          </div>
+
+          <div class="gl-section">
+            <div class="gl-section-lbl">Quando scomporre e quando no</div>
+            <p>La scomposizione è utile quando le fasi producono output intermedi su cui si basa la fase successiva. Non è necessaria per task lineari anche se complessi. <strong>Regola pratica:</strong> se il task ha un verbo principale (analizza, scrivi, classifica), non serve scomposizione. Se ha più verbi in sequenza (leggi → valuta → scrivi), la scomposizione aiuta.</p>
+          </div>
+
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+
+<!-- ═══════════════════════════
+     S3 — CRITERIO DI SUCCESSO
+═══════════════════════════ -->
+<div class="sect" id="s3">
+  <div class="sect-head">
+    <div class="sect-num">Linea guida 03</div>
+    <h2>Definire il criterio di successo</h2>
+    <p>Come fa il modello a sapere quando ha finito bene? Senza un criterio esplicito, lo decide da solo — e raramente coincide con il tuo.</p>
+  </div>
+  <div class="wrap">
+
+    <!-- GL 03 -->
+    <div class="gl-group" style="margin-top:32px;">
+      <div class="gl-group-title">Linea guida 03</div>
+      <div class="gl-card">
+        <div class="gl-header">
+          <div class="gl-stripe"></div>
+          <div class="gl-num">03</div>
+          <div class="gl-title-wrap">
+            <div class="gl-title">Esplicita il criterio con cui misuri un buon output</div>
+            <div class="gl-subtitle">Il modello deve sapere non solo cosa produrre, ma quando l'ha prodotto bene</div>
+          </div>
+          <div class="gl-impact-wrap">
+            <div class="gl-impact-stars" style="color:var(--accent)">★★★</div>
+            <div class="gl-impact-lbl">Impatto</div>
+          </div>
+        </div>
+        <div class="gl-body">
+
+          <div class="gl-section">
+            <div class="gl-section-lbl">La linea guida</div>
+            <p>Il criterio di successo è la risposta alla domanda: <em>"Come faccio a sapere che questo output è buono?"</em>. Può essere esplicito (una rubrica di valutazione) o implicito (costruito nella descrizione dell'output). In entrambi i casi, il modello deve avere elementi sufficienti per <strong>auto-valutare la qualità del suo output prima di consegnarlo</strong>.</p>
+          </div>
+
+          <div class="gl-section">
+            <div class="gl-section-lbl">Tre modi per comunicare il criterio di successo</div>
+
+            <div style="margin-top:12px;">
+              <div class="prompt-ex-label neutral">Modo 1 — Proprietà dell'output eccellente</div>
+              <div class="prompt-box good" style="margin-top:6px;">Un'analisi di rischio eccellente: <span class="hl">identifica rischi non ovvi</span> (non solo quelli che qualsiasi lettore vedrebbe), <span class="hl">li quantifica dove possibile</span> (stima dell'impatto economico o della probabilità), e <span class="hl">li ordina per priorità d'intervento</span> — non per importanza teorica, ma per urgenza pratica.</div>
+            </div>
+
+            <div style="margin-top:14px;">
+              <div class="prompt-ex-label neutral">Modo 2 — Cosa distingue il buono dal mediocre</div>
+              <div class="prompt-box good" style="margin-top:6px;">Un riassunto mediocre ripete le informazioni nell'ordine in cui appaiono nel documento. <span class="hl">Un riassunto eccellente</span> identifica l'informazione più importante, la mette in prima posizione, e taglia tutto ciò che un decision-maker non deve necessariamente sapere.</div>
+            </div>
+
+            <div style="margin-top:14px;">
+              <div class="prompt-ex-label neutral">Modo 3 — Test di verifica (auto-check)</div>
+              <div class="prompt-box good" style="margin-top:6px;">Prima di consegnare l'output, verifica: <span class="hl">(1)</span> ogni raccomandazione è supportata da un dato specifico del documento? <span class="hl">(2)</span> Ho evitato affermazioni generiche non ancorate al caso specifico? <span class="hl">(3)</span> Un manager che legge solo l'output capisce cosa fare senza leggere il documento originale?</div>
+            </div>
+          </div>
+
+          <div class="gl-section">
+            <div class="gl-section-lbl">Perché funziona — il meccanismo LLM</div>
+            <div class="mechanism">
+              <div class="mech-lbl">Self-evaluation implicita durante la generazione</div>
+              <p>I modelli moderni hanno una capacità di auto-valutazione che si attiva quando vengono forniti criteri espliciti. <strong>Fornire un criterio di successo permette al modello di generare con un "target" interno</strong> — può confrontare il testo che sta producendo con il criterio e correggere il tiro durante la generazione stessa. Senza criteri espliciti, il modello usa criteri impliciti appresi dal training — che tipicamente massimizzano completezza e fluidità, non necessariamente utilità e precisione.</p>
+            </div>
+          </div>
+
+          <div class="gl-section">
+            <div class="gl-section-lbl">Il test per sapere se il criterio è abbastanza specifico</div>
+            <p>Prendi due output ipotetici: uno eccellente e uno mediocre per il tuo task. Il criterio che hai scritto li distinguerebbe chiaramente? Se entrambi passerebbero il tuo criterio, il criterio è ancora troppo vago.</p>
+          </div>
+
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+
+<!-- ═══════════════════════════
+     S4 — I VINCOLI
+═══════════════════════════ -->
+<div class="sect" id="s4">
+  <div class="sect-head">
+    <div class="sect-num">Linee guida 04 – 05</div>
+    <h2>I vincoli: cosa deve restare entro certi confini</h2>
+    <p>I vincoli delimitano lo spazio dell'output senza descrivere il task. Sono spesso la differenza tra un output usabile e uno che richiede post-elaborazione.</p>
+  </div>
+  <div class="wrap">
+
+    <div class="prose" style="margin-top:28px;">
+      <p>I vincoli sono diversi dall'obiettivo: non dicono <em>cosa fare</em>, ma <em>entro quali confini farlo</em>. Esistono quattro famiglie di vincoli, ognuna con un impatto diverso sull'output.</p>
+    </div>
+
+    <!-- GL 04 -->
+    <div class="gl-group" style="margin-top:24px;">
+      <div class="gl-group-title">Linea guida 04</div>
+      <div class="gl-card">
+        <div class="gl-header">
+          <div class="gl-stripe"></div>
+          <div class="gl-num">04</div>
+          <div class="gl-title-wrap">
+            <div class="gl-title">Definisci i 4 tipi di vincolo che contano</div>
+            <div class="gl-subtitle">Scope, qualità, forma, fonte — ognuno agisce su una dimensione diversa dell'output</div>
+          </div>
+          <div class="gl-impact-wrap">
+            <div class="gl-impact-stars" style="color:var(--accent)">★★★</div>
+            <div class="gl-impact-lbl">Impatto</div>
+          </div>
+        </div>
+        <div class="gl-body">
+
+          <div class="gl-section">
+            <div class="gl-section-lbl">Le 4 famiglie di vincoli</div>
+            <div class="vincoli-grid">
+
+              <div class="vincolo-card">
+                <div class="vc-head">
+                  <div class="vc-type">Tipo 1</div>
+                  <div class="vc-title">Vincoli di scope</div>
+                </div>
+                <div class="vc-body">
+                  <p>Delimitano <strong>l'ambito del task</strong>: cosa è in scope e cosa no, a quali dati attingere, quali aspetti considerare e quali ignorare.</p>
+                  <div class="vc-example">Analizza solo le clausole della Sezione 4 e 7. Ignora le premesse e i considerando.
+
+Considera solo i dati degli ultimi 12 mesi. Non fare proiezioni future.</div>
+                </div>
+              </div>
+
+              <div class="vincolo-card">
+                <div class="vc-head">
+                  <div class="vc-type">Tipo 2</div>
+                  <div class="vc-title">Vincoli di qualità</div>
+                </div>
+                <div class="vc-body">
+                  <p>Definiscono la <strong>soglia minima accettabile</strong>: livello di confidenza richiesto, precisione attesa, soglie di certezza prima di affermare qualcosa.</p>
+                  <div class="vc-example">Afferma solo ciò che è esplicitamente supportato dal documento. Se deduci qualcosa, segnalalo con "[inferenza]".
+
+Non arrotondare le percentuali: riporta i valori esatti dal documento.</div>
+                </div>
+              </div>
+
+              <div class="vincolo-card">
+                <div class="vc-head">
+                  <div class="vc-type">Tipo 3</div>
+                  <div class="vc-title">Vincoli di forma</div>
+                </div>
+                <div class="vc-body">
+                  <p>Regolano <strong>come si presenta l'output</strong>: lunghezza, struttura, formato. Critici quando l'output viene consumato da sistemi automatici o inserito in template prefissati.</p>
+                  <div class="vc-example">Massimo 200 parole. Nessuna lista puntata: solo prosa. Nessun titolo o intestazione.
+
+Output solo in JSON. Nessun testo prima o dopo il JSON.</div>
+                </div>
+              </div>
+
+              <div class="vincolo-card">
+                <div class="vc-head">
+                  <div class="vc-type">Tipo 4</div>
+                  <div class="vc-title">Vincoli di fonte</div>
+                </div>
+                <div class="vc-body">
+                  <p>Specificano <strong>da dove il modello può attingere informazioni</strong>: solo dal documento allegato, solo dai dati forniti, o anche dalla conoscenza generale.</p>
+                  <div class="vc-example">Basa l'analisi solo sui dati nel documento allegato. Non usare conoscenze esterne sul settore o sull'azienda.
+
+Puoi integrare con best practice generali del settore, ma distinguile esplicitamente dai dati del documento.</div>
+                </div>
+              </div>
+
+            </div>
+          </div>
+
+          <div class="gl-section">
+            <div class="gl-section-lbl">Perché funziona — il meccanismo LLM</div>
+            <div class="mechanism">
+              <div class="mech-lbl">Chiusura dello spazio di output per tipo di dimensione</div>
+              <p>Ogni tipo di vincolo chiude lo spazio di output lungo una dimensione diversa. I vincoli di scope riducono <em>cosa</em> il modello considera. I vincoli di qualità alzano la soglia di ciò che il modello è disposto ad affermare. I vincoli di forma eliminano la varianza strutturale. I vincoli di fonte evitano che il modello mescoli dati reali con conoscenza generale in modo non trasparente. <strong>Ognuno agisce su una causa distinta di output non voluti</strong> — è importante capire quale problema si vuole risolvere prima di aggiungere un vincolo.</p>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </div>
+
+    <!-- GL 05 -->
+    <div class="gl-group" style="margin-top:8px;">
+      <div class="gl-group-title">Linea guida 05</div>
+      <div class="gl-card">
+        <div class="gl-header">
+          <div class="gl-stripe"></div>
+          <div class="gl-num">05</div>
+          <div class="gl-title-wrap">
+            <div class="gl-title">Non accumulare vincoli: ogni vincolo deve guadagnarsi il posto</div>
+            <div class="gl-subtitle">Troppi vincoli diluiscono l'attenzione del modello su quelli importanti</div>
+          </div>
+          <div class="gl-impact-wrap">
+            <div class="gl-impact-stars" style="color:var(--accent)">★★☆</div>
+            <div class="gl-impact-lbl">Impatto</div>
+          </div>
+        </div>
+        <div class="gl-body">
+
+          <div class="gl-section">
+            <div class="gl-section-lbl">La linea guida</div>
+            <p>Un prompt con 20 vincoli è un prompt dove nessun vincolo ha peso. Il modello distribuisce l'attenzione su tutto il testo del prompt — più vincoli ci sono, meno peso ha ciascuno. <strong>Ogni vincolo che aggiungi riduce l'importanza relativa di tutti gli altri.</strong> Tieni solo i vincoli che, se violati, renderebbero l'output inutilizzabile.</p>
+          </div>
+
+          <div class="gl-section">
+            <div class="gl-section-lbl">Il test del vincolo necessario</div>
+            <p>Per ogni vincolo che stai per inserire, chiediti: <em>"Se questo vincolo venisse ignorato, l'output avrebbe comunque valore?"</em></p>
+            <div class="spectrum" style="margin-top:12px;">
+              <div class="spectrum-row head col3">
+                <div class="spectrum-cell">Vincolo</div>
+                <div class="spectrum-cell">Se violato, output inutilizzabile?</div>
+                <div class="spectrum-cell">Decisione</div>
+              </div>
+              <div class="spectrum-row col3">
+                <div class="spectrum-cell lbl">"Output solo in JSON"</div>
+                <div class="spectrum-cell hi">Sì — il parser downstream si rompe</div>
+                <div class="spectrum-cell hi">✓ Tienilo</div>
+              </div>
+              <div class="spectrum-row col3">
+                <div class="spectrum-cell lbl">"Max 200 parole"</div>
+                <div class="spectrum-cell hi">Sì — va in un campo con limite di caratteri</div>
+                <div class="spectrum-cell hi">✓ Tienilo</div>
+              </div>
+              <div class="spectrum-row col3">
+                <div class="spectrum-cell lbl">"Non usare la parola &lsquo;molto&rsquo;"</div>
+                <div class="spectrum-cell lo">No — è una preferenza stilistica marginale</div>
+                <div class="spectrum-cell lo">✗ Rimuovilo</div>
+              </div>
+              <div class="spectrum-row col3">
+                <div class="spectrum-cell lbl">"Usa sempre il punto fermo alla fine"</div>
+                <div class="spectrum-cell lo">No — non cambia l'usabilità</div>
+                <div class="spectrum-cell lo">✗ Rimuovilo</div>
+              </div>
+              <div class="spectrum-row col3">
+                <div class="spectrum-cell lbl">"Non fare assunzioni non supportate dai dati"</div>
+                <div class="spectrum-cell hi">Sì — in contesti critici (medico, legale, finanziario)</div>
+                <div class="spectrum-cell hi">✓ Tienilo</div>
+              </div>
+            </div>
+          </div>
+
+          <div class="gl-section">
+            <div class="gl-section-lbl">Perché funziona — il meccanismo LLM</div>
+            <div class="mechanism">
+              <div class="mech-lbl">Attention e peso relativo delle istruzioni</div>
+              <p>I modelli LLM non leggono il prompt con uguale attenzione su tutto il testo. Le istruzioni in prompt molto lunghi con molti vincoli tendono a ricevere <strong>meno peso relativo per singola istruzione</strong>. Prompt più corti e focalizzati permettono al modello di dare peso pieno alle istruzioni critiche. Non è un invito a scrivere prompt brevissimi — è un invito a non aggiungere rumore che diluisce il segnale.</p>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+
+<!-- ═══════════════════════════
+     S5 — GUARDRAIL
+═══════════════════════════ -->
+<div class="sect" id="s5">
+  <div class="sect-head">
+    <div class="sect-num">Linea guida 06</div>
+    <h2>I guardrail: cosa il modello non deve fare</h2>
+    <p>La controparte dei vincoli. I guardrail non limitano la forma dell'output — limitano i comportamenti che il modello tenderebbe a tenere in assenza di istruzioni.</p>
+  </div>
+  <div class="wrap">
+
+    <!-- GL 06 -->
+    <div class="gl-group" style="margin-top:32px;">
+      <div class="gl-group-title">Linea guida 06</div>
+      <div class="gl-card">
+        <div class="gl-header">
+          <div class="gl-stripe"></div>
+          <div class="gl-num">06</div>
+          <div class="gl-title-wrap">
+            <div class="gl-title">Usa i guardrail per prevenire i comportamenti di default indesiderati</div>
+            <div class="gl-subtitle">Il modello ha tendenze comportamentali implicite — i guardrail le correggono dove necessario</div>
+          </div>
+          <div class="gl-impact-wrap">
+            <div class="gl-impact-stars" style="color:var(--accent)">★★★</div>
+            <div class="gl-impact-lbl">Impatto</div>
+          </div>
+        </div>
+        <div class="gl-body">
+
+          <div class="gl-section">
+            <div class="gl-section-lbl">I comportamenti di default che spesso non vuoi</div>
+            <div class="spectrum" style="margin-top:12px;">
+              <div class="spectrum-row head col3">
+                <div class="spectrum-cell">Comportamento di default</div>
+                <div class="spectrum-cell">Perché lo fa</div>
+                <div class="spectrum-cell">Guardrail tipico</div>
+              </div>
+              <div class="spectrum-row col3">
+                <div class="spectrum-cell lbl">Aggiunge premesse e conclusioni</div>
+                <div class="spectrum-cell">Pattern frequente nel training: testi strutturati con intro e outro</div>
+                <div class="spectrum-cell" style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--ink3);">Vai direttamente al contenuto. Nessuna introduzione, nessuna conclusione.</div>
+              </div>
+              <div class="spectrum-row col3">
+                <div class="spectrum-cell lbl">Qualifica tutto con "potrebbe", "forse", "in generale"</div>
+                <div class="spectrum-cell">RLHF lo ha addestrato a essere cauto e a hedging per non sembrare troppo assertivo</div>
+                <div class="spectrum-cell" style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--ink3);">Sii assertivo. Esprimi giudizi netti. Se sei incerto, dillo una volta sola e vai avanti.</div>
+              </div>
+              <div class="spectrum-row col3">
+                <div class="spectrum-cell lbl">Dà "entrambi i lati" quando chiedi un parere</div>
+                <div class="spectrum-cell">RLHF lo ha reso cauto nell'esprimere posizioni unilaterali</div>
+                <div class="spectrum-cell" style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--ink3);">Esprimi una posizione chiara. Non è necessario bilanciare con il punto di vista opposto.</div>
+              </div>
+              <div class="spectrum-row col3">
+                <div class="spectrum-cell lbl">Produce output più lungo del necessario</div>
+                <div class="spectrum-cell">Pattern di completezza: i testi nel training che rispondono a domande tendono a essere esaustivi</div>
+                <div class="spectrum-cell" style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--ink3);">Preferisci la brevità alla completezza. Ometti dettagli che non cambiano la sostanza.</div>
+              </div>
+              <div class="spectrum-row col3">
+                <div class="spectrum-cell lbl">Usa la conoscenza generale quando i dati non bastano</div>
+                <div class="spectrum-cell">Tende a essere utile anche quando i dati forniti sono incompleti — "riempie i buchi"</div>
+                <div class="spectrum-cell" style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--ink3);">Se i dati nel documento non bastano per rispondere, dillo esplicitamente. Non integrare con conoscenza esterna senza segnalarlo.</div>
+              </div>
+              <div class="spectrum-row col3">
+                <div class="spectrum-cell lbl">Suggerisce passi successivi non richiesti</div>
+                <div class="spectrum-cell">Pattern di proattività: i testi nel training spesso concludono con raccomandazioni</div>
+                <div class="spectrum-cell" style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--ink3);">Non aggiungere raccomandazioni o passi successivi non richiesti esplicitamente.</div>
+              </div>
+            </div>
+          </div>
+
+          <div class="gl-section">
+            <div class="gl-section-lbl">Come scrivere guardrail efficaci</div>
+            <div class="compare-grid">
+              <div>
+                <div class="prompt-ex-label bad">❌ Guardrail negativo senza alternativa</div>
+                <div class="prompt-box bad">Non essere vago.
+
+Non fare affermazioni non supportate.
+
+Non aggiungere informazioni non richieste.</div>
+              </div>
+              <div>
+                <div class="prompt-ex-label good">✓ Guardrail con comportamento sostitutivo</div>
+                <div class="prompt-box good">Se non hai abbastanza dati per un'affermazione precisa, <span class="hl">dì esattamente quale dato manca</span> invece di generalizzare.
+
+Se hai informazioni utili ma non richieste, <span class="hl">omettile</span> — a meno che cambino materialmente la conclusione.</div>
+              </div>
+            </div>
+            <div class="insight" style="margin-top:16px;">
+              <div class="insight-lbl">La regola del guardrail</div>
+              <p>Un guardrail efficace non dice solo cosa <em>non</em> fare — dice cosa fare <em>invece</em>. Il modello ha bisogno di un comportamento alternativo a cui appoggiarsi: senza di esso, l'istruzione negativa crea un vuoto che il modello riempie comunque con il suo default.</p>
+            </div>
+          </div>
+
+          <div class="gl-section">
+            <div class="gl-section-lbl">Perché funziona — il meccanismo LLM</div>
+            <div class="mechanism">
+              <div class="mech-lbl">Correzione dei bias di RLHF e del training</div>
+              <p>I comportamenti di default del modello non sono neutri: sono il risultato dell'addestramento RLHF (Reinforcement Learning from Human Feedback), che ha ottimizzato il modello per sembrare utile, bilanciato e cauto a un valutatore umano generico. <strong>Questi obiettivi non coincidono necessariamente con quello che vuoi tu in un contesto specifico.</strong> I guardrail correggono queste distorsioni esplicitamente — dicendo al modello che in questo contesto, i criteri di qualità sono diversi da quelli per cui è stato addestrato a ottimizzare.</p>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </div>
+
+    <div class="key-point" style="margin-top:32px;">
+      <div class="kp-label">Il principio del cluster B — sintesi</div>
+      <div class="kp-text">L'obiettivo non è comunicare cosa vuoi. È eliminare ogni interpretazione alternativa di cosa vuoi.</div>
+      <div class="kp-sub">Un prompt con obiettivo vago lascia al modello uno spazio enorme di risposte "ragionevoli" — e il modello ne sceglierà una in base ai propri bias di training, non in base alle tue esigenze. Un obiettivo operazionalizzato, con criterio di successo esplicito, vincoli necessari e guardrail sui comportamenti indesiderati, restringe quello spazio fino a rendere quasi impossibile un output sbagliato. Non si tratta di controllare il modello — si tratta di dargli abbastanza informazioni per fare bene il suo lavoro.</div>
+    </div>
+
+  </div>
+</div>
+
+
+<!-- ═══════════════════════════
+     S6 — TEMPLATE
+═══════════════════════════ -->
+<div class="sect" id="s6">
+  <div class="sect-head">
+    <div class="sect-num">Sezione pratica</div>
+    <h2>Template e checklist del Cluster B</h2>
+    <p>Un template riutilizzabile per la sezione obiettivo del system prompt, con esempio compilato e checklist di verifica.</p>
+  </div>
+  <div class="wrap">
+
+    <div class="template-box" style="margin-top:28px;"><span class="t-comment"># ── OBIETTIVO E VINCOLI ───────────────────────────────────────</span>
+
+<span class="t-comment"># 1. OBIETTIVO OPERAZIONALIZZATO (GL 01 — sempre obbligatorio)</span>
+<span class="t-val">Il tuo task è: </span><span class="t-bracket">[descrizione dell'output atteso, non solo del task]</span><span class="t-val">.</span>
+<span class="t-comment">#    Includi: cosa deve contenere, a quale granularità, per quale scopo d'uso.</span>
+
+<span class="t-comment"># 2. SOTTO-OBIETTIVI SEQUENZIALI (GL 02 — solo per task multi-fase)</span>
+<span class="t-bracket">[Solo se necessario: scomposizione del task in fasi numerate]</span><span class="t-val">:</span>
+<span class="t-val">1. </span><span class="t-bracket">[Prima fase + output intermedio atteso]</span>
+<span class="t-val">2. </span><span class="t-bracket">[Seconda fase + output intermedio atteso]</span>
+<span class="t-val">3. </span><span class="t-bracket">[Output finale]</span>
+
+<span class="t-comment"># 3. CRITERIO DI SUCCESSO (GL 03 — fortemente raccomandato)</span>
+<span class="t-bracket">[Scegli uno dei 3 modi:]</span>
+<span class="t-comment">#    Modo 1: "Un output eccellente: [proprietà 1], [proprietà 2], [proprietà 3]"</span>
+<span class="t-comment">#    Modo 2: "La differenza tra buono e mediocre è: [...]"</span>
+<span class="t-comment">#    Modo 3: "Prima di consegnare, verifica: (1)[...] (2)[...] (3)[...]"</span>
+
+<span class="t-comment"># 4. VINCOLI (GL 04 — solo quelli che rendono l'output inutilizzabile se violati)</span>
+<span class="t-comment">#    Scope:   </span><span class="t-bracket">[cosa è in scope e cosa no]</span>
+<span class="t-comment">#    Qualità: </span><span class="t-bracket">[livello di certezza richiesto, come gestire l'incertezza]</span>
+<span class="t-comment">#    Forma:   </span><span class="t-bracket">[lunghezza, struttura, formato — solo se critici]</span>
+<span class="t-comment">#    Fonte:   </span><span class="t-bracket">[solo documento allegato / puoi usare conoscenza esterna / distingui le fonti]</span>
+
+<span class="t-comment"># 5. GUARDRAIL (GL 06 — per comportamenti di default che vuoi disabilitare)</span>
+<span class="t-bracket">[Solo i guardrail necessari, ognuno con comportamento sostitutivo]</span>
+
+<span class="t-comment"># ── FINE SEZIONE OBIETTIVO — prosegue con Cluster C ──────────</span></div>
+
+    <div class="prose" style="margin-top:36px;">
+      <p style="font-size:15px; font-weight:500; color:var(--ink2);">Esempio compilato — agente di analisi contrattuale (continua dal Report A)</p>
+    </div>
+
+    <div class="template-box" style="margin-top:12px;"><span class="t-comment"># ── OBIETTIVO E VINCOLI ───────────────────────────────────────</span>
+
+<span class="t-val">Il tuo task è analizzare il contratto allegato e produrre una <span class="t-hl">scheda di rischio strutturata</span>
+che il cliente possa leggere in 5 minuti e usare come base per decidere se procedere
+alla firma o richiedere modifiche.</span>
+
+<span class="t-val">La scheda deve contenere:</span>
+<span class="t-val">1. <span class="t-hl">ESTRAI</span> le clausole rilevanti per il rischio del cliente: penali, limitazioni di
+   responsabilità, clausole di rinnovo automatico, condizioni di recesso, foro competente.</span>
+<span class="t-val">2. <span class="t-hl">VALUTA</span> ogni clausola estratta: rischio specifico per il cliente (non in astratto),
+   severità (Alta / Media / Bassa), presenza di alternative contrattuali standard.</span>
+<span class="t-val">3. <span class="t-hl">SINTETIZZA</span> in una raccomandazione finale: Firma senza modifiche / Firma con
+   le modifiche X, Y, Z / Non firmare senza rinegoziare — con motivazione in 3 righe.</span>
+
+<span class="t-val">Un output eccellente: <span class="t-hl">identifica rischi non ovvi</span> (non solo le penali evidenti), <span class="t-hl">li ancora
+alla clausola specifica</span> (numero articolo), e dà al cliente un'indicazione chiara
+su cosa fare — non solo cosa rischia.</span>
+
+<span class="t-val">Vincoli:</span>
+<span class="t-val">- <span class="t-hl">Fonte</span>: basa l'analisi solo sul testo del contratto allegato. Se usi prassi
+  contrattuali generali come riferimento, segnalalo con "[prassi di settore]".</span>
+<span class="t-val">- <span class="t-hl">Qualità</span>: non affermare che una clausola è "standard" senza specificare
+  rispetto a quale standard. Se non sai, scrivi "verifica con l'avvocato".</span>
+<span class="t-val">- <span class="t-hl">Forma</span>: max 500 parole totali. Usa le 3 sezioni indicate (ESTRAI / VALUTA / SINTETIZZA).</span>
+
+<span class="t-val">Guardrail:</span>
+<span class="t-val">- <span class="t-hl">Non aggiungere disclaimer legali generici</span> (es: "questo non è un parere legale"):
+  il cliente sa già di usare uno strumento di supporto.</span>
+<span class="t-val">- <span class="t-hl">Non bilanciare il rischio con i vantaggi del contratto</span>: il cliente vuole sapere
+  i rischi, non una valutazione bilanciata.</span></div>
+
+    <div class="prose" style="margin-top:36px;">
+      <p style="font-size:15px; font-weight:500; color:var(--ink2);">Checklist di verifica — Cluster B completato?</p>
+    </div>
+
+    <div class="checklist" style="margin-top:12px;">
+      <div class="check-item">
+        <div class="check-icon" style="background:var(--accent)">✓</div>
+        <div>L'obiettivo descrive <strong>l'output atteso</strong>, non solo il task — posso immaginare come si presenta un output perfetto.</div>
+      </div>
+      <div class="check-item">
+        <div class="check-icon" style="background:var(--accent)">✓</div>
+        <div>Se il task ha più fasi, le fasi sono <strong>esplicite e sequenziali</strong> — ognuna con il suo output intermedio definito.</div>
+      </div>
+      <div class="check-item">
+        <div class="check-icon" style="background:var(--accent)">✓</div>
+        <div>C'è un <strong>criterio di successo</strong> esplicito — potrei distinguere un output eccellente da uno mediocre usando solo il prompt.</div>
+      </div>
+      <div class="check-item">
+        <div class="check-icon" style="background:var(--accent)">✓</div>
+        <div>I vincoli presenti sono solo quelli <strong>necessari</strong>: se violati, l'output sarebbe inutilizzabile.</div>
+      </div>
+      <div class="check-item">
+        <div class="check-icon" style="background:var(--accent)">✓</div>
+        <div>Ogni guardrail ha un <strong>comportamento sostitutivo</strong> — non solo "non fare X" ma "fai Y invece".</div>
+      </div>
+      <div class="check-item">
+        <div class="check-icon" style="background:var(--accent)">✓</div>
+        <div><strong>Test della singola interpretazione</strong> superato: se mostrassi l'obiettivo a 5 persone, lo interpreterebbero tutte uguale.</div>
+      </div>
+    </div>
+
+    <div class="insight" style="margin-top:28px; border-color:#7b5ea7;">
+      <div class="insight-lbl" style="color:#7b5ea7;">Prossimo — Cluster C</div>
+      <p>Con identità (A) e obiettivo (B) definiti, il modello sa <em>chi è</em> e <em>cosa deve produrre</em>. Il prossimo report (Cluster C) affronta il <strong>come ragionare</strong>: le tecniche per strutturare il processo di pensiero del modello — chain-of-thought, decomposizione, self-check — che fanno la differenza su task complessi e multi-step.</p>
+    </div>
+
+  </div>
+</div>
+
+
+<!-- FOOTER -->
+<div class="footer">
+  <span>Serie Agenti AI — Leva 01 · Prompt Engineering · Cluster B · Obiettivo e Vincoli</span>
+  <span>Marzo 2026</span>
+</div>
+
+
+<script>
+function show(n) {
+  document.querySelectorAll('.sect').forEach(s => s.classList.remove('active'));
+  document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('s'+n).classList.add('active');
+  document.querySelectorAll('.nav-btn')[n-1].classList.add('active');
+  window.scrollTo({top:0, behavior:'smooth'});
+}
+</script>
+
+</body>
+</html>

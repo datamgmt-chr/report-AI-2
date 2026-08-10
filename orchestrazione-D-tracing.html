@@ -1,0 +1,633 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Orchestrazione — D · Tracing, debugging e valutazione</title>
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Outfit:wght@200;300;400;500;600;700;800;900&family=IBM+Plex+Mono:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg:     #faf8f5;
+  --bg2:    #f2efe9;
+  --bg3:    #e9e5dc;
+  --ink:    #1b1915;
+  --ink2:   #2e2b25;
+  --ink3:   #6d685c;
+  --ink4:   #a19c8f;
+  --border: #d9d4c8;
+  --border2:#cac4b6;
+
+  --accent:  #2e4a7a;
+  --accent2: #1a2e52;
+  --accent-light: #edf1f9;
+
+  --ok:   #3d7a45; --ok-l:  #f4faf5;
+  --bad:  #c0392b; --bad-l: #fdf5f5;
+  --warn: #b07d24; --warn-l:#fdf6e8;
+}
+
+* { margin:0; padding:0; box-sizing:border-box; }
+html { scroll-behavior:smooth; }
+body { background:var(--bg); color:var(--ink); font-family:'Outfit',sans-serif; font-weight:300; font-size:14px; line-height:1.75; }
+
+.masthead { background:var(--ink); color:rgba(255,255,255,.9); padding:60px 56px 52px; position:relative; overflow:hidden; }
+.masthead::before { content:''; position:absolute; inset:0; background: repeating-linear-gradient(90deg,rgba(255,255,255,.012) 0,rgba(255,255,255,.012) 1px,transparent 1px,transparent 64px), repeating-linear-gradient(0deg,rgba(255,255,255,.012) 0,rgba(255,255,255,.012) 1px,transparent 1px,transparent 64px); pointer-events:none; }
+.masthead::after { content:'D'; position:absolute; right:44px; bottom:-28px; font-family:'Instrument Serif',serif; font-size:280px; line-height:1; color:rgba(255,255,255,.025); pointer-events:none; }
+.mh-eye { font-family:'IBM Plex Mono',monospace; font-size:10px; letter-spacing:3px; text-transform:uppercase; color:rgba(255,255,255,.25); margin-bottom:18px; position:relative; }
+.mh-cluster { display:inline-block; font-family:'IBM Plex Mono',monospace; font-size:10px; letter-spacing:2px; text-transform:uppercase; padding:4px 12px; border:1px solid var(--accent); color:var(--accent); margin-bottom:20px; position:relative; }
+.masthead h1 { font-family:'Instrument Serif',serif; font-weight:400; font-size:clamp(30px,4.5vw,54px); line-height:1.08; letter-spacing:-1px; max-width:700px; position:relative; }
+.mh-sub { margin-top:20px; font-size:15px; font-weight:300; color:rgba(255,255,255,.38); max-width:660px; line-height:1.7; position:relative; }
+.mh-meta { margin-top:32px; display:flex; gap:32px; flex-wrap:wrap; position:relative; }
+.mh-stat { display:flex; flex-direction:column; gap:4px; }
+.mh-stat-val { font-family:'IBM Plex Mono',monospace; font-size:22px; font-weight:500; color:rgba(255,255,255,.85); }
+.mh-stat-lbl { font-size:10px; letter-spacing:2px; text-transform:uppercase; color:rgba(255,255,255,.25); }
+
+.nav { background:var(--ink2); position:sticky; top:0; z-index:100; display:flex; overflow-x:auto; border-bottom:1px solid rgba(255,255,255,.06); }
+.nav-btn { flex:1; min-width:100px; padding:13px 12px; border:none; background:transparent; cursor:pointer; font-family:'Outfit',sans-serif; font-size:10.5px; font-weight:600; text-transform:uppercase; letter-spacing:.4px; color:rgba(255,255,255,.3); border-right:1px solid rgba(255,255,255,.06); transition:all .2s; white-space:nowrap; }
+.nav-btn:last-child { border-right:none; }
+.nav-btn:hover { color:rgba(255,255,255,.6); }
+.nav-btn.active { color:#fff; background:rgba(255,255,255,.05); }
+
+.sect { display:none; }
+.sect.active { display:block; animation:fadeIn .3s ease; }
+@keyframes fadeIn { from{opacity:0;transform:translateY(6px)} to{opacity:1;transform:translateY(0)} }
+.sect-head { padding:48px 56px 36px; border-bottom:1px solid var(--border); }
+.sect-num { font-family:'IBM Plex Mono',monospace; font-size:10px; letter-spacing:3px; text-transform:uppercase; color:var(--ink4); margin-bottom:10px; }
+.sect-head h2 { font-family:'Instrument Serif',serif; font-weight:400; font-size:clamp(26px,3.5vw,42px); line-height:1.1; letter-spacing:-.5px; max-width:640px; margin-bottom:14px; }
+.sect-head p { color:var(--ink3); max-width:700px; font-size:14.5px; }
+.wrap { padding:0 56px 64px; }
+
+.prose { max-width:760px; }
+.prose p { font-size:14.5px; color:var(--ink3); line-height:1.85; margin-bottom:16px; }
+.prose p strong { color:var(--ink2); font-weight:500; }
+.prose p em { font-style:italic; color:var(--ink2); }
+
+/* ── GL CARD ── */
+.gl-group { margin-top:36px; }
+.gl-group-title { font-family:'IBM Plex Mono',monospace; font-size:9px; letter-spacing:3px; text-transform:uppercase; color:var(--ink4); padding-bottom:10px; border-bottom:1px solid var(--border); }
+.gl-card { border:1px solid var(--border2); border-top:none; background:var(--bg); }
+.gl-header { display:grid; grid-template-columns:5px 52px 1fr auto; align-items:stretch; border-bottom:1px solid var(--border); }
+.gl-stripe { background:var(--accent); }
+.gl-num { font-family:'Outfit',sans-serif; font-weight:800; font-size:20px; color:var(--bg3); display:flex; align-items:center; justify-content:center; border-right:1px solid var(--border); }
+.gl-title-wrap { padding:16px 20px; }
+.gl-title { font-family:'Instrument Serif',serif; font-size:20px; color:var(--ink2); line-height:1.2; }
+.gl-subtitle { font-size:12px; color:var(--ink4); margin-top:3px; }
+.gl-impact-wrap { padding:14px 20px; display:flex; flex-direction:column; align-items:flex-end; justify-content:center; gap:4px; }
+.gl-impact-stars { font-size:14px; }
+.gl-impact-lbl { font-family:'IBM Plex Mono',monospace; font-size:8px; letter-spacing:1px; text-transform:uppercase; color:var(--ink4); }
+.gl-body { padding:0; }
+.gl-section { padding:20px 24px; border-bottom:1px solid var(--border); }
+.gl-section:last-child { border-bottom:none; }
+.gl-section-lbl { font-family:'IBM Plex Mono',monospace; font-size:9px; letter-spacing:2px; text-transform:uppercase; color:var(--ink4); margin-bottom:10px; padding-bottom:6px; border-bottom:1px solid var(--border); }
+.gl-section p { font-size:13.5px; color:var(--ink3); line-height:1.8; max-width:740px; }
+.gl-section p strong { color:var(--ink2); font-weight:500; }
+
+/* ── TRACE LOG ── */
+.trace-panel { margin-top:16px; border:1px solid var(--border2); }
+.tp-head { padding:10px 16px; background:var(--ink); border-bottom:1px solid rgba(255,255,255,.06); font-family:'IBM Plex Mono',monospace; font-size:9px; letter-spacing:2px; text-transform:uppercase; color:rgba(255,255,255,.4); display:flex; justify-content:space-between; }
+.tp-body { font-family:'IBM Plex Mono',monospace; font-size:11.5px; line-height:1.85; padding:16px 20px; background:var(--ink); color:rgba(255,255,255,.75); white-space:pre-wrap; }
+.tp-body .ts  { color:rgba(255,255,255,.3); }
+.tp-body .wid { color:#93c5e8; }
+.tp-body .step{ color:#7dd3a8; }
+.tp-body .evt { color:#f4a87a; }
+.tp-body .ok  { color:#7dd3a8; }
+.tp-body .err { color:#f4a8a8; }
+.tp-body .warn{ color:#f4c87a; }
+.tp-body .data{ color:rgba(255,255,255,.55); }
+.tp-body .cm  { color:rgba(255,255,255,.25); }
+
+/* ── COMPARE GRID ── */
+.compare-grid { display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-top:12px; }
+.pex-lbl { font-family:'IBM Plex Mono',monospace; font-size:9px; letter-spacing:2px; text-transform:uppercase; margin-bottom:6px; }
+.pex-lbl.bad  { color:var(--bad); }
+.pex-lbl.good { color:var(--accent); }
+.pex-lbl.neutral { color:var(--ink4); }
+.prompt-box { font-family:'IBM Plex Mono',monospace; font-size:11.5px; line-height:1.75; padding:14px 18px; border:1px solid; white-space:pre-wrap; word-break:break-word; }
+.prompt-box.bad  { border-color:#e8c5c5; background:var(--bad-l); color:#6b3030; }
+.prompt-box.good { border-color:#a8b8d8; background:var(--accent-light); color:var(--accent2); }
+.prompt-box.neutral { border-color:var(--border2); background:var(--bg2); color:var(--ink3); }
+
+/* ── BUG CARDS ── */
+.bug-grid { display:grid; grid-template-columns:1fr 1fr; gap:14px; margin-top:16px; }
+.bug-card { border:1px solid var(--border2); background:var(--bg); overflow:hidden; }
+.bc-head { padding:12px 16px; border-bottom:1px solid var(--border); background:var(--bg2); }
+.bc-badge { font-family:'IBM Plex Mono',monospace; font-size:9px; letter-spacing:2px; text-transform:uppercase; color:var(--bad); margin-bottom:3px; }
+.bc-name { font-weight:600; font-size:14px; color:var(--ink2); }
+.bc-body { padding:14px 16px; }
+.bc-symptom { font-size:13px; color:var(--ink3); line-height:1.6; margin-bottom:8px; }
+.bc-symptom strong { color:var(--ink2); font-weight:500; }
+.bc-diagnosis { padding:8px 12px; border-left:3px solid var(--bad); background:var(--bad-l); font-size:12.5px; color:#6b3030; line-height:1.5; margin-bottom:8px; }
+.bc-fix { padding:8px 12px; border-left:3px solid var(--ok); background:var(--ok-l); font-size:12.5px; color:#2e4a32; line-height:1.5; }
+.bc-fix strong { font-weight:500; }
+
+/* ── METRICS TABLE ── */
+.met-table { width:100%; border-collapse:collapse; margin-top:16px; border:1px solid var(--border2); }
+.met-table th, .met-table td { padding:11px 14px; border:1px solid var(--border); font-size:12.5px; line-height:1.5; vertical-align:top; text-align:left; }
+.met-table thead th { background:var(--ink); color:rgba(255,255,255,.82); font-family:'IBM Plex Mono',monospace; font-size:9px; letter-spacing:.5px; text-transform:uppercase; }
+.met-table tbody tr:nth-child(even) { background:var(--bg2); }
+.met-table td:first-child { font-weight:500; color:var(--ink2); width:190px; }
+.m-ok  { color:var(--ok);  font-weight:600; font-family:'IBM Plex Mono',monospace; font-size:11px; }
+.m-warn{ color:var(--warn);font-weight:600; font-family:'IBM Plex Mono',monospace; font-size:11px; }
+.m-bad { color:var(--bad); font-weight:600; font-family:'IBM Plex Mono',monospace; font-size:11px; }
+
+/* ── SERIES SUMMARY ── */
+.series-grid { display:grid; grid-template-columns:repeat(5,1fr); gap:1px; background:var(--border); margin-top:24px; border:1px solid var(--border2); }
+.sg-cell { background:var(--bg); padding:14px 12px; }
+.sg-label { font-family:'IBM Plex Mono',monospace; font-size:8px; letter-spacing:2px; text-transform:uppercase; color:var(--ink4); margin-bottom:4px; }
+.sg-title { font-family:'Instrument Serif',serif; font-size:14px; color:var(--ink2); margin-bottom:3px; }
+.sg-desc { font-size:11px; color:var(--ink3); line-height:1.5; }
+
+/* ── CHECKLIST ── */
+.checklist { margin-top:16px; }
+.check-item { display:flex; gap:12px; align-items:flex-start; padding:10px 0; border-bottom:1px solid var(--border); font-size:13.5px; color:var(--ink3); }
+.check-item:last-child { border-bottom:none; }
+.check-icon { width:20px; height:20px; border-radius:50%; background:var(--accent); color:#fff; display:flex; align-items:center; justify-content:center; font-size:11px; font-weight:700; flex-shrink:0; margin-top:1px; }
+.check-item strong { color:var(--ink2); font-weight:500; }
+
+/* ── MECHANISM / KP / INSIGHT ── */
+.mechanism { margin-top:14px; padding:14px 18px; border-left:3px solid var(--accent); background:var(--accent-light); }
+.mech-lbl { font-family:'IBM Plex Mono',monospace; font-size:9px; letter-spacing:2px; text-transform:uppercase; color:var(--accent); margin-bottom:6px; }
+.mechanism p { font-size:13px; color:var(--ink3); line-height:1.65; }
+.mechanism p strong { color:var(--ink2); font-weight:500; }
+.key-point { margin-top:36px; padding:24px 28px; border-left:4px solid var(--accent); background:var(--accent-light); }
+.kp-label { font-family:'IBM Plex Mono',monospace; font-size:9px; letter-spacing:2px; text-transform:uppercase; color:var(--accent); margin-bottom:8px; }
+.kp-text { font-family:'Instrument Serif',serif; font-size:18px; line-height:1.45; color:var(--ink2); }
+.kp-sub { margin-top:10px; font-size:13px; color:var(--ink3); line-height:1.65; }
+.insight { margin:16px 0; padding:16px 20px; border-left:4px solid var(--accent); background:var(--accent-light); }
+.insight-lbl { font-family:'IBM Plex Mono',monospace; font-size:9px; letter-spacing:2px; text-transform:uppercase; color:var(--accent); margin-bottom:6px; }
+.insight p { font-size:13.5px; color:var(--ink2); line-height:1.65; max-width:700px; }
+.insight p strong { font-weight:500; }
+
+.footer { padding:24px 56px; border-top:1px solid var(--border); display:flex; justify-content:space-between; align-items:center; font-family:'IBM Plex Mono',monospace; font-size:10px; letter-spacing:1px; text-transform:uppercase; color:var(--ink4); }
+
+@media (max-width:700px) {
+  .masthead,.sect-head,.wrap,.footer { padding-left:20px; padding-right:20px; }
+  .compare-grid,.bug-grid { grid-template-columns:1fr; }
+  .gl-header { grid-template-columns:5px 40px 1fr; }
+  .gl-impact-wrap { display:none; }
+  .series-grid { grid-template-columns:1fr 1fr; }
+}
+</style>
+</head>
+<body>
+
+<div class="masthead">
+  <div class="mh-eye">Serie Agenti AI · Leva 05 · Orchestrazione</div>
+  <div class="mh-cluster">Report D — Finale</div>
+  <h1>Tracing, debugging e valutazione</h1>
+  <p class="mh-sub">Un sistema di orchestrazione che non si capisce è un sistema che non si può migliorare. Come loggare in modo che i log siano utili, come correlare le tracce tra agenti diversi, come testare un workflow, e come diagnosticare i 4 bug più comuni.</p>
+  <div class="mh-meta">
+    <div class="mh-stat"><div class="mh-stat-val">Trace ID</div><div class="mh-stat-lbl">Il filo di Arianna</div></div>
+    <div class="mh-stat"><div class="mh-stat-val">4</div><div class="mh-stat-lbl">Bug pattern da riconoscere</div></div>
+    <div class="mh-stat"><div class="mh-stat-value">3 livelli</div><div class="mh-stat-lbl">Di testing</div></div>
+    <div class="mh-stat"><div class="mh-stat-val">Fine serie</div><div class="mh-stat-lbl">Report 5/5</div></div>
+  </div>
+</div>
+
+<div class="nav">
+  <button class="nav-btn active" onclick="show(1)">Tracing strutturato</button>
+  <button class="nav-btn" onclick="show(2)">Cosa loggare</button>
+  <button class="nav-btn" onclick="show(3)">Testing dei workflow</button>
+  <button class="nav-btn" onclick="show(4)">I 4 bug pattern</button>
+  <button class="nav-btn" onclick="show(5)">Metriche e fine serie</button>
+</div>
+
+
+<!-- ═══════════════════════════
+     S1 — TRACING STRUTTURATO
+═══════════════════════════ -->
+<div class="sect active" id="s1">
+  <div class="sect-head">
+    <div class="sect-num">Sezione 01</div>
+    <h2>Tracing strutturato — il filo di Arianna nei workflow multi-agente</h2>
+    <p>In un sistema con un agente singolo, un bug ha una catena di causazione lineare. In un sistema multi-agente con passi paralleli, il bug può essere l'effetto combinato di decisioni prese in agenti diversi, in momenti diversi. Senza tracing strutturato, trovarlo è quasi impossibile.</p>
+  </div>
+  <div class="wrap">
+
+    <div class="prose" style="margin-top:28px;">
+      <p>Il problema fondamentale del debugging multi-agente: i log dei singoli agenti sono corretti presi singolarmente — nessun agente ha commesso un errore individuale evidente. Il problema emerge dall'<em>interazione</em> tra gli agenti: l'output dell'Agente A era tecnicamente corretto ma non quello che l'Agente B si aspettava; l'Agente B ha elaborato quell'output nel modo che poteva, producendo qualcosa che l'Agente C ha interpretato diversamente da come era inteso. Alla fine, l'output del sistema è sbagliato, ma seguendo il log di qualsiasi singolo agente tutto sembra normale.</p>
+      <p>La soluzione è il <strong>tracing strutturato</strong>: ogni operazione — in qualsiasi agente — porta un identificatore univoco che la collega all'esecuzione del workflow che l'ha generata. Questo consente di ricostruire la storia completa di un'esecuzione, correlando eventi da agenti diversi nella sequenza temporale corretta.</p>
+    </div>
+
+    <!-- GL 01 -->
+    <div class="gl-group">
+      <div class="gl-group-title">Linea guida 01</div>
+      <div class="gl-card">
+        <div class="gl-header">
+          <div class="gl-stripe"></div>
+          <div class="gl-num">01</div>
+          <div class="gl-title-wrap">
+            <div class="gl-title">Ogni evento porta 3 identificatori — workflow_id, step_id, span_id — sempre</div>
+            <div class="gl-subtitle">Senza questi tre ID, i log di agenti diversi non si possono correlare — e il debugging multi-agente diventa indovinare</div>
+          </div>
+          <div class="gl-impact-wrap">
+            <div class="gl-impact-stars" style="color:var(--accent)">★★★</div>
+            <div class="gl-impact-lbl">Fondamentale</div>
+          </div>
+        </div>
+        <div class="gl-body">
+
+          <div class="gl-section">
+            <div class="gl-section-lbl">I 3 identificatori e il loro ruolo</div>
+            <p><strong>workflow_id</strong>: identifica l'esecuzione specifica del workflow. Tutti gli eventi di un'esecuzione condividono lo stesso workflow_id — è il filo che li connette tutti, indipendentemente da quale agente li ha generati.</p>
+            <p><strong>step_id</strong>: identifica il passo del workflow a cui appartiene l'evento. Permette di filtrare tutti gli eventi di un passo specifico — utile per verificare cosa è successo nell'Agente B senza guardare il rumore degli altri.</p>
+            <p><strong>span_id</strong>: identifica l'operazione specifica all'interno del passo (una singola chiamata a un tool, un LLM call, una lettura del database). Permette di misurare la latenza di ogni operazione e di trovare il punto esatto dove qualcosa è andato storto.</p>
+          </div>
+
+          <div class="gl-section">
+            <div class="gl-section-lbl">Un trace log strutturato — come appare in pratica</div>
+            <div class="trace-panel">
+              <div class="tp-head">
+                <span>Trace del workflow wf_a4f2 — esecuzione completa</span>
+                <span>workflow_id: wf_20260319_a4f2</span>
+              </div>
+              <div class="tp-body"><span class="cm"># Ogni riga: timestamp | workflow_id | step_id | span_id | evento | dati</span>
+
+<span class="ts">14:00:05.001</span> <span class="wid">wf_a4f2</span> <span class="step">init</span>      <span class="data">sp_001</span> <span class="evt">WORKFLOW_STARTED</span>  <span class="data">input=contratto.pdf type=contract_risk</span>
+<span class="ts">14:00:05.120</span> <span class="wid">wf_a4f2</span> <span class="step">extraction</span> <span class="data">sp_002</span> <span class="evt">STEP_STARTED</span>     <span class="data">agent=document_extractor</span>
+<span class="ts">14:00:05.340</span> <span class="wid">wf_a4f2</span> <span class="step">extraction</span> <span class="data">sp_003</span> <span class="evt">TOOL_CALLED</span>      <span class="data">tool=parse_pdf pages=18</span>
+<span class="ts">14:00:08.210</span> <span class="wid">wf_a4f2</span> <span class="step">extraction</span> <span class="data">sp_003</span> <span class="ok">TOOL_SUCCESS</span>     <span class="data">entities=12 duration=2870ms</span>
+<span class="ts">14:00:08.450</span> <span class="wid">wf_a4f2</span> <span class="step">extraction</span> <span class="data">sp_002</span> <span class="ok">STEP_COMPLETED</span>   <span class="data">output_ref=s3://results/extraction.json</span>
+<span class="ts">14:00:08.460</span> <span class="wid">wf_a4f2</span> <span class="step">analysis</span>  <span class="data">sp_004</span> <span class="evt">STEP_STARTED</span>     <span class="data">agent=risk_analyzer attempt=1</span>
+<span class="ts">14:00:08.700</span> <span class="wid">wf_a4f2</span> <span class="step">analysis</span>  <span class="data">sp_005</span> <span class="evt">LLM_CALLED</span>       <span class="data">model=claude tokens_in=4200</span>
+<span class="ts">14:00:12.300</span> <span class="wid">wf_a4f2</span> <span class="step">analysis</span>  <span class="data">sp_005</span> <span class="ok">LLM_SUCCESS</span>      <span class="data">tokens_out=820 duration=3600ms</span>
+<span class="ts">14:00:12.310</span> <span class="wid">wf_a4f2</span> <span class="step">analysis</span>  <span class="data">sp_006</span> <span class="evt">TOOL_CALLED</span>      <span class="data">tool=search_docs query="penali standard settore"</span>
+<span class="ts">14:00:15.100</span> <span class="wid">wf_a4f2</span> <span class="step">analysis</span>  <span class="data">sp_006</span> <span class="warn">TOOL_EMPTY</span>       <span class="data">results=0 fallback=general_knowledge</span>
+<span class="ts">14:00:18.900</span> <span class="wid">wf_a4f2</span> <span class="step">analysis</span>  <span class="data">sp_004</span> <span class="ok">STEP_COMPLETED</span>   <span class="data">risk_score=ALTO duration=10440ms</span>
+<span class="ts">14:00:18.910</span> <span class="wid">wf_a4f2</span> <span class="step">report</span>    <span class="data">sp_007</span> <span class="evt">STEP_STARTED</span>     <span class="data">agent=report_writer</span>
+<span class="ts">14:00:22.500</span> <span class="wid">wf_a4f2</span> <span class="step">report</span>    <span class="data">sp_007</span> <span class="ok">STEP_COMPLETED</span>   <span class="data">output=report_final.pdf pages=4</span>
+<span class="ts">14:00:22.510</span> <span class="wid">wf_a4f2</span> <span class="step">complete</span>  <span class="data">sp_008</span> <span class="ok">WORKFLOW_COMPLETED</span> <span class="data">total_duration=17509ms steps=3</span></div>
+            </div>
+            <div class="mechanism" style="margin-top:14px;">
+              <div class="mech-lbl">Come leggere questo trace in modo efficiente</div>
+              <p>Per investigare un problema: filtra per workflow_id per vedere tutta l'esecuzione. Poi filtra per step_id per isolare il passo sospetto. Poi guarda i span_id per vedere la sequenza esatta delle operazioni. <strong>L'evento TOOL_EMPTY alla riga 14:00:15.100 è visibile a colpo d'occhio perché ha un livello diverso (WARN) — senza il livello esplicito, si perderebbe nel flusso.</strong> Notare anche il fallback=general_knowledge che spiega perché il risk_score finale potrebbe essere meno preciso del solito.</p>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+
+<!-- ═══════════════════════════
+     S2 — COSA LOGGARE
+═══════════════════════════ -->
+<div class="sect" id="s2">
+  <div class="sect-head">
+    <div class="sect-num">Linea guida 02</div>
+    <h2>Cosa loggare — e cosa non loggare</h2>
+    <p>Loggare tutto è costoso e rende i log inutili per il debugging. Loggare troppo poco lascia ciechi quando serve. La regola è loggare gli eventi che cambiano lo stato del sistema o che segnalano anomalie — non il flusso di esecuzione normale.</p>
+  </div>
+  <div class="wrap">
+
+    <!-- GL 02 -->
+    <div class="gl-group" style="margin-top:28px;">
+      <div class="gl-group-title">Linea guida 02</div>
+      <div class="gl-card">
+        <div class="gl-header">
+          <div class="gl-stripe"></div>
+          <div class="gl-num">02</div>
+          <div class="gl-title-wrap">
+            <div class="gl-title">Logga le decisioni del modello e i risultati anomali — non il testo completo di ogni LLM call</div>
+            <div class="gl-subtitle">Il testo completo dei prompt non serve per il debugging — le decisioni prese e le deviazioni dall'atteso sì</div>
+          </div>
+          <div class="gl-impact-wrap">
+            <div class="gl-impact-stars" style="color:var(--accent)">★★★</div>
+            <div class="gl-impact-lbl">Impatto</div>
+          </div>
+        </div>
+        <div class="gl-body">
+
+          <div class="gl-section">
+            <div class="gl-section-lbl">La tassonomia degli eventi da loggare</div>
+            <p><strong>Sempre loggare:</strong> avvio e completamento di ogni passo (con durata), ogni tool call (con parametri e risultato), errori e warning di qualsiasi tipo, deviazioni dal piano (il modello ha scelto un percorso non atteso), decisioni del supervisore su routing e decomposizione, ogni punto di HITL (richiesta, risposta, timeout), aggiornamenti di stato.</p>
+            <p><strong>Loggare solo per debugging attivo (livello DEBUG):</strong> il prompt completo inviato al modello (voluminoso — utile solo per diagnosticare problemi di prompt), l'output completo del modello, i chunk RAG recuperati.</p>
+            <p><strong>Non loggare mai:</strong> dati personali dell'utente non necessari al debugging, contenuto delle comunicazioni (email, messaggi) prodotte dall'agente (privacy), credenziali e token anche in forma parziale.</p>
+          </div>
+
+          <div class="gl-section">
+            <div class="gl-section-lbl">Il campo "decisione" — loggare perché il modello ha fatto cosa</div>
+            <div class="compare-grid">
+              <div>
+                <div class="pex-lbl bad">❌ Log di azione senza contesto decisionale</div>
+                <div class="prompt-box bad">14:00:12.310 TOOL_CALLED tool=search_docs
+               query="penali standard settore"
+
+→ Sappiamo cosa ha fatto.
+→ Non sappiamo perché ha scelto questo
+  tool in questo momento — né se era
+  la scelta giusta dato il contesto.</div>
+              </div>
+              <div>
+                <div class="pex-lbl good">✓ Log con reasoning del modello (sintetico)</div>
+                <div class="prompt-box good">14:00:12.310 TOOL_CALLED
+  tool=search_docs
+  query="penali standard settore"
+  reasoning="art.12 specifica penali 3%/gg;
+    necessario verificare se è standard
+    per contratti fornitura manifatturiero"
+  confidence=medium
+
+→ Sappiamo cosa ha fatto E perché.
+→ Se il reasoning è sbagliato, lo vediamo
+  nel log senza dover riprodurre l'intera
+  esecuzione.</div>
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+
+<!-- ═══════════════════════════
+     S3 — TESTING DEI WORKFLOW
+═══════════════════════════ -->
+<div class="sect" id="s3">
+  <div class="sect-head">
+    <div class="sect-num">Sezione 03</div>
+    <h2>Testing dei workflow — tre livelli, tre obiettivi</h2>
+    <p>Un sistema di orchestrazione ha più livelli di testing di un sistema con agente singolo. Non basta testare il singolo agente — bisogna testare le interazioni, il comportamento in caso di fallimento, e il sistema end-to-end.</p>
+  </div>
+  <div class="wrap">
+
+    <div class="prose" style="margin-top:28px;">
+      <p>Il testing di un workflow multi-agente non è semplicemente "più test unitari". Richiede tre livelli distinti che coprono problemi diversi — e l'assenza di uno dei tre lascia scoperta una categoria intera di bug.</p>
+    </div>
+
+    <!-- GL 03 -->
+    <div class="gl-group">
+      <div class="gl-group-title">Linea guida 03</div>
+      <div class="gl-card">
+        <div class="gl-header">
+          <div class="gl-stripe"></div>
+          <div class="gl-num">03</div>
+          <div class="gl-title-wrap">
+            <div class="gl-title">Test a tre livelli: agente isolato, integrazione dei passi, sistema end-to-end</div>
+            <div class="gl-subtitle">Ogni livello trova bug che gli altri non trovano — saltarne uno significa avere punti ciechi</div>
+          </div>
+          <div class="gl-impact-wrap">
+            <div class="gl-impact-stars" style="color:var(--accent)">★★★</div>
+            <div class="gl-impact-lbl">Impatto</div>
+          </div>
+        </div>
+        <div class="gl-body">
+
+          <div class="gl-section">
+            <div class="gl-section-lbl">Livello 1 — Test unitari per agente (in isolamento)</div>
+            <p>Testa ogni agente come unità separata, con input mockati. L'obiettivo: verificare che l'agente produca l'output corretto dato un input specifico — indipendentemente da come quell'input è stato generato nel workflow reale.</p>
+            <p><strong>Cosa testare:</strong> l'agente sceglie il tool corretto? I parametri sono corretti? L'output rispetta il contratto di comunicazione (schema)? L'agente gestisce correttamente gli errori dei tool? L'agente riconosce quando deve richiedere input umano?</p>
+            <p><strong>Come implementarlo:</strong> mock dei tool con output predefiniti (success, empty, error per ogni tool). Assertion sullo schema dell'output (campi obbligatori, tipi, range di valori). Test con input edge-case (documento vuoto, dati mancanti, errore su ogni tool). Il modello è non deterministico — usare un LLM judge per valutare la qualità dell'output invece di asserzioni esatte.</p>
+          </div>
+
+          <div class="gl-section">
+            <div class="gl-section-lbl">Livello 2 — Test di integrazione tra passi</div>
+            <p>Testa la trasmissione dell'informazione tra agenti adiacenti nel workflow. L'obiettivo: verificare che l'output dell'Agente A sia compatibile con l'input atteso dall'Agente B — e che il sistema si comporti correttamente quando non lo è.</p>
+            <p><strong>Cosa testare:</strong> il contratto di comunicazione tra ogni coppia di agenti adiacenti. Cosa succede quando l'Agente A produce un output con un campo mancante? Con un valore fuori range? Con un formato diverso dall'atteso? La logica di validazione tra passi funziona e produce errori informativi?</p>
+            <p><strong>Come implementarlo:</strong> test parametrizzati per ogni possibile deviazione dell'output di A rispetto allo schema atteso da B. Verifica che gli errori di validazione abbiano messaggi utili per il debugging. Test della propagazione degli errori: un errore in A blocca correttamente il workflow o viene ignorato?</p>
+          </div>
+
+          <div class="gl-section">
+            <div class="gl-section-lbl">Livello 3 — Test end-to-end</div>
+            <p>Testa il workflow completo con input reali o rappresentativi. L'obiettivo: verificare che il sistema produca l'output finale corretto su casi rappresentativi — e che si comporti correttamente in scenari di fallimento parziale.</p>
+            <p><strong>Cosa testare:</strong> casi tipici (happy path) con input rappresentativi. Casi limite (documento molto lungo, dati ambigui, input in formato inatteso). Scenari di fallimento parziale (tool di un passo che fallisce — il workflow usa correttamente la strategia di failure configurata?). Performance: la latenza del workflow è nei limiti attesi?</p>
+            <p><strong>Il costo dei test end-to-end:</strong> ogni test chiama il modello → costo e latenza elevati. Limitare a un numero gestibile di casi (10–20) e eseguirli periodicamente (non ad ogni commit). Per la CI, usare i test unitari e di integrazione che sono deterministici e veloci.</p>
+            <div class="mechanism" style="margin-top:12px;">
+              <div class="mech-lbl">La regression suite — i casi che non si devono mai rompere</div>
+              <p>Una volta che il sistema è in produzione, ogni bug risolto diventa un caso di test. La regression suite è la collezione di questi casi — input specifici che hanno causato problemi in passato, con il comportamento corretto documentato. <strong>Ogni fix deve aggiungere un caso alla regression suite. Un sistema con 50 casi di regressione è molto più affidabile di uno con 5 — anche se entrambi passano tutti i test.</strong></p>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+
+<!-- ═══════════════════════════
+     S4 — I 4 BUG PATTERN
+═══════════════════════════ -->
+<div class="sect" id="s4">
+  <div class="sect-head">
+    <div class="sect-num">Sezione 04</div>
+    <h2>I 4 pattern di bug più comuni — e come diagnosticarli</h2>
+    <p>Quattro pattern di bug che emergono specificamente nei sistemi di orchestrazione — non nei singoli agenti. Ognuno ha sintomi caratteristici e una diagnosi precisa che permette di identificarli rapidamente nel trace.</p>
+  </div>
+  <div class="wrap">
+
+    <div class="bug-grid" style="margin-top:28px;">
+
+      <div class="bug-card">
+        <div class="bc-head">
+          <div class="bc-badge">Bug Pattern 01</div>
+          <div class="bc-name">Context drift — il contesto si perde tra passi</div>
+        </div>
+        <div class="bc-body">
+          <div class="bc-symptom">Il workflow produce un output che sembra tecnicamente corretto ma <strong>ignora vincoli o dettagli stabiliti all'inizio del workflow</strong>. L'Agente C non sa qualcosa che l'Agente A sapeva — e nessuno se ne è accorto nel mezzo.</div>
+          <div class="bc-diagnosis">Diagnosi nel trace: cerca divergenze tra i dati nell'input originale del workflow e i dati presenti nell'output di passi avanzati. Se l'Agente C non cita un vincolo che era nell'input originale, il contesto si è perso in un passaggio intermedio.</div>
+          <div class="bc-fix"><strong>Fix:</strong> ogni agente deve ricevere il task originale + il proprio input specifico (Report A, GL 01). Non solo l'output del passo precedente. Aggiungere al trace un campo di "contesto propagato" che permette di verificare cosa ogni agente sa dell'input originale.</div>
+        </div>
+      </div>
+
+      <div class="bug-card">
+        <div class="bc-head">
+          <div class="bc-badge">Bug Pattern 02</div>
+          <div class="bc-name">Schema mismatch silenzioso</div>
+        </div>
+        <div class="bc-body">
+          <div class="bc-symptom">L'Agente B riceve l'output dell'Agente A, <strong>non trova il campo che si aspetta, e continua silenziosamente</strong> usando un default o ignorando la mancanza. Il workflow completa senza errori ma il risultato finale è sbagliato o incompleto.</div>
+          <div class="bc-diagnosis">Diagnosi nel trace: cerca warning sulla validazione dello schema tra passi. Se la validazione non è implementata, cerca campi null o default nell'output del Agente B che avrebbero dovuto provenire dall'Agente A.</div>
+          <div class="bc-fix"><strong>Fix:</strong> implementa validazione esplicita tra ogni coppia di agenti (Report A, GL 03). Fallisci apertamente invece di continuare con dati mancanti — un HALT esplicito è più utile di un output silenziosamente sbagliato.</div>
+        </div>
+      </div>
+
+      <div class="bug-card">
+        <div class="bc-head">
+          <div class="bc-badge">Bug Pattern 03</div>
+          <div class="bc-name">Loop senza progressi</div>
+        </div>
+        <div class="bc-body">
+          <div class="bc-symptom">L'agente invoca gli stessi tool con parametri identici o quasi identici per molte iterazioni consecutive. Il workflow <strong>non converge verso una risposta</strong> — continua a girare finché non esaurisce il limite di passi o il timeout.</div>
+          <div class="bc-diagnosis">Diagnosi nel trace: cerca sequenze di TOOL_CALLED con lo stesso tool e parametri simili per 3+ iterazioni consecutive. Se l'output del tool è costantemente TOOL_EMPTY o lo stesso, il modello non sta imparando dall'assenza di risultati.</div>
+          <div class="bc-fix"><strong>Fix:</strong> aggiungi al system prompt istruzioni esplicite per gestire il caso "ricerca senza risultati" (cambia strategia, usa fallback, chiedi input umano). Implementa rilevamento di stallo nel runtime — stesso tool+parametri per N iterazioni → interrompi e segnala (Report Quadro, criteri di terminazione).</div>
+        </div>
+      </div>
+
+      <div class="bug-card">
+        <div class="bc-head">
+          <div class="bc-badge">Bug Pattern 04</div>
+          <div class="bc-name">Decomposizione errata del supervisore</div>
+        </div>
+        <div class="bc-body">
+          <div class="bc-symptom">In una topologia supervisore, il task viene scomposto in sotto-task che <strong>non coprono tutto il task originale, o che si sovrappongono, o che assumono dipendenze non esistenti</strong>. Ogni worker esegue correttamente il proprio sotto-task, ma l'output aggregato manca di parti o ha ridondanze.</div>
+          <div class="bc-diagnosis">Diagnosi nel trace: confronta la decomposizione nei log del supervisore con il task originale. Se la copertura non è completa o ci sono sovrapposizioni, il problema è nel prompt del supervisore o nel suo catalogo dei worker.</div>
+          <div class="bc-fix"><strong>Fix:</strong> aggiungi al prompt del supervisore un passo esplicito di verifica: "prima di assegnare, controlla che i sotto-task coprono completamente il task originale senza sovrapposizioni". Aggiungi test unitari sul supervisore con input diversi per verificare la qualità della decomposizione (Report A, GL 02).</div>
+        </div>
+      </div>
+
+    </div>
+
+  </div>
+</div>
+
+
+<!-- ═══════════════════════════
+     S5 — METRICHE E FINE SERIE
+═══════════════════════════ -->
+<div class="sect" id="s5">
+  <div class="sect-head">
+    <div class="sect-num">Sezione finale</div>
+    <h2>Metriche di qualità e chiusura della serie</h2>
+    <p>Come misurare se un sistema di orchestrazione funziona bene in produzione — e la vista d'insieme dei 5 report.</p>
+  </div>
+  <div class="wrap">
+
+    <table class="met-table" style="margin-top:28px;">
+      <thead>
+        <tr><th>Metrica</th><th>Cosa misura</th><th>Target</th><th>Se fuori target</th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>Workflow completion rate</td>
+          <td>Percentuale di workflow che completano con successo (non in halt o timeout)</td>
+          <td class="m-ok">≥ 0.92 in produzione</td>
+          <td>Analizza i workflow falliti per categoria: quali passi falliscono di più? Errori transitori o permanenti?</td>
+        </tr>
+        <tr>
+          <td>Step retry rate</td>
+          <td>Quante volte in media un passo richiede un retry prima di completare</td>
+          <td class="m-ok">≤ 1.1 (al massimo 10% dei passi richiede un retry)</td>
+          <td>Se alto su un passo specifico: il tool sottostante ha problemi di affidabilità o il timeout è troppo breve.</td>
+        </tr>
+        <tr>
+          <td>Loop detection rate</td>
+          <td>Percentuale di esecuzioni dove viene rilevato un loop senza progressi</td>
+          <td class="m-ok">≤ 0.02 (meno del 2% delle esecuzioni)</td>
+          <td>Se alto: il prompt non gestisce adeguatamente i casi dove i tool non trovano risultati.</td>
+        </tr>
+        <tr>
+          <td>P95 latenza end-to-end</td>
+          <td>Il 95° percentile della latenza totale del workflow</td>
+          <td class="m-warn">Definito caso per caso — deve essere &lt; SLA del prodotto</td>
+          <td>Analizza la distribuzione della latenza per passo: quale passo è il bottleneck? È parallelizzabile?</td>
+        </tr>
+        <tr>
+          <td>HITL approval rate</td>
+          <td>Percentuale di richieste HITL approvate senza modifiche</td>
+          <td class="m-warn">70–90% — sotto il 70% il piano è spesso sbagliato; sopra il 95% c'è troppo HITL</td>
+          <td>Sotto 70%: l'agente pianifica male o il contesto è insufficiente. Sopra 95%: considera di ridurre il HITL per quel passo.</td>
+        </tr>
+        <tr>
+          <td>Schema validation failure rate</td>
+          <td>Percentuale di passaggi tra agenti dove la validazione dello schema fallisce</td>
+          <td class="m-ok">≤ 0.01 — quasi zero</td>
+          <td>Se alto: il contratto di comunicazione tra due agenti specifici non è allineato. Aggiorna lo schema di validazione o i prompt degli agenti.</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <!-- SERIE RECAP -->
+    <div class="prose" style="margin-top:36px;">
+      <p style="font-size:15px; font-weight:500; color:var(--ink2);">La serie completa — 5 report</p>
+    </div>
+    <div class="series-grid">
+      <div class="sg-cell">
+        <div class="sg-label">Quadro</div>
+        <div class="sg-title">Il loop e i pattern</div>
+        <div class="sg-desc">Loop agentic, criteri terminazione, 4 pattern, singolo vs. orchestrato.</div>
+      </div>
+      <div class="sg-cell">
+        <div class="sg-label" style="color:#7b5ea7">Report A</div>
+        <div class="sg-title">Multi-agente</div>
+        <div class="sg-desc">Pipeline, supervisore, peer-to-peer. Contratti di comunicazione.</div>
+      </div>
+      <div class="sg-cell">
+        <div class="sg-label" style="color:#b07d24">Report B</div>
+        <div class="sg-title">Stato</div>
+        <div class="sg-desc">3 strategie, schema, partial failure, retry/skip/halt/compensate.</div>
+      </div>
+      <div class="sg-cell">
+        <div class="sg-label" style="color:#3d7a45">Report C</div>
+        <div class="sg-title">Human-in-the-loop</div>
+        <div class="sg-desc">3 livelli, approvazioni efficaci, timeout, spettro autonomia.</div>
+      </div>
+      <div class="sg-cell">
+        <div class="sg-label" style="color:var(--accent)">Report D ←</div>
+        <div class="sg-title">Osservabilità</div>
+        <div class="sg-desc">Tracing, cosa loggare, 3 livelli testing, 4 bug pattern, metriche.</div>
+      </div>
+    </div>
+
+    <div class="key-point" style="margin-top:28px;">
+      <div class="kp-label">I 5 principi trasversali della serie</div>
+      <div class="kp-text">L'orchestrazione è ingegneria del controllo — non solo ingegneria dell'automazione.</div>
+      <div class="kp-sub" style="margin-top:14px;">
+        <strong>1. Semplicità prima.</strong> Un agente singolo ben configurato supera quasi sempre un sistema multi-agente mal progettato. La complessità dell'orchestrazione si paga sempre e deve comprare qualcosa di misurabile.
+        <br><br>
+        <strong>2. I criteri di terminazione non sono opzionali.</strong> Un loop senza limite di passi e senza rilevamento di stallo non è un agente — è un problema in attesa di manifestarsi in produzione.
+        <br><br>
+        <strong>3. Lo stato è la mappa, l'output è il territorio.</strong> Progettare lo stato prima del codice. Ogni passo legge lo stato all'inizio e lo aggiorna alla fine. La strategia di fallimento per ogni passo si decide prima del deploy, non dopo il primo errore.
+        <br><br>
+        <strong>4. Il HITL selettivo è più efficace del HITL totale.</strong> Riservare l'intervento umano per le decisioni che solo l'umano può prendere. Tutto il resto è noise che porta all'approvazione meccanica.
+        <br><br>
+        <strong>5. Un sistema che non si capisce non si può migliorare.</strong> Il tracing strutturato, i contratti di comunicazione, i tre livelli di testing e le metriche non sono overhead — sono il prerequisito per sapere cosa sta succedendo e per poter intervenire quando qualcosa va storto.
+      </div>
+    </div>
+
+    <div class="checklist" style="margin-top:28px;">
+      <div style="font-family:'IBM Plex Mono',monospace; font-size:9px; letter-spacing:3px; text-transform:uppercase; color:var(--ink4); padding-bottom:10px; border-bottom:1px solid var(--border); margin-bottom:0;">Checklist finale — sistema di orchestrazione pronto per produzione?</div>
+      <div class="check-item">
+        <div class="check-icon">1</div>
+        <div><strong>Tracing strutturato:</strong> ogni evento porta workflow_id, step_id, span_id. I log di agenti diversi si possono correlare per un'esecuzione specifica.</div>
+      </div>
+      <div class="check-item">
+        <div class="check-icon">2</div>
+        <div><strong>Decisioni loggate:</strong> ogni tool call ha un campo reasoning sintetico che spiega perché il modello ha fatto quella scelta — non solo cosa ha fatto.</div>
+      </div>
+      <div class="check-item">
+        <div class="check-icon">3</div>
+        <div><strong>Test a 3 livelli:</strong> test unitari per ogni agente in isolamento (con mock), test di integrazione per ogni coppia di agenti adiacenti, test end-to-end su casi rappresentativi e regression suite.</div>
+      </div>
+      <div class="check-item">
+        <div class="check-icon">4</div>
+        <div><strong>Metriche monitorate:</strong> workflow completion rate, step retry rate, loop detection rate, latenza P95, HITL approval rate, schema validation failure rate — con alert configurati per i valori fuori target.</div>
+      </div>
+      <div class="check-item">
+        <div class="check-icon">✓</div>
+        <div><strong>4 bug pattern conosciuti:</strong> il team sa come riconoscere context drift, schema mismatch silenzioso, loop senza progressi e decomposizione errata del supervisore — e sa dove cercarli nel trace.</div>
+      </div>
+    </div>
+
+    <div class="prose" style="margin-top:32px; padding-top:24px; border-top:1px solid var(--border);">
+      <p style="color:var(--ink4); font-size:13px;">Serie Agenti AI · Leva 05 · Orchestrazione · 5 report (Quadro + A–D) · Marzo 2026</p>
+      <p style="font-size:13px; color:var(--ink4);">Quadro · A · B · C · <strong style="color:var(--ink2);">D ← questo report · Fine serie Leva Orchestrazione</strong></p>
+    </div>
+
+  </div>
+</div>
+
+<div class="footer">
+  <span>Serie Agenti AI — Leva 05 · Orchestrazione · Report D · Tracing e debugging · Fine serie</span>
+  <span>Marzo 2026</span>
+</div>
+
+<script>
+function show(n) {
+  document.querySelectorAll('.sect').forEach(s => s.classList.remove('active'));
+  document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('s'+n).classList.add('active');
+  document.querySelectorAll('.nav-btn')[n-1].classList.add('active');
+  window.scrollTo({top:0, behavior:'smooth'});
+}
+</script>
+</body>
+</html>

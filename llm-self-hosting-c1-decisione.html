@@ -1,0 +1,1385 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Self-Hosting LLM — C1: La Decisione</title>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@300;400;500;700;900&family=JetBrains+Mono:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg:       #0c0c0f;
+  --bg2:      #13131a;
+  --bg3:      #1a1a24;
+  --bg4:      #22222e;
+  --border:   #2a2a38;
+  --border2:  #363648;
+
+  --ink:      #e4e4f0;
+  --ink2:     #a8a8c0;
+  --ink3:     #686880;
+  --ink4:     #404058;
+
+  --violet:   #a07ef0;
+  --violet-l: rgba(160,126,240,0.08);
+  --violet-b: rgba(160,126,240,0.18);
+  --red:      #f05a6a;
+  --red-l:    rgba(240,90,106,0.07);
+  --green:    #50e8a0;
+  --green-l:  rgba(80,232,160,0.07);
+  --amber:    #f0b050;
+  --amber-l:  rgba(240,176,80,0.07);
+  --blue:     #50b8f0;
+  --blue-l:   rgba(80,184,240,0.07);
+}
+
+* { margin:0; padding:0; box-sizing:border-box; }
+html { scroll-behavior:smooth; }
+
+body {
+  background: var(--bg);
+  color: var(--ink);
+  font-family: 'Archivo', sans-serif;
+  font-weight: 300;
+  font-size: 14px;
+  line-height: 1.78;
+}
+
+/* ── MASTHEAD ── */
+.masthead {
+  padding: 72px 64px 60px;
+  border-bottom: 1px solid var(--border);
+  position: relative;
+  overflow: hidden;
+  background: var(--bg2);
+}
+
+.masthead::before {
+  content: '';
+  position: absolute;
+  top: -200px; right: -200px;
+  width: 700px; height: 700px;
+  background: radial-gradient(circle, rgba(160,126,240,0.05) 0%, transparent 65%);
+  pointer-events: none;
+}
+
+.masthead::after {
+  content: 'C1';
+  position: absolute;
+  right: 48px; bottom: -30px;
+  font-weight: 900;
+  font-size: 280px;
+  line-height: 1;
+  color: rgba(160,126,240,0.04);
+  pointer-events: none;
+  letter-spacing: -12px;
+  font-family: 'Archivo', sans-serif;
+}
+
+.series-label {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px;
+  letter-spacing: 4px;
+  text-transform: uppercase;
+  color: var(--ink4);
+  margin-bottom: 6px;
+}
+
+.report-label {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  letter-spacing: 3px;
+  text-transform: uppercase;
+  color: var(--violet);
+  margin-bottom: 32px;
+}
+
+.masthead h1 {
+  font-weight: 900;
+  font-size: clamp(34px, 5vw, 62px);
+  line-height: 1.05;
+  letter-spacing: -2.5px;
+  max-width: 780px;
+}
+
+.masthead h1 em {
+  font-style: italic;
+  color: var(--violet);
+  font-weight: 400;
+}
+
+.masthead-sub {
+  margin-top: 24px;
+  font-size: 15px;
+  color: var(--ink3);
+  max-width: 620px;
+  line-height: 1.75;
+}
+
+.masthead-meta {
+  margin-top: 52px;
+  display: flex;
+  gap: 48px;
+  flex-wrap: wrap;
+  padding-top: 32px;
+  border-top: 1px solid var(--border);
+}
+
+.meta-item span {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 9px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: var(--ink4);
+  display: block;
+}
+
+.meta-item strong {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--ink2);
+  display: block;
+  margin-top: 3px;
+}
+
+/* ── TAB NAV ── */
+.tab-nav {
+  display: flex;
+  background: var(--bg2);
+  border-bottom: 1px solid var(--border);
+  overflow-x: auto;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  scrollbar-width: none;
+}
+.tab-nav::-webkit-scrollbar { display: none; }
+
+.tab-btn {
+  flex-shrink: 0;
+  padding: 0;
+  border: none;
+  cursor: pointer;
+  background: transparent;
+  border-right: 1px solid var(--border);
+  transition: background 0.2s;
+}
+.tab-btn:last-child { border-right: none; }
+
+.tab-btn-inner {
+  display: block;
+  padding: 13px 22px;
+  text-align: left;
+}
+
+.tab-num {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 9px;
+  letter-spacing: 2px;
+  color: var(--ink4);
+  display: block;
+  margin-bottom: 3px;
+}
+
+.tab-name {
+  font-weight: 700;
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--ink3);
+  display: block;
+  line-height: 1.25;
+  white-space: nowrap;
+  transition: color 0.2s;
+}
+
+.tab-btn.active .tab-name { color: var(--ink); }
+.tab-btn.active {
+  position: relative;
+}
+.tab-btn.active::after {
+  content: '';
+  position: absolute;
+  bottom: 0; left: 0; right: 0;
+  height: 2px;
+  background: var(--violet);
+}
+.tab-btn:hover .tab-name { color: var(--ink2); }
+
+/* ── PANELS ── */
+.tab-panel { display: none; }
+.tab-panel.active {
+  display: grid;
+  grid-template-columns: 190px 1fr;
+  min-height: 80vh;
+  animation: fadeIn 0.3s ease;
+}
+
+@keyframes fadeIn {
+  from { opacity:0; transform:translateY(6px); }
+  to   { opacity:1; transform:translateY(0); }
+}
+
+/* ── ASIDE ── */
+.panel-aside {
+  border-right: 1px solid var(--border);
+  padding: 40px 24px 40px 40px;
+  position: sticky;
+  top: 48px;
+  height: calc(100vh - 48px);
+  overflow-y: auto;
+}
+
+.aside-label {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 9px;
+  letter-spacing: 3px;
+  text-transform: uppercase;
+  color: var(--ink4);
+  margin-bottom: 16px;
+}
+
+.panel-aside nav a {
+  display: block;
+  font-size: 12px;
+  color: var(--ink3);
+  text-decoration: none;
+  padding: 7px 0;
+  border-bottom: 1px solid var(--border);
+  line-height: 1.4;
+  transition: color 0.2s;
+}
+.panel-aside nav a:hover { color: var(--violet); }
+.panel-aside nav a:last-child { border: none; }
+
+/* ── CONTENT ── */
+.panel-content {
+  padding: 52px 64px 88px;
+  max-width: 900px;
+}
+
+/* ── TYPOGRAPHY ── */
+.panel-content h3 {
+  font-weight: 700;
+  font-size: 17px;
+  color: var(--ink);
+  margin: 44px 0 16px;
+  letter-spacing: -0.4px;
+  line-height: 1.3;
+}
+.panel-content h3:first-child { margin-top: 0; }
+
+.panel-content h4 {
+  font-weight: 700;
+  font-size: 14px;
+  color: var(--ink);
+  margin: 28px 0 10px;
+}
+
+.panel-content p {
+  font-size: 14px;
+  color: var(--ink2);
+  margin-bottom: 18px;
+  line-height: 1.82;
+}
+
+.panel-content p strong { color: var(--ink); font-weight: 500; }
+
+/* ── COMPONENT: VS BLOCK ── */
+.vs-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 2px;
+  margin: 28px 0;
+}
+
+.vs-card {
+  padding: 28px 26px;
+  background: var(--bg2);
+  border: 1px solid var(--border);
+}
+
+.vs-card-label {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 9px;
+  letter-spacing: 2.5px;
+  text-transform: uppercase;
+  margin-bottom: 14px;
+  display: block;
+}
+
+.vs-card.perceived .vs-card-label { color: var(--amber); }
+.vs-card.real      .vs-card-label { color: var(--green); }
+
+.vs-card h4 {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--ink);
+  margin: 0 0 8px;
+}
+
+.vs-card p {
+  font-size: 13px;
+  color: var(--ink3);
+  line-height: 1.7;
+  margin: 0;
+}
+
+.vs-card p strong { color: var(--ink2); font-weight: 500; }
+
+/* ── COMPONENT: INFO BOX ── */
+.ibox {
+  background: var(--bg2);
+  border: 1px solid var(--border);
+  border-left: 3px solid var(--violet);
+  padding: 24px 28px;
+  margin: 24px 0;
+}
+
+.ibox.red    { border-left-color: var(--red);   background: var(--red-l); }
+.ibox.green  { border-left-color: var(--green);  background: var(--green-l); }
+.ibox.amber  { border-left-color: var(--amber);  background: var(--amber-l); }
+.ibox.blue   { border-left-color: var(--blue);   background: var(--blue-l); }
+
+.ibox-label {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 9px;
+  letter-spacing: 2.5px;
+  text-transform: uppercase;
+  margin-bottom: 10px;
+  display: block;
+}
+
+.ibox       .ibox-label { color: var(--violet); }
+.ibox.red   .ibox-label { color: var(--red); }
+.ibox.green .ibox-label { color: var(--green); }
+.ibox.amber .ibox-label { color: var(--amber); }
+.ibox.blue  .ibox-label { color: var(--blue); }
+
+.ibox p { font-size: 13px; color: var(--ink2); margin: 0; line-height: 1.75; }
+.ibox p strong { color: var(--ink); font-weight: 500; }
+
+/* ── COMPONENT: PRO/CON LIST ── */
+.pro-con {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  margin: 24px 0;
+}
+
+.pc-item {
+  display: flex;
+  gap: 14px;
+  align-items: flex-start;
+  background: var(--bg2);
+  border: 1px solid var(--border);
+  padding: 14px 18px;
+}
+
+.pc-icon {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 13px;
+  flex-shrink: 0;
+  padding-top: 1px;
+  width: 18px;
+}
+
+.pc-icon.pro   { color: var(--green); }
+.pc-icon.con   { color: var(--red); }
+.pc-icon.warn  { color: var(--amber); }
+
+.pc-body { font-size: 13px; color: var(--ink2); line-height: 1.7; }
+.pc-body strong { color: var(--ink); font-weight: 500; }
+
+/* ── COMPONENT: NO-GO CONDITIONS ── */
+.nogo-list {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  margin: 24px 0;
+}
+
+.nogo-item {
+  display: grid;
+  grid-template-columns: 48px 1fr;
+  background: var(--bg2);
+  border: 1px solid var(--border);
+  border-left: 3px solid var(--red);
+  overflow: hidden;
+}
+
+.nogo-num {
+  background: var(--red-l);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--red);
+  border-right: 1px solid var(--border);
+}
+
+.nogo-body {
+  padding: 18px 22px;
+}
+
+.nogo-body h4 {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--ink);
+  margin: 0 0 6px;
+}
+
+.nogo-body p {
+  font-size: 13px;
+  color: var(--ink3);
+  line-height: 1.65;
+  margin: 0;
+}
+
+.nogo-body p strong { color: var(--ink2); font-weight: 500; }
+
+/* ── COMPONENT: APPROACH CARDS (pre-training / fine-tuning / RAG) ── */
+.approach-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 2px;
+  margin: 28px 0;
+}
+
+.approach-card {
+  background: var(--bg2);
+  border: 1px solid var(--border);
+  padding: 28px 22px;
+  position: relative;
+}
+
+.approach-tag {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 9px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: var(--ink4);
+  margin-bottom: 14px;
+  display: block;
+}
+
+.approach-card h4 {
+  font-size: 15px;
+  font-weight: 900;
+  color: var(--ink);
+  margin: 0 0 12px;
+  letter-spacing: -0.5px;
+}
+
+.approach-card p {
+  font-size: 13px;
+  color: var(--ink3);
+  line-height: 1.7;
+  margin-bottom: 16px;
+}
+
+.approach-card p strong { color: var(--ink2); font-weight: 500; }
+
+.approach-verdict {
+  border-top: 1px solid var(--border);
+  padding-top: 14px;
+  font-size: 12px;
+  line-height: 1.6;
+}
+
+.approach-verdict .v-label {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 9px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  display: block;
+  margin-bottom: 6px;
+}
+
+.approach-card.pta .approach-tag,
+.approach-card.pta .v-label { color: var(--red); }
+.approach-card.pta .approach-verdict { color: var(--red); }
+
+.approach-card.fta .approach-tag,
+.approach-card.fta .v-label { color: var(--amber); }
+.approach-card.fta .approach-verdict { color: var(--amber); }
+
+.approach-card.rag .approach-tag,
+.approach-card.rag .v-label { color: var(--green); }
+.approach-card.rag .approach-verdict { color: var(--green); }
+
+/* ── COMPONENT: LICENSE TABLE ── */
+.lic-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 24px 0;
+  font-size: 13px;
+}
+
+.lic-table th {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 9px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: var(--ink4);
+  text-align: left;
+  padding: 10px 14px;
+  border-bottom: 1px solid var(--border2);
+  background: var(--bg3);
+}
+
+.lic-table td {
+  padding: 13px 14px;
+  border-bottom: 1px solid var(--border);
+  color: var(--ink2);
+  vertical-align: top;
+  line-height: 1.6;
+}
+
+.lic-table tr:hover td { background: var(--bg2); }
+.lic-table td:first-child { font-weight: 500; color: var(--ink); }
+
+.lic-badge {
+  display: inline-block;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 9px;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  padding: 3px 8px;
+  border-radius: 2px;
+}
+
+.lic-badge.ok      { background: rgba(80,232,160,0.1); color: var(--green); }
+.lic-badge.warn    { background: rgba(240,176,80,0.1);  color: var(--amber); }
+.lic-badge.limited { background: rgba(240,90,106,0.1);  color: var(--red); }
+
+/* ── COMPONENT: DECISION MATRIX ── */
+.dec-matrix {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 24px 0;
+  font-size: 13px;
+}
+
+.dec-matrix th {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 9px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: var(--ink4);
+  text-align: left;
+  padding: 10px 14px;
+  border-bottom: 1px solid var(--border2);
+  background: var(--bg3);
+}
+
+.dec-matrix td {
+  padding: 13px 14px;
+  border-bottom: 1px solid var(--border);
+  vertical-align: top;
+  color: var(--ink2);
+  line-height: 1.6;
+}
+
+.dec-matrix tr:hover td { background: var(--bg2); }
+.dec-matrix td:first-child { font-weight: 500; color: var(--ink); width: 200px; }
+
+.dot {
+  display: inline-block;
+  width: 10px; height: 10px;
+  border-radius: 50%;
+  margin-right: 6px;
+  vertical-align: middle;
+}
+
+.dot.green { background: var(--green); box-shadow: 0 0 6px var(--green); }
+.dot.amber { background: var(--amber); box-shadow: 0 0 6px var(--amber); }
+.dot.red   { background: var(--red);   box-shadow: 0 0 6px var(--red); }
+
+/* ── FOOTER ── */
+footer {
+  border-top: 1px solid var(--border);
+  background: var(--bg2);
+  padding: 28px 64px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+footer p {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  color: var(--ink4);
+  letter-spacing: 0.5px;
+}
+
+/* ── RESPONSIVE ── */
+@media (max-width: 860px) {
+  .masthead, .panel-content, footer { padding-left: 24px; padding-right: 24px; }
+  .tab-panel.active { grid-template-columns: 1fr; }
+  .panel-aside { display: none; }
+  .approach-grid, .vs-grid { grid-template-columns: 1fr; }
+}
+</style>
+</head>
+<body>
+
+<!-- MASTHEAD -->
+<header class="masthead">
+  <div class="series-label">Serie C · Self-Hosting LLM</div>
+  <div class="report-label">Report C1 — La Decisione</div>
+  <h1>Self-hosting:<br><em>ha senso</em> per noi?</h1>
+  <p class="masthead-sub">Un framework per valutare la decisione di ospitare un LLM su infrastruttura propria — separando i vantaggi reali da quelli percepiti, e identificando con chiarezza quando la risposta è no.</p>
+  <div class="masthead-meta">
+    <div class="meta-item"><span>Serie</span><strong>C · Self-Hosting LLM</strong></div>
+    <div class="meta-item"><span>Report</span><strong>C1 di 7</strong></div>
+    <div class="meta-item"><span>Destinatari</span><strong>Management + IT</strong></div>
+    <div class="meta-item"><span>Prerequisito</span><strong>Report A e B (Sicurezza dati)</strong></div>
+  </div>
+</header>
+
+<!-- TAB NAV -->
+<nav class="tab-nav">
+  <button class="tab-btn active" data-tab="t1">
+    <span class="tab-btn-inner">
+      <span class="tab-num">01</span>
+      <span class="tab-name">Cos'è davvero</span>
+    </span>
+  </button>
+  <button class="tab-btn" data-tab="t2">
+    <span class="tab-btn-inner">
+      <span class="tab-num">02</span>
+      <span class="tab-name">Vantaggi reali</span>
+    </span>
+  </button>
+  <button class="tab-btn" data-tab="t3">
+    <span class="tab-btn-inner">
+      <span class="tab-num">03</span>
+      <span class="tab-name">Svantaggi e limiti</span>
+    </span>
+  </button>
+  <button class="tab-btn" data-tab="t4">
+    <span class="tab-btn-inner">
+      <span class="tab-num">04</span>
+      <span class="tab-name">Quando dire no</span>
+    </span>
+  </button>
+  <button class="tab-btn" data-tab="t5">
+    <span class="tab-btn-inner">
+      <span class="tab-num">05</span>
+      <span class="tab-name">Training, Fine-tuning, RAG</span>
+    </span>
+  </button>
+  <button class="tab-btn" data-tab="t6">
+    <span class="tab-btn-inner">
+      <span class="tab-num">06</span>
+      <span class="tab-name">Licenze</span>
+    </span>
+  </button>
+  <button class="tab-btn" data-tab="t7">
+    <span class="tab-btn-inner">
+      <span class="tab-num">07</span>
+      <span class="tab-name">La decisione</span>
+    </span>
+  </button>
+</nav>
+
+<!-- ══════════════════════════════════════════
+     TAB 1 — COS'È DAVVERO
+══════════════════════════════════════════ -->
+<div class="tab-panel active" id="t1">
+  <aside class="panel-aside">
+    <div class="aside-label">In questa sezione</div>
+    <nav>
+      <a href="#t1-def">Definizione operativa</a>
+      <a href="#t1-varianti">Le tre varianti</a>
+      <a href="#t1-non">Cosa NON è</a>
+    </nav>
+  </aside>
+  <div class="panel-content">
+
+    <h3 id="t1-def">Una definizione operativa</h3>
+    <p>Con <strong>self-hosting di un LLM</strong> si intende il deploy e la gestione di un modello linguistico su infrastruttura sotto il controllo diretto dell'organizzazione — anziché consumarlo tramite le API di un provider esterno come OpenAI, Anthropic o Google.</p>
+    <p>"Sotto controllo diretto" è la parte che conta. Non significa necessariamente su hardware fisico di proprietà — significa che l'organizzazione decide dove i dati risiedono, chi vi accede, e come il sistema viene gestito. Il dato non transita mai attraverso i sistemi di un provider LLM terzo.</p>
+
+    <div class="ibox">
+      <span class="ibox-label">Chiarimento terminologico</span>
+      <p>Nel dibattito comune i termini "self-hosted", "on-premise" e "private deployment" vengono usati in modo intercambiabile. In questo report li distinguiamo con precisione perché le implicazioni pratiche sono molto diverse. <strong>Self-hosted è il termine ombrello</strong> — include sia server fisici propri che cloud privato.</p>
+    </div>
+
+    <h3 id="t1-varianti">Le tre varianti principali</h3>
+    <p>Esistono tre configurazioni distinte, con profili di costo, complessità e controllo molto diversi.</p>
+
+    <div class="pro-con">
+      <div class="pc-item">
+        <div class="pc-icon pro">A</div>
+        <div class="pc-body">
+          <strong>Cloud privato (VPC / tenant dedicato)</strong><br>
+          Il modello gira su infrastruttura cloud (AWS, Azure, GCP) in un tenant completamente isolato, gestito dall'azienda. I dati non vengono mai inviati al provider LLM — restano nel tenant cloud aziendale. È la configurazione più rapida da attivare e la più scalabile. Il trade-off: i dati restano tecnicamente su infrastruttura di un cloud provider americano, con le implicazioni CLOUD Act discusse nel Report B.
+        </div>
+      </div>
+      <div class="pc-item">
+        <div class="pc-icon pro">B</div>
+        <div class="pc-body">
+          <strong>On-premise (server fisici aziendali)</strong><br>
+          Il modello gira su server di proprietà dell'azienda, nella rete aziendale. Massimo controllo: i dati non escono mai dal perimetro fisico. Richiede investimento hardware (GPU dedicate), competenze IT specializzate e tempi di attivazione più lunghi. È la configurazione con il TCO più alto nel breve termine, ma potenzialmente più conveniente a lungo termine per volumi d'uso elevati.
+        </div>
+      </div>
+      <div class="pc-item">
+        <div class="pc-icon warn">C</div>
+        <div class="pc-body">
+          <strong>Ibrido</strong><br>
+          Task e dati classificati a diversi livelli di sensibilità vengono instradati su sistemi diversi: i dati più critici su modello on-premise o cloud privato, i task meno sensibili su API provider con piano enterprise. Architettura più complessa da gestire, ma spesso la più razionale economicamente per aziende con profili d'uso eterogenei.
+        </div>
+      </div>
+    </div>
+
+    <h3 id="t1-non">Cosa il self-hosting NON è</h3>
+    <p>Alcune confusioni comuni che è bene eliminare subito prima di procedere con la valutazione.</p>
+
+    <div class="ibox amber">
+      <span class="ibox-label">Confusioni comuni</span>
+      <p>
+      <strong>Non è addestrare un modello da zero.</strong> Il self-hosting utilizza modelli già addestrati — si tratta di farli girare sulla propria infrastruttura, non di crearli. Addestrare un modello da zero richiede risorse dell'ordine dei milioni di dollari e infrastrutture dedicate che nessuna azienda manifatturiera possiede o ha ragione di possedere.<br><br>
+      <strong>Non è necessariamente più sicuro in assoluto.</strong> Elimina i rischi legati ai provider esterni, ma introduce rischi interni: accessi non autorizzati, configurazioni errate, vulnerabilità dell'infrastruttura. La sicurezza di un sistema self-hosted dipende interamente da come viene gestita internamente.<br><br>
+      <strong>Non è gratuito.</strong> I modelli open source sono gratuiti nella licenza, ma l'infrastruttura, il personale e la manutenzione hanno un costo significativo e spesso superiore alle alternative cloud nel breve-medio termine.<br><br>
+      <strong>Non garantisce automaticamente performance superiori.</strong> I modelli open source disponibili per self-hosting sono molto capaci, ma per molti task i modelli frontier (GPT-4o, Claude Opus) mantengono un vantaggio qualitativo misurabile. Il Report C2 esplora questa dimensione in dettaglio.
+      </p>
+    </div>
+
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════
+     TAB 2 — VANTAGGI REALI
+══════════════════════════════════════════ -->
+<div class="tab-panel" id="t2">
+  <aside class="panel-aside">
+    <div class="aside-label">In questa sezione</div>
+    <nav>
+      <a href="#t2-reali">Vantaggi reali</a>
+      <a href="#t2-percepiti">Vantaggi percepiti</a>
+    </nav>
+  </aside>
+  <div class="panel-content">
+
+    <h3 id="t2-reali">I vantaggi reali — e perché lo sono</h3>
+    <p>La distinzione tra vantaggi reali e percepiti è cruciale. Un vantaggio è reale quando è verificabile, misurabile e non ottenibile con alternative più semplici. Molte argomentazioni a favore del self-hosting non superano questo test.</p>
+
+    <div class="pro-con">
+      <div class="pc-item">
+        <div class="pc-icon pro">+</div>
+        <div class="pc-body">
+          <strong>Controllo completo sul perimetro dei dati</strong><br>
+          È il vantaggio più solido e difficilmente contestabile. Con il self-hosting, i dati non escono mai dall'infrastruttura aziendale — non c'è nessun trasferimento a server di terzi, nessun log esterno, nessuna dipendenza da policy che possono cambiare. Per IP industriale critico o dati sotto NDA stringenti, questo è l'unica soluzione che azzera strutturalmente il rischio di fuoriuscita. Non è un vantaggio percepito: è una proprietà tecnica verificabile.
+        </div>
+      </div>
+      <div class="pc-item">
+        <div class="pc-icon pro">+</div>
+        <div class="pc-body">
+          <strong>Indipendenza da variazioni di prezzo e policy del provider</strong><br>
+          I provider cloud LLM hanno modificato prezzi, limiti e policy più volte negli ultimi due anni. Un sistema self-hosted è immune da questi cambiamenti. Per un'azienda che costruisce processi critici attorno a un LLM, questa stabilità ha un valore concreto — specialmente se il volume d'uso è alto e il costo per token è rilevante nel totale.
+        </div>
+      </div>
+      <div class="pc-item">
+        <div class="pc-icon pro">+</div>
+        <div class="pc-body">
+          <strong>Personalizzazione profonda del modello</strong><br>
+          Con un modello self-hosted è possibile fare fine-tuning su dati proprietari, modificare il comportamento di sistema, integrare conoscenza di dominio specifica. I provider cloud offrono fine-tuning limitato e su modelli non sempre i più recenti. Il controllo completo del modello permette livelli di personalizzazione non accessibili via API.
+        </div>
+      </div>
+      <div class="pc-item">
+        <div class="pc-icon pro">+</div>
+        <div class="pc-body">
+          <strong>Latenza e disponibilità controllabili</strong><br>
+          Un modello on-premise o su cloud privato non condivide infrastruttura con milioni di altri utenti. Latenza più prevedibile, nessun degrado in orari di picco globali, SLA definiti internamente. Rilevante per applicazioni real-time o integrate in processi produttivi con requisiti di risposta stringenti.
+        </div>
+      </div>
+      <div class="pc-item">
+        <div class="pc-icon pro">+</div>
+        <div class="pc-body">
+          <strong>Economie di scala a volumi molto elevati</strong><br>
+          Oltre una certa soglia di utilizzo (tipicamente da centinaia di migliaia a milioni di query/mese), il costo per query del self-hosting diventa inferiore a quello delle API. Il break-even dipende dall'hardware scelto, dal modello e dal volume. Il Report C4 analizza questo punto con dati quantitativi.
+        </div>
+      </div>
+    </div>
+
+    <h3 id="t2-percepiti">I vantaggi percepiti — e perché non lo sono</h3>
+    <p>Queste motivazioni vengono frequentemente citate a favore del self-hosting, ma non reggono a un'analisi più attenta.</p>
+
+    <div class="vs-grid">
+      <div class="vs-card perceived">
+        <span class="vs-card-label">⚠ Vantaggio percepito</span>
+        <h4>"Siamo indipendenti da OpenAI / Anthropic"</h4>
+        <p>L'argomento dell'indipendenza è spesso più emotivo che strategico. I modelli open source su cui si basa il self-hosting (Llama, Mistral) sono sviluppati da organizzazioni esterne — Meta, Mistral AI — da cui si dipende ugualmente per gli aggiornamenti. <strong>Si sostituisce una dipendenza con un'altra, più la dipendenza dall'infrastruttura hardware.</strong></p>
+      </div>
+      <div class="vs-card real">
+        <span class="vs-card-label">✓ Reincadramento corretto</span>
+        <h4>Il vantaggio reale è il controllo sui dati, non l'indipendenza</h4>
+        <p>Se la preoccupazione è strategica (lock-in su un provider), il problema si risolve con architetture multi-provider o API standardizzate. Se la preoccupazione è la sicurezza dei dati, il self-hosting ha senso. Ma "indipendenza" come obiettivo in sé non è una motivazione sufficiente.</p>
+      </div>
+
+      <div class="vs-card perceived">
+        <span class="vs-card-label">⚠ Vantaggio percepito</span>
+        <h4>"Risparmiamo sui costi rispetto alle API"</h4>
+        <p>Vero solo oltre certe soglie di volume e con un calcolo onesto che include hardware, personale, energia, manutenzione e downtime. Sotto quelle soglie — che per molte aziende manifatturiere non vengono mai raggiunte — il self-hosting è significativamente più costoso. <strong>Il confronto corretto non è "costo API vs costo zero del modello open source".</strong></p>
+      </div>
+      <div class="vs-card real">
+        <span class="vs-card-label">✓ Reincadramento corretto</span>
+        <h4>I costi vanno calcolati sul TCO completo</h4>
+        <p>Hardware (o cloud GPU), setup, personale dedicato, aggiornamenti, monitoring, energia. Solo con questo calcolo si può determinare se e quando il self-hosting è economicamente vantaggioso. Il Report C4 fornisce i modelli di calcolo necessari.</p>
+      </div>
+
+      <div class="vs-card perceived">
+        <span class="vs-card-label">⚠ Vantaggio percepito</span>
+        <h4>"Possiamo addestrare il modello sui nostri dati"</h4>
+        <p>Tecnicamente possibile, ma raramente necessario nel modo in cui viene immaginato. Nella maggior parte dei casi d'uso aziendali, il fine-tuning non è indispensabile — il RAG (collegare documenti propri al modello) ottiene risultati comparabili con molto meno sforzo. <strong>Il fine-tuning ha senso in casi specifici, non come strategia generale.</strong></p>
+      </div>
+      <div class="vs-card real">
+        <span class="vs-card-label">✓ Reincadramento corretto</span>
+        <h4>RAG prima, fine-tuning solo quando necessario</h4>
+        <p>Il fine-tuning cambia il comportamento del modello, non la sua conoscenza dei documenti. Per dare al modello accesso a documentazione aziendale, manuali tecnici, procedure interne — il RAG è più efficace, più veloce e più aggiornabile. La sezione 05 di questo report chiarisce la distinzione in dettaglio.</p>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════
+     TAB 3 — SVANTAGGI E LIMITI
+══════════════════════════════════════════ -->
+<div class="tab-panel" id="t3">
+  <aside class="panel-aside">
+    <div class="aside-label">In questa sezione</div>
+    <nav>
+      <a href="#t3-capability">Gap di capability</a>
+      <a href="#t3-costi">Costi reali</a>
+      <a href="#t3-ops">Complessità operativa</a>
+      <a href="#t3-velocity">Model velocity</a>
+      <a href="#t3-sicurezza">Sicurezza interna</a>
+    </nav>
+  </aside>
+  <div class="panel-content">
+
+    <h3 id="t3-capability">1. Il gap di capability — il limite più sottovalutato</h3>
+    <p>I modelli open source disponibili per self-hosting sono notevolmente capaci, ma per molti task il divario con i modelli frontier rimane misurabile e operativamente rilevante. Questo vale in particolare per:</p>
+
+    <div class="pro-con">
+      <div class="pc-item">
+        <div class="pc-icon con">−</div>
+        <div class="pc-body"><strong>Ragionamento complesso e multi-step</strong> — task che richiedono catene di ragionamento lunghe, pianificazione su problemi aperti, gestione di molte variabili simultanee. I modelli più grandi (70B+) si avvicinano ai frontier, quelli più piccoli no.</div>
+      </div>
+      <div class="pc-item">
+        <div class="pc-icon con">−</div>
+        <div class="pc-body"><strong>Comportamenti agentici avanzati</strong> — uso di strumenti multipli, pianificazione autonoma, gestione degli errori in pipeline complesse. I modelli frontier hanno un vantaggio significativo nell'affidabilità su task agentici lunghi.</div>
+      </div>
+      <div class="pc-item">
+        <div class="pc-icon con">−</div>
+        <div class="pc-body"><strong>Instruction following preciso</strong> — seguire istruzioni complesse e sfumate, rispettare formati output rigidi, gestire casi edge in modo coerente. Rilevante per sistemi in produzione dove la prevedibilità è critica.</div>
+      </div>
+      <div class="pc-item">
+        <div class="pc-icon warn">·</div>
+        <div class="pc-body"><strong>Il gap si riduce con la dimensione del modello.</strong> Un Llama 3.3 70B è significativamente più capace di un Llama 3.2 8B. Ma un modello più grande richiede hardware più costoso e latenza più alta. La scelta del modello è sempre un trade-off tra capability, costo e velocità.</div>
+      </div>
+    </div>
+
+    <div class="ibox blue">
+      <span class="ibox-label">Riferimento</span>
+      <p>Il Report C2 mappa in dettaglio quali task reggono bene sui modelli self-hosted e quali no, con riferimenti specifici al contesto manifatturiero. È la lettura complementare indispensabile a questo report per la valutazione dei casi d'uso specifici.</p>
+    </div>
+
+    <h3 id="t3-costi">2. I costi reali — spesso sottostimati</h3>
+    <p>Il costo di un modello open source è zero di licenza. Il costo di un sistema self-hosted in produzione non lo è. Le componenti spesso dimenticate nel calcolo iniziale:</p>
+
+    <div class="pro-con">
+      <div class="pc-item">
+        <div class="pc-icon con">−</div>
+        <div class="pc-body"><strong>Hardware GPU</strong> — per modelli di dimensione utile in produzione (7B–70B parametri) servono GPU con 24–80GB di VRAM. Una A100 da 80GB costa ~10.000€ acquisto, ~3–5€/ora su cloud. Per cluster multi-GPU i costi si moltiplicano.</div>
+      </div>
+      <div class="pc-item">
+        <div class="pc-icon con">−</div>
+        <div class="pc-body"><strong>Personale specializzato</strong> — serve almeno una figura con competenze MLOps / DevOps avanzate per il deploy, la manutenzione, il monitoring e gli aggiornamenti. Non è un task che si delega al sysadmin tradizionale.</div>
+      </div>
+      <div class="pc-item">
+        <div class="pc-icon con">−</div>
+        <div class="pc-body"><strong>Setup e integrazione</strong> — il deploy del modello è la parte più semplice. L'integrazione con i sistemi aziendali (ERP, MES, PLM, documentale) è tipicamente il lavoro più lungo e costoso dell'intero progetto.</div>
+      </div>
+      <div class="pc-item">
+        <div class="pc-icon con">−</div>
+        <div class="pc-body"><strong>Costi operativi continuativi</strong> — energia elettrica (una GPU A100 consuma ~400W), raffreddamento, monitoring, backup, aggiornamenti di sicurezza dell'infrastruttura. Costi fissi indipendenti dall'utilizzo effettivo.</div>
+      </div>
+      <div class="pc-item">
+        <div class="pc-icon con">−</div>
+        <div class="pc-body"><strong>Downtime e ridondanza</strong> — un sistema LLM in produzione che si ferma blocca i processi che vi si appoggiano. La ridondanza (hardware di backup, failover) raddoppia o triplica i costi infrastrutturali.</div>
+      </div>
+    </div>
+
+    <h3 id="t3-ops">3. Complessità operativa — il costo nascosto più grande</h3>
+    <p>Hostare un LLM non è come hostare un'applicazione web tradizionale. Le specificità operative sono significative e spesso sorprendono chi le affronta per la prima volta.</p>
+    <p>Il <strong>serving del modello</strong> richiede framework specializzati (vLLM, Text Generation Inference, Ollama) con parametri di configurazione non banali: batch size, quantizzazione, gestione della memoria, context length. Configurazioni non ottimali possono dimezzare le performance o causare errori in produzione.</p>
+    <p>Il <strong>monitoring</strong> di un LLM in produzione è diverso dal monitoring di un'applicazione tradizionale. Oltre ai classici indicatori di sistema (CPU, memoria, latenza), servono metriche specifiche: token throughput, tasso di errori del modello, drift qualitativo delle risposte nel tempo.</p>
+    <p>La <strong>gestione del contesto e della memoria</strong> — quanto contesto il modello può gestire, come si gestisce la finestra di contesto per conversazioni lunghe, come si previene il degrado delle performance su richieste molto grandi — sono problemi tecnici non banali in produzione.</p>
+
+    <h3 id="t3-velocity">4. Model velocity — il problema dell'evoluzione rapida</h3>
+    <p>Il panorama dei modelli open source evolve a una velocità che non ha precedenti nel software enterprise. Llama 2 è stato rilasciato a luglio 2023, Llama 3 ad aprile 2024, Llama 3.1 a luglio 2024, Llama 3.3 a dicembre 2024. Ogni versione ha portato miglioramenti significativi.</p>
+    <p>Chi fa self-hosting deve rispondere a domande operative concrete: <strong>quando aggiornare il modello base?</strong> Ogni aggiornamento può richiedere re-validazione del comportamento del sistema, re-fine-tuning se il modello era stato specializzato, aggiornamento dell'infrastruttura di serving. <strong>Chi gestisce la migrazione?</strong> Con quale processo? Con quale finestra di downtime accettabile?</p>
+    <p>Non aggiornare significa restare su modelli progressivamente più obsoleti rispetto allo stato dell'arte. Aggiornare frequentemente ha un costo operativo non trascurabile. È un trade-off che va pianificato esplicitamente — non è un problema che si risolve da solo.</p>
+
+    <h3 id="t3-sicurezza">5. Sicurezza interna — un rischio spesso ignorato</h3>
+    <p>Il self-hosting elimina i rischi verso provider esterni, ma introduce una superficie di rischio interna che richiede presidio attivo.</p>
+    <p>Il modello deployato è un sistema che può essere interrogato da chiunque abbia accesso alla rete interna — se non sono implementati controlli di accesso adeguati. Un modello RAG che ha accesso a documentazione tecnica riservata è, senza autenticazione e autorizzazione granulare, un potenziale canale di accesso non controllato a quella documentazione.</p>
+    <p>I log delle query al modello self-hosted contengono i dati inviati dagli utenti interni. Chi ha accesso a questi log? Con quale retention? Con quale processo di audit? Queste domande, banali per qualsiasi sistema informatico tradizionale, vengono spesso ignorate nel rush di mettere in produzione un LLM.</p>
+
+    <div class="ibox red">
+      <span class="ibox-label">Rischio operativo</span>
+      <p>Un sistema LLM self-hosted mal configurato può diventare un vettore di accesso non controllato a dati aziendali sensibili — non dall'esterno, ma dall'interno. <strong>La governance degli accessi al modello e ai suoi log deve essere progettata prima del deploy, non aggiunta dopo.</strong></p>
+    </div>
+
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════
+     TAB 4 — QUANDO DIRE NO
+══════════════════════════════════════════ -->
+<div class="tab-panel" id="t4">
+  <aside class="panel-aside">
+    <div class="aside-label">In questa sezione</div>
+    <nav>
+      <a href="#t4-condizioni">Le 5 condizioni</a>
+      <a href="#t4-alternative">Le alternative</a>
+    </nav>
+  </aside>
+  <div class="panel-content">
+
+    <h3 id="t4-condizioni">Le 5 condizioni che rendono il self-hosting la scelta sbagliata</h3>
+    <p>Prima di investire nella valutazione tecnica del self-hosting, è utile verificare se si rientra in uno di questi scenari. Se anche una sola condizione è soddisfatta, il self-hosting richiede una giustificazione molto solida per essere razionale.</p>
+
+    <div class="nogo-list">
+
+      <div class="nogo-item">
+        <div class="nogo-num">01</div>
+        <div class="nogo-body">
+          <h4>I casi d'uso non sono definiti</h4>
+          <p>Il self-hosting ha senso per task specifici e ripetibili dove il modello viene integrato in un processo. Se l'obiettivo è "avere un LLM nostro per uso generale", la complessità e i costi non si giustificano. <strong>Senza casi d'uso chiari non è possibile valutare né la capability necessaria, né il volume d'uso, né il ROI.</strong> Prima di qualsiasi decisione infrastrutturale serve rispondere: quale processo specifico vogliamo migliorare? Con quale frequenza? Con quali dati?</p>
+        </div>
+      </div>
+
+      <div class="nogo-item">
+        <div class="nogo-num">02</div>
+        <div class="nogo-body">
+          <h4>Mancano le competenze interne (e non si ha budget per acquisirle)</h4>
+          <p>Un sistema LLM self-hosted in produzione richiede almeno una figura con competenze MLOps/DevOps specializzate, disponibile continuativamente per manutenzione, aggiornamenti e troubleshooting. <strong>Non è un progetto che si può delegare a un consulente una tantum e poi dimenticare.</strong> Se queste competenze non esistono internamente e non c'è budget per assumerle o formarle, il self-hosting introduce un rischio operativo maggiore dei rischi che intende mitigare.</p>
+        </div>
+      </div>
+
+      <div class="nogo-item">
+        <div class="nogo-num">03</div>
+        <div class="nogo-body">
+          <h4>Il volume d'uso previsto è basso</h4>
+          <p>I costi fissi del self-hosting (hardware, personale, infrastruttura) si ammortizzano solo con volumi d'uso significativi. Per un utilizzo di poche centinaia di query al giorno, il costo per query del self-hosting è ordini di grandezza superiore a quello delle API. <strong>Il break-even con i provider cloud si raggiunge tipicamente a partire da centinaia di migliaia di query/mese</strong>, con un modello di dimensione media. Il Report C4 fornisce i calcoli dettagliati.</p>
+        </div>
+      </div>
+
+      <div class="nogo-item">
+        <div class="nogo-num">04</div>
+        <div class="nogo-body">
+          <h4>I task richiedono capability di livello frontier</h4>
+          <p>Se i casi d'uso identificati richiedono ragionamento avanzato, pianificazione complessa, output creativi di alta qualità o comportamenti agentici sofisticati, i modelli open source disponibili oggi potrebbero non essere adeguati — o richiedere dimensioni (e costi hardware) tali da rendere il cloud provider più conveniente. <strong>La valutazione della capability deve precedere qualsiasi decisione infrastrutturale.</strong> Il Report C2 fornisce gli strumenti per questa valutazione.</p>
+        </div>
+      </div>
+
+      <div class="nogo-item">
+        <div class="nogo-num">05</div>
+        <div class="nogo-body">
+          <h4>Il profilo di rischio dei dati non lo giustifica</h4>
+          <p>Se i dati trattati non includono IP industriale critico o dati sotto NDA stringenti, un piano enterprise con un provider affidabile risolve quasi tutti i rischi di sicurezza a un costo e una complessità molto inferiori. <strong>Il self-hosting ha il suo principale argomento nella protezione dei dati più critici</strong> — se questo argomento non è rilevante per i casi d'uso specifici, la bilancia pende quasi sempre verso il cloud con piano enterprise.</p>
+        </div>
+      </div>
+
+    </div>
+
+    <h3 id="t4-alternative">Le alternative al self-hosting completo</h3>
+    <p>Il self-hosting non è binario. Tra "API consumer" e "modello on-premise" esiste uno spazio di opzioni che spesso rappresenta il compromesso più razionale.</p>
+
+    <div class="pro-con">
+      <div class="pc-item">
+        <div class="pc-icon pro">→</div>
+        <div class="pc-body"><strong>Piano enterprise con provider affidabile</strong> — risolve GDPR, NDA, data retention. I dati non vengono usati per training, non vengono conservati. Non risolve il fatto che i dati transitino fuori dal perimetro, ma elimina quasi tutti i rischi pratici per la maggior parte delle aziende.</div>
+      </div>
+      <div class="pc-item">
+        <div class="pc-icon pro">→</div>
+        <div class="pc-body"><strong>Architettura ibrida</strong> — i dati più sensibili (IP core, NDA critici) su modello self-hosted; tutti gli altri su API enterprise. Bilanciamento razionale tra costo, complessità e protezione.</div>
+      </div>
+      <div class="pc-item">
+        <div class="pc-icon pro">→</div>
+        <div class="pc-body"><strong>PoC self-hosted prima di investire</strong> — un Proof of Concept su cloud privato (costo limitato, setup rapido) permette di validare la capability del modello sui casi d'uso specifici prima di decidere se investire in infrastruttura on-premise.</div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════
+     TAB 5 — TRAINING, FINE-TUNING, RAG
+══════════════════════════════════════════ -->
+<div class="tab-panel" id="t5">
+  <aside class="panel-aside">
+    <div class="aside-label">In questa sezione</div>
+    <nav>
+      <a href="#t5-tre">I tre approcci</a>
+      <a href="#t5-quando">Quando usare cosa</a>
+      <a href="#t5-manifatturiero">Focus manifatturiero</a>
+    </nav>
+  </aside>
+  <div class="panel-content">
+
+    <h3 id="t5-tre">Pre-training, Fine-tuning, RAG: tre cose diverse</h3>
+    <p>Questa distinzione è fondamentale e viene sistematicamente confusa nel dibattito aziendale sull'AI. Chiarirla cambia radicalmente la valutazione dei costi e della complessità.</p>
+
+    <div class="approach-grid">
+
+      <div class="approach-card pta">
+        <span class="approach-tag">Approccio 01</span>
+        <h4>Pre-training</h4>
+        <p>Addestrare un modello da zero su enormi quantità di testo (centinaia di miliardi di token). È come insegnare a qualcuno a leggere e a capire il linguaggio prima ancora di insegnargli qualcosa di specifico.</p>
+        <p><strong>Costo:</strong> milioni di dollari in compute. <strong>Dati necessari:</strong> centinaia di miliardi di token. <strong>Tempo:</strong> mesi su cluster GPU dedicati.</p>
+        <div class="approach-verdict">
+          <span class="v-label">Verdetto per le aziende</span>
+          Non applicabile. È il dominio esclusivo di OpenAI, Anthropic, Google, Meta. Nessuna azienda manifatturiera ha ragione di considerarlo.
+        </div>
+      </div>
+
+      <div class="approach-card fta">
+        <span class="approach-tag">Approccio 02</span>
+        <h4>Fine-tuning</h4>
+        <p>Continuare ad addestrare un modello già esistente su un dataset più piccolo e specifico, per modificarne il comportamento, lo stile o la specializzazione di dominio. Come fare un corso di specializzazione a qualcuno che sa già leggere e scrivere.</p>
+        <p><strong>Costo:</strong> centinaia/migliaia di euro. <strong>Dati necessari:</strong> da migliaia a decine di migliaia di esempi. <strong>Tempo:</strong> ore o giorni.</p>
+        <div class="approach-verdict">
+          <span class="v-label">Verdetto per le aziende</span>
+          Possibile e a volte utile — ma spesso sovrastimato. Ha senso per modificare stile/tono, specializzare il modello su terminologia di dominio, migliorare l'instruction following su task ripetitivi molto specifici. Non serve per dare al modello accesso a documentazione aziendale.
+        </div>
+      </div>
+
+      <div class="approach-card rag">
+        <span class="approach-tag">Approccio 03</span>
+        <h4>RAG</h4>
+        <p>Retrieval-Augmented Generation: il modello non viene modificato, ma al momento della query viene recuperato il contenuto rilevante da un archivio di documenti e inserito nel contesto. Il modello risponde usando sia la sua conoscenza base sia i documenti recuperati. Come dare a qualcuno un archivio da consultare al momento del bisogno.</p>
+        <p><strong>Costo:</strong> infrastruttura di indicizzazione (database vettoriale). <strong>Dati:</strong> documenti aziendali già esistenti. <strong>Tempo setup:</strong> giorni o settimane.</p>
+        <div class="approach-verdict">
+          <span class="v-label">Verdetto per le aziende</span>
+          L'approccio più adatto per la maggior parte dei casi d'uso aziendali. Permette al modello di rispondere su documentazione interna, manuali, procedure, knowledge base — senza modificare il modello e senza rischi di "memorizzazione" permanente dei dati.
+        </div>
+      </div>
+
+    </div>
+
+    <h3 id="t5-quando">Quando usare cosa: una guida pratica</h3>
+
+    <table class="lic-table">
+      <thead>
+        <tr>
+          <th>Obiettivo</th>
+          <th>Approccio giusto</th>
+          <th>Perché</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>Il modello deve rispondere su manuali tecnici e procedure interne</td>
+          <td><span class="lic-badge ok">RAG</span></td>
+          <td>Documenti aggiornabili senza rifare nulla sul modello</td>
+        </tr>
+        <tr>
+          <td>Il modello deve scrivere in uno stile aziendale specifico</td>
+          <td><span class="lic-badge warn">Fine-tuning</span></td>
+          <td>Cambia il comportamento generativo, non la conoscenza</td>
+        </tr>
+        <tr>
+          <td>Il modello deve usare terminologia tecnica di settore</td>
+          <td><span class="lic-badge warn">Fine-tuning</span> o <span class="lic-badge ok">RAG</span></td>
+          <td>Dipende: vocabolario → fine-tuning; riferimenti specifici → RAG</td>
+        </tr>
+        <tr>
+          <td>Il modello deve compilare form o seguire formati output rigidi</td>
+          <td><span class="lic-badge warn">Fine-tuning</span></td>
+          <td>L'instruction following migliora con esempi di training specifici</td>
+        </tr>
+        <tr>
+          <td>Il modello deve rispondere su dati aggiornati frequentemente</td>
+          <td><span class="lic-badge ok">RAG</span></td>
+          <td>I documenti nel db vettoriale si aggiornano senza toccare il modello</td>
+        </tr>
+        <tr>
+          <td>Il modello deve ragionare su dati strutturati (ERP, MES)</td>
+          <td><span class="lic-badge ok">RAG</span> + integrazione</td>
+          <td>I dati strutturati si recuperano e si inseriscono nel contesto</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <h3 id="t5-manifatturiero">Focus manifatturiero: l'approccio più comune</h3>
+    <p>Per una manifatturiera, il caso d'uso più frequente e immediatamente valorizzabile è il <strong>Q&A su documentazione tecnica interna</strong>: manuali macchina, procedure di qualità, schede tecniche di prodotto, istruzioni operative. Questo task è perfettamente gestibile con RAG su modello self-hosted, senza fine-tuning.</p>
+    <p>Il secondo caso d'uso frequente è il <strong>supporto alla generazione di documenti</strong> (schede non conformità, rapporti di ispezione, offerte standard): qui il fine-tuning su esempi aziendali reali può migliorare la qualità dell'output, ma non è indispensabile per iniziare.</p>
+
+    <div class="ibox green">
+      <span class="ibox-label">Raccomandazione operativa</span>
+      <p>Per qualsiasi progetto self-hosted in ambito manifatturiero: <strong>partire sempre con RAG, senza fine-tuning</strong>. Validare la qualità del sistema su casi d'uso reali. Valutare il fine-tuning solo se emergono limitazioni specifiche che il RAG non risolve. Nella maggior parte dei casi il fine-tuning non sarà necessario.</p>
+    </div>
+
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════
+     TAB 6 — LICENZE
+══════════════════════════════════════════ -->
+<div class="tab-panel" id="t6">
+  <aside class="panel-aside">
+    <div class="aside-label">In questa sezione</div>
+    <nav>
+      <a href="#t6-perche">Perché conta</a>
+      <a href="#t6-modelli">Licenze per modello</a>
+      <a href="#t6-checklist">Cosa verificare</a>
+    </nav>
+  </aside>
+  <div class="panel-content">
+
+    <h3 id="t6-perche">Perché le licenze sono un tema legale, non solo tecnico</h3>
+    <p>I modelli open source non sono tutti equivalenti dal punto di vista della licenza. "Open source" in ambito AI ha un significato diverso rispetto al software tradizionale — spesso i pesi del modello sono distribuiti liberamente, ma con restrizioni sull'uso commerciale, sulla redistribuzione o sulla dimensione dell'organizzazione che li utilizza.</p>
+    <p>Ignorare le condizioni di licenza può configurare una violazione contrattuale con conseguenze legali. Prima di deployare qualsiasi modello in produzione, la licenza va esaminata — idealmente con il supporto del team legale.</p>
+
+    <div class="ibox amber">
+      <span class="ibox-label">Nota importante</span>
+      <p>Le licenze dei modelli AI cambiano: Meta ha modificato i termini di Llama tra la versione 2 e la versione 3. <strong>Verificare sempre la licenza della versione specifica che si intende deployare</strong>, non della famiglia in generale. Le informazioni qui riportate sono accurate a inizio 2026 ma vanno verificate al momento dell'adozione.</p>
+    </div>
+
+    <h3 id="t6-modelli">Panoramica delle licenze per i principali modelli</h3>
+
+    <table class="lic-table">
+      <thead>
+        <tr>
+          <th>Modello</th>
+          <th>Licenza</th>
+          <th>Uso commerciale</th>
+          <th>Restrizioni principali</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>Llama 3.x (Meta)</td>
+          <td>Meta Llama 3 Community License</td>
+          <td><span class="lic-badge ok">Consentito</span></td>
+          <td>Vietato per prodotti con &gt;700M utenti/mese. Vietato addestrare altri LLM. Obbligo di attribuzione.</td>
+        </tr>
+        <tr>
+          <td>Mistral 7B</td>
+          <td>Apache 2.0</td>
+          <td><span class="lic-badge ok">Libero</span></td>
+          <td>Nessuna restrizione rilevante per uso aziendale. La licenza più permissiva disponibile.</td>
+        </tr>
+        <tr>
+          <td>Mixtral 8x7B</td>
+          <td>Apache 2.0</td>
+          <td><span class="lic-badge ok">Libero</span></td>
+          <td>Nessuna restrizione rilevante per uso aziendale.</td>
+        </tr>
+        <tr>
+          <td>Mistral Large / Pixtral</td>
+          <td>Mistral Research License</td>
+          <td><span class="lic-badge warn">Limitato</span></td>
+          <td>Uso commerciale richiede accordo separato con Mistral AI per i modelli premium.</td>
+        </tr>
+        <tr>
+          <td>Gemma 2 (Google)</td>
+          <td>Gemma Terms of Use</td>
+          <td><span class="lic-badge ok">Consentito</span></td>
+          <td>Vietato per applicazioni ad alto rischio (sicurezza, armi). Obbligo di attribuzione.</td>
+        </tr>
+        <tr>
+          <td>DeepSeek R1</td>
+          <td>MIT License</td>
+          <td><span class="lic-badge ok">Libero</span></td>
+          <td>Nessuna restrizione rilevante. Nota: provider con sede in Cina — valutare implicazioni per dati molto sensibili.</td>
+        </tr>
+        <tr>
+          <td>Qwen 2.5 (Alibaba)</td>
+          <td>Qwen License</td>
+          <td><span class="lic-badge ok">Consentito</span></td>
+          <td>Vietato per prodotti con &gt;100M utenti/mese. Provider con sede in Cina — stessa nota DeepSeek.</td>
+        </tr>
+        <tr>
+          <td>Phi-3 / Phi-4 (Microsoft)</td>
+          <td>MIT License</td>
+          <td><span class="lic-badge ok">Libero</span></td>
+          <td>Nessuna restrizione rilevante. Modelli compatti, ottimi per edge deployment.</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <h3 id="t6-checklist">Cosa verificare prima del deploy</h3>
+
+    <div class="pro-con">
+      <div class="pc-item">
+        <div class="pc-icon warn">?</div>
+        <div class="pc-body"><strong>L'uso commerciale è esplicitamente consentito?</strong> Verificare che la licenza della versione specifica non richieda accordi separati per uso commerciale.</div>
+      </div>
+      <div class="pc-item">
+        <div class="pc-icon warn">?</div>
+        <div class="pc-body"><strong>Esistono restrizioni legate alla dimensione dell'organizzazione o al numero di utenti?</strong> Alcune licenze hanno soglie (utenti mensili, fatturato) oltre le quali richiedono accordi commerciali separati.</div>
+      </div>
+      <div class="pc-item">
+        <div class="pc-icon warn">?</div>
+        <div class="pc-body"><strong>È vietato usare il modello per addestrare altri modelli?</strong> Rilevante se si pianifica fine-tuning i cui risultati vengono redistribuiti o usati per addestrare ulteriori sistemi.</div>
+      </div>
+      <div class="pc-item">
+        <div class="pc-icon warn">?</div>
+        <div class="pc-body"><strong>Esistono restrizioni geografiche o legate alla giurisdizione del provider?</strong> Per modelli con provider in paesi extra-UE (Cina, USA), valutare le implicazioni per dati molto sensibili anche in assenza di restrizioni di licenza esplicite.</div>
+      </div>
+      <div class="pc-item">
+        <div class="pc-icon warn">?</div>
+        <div class="pc-body"><strong>Sono richiesti attributi o notifiche specifiche?</strong> Alcune licenze richiedono di indicare che il prodotto utilizza il modello X — verificare se questo è rilevante per la comunicazione verso clienti o nell'interfaccia utente.</div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════
+     TAB 7 — LA DECISIONE
+══════════════════════════════════════════ -->
+<div class="tab-panel" id="t7">
+  <aside class="panel-aside">
+    <div class="aside-label">In questa sezione</div>
+    <nav>
+      <a href="#t7-matrix">Matrice decisionale</a>
+      <a href="#t7-percorso">Il percorso consigliato</a>
+      <a href="#t7-prossimi">Prossimi passi</a>
+    </nav>
+  </aside>
+  <div class="panel-content">
+
+    <h3 id="t7-matrix">Matrice decisionale: self-hosted vs enterprise vs ibrido</h3>
+    <p>Una sintesi operativa per orientare la decisione in base alle caratteristiche specifiche dell'organizzazione e dei casi d'uso.</p>
+
+    <table class="dec-matrix">
+      <thead>
+        <tr>
+          <th>Criterio</th>
+          <th>Favorisce self-hosted</th>
+          <th>Favorisce enterprise cloud</th>
+          <th>Suggerisce ibrido</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>Tipo di dati coinvolti</td>
+          <td><span class="dot green"></span>IP core, NDA critici, dati che non possono uscire dal perimetro</td>
+          <td><span class="dot amber"></span>Dati sensibili ma gestibili con DPA e zero retention</td>
+          <td><span class="dot amber"></span>Mix: alcuni dati critici, altri no</td>
+        </tr>
+        <tr>
+          <td>Competenze IT interne</td>
+          <td><span class="dot green"></span>Team MLOps / DevOps disponibile o acquisibile</td>
+          <td><span class="dot green"></span>IT tradizionale, senza specializzazioni AI/ML</td>
+          <td><span class="dot amber"></span>Competenze parziali, crescita pianificata</td>
+        </tr>
+        <tr>
+          <td>Volume d'uso previsto</td>
+          <td><span class="dot green"></span>Alto (centinaia di migliaia di query/mese)</td>
+          <td><span class="dot amber"></span>Basso-medio (sotto le soglie di break-even)</td>
+          <td><span class="dot amber"></span>Variabile per caso d'uso</td>
+        </tr>
+        <tr>
+          <td>Complessità dei task</td>
+          <td><span class="dot amber"></span>Task definiti e ripetibili, modelli open source adeguati</td>
+          <td><span class="dot green"></span>Task complessi che richiedono capability frontier</td>
+          <td><span class="dot green"></span>Task eterogenei con requisiti diversi</td>
+        </tr>
+        <tr>
+          <td>Orizzonte temporale</td>
+          <td><span class="dot green"></span>Lungo termine, con piano di ammortamento hardware</td>
+          <td><span class="dot green"></span>Breve-medio termine, flessibilità prioritaria</td>
+          <td><span class="dot amber"></span>Medio termine con scalabilità progressiva</td>
+        </tr>
+        <tr>
+          <td>Tolleranza alla complessità</td>
+          <td><span class="dot amber"></span>Alta: team pronto a gestire infrastruttura dedicata</td>
+          <td><span class="dot green"></span>Bassa: focus sul business, non sull'infrastruttura AI</td>
+          <td><span class="dot amber"></span>Media: gestione selettiva della complessità</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <h3 id="t7-percorso">Il percorso consigliato per una manifatturiera in fase di valutazione</h3>
+
+    <div class="pro-con">
+      <div class="pc-item">
+        <div class="pc-icon pro">1</div>
+        <div class="pc-body">
+          <strong>Definire i casi d'uso specifici prima di qualsiasi decisione infrastrutturale</strong><br>
+          Quali processi si vogliono migliorare? Con quali dati? Con quale frequenza? Senza questa mappa, qualsiasi scelta tecnologica è prematura.
+        </div>
+      </div>
+      <div class="pc-item">
+        <div class="pc-icon pro">2</div>
+        <div class="pc-body">
+          <strong>Valutare la capability dei modelli open source sui casi d'uso identificati</strong><br>
+          Prima di investire in infrastruttura, verificare se un modello self-hosted regge i task specifici. Il Report C2 fornisce il framework per questa valutazione. Un PoC su cloud privato (costo limitato, setup rapido) è il metodo più pratico.
+        </div>
+      </div>
+      <div class="pc-item">
+        <div class="pc-icon pro">3</div>
+        <div class="pc-body">
+          <strong>Calcolare il TCO reale e confrontarlo con le alternative</strong><br>
+          Hardware, personale, setup, manutenzione, aggiornamenti. Il confronto corretto è tra self-hosting completo e piano enterprise del provider, su un orizzonte di 3 anni. Il Report C4 fornisce i modelli di calcolo.
+        </div>
+      </div>
+      <div class="pc-item">
+        <div class="pc-icon pro">4</div>
+        <div class="pc-body">
+          <strong>Considerare l'approccio ibrido come default iniziale</strong><br>
+          Per la maggior parte delle manifatturiere, la configurazione più razionale nel breve-medio termine è: piano enterprise per i task generali, self-hosted (cloud privato) per i flussi di lavoro con IP core più critico. L'on-premise full viene valutato solo se il volume d'uso e il profilo di rischio lo giustificano chiaramente.
+        </div>
+      </div>
+    </div>
+
+    <h3 id="t7-prossimi">Prossimi passi nella serie</h3>
+
+    <div class="ibox">
+      <span class="ibox-label">Struttura della serie C</span>
+      <p>
+      <strong>C1 — La decisione</strong> (questo report) · Framework per valutare se il self-hosting ha senso<br>
+      <strong>C2 — Mappa dei task</strong> · Quali task reggono su modelli self-hosted, quali no<br>
+      <strong>C3 — I modelli disponibili</strong> · Panoramica, confronto, model velocity e strategia di aggiornamento<br>
+      <strong>C4 — Le architetture</strong> · On-premise, cloud privato, ibrido: pro/contro e hardware necessario<br>
+      <strong>C5 — I costi</strong> · Analisi quantitativa e confronto con provider cloud<br>
+      <strong>C6 — Agenti su modelli self-hosted</strong> · Capability, limitazioni, framework compatibili<br>
+      <strong>C7 — Implementazione</strong> · Roadmap, integrazione sistemi esistenti, team necessario
+      </p>
+    </div>
+
+  </div>
+</div>
+
+<footer>
+  <p>Report generato con Claude · Anthropic · 2026</p>
+  <p>Serie C: Self-Hosting LLM · Report C1 — La Decisione</p>
+</footer>
+
+<script>
+document.querySelectorAll('.tab-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    const target = btn.dataset.tab;
+    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+    document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+    btn.classList.add('active');
+    document.getElementById(target).classList.add('active');
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  });
+});
+</script>
+
+</body>
+</html>

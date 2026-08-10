@@ -1,0 +1,1775 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>LLM e Sicurezza dei Dati — Guida Tecnico-Operativa</title>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@300;400;500;700;900&family=Archivo+Narrow:wght@400;500;700&family=JetBrains+Mono:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg:      #0f0f0f;
+  --bg2:     #171717;
+  --bg3:     #202020;
+  --bg4:     #282828;
+  --border:  #2e2e2e;
+  --border2: #3a3a3a;
+  --ink:     #e6e6de;
+  --ink2:    #b0b0a8;
+  --ink3:    #707068;
+  --ink4:    #484840;
+
+  --amber:   #f0a44a;
+  --amber-d: #c07820;
+  --amber-l: rgba(240,164,74,0.08);
+  --red:     #f04a6a;
+  --red-l:   rgba(240,74,106,0.07);
+  --green:   #4af0a4;
+  --green-l: rgba(74,240,164,0.07);
+  --blue:    #4ab0f0;
+  --blue-l:  rgba(74,176,240,0.07);
+}
+
+* { margin:0; padding:0; box-sizing:border-box; }
+html { scroll-behavior:smooth; }
+
+body {
+  background: var(--bg);
+  color: var(--ink);
+  font-family: 'Archivo', sans-serif;
+  font-weight: 300;
+  font-size: 14px;
+  line-height: 1.75;
+}
+
+/* ── MASTHEAD ── */
+.masthead {
+  background: var(--bg2);
+  border-bottom: 1px solid var(--border);
+  padding: 64px 60px 52px;
+  position: relative;
+  overflow: hidden;
+}
+
+.masthead::after {
+  content: 'B';
+  position: absolute;
+  right: 40px; bottom: -60px;
+  font-family: 'Archivo', sans-serif;
+  font-weight: 900;
+  font-size: 320px;
+  line-height: 1;
+  color: rgba(240,164,74,0.04);
+  pointer-events: none;
+  letter-spacing: -10px;
+}
+
+.masthead-series {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px;
+  letter-spacing: 4px;
+  text-transform: uppercase;
+  color: var(--ink4);
+  margin-bottom: 6px;
+}
+
+.masthead-label {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  letter-spacing: 3px;
+  text-transform: uppercase;
+  color: var(--amber);
+  margin-bottom: 28px;
+}
+
+.masthead h1 {
+  font-family: 'Archivo', sans-serif;
+  font-weight: 900;
+  font-size: clamp(30px, 4.5vw, 58px);
+  line-height: 1.05;
+  letter-spacing: -2px;
+  max-width: 760px;
+  color: var(--ink);
+}
+
+.masthead-sub {
+  margin-top: 22px;
+  font-size: 15px;
+  color: var(--ink3);
+  max-width: 600px;
+  line-height: 1.75;
+}
+
+.masthead-meta {
+  margin-top: 44px;
+  display: flex;
+  gap: 48px;
+  flex-wrap: wrap;
+}
+
+.masthead-meta-item span {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 9px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: var(--ink4);
+  display: block;
+}
+
+.masthead-meta-item strong {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--ink2);
+  display: block;
+  margin-top: 3px;
+}
+
+/* ── TAB NAV ── */
+.tab-nav {
+  display: flex;
+  background: var(--bg2);
+  border-bottom: 1px solid var(--border);
+  overflow-x: auto;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  scrollbar-width: none;
+}
+
+.tab-nav::-webkit-scrollbar { display: none; }
+
+.tab-btn {
+  flex-shrink: 0;
+  padding: 0;
+  border: none;
+  cursor: pointer;
+  background: transparent;
+  border-right: 1px solid var(--border);
+  transition: background 0.2s;
+}
+
+.tab-btn:last-child { border-right: none; }
+
+.tab-btn-inner {
+  display: block;
+  padding: 14px 22px;
+  text-align: left;
+}
+
+.tab-btn-num {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 9px;
+  letter-spacing: 2px;
+  color: var(--ink4);
+  display: block;
+  margin-bottom: 3px;
+}
+
+.tab-btn-name {
+  font-family: 'Archivo', sans-serif;
+  font-weight: 700;
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--ink3);
+  display: block;
+  line-height: 1.25;
+  transition: color 0.2s;
+  white-space: nowrap;
+}
+
+.tab-btn.active .tab-btn-name { color: var(--ink); }
+.tab-btn.active { position: relative; }
+.tab-btn.active::after {
+  content: '';
+  position: absolute;
+  bottom: 0; left: 0; right: 0;
+  height: 2px;
+  background: var(--amber);
+}
+
+.tab-btn:hover .tab-btn-name { color: var(--ink2); }
+
+/* ── PANELS ── */
+.tab-panel { display: none; }
+.tab-panel.active {
+  display: block;
+  animation: fadeIn 0.3s ease;
+}
+
+@keyframes fadeIn {
+  from { opacity:0; transform: translateY(8px); }
+  to   { opacity:1; transform: translateY(0); }
+}
+
+/* ── PANEL LAYOUT ── */
+.panel-body {
+  display: grid;
+  grid-template-columns: 180px 1fr;
+  min-height: 80vh;
+}
+
+.panel-aside {
+  border-right: 1px solid var(--border);
+  padding: 40px 24px 40px 40px;
+  position: sticky;
+  top: 52px;
+  height: calc(100vh - 52px);
+  overflow-y: auto;
+}
+
+.panel-aside-label {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 9px;
+  letter-spacing: 3px;
+  text-transform: uppercase;
+  color: var(--ink4);
+  margin-bottom: 16px;
+}
+
+.panel-aside nav a {
+  display: block;
+  font-size: 12px;
+  color: var(--ink3);
+  text-decoration: none;
+  padding: 7px 0;
+  border-bottom: 1px solid var(--border);
+  line-height: 1.4;
+  transition: color 0.2s;
+}
+
+.panel-aside nav a:hover { color: var(--amber); }
+.panel-aside nav a:last-child { border: none; }
+
+.panel-content {
+  padding: 48px 60px 80px;
+  max-width: 880px;
+}
+
+/* ── PANEL HERO ── */
+.panel-hero {
+  padding: 40px 60px 36px;
+  border-bottom: 1px solid var(--border);
+  background: var(--bg2);
+}
+
+.panel-hero-tag {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px;
+  letter-spacing: 3px;
+  text-transform: uppercase;
+  color: var(--amber);
+  margin-bottom: 12px;
+}
+
+.panel-hero h2 {
+  font-family: 'Archivo', sans-serif;
+  font-weight: 900;
+  font-size: clamp(22px, 3vw, 36px);
+  letter-spacing: -1px;
+  line-height: 1.1;
+  color: var(--ink);
+}
+
+.panel-hero-sub {
+  margin-top: 14px;
+  font-size: 14px;
+  color: var(--ink3);
+  max-width: 640px;
+}
+
+/* ── TYPOGRAPHY ── */
+.panel-content h3 {
+  font-family: 'Archivo', sans-serif;
+  font-weight: 700;
+  font-size: 16px;
+  color: var(--ink);
+  margin: 36px 0 14px;
+  letter-spacing: -0.3px;
+}
+
+.panel-content h3:first-child { margin-top: 0; }
+
+.panel-content p {
+  font-size: 14px;
+  color: var(--ink2);
+  margin-bottom: 18px;
+  line-height: 1.8;
+}
+
+.panel-content p strong {
+  color: var(--ink);
+  font-weight: 500;
+}
+
+/* ── COMPONENT: RISK ROW ── */
+.risk-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 24px 0;
+  font-size: 13px;
+}
+
+.risk-table th {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 9px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: var(--ink4);
+  text-align: left;
+  padding: 10px 14px;
+  border-bottom: 1px solid var(--border2);
+  background: var(--bg2);
+}
+
+.risk-table td {
+  padding: 14px;
+  border-bottom: 1px solid var(--border);
+  vertical-align: top;
+  color: var(--ink2);
+  line-height: 1.6;
+}
+
+.risk-table tr:hover td { background: var(--bg2); }
+
+.risk-badge {
+  display: inline-block;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 9px;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  padding: 3px 8px;
+  border-radius: 2px;
+}
+
+.risk-badge.alto   { background: rgba(240,74,106,0.12); color: var(--red); }
+.risk-badge.medio  { background: rgba(240,164,74,0.12); color: var(--amber); }
+.risk-badge.basso  { background: rgba(74,240,164,0.10); color: var(--green); }
+
+/* ── COMPONENT: INFO BOX ── */
+.info-box {
+  background: var(--bg2);
+  border: 1px solid var(--border);
+  border-left: 3px solid var(--amber);
+  padding: 24px 28px;
+  margin: 24px 0;
+}
+
+.info-box.red   { border-left-color: var(--red);   background: var(--red-l); }
+.info-box.green { border-left-color: var(--green);  background: var(--green-l); }
+.info-box.blue  { border-left-color: var(--blue);   background: var(--blue-l); }
+
+.info-box-label {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 9px;
+  letter-spacing: 2.5px;
+  text-transform: uppercase;
+  margin-bottom: 10px;
+  display: block;
+}
+
+.info-box.red   .info-box-label { color: var(--red); }
+.info-box.green .info-box-label { color: var(--green); }
+.info-box.blue  .info-box-label { color: var(--blue); }
+.info-box       .info-box-label { color: var(--amber); }
+
+.info-box p {
+  font-size: 13px;
+  color: var(--ink2);
+  margin: 0;
+  line-height: 1.7;
+}
+
+.info-box p strong { color: var(--ink); font-weight: 500; }
+
+/* ── COMPONENT: FLOW ── */
+.flow-row {
+  display: flex;
+  align-items: stretch;
+  gap: 2px;
+  margin: 24px 0;
+}
+
+.flow-node {
+  flex: 1;
+  background: var(--bg2);
+  border: 1px solid var(--border);
+  padding: 18px 14px;
+  text-align: center;
+  position: relative;
+}
+
+.flow-node.danger {
+  border-color: rgba(240,74,106,0.25);
+  background: var(--red-l);
+}
+
+.flow-node::after {
+  content: '→';
+  position: absolute;
+  right: -12px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--ink4);
+  font-size: 14px;
+  z-index: 1;
+  background: var(--bg);
+  padding: 0 2px;
+}
+
+.flow-node:last-child::after { display: none; }
+
+.flow-node-step {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 9px;
+  color: var(--ink4);
+  letter-spacing: 1px;
+  margin-bottom: 8px;
+}
+
+.flow-node-icon { font-size: 20px; margin-bottom: 8px; display: block; }
+
+.flow-node-label {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--ink);
+  margin-bottom: 5px;
+  line-height: 1.3;
+}
+
+.flow-node.danger .flow-node-label { color: var(--red); }
+
+.flow-node-desc {
+  font-size: 11px;
+  color: var(--ink4);
+  line-height: 1.5;
+}
+
+/* ── COMPONENT: PROVIDER TABLE ── */
+.provider-grid {
+  display: grid;
+  grid-template-columns: 140px repeat(3, 1fr);
+  gap: 2px;
+  margin: 24px 0;
+  font-size: 12px;
+}
+
+.provider-cell {
+  background: var(--bg2);
+  border: 1px solid var(--border);
+  padding: 14px 16px;
+  line-height: 1.5;
+}
+
+.provider-cell.header {
+  background: var(--bg3);
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 9px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: var(--ink4);
+  display: flex;
+  align-items: center;
+}
+
+.provider-cell.row-label {
+  background: var(--bg3);
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--ink3);
+  display: flex;
+  align-items: center;
+}
+
+.provider-cell.ok   { color: var(--green); }
+.provider-cell.warn { color: var(--amber); }
+.provider-cell.bad  { color: var(--red);   }
+
+.check { font-size: 14px; margin-right: 6px; }
+
+/* ── COMPONENT: MATRICE RISCHIO ── */
+.matrix-wrap {
+  overflow-x: auto;
+  margin: 24px 0;
+}
+
+.matrix {
+  min-width: 620px;
+  border-collapse: collapse;
+  font-size: 12px;
+  width: 100%;
+}
+
+.matrix th, .matrix td {
+  border: 1px solid var(--border);
+  padding: 11px 14px;
+  text-align: center;
+  vertical-align: middle;
+}
+
+.matrix th {
+  background: var(--bg3);
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 9px;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  color: var(--ink4);
+  font-weight: 400;
+}
+
+.matrix td.row-head {
+  background: var(--bg2);
+  text-align: left;
+  font-weight: 500;
+  color: var(--ink2);
+  font-size: 12px;
+}
+
+.matrix td.r0 { background: rgba(74,240,164,0.08);  color: var(--green); font-size: 11px; font-family: 'JetBrains Mono', monospace; letter-spacing: 1px; }
+.matrix td.r1 { background: rgba(240,164,74,0.08);  color: var(--amber); font-size: 11px; font-family: 'JetBrains Mono', monospace; letter-spacing: 1px; }
+.matrix td.r2 { background: rgba(240,164,74,0.14);  color: #f0c44a;      font-size: 11px; font-family: 'JetBrains Mono', monospace; letter-spacing: 1px; }
+.matrix td.r3 { background: rgba(240,74,106,0.10);  color: var(--red);   font-size: 11px; font-family: 'JetBrains Mono', monospace; letter-spacing: 1px; }
+.matrix td.r4 { background: rgba(240,74,106,0.18);  color: #ff2a50;      font-size: 11px; font-family: 'JetBrains Mono', monospace; letter-spacing: 1px; font-weight: 700; }
+
+/* ── COMPONENT: MITIGAZIONE LIST ── */
+.mitigation-list {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  margin: 24px 0;
+}
+
+.mitigation-item {
+  display: grid;
+  grid-template-columns: 36px 1fr auto;
+  gap: 0;
+  background: var(--bg2);
+  border: 1px solid var(--border);
+  align-items: stretch;
+}
+
+.mitigation-level {
+  background: var(--bg3);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  color: var(--amber);
+  border-right: 1px solid var(--border);
+  writing-mode: vertical-rl;
+  letter-spacing: 1px;
+  font-weight: 600;
+}
+
+.mitigation-body {
+  padding: 18px 22px;
+}
+
+.mitigation-body h4 {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--ink);
+  margin-bottom: 6px;
+}
+
+.mitigation-body p {
+  font-size: 13px;
+  color: var(--ink3);
+  line-height: 1.65;
+  margin: 0;
+}
+
+.mitigation-body p strong { color: var(--ink2); font-weight: 500; }
+
+.mitigation-badge {
+  padding: 18px 16px;
+  display: flex;
+  align-items: center;
+  border-left: 1px solid var(--border);
+  min-width: 80px;
+  flex-direction: column;
+  justify-content: center;
+  gap: 6px;
+}
+
+.mitigation-badge span {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 9px;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  color: var(--ink4);
+  text-align: center;
+}
+
+.mitigation-badge strong {
+  font-size: 12px;
+  font-weight: 700;
+  text-align: center;
+}
+
+.cost-low  strong { color: var(--green); }
+.cost-mid  strong { color: var(--amber); }
+.cost-high strong { color: var(--red); }
+
+/* ── COMPONENT: ALBERO DECISIONALE ── */
+.tree {
+  margin: 28px 0;
+  font-size: 13px;
+}
+
+.tree-node {
+  margin-bottom: 2px;
+}
+
+.tree-question {
+  background: var(--bg3);
+  border: 1px solid var(--border2);
+  padding: 16px 20px;
+  font-weight: 700;
+  color: var(--ink);
+  position: relative;
+  cursor: default;
+}
+
+.tree-question::before {
+  content: '?';
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px;
+  color: var(--amber);
+  margin-right: 10px;
+}
+
+.tree-branches {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 2px;
+  margin-left: 24px;
+  margin-top: 2px;
+  border-left: 2px solid var(--border2);
+  padding-left: 16px;
+}
+
+.tree-branch-label {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 9px;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  color: var(--ink4);
+  padding: 0 0 4px 0;
+}
+
+.tree-answer {
+  background: var(--bg2);
+  border: 1px solid var(--border);
+  padding: 14px 18px;
+  color: var(--ink2);
+  font-size: 13px;
+  line-height: 1.55;
+}
+
+.tree-answer.terminal-green {
+  border-left: 3px solid var(--green);
+  background: var(--green-l);
+}
+
+.tree-answer.terminal-amber {
+  border-left: 3px solid var(--amber);
+  background: var(--amber-l);
+}
+
+.tree-answer.terminal-red {
+  border-left: 3px solid var(--red);
+  background: var(--red-l);
+}
+
+.tree-answer strong { color: var(--ink); font-weight: 700; font-size: 12px; display: block; margin-bottom: 4px; }
+
+/* ── COMPONENT: CHECKLIST ── */
+.checklist {
+  margin: 24px 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.checklist-group-label {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 9px;
+  letter-spacing: 3px;
+  text-transform: uppercase;
+  color: var(--amber);
+  padding: 14px 0 6px;
+  border-bottom: 1px solid var(--border);
+  margin-bottom: 2px;
+}
+
+.checklist-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+  background: var(--bg2);
+  border: 1px solid var(--border);
+  padding: 14px 18px;
+  cursor: pointer;
+  transition: background 0.15s;
+  user-select: none;
+}
+
+.checklist-item:hover { background: var(--bg3); }
+
+.checklist-item.done { opacity: 0.55; }
+
+.checklist-box {
+  width: 18px; height: 18px;
+  border: 1px solid var(--border2);
+  border-radius: 2px;
+  flex-shrink: 0;
+  margin-top: 1px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 11px;
+  color: var(--green);
+  background: transparent;
+  transition: background 0.15s, border-color 0.15s;
+}
+
+.checklist-item.done .checklist-box {
+  background: rgba(74,240,164,0.12);
+  border-color: var(--green);
+}
+
+.checklist-text {
+  font-size: 13px;
+  color: var(--ink2);
+  line-height: 1.6;
+}
+
+.checklist-text strong { color: var(--ink); font-weight: 500; }
+
+/* ── COMPONENT: SELF-HOST COMPARE ── */
+.sh-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 2px;
+  margin: 24px 0;
+}
+
+.sh-card {
+  background: var(--bg2);
+  border: 1px solid var(--border);
+  padding: 24px 20px;
+}
+
+.sh-card-tag {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 9px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: var(--ink4);
+  margin-bottom: 14px;
+  display: block;
+}
+
+.sh-card h4 {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--ink);
+  margin-bottom: 10px;
+  line-height: 1.3;
+}
+
+.sh-card p {
+  font-size: 12px;
+  color: var(--ink3);
+  line-height: 1.65;
+  margin-bottom: 16px;
+}
+
+.sh-card .sh-list {
+  border-top: 1px solid var(--border);
+  padding-top: 14px;
+}
+
+.sh-list-item {
+  font-size: 12px;
+  color: var(--ink3);
+  padding: 4px 0 4px 16px;
+  position: relative;
+  line-height: 1.5;
+}
+
+.sh-list-item::before {
+  position: absolute;
+  left: 0;
+  font-size: 10px;
+}
+
+.sh-list-item.pro::before  { content: '+'; color: var(--green); }
+.sh-list-item.con::before  { content: '−'; color: var(--red); }
+.sh-list-item.note::before { content: '·'; color: var(--amber); }
+
+/* ── FOOTER ── */
+footer {
+  border-top: 1px solid var(--border);
+  background: var(--bg2);
+  padding: 28px 60px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+footer p {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  color: var(--ink4);
+  letter-spacing: 0.5px;
+}
+
+/* ── RESPONSIVE ── */
+@media (max-width: 860px) {
+  .masthead, .panel-hero, .panel-content, footer { padding-left: 24px; padding-right: 24px; }
+  .panel-body { grid-template-columns: 1fr; }
+  .panel-aside { display: none; }
+  .sh-grid, .tree-branches { grid-template-columns: 1fr; }
+  .flow-row { flex-direction: column; }
+  .flow-node::after { display: none; }
+  .provider-grid { grid-template-columns: 100px repeat(3,1fr); }
+}
+</style>
+</head>
+<body>
+
+<!-- MASTHEAD -->
+<header class="masthead">
+  <div class="masthead-series">Serie · LLM e Sicurezza dei Dati</div>
+  <div class="masthead-label">Report B — Guida Tecnico-Operativa</div>
+  <h1>LLM e dati aziendali:<br>rischi, strumenti e policy</h1>
+  <p class="masthead-sub">Analisi tecnica dei rischi, delle policy dei provider, delle strategie di mitigazione e delle opzioni di deployment per team IT e responsabili tecnologici.</p>
+  <div class="masthead-meta">
+    <div class="masthead-meta-item"><span>Destinatari</span><strong>IT, CTO, Responsabili tecnici</strong></div>
+    <div class="masthead-meta-item"><span>Settore</span><strong>Manifatturiero / Industriale</strong></div>
+    <div class="masthead-meta-item"><span>Correlato a</span><strong>Report A — Executive Summary</strong></div>
+    <div class="masthead-meta-item"><span>Anno</span><strong>2026</strong></div>
+  </div>
+</header>
+
+<!-- TAB NAV -->
+<nav class="tab-nav">
+  <button class="tab-btn active" data-tab="s1">
+    <span class="tab-btn-inner">
+      <span class="tab-btn-num">01</span>
+      <span class="tab-btn-name">Flusso dati</span>
+    </span>
+  </button>
+  <button class="tab-btn" data-tab="s2">
+    <span class="tab-btn-inner">
+      <span class="tab-btn-num">02</span>
+      <span class="tab-btn-name">Tassonomia dati</span>
+    </span>
+  </button>
+  <button class="tab-btn" data-tab="s3">
+    <span class="tab-btn-inner">
+      <span class="tab-btn-num">03</span>
+      <span class="tab-btn-name">Mappa rischi</span>
+    </span>
+  </button>
+  <button class="tab-btn" data-tab="s4">
+    <span class="tab-btn-inner">
+      <span class="tab-btn-num">04</span>
+      <span class="tab-btn-name">Policy provider</span>
+    </span>
+  </button>
+  <button class="tab-btn" data-tab="s5">
+    <span class="tab-btn-inner">
+      <span class="tab-btn-num">05</span>
+      <span class="tab-btn-name">Mitigazioni</span>
+    </span>
+  </button>
+  <button class="tab-btn" data-tab="s6">
+    <span class="tab-btn-inner">
+      <span class="tab-btn-num">06</span>
+      <span class="tab-btn-name">Self-hosting</span>
+    </span>
+  </button>
+  <button class="tab-btn" data-tab="s7">
+    <span class="tab-btn-inner">
+      <span class="tab-btn-num">07</span>
+      <span class="tab-btn-name">Decisionale + Policy</span>
+    </span>
+  </button>
+</nav>
+
+<!-- ═══════════════════════════════════════════════════════
+     SEZIONE 1 — FLUSSO TECNICO DEI DATI
+════════════════════════════════════════════════════════ -->
+<div class="tab-panel active" id="s1">
+  <div class="panel-hero">
+    <div class="panel-hero-tag">Sezione 01</div>
+    <h2>Come funziona tecnicamente il flusso dei dati verso un LLM</h2>
+    <p class="panel-hero-sub">Comprendere il percorso tecnico dei dati è il prerequisito per qualsiasi valutazione del rischio.</p>
+  </div>
+  <div class="panel-body">
+    <aside class="panel-aside">
+      <div class="panel-aside-label">In questa sezione</div>
+      <nav>
+        <a href="#s1-flusso">Flusso tecnico</a>
+        <a href="#s1-inference">Inference vs Training</a>
+        <a href="#s1-retention">Retention e log</a>
+        <a href="#s1-piani">Differenze tra piani</a>
+      </nav>
+    </aside>
+    <div class="panel-content">
+
+      <h3 id="s1-flusso">Il percorso di un prompt dal client al modello</h3>
+      <p>Quando un utente invia un messaggio a un LLM commerciale (ChatGPT, Claude, Gemini), il testo percorre una catena tecnica precisa prima che venga generata la risposta. Ogni nodo di questa catena è un punto in cui il dato esiste fuori dal perimetro aziendale.</p>
+
+      <div class="flow-row">
+        <div class="flow-node">
+          <div class="flow-node-step">Step 01</div>
+          <span class="flow-node-icon">🖥️</span>
+          <div class="flow-node-label">Client browser / app</div>
+          <div class="flow-node-desc">Testo inserito dall'utente. Ancora nel perimetro.</div>
+        </div>
+        <div class="flow-node danger">
+          <div class="flow-node-step">Step 02</div>
+          <span class="flow-node-icon">🌐</span>
+          <div class="flow-node-label">HTTPS → API provider</div>
+          <div class="flow-node-desc">Il testo lascia il perimetro. Cifrato in transito (TLS 1.3), ma destinazione esterna.</div>
+        </div>
+        <div class="flow-node danger">
+          <div class="flow-node-step">Step 03</div>
+          <span class="flow-node-icon">📦</span>
+          <div class="flow-node-label">Load balancer / API gateway</div>
+          <div class="flow-node-desc">Autenticazione, rate limiting, routing. Prima elaborazione lato provider.</div>
+        </div>
+        <div class="flow-node danger">
+          <div class="flow-node-step">Step 04</div>
+          <span class="flow-node-icon">📋</span>
+          <div class="flow-node-label">Logging e storage</div>
+          <div class="flow-node-desc">Il prompt viene loggato. Durata: variabile per piano. Questo è il nodo critico.</div>
+        </div>
+        <div class="flow-node">
+          <div class="flow-node-step">Step 05</div>
+          <span class="flow-node-icon">🤖</span>
+          <div class="flow-node-label">Inference engine</div>
+          <div class="flow-node-desc">Il modello elabora il prompt in memoria GPU e genera la risposta.</div>
+        </div>
+      </div>
+
+      <div class="info-box red">
+        <span class="info-box-label">⚠ Punto critico</span>
+        <p>Lo <strong>Step 04 — logging e storage</strong> è il nodo dove il rischio si concretizza. Non è il modello che "memorizza" il dato — il modello è stateless durante l'inference. Il rischio è che il dato esista nei sistemi di logging del provider per un periodo determinato dal contratto, accessibile ai processi interni del provider e potenzialmente soggetto a richieste legali (CLOUD Act USA).</p>
+      </div>
+
+      <h3 id="s1-inference">Inference vs Training: una distinzione fondamentale</h3>
+      <p>La confusione più comune riguarda il rapporto tra i dati inviati durante l'uso e l'addestramento del modello. Si tratta di due processi completamente separati.</p>
+
+      <p><strong>Inference</strong> è il processo con cui il modello genera una risposta a partire da un input. Avviene in tempo reale, in memoria GPU volatile, e <strong>non modifica i pesi del modello</strong>. Il modello non "impara" nulla da una conversazione nel momento in cui la elabora.</p>
+
+      <p><strong>Training</strong> è il processo con cui il modello viene addestrato o aggiornato. Avviene in cicli separati, richiede infrastrutture dedicate, grandi dataset e settimane o mesi di computazione. I dati usati per il training vengono selezionati deliberatamente — non sono automaticamente i log delle conversazioni.</p>
+
+      <div class="info-box">
+        <span class="info-box-label">Nota operativa</span>
+        <p>Il rischio "training sui dati inviati" è <strong>condizionato al piano contrattuale</strong>. Sul piano consumer/gratuito i provider si riservano il diritto di usare le conversazioni per il miglioramento del modello. Sui piani enterprise questo diritto viene esplicitamente rinunciato per contratto. La distinzione è contrattuale, non tecnica.</p>
+      </div>
+
+      <h3 id="s1-retention">Retention dei dati: cosa si conserva e per quanto</h3>
+      <p>Indipendentemente dalla questione training, i provider conservano i log delle conversazioni per finalità operative (sicurezza, anti-abuso, debug). La durata di questa retention dipende dal piano:</p>
+
+      <table class="risk-table">
+        <thead>
+          <tr>
+            <th>Piano</th>
+            <th>Retention tipica</th>
+            <th>Finalità dichiarata</th>
+            <th>Controllo utente</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong>Consumer / gratuito</strong></td>
+            <td>30–90 giorni o più</td>
+            <td>Miglioramento prodotto, safety, training</td>
+            <td>Limitato (opt-out parziale)</td>
+          </tr>
+          <tr>
+            <td><strong>API standard</strong></td>
+            <td>30 giorni (OpenAI), variabile</td>
+            <td>Trust & Safety, abuse detection</td>
+            <td>Maggiore (zero retention opt-in)</td>
+          </tr>
+          <tr>
+            <td><strong>Enterprise</strong></td>
+            <td>Zero o minima (processing only)</td>
+            <td>Solo elaborazione in tempo reale</td>
+            <td>Garantito contrattualmente</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <h3 id="s1-piani">Il problema dell'uso misto</h3>
+      <p>In un contesto aziendale con uso misto — strumenti strutturati su API o piano enterprise + uso informale su piani consumer — coesistono livelli di protezione radicalmente diversi. I dipendenti che usano account personali gratuiti operano nel profilo di rischio più alto, spesso senza saperlo.</p>
+
+      <div class="info-box red">
+        <span class="info-box-label">Scenario tipico ad alto rischio</span>
+        <p>Un dipendente usa un account ChatGPT gratuito personale per velocizzare il proprio lavoro. Incolla estratti di specifiche tecniche, offerte commerciali o comunicazioni riservate. Questi dati rientrano nel profilo di retention massima e nel perimetro di possibile uso per training. <strong>L'azienda non ha visibilità su questo utilizzo, né protezione contrattuale.</strong></p>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════
+     SEZIONE 2 — TASSONOMIA DATI SENSIBILI
+════════════════════════════════════════════════════════ -->
+<div class="tab-panel" id="s2">
+  <div class="panel-hero">
+    <div class="panel-hero-tag">Sezione 02</div>
+    <h2>Tassonomia dei dati sensibili in ambito manifatturiero</h2>
+    <p class="panel-hero-sub">Non tutti i dati hanno lo stesso profilo di rischio. Una classificazione chiara è il prerequisito per costruire regole operative efficaci.</p>
+  </div>
+  <div class="panel-body">
+    <aside class="panel-aside">
+      <div class="panel-aside-label">In questa sezione</div>
+      <nav>
+        <a href="#s2-ip">IP Industriale</a>
+        <a href="#s2-clienti">Dati clienti / NDA</a>
+        <a href="#s2-produzione">Dati di produzione</a>
+        <a href="#s2-hr">Dati personali</a>
+        <a href="#s2-matrix">Matrice classificazione</a>
+      </nav>
+    </aside>
+    <div class="panel-content">
+
+      <h3 id="s2-ip">Categoria A — Proprietà intellettuale industriale</h3>
+      <p>È la categoria più critica e spesso la meno presidiata formalmente, proprio perché non rientra nelle categorie GDPR e non ha un referente normativo diretto. Include:</p>
+      <table class="risk-table">
+        <thead><tr><th>Tipo di dato</th><th>Esempi concreti</th><th>Rischio primario</th></tr></thead>
+        <tbody>
+          <tr><td>Specifiche tecniche di prodotto</td><td>Disegni CAD, tolleranze, materiali, BOM</td><td>Fuoriuscita dal perimetro</td></tr>
+          <tr><td>Processi produttivi</td><td>Parametri di processo, ricette, sequenze operative</td><td>Fuoriuscita + training indiretto</td></tr>
+          <tr><td>Progetti in sviluppo</td><td>Prototipi, roadmap prodotto, R&D in corso</td><td>Anticipazione competitiva</td></tr>
+          <tr><td>Know-how di formulazione</td><td>Composizioni, concentrazioni, trattamenti</td><td>Fuoriuscita dal perimetro</td></tr>
+        </tbody>
+      </table>
+
+      <div class="info-box red">
+        <span class="info-box-label">Perché è la categoria più critica</span>
+        <p>A differenza dei dati personali (tutelati dal GDPR con procedure chiare) o dei dati sotto NDA (tutelati contrattualmente), l'IP industriale può non avere una classificazione formale interna. Spesso i dipendenti non sanno se un documento è "segreto" o no. <strong>Definire esplicitamente cosa appartiene a questa categoria è il primo passo operativo da compiere.</strong></p>
+      </div>
+
+      <h3 id="s2-clienti">Categoria B — Dati di clienti e fornitori (ambito NDA)</h3>
+      <p>Dati scambiati nell'ambito di relazioni commerciali coperte da accordi di riservatezza. Il profilo di rischio è contrattuale, non normativo.</p>
+      <table class="risk-table">
+        <thead><tr><th>Tipo di dato</th><th>Esempi concreti</th><th>Rischio primario</th></tr></thead>
+        <tbody>
+          <tr><td>Specifiche di commessa cliente</td><td>Requisiti tecnici, target di costo, vincoli</td><td>Violazione NDA</td></tr>
+          <tr><td>Offerte e pricing</td><td>Prezzi negoziati, condizioni contrattuali</td><td>Violazione NDA + danno commerciale</td></tr>
+          <tr><td>Dati tecnici fornitori</td><td>Composizioni, specifiche ricevute in confidenza</td><td>Violazione NDA verso terzi</td></tr>
+          <tr><td>Comunicazioni riservate</td><td>Email, verbali, accordi non pubblici</td><td>Violazione NDA</td></tr>
+        </tbody>
+      </table>
+
+      <h3 id="s2-produzione">Categoria C — Dati di produzione e operativi</h3>
+      <p>Dati che descrivono le performance e i parametri operativi dell'impianto. Rilevanti per la competitività, ma con profilo di rischio variabile a seconda del contenuto specifico.</p>
+      <table class="risk-table">
+        <thead><tr><th>Tipo di dato</th><th>Esempi concreti</th><th>Rischio primario</th></tr></thead>
+        <tbody>
+          <tr><td>KPI di produzione</td><td>OEE, scarti, tempi ciclo, rendimenti</td><td>Benchmark competitivo se aggregati</td></tr>
+          <tr><td>Dati di qualità</td><td>Non conformità, cause di scarto, trend</td><td>Esposizione debolezze operative</td></tr>
+          <tr><td>Dati di manutenzione</td><td>MTBF, anomalie ricorrenti, interventi</td><td>Limitato se anonimizzati</td></tr>
+          <tr><td>Parametri impianto</td><td>Setpoint, configurazioni macchina</td><td>Dipende dal contenuto</td></tr>
+        </tbody>
+      </table>
+
+      <h3 id="s2-hr">Categoria D — Dati personali (dipendenti, fornitori, clienti)</h3>
+      <p>L'unica categoria con un framework normativo diretto e consolidato: il GDPR. Il rischio è normativo e sanzionatorio.</p>
+      <table class="risk-table">
+        <thead><tr><th>Tipo di dato</th><th>Esempi concreti</th><th>Rischio primario</th></tr></thead>
+        <tbody>
+          <tr><td>Dati anagrafici dipendenti</td><td>Nome, CF, dati contrattuali, stipendi</td><td>Violazione GDPR</td></tr>
+          <tr><td>Valutazioni e feedback</td><td>Performance review, note disciplinari</td><td>Violazione GDPR + rischio reputazionale</td></tr>
+          <tr><td>Dati di contatto clienti/fornitori</td><td>Email, telefono, dati anagrafici</td><td>Violazione GDPR se extra-UE senza DPA</td></tr>
+        </tbody>
+      </table>
+
+      <h3 id="s2-matrix">Matrice di classificazione operativa</h3>
+      <p>Una classificazione sintetica per orientare le regole operative. Da usare come base per la policy interna.</p>
+
+      <div class="matrix-wrap">
+        <table class="matrix">
+          <thead>
+            <tr>
+              <th style="text-align:left">Tipo di dato</th>
+              <th>Piano consumer</th>
+              <th>Piano API std</th>
+              <th>Piano enterprise</th>
+              <th>Self-hosted</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td class="row-head">IP industriale core (processi, brevetti)</td>
+              <td class="r4">VIETATO</td>
+              <td class="r3">SCONSIGLIATO</td>
+              <td class="r2">RISCHIO BASSO</td>
+              <td class="r0">OK</td>
+            </tr>
+            <tr>
+              <td class="row-head">Specifiche tecniche di prodotto</td>
+              <td class="r4">VIETATO</td>
+              <td class="r2">RISCHIO BASSO</td>
+              <td class="r1">CAUTELA</td>
+              <td class="r0">OK</td>
+            </tr>
+            <tr>
+              <td class="row-head">Dati commesse sotto NDA</td>
+              <td class="r4">VIETATO</td>
+              <td class="r3">SCONSIGLIATO</td>
+              <td class="r1">CAUTELA</td>
+              <td class="r0">OK</td>
+            </tr>
+            <tr>
+              <td class="row-head">Offerte e pricing riservati</td>
+              <td class="r4">VIETATO</td>
+              <td class="r2">RISCHIO BASSO</td>
+              <td class="r1">CAUTELA</td>
+              <td class="r0">OK</td>
+            </tr>
+            <tr>
+              <td class="row-head">Dati personali dipendenti</td>
+              <td class="r4">VIETATO</td>
+              <td class="r3">SCONSIGLIATO</td>
+              <td class="r1">CON DPA</td>
+              <td class="r0">OK</td>
+            </tr>
+            <tr>
+              <td class="row-head">KPI operativi aggregati</td>
+              <td class="r2">RISCHIO BASSO</td>
+              <td class="r1">CAUTELA</td>
+              <td class="r0">OK</td>
+              <td class="r0">OK</td>
+            </tr>
+            <tr>
+              <td class="row-head">Testi generici, comunicazioni pubbliche</td>
+              <td class="r0">OK</td>
+              <td class="r0">OK</td>
+              <td class="r0">OK</td>
+              <td class="r0">OK</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════
+     SEZIONE 3 — MAPPA DEI RISCHI
+════════════════════════════════════════════════════════ -->
+<div class="tab-panel" id="s3">
+  <div class="panel-hero">
+    <div class="panel-hero-tag">Sezione 03</div>
+    <h2>Mappa dei rischi per categoria</h2>
+    <p class="panel-hero-sub">Sei tipologie di rischio distinte, con natura, probabilità e impatto differenti. Non vanno confuse.</p>
+  </div>
+  <div class="panel-body">
+    <aside class="panel-aside">
+      <div class="panel-aside-label">In questa sezione</div>
+      <nav>
+        <a href="#r1">Fuoriuscita perimetro</a>
+        <a href="#r2">Violazione NDA</a>
+        <a href="#r3">Training sui dati</a>
+        <a href="#r4">Breach provider</a>
+        <a href="#r5">Giurisdizione GDPR</a>
+        <a href="#r6">Prompt injection</a>
+      </nav>
+    </aside>
+    <div class="panel-content">
+
+      <table class="risk-table" style="margin-bottom:36px">
+        <thead>
+          <tr>
+            <th>#</th>
+            <th>Tipo di rischio</th>
+            <th>Priorità settore</th>
+            <th>Probabilità</th>
+            <th>Impatto</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr><td>R1</td><td>Fuoriuscita dati dal perimetro</td><td><span class="risk-badge alto">Alta</span></td><td>Certa (by design)</td><td>Dipende dai dati</td></tr>
+          <tr><td>R2</td><td>Violazione NDA contrattuale</td><td><span class="risk-badge alto">Alta</span></td><td>Alta (uso informale)</td><td>Contenzioso, danno reputazionale</td></tr>
+          <tr><td>R3</td><td>Uso per training del modello</td><td><span class="risk-badge medio">Media</span></td><td>Alta su piano free</td><td>Indiretto, difficile da provare</td></tr>
+          <tr><td>R4</td><td>Data breach lato provider</td><td><span class="risk-badge medio">Media</span></td><td>Bassa (ma non zero)</td><td>Potenzialmente molto alto</td></tr>
+          <tr><td>R5</td><td>Non conformità GDPR</td><td><span class="risk-badge medio">Media</span></td><td>Alta senza DPA</td><td>Sanzione + obbligo notifica</td></tr>
+          <tr><td>R6</td><td>Prompt injection</td><td><span class="risk-badge basso">Bassa</span></td><td>Rilevante su sistemi agentici</td><td>Alto in contesti automatizzati</td></tr>
+        </tbody>
+      </table>
+
+      <h3 id="r1">R1 — Fuoriuscita dati dal perimetro</h3>
+      <p><strong>Natura:</strong> strutturale. Non è un bug o un attacco — è il funzionamento normale di qualsiasi LLM cloud. Qualsiasi dato inviato a un provider esterno esce dal perimetro aziendale. Non esiste modo tecnico di "recuperare" dati già inviati.</p>
+      <p><strong>Impatto per il manifatturiero:</strong> massimo quando coinvolge IP industriale o dati sotto NDA. Moderato per dati operativi aggregati. Minimo per contenuto generico.</p>
+      <div class="info-box">
+        <span class="info-box-label">Principio operativo</span>
+        <p>Il dato che non viene inviato non può essere esposto. La prima linea di difesa è la <strong>selezione di cosa si invia</strong>, non il controllo di cosa succede dopo l'invio.</p>
+      </div>
+
+      <h3 id="r2">R2 — Violazione di NDA e obblighi contrattuali</h3>
+      <p><strong>Natura:</strong> contrattuale. Molti NDA definiscono "terza parte" in senso ampio, includendo qualsiasi soggetto esterno all'accordo. Inviare dati coperti da NDA a un provider AI può configurare violazione contrattuale indipendentemente da qualsiasi breach tecnico.</p>
+      <p><strong>Il punto critico:</strong> la violazione avviene nell'atto dell'invio, non in seguito. Non serve che i dati vengano "usati male" — il fatto stesso del trasferimento a un soggetto non previsto dal NDA può essere sufficiente a configurare inadempimento.</p>
+      <p><strong>Probabilità attuale:</strong> alta in presenza di uso informale non regolamentato. I dipendenti spesso non sanno quali documenti sono coperti da NDA e quali no.</p>
+
+      <h3 id="r3">R3 — Uso dei dati per training del modello</h3>
+      <p><strong>Natura:</strong> contrattuale e tecnica. Il modello non "memorizza" dati in tempo reale — il rischio riguarda l'uso dei log di conversazione nei cicli di training successivi.</p>
+      <p><strong>Meccanismo:</strong> se i dati vengono inclusi nei dataset di training, possono influenzare le risposte del modello in modo statisticamente indiretto. Non è un "leak" diretto, ma una forma di assorbimento del know-how aziendale nel modello stesso.</p>
+      <p><strong>Mitigazione contrattuale:</strong> i piani enterprise di tutti i principali provider escludono esplicitamente questo rischio. Sul piano consumer il rischio è reale e non completamente controllabile.</p>
+
+      <h3 id="r4">R4 — Data breach lato provider</h3>
+      <p><strong>Natura:</strong> probabilistico e non controllabile direttamente dall'azienda. I principali provider hanno pratiche di sicurezza robuste, ma non sono immuni da violazioni. Esistono precedenti documentati (bug ChatGPT marzo 2023, incidenti minori su altri provider).</p>
+      <p><strong>Impatto potenziale:</strong> se i dati sono presenti nei log al momento del breach, l'azienda subisce le conseguenze senza aver commesso alcun errore operativo proprio. È un rischio di terze parti.</p>
+      <p><strong>Mitigazione:</strong> zero data retention (piano enterprise) riduce drasticamente la superficie di esposizione. Dati non conservati non possono essere rubati.</p>
+
+      <h3 id="r5">R5 — Non conformità GDPR e giurisdizione</h3>
+      <p><strong>Natura:</strong> normativo e sanzionatorio. Trasferire dati personali di soggetti europei verso server extra-UE richiede basi legali specifiche: clausole contrattuali standard (SCC), binding corporate rules, o adeguatezza del paese destinatario.</p>
+      <p><strong>Situazione attuale:</strong> OpenAI e Anthropic hanno datacenter in Europa (o in fase di attivazione) per i piani enterprise, e offrono DPA conformi al GDPR. Il problema persiste per l'uso su piani consumer, dove queste garanzie non esistono.</p>
+      <p><strong>Obblighi pratici:</strong> qualsiasi trattamento di dati personali tramite LLM richiede un DPA firmato con il provider, la nomina a responsabile del trattamento, e la verifica del registro dei trattamenti.</p>
+
+      <h3 id="r6">R6 — Prompt injection e attacchi tramite input</h3>
+      <p><strong>Natura:</strong> tecnico-applicativo. Rilevante soprattutto quando si costruiscono sistemi agentici o pipeline automatizzate che processano input non trusted (documenti di terzi, email, dati web).</p>
+      <p><strong>Meccanismo:</strong> un input malevolo contenuto in un documento processato dall'agente può manipolare le istruzioni del modello, potenzialmente causando esfiltrazione di dati di contesto o azioni non autorizzate.</p>
+      <p><strong>Rilevanza attuale:</strong> bassa per l'uso conversazionale standard. Alta per sistemi agentici che processano documenti esterni in modo automatico. Da considerare nella fase di progettazione di qualsiasi pipeline AI che legge input non controllati.</p>
+
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════
+     SEZIONE 4 — POLICY DEI PROVIDER
+════════════════════════════════════════════════════════ -->
+<div class="tab-panel" id="s4">
+  <div class="panel-hero">
+    <div class="panel-hero-tag">Sezione 04</div>
+    <h2>Cosa dicono davvero le policy dei provider</h2>
+    <p class="panel-hero-sub">Analisi comparativa delle policy di OpenAI, Anthropic e Google per i principali aspetti rilevanti in ambito aziendale.</p>
+  </div>
+  <div class="panel-body">
+    <aside class="panel-aside">
+      <div class="panel-aside-label">In questa sezione</div>
+      <nav>
+        <a href="#s4-confronto">Confronto provider</a>
+        <a href="#s4-cloudact">CLOUD Act e giurisdizione</a>
+        <a href="#s4-dpa">DPA e GDPR</a>
+        <a href="#s4-piano">Cosa cambia con enterprise</a>
+      </nav>
+    </aside>
+    <div class="panel-content">
+
+      <h3 id="s4-confronto">Confronto sintetico: i tre provider principali</h3>
+
+      <div class="provider-grid">
+        <div class="provider-cell header"></div>
+        <div class="provider-cell header">OpenAI</div>
+        <div class="provider-cell header">Anthropic</div>
+        <div class="provider-cell header">Google (Gemini)</div>
+
+        <div class="provider-cell row-label">Training su dati API</div>
+        <div class="provider-cell ok"><span class="check">✓</span>No (API standard e enterprise)</div>
+        <div class="provider-cell ok"><span class="check">✓</span>No (API standard e enterprise)</div>
+        <div class="provider-cell ok"><span class="check">✓</span>No (Workspace enterprise)</div>
+
+        <div class="provider-cell row-label">Training su piano gratuito</div>
+        <div class="provider-cell warn"><span class="check">⚠</span>Possibile (opt-out disponibile)</div>
+        <div class="provider-cell warn"><span class="check">⚠</span>Possibile su Claude.ai free</div>
+        <div class="provider-cell warn"><span class="check">⚠</span>Possibile su Gemini free</div>
+
+        <div class="provider-cell row-label">Retention dati enterprise</div>
+        <div class="provider-cell ok"><span class="check">✓</span>Zero retention disponibile</div>
+        <div class="provider-cell ok"><span class="check">✓</span>Zero retention enterprise</div>
+        <div class="provider-cell ok"><span class="check">✓</span>Controllabile (Workspace)</div>
+
+        <div class="provider-cell row-label">DPA GDPR disponibile</div>
+        <div class="provider-cell ok"><span class="check">✓</span>Sì (piano enterprise)</div>
+        <div class="provider-cell ok"><span class="check">✓</span>Sì (piano enterprise)</div>
+        <div class="provider-cell ok"><span class="check">✓</span>Sì (Google Workspace)</div>
+
+        <div class="provider-cell row-label">Datacenter EU</div>
+        <div class="provider-cell warn"><span class="check">⚠</span>In espansione (EU enterprise)</div>
+        <div class="provider-cell warn"><span class="check">⚠</span>In valutazione</div>
+        <div class="provider-cell ok"><span class="check">✓</span>Disponibile (EU regions)</div>
+
+        <div class="provider-cell row-label">Accesso dipendenti provider</div>
+        <div class="provider-cell warn"><span class="check">⚠</span>Possibile per safety review</div>
+        <div class="provider-cell warn"><span class="check">⚠</span>Possibile per safety review</div>
+        <div class="provider-cell warn"><span class="check">⚠</span>Possibile per safety review</div>
+      </div>
+
+      <div class="info-box">
+        <span class="info-box-label">Nota metodologica</span>
+        <p>Le policy dei provider cambiano con frequenza. I dati sopra riflettono la situazione a inizio 2026. <strong>Verificare sempre i ToS e i DPA aggiornati prima di firmare contratti enterprise</strong>, e inserire clausole di notifica in caso di modifica delle policy.</p>
+      </div>
+
+      <h3 id="s4-cloudact">Il CLOUD Act USA e le sue implicazioni</h3>
+      <p>Il Clarifying Lawful Overseas Use of Data Act (CLOUD Act, 2018) consente alle autorità americane di richiedere a provider USA l'accesso a dati conservati su qualsiasi loro server, inclusi quelli europei, in presenza di ordini giudiziari.</p>
+      <p>Questo significa che anche i datacenter europei di provider americani (OpenAI, Anthropic, Google, Microsoft) non sono completamente fuori dalla giurisdizione USA. I dati conservati su questi server possono teoricamente essere oggetto di richieste legali americane, indipendentemente dalla location fisica del datacenter.</p>
+      <p><strong>Impatto pratico:</strong> per la maggior parte delle aziende manifatturiere, questo è un rischio residuale. Diventa rilevante in contesti ad alta sensibilità (difesa, infrastrutture critiche, procedimenti legali in corso). Per questi casi, solo il self-hosting su infrastruttura europea non US-based elimina completamente il rischio di giurisdizione.</p>
+
+      <h3 id="s4-dpa">DPA e GDPR: cosa deve contenere il contratto</h3>
+      <p>Per utilizzare qualsiasi LLM cloud in modo conforme al GDPR per il trattamento di dati personali, l'azienda deve stipulare un <strong>Data Processing Agreement (DPA)</strong> con il provider, che deve nominare come Responsabile del Trattamento.</p>
+      <p>Un DPA aziendale minimo deve contenere: finalità e durata del trattamento, natura dei dati trattati, obblighi e diritti del titolare, misure di sicurezza adottate dal responsabile, condizioni per sub-responsabili, procedure per richieste degli interessati, obblighi di notifica breach.</p>
+      <div class="info-box green">
+        <span class="info-box-label">Checklist DPA</span>
+        <p>Prima di attivare un piano enterprise: <strong>(1)</strong> richiedere il DPA standard del provider <strong>(2)</strong> farlo esaminare dal DPO o consulente privacy <strong>(3)</strong> verificare la localizzazione dei datacenter <strong>(4)</strong> aggiornare il Registro dei Trattamenti <strong>(5)</strong> documentare la base legale del trasferimento extra-UE se applicabile.</p>
+      </div>
+
+      <h3 id="s4-piano">Cosa cambia concretamente passando a un piano enterprise</h3>
+      <p>Il salto dal piano API standard o consumer al piano enterprise non è solo economico — è un cambio di profilo di rischio sostanziale:</p>
+      <table class="risk-table">
+        <thead><tr><th>Aspetto</th><th>Piano standard/free</th><th>Piano enterprise</th></tr></thead>
+        <tbody>
+          <tr><td>Uso per training</td><td>Possibile o non escluso</td><td>Contrattualmente escluso</td></tr>
+          <tr><td>Retention dati</td><td>30–90 giorni o più</td><td>Zero (solo processing)</td></tr>
+          <tr><td>DPA GDPR</td><td>Non disponibile</td><td>Incluso e firmabile</td></tr>
+          <tr><td>Visibilità sui log</td><td>Nessuna</td><td>Dashboard + audit log</td></tr>
+          <tr><td>SLA e supporto</td><td>Best effort</td><td>SLA garantiti</td></tr>
+          <tr><td>Controllo accessi</td><td>Individuale</td><td>SSO, permessi per ruolo</td></tr>
+          <tr><td>Costo indicativo</td><td>Gratuito / pochi €/mese</td><td>Da ~€20 a €60+/utente/mese</td></tr>
+        </tbody>
+      </table>
+
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════
+     SEZIONE 5 — STRATEGIE DI MITIGAZIONE
+════════════════════════════════════════════════════════ -->
+<div class="tab-panel" id="s5">
+  <div class="panel-hero">
+    <div class="panel-hero-tag">Sezione 05</div>
+    <h2>Strategie di mitigazione</h2>
+    <p class="panel-hero-sub">Un continuum di interventi da quello più immediato a quello più strutturato. Ogni livello risolve rischi diversi e ha un costo diverso.</p>
+  </div>
+  <div class="panel-body">
+    <aside class="panel-aside">
+      <div class="panel-aside-label">In questa sezione</div>
+      <nav>
+        <a href="#m1">Livello 1 · Policy</a>
+        <a href="#m2">Livello 2 · Anonimizzazione</a>
+        <a href="#m3">Livello 3 · Enterprise</a>
+        <a href="#m4">Livello 4 · Cloud privato</a>
+        <a href="#m5">Livello 5 · On-premise</a>
+        <a href="#m-sintesi">Quale livello scegliere</a>
+      </nav>
+    </aside>
+    <div class="panel-content">
+
+      <div class="mitigation-list">
+
+        <div class="mitigation-item" id="m1">
+          <div class="mitigation-level">L1</div>
+          <div class="mitigation-body">
+            <h4>Policy di utilizzo e classificazione dei dati</h4>
+            <p>Definire regole operative su cosa si può e non si può condividere con strumenti AI. Comunicarle a tutti i dipendenti con esempi concreti. Includere una classificazione dei dati aziendali (liberamente condivisibili / da anonimizzare / mai condivisibili). <strong>È l'intervento più urgente e con il miglior rapporto costo-efficacia</strong> — non richiede tecnologia, si implementa in settimane, riduce immediatamente il rischio derivante dall'uso inconsapevole.</p>
+          </div>
+          <div class="mitigation-badge cost-low">
+            <span>Costo</span><strong>Basso</strong>
+            <span>Tempo</span><strong>Settimane</strong>
+          </div>
+        </div>
+
+        <div class="mitigation-item" id="m2">
+          <div class="mitigation-level">L2</div>
+          <div class="mitigation-body">
+            <h4>Anonimizzazione e data masking prima dell'invio</h4>
+            <p>Prima di inviare dati sensibili a un LLM esterno, rimuovere o sostituire gli elementi identificativi o riservati. Una specifica tecnica diventa "componente X", un cliente diventa "cliente A". Richiede disciplina operativa, ma riduce significativamente la superficie di esposizione. <strong>Per molti casi d'uso (redazione testi, analisi di struttura, supporto alla scrittura) è sufficiente per rendere sicuro l'uso di LLM esterni.</strong> Tecniche più avanzate: pseudonimizzazione sistematica, tokenizzazione, strumenti di masking automatico.</p>
+          </div>
+          <div class="mitigation-badge cost-low">
+            <span>Costo</span><strong>Basso</strong>
+            <span>Tempo</span><strong>Immediato</strong>
+          </div>
+        </div>
+
+        <div class="mitigation-item" id="m3">
+          <div class="mitigation-level">L3</div>
+          <div class="mitigation-body">
+            <h4>Piano enterprise + contratto DPA</h4>
+            <p>Adottare un piano enterprise con il provider scelto: zero data retention, zero training sui dati, DPA conforme al GDPR, datacenter EU dove disponibile. <strong>Risolve quasi completamente il rischio normativo (GDPR) e il rischio contrattuale (NDA), che sono i rischi prioritari per il manifatturiero.</strong> Non elimina il fatto che i dati escano dal perimetro — ma garantisce che non vengano conservati né usati dopo l'elaborazione. Costi: variabili per provider, tipicamente da 20 a 60€/utente/mese.</p>
+          </div>
+          <div class="mitigation-badge cost-mid">
+            <span>Costo</span><strong>Medio</strong>
+            <span>Tempo</span><strong>1–4 settimane</strong>
+          </div>
+        </div>
+
+        <div class="mitigation-item" id="m4">
+          <div class="mitigation-level">L4</div>
+          <div class="mitigation-body">
+            <h4>LLM su cloud privato (self-hosting "light")</h4>
+            <p>Deploy di un modello open source (Llama 3, Mistral, Mixtral) su infrastruttura cloud propria (AWS VPC, Azure Private, Google Cloud privato). I dati non escono dal proprio tenant cloud. Mantiene scalabilità e flessibilità del cloud, elimina la condivisione con il provider LLM. <strong>Adatto per aziende che già usano cloud enterprise e vogliono il controllo pieno dei dati senza la complessità dell'on-premise.</strong> Richiede competenze DevOps/MLOps e gestione del modello (aggiornamenti, monitoring, scaling).</p>
+          </div>
+          <div class="mitigation-badge cost-mid">
+            <span>Costo</span><strong>Medio-alto</strong>
+            <span>Tempo</span><strong>1–3 mesi</strong>
+          </div>
+        </div>
+
+        <div class="mitigation-item" id="m5">
+          <div class="mitigation-level">L5</div>
+          <div class="mitigation-body">
+            <h4>Self-hosting on-premise</h4>
+            <p>Il modello gira su server fisici aziendali. I dati non escono mai dalla rete aziendale. <strong>Massimo controllo, massima complessità.</strong> Richiede hardware dedicato (GPU enterprise), competenze IT specializzate, gestione completa del ciclo di vita del modello. I modelli open source disponibili sono capaci ma inferiori ai modelli frontier per task complessi. Ha senso per aziende con requisiti di sicurezza molto stringenti e casi d'uso ben definiti dove la capability del modello non è il fattore critico.</p>
+          </div>
+          <div class="mitigation-badge cost-high">
+            <span>Costo</span><strong>Alto</strong>
+            <span>Tempo</span><strong>3–12 mesi</strong>
+          </div>
+        </div>
+
+      </div>
+
+      <h3 id="m-sintesi">Quale livello scegliere: una guida pratica</h3>
+      <p>I livelli non sono esclusivi — si combinano. Il percorso più razionale per una manifatturiera in situazione mista:</p>
+
+      <div class="info-box green">
+        <span class="info-box-label">Percorso consigliato</span>
+        <p><strong>Subito:</strong> Livello 1 (policy) — costo minimo, impatto massimo sull'uso informale già in corso.<br>
+        <strong>Breve termine:</strong> Livello 3 (enterprise) per gli strumenti strutturati già in uso — risolve GDPR e NDA.<br>
+        <strong>Parallelo:</strong> Livello 2 (anonimizzazione) come pratica operativa per tutti gli utenti.<br>
+        <strong>Medio termine:</strong> Valutazione Livello 4/5 per i flussi di lavoro con IP core — oggetto di analisi dedicata.</p>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════
+     SEZIONE 6 — SELF-HOSTING
+════════════════════════════════════════════════════════ -->
+<div class="tab-panel" id="s6">
+  <div class="panel-hero">
+    <div class="panel-hero-tag">Sezione 06</div>
+    <h2>Self-hosting: quando ha senso e cosa comporta</h2>
+    <p class="panel-hero-sub">Una panoramica dell'opzione self-hosted — approfondimento completo su architetture, costi e modelli disponibili è oggetto di una serie dedicata.</p>
+  </div>
+  <div class="panel-body">
+    <aside class="panel-aside">
+      <div class="panel-aside-label">In questa sezione</div>
+      <nav>
+        <a href="#sh-cosa">Cosa si intende</a>
+        <a href="#sh-risolve">Cosa risolve e cosa no</a>
+        <a href="#sh-modelli">Modelli disponibili</a>
+        <a href="#sh-costi">Costi indicativi</a>
+        <a href="#sh-quando">Quando ha senso</a>
+      </nav>
+    </aside>
+    <div class="panel-content">
+
+      <h3 id="sh-cosa">Due varianti: cloud privato vs on-premise</h3>
+
+      <div class="sh-grid">
+        <div class="sh-card">
+          <span class="sh-card-tag">Variante A</span>
+          <h4>Cloud privato (VPC / tenant dedicato)</h4>
+          <p>Il modello gira su infrastruttura cloud (AWS, Azure, GCP) in un tenant completamente isolato, gestito dall'azienda. I dati non vengono mai condivisi con il provider LLM — restano nell'infrastruttura cloud aziendale.</p>
+          <div class="sh-list">
+            <div class="sh-list-item pro">Scalabilità e flessibilità del cloud</div>
+            <div class="sh-list-item pro">Nessun hardware da acquistare</div>
+            <div class="sh-list-item pro">Più veloce da attivare vs on-premise</div>
+            <div class="sh-list-item con">I dati restano su infrastruttura di terzi (AWS/Azure)</div>
+            <div class="sh-list-item con">Costi cloud variabili e potenzialmente alti</div>
+          </div>
+        </div>
+
+        <div class="sh-card">
+          <span class="sh-card-tag">Variante B</span>
+          <h4>On-premise (server fisici aziendali)</h4>
+          <p>Il modello gira su server fisici di proprietà dell'azienda, nella rete aziendale. I dati non escono mai dal perimetro fisico. Massimo controllo e massima complessità.</p>
+          <div class="sh-list">
+            <div class="sh-list-item pro">Dati mai fuori dal perimetro fisico</div>
+            <div class="sh-list-item pro">Nessuna dipendenza da provider esterni</div>
+            <div class="sh-list-item pro">Costi operativi stabili e prevedibili</div>
+            <div class="sh-list-item con">Investimento hardware significativo (GPU)</div>
+            <div class="sh-list-item con">Competenze IT specializzate richieste</div>
+            <div class="sh-list-item con">Tempi di attivazione lunghi</div>
+          </div>
+        </div>
+
+        <div class="sh-card">
+          <span class="sh-card-tag">Cosa non cambia</span>
+          <h4>I limiti del self-hosting</h4>
+          <p>Il self-hosting non risolve tutto. Alcuni aspetti restano critici indipendentemente dall'opzione scelta.</p>
+          <div class="sh-list">
+            <div class="sh-list-item note">Capability inferiore vs modelli frontier</div>
+            <div class="sh-list-item note">Aggiornamento e manutenzione del modello</div>
+            <div class="sh-list-item note">Sicurezza interna (accessi, audit)</div>
+            <div class="sh-list-item note">Prompt injection e sicurezza applicativa</div>
+            <div class="sh-list-item note">Governance dell'uso interno</div>
+          </div>
+        </div>
+      </div>
+
+      <h3 id="sh-risolve">Cosa risolve il self-hosting — e cosa non risolve</h3>
+
+      <div class="provider-grid" style="grid-template-columns: 200px 1fr 1fr;">
+        <div class="provider-cell header"></div>
+        <div class="provider-cell header">Self-hosting risolve</div>
+        <div class="provider-cell header">Self-hosting NON risolve</div>
+        <div class="provider-cell row-label">Fuoriuscita dati</div>
+        <div class="provider-cell ok">✓ Completamente — i dati non escono</div>
+        <div class="provider-cell warn">— Accessi interni non autorizzati</div>
+        <div class="provider-cell row-label">Training su dati</div>
+        <div class="provider-cell ok">✓ Nessun training esterno possibile</div>
+        <div class="provider-cell warn">— Governance uso interno del modello</div>
+        <div class="provider-cell row-label">GDPR / DPA</div>
+        <div class="provider-cell ok">✓ Nessun trasferimento extra-UE</div>
+        <div class="provider-cell warn">— Obblighi GDPR interni restano</div>
+        <div class="provider-cell row-label">Breach provider</div>
+        <div class="provider-cell ok">✓ Nessuna dipendenza da provider</div>
+        <div class="provider-cell warn">— Breach infrastruttura propria</div>
+        <div class="provider-cell row-label">CLOUD Act USA</div>
+        <div class="provider-cell ok">✓ Se su infrastruttura EU non US-based</div>
+        <div class="provider-cell warn">— Se cloud privato su AWS/Azure/GCP</div>
+        <div class="provider-cell row-label">Prompt injection</div>
+        <div class="provider-cell warn">— Non risolve — è un problema applicativo</div>
+        <div class="provider-cell warn">— Richiede mitigazioni a livello applicativo</div>
+      </div>
+
+      <h3 id="sh-modelli">Modelli disponibili per self-hosting</h3>
+      <p>Il panorama dei modelli open source disponibili per self-hosting è maturo e in rapida evoluzione. I principali:</p>
+
+      <table class="risk-table">
+        <thead><tr><th>Modello</th><th>Provider</th><th>Punti di forza</th><th>Caso d'uso ideale</th></tr></thead>
+        <tbody>
+          <tr><td><strong>Llama 3.1 / 3.3</strong></td><td>Meta</td><td>Ottimo equilibrio performance/costo, molto supportato dalla community</td><td>Uso generale, assistenza, Q&A su documenti</td></tr>
+          <tr><td><strong>Mistral / Mixtral</strong></td><td>Mistral AI (EU)</td><td>Efficiente, buone performance per dimensione, provider europeo</td><td>Task linguistici, classificazione, riassunti</td></tr>
+          <tr><td><strong>Gemma 2</strong></td><td>Google</td><td>Compatto, ottimizzato per inferenza su hardware limitato</td><td>Edge deployment, risorse limitate</td></tr>
+          <tr><td><strong>DeepSeek R1</strong></td><td>DeepSeek</td><td>Capacità di ragionamento avanzate, molto efficiente</td><td>Analisi complesse, ragionamento multi-step</td></tr>
+          <tr><td><strong>Qwen 2.5</strong></td><td>Alibaba</td><td>Buon supporto multilingua e coding</td><td>Task multilingua, contesti internazionali</td></tr>
+        </tbody>
+      </table>
+
+      <div class="info-box">
+        <span class="info-box-label">Gap di capability vs modelli frontier</span>
+        <p>I modelli self-hosted sono molto capaci per task specifici e ben definiti. Tuttavia, per task complessi che richiedono ragionamento avanzato, sintesi di informazioni eterogenee o creatività, i modelli frontier (GPT-4o, Claude Opus, Gemini Ultra) mantengono un vantaggio significativo. <strong>La scelta del modello deve partire dai casi d'uso specifici, non dall'obiettivo generico di "usare AI".</strong></p>
+      </div>
+
+      <h3 id="sh-costi">Costi indicativi</h3>
+      <table class="risk-table">
+        <thead><tr><th>Componente</th><th>Cloud privato</th><th>On-premise</th></tr></thead>
+        <tbody>
+          <tr><td>Hardware/Infrastruttura</td><td>~€500–3.000/mese (GPU cloud)</td><td>€20.000–100.000+ (investimento iniziale GPU server)</td></tr>
+          <tr><td>Setup e integrazione</td><td>€5.000–30.000 (una tantum)</td><td>€20.000–80.000 (una tantum)</td></tr>
+          <tr><td>Personale IT dedicato</td><td>0.2–0.5 FTE</td><td>0.5–1.5 FTE</td></tr>
+          <tr><td>Manutenzione annua</td><td>Inclusa nei costi cloud</td><td>10–20% del costo hardware</td></tr>
+          <tr><td>Tempo di attivazione</td><td>1–3 mesi</td><td>3–12 mesi</td></tr>
+        </tbody>
+      </table>
+
+      <h3 id="sh-quando">Quando il self-hosting ha senso: tre condizioni</h3>
+      <div class="info-box green">
+        <span class="info-box-label">Condizioni necessarie</span>
+        <p>
+        <strong>1. Il tipo di dato lo richiede:</strong> IP industriale core che non può uscire dal perimetro in nessuna forma, o vincoli regolatori specifici (difesa, infrastrutture critiche).<br><br>
+        <strong>2. I casi d'uso sono definiti:</strong> il self-hosting ha senso per task specifici e ripetibili (analisi documenti tecnici, supporto alla produzione, Q&A su knowledge base interna) — non come sostituto generale dei provider cloud.<br><br>
+        <strong>3. Le competenze ci sono o si possono acquisire:</strong> senza un team IT in grado di gestire l'infrastruttura, il self-hosting diventa un rischio operativo maggiore dei rischi che vuole mitigare.
+        </p>
+      </div>
+      <p>L'approfondimento completo su architetture, stack tecnico, modelli e piano di implementazione sarà oggetto della serie di report dedicata al self-hosting.</p>
+
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════
+     SEZIONE 7 — ALBERO DECISIONALE + POLICY
+════════════════════════════════════════════════════════ -->
+<div class="tab-panel" id="s7">
+  <div class="panel-hero">
+    <div class="panel-hero-tag">Sezione 07</div>
+    <h2>Albero decisionale e bozza di policy aziendale</h2>
+    <p class="panel-hero-sub">Strumenti operativi per prendere decisioni sui casi d'uso e costruire una policy interna sull'uso degli LLM.</p>
+  </div>
+  <div class="panel-body">
+    <aside class="panel-aside">
+      <div class="panel-aside-label">In questa sezione</div>
+      <nav>
+        <a href="#s7-tree">Albero decisionale</a>
+        <a href="#s7-checklist">Checklist di valutazione</a>
+        <a href="#s7-policy">Bozza regole policy</a>
+      </nav>
+    </aside>
+    <div class="panel-content">
+
+      <h3 id="s7-tree">Albero decisionale: quale soluzione per quale caso d'uso</h3>
+      <p>Per ogni nuovo caso d'uso che coinvolge un LLM, percorrere questo albero per determinare il livello di protezione necessario.</p>
+
+      <div class="tree">
+
+        <div class="tree-node">
+          <div class="tree-question">I dati coinvolti includono IP industriale core (processi, brevetti, specifiche critiche)?</div>
+          <div class="tree-branches">
+            <div>
+              <div class="tree-branch-label">→ Sì</div>
+              <div class="tree-answer terminal-red">
+                <strong>Self-hosting (Livello 4 o 5)</strong>
+                I dati non possono uscire dal perimetro. Valutare cloud privato o on-premise. Se non disponibile, il caso d'uso deve essere riformulato con anonimizzazione completa prima di procedere.
+              </div>
+            </div>
+            <div>
+              <div class="tree-branch-label">→ No, continua ↓</div>
+              <div class="tree-node">
+                <div class="tree-question">I dati sono coperti da NDA con clienti o fornitori?</div>
+                <div class="tree-branches">
+                  <div>
+                    <div class="tree-branch-label">→ Sì</div>
+                    <div class="tree-answer terminal-amber">
+                      <strong>Piano enterprise + verifica NDA</strong>
+                      Verificare che il NDA consenta trattamenti da parte di sub-responsabili con DPA. Se consente: piano enterprise con DPA. Se non consente o è ambiguo: anonimizzare i dati prima dell'invio.
+                    </div>
+                  </div>
+                  <div>
+                    <div class="tree-branch-label">→ No, continua ↓</div>
+                    <div class="tree-node">
+                      <div class="tree-question">I dati includono informazioni personali di dipendenti o soggetti terzi?</div>
+                      <div class="tree-branches">
+                        <div>
+                          <div class="tree-branch-label">→ Sì</div>
+                          <div class="tree-answer terminal-amber">
+                            <strong>Piano enterprise con DPA GDPR</strong>
+                            Obbligatorio avere un DPA firmato. Preferire datacenter EU. Verificare base legale del trattamento. Aggiornare registro dei trattamenti.
+                          </div>
+                        </div>
+                        <div>
+                          <div class="tree-branch-label">→ No, continua ↓</div>
+                          <div class="tree-answer terminal-green">
+                            <strong>Piano standard / enterprise (a discrezione)</strong>
+                            Dati non critici. Piano API standard o enterprise entrambi adeguati. Applicare comunque le regole operative di base (non incollare dati non necessari, anonimizzare dove possibile).
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+      <h3 id="s7-checklist">Checklist di valutazione per l'adozione di un nuovo strumento AI</h3>
+      <p>Da completare prima di autorizzare l'uso di qualsiasi nuovo strumento LLM in azienda. Clicca sugli item per segnarli come completati.</p>
+
+      <div class="checklist" id="checklist-main">
+
+        <div class="checklist-group-label">Classificazione del dato</div>
+        <div class="checklist-item" onclick="toggleCheck(this)">
+          <div class="checklist-box"></div>
+          <div class="checklist-text"><strong>Identificare le categorie di dati</strong> che verranno trattate dal sistema (IP, NDA, dati personali, dati operativi)</div>
+        </div>
+        <div class="checklist-item" onclick="toggleCheck(this)">
+          <div class="checklist-box"></div>
+          <div class="checklist-text"><strong>Verificare se esistono NDA attivi</strong> che coprono i dati coinvolti e se consentono trattamenti da sub-responsabili</div>
+        </div>
+        <div class="checklist-item" onclick="toggleCheck(this)">
+          <div class="checklist-box"></div>
+          <div class="checklist-text"><strong>Determinare il livello di sensibilità</strong> usando la matrice della Sezione 02</div>
+        </div>
+
+        <div class="checklist-group-label">Valutazione del provider</div>
+        <div class="checklist-item" onclick="toggleCheck(this)">
+          <div class="checklist-box"></div>
+          <div class="checklist-text"><strong>Verificare il piano contrattuale</strong> richiesto in base al profilo di rischio del dato (consumer / standard / enterprise)</div>
+        </div>
+        <div class="checklist-item" onclick="toggleCheck(this)">
+          <div class="checklist-box"></div>
+          <div class="checklist-text"><strong>Richiedere e analizzare i ToS aggiornati</strong> del provider, con attenzione a: training, retention, accesso dipendenti provider</div>
+        </div>
+        <div class="checklist-item" onclick="toggleCheck(this)">
+          <div class="checklist-box"></div>
+          <div class="checklist-text"><strong>Verificare la localizzazione dei datacenter</strong> e la disponibilità di opzioni EU se richieste</div>
+        </div>
+
+        <div class="checklist-group-label">Adempimenti GDPR</div>
+        <div class="checklist-item" onclick="toggleCheck(this)">
+          <div class="checklist-box"></div>
+          <div class="checklist-text"><strong>Stipulare un DPA</strong> con il provider se vengono trattati dati personali</div>
+        </div>
+        <div class="checklist-item" onclick="toggleCheck(this)">
+          <div class="checklist-box"></div>
+          <div class="checklist-text"><strong>Aggiornare il Registro dei Trattamenti</strong> con il nuovo trattamento e il responsabile esterno</div>
+        </div>
+        <div class="checklist-item" onclick="toggleCheck(this)">
+          <div class="checklist-box"></div>
+          <div class="checklist-text"><strong>Valutare se è necessaria una DPIA</strong> (valutazione d'impatto) per trattamenti ad alto rischio</div>
+        </div>
+
+        <div class="checklist-group-label">Governance interna</div>
+        <div class="checklist-item" onclick="toggleCheck(this)">
+          <div class="checklist-box"></div>
+          <div class="checklist-text"><strong>Definire chi è autorizzato</strong> a usare il sistema e con quali dati</div>
+        </div>
+        <div class="checklist-item" onclick="toggleCheck(this)">
+          <div class="checklist-box"></div>
+          <div class="checklist-text"><strong>Comunicare le regole operative</strong> agli utenti con esempi concreti (cosa si può e non si può inviare)</div>
+        </div>
+        <div class="checklist-item" onclick="toggleCheck(this)">
+          <div class="checklist-box"></div>
+          <div class="checklist-text"><strong>Definire un processo di revisione periodica</strong> (almeno annuale) della policy e dei contratti con i provider</div>
+        </div>
+
+      </div>
+
+      <h3 id="s7-policy">Bozza: regole operative per la policy aziendale</h3>
+      <p>Le seguenti regole costituiscono la base di una policy interna sull'uso degli LLM. Da adattare alla realtà specifica e formalizzare in un documento aziendale.</p>
+
+      <div class="info-box">
+        <span class="info-box-label">Regole operative — bozza</span>
+        <p>
+        <strong>1. Strumenti autorizzati:</strong> è consentito l'uso esclusivo degli strumenti AI approvati dall'azienda [lista da definire]. L'uso di strumenti AI personali (account individuali gratuiti) per attività lavorative è vietato.<br><br>
+        <strong>2. Dati vietati:</strong> è vietato inviare a qualsiasi LLM esterno: specifiche tecniche di prodotto, processi produttivi proprietari, progetti in sviluppo, dati coperti da NDA, dati contrattuali con clienti/fornitori, dati personali di dipendenti.<br><br>
+        <strong>3. Dati condivisibili con anonimizzazione:</strong> dati operativi aggregati, comunicazioni generiche, testi da revisionare privi di riferimenti specifici a soggetti, prodotti o accordi riservati. Prima dell'invio, sostituire nomi di prodotti, clienti, fornitori e parametri sensibili con placeholder generici.<br><br>
+        <strong>4. Dati liberamente condivisibili:</strong> contenuto pubblico o già pubblicato, testi generici senza informazioni aziendali specifiche, domande su concetti generali.<br><br>
+        <strong>5. Responsabilità:</strong> ogni dipendente è responsabile del rispetto di queste regole. In caso di dubbio su classificazione di un dato, consultare il responsabile IT o il DPO prima di procedere.<br><br>
+        <strong>6. Segnalazione incidenti:</strong> qualsiasi invio accidentale di dati non autorizzati va segnalato tempestivamente a [referente da definire] entro 24 ore dall'evento.<br><br>
+        <strong>7. Revisione:</strong> questa policy viene rivista ogni 12 mesi o in seguito a cambiamenti significativi degli strumenti adottati o delle normative applicabili.
+        </p>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<footer>
+  <p>Report generato con Claude · Anthropic · 2026</p>
+  <p>Serie: LLM e Sicurezza dei Dati · Report B — Guida Tecnico-Operativa</p>
+</footer>
+
+<script>
+// Tab navigation
+document.querySelectorAll('.tab-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    const target = btn.dataset.tab;
+    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+    document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+    btn.classList.add('active');
+    document.getElementById(target).classList.add('active');
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  });
+});
+
+// Checklist toggle
+function toggleCheck(item) {
+  item.classList.toggle('done');
+  const box = item.querySelector('.checklist-box');
+  box.textContent = item.classList.contains('done') ? '✓' : '';
+}
+</script>
+
+</body>
+</html>

@@ -1,0 +1,1277 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Self-Hosting LLM — C7: Implementazione</title>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@300;400;500;700;900&family=JetBrains+Mono:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg:       #0c0c0f;
+  --bg2:      #13131a;
+  --bg3:      #1a1a24;
+  --bg4:      #22222e;
+  --border:   #2a2a38;
+  --border2:  #363648;
+  --ink:      #e4e4f0;
+  --ink2:     #a8a8c0;
+  --ink3:     #686880;
+  --ink4:     #404058;
+  --violet:   #a07ef0;
+  --violet-l: rgba(160,126,240,0.08);
+  --red:      #f05a6a;
+  --red-l:    rgba(240,90,106,0.07);
+  --green:    #50e8a0;
+  --green-l:  rgba(80,232,160,0.07);
+  --amber:    #f0b050;
+  --amber-l:  rgba(240,176,80,0.07);
+  --blue:     #50b8f0;
+  --blue-l:   rgba(80,184,240,0.07);
+  --teal:     #50d8d0;
+  --teal-l:   rgba(80,216,208,0.07);
+}
+
+* { margin:0; padding:0; box-sizing:border-box; }
+html { scroll-behavior:smooth; }
+
+body {
+  background: var(--bg);
+  color: var(--ink);
+  font-family: 'Archivo', sans-serif;
+  font-weight: 300;
+  font-size: 14px;
+  line-height: 1.78;
+}
+
+.masthead {
+  padding: 72px 64px 60px;
+  border-bottom: 1px solid var(--border);
+  position: relative; overflow: hidden;
+  background: var(--bg2);
+}
+.masthead::before {
+  content: ''; position: absolute; top: -200px; right: -200px;
+  width: 700px; height: 700px;
+  background: radial-gradient(circle, rgba(160,126,240,0.04) 0%, transparent 65%);
+  pointer-events: none;
+}
+.masthead::after {
+  content: 'C7'; position: absolute; right: 48px; bottom: -30px;
+  font-weight: 900; font-size: 280px; line-height: 1;
+  color: rgba(160,126,240,0.04); pointer-events: none;
+  letter-spacing: -12px; font-family: 'Archivo', sans-serif;
+}
+.series-label { font-family: 'JetBrains Mono', monospace; font-size: 10px; letter-spacing: 4px; text-transform: uppercase; color: var(--ink4); margin-bottom: 6px; }
+.report-label { font-family: 'JetBrains Mono', monospace; font-size: 11px; letter-spacing: 3px; text-transform: uppercase; color: var(--violet); margin-bottom: 32px; }
+.masthead h1 { font-weight: 900; font-size: clamp(34px, 5vw, 62px); line-height: 1.05; letter-spacing: -2.5px; max-width: 780px; }
+.masthead h1 em { font-style: italic; color: var(--violet); font-weight: 400; }
+.masthead-sub { margin-top: 24px; font-size: 15px; color: var(--ink3); max-width: 640px; line-height: 1.75; }
+.masthead-meta { margin-top: 48px; display: flex; gap: 48px; flex-wrap: wrap; padding-top: 28px; border-top: 1px solid var(--border); }
+.meta-item span { font-family: 'JetBrains Mono', monospace; font-size: 9px; letter-spacing: 2px; text-transform: uppercase; color: var(--ink4); display: block; }
+.meta-item strong { font-size: 13px; font-weight: 500; color: var(--ink2); display: block; margin-top: 3px; }
+
+.tab-nav { display: flex; background: var(--bg2); border-bottom: 1px solid var(--border); overflow-x: auto; position: sticky; top: 0; z-index: 100; scrollbar-width: none; }
+.tab-nav::-webkit-scrollbar { display: none; }
+.tab-btn { flex-shrink: 0; padding: 0; border: none; cursor: pointer; background: transparent; border-right: 1px solid var(--border); transition: background 0.2s; }
+.tab-btn:last-child { border-right: none; }
+.tab-btn-inner { display: block; padding: 13px 22px; text-align: left; }
+.tab-num { font-family: 'JetBrains Mono', monospace; font-size: 9px; letter-spacing: 2px; color: var(--ink4); display: block; margin-bottom: 3px; }
+.tab-name { font-weight: 700; font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px; color: var(--ink3); display: block; line-height: 1.25; white-space: nowrap; transition: color 0.2s; }
+.tab-btn.active .tab-name { color: var(--ink); }
+.tab-btn.active { position: relative; }
+.tab-btn.active::after { content: ''; position: absolute; bottom: 0; left: 0; right: 0; height: 2px; background: var(--violet); }
+.tab-btn:hover .tab-name { color: var(--ink2); }
+
+.tab-panel { display: none; }
+.tab-panel.active { display: grid; grid-template-columns: 190px 1fr; min-height: 80vh; animation: fadeIn 0.3s ease; }
+@keyframes fadeIn { from { opacity:0; transform:translateY(6px); } to { opacity:1; transform:translateY(0); } }
+
+.panel-aside { border-right: 1px solid var(--border); padding: 40px 24px 40px 40px; position: sticky; top: 48px; height: calc(100vh - 48px); overflow-y: auto; }
+.aside-label { font-family: 'JetBrains Mono', monospace; font-size: 9px; letter-spacing: 3px; text-transform: uppercase; color: var(--ink4); margin-bottom: 16px; }
+.panel-aside nav a { display: block; font-size: 12px; color: var(--ink3); text-decoration: none; padding: 7px 0; border-bottom: 1px solid var(--border); line-height: 1.4; transition: color 0.2s; }
+.panel-aside nav a:hover { color: var(--violet); }
+.panel-aside nav a:last-child { border: none; }
+
+.panel-content { padding: 52px 64px 88px; max-width: 940px; }
+.panel-content h3 { font-weight: 700; font-size: 17px; color: var(--ink); margin: 44px 0 16px; letter-spacing: -0.4px; line-height: 1.3; }
+.panel-content h3:first-child { margin-top: 0; }
+.panel-content p { font-size: 14px; color: var(--ink2); margin-bottom: 18px; line-height: 1.82; }
+.panel-content p strong { color: var(--ink); font-weight: 500; }
+
+/* ── ROADMAP PHASES ── */
+.roadmap { display: flex; flex-direction: column; gap: 2px; margin: 24px 0; }
+
+.phase {
+  background: var(--bg2);
+  border: 1px solid var(--border);
+  overflow: hidden;
+}
+
+.phase-header {
+  display: grid;
+  grid-template-columns: 80px 1fr auto;
+  border-bottom: 1px solid var(--border);
+  cursor: pointer;
+  transition: background 0.2s;
+}
+.phase-header:hover { background: var(--bg3); }
+
+.phase-num {
+  background: var(--violet-l);
+  display: flex; align-items: center; justify-content: center;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px; font-weight: 600; color: var(--violet);
+  border-right: 1px solid var(--border);
+  padding: 16px;
+  letter-spacing: 1px;
+}
+
+.phase-title-wrap { padding: 16px 20px; }
+.phase-title { font-size: 14px; font-weight: 700; color: var(--ink); margin-bottom: 3px; }
+.phase-subtitle { font-size: 12px; color: var(--ink3); }
+
+.phase-duration {
+  padding: 16px 20px;
+  display: flex; align-items: center;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px; color: var(--ink4);
+  letter-spacing: 1px; white-space: nowrap;
+  border-left: 1px solid var(--border);
+}
+
+.phase-body { padding: 20px 24px; }
+
+.phase-tasks { display: flex; flex-direction: column; gap: 2px; margin-bottom: 16px; }
+
+.phase-task {
+  display: flex; gap: 12px; align-items: flex-start;
+  padding: 10px 14px;
+  background: var(--bg3); border: 1px solid var(--border);
+  font-size: 13px; color: var(--ink2); line-height: 1.6;
+  cursor: pointer; transition: background 0.15s; user-select: none;
+}
+.phase-task:hover { background: var(--bg4); }
+.phase-task.done { opacity: 0.5; }
+
+.task-check {
+  width: 16px; height: 16px; border: 1px solid var(--border2);
+  border-radius: 2px; flex-shrink: 0; margin-top: 1px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 10px; color: var(--green); background: transparent;
+  transition: all 0.15s;
+}
+.phase-task.done .task-check { background: rgba(80,232,160,0.12); border-color: var(--green); }
+
+.phase-task-text strong { color: var(--ink); font-weight: 500; }
+
+.phase-milestone {
+  background: var(--violet-l);
+  border: 1px solid rgba(160,126,240,0.2);
+  padding: 12px 16px;
+  font-size: 13px; color: var(--ink2);
+}
+.phase-milestone span {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 9px; letter-spacing: 2px; text-transform: uppercase;
+  color: var(--violet); display: block; margin-bottom: 4px;
+}
+
+/* ── INTEGRATION CARDS ── */
+.integration-grid { display: flex; flex-direction: column; gap: 2px; margin: 24px 0; }
+
+.integration-item {
+  display: grid; grid-template-columns: 4px 1fr;
+  background: var(--bg2); border: 1px solid var(--border);
+  overflow: hidden;
+}
+
+.int-stripe { }
+.integration-item.erp   .int-stripe { background: var(--blue); }
+.integration-item.mes   .int-stripe { background: var(--green); }
+.integration-item.plm   .int-stripe { background: var(--amber); }
+.integration-item.doc   .int-stripe { background: var(--teal); }
+.integration-item.auth  .int-stripe { background: var(--violet); }
+
+.int-body { padding: 18px 22px; }
+.int-header { display: flex; align-items: baseline; gap: 12px; margin-bottom: 8px; flex-wrap: wrap; }
+.int-name { font-size: 14px; font-weight: 700; color: var(--ink); }
+.int-type { font-family: 'JetBrains Mono', monospace; font-size: 9px; letter-spacing: 2px; text-transform: uppercase; padding: 3px 8px; border-radius: 2px; }
+.integration-item.erp  .int-type { color: var(--blue);   background: var(--blue-l); }
+.integration-item.mes  .int-type { color: var(--green);  background: var(--green-l); }
+.integration-item.plm  .int-type { color: var(--amber);  background: var(--amber-l); }
+.integration-item.doc  .int-type { color: var(--teal);   background: var(--teal-l); }
+.integration-item.auth .int-type { color: var(--violet); background: var(--violet-l); }
+
+.int-complexity {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px; letter-spacing: 1px; color: var(--ink4);
+  margin-left: auto;
+}
+
+.int-desc { font-size: 13px; color: var(--ink3); line-height: 1.7; margin-bottom: 12px; }
+.int-approaches { display: flex; gap: 6px; flex-wrap: wrap; }
+.int-approach { font-size: 11px; padding: 3px 10px; background: var(--bg3); border: 1px solid var(--border); color: var(--ink3); font-family: 'JetBrains Mono', monospace; font-size: 10px; }
+
+/* ── TEAM ROLES ── */
+.team-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 2px; margin: 24px 0; }
+
+.role-card { background: var(--bg2); border: 1px solid var(--border); padding: 22px 20px; }
+.role-tag { font-family: 'JetBrains Mono', monospace; font-size: 9px; letter-spacing: 2px; text-transform: uppercase; color: var(--ink4); margin-bottom: 10px; display: block; }
+.role-card h4 { font-size: 14px; font-weight: 700; color: var(--ink); margin-bottom: 8px; letter-spacing: -0.3px; }
+.role-fte { font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--violet); margin-bottom: 12px; display: block; }
+.role-skills { display: flex; flex-direction: column; gap: 3px; }
+.role-skill { font-size: 12px; color: var(--ink3); padding-left: 12px; position: relative; }
+.role-skill::before { content: '·'; position: absolute; left: 0; color: var(--violet); }
+.role-gap { margin-top: 12px; padding-top: 12px; border-top: 1px solid var(--border); font-size: 11px; color: var(--amber); font-family: 'JetBrains Mono', monospace; letter-spacing: 0.5px; }
+
+/* ── KPI TABLE ── */
+.kpi-table { width: 100%; border-collapse: collapse; margin: 24px 0; font-size: 13px; }
+.kpi-table th { font-family: 'JetBrains Mono', monospace; font-size: 9px; letter-spacing: 2px; text-transform: uppercase; color: var(--ink4); text-align: left; padding: 10px 14px; border-bottom: 1px solid var(--border2); background: var(--bg3); }
+.kpi-table td { padding: 12px 14px; border-bottom: 1px solid var(--border); color: var(--ink2); vertical-align: top; line-height: 1.6; }
+.kpi-table tr:hover td { background: var(--bg2); }
+.kpi-table td:first-child { font-weight: 500; color: var(--ink); width: 200px; }
+
+/* ── RISK REGISTER ── */
+.risk-list { display: flex; flex-direction: column; gap: 2px; margin: 24px 0; }
+
+.risk-item { display: grid; grid-template-columns: 1fr 80px 80px; background: var(--bg2); border: 1px solid var(--border); }
+.risk-item.header { background: var(--bg3); }
+
+.risk-body { padding: 14px 18px; border-right: 1px solid var(--border); }
+.risk-item.header .risk-body { font-family: 'JetBrains Mono', monospace; font-size: 9px; letter-spacing: 2px; text-transform: uppercase; color: var(--ink4); }
+.risk-body h4 { font-size: 13px; font-weight: 700; color: var(--ink); margin-bottom: 4px; }
+.risk-body p  { font-size: 12px; color: var(--ink3); line-height: 1.55; margin: 0; }
+.risk-body p strong { color: var(--ink2); font-weight: 500; }
+
+.risk-cell { padding: 14px 12px; text-align: center; border-right: 1px solid var(--border); display: flex; align-items: center; justify-content: center; }
+.risk-cell:last-child { border-right: none; }
+.risk-item.header .risk-cell { font-family: 'JetBrains Mono', monospace; font-size: 9px; letter-spacing: 2px; text-transform: uppercase; color: var(--ink4); }
+
+.risk-badge { font-family: 'JetBrains Mono', monospace; font-size: 10px; letter-spacing: 1px; text-transform: uppercase; padding: 3px 8px; border-radius: 2px; }
+.risk-badge.high { color: var(--red);   background: var(--red-l); }
+.risk-badge.mid  { color: var(--amber); background: var(--amber-l); }
+.risk-badge.low  { color: var(--green); background: var(--green-l); }
+
+/* ── SERIE SUMMARY ── */
+.series-summary { display: flex; flex-direction: column; gap: 2px; margin: 24px 0; }
+
+.summary-row {
+  display: grid; grid-template-columns: 60px 1fr 120px;
+  background: var(--bg2); border: 1px solid var(--border);
+  align-items: center;
+}
+
+.summary-row.done { border-left: 3px solid var(--green); }
+.summary-row.current { border-left: 3px solid var(--violet); background: var(--violet-l); }
+
+.sum-num { padding: 14px 16px; font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--violet); font-weight: 600; border-right: 1px solid var(--border); text-align: center; }
+.sum-body { padding: 14px 18px; }
+.sum-title { font-size: 13px; font-weight: 700; color: var(--ink); margin-bottom: 2px; }
+.sum-desc { font-size: 11px; color: var(--ink4); }
+.sum-status { padding: 14px 16px; text-align: center; border-left: 1px solid var(--border); }
+.sum-status span { font-family: 'JetBrains Mono', monospace; font-size: 10px; letter-spacing: 1px; text-transform: uppercase; }
+.summary-row.done .sum-status span { color: var(--green); }
+.summary-row.current .sum-status span { color: var(--violet); }
+
+/* ── INFO BOX ── */
+.ibox { background: var(--bg2); border: 1px solid var(--border); border-left: 3px solid var(--violet); padding: 22px 26px; margin: 22px 0; }
+.ibox.green  { border-left-color: var(--green);  background: var(--green-l); }
+.ibox.amber  { border-left-color: var(--amber);  background: var(--amber-l); }
+.ibox.red    { border-left-color: var(--red);    background: var(--red-l); }
+.ibox.blue   { border-left-color: var(--blue);   background: var(--blue-l); }
+.ibox.teal   { border-left-color: var(--teal);   background: var(--teal-l); }
+.ibox-label { font-family: 'JetBrains Mono', monospace; font-size: 9px; letter-spacing: 2.5px; text-transform: uppercase; margin-bottom: 10px; display: block; }
+.ibox       .ibox-label { color: var(--violet); }
+.ibox.green .ibox-label { color: var(--green); }
+.ibox.amber .ibox-label { color: var(--amber); }
+.ibox.red   .ibox-label { color: var(--red); }
+.ibox.blue  .ibox-label { color: var(--blue); }
+.ibox.teal  .ibox-label { color: var(--teal); }
+.ibox p { font-size: 13px; color: var(--ink2); margin: 0; line-height: 1.75; }
+.ibox p strong { color: var(--ink); font-weight: 500; }
+.ibox p + p { margin-top: 10px; }
+
+footer { border-top: 1px solid var(--border); background: var(--bg2); padding: 28px 64px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px; }
+footer p { font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--ink4); letter-spacing: 0.5px; }
+
+@media (max-width: 860px) {
+  .masthead, .panel-content, footer { padding-left: 24px; padding-right: 24px; }
+  .tab-panel.active { grid-template-columns: 1fr; }
+  .panel-aside { display: none; }
+  .team-grid { grid-template-columns: 1fr; }
+  .summary-row { grid-template-columns: 48px 1fr 90px; }
+}
+</style>
+</head>
+<body>
+
+<header class="masthead">
+  <div class="series-label">Serie C · Self-Hosting LLM</div>
+  <div class="report-label">Report C7 — Implementazione</div>
+  <h1>Dalla decisione<br>al <em>sistema in produzione</em></h1>
+  <p class="masthead-sub">La roadmap pratica per implementare un sistema LLM self-hosted: fasi, milestone, integrazioni con ERP/MES/PLM, il team necessario, i KPI di successo e i rischi da gestire.</p>
+  <div class="masthead-meta">
+    <div class="meta-item"><span>Serie</span><strong>C · Self-Hosting LLM</strong></div>
+    <div class="meta-item"><span>Report</span><strong>C7 di 7 — Conclusivo</strong></div>
+    <div class="meta-item"><span>Destinatari</span><strong>Project Owner, CTO, IT, Management</strong></div>
+    <div class="meta-item"><span>Prerequisito</span><strong>Tutta la serie C (C1–C6)</strong></div>
+  </div>
+</header>
+
+<nav class="tab-nav">
+  <button class="tab-btn active" data-tab="t1">
+    <span class="tab-btn-inner"><span class="tab-num">01</span><span class="tab-name">Roadmap fasi</span></span>
+  </button>
+  <button class="tab-btn" data-tab="t2">
+    <span class="tab-btn-inner"><span class="tab-num">02</span><span class="tab-name">Integrazioni sistemi</span></span>
+  </button>
+  <button class="tab-btn" data-tab="t3">
+    <span class="tab-btn-inner"><span class="tab-num">03</span><span class="tab-name">Team e competenze</span></span>
+  </button>
+  <button class="tab-btn" data-tab="t4">
+    <span class="tab-btn-inner"><span class="tab-num">04</span><span class="tab-name">KPI e successo</span></span>
+  </button>
+  <button class="tab-btn" data-tab="t5">
+    <span class="tab-btn-inner"><span class="tab-num">05</span><span class="tab-name">Rischi di progetto</span></span>
+  </button>
+  <button class="tab-btn" data-tab="t6">
+    <span class="tab-btn-inner"><span class="tab-num">06</span><span class="tab-name">Chiusura serie</span></span>
+  </button>
+</nav>
+
+
+<!-- ══════════════════════════════════════════
+     TAB 1 — ROADMAP FASI
+══════════════════════════════════════════ -->
+<div class="tab-panel active" id="t1">
+  <aside class="panel-aside">
+    <div class="aside-label">In questa sezione</div>
+    <nav>
+      <a href="#rm-intro">Come usare questa roadmap</a>
+      <a href="#rm-phase1">Fase 1 — Preparazione</a>
+      <a href="#rm-phase2">Fase 2 — PoC</a>
+      <a href="#rm-phase3">Fase 3 — Produzione v1</a>
+      <a href="#rm-phase4">Fase 4 — Espansione</a>
+      <a href="#rm-phase5">Fase 5 — Maturità</a>
+    </nav>
+  </aside>
+  <div class="panel-content">
+
+    <h3 id="rm-intro">Come usare questa roadmap</h3>
+    <p>La roadmap è strutturata in cinque fasi progressive. Ogni fase ha prerequisiti chiari dalla precedente — saltare fasi è quasi sempre un errore che genera debito tecnico e organizzativo. I tempi sono indicativi per un primo progetto in un'azienda manifatturiera di medie dimensioni senza esperienza AI interna preesistente.</p>
+    <p>Le checklist nelle fasi sono interattive — cliccabili per tracciare l'avanzamento. Le milestone segnano i gate di passaggio tra una fase e la successiva: prima di proseguire, tutti i criteri della milestone devono essere soddisfatti.</p>
+
+    <div class="roadmap">
+
+      <!-- FASE 1 -->
+      <div class="phase" id="rm-phase1">
+        <div class="phase-header">
+          <div class="phase-num">F1</div>
+          <div class="phase-title-wrap">
+            <div class="phase-title">Preparazione e definizione</div>
+            <div class="phase-subtitle">Prima di scrivere una riga di codice o acquistare hardware</div>
+          </div>
+          <div class="phase-duration">Settimane 1–4</div>
+        </div>
+        <div class="phase-body">
+          <div class="phase-tasks">
+            <div class="phase-task" onclick="toggleTask(this)">
+              <div class="task-check"></div>
+              <div class="phase-task-text"><strong>Definire i casi d'uso specifici</strong> — non "usare AI", ma "il sistema deve rispondere a domande sui manuali macchina in meno di 10 secondi con accuratezza &gt;85%"</div>
+            </div>
+            <div class="phase-task" onclick="toggleTask(this)">
+              <div class="task-check"></div>
+              <div class="phase-task-text"><strong>Classificare i dati coinvolti</strong> — quali categorie (IP, NDA, dati personali), quale livello di sensibilità, quali restrizioni contrattuali esistenti (usa la matrice del Report B)</div>
+            </div>
+            <div class="phase-task" onclick="toggleTask(this)">
+              <div class="task-check"></div>
+              <div class="phase-task-text"><strong>Decidere l'architettura di massima</strong> — cloud privato vs on-premise vs ibrido (usa la matrice del Report C4)</div>
+            </div>
+            <div class="phase-task" onclick="toggleTask(this)">
+              <div class="task-check"></div>
+              <div class="phase-task-text"><strong>Calcolare TCO e confrontare con alternative</strong> — includere personale, setup, aggiornamenti (usa il simulatore del Report C5)</div>
+            </div>
+            <div class="phase-task" onclick="toggleTask(this)">
+              <div class="task-check"></div>
+              <div class="phase-task-text"><strong>Identificare il team</strong> — chi ha le competenze interne, cosa serve acquisire o formare, se serve un partner esterno</div>
+            </div>
+            <div class="phase-task" onclick="toggleTask(this)">
+              <div class="task-check"></div>
+              <div class="phase-task-text"><strong>Ottenere approvazione e budget</strong> — presentare al management con il business case basato sui KPI identificati</div>
+            </div>
+            <div class="phase-task" onclick="toggleTask(this)">
+              <div class="task-check"></div>
+              <div class="phase-task-text"><strong>Raccogliere la documentazione tecnica</strong> da usare nel sistema RAG — manuali, procedure, specifiche, in qualsiasi formato disponibile</div>
+            </div>
+            <div class="phase-task" onclick="toggleTask(this)">
+              <div class="task-check"></div>
+              <div class="phase-task-text"><strong>Definire la policy di utilizzo</strong> — regole su cosa gli utenti possono e non possono condividere con il sistema (usa la bozza del Report B)</div>
+            </div>
+          </div>
+          <div class="phase-milestone">
+            <span>Milestone F1</span>
+            Caso d'uso definito con metriche di successo · Architettura scelta · Budget approvato · Team identificato · Documentazione raccolta
+          </div>
+        </div>
+      </div>
+
+      <!-- FASE 2 -->
+      <div class="phase" id="rm-phase2">
+        <div class="phase-header">
+          <div class="phase-num">F2</div>
+          <div class="phase-title-wrap">
+            <div class="phase-title">Proof of Concept</div>
+            <div class="phase-subtitle">Validare la qualità tecnica prima di investire in infrastruttura</div>
+          </div>
+          <div class="phase-duration">Settimane 5–10</div>
+        </div>
+        <div class="phase-body">
+          <div class="phase-tasks">
+            <div class="phase-task" onclick="toggleTask(this)">
+              <div class="task-check"></div>
+              <div class="phase-task-text"><strong>Attivare istanza GPU cloud</strong> — ambiente isolato, accesso SSH con chiave, nessuna porta aperta verso l'esterno</div>
+            </div>
+            <div class="phase-task" onclick="toggleTask(this)">
+              <div class="task-check"></div>
+              <div class="phase-task-text"><strong>Installare e configurare Ollama</strong> con il modello scelto (Llama 3.2 8B per inizio rapido, 70B per qualità). Test base di inferenza.</div>
+            </div>
+            <div class="phase-task" onclick="toggleTask(this)">
+              <div class="task-check"></div>
+              <div class="phase-task-text"><strong>Costruire il pipeline RAG</strong> — indicizzare la documentazione raccolta in Fase 1, configurare il vector database, testare la qualità del retrieval</div>
+            </div>
+            <div class="phase-task" onclick="toggleTask(this)">
+              <div class="task-check"></div>
+              <div class="phase-task-text"><strong>Costruire il set di test</strong> — 30–50 domande reali con risposta attesa, da usare per misurare la qualità del sistema (metodologia Report C2)</div>
+            </div>
+            <div class="phase-task" onclick="toggleTask(this)">
+              <div class="task-check"></div>
+              <div class="phase-task-text"><strong>Misurare la qualità</strong> sul set di test — accuratezza, tasso di allucinazioni, completezza delle risposte. Confronto con la soglia definita in Fase 1.</div>
+            </div>
+            <div class="phase-task" onclick="toggleTask(this)">
+              <div class="task-check"></div>
+              <div class="phase-task-text"><strong>Ottimizzare il sistema prompt</strong> e il retrieval sulla base dei risultati — iterare fino a raggiungere la soglia di qualità o dichiarare il fallimento tecnico del PoC</div>
+            </div>
+            <div class="phase-task" onclick="toggleTask(this)">
+              <div class="task-check"></div>
+              <div class="phase-task-text"><strong>Demo con utenti chiave</strong> (3–5 persone che useranno il sistema) — raccogliere feedback qualitativo su usabilità e utilità percepita</div>
+            </div>
+            <div class="phase-task" onclick="toggleTask(this)">
+              <div class="task-check"></div>
+              <div class="phase-task-text"><strong>Decisione go/no-go</strong> basata su dati misurati — non su impressioni. Se il PoC non raggiunge la soglia, documentare perché e valutare alternative prima di procedere.</div>
+            </div>
+          </div>
+          <div class="phase-milestone">
+            <span>Milestone F2</span>
+            Sistema RAG funzionante · Qualità misurata ≥ soglia definita · Go/no-go documentato con dati · Feedback utenti raccolto
+          </div>
+        </div>
+      </div>
+
+      <!-- FASE 3 -->
+      <div class="phase" id="rm-phase3">
+        <div class="phase-header">
+          <div class="phase-num">F3</div>
+          <div class="phase-title-wrap">
+            <div class="phase-title">Produzione v1 — Pilota</div>
+            <div class="phase-subtitle">Deployment controllato con un gruppo ristretto di utenti reali</div>
+          </div>
+          <div class="phase-duration">Settimane 11–20</div>
+        </div>
+        <div class="phase-body">
+          <div class="phase-tasks">
+            <div class="phase-task" onclick="toggleTask(this)">
+              <div class="task-check"></div>
+              <div class="phase-task-text"><strong>Hardening infrastrutturale</strong> — reverse proxy con autenticazione, VLAN isolata, HTTPS, logging strutturato (checklist sicurezza Report C4)</div>
+            </div>
+            <div class="phase-task" onclick="toggleTask(this)">
+              <div class="task-check"></div>
+              <div class="phase-task-text"><strong>Passaggio a vLLM</strong> se il volume utenti lo richiede — configurazione ottimizzata per produzione, monitoring Prometheus/Grafana</div>
+            </div>
+            <div class="phase-task" onclick="toggleTask(this)">
+              <div class="task-check"></div>
+              <div class="phase-task-text"><strong>Integrazione autenticazione aziendale</strong> — SSO/LDAP per gestione utenti, permessi per ruolo, revoca accessi</div>
+            </div>
+            <div class="phase-task" onclick="toggleTask(this)">
+              <div class="task-check"></div>
+              <div class="phase-task-text"><strong>Pipeline di aggiornamento documenti</strong> — processo per aggiungere nuovi manuali o aggiornare quelli esistenti nel vector database senza downtime</div>
+            </div>
+            <div class="phase-task" onclick="toggleTask(this)">
+              <div class="task-check"></div>
+              <div class="phase-task-text"><strong>Formazione pilota utenti</strong> (10–20 persone) — come usare il sistema, cosa funziona bene, cosa non fare, come segnalare problemi</div>
+            </div>
+            <div class="phase-task" onclick="toggleTask(this)">
+              <div class="task-check"></div>
+              <div class="phase-task-text"><strong>Raccolta feedback strutturata</strong> — thumbs up/down su ogni risposta, segnalazioni di errori, NPS del pilota dopo 4 settimane di uso</div>
+            </div>
+            <div class="phase-task" onclick="toggleTask(this)">
+              <div class="task-check"></div>
+              <div class="phase-task-text"><strong>Adempimenti GDPR</strong> — DPA con provider cloud se applicabile, aggiornamento registro trattamenti, verifica policy con DPO</div>
+            </div>
+            <div class="phase-task" onclick="toggleTask(this)">
+              <div class="task-check"></div>
+              <div class="phase-task-text"><strong>Misurazione KPI baseline</strong> — raccogliere i dati di performance del sistema (latenza, uptime, qualità) per avere una baseline pre-espansione</div>
+            </div>
+          </div>
+          <div class="phase-milestone">
+            <span>Milestone F3</span>
+            Sistema in produzione sicuro · 10–20 utenti attivi · KPI baseline misurati · Feedback pilota positivo · Adempimenti GDPR completati
+          </div>
+        </div>
+      </div>
+
+      <!-- FASE 4 -->
+      <div class="phase" id="rm-phase4">
+        <div class="phase-header">
+          <div class="phase-num">F4</div>
+          <div class="phase-title-wrap">
+            <div class="phase-title">Espansione e integrazioni</div>
+            <div class="phase-subtitle">Allargare l'adozione e connettere i sistemi aziendali</div>
+          </div>
+          <div class="phase-duration">Mesi 6–12</div>
+        </div>
+        <div class="phase-body">
+          <div class="phase-tasks">
+            <div class="phase-task" onclick="toggleTask(this)">
+              <div class="task-check"></div>
+              <div class="phase-task-text"><strong>Integrazione con sistemi aziendali prioritari</strong> — ERP, MES o documentale, a seconda del caso d'uso (dettaglio Tab 2 di questo report)</div>
+            </div>
+            <div class="phase-task" onclick="toggleTask(this)">
+              <div class="task-check"></div>
+              <div class="phase-task-text"><strong>Estensione a tutti gli utenti target</strong> — comunicazione interna, formazione, raccolta feedback su scala più ampia</div>
+            </div>
+            <div class="phase-task" onclick="toggleTask(this)">
+              <div class="task-check"></div>
+              <div class="phase-task-text"><strong>Valutazione upgrade hardware</strong> — se il volume d'uso supera la capacità del setup pilota, valutare upgrade cloud o transizione on-premise</div>
+            </div>
+            <div class="phase-task" onclick="toggleTask(this)">
+              <div class="task-check"></div>
+              <div class="phase-task-text"><strong>Aggiunta di casi d'uso secondari</strong> — sulla base dell'esperienza del pilota, espandere a nuovi task (es. da Q&A documenti a generazione NC)</div>
+            </div>
+            <div class="phase-task" onclick="toggleTask(this)">
+              <div class="task-check"></div>
+              <div class="phase-task-text"><strong>Primo aggiornamento del modello</strong> — applicare il processo di migrazione definito nel Report C3, con test di regressione sul set di benchmark</div>
+            </div>
+            <div class="phase-task" onclick="toggleTask(this)">
+              <div class="task-check"></div>
+              <div class="phase-task-text"><strong>Valutazione fine-tuning</strong> — solo se emergono limitazioni specifiche non risolvibili con RAG e prompt engineering migliorato</div>
+            </div>
+          </div>
+          <div class="phase-milestone">
+            <span>Milestone F4</span>
+            Almeno 1 integrazione di sistema completata · Utenti target raggiunti · KPI migliorati rispetto alla baseline · Processo di aggiornamento modello testato
+          </div>
+        </div>
+      </div>
+
+      <!-- FASE 5 -->
+      <div class="phase" id="rm-phase5">
+        <div class="phase-header">
+          <div class="phase-num">F5</div>
+          <div class="phase-title-wrap">
+            <div class="phase-title">Maturità operativa</div>
+            <div class="phase-subtitle">Il sistema è parte stabile dell'infrastruttura aziendale</div>
+          </div>
+          <div class="phase-duration">Mese 12+</div>
+        </div>
+        <div class="phase-body">
+          <div class="phase-tasks">
+            <div class="phase-task" onclick="toggleTask(this)">
+              <div class="task-check"></div>
+              <div class="phase-task-text"><strong>Governance formale</strong> — owner del sistema definito, SLA interni, processo di change management, revisione periodica della policy di utilizzo</div>
+            </div>
+            <div class="phase-task" onclick="toggleTask(this)">
+              <div class="task-check"></div>
+              <div class="phase-task-text"><strong>Piano di disaster recovery</strong> — backup dei pesi del modello, del vector database e delle configurazioni; procedura testata di ripristino</div>
+            </div>
+            <div class="phase-task" onclick="toggleTask(this)">
+              <div class="task-check"></div>
+              <div class="phase-task-text"><strong>Revisione annuale della strategia modelli</strong> — valutare se il modello in uso è ancora adeguato rispetto alle nuove release, decidere quando aggiornare</div>
+            </div>
+            <div class="phase-task" onclick="toggleTask(this)">
+              <div class="task-check"></div>
+              <div class="phase-task-text"><strong>Valutazione agenti AI</strong> — se il sistema RAG ha dimostrato valore, valutare l'espansione a casi d'uso agentici (Report C6)</div>
+            </div>
+            <div class="phase-task" onclick="toggleTask(this)">
+              <div class="task-check"></div>
+              <div class="phase-task-text"><strong>Review TCO vs alternative</strong> — con i dati reali di utilizzo, verificare che il self-hosting rimanga la scelta economicamente razionale rispetto al piano enterprise API</div>
+            </div>
+          </div>
+          <div class="phase-milestone">
+            <span>Milestone F5</span>
+            Sistema stabile con SLA monitorati · Governance formale attiva · DR testato · Revisione strategica annuale pianificata
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+  </div>
+</div>
+
+
+<!-- ══════════════════════════════════════════
+     TAB 2 — INTEGRAZIONI SISTEMI
+══════════════════════════════════════════ -->
+<div class="tab-panel" id="t2">
+  <aside class="panel-aside">
+    <div class="aside-label">In questa sezione</div>
+    <nav>
+      <a href="#int-intro">Il problema delle integrazioni</a>
+      <a href="#int-erp">ERP</a>
+      <a href="#int-mes">MES</a>
+      <a href="#int-plm">PLM / CAD</a>
+      <a href="#int-doc">Documentale</a>
+      <a href="#int-auth">Autenticazione</a>
+      <a href="#int-sequenza">Sequenza consigliata</a>
+    </nav>
+  </aside>
+  <div class="panel-content">
+
+    <h3 id="int-intro">Il problema delle integrazioni: spesso il lavoro più lungo</h3>
+    <p>Il deploy del modello richiede ore o giorni. L'integrazione con i sistemi aziendali esistenti richiede settimane o mesi. È la parte dell'implementazione più spesso sottostimata nel planning iniziale, e quella che genera più sorprese.</p>
+    <p>Le integrazioni si dividono in due categorie con implicazioni molto diverse: <strong>integrazioni read-only</strong> (il sistema LLM legge dati da sistemi esistenti per arricchire le risposte) e <strong>integrazioni read-write</strong> (il sistema LLM scrive su sistemi esistenti, come apertura NC o aggiornamento record). Le integrazioni read-write sono significativamente più complesse da testare, validare e mettere in sicurezza.</p>
+
+    <div class="integration-grid">
+
+      <div class="integration-item erp" id="int-erp">
+        <div class="int-stripe"></div>
+        <div class="int-body">
+          <div class="int-header">
+            <span class="int-name">ERP (SAP, Microsoft Dynamics, altri)</span>
+            <span class="int-type">ERP</span>
+            <span class="int-complexity">Complessità: Alta</span>
+          </div>
+          <p class="int-desc">L'integrazione ERP è la più complessa e spesso la più preziosa. Permette all'LLM di rispondere su dati di ordini, produzione, magazzino, fornitori in tempo reale — e potenzialmente di scrivere record (con approvazione umana). Le API ERP sono tipicamente mature ma documentate per sviluppatori ERP, non per sistemi AI.</p>
+          <div class="int-approaches">
+            <span class="int-approach">API REST/OData native</span>
+            <span class="int-approach">BAPI (SAP)</span>
+            <span class="int-approach">Middleware ESB</span>
+            <span class="int-approach">Database view read-only</span>
+            <span class="int-approach">Replica dati su DB intermedio</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="integration-item mes" id="int-mes">
+        <div class="int-stripe"></div>
+        <div class="int-body">
+          <div class="int-header">
+            <span class="int-name">MES (Siemens Opcenter, Aveva, altri)</span>
+            <span class="int-type">MES</span>
+            <span class="int-complexity">Complessità: Media-Alta</span>
+          </div>
+          <p class="int-desc">Il MES è la fonte di dati di produzione in tempo reale — stato macchinari, OEE, allarmi, ordini di produzione. L'integrazione read-only per alimentare il contesto dell'agente è spesso più semplice di quanto sembri se il MES espone API REST. L'integrazione in reti OT richiede attenzione specifica alla separazione IT/OT.</p>
+          <div class="int-approaches">
+            <span class="int-approach">API REST MES</span>
+            <span class="int-approach">OPC-UA gateway</span>
+            <span class="int-approach">MQTT broker</span>
+            <span class="int-approach">Database historian</span>
+            <span class="int-approach">Middleware OT/IT</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="integration-item plm" id="int-plm">
+        <div class="int-stripe"></div>
+        <div class="int-body">
+          <div class="int-header">
+            <span class="int-name">PLM / CAD (Teamcenter, Windchill, altri)</span>
+            <span class="int-type">PLM</span>
+            <span class="int-complexity">Complessità: Media</span>
+          </div>
+          <p class="int-desc">Il PLM è la fonte primaria di IP industriale — specifiche tecniche, distinte base, revisioni di disegno, cicli di processo. L'integrazione con il sistema RAG permette di rispondere su specifiche tecniche in modo contestualizzato. Attenzione: i documenti PLM contengono spesso l'IP più critico — la classificazione del dato (Report B) deve precedere qualsiasi integrazione.</p>
+          <div class="int-approaches">
+            <span class="int-approach">Export periodico PDF/XML</span>
+            <span class="int-approach">API PLM native</span>
+            <span class="int-approach">Webhook on change</span>
+            <span class="int-approach">File system monitor</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="integration-item doc" id="int-doc">
+        <div class="int-stripe"></div>
+        <div class="int-body">
+          <div class="int-header">
+            <span class="int-name">Sistema documentale (SharePoint, Confluence, DMS)</span>
+            <span class="int-type">Documentale</span>
+            <span class="int-complexity">Complessità: Bassa-Media</span>
+          </div>
+          <p class="int-desc">L'integrazione più semplice e spesso il punto di partenza ideale. Manuali, procedure, istruzioni operative, modulistica — tutto ciò che è già in formato testo/PDF è direttamente indicizzabile nel sistema RAG. La maggior parte dei sistemi documentali espone API o connettori standard per l'export.</p>
+          <div class="int-approaches">
+            <span class="int-approach">Microsoft Graph API (SharePoint)</span>
+            <span class="int-approach">Confluence API REST</span>
+            <span class="int-approach">Export cartelle periodico</span>
+            <span class="int-approach">OneDrive/Google Drive connector</span>
+            <span class="int-approach">Email server (per ticket email)</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="integration-item auth" id="int-auth">
+        <div class="int-stripe"></div>
+        <div class="int-body">
+          <div class="int-header">
+            <span class="int-name">Autenticazione e identità (AD, Azure AD, Okta)</span>
+            <span class="int-type">Auth</span>
+            <span class="int-complexity">Complessità: Bassa</span>
+          </div>
+          <p class="int-desc">L'integrazione con il sistema di identità aziendale è essenziale per la governance: ogni utente accede con le proprie credenziali aziendali, i permessi sono sincronizzati con i gruppi AD, la revoca degli accessi è automatica al termine del rapporto. Non è opzionale per un sistema in produzione.</p>
+          <div class="int-approaches">
+            <span class="int-approach">SAML 2.0 / SSO</span>
+            <span class="int-approach">OAuth 2.0 / OIDC</span>
+            <span class="int-approach">LDAP / Active Directory</span>
+            <span class="int-approach">Azure AD / Entra ID</span>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+    <h3 id="int-sequenza">Sequenza di integrazione consigliata</h3>
+
+    <div class="ibox green">
+      <span class="ibox-label">Ordine consigliato</span>
+      <p>
+      <strong>1° — Autenticazione (Fase 3):</strong> prima di qualsiasi utente reale, l'accesso deve essere gestito con credenziali aziendali. È il fondamento della governance.<br><br>
+      <strong>2° — Sistema documentale (Fase 3):</strong> la fonte di dati più semplice da integrare e quella che alimenta il sistema RAG. Alta priorità, bassa complessità.<br><br>
+      <strong>3° — MES read-only (Fase 4):</strong> dati di produzione in tempo reale per gli agenti di supporto operatori. Complessità media, ma valore alto per i casi d'uso manifatturieri.<br><br>
+      <strong>4° — ERP read-only (Fase 4):</strong> dati di ordini, magazzino, fornitori. Complessità alta — pianificare almeno 6–8 settimane per un'integrazione ERP anche semplice.<br><br>
+      <strong>5° — PLM (Fase 4, con attenzione alla sicurezza dati):</strong> solo dopo aver verificato la classificazione dei dati PLM e implementato i controlli di accesso granulari.<br><br>
+      <strong>Integrazioni write (ERP/MES/qualità) — Fase 4-5, con HITL obbligatorio:</strong> scrivere su sistemi aziendali è una fase successiva che richiede validazione estesa e human-in-the-loop per ogni azione.
+      </p>
+    </div>
+
+  </div>
+</div>
+
+
+<!-- ══════════════════════════════════════════
+     TAB 3 — TEAM E COMPETENZE
+══════════════════════════════════════════ -->
+<div class="tab-panel" id="t3">
+  <aside class="panel-aside">
+    <div class="aside-label">In questa sezione</div>
+    <nav>
+      <a href="#tc-intro">Il team minimo</a>
+      <a href="#tc-ruoli">I ruoli necessari</a>
+      <a href="#tc-gap">Gap comuni e come colmarli</a>
+      <a href="#tc-partner">Quando serve un partner esterno</a>
+    </nav>
+  </aside>
+  <div class="panel-content">
+
+    <h3 id="tc-intro">Il team minimo per un progetto self-hosted</h3>
+    <p>Non esiste un team "standard" — dipende dalla complessità del progetto, dall'architettura scelta e dalle competenze già presenti. Ma esistono ruoli che devono essere coperti, internamente o con partner esterni. La mancanza di anche uno solo di questi ruoli è un rischio di progetto significativo.</p>
+    <p>Per un primo progetto self-hosted di livello medio (sistema RAG in produzione, 50–150 utenti, integrazione con 1–2 sistemi), il team minimo efficace è di 3–4 persone con commitment part-time, più il supporto di un partner esterno per le competenze mancanti.</p>
+
+    <div class="team-grid" id="tc-ruoli">
+
+      <div class="role-card">
+        <span class="role-tag">Ruolo 01</span>
+        <h4>Project Owner / AI Product Manager</h4>
+        <span class="role-fte">0.3–0.5 FTE</span>
+        <div class="role-skills">
+          <div class="role-skill">Definisce e mantiene i casi d'uso</div>
+          <div class="role-skill">Gestisce le aspettative degli stakeholder</div>
+          <div class="role-skill">Misura i KPI e guida le priorità</div>
+          <div class="role-skill">Interfaccia tra IT e business</div>
+          <div class="role-skill">Non deve essere tecnico, ma deve capire i limiti dell'AI</div>
+        </div>
+        <div class="role-gap">Gap tipico: figura spesso mancante — il progetto viene guidato solo dall'IT senza raccordo col business</div>
+      </div>
+
+      <div class="role-card">
+        <span class="role-tag">Ruolo 02</span>
+        <h4>MLOps / AI Engineer</h4>
+        <span class="role-fte">0.5–1.0 FTE</span>
+        <div class="role-skills">
+          <div class="role-skill">Deploy e configurazione del modello</div>
+          <div class="role-skill">Setup e ottimizzazione del serving framework</div>
+          <div class="role-skill">Costruzione del pipeline RAG</div>
+          <div class="role-skill">Monitoring e troubleshooting</div>
+          <div class="role-skill">Aggiornamenti del modello e test di regressione</div>
+        </div>
+        <div class="role-gap">Gap tipico: competenza più rara in aziende manifatturiere — spesso la principale lacuna che giustifica un partner esterno</div>
+      </div>
+
+      <div class="role-card">
+        <span class="role-tag">Ruolo 03</span>
+        <h4>DevOps / Infrastruttura</h4>
+        <span class="role-fte">0.2–0.4 FTE</span>
+        <div class="role-skills">
+          <div class="role-skill">Provisioning e gestione infrastruttura cloud/on-prem</div>
+          <div class="role-skill">Networking e sicurezza perimetrale</div>
+          <div class="role-skill">Autenticazione e gestione identità</div>
+          <div class="role-skill">Backup e disaster recovery</div>
+          <div class="role-skill">Monitoring infrastrutturale</div>
+        </div>
+        <div class="role-gap">Gap tipico: spesso già presente come sysadmin/IT, ma senza esperienza con GPU e ambienti ML</div>
+      </div>
+
+      <div class="role-card">
+        <span class="role-tag">Ruolo 04</span>
+        <h4>Sviluppatore applicazioni</h4>
+        <span class="role-fte">0.3–0.5 FTE</span>
+        <div class="role-skills">
+          <div class="role-skill">Sviluppo interfaccia utente (chat, widget)</div>
+          <div class="role-skill">Integrazione con sistemi aziendali (API)</div>
+          <div class="role-skill">Sviluppo dei tool per agenti</div>
+          <div class="role-skill">Testing e QA delle integrazioni</div>
+          <div class="role-skill">Python / REST API essenziali</div>
+        </div>
+        <div class="role-gap">Gap tipico: spesso presente, ma senza esperienza con LLM e framework agentici — formazione necessaria</div>
+      </div>
+
+      <div class="role-card">
+        <span class="role-tag">Ruolo 05</span>
+        <h4>Domain Expert / Validatore</h4>
+        <span class="role-fte">0.1–0.2 FTE</span>
+        <div class="role-skills">
+          <div class="role-skill">Valuta la qualità delle risposte del sistema</div>
+          <div class="role-skill">Costruisce e mantiene il set di test</div>
+          <div class="role-skill">Identifica errori tecnici nelle risposte</div>
+          <div class="role-skill">Valida le procedure nel sistema RAG</div>
+          <div class="role-skill">Deve essere esperto del dominio (es. responsabile qualità)</div>
+        </div>
+        <div class="role-gap">Gap tipico: spesso non considerato nel team — ma senza questo ruolo la qualità tecnica delle risposte non è verificabile</div>
+      </div>
+
+      <div class="role-card">
+        <span class="role-tag">Ruolo 06</span>
+        <h4>DPO / Compliance</h4>
+        <span class="role-fte">0.05–0.1 FTE</span>
+        <div class="role-skills">
+          <div class="role-skill">Verifica adempimenti GDPR</div>
+          <div class="role-skill">Aggiorna registro trattamenti</div>
+          <div class="role-skill">Verifica compatibilità con NDA esistenti</div>
+          <div class="role-skill">Policy di utilizzo e formazione</div>
+          <div class="role-skill">Gestione incidenti di sicurezza</div>
+        </div>
+        <div class="role-gap">Gap tipico: spesso già presente, ma non coinvolto nel progetto AI fino a tardi — coinvolgerlo dalla Fase 1</div>
+      </div>
+
+    </div>
+
+    <h3 id="tc-gap">Gap comuni e come colmarli</h3>
+    <p>Il gap più frequente è la competenza MLOps/AI Engineering. Tre opzioni per colmarlo, in ordine di preferenza:</p>
+    <p><strong>Formazione interna:</strong> se c'è un profilo IT con buone basi Python e DevOps, 2–3 mesi di formazione focalizzata (LLM deployment, LangChain/LlamaIndex, vector database) possono essere sufficienti per un primo progetto. Costo basso, tempo medio, risultato stabile nel lungo periodo.</p>
+    <p><strong>Assunzione:</strong> un MLOps engineer ha tipicamente un costo di €50.000–80.000/anno. Si giustifica se il progetto è strategico e continuativo. Time-to-hire 2–4 mesi nel mercato attuale.</p>
+    <p><strong>Partner esterno:</strong> per il primo progetto, un system integrator o una software house specializzata in AI può coprire le competenze mancanti. Il rischio principale è la dipendenza — pianificare un percorso di knowledge transfer esplicito nel contratto.</p>
+
+    <h3 id="tc-partner">Quando serve un partner esterno</h3>
+    <div class="ibox amber">
+      <span class="ibox-label">Indicatori che giustificano un partner</span>
+      <p>
+      · Nessuno in azienda ha mai deployato un LLM o costruito un sistema RAG<br>
+      · Il progetto ha una scadenza stretta (meno di 3 mesi al go-live)<br>
+      · L'integrazione coinvolge sistemi ERP complessi con poca documentazione API<br>
+      · Si vuole on-premise con cluster GPU multipli già dal primo progetto<br>
+      · Il caso d'uso coinvolge agenti con azioni su sistemi critici (es. scrittura ERP)<br><br>
+      <strong>In tutti questi casi:</strong> selezionare un partner con referenze specifiche in ambito manifatturiero e LLM, non solo in AI generica. Inserire nel contratto: knowledge transfer documentato, formazione del team interno, codice sorgente e documentazione di proprietà del cliente.
+      </p>
+    </div>
+
+  </div>
+</div>
+
+
+<!-- ══════════════════════════════════════════
+     TAB 4 — KPI E SUCCESSO
+══════════════════════════════════════════ -->
+<div class="tab-panel" id="t4">
+  <aside class="panel-aside">
+    <div class="aside-label">In questa sezione</div>
+    <nav>
+      <a href="#kpi-intro">Come misurare il successo</a>
+      <a href="#kpi-tecnici">KPI tecnici</a>
+      <a href="#kpi-business">KPI di business</a>
+      <a href="#kpi-adoption">KPI di adozione</a>
+      <a href="#kpi-dashboard">Il dashboard minimo</a>
+    </nav>
+  </aside>
+  <div class="panel-content">
+
+    <h3 id="kpi-intro">Come misurare il successo: il framework in tre livelli</h3>
+    <p>Un sistema LLM ha tre livelli distinti di performance, ognuno con metriche specifiche. Un sistema eccellente a livello tecnico ma non adottato dagli utenti è un fallimento. Un sistema molto usato ma che produce risposte errate è un rischio. Un sistema usato e tecnicamente corretto, ma che non migliora i processi aziendali, non giustifica l'investimento.</p>
+    <p>Le metriche vanno raccolte in modo continuativo — non solo al lancio. Il sistema cambia nel tempo (modello aggiornato, documenti aggiunti, nuovi utenti) e le metriche possono degradare silenziosamente senza un monitoring attivo.</p>
+
+    <h3 id="kpi-tecnici">KPI tecnici: il sistema funziona?</h3>
+
+    <table class="kpi-table">
+      <thead><tr><th>KPI</th><th>Come misurarlo</th><th>Target indicativo</th><th>Frequenza</th></tr></thead>
+      <tbody>
+        <tr>
+          <td>Latenza risposta (P95)</td>
+          <td>Tempo dal ricevimento query all'inizio della risposta, 95° percentile</td>
+          <td>&lt; 5 secondi per uso interattivo</td>
+          <td>Continua</td>
+        </tr>
+        <tr>
+          <td>Uptime del sistema</td>
+          <td>% del tempo in cui il sistema risponde correttamente alle richieste</td>
+          <td>&gt; 99% in orario lavorativo</td>
+          <td>Continua</td>
+        </tr>
+        <tr>
+          <td>Accuratezza su benchmark</td>
+          <td>% di risposte corrette sul set di test definito in Fase 2</td>
+          <td>≥ soglia definita in Fase 1</td>
+          <td>Mensile o dopo ogni aggiornamento</td>
+        </tr>
+        <tr>
+          <td>Tasso di allucinazioni</td>
+          <td>% di risposte che contengono informazioni non presenti nei documenti fonte</td>
+          <td>&lt; 5% (con RAG ben configurato)</td>
+          <td>Settimanale su campione</td>
+        </tr>
+        <tr>
+          <td>Tasso di errori / timeout</td>
+          <td>% di richieste che falliscono o non ricevono risposta</td>
+          <td>&lt; 1%</td>
+          <td>Continua</td>
+        </tr>
+        <tr>
+          <td>Utilizzo VRAM / GPU</td>
+          <td>% utilizzo GPU durante le ore di punta</td>
+          <td>&lt; 80% (per avere margine)</td>
+          <td>Continua</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <h3 id="kpi-business">KPI di business: il sistema crea valore?</h3>
+
+    <table class="kpi-table">
+      <thead><tr><th>KPI</th><th>Come misurarlo</th><th>Baseline e target</th></tr></thead>
+      <tbody>
+        <tr>
+          <td>Tempo medio ricerca informazioni</td>
+          <td>Confronto before/after su campione di task misurati (es. trovare procedura operativa)</td>
+          <td>Baseline pre-sistema → Target: riduzione ≥ 50%</td>
+        </tr>
+        <tr>
+          <td>Tempo medio redazione documenti</td>
+          <td>Confronto before/after su tipi di documento supportati (NC, rapporti, offerte)</td>
+          <td>Baseline pre-sistema → Target: riduzione ≥ 30%</td>
+        </tr>
+        <tr>
+          <td>Tempo medio risoluzione problemi tecnici</td>
+          <td>Per agenti di supporto operatori: MTTR (Mean Time To Repair) su macchinari</td>
+          <td>Baseline storica MES → Target: riduzione ≥ 20%</td>
+        </tr>
+        <tr>
+          <td>Tasso di escalation NC</td>
+          <td>% di non conformità che richiedono intervento esperto vs gestite direttamente</td>
+          <td>Baseline storica qualità → Target definito con responsabile qualità</td>
+        </tr>
+        <tr>
+          <td>ROI annuale</td>
+          <td>(Ore risparmiate × costo orario) + (errori evitati × costo medio errore) − TCO sistema</td>
+          <td>Target: ROI positivo entro 18 mesi</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <h3 id="kpi-adoption">KPI di adozione: il sistema viene usato?</h3>
+
+    <table class="kpi-table">
+      <thead><tr><th>KPI</th><th>Come misurarlo</th><th>Target indicativo</th></tr></thead>
+      <tbody>
+        <tr>
+          <td>Utenti attivi mensili (MAU)</td>
+          <td>Utenti unici che hanno effettuato almeno una query nel mese</td>
+          <td>≥ 70% degli utenti autorizzati dopo 3 mesi dal lancio</td>
+        </tr>
+        <tr>
+          <td>Query per utente per settimana</td>
+          <td>Media di query effettuate per utente attivo</td>
+          <td>Crescita progressiva nei primi 6 mesi</td>
+        </tr>
+        <tr>
+          <td>Rating utenti (thumbs up/down)</td>
+          <td>% di risposte valutate positivamente dagli utenti</td>
+          <td>≥ 75% positive</td>
+        </tr>
+        <tr>
+          <td>NPS del sistema</td>
+          <td>Survey mensile: "consiglieresti questo sistema a un collega?" (0–10)</td>
+          <td>NPS ≥ 30 dopo 3 mesi</td>
+        </tr>
+        <tr>
+          <td>Churn (utenti che smettono di usarlo)</td>
+          <td>% utenti che hanno usato il sistema nei mesi precedenti e non lo usano più</td>
+          <td>&lt; 20% mensile</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <h3 id="kpi-dashboard">Il dashboard di monitoring minimo</h3>
+    <div class="ibox">
+      <span class="ibox-label">Setup minimo consigliato</span>
+      <p>
+      <strong>Prometheus + Grafana</strong> per le metriche tecniche (latenza, uptime, utilizzo GPU) — setup in 1–2 giorni con i template standard per vLLM/Ollama.<br><br>
+      <strong>Log strutturati</strong> con query, user_id, latency, rating per le metriche di utilizzo — un CSV o database semplice è sufficiente all'inizio.<br><br>
+      <strong>Survey mensile breve</strong> (3 domande max) agli utenti per le metriche di soddisfazione — non automatizzabile ma essenziale.<br><br>
+      <strong>Benchmark mensile automatizzato</strong> — script che esegue il set di test definito in Fase 2 e salva i risultati. Alert se l'accuratezza scende sotto soglia.
+      </p>
+    </div>
+
+  </div>
+</div>
+
+
+<!-- ══════════════════════════════════════════
+     TAB 5 — RISCHI DI PROGETTO
+══════════════════════════════════════════ -->
+<div class="tab-panel" id="t5">
+  <aside class="panel-aside">
+    <div class="aside-label">In questa sezione</div>
+    <nav>
+      <a href="#rp-intro">I rischi più comuni</a>
+      <a href="#rp-register">Risk register</a>
+      <a href="#rp-go-nogo">Criteri go/no-go</a>
+    </nav>
+  </aside>
+  <div class="panel-content">
+
+    <h3 id="rp-intro">I rischi che affondano i progetti LLM</h3>
+    <p>I progetti di implementazione LLM falliscono per ragioni ricorrenti — non tecniche, nella maggior parte dei casi. Il modello non è abbastanza capace è solo il quinto o sesto motivo più frequente. I primi quattro sono quasi sempre organizzativi o di governance.</p>
+    <p>Il risk register qui sotto è basato sui pattern più comuni osservati in implementazioni enterprise. Per ogni rischio è indicato un livello di probabilità, l'impatto potenziale e le mitigazioni specifiche.</p>
+
+    <div class="risk-list" id="rp-register">
+
+      <div class="risk-item header">
+        <div class="risk-body">Rischio</div>
+        <div class="risk-cell">Probabilità</div>
+        <div class="risk-cell">Impatto</div>
+      </div>
+
+      <div class="risk-item">
+        <div class="risk-body">
+          <h4>Casi d'uso non definiti o cambiati in corso</h4>
+          <p>Il progetto parte con obiettivi vaghi ("usiamo l'AI"), il modello viene deployato prima di capire cosa deve fare, e si scopre in produzione che le aspettative degli utenti non coincidono con quanto costruito. <strong>Mitigazione:</strong> milestone F1 non negoziabile — nessun PoC prima di avere casi d'uso misurabili e approvati.</p>
+        </div>
+        <div class="risk-cell"><span class="risk-badge high">Alta</span></div>
+        <div class="risk-cell"><span class="risk-badge high">Alto</span></div>
+      </div>
+
+      <div class="risk-item">
+        <div class="risk-body">
+          <h4>Mancanza di competenze MLOps interne</h4>
+          <p>Il sistema viene deployato da un consulente esterno senza knowledge transfer adeguato. Il consulente termina il progetto e nessuno in azienda sa come gestire aggiornamenti, problemi o modifiche. <strong>Mitigazione:</strong> knowledge transfer esplicito nel contratto, formazione del team interno come deliverable, documentazione tecnica completa di proprietà del cliente.</p>
+        </div>
+        <div class="risk-cell"><span class="risk-badge high">Alta</span></div>
+        <div class="risk-cell"><span class="risk-badge high">Alto</span></div>
+      </div>
+
+      <div class="risk-item">
+        <div class="risk-body">
+          <h4>Qualità della documentazione insufficiente</h4>
+          <p>Il sistema RAG viene costruito su documentazione incompleta, non aggiornata o in formati non processabili (PDF scansionati non OCR, disegni CAD, formati proprietari). La qualità delle risposte è inaccettabile non per il modello ma per i dati. <strong>Mitigazione:</strong> audit della documentazione disponibile in Fase 1, prima di scegliere il caso d'uso — non tutte le documentazioni sono immediatamente indicizzabili.</p>
+        </div>
+        <div class="risk-cell"><span class="risk-badge high">Alta</span></div>
+        <div class="risk-cell"><span class="risk-badge mid">Medio</span></div>
+      </div>
+
+      <div class="risk-item">
+        <div class="risk-body">
+          <h4>Resistenza degli utenti all'adozione</h4>
+          <p>Il sistema viene percepito come uno strumento di controllo, come una minaccia al proprio ruolo, o semplicemente come complicato rispetto alle soluzioni già in uso (ricerca su Google, colleghi). <strong>Mitigazione:</strong> coinvolgere gli utenti finali dal design, non dall'adozione. Mostrare il valore diretto per il loro lavoro. Partire con i casi d'uso più utili per chi lo usa, non per chi lo commissiona.</p>
+        </div>
+        <div class="risk-cell"><span class="risk-badge mid">Media</span></div>
+        <div class="risk-cell"><span class="risk-badge high">Alto</span></div>
+      </div>
+
+      <div class="risk-item">
+        <div class="risk-body">
+          <h4>Integrazione con sistemi legacy più complessa del previsto</h4>
+          <p>Le API del sistema ERP o MES non sono documentate, cambiano tra versioni, o richiedono competenze specifiche non disponibili. Il tempo di integrazione si triplica rispetto alle stime. <strong>Mitigazione:</strong> discovery tecnica delle API disponibili prima di pianificare le integrazioni, stima con buffer del 100% per integrazioni legacy, fallback su export periodico dove le API non sono percorribili.</p>
+        </div>
+        <div class="risk-cell"><span class="risk-badge mid">Media</span></div>
+        <div class="risk-cell"><span class="risk-badge mid">Medio</span></div>
+      </div>
+
+      <div class="risk-item">
+        <div class="risk-body">
+          <h4>Costi reali superiori alle stime iniziali</h4>
+          <p>Il TCO viene calcolato correttamente sull'hardware ma non include personale, integrazioni, formazione e manutenzione. Il management approva un budget che si rivela insufficiente a metà progetto. <strong>Mitigazione:</strong> usare il modello di costo completo del Report C5, includere tutte le voci, e aggiungere un contingency del 30% per il primo progetto.</p>
+        </div>
+        <div class="risk-cell"><span class="risk-badge mid">Media</span></div>
+        <div class="risk-cell"><span class="risk-badge mid">Medio</span></div>
+      </div>
+
+      <div class="risk-item">
+        <div class="risk-body">
+          <h4>Violazione di NDA o GDPR non rilevata</h4>
+          <p>Dati coperti da NDA o dati personali vengono inviati al sistema senza che nessuno si sia posto la domanda della classificazione. Il rischio viene scoperto solo in fase di audit esterno. <strong>Mitigazione:</strong> DPO coinvolto dalla Fase 1, classificazione dati completata prima del PoC, policy di utilizzo comunicata prima dell'accesso al sistema.</p>
+        </div>
+        <div class="risk-cell"><span class="risk-badge low">Bassa</span></div>
+        <div class="risk-cell"><span class="risk-badge high">Alto</span></div>
+      </div>
+
+    </div>
+
+    <h3 id="rp-go-nogo">Criteri go/no-go espliciti</h3>
+    <div class="ibox green">
+      <span class="ibox-label">Quando fermarsi e rivalutare</span>
+      <p>
+      <strong>Stop dopo Fase 1 se:</strong> non si riesce a definire un caso d'uso con metriche di successo misurabili · il budget approvato è inferiore al TCO realistico · non c'è nessuno in azienda o tra partner che conosce il deployment di LLM<br><br>
+      <strong>Stop dopo Fase 2 (PoC) se:</strong> la qualità misurata è significativamente sotto la soglia definita e non migliora con ottimizzazioni · gli utenti del pilota non vedono valore concreto nel sistema · il caso d'uso si rivela in Zona Rossa per capability (vedi Report C2)<br><br>
+      <strong>Ridimensionare dopo Fase 3 se:</strong> l'adozione è molto bassa nonostante la qualità tecnica buona · il ROI misurato è negativo dopo 6 mesi di produzione · i costi operativi superano le stime del 50%+<br><br>
+      Fermarsi non è fallire — è governare razionalmente un progetto. Un PoC che dimostra che il self-hosting non è la soluzione giusta per quel caso d'uso è un risultato di valore, non una perdita.
+      </p>
+    </div>
+
+  </div>
+</div>
+
+
+<!-- ══════════════════════════════════════════
+     TAB 6 — CHIUSURA SERIE
+══════════════════════════════════════════ -->
+<div class="tab-panel" id="t6">
+  <aside class="panel-aside">
+    <div class="aside-label">In questa sezione</div>
+    <nav>
+      <a href="#cs-serie">Riepilogo della serie</a>
+      <a href="#cs-decisione">Il percorso decisionale</a>
+      <a href="#cs-contesto">Connessione con il contesto più ampio</a>
+    </nav>
+  </aside>
+  <div class="panel-content">
+
+    <h3 id="cs-serie">Riepilogo della serie completa</h3>
+    <p>Questa serie di report ha affrontato il self-hosting degli LLM in modo progressivo — dalla decisione strategica fino alla roadmap operativa. Ogni report ha risposto a una domanda specifica, costruendo su quelle precedenti.</p>
+
+    <div class="series-summary">
+      <div class="summary-row done">
+        <div class="sum-num">A</div>
+        <div class="sum-body">
+          <div class="sum-title">LLM e sicurezza dei dati — Executive Summary</div>
+          <div class="sum-desc">I rischi per il management. Cosa succede ai dati, i tre scenari di danno, le opzioni disponibili.</div>
+        </div>
+        <div class="sum-status"><span>Completato</span></div>
+      </div>
+      <div class="summary-row done">
+        <div class="sum-num">B</div>
+        <div class="sum-body">
+          <div class="sum-title">LLM e sicurezza dei dati — Guida tecnico-operativa</div>
+          <div class="sum-desc">Flusso dati, tassonomia rischi, policy provider, DPA GDPR, matrice mitigazioni.</div>
+        </div>
+        <div class="sum-status"><span>Completato</span></div>
+      </div>
+      <div class="summary-row done">
+        <div class="sum-num">C1</div>
+        <div class="sum-body">
+          <div class="sum-title">Self-hosting: la decisione</div>
+          <div class="sum-desc">Vantaggi reali vs percepiti, quando dire no, pre-training vs fine-tuning vs RAG, licenze.</div>
+        </div>
+        <div class="sum-status"><span>Completato</span></div>
+      </div>
+      <div class="summary-row done">
+        <div class="sum-num">C2</div>
+        <div class="sum-body">
+          <div class="sum-title">Mappa dei task</div>
+          <div class="sum-desc">Le quattro zone (verde/giallo/arancione/rosso), focus manifatturiero, metodo di valutazione.</div>
+        </div>
+        <div class="sum-status"><span>Completato</span></div>
+      </div>
+      <div class="summary-row done">
+        <div class="sum-num">C3</div>
+        <div class="sum-body">
+          <div class="sum-title">I modelli disponibili</div>
+          <div class="sum-desc">Famiglie, schede, confronto capability, model velocity, strategia aggiornamento, guida alla scelta.</div>
+        </div>
+        <div class="sum-status"><span>Completato</span></div>
+      </div>
+      <div class="summary-row done">
+        <div class="sum-num">C4</div>
+        <div class="sum-body">
+          <div class="sum-title">Le architetture</div>
+          <div class="sum-desc">Cloud privato vs on-premise vs ibrido, hardware, quantizzazione, framework serving, sicurezza interna.</div>
+        </div>
+        <div class="sum-status"><span>Completato</span></div>
+      </div>
+      <div class="summary-row done">
+        <div class="sum-num">C5</div>
+        <div class="sum-body">
+          <div class="sum-title">I costi</div>
+          <div class="sum-desc">TCO, tre scenari, prezzi API, break-even, costi nascosti, simulatore interattivo.</div>
+        </div>
+        <div class="sum-status"><span>Completato</span></div>
+      </div>
+      <div class="summary-row done">
+        <div class="sum-num">C6</div>
+        <div class="sum-body">
+          <div class="sum-title">Agenti AI su modelli self-hosted</div>
+          <div class="sum-desc">Differenze architetturali, gap capability, tool use, framework agentici, sicurezza agentiva, casi d'uso.</div>
+        </div>
+        <div class="sum-status"><span>Completato</span></div>
+      </div>
+      <div class="summary-row current">
+        <div class="sum-num">C7</div>
+        <div class="sum-body">
+          <div class="sum-title">Implementazione — Roadmap pratica</div>
+          <div class="sum-desc">Cinque fasi, integrazioni sistemi, team, KPI, rischi di progetto.</div>
+        </div>
+        <div class="sum-status"><span>Questo report</span></div>
+      </div>
+    </div>
+
+    <h3 id="cs-decisione">Il percorso decisionale distillato</h3>
+    <p>Se dovessimo ridurre l'intera serie a un percorso decisionale sintetico, sarebbe questo:</p>
+
+    <div class="ibox green">
+      <span class="ibox-label">In ordine, prima di tutto il resto</span>
+      <p>
+      <strong>1. Definisci il caso d'uso con metriche.</strong> Non "vogliamo usare l'AI". Cosa deve fare, per chi, con quale qualità misurabile. Senza questo, tutto il resto è prematuro.<br><br>
+      <strong>2. Classifica i dati coinvolti.</strong> IP industriale critico, dati sotto NDA, dati personali? Questo determina se il self-hosting è necessario o se un piano enterprise è sufficiente.<br><br>
+      <strong>3. Verifica la capability con un test diretto.</strong> Prima dell'infrastruttura, testa il modello sul tuo caso d'uso reale. Usa il metodo del Report C2. I benchmark pubblici non sostituiscono il test sui tuoi dati.<br><br>
+      <strong>4. Calcola il TCO completo.</strong> Hardware o cloud, personale, setup, integrazioni, aggiornamenti. Confronta con il costo di un piano enterprise API. La scelta economica potrebbe sorprenderti.<br><br>
+      <strong>5. Inizia piccolo e misura.</strong> PoC su cloud privato, caso d'uso circoscritto, gruppo pilota di 10–20 utenti, KPI definiti prima del lancio. Espandi solo se i dati lo giustificano.
+      </p>
+    </div>
+
+    <h3 id="cs-contesto">Connessione con il contesto più ampio</h3>
+    <p>Questa serie si è sviluppata all'interno di un percorso più ampio iniziato nelle chat precedenti — dalla comprensione degli agenti AI, alle architetture multi-agent, fino alla sicurezza dei dati e al self-hosting. I temi sono connessi: un sistema self-hosted ben progettato è la base infrastrutturale su cui costruire agenti AI sicuri, che a loro volta abilitano i casi d'uso di automazione industriale discussi nella serie sugli agenti.</p>
+    <p>Il passo naturale successivo — non ancora esplorato — è la <strong>convergenza tra sistemi agentici e processi produttivi reali</strong>: come gli agenti si integrano con i sistemi di controllo, come si gestisce la supervisione umana su agenti che interagiscono con macchinari, e quali sono i requisiti di affidabilità per sistemi AI in contesti di sicurezza funzionale. È un territorio ancora in evoluzione rapida, con implicazioni sia tecniche che normative (AI Act europeo, IEC 61511 per la sicurezza funzionale).</p>
+
+    <div class="ibox blue">
+      <span class="ibox-label">Fine della serie C · Self-Hosting LLM</span>
+      <p>
+      La serie è composta da 9 report (A, B, C1–C7) che coprono il percorso completo dalla comprensione dei rischi alla roadmap di implementazione. Tutti i report sono disponibili come file HTML apribili direttamente nel browser, progettati per essere condivisi internamente con pubblici diversi (executive, IT, management tecnico).<br><br>
+      Per approfondire argomenti specifici della serie, o per affrontare nuovi temi — come l'AI Act, la sicurezza funzionale in ambito OT, o le architetture multi-agent avanzate — è possibile riprendere la conversazione in una nuova chat con i report come contesto di riferimento.
+      </p>
+    </div>
+
+  </div>
+</div>
+
+
+<footer>
+  <p>Report generato con Claude · Anthropic · 2026</p>
+  <p>Serie C: Self-Hosting LLM · Report C7 — Implementazione · Fine serie</p>
+</footer>
+
+<script>
+document.querySelectorAll('.tab-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    const target = btn.dataset.tab;
+    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+    document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+    btn.classList.add('active');
+    document.getElementById(target).classList.add('active');
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  });
+});
+
+function toggleTask(item) {
+  item.classList.toggle('done');
+  const box = item.querySelector('.task-check');
+  box.textContent = item.classList.contains('done') ? '✓' : '';
+}
+</script>
+
+</body>
+</html>

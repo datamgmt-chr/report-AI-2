@@ -1,0 +1,1375 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Self-Hosting LLM — C4: Le Architetture</title>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@300;400;500;700;900&family=JetBrains+Mono:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg:       #0c0c0f;
+  --bg2:      #13131a;
+  --bg3:      #1a1a24;
+  --bg4:      #22222e;
+  --border:   #2a2a38;
+  --border2:  #363648;
+  --ink:      #e4e4f0;
+  --ink2:     #a8a8c0;
+  --ink3:     #686880;
+  --ink4:     #404058;
+  --violet:   #a07ef0;
+  --violet-l: rgba(160,126,240,0.08);
+  --red:      #f05a6a;
+  --red-l:    rgba(240,90,106,0.07);
+  --green:    #50e8a0;
+  --green-l:  rgba(80,232,160,0.07);
+  --amber:    #f0b050;
+  --amber-l:  rgba(240,176,80,0.07);
+  --blue:     #50b8f0;
+  --blue-l:   rgba(80,184,240,0.07);
+  --teal:     #50d8d0;
+  --teal-l:   rgba(80,216,208,0.07);
+}
+
+* { margin:0; padding:0; box-sizing:border-box; }
+html { scroll-behavior:smooth; }
+
+body {
+  background: var(--bg);
+  color: var(--ink);
+  font-family: 'Archivo', sans-serif;
+  font-weight: 300;
+  font-size: 14px;
+  line-height: 1.78;
+}
+
+/* ── MASTHEAD ── */
+.masthead {
+  padding: 72px 64px 60px;
+  border-bottom: 1px solid var(--border);
+  position: relative; overflow: hidden;
+  background: var(--bg2);
+}
+.masthead::before {
+  content: '';
+  position: absolute; top: -200px; right: -200px;
+  width: 700px; height: 700px;
+  background: radial-gradient(circle, rgba(160,126,240,0.04) 0%, transparent 65%);
+  pointer-events: none;
+}
+.masthead::after {
+  content: 'C4';
+  position: absolute; right: 48px; bottom: -30px;
+  font-weight: 900; font-size: 280px; line-height: 1;
+  color: rgba(160,126,240,0.04); pointer-events: none;
+  letter-spacing: -12px; font-family: 'Archivo', sans-serif;
+}
+.series-label {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px; letter-spacing: 4px; text-transform: uppercase;
+  color: var(--ink4); margin-bottom: 6px;
+}
+.report-label {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px; letter-spacing: 3px; text-transform: uppercase;
+  color: var(--violet); margin-bottom: 32px;
+}
+.masthead h1 {
+  font-weight: 900; font-size: clamp(34px, 5vw, 62px);
+  line-height: 1.05; letter-spacing: -2.5px; max-width: 780px;
+}
+.masthead h1 em { font-style: italic; color: var(--violet); font-weight: 400; }
+.masthead-sub {
+  margin-top: 24px; font-size: 15px; color: var(--ink3);
+  max-width: 640px; line-height: 1.75;
+}
+.masthead-meta {
+  margin-top: 48px; display: flex; gap: 48px; flex-wrap: wrap;
+  padding-top: 28px; border-top: 1px solid var(--border);
+}
+.meta-item span {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 9px; letter-spacing: 2px; text-transform: uppercase;
+  color: var(--ink4); display: block;
+}
+.meta-item strong {
+  font-size: 13px; font-weight: 500; color: var(--ink2);
+  display: block; margin-top: 3px;
+}
+
+/* ── TAB NAV ── */
+.tab-nav {
+  display: flex; background: var(--bg2);
+  border-bottom: 1px solid var(--border);
+  overflow-x: auto; position: sticky; top: 0; z-index: 100;
+  scrollbar-width: none;
+}
+.tab-nav::-webkit-scrollbar { display: none; }
+.tab-btn {
+  flex-shrink: 0; padding: 0; border: none; cursor: pointer;
+  background: transparent; border-right: 1px solid var(--border);
+  transition: background 0.2s;
+}
+.tab-btn:last-child { border-right: none; }
+.tab-btn-inner { display: block; padding: 13px 22px; text-align: left; }
+.tab-num {
+  font-family: 'JetBrains Mono', monospace; font-size: 9px;
+  letter-spacing: 2px; color: var(--ink4); display: block; margin-bottom: 3px;
+}
+.tab-name {
+  font-weight: 700; font-size: 11px; text-transform: uppercase;
+  letter-spacing: 0.5px; color: var(--ink3); display: block;
+  line-height: 1.25; white-space: nowrap; transition: color 0.2s;
+}
+.tab-btn.active .tab-name { color: var(--ink); }
+.tab-btn.active { position: relative; }
+.tab-btn.active::after {
+  content: ''; position: absolute; bottom: 0; left: 0; right: 0;
+  height: 2px; background: var(--violet);
+}
+.tab-btn:hover .tab-name { color: var(--ink2); }
+
+/* ── PANELS ── */
+.tab-panel { display: none; }
+.tab-panel.active {
+  display: grid; grid-template-columns: 190px 1fr;
+  min-height: 80vh; animation: fadeIn 0.3s ease;
+}
+@keyframes fadeIn {
+  from { opacity:0; transform:translateY(6px); }
+  to   { opacity:1; transform:translateY(0); }
+}
+
+/* ── ASIDE ── */
+.panel-aside {
+  border-right: 1px solid var(--border);
+  padding: 40px 24px 40px 40px;
+  position: sticky; top: 48px;
+  height: calc(100vh - 48px); overflow-y: auto;
+}
+.aside-label {
+  font-family: 'JetBrains Mono', monospace; font-size: 9px;
+  letter-spacing: 3px; text-transform: uppercase;
+  color: var(--ink4); margin-bottom: 16px;
+}
+.panel-aside nav a {
+  display: block; font-size: 12px; color: var(--ink3);
+  text-decoration: none; padding: 7px 0;
+  border-bottom: 1px solid var(--border);
+  line-height: 1.4; transition: color 0.2s;
+}
+.panel-aside nav a:hover { color: var(--violet); }
+.panel-aside nav a:last-child { border: none; }
+
+/* ── CONTENT ── */
+.panel-content { padding: 52px 64px 88px; max-width: 920px; }
+
+.panel-content h3 {
+  font-weight: 700; font-size: 17px; color: var(--ink);
+  margin: 44px 0 16px; letter-spacing: -0.4px; line-height: 1.3;
+}
+.panel-content h3:first-child { margin-top: 0; }
+.panel-content p {
+  font-size: 14px; color: var(--ink2);
+  margin-bottom: 18px; line-height: 1.82;
+}
+.panel-content p strong { color: var(--ink); font-weight: 500; }
+
+/* ── ARCH CARDS ── */
+.arch-grid {
+  display: grid; grid-template-columns: repeat(3, 1fr);
+  gap: 2px; margin: 28px 0;
+}
+
+.arch-card {
+  background: var(--bg2); border: 1px solid var(--border);
+  overflow: hidden;
+}
+
+.arch-card-header {
+  padding: 20px 22px 16px;
+  border-bottom: 1px solid var(--border);
+}
+
+.arch-card-tag {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 9px; letter-spacing: 2px; text-transform: uppercase;
+  margin-bottom: 10px; display: block;
+}
+
+.arch-card.cloud .arch-card-tag  { color: var(--blue); }
+.arch-card.onprem .arch-card-tag { color: var(--green); }
+.arch-card.hybrid .arch-card-tag { color: var(--violet); }
+
+.arch-card h4 {
+  font-size: 15px; font-weight: 900;
+  color: var(--ink); letter-spacing: -0.4px;
+}
+
+.arch-card-body { padding: 18px 22px; }
+
+.arch-card p {
+  font-size: 13px; color: var(--ink3);
+  line-height: 1.7; margin-bottom: 16px;
+}
+
+.arch-prop-list { display: flex; flex-direction: column; gap: 2px; }
+
+.arch-prop {
+  display: flex; gap: 10px; align-items: flex-start;
+  font-size: 12px; padding: 6px 0;
+  border-bottom: 1px solid var(--border);
+  line-height: 1.5;
+}
+.arch-prop:last-child { border: none; }
+
+.arch-prop-key {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 9px; letter-spacing: 1.5px; text-transform: uppercase;
+  color: var(--ink4); flex-shrink: 0; width: 72px;
+  padding-top: 1px;
+}
+
+.arch-prop-val { color: var(--ink2); }
+
+/* ── HARDWARE TABLE ── */
+.hw-table {
+  width: 100%; border-collapse: collapse;
+  margin: 24px 0; font-size: 13px;
+}
+.hw-table th {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 9px; letter-spacing: 2px; text-transform: uppercase;
+  color: var(--ink4); text-align: left; padding: 10px 14px;
+  border-bottom: 1px solid var(--border2); background: var(--bg3);
+}
+.hw-table td {
+  padding: 13px 14px; border-bottom: 1px solid var(--border);
+  color: var(--ink2); vertical-align: top; line-height: 1.6;
+}
+.hw-table tr:hover td { background: var(--bg2); }
+.hw-table td:first-child { font-weight: 500; color: var(--ink); }
+
+.hw-badge {
+  display: inline-block;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 9px; letter-spacing: 1px; text-transform: uppercase;
+  padding: 3px 8px; border-radius: 2px;
+}
+.hw-badge.entry  { background: var(--green-l);  color: var(--green); }
+.hw-badge.mid    { background: var(--amber-l);  color: var(--amber); }
+.hw-badge.high   { background: var(--red-l);    color: var(--red); }
+.hw-badge.cloud  { background: var(--blue-l);   color: var(--blue); }
+
+/* ── FRAMEWORK CARDS ── */
+.fw-grid {
+  display: flex; flex-direction: column;
+  gap: 2px; margin: 24px 0;
+}
+
+.fw-card {
+  background: var(--bg2); border: 1px solid var(--border);
+  display: grid; grid-template-columns: 4px 1fr;
+  overflow: hidden;
+}
+
+.fw-stripe { }
+.fw-card.primary   .fw-stripe { background: var(--violet); }
+.fw-card.secondary .fw-stripe { background: var(--blue); }
+.fw-card.light     .fw-stripe { background: var(--green); }
+.fw-card.infra     .fw-stripe { background: var(--amber); }
+
+.fw-body { padding: 18px 22px; }
+
+.fw-header {
+  display: flex; align-items: baseline;
+  gap: 12px; margin-bottom: 8px; flex-wrap: wrap;
+}
+
+.fw-name {
+  font-weight: 900; font-size: 14px;
+  color: var(--ink); letter-spacing: -0.3px;
+}
+
+.fw-type {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 9px; letter-spacing: 2px; text-transform: uppercase;
+  padding: 3px 8px; border-radius: 2px;
+}
+.fw-card.primary   .fw-type { color: var(--violet); background: var(--violet-l); }
+.fw-card.secondary .fw-type { color: var(--blue);   background: var(--blue-l); }
+.fw-card.light     .fw-type { color: var(--green);  background: var(--green-l); }
+.fw-card.infra     .fw-type { color: var(--amber);  background: var(--amber-l); }
+
+.fw-desc {
+  font-size: 13px; color: var(--ink3);
+  line-height: 1.7; margin-bottom: 12px;
+}
+
+.fw-tags { display: flex; gap: 6px; flex-wrap: wrap; }
+
+.fw-tag {
+  font-size: 11px; padding: 3px 10px;
+  background: var(--bg3); border: 1px solid var(--border);
+  color: var(--ink3);
+}
+
+.fw-note {
+  margin-top: 10px; padding-top: 10px;
+  border-top: 1px solid var(--border);
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px; color: var(--ink4); line-height: 1.6;
+}
+
+/* ── SECURITY MATRIX ── */
+.sec-list {
+  display: flex; flex-direction: column;
+  gap: 2px; margin: 24px 0;
+}
+
+.sec-item {
+  display: grid; grid-template-columns: 44px 1fr auto;
+  background: var(--bg2); border: 1px solid var(--border);
+  align-items: stretch;
+}
+
+.sec-icon {
+  background: var(--violet-l);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 18px; border-right: 1px solid var(--border);
+}
+
+.sec-body { padding: 16px 20px; }
+.sec-body h4 { font-size: 13px; font-weight: 700; color: var(--ink); margin-bottom: 5px; }
+.sec-body p  { font-size: 13px; color: var(--ink3); line-height: 1.65; margin: 0; }
+.sec-body p strong { color: var(--ink2); font-weight: 500; }
+
+.sec-level {
+  padding: 16px 14px; border-left: 1px solid var(--border);
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: center; gap: 4px;
+  min-width: 72px;
+}
+.sec-level span {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 9px; letter-spacing: 1px; text-transform: uppercase;
+  color: var(--ink4);
+}
+.sec-level strong { font-size: 12px; font-weight: 700; }
+.sec-level.must strong { color: var(--red); }
+.sec-level.high strong { color: var(--amber); }
+.sec-level.med  strong { color: var(--blue); }
+
+/* ── QUANTIZATION ── */
+.quant-grid {
+  display: grid; grid-template-columns: repeat(4, 1fr);
+  gap: 2px; margin: 24px 0;
+}
+
+.quant-card {
+  background: var(--bg2); border: 1px solid var(--border);
+  padding: 20px 16px;
+}
+
+.quant-label {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 18px; font-weight: 600; color: var(--ink);
+  margin-bottom: 10px; display: block;
+}
+
+.quant-name {
+  font-size: 12px; font-weight: 700; color: var(--ink2);
+  margin-bottom: 8px;
+}
+
+.quant-bar-wrap {
+  height: 4px; background: var(--border2);
+  border-radius: 2px; margin-bottom: 12px; overflow: hidden;
+}
+
+.quant-bar { height: 100%; border-radius: 2px; }
+
+.quant-card.fp16  .quant-bar { width: 100%; background: var(--red); }
+.quant-card.q8    .quant-bar { width: 75%;  background: var(--amber); }
+.quant-card.q4    .quant-bar { width: 50%;  background: var(--green); }
+.quant-card.q2    .quant-bar { width: 28%;  background: var(--blue); }
+
+.quant-stats { display: flex; flex-direction: column; gap: 4px; }
+
+.quant-stat {
+  font-size: 11px; color: var(--ink4);
+  display: flex; justify-content: space-between;
+}
+.quant-stat span:last-child { color: var(--ink2); font-weight: 500; }
+
+/* ── COMPARISON MATRIX ── */
+.cmp-matrix {
+  width: 100%; border-collapse: collapse;
+  margin: 24px 0; font-size: 12px;
+}
+.cmp-matrix th {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 9px; letter-spacing: 2px; text-transform: uppercase;
+  color: var(--ink4); text-align: left; padding: 10px 14px;
+  border-bottom: 1px solid var(--border2); background: var(--bg3);
+}
+.cmp-matrix th.center { text-align: center; }
+.cmp-matrix td {
+  padding: 12px 14px; border-bottom: 1px solid var(--border);
+  color: var(--ink2); vertical-align: middle; line-height: 1.5;
+}
+.cmp-matrix tr:hover td { background: var(--bg2); }
+.cmp-matrix td:first-child { font-weight: 500; color: var(--ink); font-size: 13px; }
+.cmp-matrix td.center { text-align: center; }
+
+.cmp-icon { font-size: 14px; }
+
+/* ── INFO BOX ── */
+.ibox {
+  background: var(--bg2); border: 1px solid var(--border);
+  border-left: 3px solid var(--violet);
+  padding: 22px 26px; margin: 22px 0;
+}
+.ibox.green  { border-left-color: var(--green);  background: var(--green-l); }
+.ibox.amber  { border-left-color: var(--amber);  background: var(--amber-l); }
+.ibox.red    { border-left-color: var(--red);    background: var(--red-l); }
+.ibox.blue   { border-left-color: var(--blue);   background: var(--blue-l); }
+.ibox.teal   { border-left-color: var(--teal);   background: var(--teal-l); }
+.ibox-label {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 9px; letter-spacing: 2.5px; text-transform: uppercase;
+  margin-bottom: 10px; display: block;
+}
+.ibox       .ibox-label { color: var(--violet); }
+.ibox.green .ibox-label { color: var(--green); }
+.ibox.amber .ibox-label { color: var(--amber); }
+.ibox.red   .ibox-label { color: var(--red); }
+.ibox.blue  .ibox-label { color: var(--blue); }
+.ibox.teal  .ibox-label { color: var(--teal); }
+.ibox p { font-size: 13px; color: var(--ink2); margin: 0; line-height: 1.75; }
+.ibox p strong { color: var(--ink); font-weight: 500; }
+
+/* ── FOOTER ── */
+footer {
+  border-top: 1px solid var(--border); background: var(--bg2);
+  padding: 28px 64px;
+  display: flex; justify-content: space-between;
+  align-items: center; flex-wrap: wrap; gap: 8px;
+}
+footer p {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px; color: var(--ink4); letter-spacing: 0.5px;
+}
+
+/* ── RESPONSIVE ── */
+@media (max-width: 860px) {
+  .masthead, .panel-content, footer { padding-left: 24px; padding-right: 24px; }
+  .tab-panel.active { grid-template-columns: 1fr; }
+  .panel-aside { display: none; }
+  .arch-grid, .quant-grid { grid-template-columns: 1fr; }
+}
+</style>
+</head>
+<body>
+
+<header class="masthead">
+  <div class="series-label">Serie C · Self-Hosting LLM</div>
+  <div class="report-label">Report C4 — Le Architetture</div>
+  <h1>Dove e come<br><em>deployare</em> il modello</h1>
+  <p class="masthead-sub">On-premise, cloud privato o ibrido — le opzioni architetturali a confronto, con l'hardware necessario per ogni scenario, i framework di serving e i requisiti di sicurezza interna.</p>
+  <div class="masthead-meta">
+    <div class="meta-item"><span>Serie</span><strong>C · Self-Hosting LLM</strong></div>
+    <div class="meta-item"><span>Report</span><strong>C4 di 7</strong></div>
+    <div class="meta-item"><span>Destinatari</span><strong>IT, CTO, Infrastruttura</strong></div>
+    <div class="meta-item"><span>Prerequisito</span><strong>C1, C2, C3</strong></div>
+  </div>
+</header>
+
+<nav class="tab-nav">
+  <button class="tab-btn active" data-tab="t1">
+    <span class="tab-btn-inner"><span class="tab-num">01</span><span class="tab-name">Le tre opzioni</span></span>
+  </button>
+  <button class="tab-btn" data-tab="t2">
+    <span class="tab-btn-inner"><span class="tab-num">02</span><span class="tab-name">Hardware</span></span>
+  </button>
+  <button class="tab-btn" data-tab="t3">
+    <span class="tab-btn-inner"><span class="tab-num">03</span><span class="tab-name">Quantizzazione</span></span>
+  </button>
+  <button class="tab-btn" data-tab="t4">
+    <span class="tab-btn-inner"><span class="tab-num">04</span><span class="tab-name">Framework di serving</span></span>
+  </button>
+  <button class="tab-btn" data-tab="t5">
+    <span class="tab-btn-inner"><span class="tab-num">05</span><span class="tab-name">Sicurezza interna</span></span>
+  </button>
+  <button class="tab-btn" data-tab="t6">
+    <span class="tab-btn-inner"><span class="tab-num">06</span><span class="tab-name">Matrice decisionale</span></span>
+  </button>
+</nav>
+
+
+<!-- ══════════════════════════════════════════
+     TAB 1 — LE TRE OPZIONI
+══════════════════════════════════════════ -->
+<div class="tab-panel active" id="t1">
+  <aside class="panel-aside">
+    <div class="aside-label">In questa sezione</div>
+    <nav>
+      <a href="#o1-intro">Le opzioni disponibili</a>
+      <a href="#o1-cloud">Cloud privato</a>
+      <a href="#o1-onprem">On-premise</a>
+      <a href="#o1-hybrid">Ibrido</a>
+      <a href="#o1-edge">Edge deployment</a>
+    </nav>
+  </aside>
+  <div class="panel-content">
+
+    <h3 id="o1-intro">Le opzioni architetturali</h3>
+    <p>Una volta scelto il modello (C3), la domanda diventa: dove e come lo si fa girare? Le opzioni non sono equivalenti — differiscono per profilo di sicurezza, costo, complessità operativa e tempo di attivazione. La Tab 6 di questo report fornisce la matrice decisionale per orientarsi rapidamente.</p>
+
+    <div class="arch-grid">
+      <div class="arch-card cloud">
+        <div class="arch-card-header">
+          <span class="arch-card-tag">Opzione A</span>
+          <h4>Cloud privato (VPC)</h4>
+        </div>
+        <div class="arch-card-body">
+          <p>Il modello gira su istanze GPU di un cloud provider (AWS, Azure, GCP) in un tenant completamente isolato e gestito dall'azienda. I dati non transitano dal provider LLM ma restano nell'infrastruttura cloud aziendale.</p>
+          <div class="arch-prop-list">
+            <div class="arch-prop">
+              <span class="arch-prop-key">Attivazione</span>
+              <span class="arch-prop-val">1–4 settimane</span>
+            </div>
+            <div class="arch-prop">
+              <span class="arch-prop-key">Costo iniziale</span>
+              <span class="arch-prop-val">Basso (nessun hardware da acquistare)</span>
+            </div>
+            <div class="arch-prop">
+              <span class="arch-prop-key">Costo ricorrente</span>
+              <span class="arch-prop-val">Alto (GPU cloud su istanza dedicata)</span>
+            </div>
+            <div class="arch-prop">
+              <span class="arch-prop-key">Scalabilità</span>
+              <span class="arch-prop-val">Alta — elastica su domanda</span>
+            </div>
+            <div class="arch-prop">
+              <span class="arch-prop-key">Controllo dati</span>
+              <span class="arch-prop-val">Parziale — su infrastruttura AWS/Azure</span>
+            </div>
+            <div class="arch-prop">
+              <span class="arch-prop-key">Competenze</span>
+              <span class="arch-prop-val">DevOps cloud + MLOps base</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="arch-card onprem">
+        <div class="arch-card-header">
+          <span class="arch-card-tag">Opzione B</span>
+          <h4>On-premise</h4>
+        </div>
+        <div class="arch-card-body">
+          <p>Il modello gira su server fisici di proprietà dell'azienda, nella rete interna. I dati non escono mai dal perimetro fisico aziendale. Massimo controllo, massima complessità.</p>
+          <div class="arch-prop-list">
+            <div class="arch-prop">
+              <span class="arch-prop-key">Attivazione</span>
+              <span class="arch-prop-val">3–12 mesi</span>
+            </div>
+            <div class="arch-prop">
+              <span class="arch-prop-key">Costo iniziale</span>
+              <span class="arch-prop-val">Alto (hardware GPU dedicato)</span>
+            </div>
+            <div class="arch-prop">
+              <span class="arch-prop-key">Costo ricorrente</span>
+              <span class="arch-prop-val">Medio (energia, manutenzione, personale)</span>
+            </div>
+            <div class="arch-prop">
+              <span class="arch-prop-key">Scalabilità</span>
+              <span class="arch-prop-val">Limitata — vincolata all'hardware</span>
+            </div>
+            <div class="arch-prop">
+              <span class="arch-prop-key">Controllo dati</span>
+              <span class="arch-prop-val">Completo — perimetro fisico aziendale</span>
+            </div>
+            <div class="arch-prop">
+              <span class="arch-prop-key">Competenze</span>
+              <span class="arch-prop-val">MLOps + sysadmin GPU + networking</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="arch-card hybrid">
+        <div class="arch-card-header">
+          <span class="arch-card-tag">Opzione C</span>
+          <h4>Ibrido</h4>
+        </div>
+        <div class="arch-card-body">
+          <p>I dati e task più critici su modello on-premise o cloud privato; task meno sensibili o che richiedono capability frontier su API provider con piano enterprise. Routing intelligente per caso d'uso.</p>
+          <div class="arch-prop-list">
+            <div class="arch-prop">
+              <span class="arch-prop-key">Attivazione</span>
+              <span class="arch-prop-val">Variabile per componente</span>
+            </div>
+            <div class="arch-prop">
+              <span class="arch-prop-key">Costo iniziale</span>
+              <span class="arch-prop-val">Medio (proporzionale alla quota self-hosted)</span>
+            </div>
+            <div class="arch-prop">
+              <span class="arch-prop-key">Costo ricorrente</span>
+              <span class="arch-prop-val">Mix di fissi (self) e variabili (API)</span>
+            </div>
+            <div class="arch-prop">
+              <span class="arch-prop-key">Scalabilità</span>
+              <span class="arch-prop-val">Alta per la componente cloud</span>
+            </div>
+            <div class="arch-prop">
+              <span class="arch-prop-key">Controllo dati</span>
+              <span class="arch-prop-val">Selettivo — massimo per dati critici</span>
+            </div>
+            <div class="arch-prop">
+              <span class="arch-prop-key">Competenze</span>
+              <span class="arch-prop-val">Le più alte — gestisce due ambienti</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <h3 id="o1-cloud">Cloud privato: quando è la scelta giusta</h3>
+    <p>Il cloud privato è la porta d'ingresso naturale al self-hosting per la maggior parte delle organizzazioni. Permette di iniziare in settimane, di scalare e ridurre le risorse in base all'uso effettivo, e di sperimentare con diversi modelli senza investimenti hardware. Il costo per ora di GPU è elevato rispetto all'on-premise a lungo termine, ma l'assenza di capex iniziale rende questa opzione accessibile per i primi progetti.</p>
+    <p>È la scelta giusta quando: si è nelle fasi di PoC o validazione, il volume d'uso è irregolare o imprevedibile, le competenze MLOps interne sono in costruzione, o si vuole rimandare la decisione sull'hardware a quando i requisiti sono chiari.</p>
+
+    <div class="ibox blue">
+      <span class="ibox-label">Nota CLOUD Act</span>
+      <p>Come discusso nel Report B (sicurezza dati), AWS, Azure e GCP sono provider americani soggetti al CLOUD Act USA. I dati su questi cloud — anche in datacenter europei — sono teoricamente accessibili a richieste legali americane. Per la maggior parte dei contesti manifatturieri questo è un rischio residuale, ma va valutato esplicitamente se i dati trattati sono soggetti a vincoli di giurisdizione stringenti.</p>
+    </div>
+
+    <h3 id="o1-onprem">On-premise: quando il controllo completo vale il costo</h3>
+    <p>L'on-premise è giustificato quando il profilo di sicurezza richiede che i dati non escano mai dal perimetro fisico aziendale — e questo requisito non è soddisfacibile con garanzie contrattuali, ma deve essere una proprietà tecnica verificabile. È anche la scelta più economica a lungo termine per volumi d'uso molto alti e costanti.</p>
+    <p>I punti critici da pianificare in anticipo: la catena di approvvigionamento GPU (i server GPU enterprise hanno lead time di 3-6 mesi), il dimensionamento corretto (sovradimensionare ha un costo fisso alto, sottodimensionare limita l'uso), la ridondanza (un singolo server GPU è un single point of failure), e l'alimentazione elettrica e il raffreddamento (una A100 consuma ~400W; un cluster da 4 GPU richiede infrastruttura elettrica e termica dedicata).</p>
+
+    <h3 id="o1-hybrid">Ibrido: la soluzione più razionale per molte manifatturiere</h3>
+    <p>L'architettura ibrida non è un compromesso al ribasso — è spesso la scelta più razionale per organizzazioni con un portafoglio di casi d'uso eterogeneo. Il principio è semplice: <strong>ogni task usa l'infrastruttura più adeguata al suo profilo di rischio e capability</strong>.</p>
+    <p>Un esempio concreto: Q&A su manuali tecnici e classificazione non conformità su modello self-hosted (dati critici, task in zona verde) + analisi strategica e supporto alla pianificazione su API frontier con piano enterprise (task complessi, dati anonimizzati). Due sistemi, due profili di costo e rischio, ottimizzati separatamente.</p>
+
+    <h3 id="o1-edge">Edge deployment: il caso speciale del manifatturiero</h3>
+    <p>Il manifatturiero ha un caso d'uso che altri settori non hanno: <strong>il modello vicino ai macchinari</strong>. Un operatore che consulta un LLM per diagnostica o supporto operativo direttamente sulla linea produttiva ha requisiti molto diversi da un utente in ufficio: latenza minima, funzionamento offline (reti OT isolate), hardware industriale resistente, consumi energetici limitati.</p>
+    <p>Per questi scenari i modelli compatti (Phi-4 14B, Gemma 2 9B, Llama 3.2 1B-3B per task elementari) possono girare su hardware industriale come NVIDIA Jetson AGX Orin o workstation con GPU consumer. L'architettura è completamente on-device — nessuna rete, nessun server centrale, i dati rimangono sul device.</p>
+
+    <div class="ibox amber">
+      <span class="ibox-label">OT/IT convergence — nota importante</span>
+      <p>Portare un LLM nella rete OT (Operational Technology — reti dei macchinari) introduce rischi di sicurezza specifici che vanno gestiti separatamente dalle policy IT. Le reti OT sono tipicamente air-gapped per motivi di sicurezza funzionale. <strong>Qualsiasi integrazione di AI in ambito OT richiede una valutazione di sicurezza funzionale specifica</strong>, indipendente dalla valutazione del rischio dati.</p>
+    </div>
+
+  </div>
+</div>
+
+
+<!-- ══════════════════════════════════════════
+     TAB 2 — HARDWARE
+══════════════════════════════════════════ -->
+<div class="tab-panel" id="t2">
+  <aside class="panel-aside">
+    <div class="aside-label">In questa sezione</div>
+    <nav>
+      <a href="#hw-gpu">La GPU: il componente centrale</a>
+      <a href="#hw-scenari">Scenari hardware</a>
+      <a href="#hw-cloud">GPU cloud</a>
+      <a href="#hw-infra">Infrastruttura di supporto</a>
+    </nav>
+  </aside>
+  <div class="panel-content">
+
+    <h3 id="hw-gpu">La GPU: il componente centrale</h3>
+    <p>L'inferenza LLM è dominata dalla GPU — specificamente dalla quantità di <strong>memoria GPU (VRAM)</strong> disponibile e dalla <strong>bandwidth di memoria</strong> (velocità con cui i dati vengono letti dalla VRAM). La VRAM determina quale modello si può caricare; la bandwidth determina la velocità di generazione dei token.</p>
+    <p>Una regola pratica: per ogni miliardo di parametri del modello in precisione FP16, servono circa 2GB di VRAM. In quantizzazione 4-bit (Q4), circa 0.5–0.7GB per miliardo. Quindi un modello da 70B richiede ~140GB in FP16, oppure ~40GB in Q4.</p>
+
+    <div class="ibox">
+      <span class="ibox-label">VRAM vs RAM di sistema</span>
+      <p>La VRAM è diversa dalla RAM di sistema (CPU). Il modello deve stare interamente nella VRAM per girare a velocità accettabile. Se il modello non entra nella VRAM, si può usare la RAM di sistema come overflow (<strong>CPU offloading</strong>), ma la velocità di generazione crolla a 1-3 token/secondo — inaccettabile per uso interattivo. <strong>La VRAM disponibile è il vincolo primario nella scelta del modello.</strong></p>
+    </div>
+
+    <h3 id="hw-scenari">Scenari hardware per on-premise</h3>
+
+    <table class="hw-table">
+      <thead>
+        <tr>
+          <th>Scenario</th>
+          <th>Hardware</th>
+          <th>VRAM</th>
+          <th>Modelli supportati</th>
+          <th>Costo indicativo</th>
+          <th>Livello</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>Entry — PoC / sviluppo</td>
+          <td>NVIDIA RTX 4090 (consumer)</td>
+          <td>24GB</td>
+          <td>Fino a 13B Q4; 7B FP16</td>
+          <td>~€1.800–2.200</td>
+          <td><span class="hw-badge entry">Entry</span></td>
+        </tr>
+        <tr>
+          <td>Entry pro — task leggeri</td>
+          <td>2× RTX 4090 (NVLink)</td>
+          <td>48GB</td>
+          <td>Fino a 34B Q4; 13B FP16</td>
+          <td>~€4.000–5.000</td>
+          <td><span class="hw-badge entry">Entry</span></td>
+        </tr>
+        <tr>
+          <td>Mid — produzione leggera</td>
+          <td>NVIDIA A10G (datacenter)</td>
+          <td>24GB</td>
+          <td>Fino a 13B Q4; ottimizzato inferenza</td>
+          <td>~€4.000–5.500</td>
+          <td><span class="hw-badge mid">Mid</span></td>
+        </tr>
+        <tr>
+          <td>Mid pro — produzione standard</td>
+          <td>NVIDIA A100 40GB</td>
+          <td>40GB</td>
+          <td>Fino a 34B FP16; 70B Q4 parziale</td>
+          <td>~€8.000–12.000</td>
+          <td><span class="hw-badge mid">Mid</span></td>
+        </tr>
+        <tr>
+          <td>High — produzione enterprise</td>
+          <td>NVIDIA A100 80GB</td>
+          <td>80GB</td>
+          <td>70B FP16; 70B FP16 con spazio</td>
+          <td>~€12.000–18.000</td>
+          <td><span class="hw-badge high">High</span></td>
+        </tr>
+        <tr>
+          <td>High cluster — uso intensivo</td>
+          <td>2× A100 80GB</td>
+          <td>160GB</td>
+          <td>70B FP16 con concorrenza; modelli MoE</td>
+          <td>~€25.000–38.000</td>
+          <td><span class="hw-badge high">High</span></td>
+        </tr>
+        <tr>
+          <td>Top — frontier self-hosted</td>
+          <td>NVIDIA H100 80GB</td>
+          <td>80GB</td>
+          <td>70B FP16 ad alta velocità; ideale per vLLM</td>
+          <td>~€25.000–35.000</td>
+          <td><span class="hw-badge high">High</span></td>
+        </tr>
+        <tr>
+          <td>Edge — macchinari / OT</td>
+          <td>NVIDIA Jetson AGX Orin</td>
+          <td>64GB unified</td>
+          <td>Phi-4 14B, Gemma 9B; 7B Q4</td>
+          <td>~€1.500–2.500</td>
+          <td><span class="hw-badge entry">Edge</span></td>
+        </tr>
+      </tbody>
+    </table>
+
+    <div class="ibox amber">
+      <span class="ibox-label">Lead time e disponibilità</span>
+      <p>Le GPU datacenter (A100, H100) hanno lead time di acquisto di <strong>3–6 mesi</strong> nella maggior parte dei canali. Pianificare l'approvvigionamento hardware molto prima del previsto avvio del progetto. Le GPU consumer (RTX 4090) sono disponibili in settimane e sono adeguate per PoC e carichi leggeri, ma non sono progettate per operatività continua 24/7 in ambiente datacenter.</p>
+    </div>
+
+    <h3 id="hw-cloud">GPU cloud: opzioni principali</h3>
+
+    <table class="hw-table">
+      <thead>
+        <tr>
+          <th>Provider</th>
+          <th>Istanza / GPU</th>
+          <th>VRAM</th>
+          <th>Costo orario indicativo</th>
+          <th>Note</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>AWS</td>
+          <td>p3.2xlarge (V100)</td>
+          <td>16GB</td>
+          <td>~€3–4/h</td>
+          <td>Economico per modelli piccoli, V100 è vecchia generazione</td>
+        </tr>
+        <tr>
+          <td>AWS</td>
+          <td>p4d.24xlarge (8× A100)</td>
+          <td>320GB</td>
+          <td>~€30–35/h</td>
+          <td>Alta capacità, per cluster multi-GPU</td>
+        </tr>
+        <tr>
+          <td>Azure</td>
+          <td>NC A100 v4 (1× A100)</td>
+          <td>80GB</td>
+          <td>~€3.5–5/h</td>
+          <td>Buona disponibilità in EU regions, datacenter europei</td>
+        </tr>
+        <tr>
+          <td>GCP</td>
+          <td>a2-highgpu-1g (A100)</td>
+          <td>40GB</td>
+          <td>~€3–4/h</td>
+          <td>Ottima integrazione con strumenti ML Google</td>
+        </tr>
+        <tr>
+          <td>Lambda Labs</td>
+          <td>1× A100 80GB</td>
+          <td>80GB</td>
+          <td>~€1.8–2.5/h</td>
+          <td>Provider specializzato GPU, spesso più economico dei big three</td>
+        </tr>
+        <tr>
+          <td>RunPod</td>
+          <td>1× A100 80GB</td>
+          <td>80GB</td>
+          <td>~€1.5–2/h</td>
+          <td>Economico, meno garanzie enterprise, adatto a sperimentazione</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <div class="ibox">
+      <span class="ibox-label">Costo mensile cloud GPU: il calcolo reale</span>
+      <p>Un'istanza A100 80GB a ~€3.5/h, attiva 24/7, costa <strong>~€2.500/mese</strong>. Per uso lavorativo (10h/giorno, 22 giorni) scende a ~€770/mese. Il costo reale dipende molto da come si gestisce il provisioning — le istanze on-demand sono più flessibili ma più care; le istanze reserved (1-3 anni) hanno sconti del 30-50%. Per confronto con i costi API, vedi il Report C5.</p>
+    </div>
+
+    <h3 id="hw-infra">Infrastruttura di supporto per on-premise</h3>
+    <p>Un server GPU non è un server tradizionale. Richiede considerazioni infrastrutturali spesso sottovalutate:</p>
+    <p><strong>Alimentazione elettrica:</strong> un A100 consuma ~400W sotto carico. Un server con 4 GPU richiede ~2kW solo per le GPU, più CPU, RAM e storage. Verificare che il rack e il PDU (Power Distribution Unit) abbiano la capacità necessaria, e che l'impianto elettrico del datacenter o CED aziendale sia adeguato.</p>
+    <p><strong>Raffreddamento:</strong> i server GPU generano molto calore. I rack GPU devono essere in posizioni con buon flusso d'aria o richiedono cooling dedicato. Il consumo termico (BTU) deve rientrare nella capacità del sistema di raffreddamento della sala server.</p>
+    <p><strong>Networking:</strong> per cluster multi-GPU, la comunicazione inter-GPU (NVLink o InfiniBand) è critica per le performance. Per uso single-GPU, è sufficiente una connessione 10GbE verso la rete aziendale.</p>
+    <p><strong>Storage:</strong> i modelli da 70B occupano 35–140GB su disco (a seconda della quantizzazione). Serve storage veloce (NVMe SSD) per il caricamento iniziale del modello e per i documenti del sistema RAG.</p>
+
+  </div>
+</div>
+
+
+<!-- ══════════════════════════════════════════
+     TAB 3 — QUANTIZZAZIONE
+══════════════════════════════════════════ -->
+<div class="tab-panel" id="t3">
+  <aside class="panel-aside">
+    <div class="aside-label">In questa sezione</div>
+    <nav>
+      <a href="#q-cos">Cos'è la quantizzazione</a>
+      <a href="#q-livelli">I livelli di quantizzazione</a>
+      <a href="#q-tradeoff">Il trade-off qualità/VRAM</a>
+      <a href="#q-pratica">Quale scegliere</a>
+    </nav>
+  </aside>
+  <div class="panel-content">
+
+    <h3 id="q-cos">Cos'è la quantizzazione e perché è fondamentale</h3>
+    <p>La quantizzazione è il processo di riduzione della precisione numerica con cui i pesi del modello vengono memorizzati. Un modello in piena precisione (FP16) usa 16 bit per ogni numero; un modello quantizzato a 4 bit (Q4) usa 4 bit. Il risultato: un modello da 70B che in FP16 occupa ~140GB di VRAM, in Q4 ne occupa ~40GB — rendendolo deployabile su hardware molto più accessibile.</p>
+    <p>La quantizzazione non è solo una scorciatoia per hardware limitato — è una pratica standard in produzione. La riduzione di qualità rispetto alla piena precisione è spesso minima per i task pratici, mentre il risparmio di VRAM e il miglioramento della velocità di inferenza sono significativi.</p>
+
+    <div class="quant-grid" id="q-livelli">
+      <div class="quant-card fp16">
+        <span class="quant-label">FP16</span>
+        <div class="quant-name">Full precision</div>
+        <div class="quant-bar-wrap"><div class="quant-bar"></div></div>
+        <div class="quant-stats">
+          <div class="quant-stat"><span>VRAM 70B</span><span>~140GB</span></div>
+          <div class="quant-stat"><span>Qualità</span><span>Massima</span></div>
+          <div class="quant-stat"><span>Velocità</span><span>Base</span></div>
+          <div class="quant-stat"><span>Uso tipico</span><span>Fine-tuning, ricerca</span></div>
+        </div>
+      </div>
+      <div class="quant-card q8">
+        <span class="quant-label">Q8</span>
+        <div class="quant-name">8-bit (GPTQ / bitsandbytes)</div>
+        <div class="quant-bar-wrap"><div class="quant-bar"></div></div>
+        <div class="quant-stats">
+          <div class="quant-stat"><span>VRAM 70B</span><span>~70GB</span></div>
+          <div class="quant-stat"><span>Qualità</span><span>Quasi identica a FP16</span></div>
+          <div class="quant-stat"><span>Velocità</span><span>Simile a FP16</span></div>
+          <div class="quant-stat"><span>Uso tipico</span><span>Produzione alta qualità</span></div>
+        </div>
+      </div>
+      <div class="quant-card q4">
+        <span class="quant-label">Q4</span>
+        <div class="quant-name">4-bit (GGUF / AWQ)</div>
+        <div class="quant-bar-wrap"><div class="quant-bar"></div></div>
+        <div class="quant-stats">
+          <div class="quant-stat"><span>VRAM 70B</span><span>~40GB</span></div>
+          <div class="quant-stat"><span>Qualità</span><span>Leggermente inferiore</span></div>
+          <div class="quant-stat"><span>Velocità</span><span>Più rapida (bandwidth)</span></div>
+          <div class="quant-stat"><span>Uso tipico</span><span>Standard di produzione</span></div>
+        </div>
+      </div>
+      <div class="quant-card q2">
+        <span class="quant-label">Q2</span>
+        <div class="quant-name">2-bit (aggressiva)</div>
+        <div class="quant-bar-wrap"><div class="quant-bar"></div></div>
+        <div class="quant-stats">
+          <div class="quant-stat"><span>VRAM 70B</span><span>~20GB</span></div>
+          <div class="quant-stat"><span>Qualità</span><span>Degradazione visibile</span></div>
+          <div class="quant-stat"><span>Velocità</span><span>Massima</span></div>
+          <div class="quant-stat"><span>Uso tipico</span><span>Edge, hardware estremo</span></div>
+        </div>
+      </div>
+    </div>
+
+    <h3 id="q-tradeoff">Il trade-off qualità/VRAM in pratica</h3>
+    <p>La riduzione di qualità da FP16 a Q4 è spesso <strong>inferiore a quella che si avrebbe scegliendo un modello più piccolo</strong>. In altri termini: un Llama 3.3 70B in Q4 (40GB) è quasi sempre superiore a un Llama 3.3 34B in FP16 (68GB), anche se entrambi richiedono hardware simile. La quantizzazione permette di usare modelli più grandi — e quindi più capaci — su hardware dato.</p>
+    <p>Il punto di degrado percepibile varia per task: su classificazione e estrazione strutturata, Q4 è praticamente indistinguibile da FP16. Su ragionamento complesso e generazione di testi lunghi e coerenti, il degrado può essere più visibile — ma in genere rimane contenuto con i formati di quantizzazione moderni (AWQ, GGUF Q4_K_M).</p>
+
+    <div class="ibox green">
+      <span class="ibox-label">Raccomandazione pratica</span>
+      <p><strong>Q4 con formato GGUF (K_M o K_L variants) o AWQ è il punto di partenza per quasi tutti i deployment di produzione.</strong> Offre un ottimo equilibrio tra qualità, VRAM e velocità. Passare a Q8 solo se si osservano degradazioni qualitative specifiche sul proprio caso d'uso dopo test. FP16 solo per fine-tuning o ricerca.</p>
+    </div>
+
+    <h3 id="q-pratica">Dove trovare i modelli quantizzati</h3>
+    <p><strong>Hugging Face</strong> è il repository principale per i modelli open source, incluse le versioni quantizzate. Per i modelli GGUF (usati con Ollama e llama.cpp), la fonte principale è il profilo <strong>bartowski</strong> su Hugging Face, che produce quantizzazioni di alta qualità per tutti i modelli principali. Per AWQ, molti provider rilasciano versioni ufficiali.</p>
+    <p>I nomi dei file includono la specifica di quantizzazione: <code>Llama-3.3-70B-Instruct-Q4_K_M.gguf</code> indica Llama 3.3 70B Instruct, quantizzato a 4 bit con il metodo K_M (buon equilibrio qualità/velocità). <code>Q4_K_S</code> è più veloce ma leggermente meno preciso; <code>Q4_K_L</code> è più preciso ma usa più VRAM.</p>
+
+  </div>
+</div>
+
+
+<!-- ══════════════════════════════════════════
+     TAB 4 — FRAMEWORK DI SERVING
+══════════════════════════════════════════ -->
+<div class="tab-panel" id="t4">
+  <aside class="panel-aside">
+    <div class="aside-label">In questa sezione</div>
+    <nav>
+      <a href="#fs-intro">Cosa fa un serving framework</a>
+      <a href="#fs-ollama">Ollama</a>
+      <a href="#fs-vllm">vLLM</a>
+      <a href="#fs-tgi">Text Generation Inference</a>
+      <a href="#fs-altri">Altri strumenti</a>
+      <a href="#fs-scegliere">Come scegliere</a>
+    </nav>
+  </aside>
+  <div class="panel-content">
+
+    <h3 id="fs-intro">Cosa fa un serving framework</h3>
+    <p>Un framework di serving è il software che prende il modello (i file dei pesi) e lo rende accessibile come servizio HTTP — esponendo un'API a cui le applicazioni possono fare richieste. Non è opzionale: senza un serving framework, il modello è solo un file inutilizzabile. Il framework gestisce il caricamento in VRAM, le richieste concorrenti, la gestione della memoria, la quantizzazione e l'ottimizzazione dell'inferenza.</p>
+    <p>La scelta del framework influenza significativamente le performance del sistema in produzione — la stessa GPU con lo stesso modello può produrre velocità di inferenza molto diverse a seconda del framework e della sua configurazione.</p>
+
+    <div class="fw-grid" id="fs-ollama">
+
+      <div class="fw-card light">
+        <div class="fw-stripe"></div>
+        <div class="fw-body">
+          <div class="fw-header">
+            <span class="fw-name">Ollama</span>
+            <span class="fw-type">Semplicità</span>
+          </div>
+          <p class="fw-desc">Il framework più semplice da installare e usare. Un singolo binario che gestisce download del modello, serving e API compatibile OpenAI. Ideale per PoC, sviluppo e deployment leggero. Non ottimizzato per produzione ad alto volume ma perfettamente adeguato per uso aziendale a basso-medio traffico (decine di utenti concorrenti).</p>
+          <div class="fw-tags">
+            <span class="fw-tag">Installazione: 1 comando</span>
+            <span class="fw-tag">API OpenAI-compatibile</span>
+            <span class="fw-tag">macOS / Linux / Windows</span>
+            <span class="fw-tag">GGUF nativo</span>
+            <span class="fw-tag">Multi-modello</span>
+          </div>
+          <div class="fw-note">Ideale per: PoC, sviluppo, team piccoli, prima installazione. Limite: throughput limitato su molti utenti concorrenti.</div>
+        </div>
+      </div>
+
+      <div class="fw-card primary" id="fs-vllm">
+        <div class="fw-stripe"></div>
+        <div class="fw-body">
+          <div class="fw-header">
+            <span class="fw-name">vLLM</span>
+            <span class="fw-type">Produzione · High throughput</span>
+          </div>
+          <p class="fw-desc">Il framework di riferimento per deployment di produzione ad alto throughput. Implementa PagedAttention — un'ottimizzazione che gestisce la memoria del contesto in modo molto più efficiente, aumentando il numero di richieste concorrenti gestibili con lo stesso hardware. API OpenAI-compatibile. Richiede GPU NVIDIA con CUDA e setup più complesso di Ollama.</p>
+          <div class="fw-tags">
+            <span class="fw-tag">PagedAttention</span>
+            <span class="fw-tag">Alta concorrenza</span>
+            <span class="fw-tag">API OpenAI-compatibile</span>
+            <span class="fw-tag">Python/CUDA</span>
+            <span class="fw-tag">Produzione enterprise</span>
+          </div>
+          <div class="fw-note">Ideale per: produzione con molti utenti, integrazione in sistemi esistenti, massimo throughput. Richiede: NVIDIA GPU, competenze DevOps.</div>
+        </div>
+      </div>
+
+      <div class="fw-card secondary" id="fs-tgi">
+        <div class="fw-stripe"></div>
+        <div class="fw-body">
+          <div class="fw-header">
+            <span class="fw-name">Text Generation Inference (TGI)</span>
+            <span class="fw-type">Produzione · Hugging Face</span>
+          </div>
+          <p class="fw-desc">Il framework ufficiale di Hugging Face per serving LLM. Ottimizzato per i modelli dell'ecosistema HF, con supporto nativo per tutti i formati di quantizzazione e integrazione con l'Hub. Concorrente diretto di vLLM con caratteristiche simili. Preferito da chi è già nell'ecosistema Hugging Face e vuole integrazione nativa con i loro strumenti.</p>
+          <div class="fw-tags">
+            <span class="fw-tag">Hugging Face nativo</span>
+            <span class="fw-tag">Flash Attention 2</span>
+            <span class="fw-tag">Docker ready</span>
+            <span class="fw-tag">Quantizzazione integrata</span>
+            <span class="fw-tag">Streaming responses</span>
+          </div>
+          <div class="fw-note">Ideale per: chi usa l'ecosistema HF, container Docker, deployment Kubernetes. Alternativa valida a vLLM.</div>
+        </div>
+      </div>
+
+      <div class="fw-card infra" id="fs-altri">
+        <div class="fw-stripe"></div>
+        <div class="fw-body">
+          <div class="fw-header">
+            <span class="fw-name">llama.cpp</span>
+            <span class="fw-type">CPU · Edge · GGUF</span>
+          </div>
+          <p class="fw-desc">Il framework originale per running di modelli GGUF senza GPU (o con GPU consumer/Apple Silicon). Permette di girare modelli quantizzati su CPU, con performance accettabili per uso leggero. Ollama è costruito sopra llama.cpp. Rilevante per edge deployment, hardware senza GPU dedicata, o Apple MacBook/Mac Studio per sviluppo.</p>
+          <div class="fw-tags">
+            <span class="fw-tag">CPU inference</span>
+            <span class="fw-tag">Apple Silicon nativo</span>
+            <span class="fw-tag">GGUF nativo</span>
+            <span class="fw-tag">Edge deployment</span>
+            <span class="fw-tag">No GPU richiesta</span>
+          </div>
+          <div class="fw-note">Ideale per: sviluppo su laptop, edge senza GPU, Apple Silicon. Non per produzione ad alto volume.</div>
+        </div>
+      </div>
+
+    </div>
+
+    <h3 id="fs-scegliere">Come scegliere il framework giusto</h3>
+
+    <table class="hw-table">
+      <thead>
+        <tr><th>Scenario</th><th>Framework consigliato</th><th>Motivazione</th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>PoC / prima installazione</td>
+          <td style="color:var(--green);font-weight:500">Ollama</td>
+          <td>Installazione in 5 minuti, zero configurazione, API pronta all'uso</td>
+        </tr>
+        <tr>
+          <td>Produzione con &lt;20 utenti concorrenti</td>
+          <td style="color:var(--green);font-weight:500">Ollama</td>
+          <td>Sufficiente per volumi medi, semplicità operativa</td>
+        </tr>
+        <tr>
+          <td>Produzione con molti utenti / alta concorrenza</td>
+          <td style="color:var(--violet);font-weight:500">vLLM</td>
+          <td>PagedAttention: throughput 2–4× superiore a Ollama su stesso hardware</td>
+        </tr>
+        <tr>
+          <td>Integrazione in pipeline ML esistente (HF)</td>
+          <td style="color:var(--blue);font-weight:500">TGI</td>
+          <td>Integrazione nativa con Hugging Face Hub e strumenti dell'ecosistema</td>
+        </tr>
+        <tr>
+          <td>Edge / hardware industriale senza GPU dedicata</td>
+          <td style="color:var(--amber);font-weight:500">Ollama / llama.cpp</td>
+          <td>CPU inference accettabile per task leggeri, nessun requisito GPU</td>
+        </tr>
+        <tr>
+          <td>Sviluppo su Mac (Apple Silicon)</td>
+          <td style="color:var(--amber);font-weight:500">Ollama</td>
+          <td>Sfrutta nativamente la GPU Apple Silicon (Metal), ottimo per sviluppo locale</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <div class="ibox">
+      <span class="ibox-label">Compatibilità API OpenAI</span>
+      <p>Tutti i framework principali (Ollama, vLLM, TGI) espongono un'API compatibile con il formato OpenAI (<code>/v1/chat/completions</code>). Questo significa che <strong>qualsiasi applicazione già integrata con le API OpenAI può passare a un modello self-hosted cambiando solo l'URL dell'endpoint e la chiave API</strong>, senza modifiche al codice applicativo. È il meccanismo che rende l'architettura ibrida (self-hosted + API cloud) tecnicamente semplice da implementare.</p>
+    </div>
+
+  </div>
+</div>
+
+
+<!-- ══════════════════════════════════════════
+     TAB 5 — SICUREZZA INTERNA
+══════════════════════════════════════════ -->
+<div class="tab-panel" id="t5">
+  <aside class="panel-aside">
+    <div class="aside-label">In questa sezione</div>
+    <nav>
+      <a href="#si-intro">Il rischio interno</a>
+      <a href="#si-accessi">Controllo degli accessi</a>
+      <a href="#si-rete">Isolamento di rete</a>
+      <a href="#si-log">Logging e audit</a>
+      <a href="#si-modello">Protezione del modello</a>
+      <a href="#si-checklist">Checklist sicurezza</a>
+    </nav>
+  </aside>
+  <div class="panel-content">
+
+    <h3 id="si-intro">Il rischio interno: la superficie spesso ignorata</h3>
+    <p>Il self-hosting elimina i rischi verso provider esterni. Ma un sistema LLM deployato internamente introduce una superficie di rischio interna che richiede presidio attivo. Un modello RAG con accesso a documentazione tecnica riservata è, senza controlli adeguati, un sistema che può restituire informazioni sensibili a qualsiasi utente della rete aziendale con accesso all'endpoint.</p>
+    <p>La domanda da porsi non è solo "i dati sono al sicuro dall'esterno?" ma anche "chi internamente può interrogare il sistema? Con quali dati? Con quali log?". Queste domande vanno risolte prima del go-live, non dopo.</p>
+
+    <div class="sec-list" id="si-accessi">
+
+      <div class="sec-item">
+        <div class="sec-icon">🔐</div>
+        <div class="sec-body">
+          <h4>Autenticazione e autorizzazione sull'endpoint</h4>
+          <p>L'endpoint del modello (es. <code>http://llm-server:8000/v1/chat/completions</code>) deve essere protetto da autenticazione. <strong>Un endpoint aperto in rete aziendale è accessibile a chiunque sulla rete — inclusi dispositivi compromessi.</strong> Implementare API key per applicazioni, autenticazione SSO aziendale per utenti, e RBAC (Role-Based Access Control) per limitare l'accesso a specifici gruppi o sistemi RAG per utenti autorizzati.</p>
+        </div>
+        <div class="sec-level must">
+          <span>Priorità</span>
+          <strong>Obbligatorio</strong>
+        </div>
+      </div>
+
+      <div class="sec-item" id="si-rete">
+        <div class="sec-icon">🌐</div>
+        <div class="sec-body">
+          <h4>Isolamento di rete del server LLM</h4>
+          <p>Il server GPU non deve essere raggiungibile direttamente dalla rete aziendale generale. <strong>Deve trovarsi in un segmento di rete dedicato (VLAN o subnet isolata)</strong>, accessibile solo tramite un reverse proxy o API gateway che applica autenticazione, rate limiting e logging. Il server GPU non deve avere accesso diretto a Internet.</p>
+        </div>
+        <div class="sec-level must">
+          <span>Priorità</span>
+          <strong>Obbligatorio</strong>
+        </div>
+      </div>
+
+      <div class="sec-item" id="si-log">
+        <div class="sec-icon">📋</div>
+        <div class="sec-body">
+          <h4>Logging delle query con policy di retention</h4>
+          <p>Ogni query al modello dovrebbe essere loggata con: timestamp, utente/sistema richiedente, lunghezza del prompt (non necessariamente il contenuto), lunghezza della risposta, latenza. <strong>Se si logga il contenuto delle query</strong> (utile per debug e audit), definire una policy di retention esplicita e un accesso controllato ai log — i log di query contengono i dati inviati al modello.</p>
+        </div>
+        <div class="sec-level high">
+          <span>Priorità</span>
+          <strong>Alta</strong>
+        </div>
+      </div>
+
+      <div class="sec-item">
+        <div class="sec-icon">📊</div>
+        <div class="sec-body">
+          <h4>Monitoring e alerting</h4>
+          <p>Monitorare utilizzo del sistema (query/minuto, latenza, errori) e definire alert per pattern anomali: picchi di volume insoliti, query molto lunghe (possibile estrazione dati), errori ripetuti (possibile attacco). <strong>Il monitoring non è solo operativo — è anche uno strumento di sicurezza.</strong> Strumenti: Prometheus + Grafana per metriche, qualsiasi SIEM aziendale per eventi di sicurezza.</p>
+        </div>
+        <div class="sec-level high">
+          <span>Priorità</span>
+          <strong>Alta</strong>
+        </div>
+      </div>
+
+      <div class="sec-item" id="si-modello">
+        <div class="sec-icon">🤖</div>
+        <div class="sec-body">
+          <h4>Protezione del modello e dei pesi</h4>
+          <p>I file dei pesi del modello (decine o centinaia di GB) sono asset aziendali — specie se su un modello fine-tuned su dati proprietari. <strong>Devono essere trattati come qualsiasi altro asset IT critico</strong>: backup regolari, controllo degli accessi al filesystem, cifratura a riposo. Un modello fine-tuned su dati aziendali perso o sottratto rappresenta una perdita di investimento e potenzialmente un rischio di esposizione indiretta di know-how.</p>
+        </div>
+        <div class="sec-level med">
+          <span>Priorità</span>
+          <strong>Media</strong>
+        </div>
+      </div>
+
+      <div class="sec-item">
+        <div class="sec-icon">💉</div>
+        <div class="sec-body">
+          <h4>Prompt injection nei sistemi RAG</h4>
+          <p>Se il sistema RAG processa documenti di terzi o input non controllati (email, documenti caricati dagli utenti), esiste il rischio di prompt injection: un testo malevolo nel documento può tentare di manipolare le istruzioni del modello. <strong>Sanitizzare gli input provenienti da fonti non fidate, definire system prompt che limitano il comportamento del modello, e non dare al modello accesso a strumenti o sistemi che non dovrebbe usare.</strong></p>
+        </div>
+        <div class="sec-level high">
+          <span>Priorità</span>
+          <strong>Alta (per RAG)</strong>
+        </div>
+      </div>
+
+    </div>
+
+    <h3 id="si-checklist">Checklist sicurezza pre-go-live</h3>
+
+    <div class="ibox green">
+      <span class="ibox-label">Checklist minima prima di mettere in produzione</span>
+      <p>
+      <strong>Rete:</strong> il server LLM è in VLAN/subnet isolata · l'endpoint non è raggiungibile direttamente dalla rete generale · è presente un reverse proxy con autenticazione davanti all'endpoint<br><br>
+      <strong>Accessi:</strong> ogni utente o sistema ha credenziali proprie · c'è un sistema di revoca delle credenziali · i permessi sono limitati al minimo necessario (least privilege)<br><br>
+      <strong>Logging:</strong> le query vengono loggata (almeno metadata) · è definita una policy di retention · i log sono in posizione sicura e con accesso controllato<br><br>
+      <strong>Monitoring:</strong> esiste un dashboard di monitoring base · sono definiti alert per anomalie · c'è una procedura di risposta agli alert<br><br>
+      <strong>Backup:</strong> i pesi del modello e le configurazioni sono in backup · è stato testato il ripristino · la procedura di recovery è documentata
+      </p>
+    </div>
+
+  </div>
+</div>
+
+
+<!-- ══════════════════════════════════════════
+     TAB 6 — MATRICE DECISIONALE
+══════════════════════════════════════════ -->
+<div class="tab-panel" id="t6">
+  <aside class="panel-aside">
+    <div class="aside-label">In questa sezione</div>
+    <nav>
+      <a href="#md-matrix">Matrice comparativa</a>
+      <a href="#md-percorso">Percorso consigliato</a>
+      <a href="#md-stack">Lo stack minimo</a>
+    </nav>
+  </aside>
+  <div class="panel-content">
+
+    <h3 id="md-matrix">Matrice comparativa delle tre architetture</h3>
+
+    <table class="cmp-matrix">
+      <thead>
+        <tr>
+          <th>Criterio</th>
+          <th class="center">Cloud privato</th>
+          <th class="center">On-premise</th>
+          <th class="center">Ibrido</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>Dati sempre nel perimetro fisico</td>
+          <td class="center"><span class="cmp-icon">✗</span> <span style="font-size:11px;color:var(--ink4)">su AWS/Azure</span></td>
+          <td class="center"><span class="cmp-icon" style="color:var(--green)">✓</span></td>
+          <td class="center"><span class="cmp-icon" style="color:var(--amber)">◑</span> <span style="font-size:11px;color:var(--ink4)">per componente self</span></td>
+        </tr>
+        <tr>
+          <td>Tempo al primo deploy</td>
+          <td class="center" style="color:var(--green)">1–4 settimane</td>
+          <td class="center" style="color:var(--red)">3–12 mesi</td>
+          <td class="center" style="color:var(--amber)">Variabile</td>
+        </tr>
+        <tr>
+          <td>Investimento iniziale</td>
+          <td class="center" style="color:var(--green)">Basso</td>
+          <td class="center" style="color:var(--red)">Alto (€20k–100k+)</td>
+          <td class="center" style="color:var(--amber)">Medio</td>
+        </tr>
+        <tr>
+          <td>Costo a lungo termine (volume alto)</td>
+          <td class="center" style="color:var(--red)">Alto (€/ora GPU)</td>
+          <td class="center" style="color:var(--green)">Basso (ammortizzato)</td>
+          <td class="center" style="color:var(--amber)">Mix</td>
+        </tr>
+        <tr>
+          <td>Scalabilità</td>
+          <td class="center" style="color:var(--green)">Alta (elastica)</td>
+          <td class="center" style="color:var(--red)">Limitata (hardware)</td>
+          <td class="center" style="color:var(--green)">Alta (componente cloud)</td>
+        </tr>
+        <tr>
+          <td>Complessità operativa</td>
+          <td class="center" style="color:var(--green)">Bassa</td>
+          <td class="center" style="color:var(--red)">Alta</td>
+          <td class="center" style="color:var(--red)">Molto alta</td>
+        </tr>
+        <tr>
+          <td>Competenze necessarie</td>
+          <td class="center">DevOps cloud + MLOps base</td>
+          <td class="center">MLOps + sysadmin GPU</td>
+          <td class="center">Entrambe</td>
+        </tr>
+        <tr>
+          <td>Indipendenza da CLOUD Act USA</td>
+          <td class="center"><span class="cmp-icon">✗</span> <span style="font-size:11px;color:var(--ink4)">AWS/Azure/GCP US</span></td>
+          <td class="center"><span class="cmp-icon" style="color:var(--green)">✓</span> <span style="font-size:11px;color:var(--ink4)">se infrastruttura EU</span></td>
+          <td class="center"><span class="cmp-icon" style="color:var(--amber)">◑</span> <span style="font-size:11px;color:var(--ink4)">per componente self</span></td>
+        </tr>
+        <tr>
+          <td>Aggiornamento modello</td>
+          <td class="center" style="color:var(--green)">Semplice</td>
+          <td class="center" style="color:var(--amber)">Procedura formalizzata</td>
+          <td class="center" style="color:var(--amber)">Per componente</td>
+        </tr>
+        <tr>
+          <td>Adatto a PoC iniziale</td>
+          <td class="center"><span class="cmp-icon" style="color:var(--green)">✓</span> Prima scelta</td>
+          <td class="center"><span class="cmp-icon">✗</span> Troppo complesso</td>
+          <td class="center"><span class="cmp-icon">✗</span> Troppo complesso</td>
+        </tr>
+        <tr>
+          <td>Adatto a produzione consolidata</td>
+          <td class="center"><span class="cmp-icon" style="color:var(--amber)">◑</span> Costo alto</td>
+          <td class="center"><span class="cmp-icon" style="color:var(--green)">✓</span> Volume alto</td>
+          <td class="center"><span class="cmp-icon" style="color:var(--green)">✓</span> Flessibile</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <h3 id="md-percorso">Percorso evolutivo consigliato per una manifatturiera</h3>
+
+    <div class="sec-list">
+      <div class="sec-item">
+        <div class="sec-icon">1</div>
+        <div class="sec-body">
+          <h4>Fase 1 — PoC su cloud privato (mese 1–3)</h4>
+          <p>Istanza GPU cloud (Azure/AWS), Ollama come serving framework, Llama 3.2 8B o Mistral Nemo 12B, sistema RAG su documentazione tecnica interna. Obiettivo: validare la qualità del sistema sui casi d'uso reali prima di qualsiasi investimento hardware. Costo: <strong>€500–2.000 totali</strong> per 2–3 mesi di sperimentazione.</p>
+        </div>
+        <div class="sec-level med">
+          <span>Opzione</span>
+          <strong>Cloud privato</strong>
+        </div>
+      </div>
+      <div class="sec-item">
+        <div class="sec-icon">2</div>
+        <div class="sec-body">
+          <h4>Fase 2 — Produzione su cloud privato (mese 3–12)</h4>
+          <p>Se il PoC dimostra valore: istanza GPU dedicata (non spot), vLLM come serving framework, Llama 3.3 70B o modello adeguato al caso d'uso, autenticazione e monitoring. Gestione operativa ordinaria. Costo mensile: <strong>€1.500–3.000/mese</strong> (istanza A100 dedicata 24/7).</p>
+        </div>
+        <div class="sec-level med">
+          <span>Opzione</span>
+          <strong>Cloud privato</strong>
+        </div>
+      </div>
+      <div class="sec-item">
+        <div class="sec-icon">3</div>
+        <div class="sec-body">
+          <h4>Fase 3 — Migrazione on-premise (mese 12+, se giustificato)</h4>
+          <p>Solo se il volume d'uso è abbastanza alto da giustificare l'investimento hardware, o se emergono requisiti di sicurezza che richiedono dati esclusivamente on-premise. Acquisto hardware, deploy on-premise, migrazione graduale. Il cloud può restare per scalabilità burst o per componenti specifici.</p>
+        </div>
+        <div class="sec-level high">
+          <span>Opzione</span>
+          <strong>On-premise</strong>
+        </div>
+      </div>
+    </div>
+
+    <h3 id="md-stack">Lo stack minimo per iniziare</h3>
+
+    <div class="ibox green">
+      <span class="ibox-label">Stack minimo per un PoC funzionante</span>
+      <p>
+      <strong>Infrastruttura:</strong> istanza GPU cloud (AWS g5.xlarge o Azure NC A100 v4) in VPC privata · accesso SSH con chiave · nessuna porta aperta verso Internet<br><br>
+      <strong>Sistema operativo:</strong> Ubuntu 22.04 LTS · driver NVIDIA CUDA 12.x · Docker (opzionale ma consigliato)<br><br>
+      <strong>Serving:</strong> Ollama (installazione: <code>curl https://ollama.ai/install.sh | sh</code>) · modello: <code>ollama pull llama3.2:8b</code><br><br>
+      <strong>RAG:</strong> LlamaIndex o LangChain per orchestrazione · ChromaDB o Qdrant come vector database · documenti aziendali indicizzati<br><br>
+      <strong>Accesso:</strong> reverse proxy Nginx con autenticazione basic (per PoC) o integrazione SSO aziendale (per produzione) · HTTPS con certificato<br><br>
+      <strong>Tempo di setup:</strong> 1–2 giorni per un tecnico con competenze DevOps base.
+      </p>
+    </div>
+
+    <div class="ibox blue">
+      <span class="ibox-label">Prossimo report della serie</span>
+      <p>Il Report C5 copre l'<strong>analisi quantitativa dei costi</strong>: modelli di calcolo del TCO, confronto con provider cloud API, e il calcolo del break-even tra self-hosted e piano enterprise. È la lettura necessaria per portare una proposta di investimento al management.</p>
+    </div>
+
+  </div>
+</div>
+
+
+<footer>
+  <p>Report generato con Claude · Anthropic · 2026</p>
+  <p>Serie C: Self-Hosting LLM · Report C4 — Le Architetture</p>
+</footer>
+
+<script>
+document.querySelectorAll('.tab-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    const target = btn.dataset.tab;
+    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+    document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+    btn.classList.add('active');
+    document.getElementById(target).classList.add('active');
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  });
+});
+</script>
+
+</body>
+</html>

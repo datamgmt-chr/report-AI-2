@@ -1,0 +1,1082 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Prompt Engineering — F · Robustezza e Casi Limite</title>
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Outfit:wght@200;300;400;500;600;700;800;900&family=IBM+Plex+Mono:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg:     #faf8f5;
+  --bg2:    #f2efe9;
+  --bg3:    #e9e5dc;
+  --ink:    #1b1915;
+  --ink2:   #2e2b25;
+  --ink3:   #6d685c;
+  --ink4:   #a19c8f;
+  --border: #d9d4c8;
+  --border2:#cac4b6;
+
+  --accent:  #3a6b8c;
+  --accent2: #274d66;
+  --accent-light: #edf4f9;
+}
+
+* { margin:0; padding:0; box-sizing:border-box; }
+html { scroll-behavior:smooth; }
+body {
+  background:var(--bg); color:var(--ink);
+  font-family:'Outfit',sans-serif; font-weight:300;
+  font-size:14px; line-height:1.75;
+}
+
+/* ── HEADER ── */
+.masthead {
+  background:var(--ink); color:rgba(255,255,255,.9);
+  padding:60px 56px 52px; position:relative; overflow:hidden;
+}
+.masthead::before {
+  content:''; position:absolute; inset:0;
+  background:
+    repeating-linear-gradient(90deg,rgba(255,255,255,.012) 0,rgba(255,255,255,.012) 1px,transparent 1px,transparent 64px),
+    repeating-linear-gradient(0deg,rgba(255,255,255,.012) 0,rgba(255,255,255,.012) 1px,transparent 1px,transparent 64px);
+  pointer-events:none;
+}
+.masthead::after {
+  content:'F'; position:absolute; right:44px; bottom:-28px;
+  font-family:'Instrument Serif',serif; font-size:280px; line-height:1;
+  color:rgba(255,255,255,.025); pointer-events:none;
+}
+.mh-eye {
+  font-family:'IBM Plex Mono',monospace; font-size:10px;
+  letter-spacing:3px; text-transform:uppercase;
+  color:rgba(255,255,255,.25); margin-bottom:18px; position:relative;
+}
+.mh-cluster {
+  display:inline-block; font-family:'IBM Plex Mono',monospace;
+  font-size:10px; letter-spacing:2px; text-transform:uppercase;
+  padding:4px 12px; border:1px solid var(--accent);
+  color:var(--accent); margin-bottom:20px; position:relative;
+}
+.masthead h1 {
+  font-family:'Instrument Serif',serif; font-weight:400;
+  font-size:clamp(30px,4.5vw,54px); line-height:1.08;
+  letter-spacing:-1px; max-width:700px; position:relative;
+}
+.mh-sub {
+  margin-top:20px; font-size:15px; font-weight:300;
+  color:rgba(255,255,255,.38); max-width:660px;
+  line-height:1.7; position:relative;
+}
+.mh-meta {
+  margin-top:32px; display:flex; gap:32px; flex-wrap:wrap; position:relative;
+}
+.mh-stat { display:flex; flex-direction:column; gap:4px; }
+.mh-stat-val {
+  font-family:'IBM Plex Mono',monospace; font-size:22px; font-weight:500;
+  color:rgba(255,255,255,.85);
+}
+.mh-stat-lbl {
+  font-size:10px; letter-spacing:2px; text-transform:uppercase;
+  color:rgba(255,255,255,.25);
+}
+
+/* ── NAV ── */
+.nav {
+  background:var(--ink2); position:sticky; top:0; z-index:100;
+  display:flex; overflow-x:auto;
+  border-bottom:1px solid rgba(255,255,255,.06);
+}
+.nav-btn {
+  flex:1; min-width:120px; padding:13px 12px;
+  border:none; background:transparent; cursor:pointer;
+  font-family:'Outfit',sans-serif; font-size:10.5px; font-weight:600;
+  text-transform:uppercase; letter-spacing:.4px;
+  color:rgba(255,255,255,.3);
+  border-right:1px solid rgba(255,255,255,.06);
+  transition:all .2s; white-space:nowrap;
+}
+.nav-btn:last-child { border-right:none; }
+.nav-btn:hover { color:rgba(255,255,255,.6); }
+.nav-btn.active { color:#fff; background:rgba(255,255,255,.05); }
+
+/* ── SECTIONS ── */
+.sect { display:none; }
+.sect.active { display:block; animation:fadeIn .3s ease; }
+@keyframes fadeIn { from{opacity:0;transform:translateY(6px)} to{opacity:1;transform:translateY(0)} }
+
+.sect-head { padding:48px 56px 36px; border-bottom:1px solid var(--border); }
+.sect-num {
+  font-family:'IBM Plex Mono',monospace; font-size:10px;
+  letter-spacing:3px; text-transform:uppercase; color:var(--ink4); margin-bottom:10px;
+}
+.sect-head h2 {
+  font-family:'Instrument Serif',serif; font-weight:400;
+  font-size:clamp(26px,3.5vw,42px); line-height:1.1;
+  letter-spacing:-.5px; max-width:640px; margin-bottom:14px;
+}
+.sect-head p { color:var(--ink3); max-width:700px; font-size:14.5px; }
+.wrap { padding:0 56px 64px; }
+
+/* ── PROSE ── */
+.prose { max-width:760px; }
+.prose p { font-size:14.5px; color:var(--ink3); line-height:1.85; margin-bottom:16px; }
+.prose p strong { color:var(--ink2); font-weight:500; }
+.prose p em { font-style:italic; color:var(--ink2); }
+
+/* ── GUIDELINE CARD ── */
+.gl-group { margin-top:40px; }
+.gl-group-title {
+  font-family:'IBM Plex Mono',monospace; font-size:9px;
+  letter-spacing:3px; text-transform:uppercase;
+  color:var(--ink4); padding-bottom:10px; border-bottom:1px solid var(--border);
+}
+.gl-card { border:1px solid var(--border2); border-top:none; background:var(--bg); }
+.gl-header {
+  display:grid; grid-template-columns:5px 52px 1fr auto;
+  align-items:stretch; border-bottom:1px solid var(--border);
+}
+.gl-stripe { background:var(--accent); }
+.gl-num {
+  font-family:'Outfit',sans-serif; font-weight:800; font-size:20px; color:var(--bg3);
+  display:flex; align-items:center; justify-content:center;
+  border-right:1px solid var(--border);
+}
+.gl-title-wrap { padding:16px 20px; }
+.gl-title { font-family:'Instrument Serif',serif; font-size:20px; color:var(--ink2); line-height:1.2; }
+.gl-subtitle { font-size:12px; color:var(--ink4); margin-top:3px; }
+.gl-impact-wrap {
+  padding:14px 20px; display:flex; flex-direction:column;
+  align-items:flex-end; justify-content:center; gap:4px;
+}
+.gl-impact-stars { font-size:14px; }
+.gl-impact-lbl {
+  font-family:'IBM Plex Mono',monospace; font-size:8px;
+  letter-spacing:1px; text-transform:uppercase; color:var(--ink4);
+}
+.gl-body { padding:0; }
+.gl-section { padding:20px 24px; border-bottom:1px solid var(--border); }
+.gl-section:last-child { border-bottom:none; }
+.gl-section-lbl {
+  font-family:'IBM Plex Mono',monospace; font-size:9px;
+  letter-spacing:2px; text-transform:uppercase; color:var(--ink4);
+  margin-bottom:10px; padding-bottom:6px; border-bottom:1px solid var(--border);
+}
+.gl-section p { font-size:13.5px; color:var(--ink3); line-height:1.8; max-width:740px; }
+.gl-section p strong { color:var(--ink2); font-weight:500; }
+.gl-section p em { font-style:italic; color:var(--ink2); }
+
+/* ── PROMPT BOXES ── */
+.pex-lbl {
+  font-family:'IBM Plex Mono',monospace; font-size:9px;
+  letter-spacing:2px; text-transform:uppercase; margin-bottom:6px;
+}
+.pex-lbl.bad     { color:#c0392b; }
+.pex-lbl.good    { color:var(--accent); }
+.pex-lbl.neutral { color:var(--ink4); }
+
+.prompt-box {
+  font-family:'IBM Plex Mono',monospace; font-size:12px; line-height:1.75;
+  padding:14px 18px; border:1px solid; white-space:pre-wrap; word-break:break-word;
+}
+.prompt-box.bad     { border-color:#e8c5c5; background:#fdf5f5; color:#6b3030; }
+.prompt-box.good    { border-color:#b8d4e8; background:var(--accent-light); color:var(--accent2); }
+.prompt-box.neutral { border-color:var(--border2); background:var(--bg2); color:var(--ink3); }
+.prompt-box .hl     { font-weight:500; }
+.prompt-box.good .hl { color:var(--accent2); text-decoration:underline; text-decoration-color:rgba(58,107,140,.3); }
+.prompt-box.bad  .hl { color:#8b3030; }
+
+.compare-grid { display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-top:12px; }
+
+/* ── MECHANISM ── */
+.mechanism {
+  margin-top:14px; padding:14px 18px;
+  border-left:3px solid var(--accent); background:var(--accent-light);
+}
+.mech-lbl {
+  font-family:'IBM Plex Mono',monospace; font-size:9px;
+  letter-spacing:2px; text-transform:uppercase; color:var(--accent); margin-bottom:6px;
+}
+.mechanism p { font-size:13px; color:var(--ink3); line-height:1.65; }
+.mechanism p strong { color:var(--ink2); font-weight:500; }
+
+/* ── FAILURE MODE CARDS ── */
+.failure-grid {
+  display:grid; grid-template-columns:repeat(auto-fill,minmax(280px,1fr));
+  gap:14px; margin-top:20px;
+}
+.failure-card {
+  border:1px solid var(--border2); background:var(--bg); overflow:hidden;
+}
+.fc-head {
+  padding:10px 14px; background:var(--bg2);
+  border-bottom:1px solid var(--border);
+  display:flex; align-items:center; gap:10px;
+}
+.fc-icon {
+  width:24px; height:24px; border-radius:50%;
+  background:#c0392b; color:#fff;
+  font-family:'IBM Plex Mono',monospace; font-size:10px; font-weight:700;
+  display:flex; align-items:center; justify-content:center; flex-shrink:0;
+}
+.fc-title { font-weight:600; font-size:13px; color:var(--ink2); }
+.fc-body { padding:12px 14px; }
+.fc-what { font-size:12.5px; color:var(--ink3); line-height:1.6; margin-bottom:8px; }
+.fc-what strong { color:var(--ink2); font-weight:500; }
+.fc-prompt {
+  font-family:'IBM Plex Mono',monospace; font-size:11px; line-height:1.65;
+  padding:10px 12px; background:var(--accent-light);
+  border-left:3px solid var(--accent);
+  color:var(--accent2); margin-top:8px;
+}
+.fc-prompt strong { color:var(--accent2); font-weight:600; }
+
+/* ── DECISION TREE ── */
+.dtree {
+  margin-top:20px; border:1px solid var(--border2);
+}
+.dt-head {
+  padding:12px 18px; background:var(--ink);
+  border-bottom:1px solid rgba(255,255,255,.06);
+  font-family:'IBM Plex Mono',monospace; font-size:9px;
+  letter-spacing:2px; text-transform:uppercase; color:rgba(255,255,255,.4);
+}
+.dt-row {
+  display:grid; grid-template-columns:32px 1fr 1fr;
+  border-bottom:1px solid var(--border);
+}
+.dt-row:last-child { border-bottom:none; }
+.dt-row.head-row {
+  background:var(--bg2);
+  font-family:'IBM Plex Mono',monospace; font-size:9px;
+  letter-spacing:1px; text-transform:uppercase; color:var(--ink4);
+}
+.dt-num {
+  padding:12px 0; text-align:center;
+  font-family:'IBM Plex Mono',monospace; font-size:11px;
+  color:var(--ink4); border-right:1px solid var(--border);
+  display:flex; align-items:center; justify-content:center;
+}
+.dt-question {
+  padding:12px 14px; border-right:1px solid var(--border);
+  font-size:13px; color:var(--ink2); font-weight:500;
+}
+.dt-answer {
+  padding:12px 14px; font-size:12.5px; color:var(--ink3); line-height:1.55;
+}
+.dt-answer strong { color:var(--accent2); font-weight:600; }
+
+/* ── SPECTRUM ── */
+.spectrum { margin-top:16px; border:1px solid var(--border); overflow:hidden; }
+.spectrum-row { display:grid; border-bottom:1px solid var(--border); font-size:12.5px; }
+.spectrum-row:last-child { border-bottom:none; }
+.spectrum-row.head {
+  background:var(--ink); color:rgba(255,255,255,.7);
+  font-family:'IBM Plex Mono',monospace; font-size:9px;
+  letter-spacing:1px; text-transform:uppercase;
+}
+.spectrum-row.col3 { grid-template-columns:200px 1fr 1fr; }
+.spectrum-row.col4 { grid-template-columns:180px 1fr 1fr 1fr; }
+.s-cell {
+  padding:11px 14px; border-right:1px solid var(--border);
+  color:var(--ink3); line-height:1.5; vertical-align:top;
+}
+.s-cell:last-child { border-right:none; }
+.s-cell.lbl { font-weight:500; color:var(--ink2); background:var(--bg2); }
+.s-cell.hi  { background:var(--accent-light); color:var(--accent2); }
+.s-cell.lo  { background:#fdf5f5; color:#8b3030; }
+
+/* ── CHECKLIST ── */
+.checklist { margin-top:16px; }
+.check-item {
+  display:flex; gap:12px; align-items:flex-start;
+  padding:10px 0; border-bottom:1px solid var(--border);
+  font-size:13.5px; color:var(--ink3);
+}
+.check-item:last-child { border-bottom:none; }
+.check-icon {
+  width:20px; height:20px; border-radius:50%;
+  background:var(--accent); color:#fff;
+  display:flex; align-items:center; justify-content:center;
+  font-size:11px; font-weight:700; flex-shrink:0; margin-top:1px;
+}
+.check-item strong { color:var(--ink2); font-weight:500; }
+
+/* ── KEY POINT ── */
+.key-point {
+  margin-top:36px; padding:24px 28px;
+  border-left:4px solid var(--accent); background:var(--accent-light);
+}
+.kp-label {
+  font-family:'IBM Plex Mono',monospace; font-size:9px;
+  letter-spacing:2px; text-transform:uppercase; color:var(--accent); margin-bottom:8px;
+}
+.kp-text {
+  font-family:'Instrument Serif',serif; font-size:18px; line-height:1.45; color:var(--ink2);
+}
+.kp-sub { margin-top:10px; font-size:13px; color:var(--ink3); line-height:1.65; }
+
+/* ── INSIGHT ── */
+.insight {
+  margin:16px 0; padding:16px 20px;
+  border-left:4px solid var(--accent); background:var(--accent-light);
+}
+.insight-lbl {
+  font-family:'IBM Plex Mono',monospace; font-size:9px;
+  letter-spacing:2px; text-transform:uppercase; color:var(--accent); margin-bottom:6px;
+}
+.insight p { font-size:13.5px; color:var(--ink2); line-height:1.65; max-width:700px; }
+.insight p strong { font-weight:500; }
+
+/* ── TEMPLATE BOX ── */
+.template-box {
+  margin-top:20px; border:1px solid var(--border2); background:var(--ink);
+  padding:28px 32px; font-family:'IBM Plex Mono',monospace;
+  font-size:12.5px; line-height:1.9; color:rgba(255,255,255,.75);
+  white-space:pre-wrap; word-break:break-word;
+}
+.template-box .t-comment { color:rgba(255,255,255,.28); }
+.template-box .t-hl      { color:#93c5e8; }
+.template-box .t-bracket { color:rgba(255,255,255,.35); }
+.template-box .t-val     { color:rgba(255,255,255,.85); }
+.template-box .t-str     { color:#7dd3a8; }
+
+/* ── FOOTER ── */
+.footer {
+  padding:24px 56px; border-top:1px solid var(--border);
+  display:flex; justify-content:space-between; align-items:center;
+  font-family:'IBM Plex Mono',monospace; font-size:10px;
+  letter-spacing:1px; text-transform:uppercase; color:var(--ink4);
+}
+
+@media (max-width:700px) {
+  .masthead,.sect-head,.wrap,.footer { padding-left:20px; padding-right:20px; }
+  .compare-grid { grid-template-columns:1fr; }
+  .spectrum-row.col3,.spectrum-row.col4 { grid-template-columns:1fr; }
+  .gl-header { grid-template-columns:5px 40px 1fr; }
+  .gl-impact-wrap { display:none; }
+  .failure-grid { grid-template-columns:1fr; }
+  .dt-row { grid-template-columns:1fr; }
+}
+</style>
+</head>
+<body>
+
+<!-- HEADER -->
+<div class="masthead">
+  <div class="mh-eye">Serie Agenti AI · Leva 01 · Prompt Engineering</div>
+  <div class="mh-cluster">Cluster F</div>
+  <h1>Robustezza e Casi Limite</h1>
+  <p class="mh-sub">Come progettare il comportamento del modello quando le cose non vanno come previsto: input anomali, dati mancanti, richieste ambigue, task fuori scope. La differenza tra un agente che funziona in demo e uno che regge in produzione.</p>
+  <div class="mh-meta">
+    <div class="mh-stat"><div class="mh-stat-val">6</div><div class="mh-stat-lbl">Linee guida</div></div>
+    <div class="mh-stat"><div class="mh-stat-val">Alto</div><div class="mh-stat-lbl">Impatto in produzione</div></div>
+    <div class="mh-stat"><div class="mh-stat-val">Medio</div><div class="mh-stat-lbl">Costo implementazione</div></div>
+    <div class="mh-stat"><div class="mh-stat-val">Trascurato</div><div class="mh-stat-lbl">In fase di sviluppo</div></div>
+  </div>
+</div>
+
+<!-- NAV -->
+<div class="nav">
+  <button class="nav-btn active" onclick="show(1)">Perché conta</button>
+  <button class="nav-btn" onclick="show(2)">Dati mancanti</button>
+  <button class="nav-btn" onclick="show(3)">Input ambigui</button>
+  <button class="nav-btn" onclick="show(4)">Fuori scope</button>
+  <button class="nav-btn" onclick="show(5)">Fallback e fail</button>
+  <button class="nav-btn" onclick="show(6)">Template</button>
+</div>
+
+
+<!-- ═══════════════════════════
+     S1 — PERCHÉ CONTA
+═══════════════════════════ -->
+<div class="sect active" id="s1">
+  <div class="sect-head">
+    <div class="sect-num">Introduzione</div>
+    <h2>Il gap tra demo e produzione</h2>
+    <p>In fase di sviluppo si testa il prompt sugli input "felici". In produzione arrivano quelli reali — e la robustezza del prompt si misura proprio su quelli.</p>
+  </div>
+  <div class="wrap">
+
+    <div class="prose" style="margin-top:28px;">
+      <p>Un prompt ottimizzato sui cluster A–E funziona molto bene sugli input che il suo progettista aveva in mente durante lo sviluppo. Il problema è che in produzione arrivano anche tutti gli altri: <strong>input con dati mancanti, input in formato inatteso, richieste ambigue, task che sfiorano il confine dello scope, casi che nessuno aveva previsto</strong>.</p>
+      <p>In assenza di istruzioni esplicite per questi casi, il modello adotta il suo comportamento di default — che quasi mai coincide con quello corretto per il contesto specifico. Il risultato tipico non è un errore evidente: è un output che <em>sembra plausibile</em> ma è costruito su assunzioni non dichiarate, inferenze non verificate, o risposte a domande che nessuno aveva fatto.</p>
+    </div>
+
+    <div class="insight" style="margin-top:24px;">
+      <div class="insight-lbl">Il comportamento di default del modello sui casi limite</div>
+      <p>Di fronte a input anomali, il modello tende a: <strong>riempire i dati mancanti con inferenze non dichiarate</strong> (hallucination), <strong>scegliere l'interpretazione più comune</strong> di un input ambiguo senza segnalarla, <strong>rispondere comunque</strong> a richieste fuori scope piuttosto che rifiutarle — perché è stato addestrato a essere utile. Nessuno di questi comportamenti è sbagliato <em>in generale</em>, ma sono tutti potenzialmente sbagliati per il tuo contesto specifico.</p>
+    </div>
+
+    <div class="key-point" style="margin-top:24px;">
+      <div class="kp-label">Il principio del cluster F</div>
+      <div class="kp-text">Un agente maturo non è quello che funziona sempre. È quello che fallisce in modo prevedibile, esplicito e recuperabile.</div>
+      <div class="kp-sub">La robustezza non si misura sulla percentuale di casi gestiti correttamente — si misura su come il modello si comporta quando non riesce a gestire un caso correttamente. Un fallimento esplicito ("non ho abbastanza dati per rispondere") è sempre meglio di un output apparentemente corretto costruito su assunzioni sbagliate. Il cluster F progetta i failure mode prima che si manifestino in produzione.</div>
+    </div>
+
+    <div class="prose" style="margin-top:28px;">
+      <p>Il cluster F si articola in tre aree principali: <strong>dati mancanti o incompleti</strong> (cosa fare quando l'input non contiene abbastanza informazioni per rispondere), <strong>input ambigui</strong> (come gestire richieste che ammettono più interpretazioni valide), e <strong>richieste fuori scope</strong> (come comportarsi quando la domanda supera i confini del ruolo definito in A). A queste si aggiunge la progettazione esplicita dei <strong>fallback e dei failure mode</strong> — cosa fare quando tutto il resto non funziona.</p>
+    </div>
+
+  </div>
+</div>
+
+
+<!-- ═══════════════════════════
+     S2 — DATI MANCANTI
+═══════════════════════════ -->
+<div class="sect" id="s2">
+  <div class="sect-head">
+    <div class="sect-num">Linee guida 01 – 02</div>
+    <h2>Gestire dati mancanti o insufficienti</h2>
+    <p>Il caso più frequente in produzione: l'input non contiene tutte le informazioni necessarie per rispondere correttamente. Il modello, di default, le inventa.</p>
+  </div>
+  <div class="wrap">
+
+    <!-- GL 01 -->
+    <div class="gl-group" style="margin-top:32px;">
+      <div class="gl-group-title">Linea guida 01</div>
+      <div class="gl-card">
+        <div class="gl-header">
+          <div class="gl-stripe"></div>
+          <div class="gl-num">01</div>
+          <div class="gl-title-wrap">
+            <div class="gl-title">Definisci esplicitamente cosa fare quando i dati non bastano</div>
+            <div class="gl-subtitle">Senza istruzioni, il modello riempie i vuoti informativi — spesso senza segnalarlo</div>
+          </div>
+          <div class="gl-impact-wrap">
+            <div class="gl-impact-stars" style="color:var(--accent)">★★★</div>
+            <div class="gl-impact-lbl">Impatto</div>
+          </div>
+        </div>
+        <div class="gl-body">
+
+          <div class="gl-section">
+            <div class="gl-section-lbl">La linea guida</div>
+            <p>Per ogni tipo di dato critico che il tuo task richiede, definisci nel prompt cosa fare se quel dato è assente o incompleto. Le strategie possibili sono tre: <strong>segnalare il dato mancante e fermarsi</strong> (per task dove procedere senza sarebbe pericoloso), <strong>procedere parzialmente dichiarando cosa manca</strong> (per task dove l'output parziale ha comunque valore), <strong>chiedere il dato all'utente</strong> (per contesti interattivi). Scegli in base al contesto — ma scegli esplicitamente.</p>
+          </div>
+
+          <div class="gl-section">
+            <div class="gl-section-lbl">Le tre strategie e quando usarle</div>
+            <div class="spectrum">
+              <div class="spectrum-row head col4">
+                <div class="s-cell">Strategia</div>
+                <div class="s-cell">Quando usarla</div>
+                <div class="s-cell">Esempio di istruzione</div>
+                <div class="s-cell">Rischio se non usata</div>
+              </div>
+              <div class="spectrum-row col4">
+                <div class="s-cell lbl">Fermarsi e segnalare</div>
+                <div class="s-cell hi">Task critici dove un output parziale è peggio di nessun output (medico, legale, finanziario)</div>
+                <div class="s-cell" style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--ink3);">"Se mancano i dati X o Y, non procedere. Indica esattamente quali dati mancano."</div>
+                <div class="s-cell lo">Hallucination: il modello inventa i dati mancanti</div>
+              </div>
+              <div class="spectrum-row col4">
+                <div class="s-cell lbl">Procedere parzialmente</div>
+                <div class="s-cell hi">Task dove l'output parziale ha comunque valore; il dato mancante è secondario</div>
+                <div class="s-cell" style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--ink3);">"Se mancano dati non critici, procedi e segnala con [DATO MANCANTE: X] dove applicabile."</div>
+                <div class="s-cell lo">Output incompleto presentato come completo, senza trasparenza sui gap</div>
+              </div>
+              <div class="spectrum-row col4">
+                <div class="s-cell lbl">Chiedere all'utente</div>
+                <div class="s-cell hi">Contesti interattivi (chatbot, assistente) dove l'utente può fornire il dato mancante</div>
+                <div class="s-cell" style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--ink3);">"Se ti manca un'informazione essenziale, fai una sola domanda precisa per ottenerla."</div>
+                <div class="s-cell lo">Domande a raffica che frustrano l'utente; o assunzioni non dichiarate</div>
+              </div>
+            </div>
+          </div>
+
+          <div class="gl-section">
+            <div class="gl-section-lbl">Esempi di istruzioni per dati mancanti</div>
+            <div class="compare-grid">
+              <div>
+                <div class="pex-lbl bad">❌ Senza gestione dei dati mancanti</div>
+                <div class="prompt-box bad">Analizza il bilancio allegato e calcola il DSCR dell'azienda.</div>
+              </div>
+              <div>
+                <div class="pex-lbl good">✓ Con gestione esplicita</div>
+                <div class="prompt-box good">Analizza il bilancio allegato e calcola il DSCR.
+
+<span class="hl">Se il documento non contiene i dati necessari</span> (flusso di cassa operativo o servizio del debito annuo), <span class="hl">non stimare</span>: indica esattamente quale voce manca e in quale sezione dovrebbe trovarsi.
+
+<span class="hl">Se il documento è incompleto</span> (es. solo uno dei 3 anni richiesti), procedi con i dati disponibili indicando l'intervallo temporale coperto.</div>
+              </div>
+            </div>
+
+            <div style="margin-top:12px;">
+              <div class="pex-lbl neutral">Strategia "una domanda sola" per contesti interattivi</div>
+              <div class="prompt-box good" style="margin-top:6px;">Se ti mancano informazioni per rispondere, <span class="hl">fai una sola domanda</span> — la più importante — invece di elencare tutto ciò che ti serve. Aspetta la risposta prima di fare altre domande. <span class="hl">Non assumere</span> informazioni che non hai ricevuto esplicitamente.</div>
+            </div>
+          </div>
+
+          <div class="gl-section">
+            <div class="gl-section-lbl">Perché funziona — il meccanismo LLM</div>
+            <div class="mechanism">
+              <div class="mech-lbl">Tendenza alla completezza vs. trasparenza sull'incertezza</div>
+              <p>Il modello è stato addestrato a produrre output completi e coerenti. Di fronte a dati mancanti, la risposta "naturale" è riempire il vuoto con inferenze — perché un output completo è più simile ai testi di alta qualità visti nel training. <strong>L'istruzione esplicita inverte questa tendenza: dice al modello che in questo contesto, un output trasparente sui propri limiti è più valido di un output apparentemente completo costruito su assunzioni non dichiarate.</strong></p>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </div>
+
+    <!-- GL 02 -->
+    <div class="gl-group" style="margin-top:8px;">
+      <div class="gl-group-title">Linea guida 02</div>
+      <div class="gl-card">
+        <div class="gl-header">
+          <div class="gl-stripe"></div>
+          <div class="gl-num">02</div>
+          <div class="gl-title-wrap">
+            <div class="gl-title">Distingui dati critici da dati utili — e gestiscili diversamente</div>
+            <div class="gl-subtitle">Non tutti i dati mancanti hanno lo stesso impatto sull'affidabilità dell'output</div>
+          </div>
+          <div class="gl-impact-wrap">
+            <div class="gl-impact-stars" style="color:var(--accent)">★★☆</div>
+            <div class="gl-impact-lbl">Impatto</div>
+          </div>
+        </div>
+        <div class="gl-body">
+
+          <div class="gl-section">
+            <div class="gl-section-lbl">La linea guida</div>
+            <p>Non tutti i dati mancanti richiedono la stessa risposta. Identifica per il tuo task quali sono i <strong>dati critici</strong> (senza i quali l'output è inaffidabile o fuorviante) e quali i <strong>dati utili ma non essenziali</strong> (la cui assenza riduce la completezza ma non l'affidabilità). Definisci una strategia diversa per ciascuno.</p>
+          </div>
+
+          <div class="gl-section">
+            <div class="gl-section-lbl">Esempio — analisi contrattuale con dati a due livelli</div>
+            <div class="prompt-box good" style="margin-top:12px;">Nella tua analisi distingui due livelli di informazione:
+
+<span class="hl">DATI CRITICI</span> (senza questi, non produrre la scheda di rischio):
+- Testo leggibile del contratto
+- Identificazione delle parti contraenti
+- Durata e condizioni di rinnovo
+
+<span class="hl">DATI UTILI</span> (se mancanti, procedi e segnala con [N.D.]):
+- Valore economico del contratto
+- Data di stipula
+- Allegati tecnici
+
+Se mancano dati critici: <span class="hl">indica quali mancano e perché impediscono l'analisi</span>.
+Se mancano dati utili: <span class="hl">procedi e indica [N.D.] nei campi corrispondenti</span>.</div>
+          </div>
+
+          <div class="gl-section">
+            <div class="gl-section-lbl">Perché funziona — il meccanismo LLM</div>
+            <div class="mechanism">
+              <div class="mech-lbl">Gerarchia esplicita delle informazioni</div>
+              <p>Il modello tratta tutti i dati mancanti allo stesso modo in assenza di istruzioni: o li ignora tutti, o cerca di inferirli tutti. <strong>Fornire una gerarchia esplicita insegna al modello a discriminare</strong> — usando una risposta conservativa (fermarsi) per i dati critici e una risposta progressiva (procedere con segnalazione) per i dati secondari. Questo calibra il comportamento in modo molto più fine di un'istruzione generica come "segnala i dati mancanti".</p>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+
+<!-- ═══════════════════════════
+     S3 — INPUT AMBIGUI
+═══════════════════════════ -->
+<div class="sect" id="s3">
+  <div class="sect-head">
+    <div class="sect-num">Linea guida 03</div>
+    <h2>Gestire input ambigui</h2>
+    <p>Un input che ammette più interpretazioni valide. Il modello sceglie sempre — la domanda è se lo fa in modo trasparente o silenzioso.</p>
+  </div>
+  <div class="wrap">
+
+    <!-- GL 03 -->
+    <div class="gl-group" style="margin-top:32px;">
+      <div class="gl-group-title">Linea guida 03</div>
+      <div class="gl-card">
+        <div class="gl-header">
+          <div class="gl-stripe"></div>
+          <div class="gl-num">03</div>
+          <div class="gl-title-wrap">
+            <div class="gl-title">Scegli tra "disambigua prima" e "procedi con l'interpretazione più probabile dichiarandola"</div>
+            <div class="gl-subtitle">Due strategie valide — la scelta dipende dal contesto e dal costo dell'interpretazione sbagliata</div>
+          </div>
+          <div class="gl-impact-wrap">
+            <div class="gl-impact-stars" style="color:var(--accent)">★★★</div>
+            <div class="gl-impact-lbl">Impatto</div>
+          </div>
+        </div>
+        <div class="gl-body">
+
+          <div class="gl-section">
+            <div class="gl-section-lbl">La linea guida</div>
+            <p>Di fronte a un input ambiguo, il modello ha due opzioni non esclusive: <strong>chiedere chiarimenti prima di procedere</strong>, oppure <strong>dichiarare l'interpretazione scelta e procedere</strong>. La prima è preferibile quando il costo di un'interpretazione sbagliata è alto; la seconda quando la latenza di un turno aggiuntivo di dialogo è inaccettabile o quando l'interpretazione è sufficientemente probabile da giustificare il rischio.</p>
+          </div>
+
+          <div class="gl-section">
+            <div class="gl-section-lbl">Strategia 1 — Disambiguare prima (contesti interattivi)</div>
+            <div class="compare-grid">
+              <div>
+                <div class="pex-lbl bad">❌ Procede silenziosamente</div>
+                <div class="prompt-box bad">Se l'input è ambiguo, scegli l'interpretazione più ragionevole e rispondi.</div>
+              </div>
+              <div>
+                <div class="pex-lbl good">✓ Disambigua con una domanda mirata</div>
+                <div class="prompt-box good">Se l'input ammette più interpretazioni rilevanti, <span class="hl">prima di rispondere fai una sola domanda</span> che identifichi l'interpretazione corretta. Scegli la domanda che risolve l'ambiguità principale, non tutte le ambiguità secondarie.</div>
+              </div>
+            </div>
+          </div>
+
+          <div class="gl-section">
+            <div class="gl-section-lbl">Strategia 2 — Dichiara e procedi (pipeline, batch processing)</div>
+            <div class="prompt-box good" style="margin-top:12px;">Se l'input è ambiguo, <span class="hl">dichiara esplicitamente l'interpretazione che stai usando</span> prima di rispondere: "Interpreto questa richiesta come [X]. Se intendevi [Y], la risposta sarebbe diversa."
+
+Poi procedi con l'interpretazione dichiarata.
+<span class="hl">Non scegliere silenziosamente</span>: rendi sempre visibile quale interpretazione hai scelto e perché.</div>
+          </div>
+
+          <div class="gl-section">
+            <div class="gl-section-lbl">Come scegliere tra le due strategie</div>
+            <div class="spectrum">
+              <div class="spectrum-row head col3">
+                <div class="s-cell">Fattore</div>
+                <div class="s-cell">Disambigua prima</div>
+                <div class="s-cell">Dichiara e procedi</div>
+              </div>
+              <div class="spectrum-row col3">
+                <div class="s-cell lbl">Costo errore interpretazione</div>
+                <div class="s-cell hi">Alto — output sbagliato causa danni</div>
+                <div class="s-cell">Basso — l'utente può correggere facilmente</div>
+              </div>
+              <div class="spectrum-row col3">
+                <div class="s-cell lbl">Contesto</div>
+                <div class="s-cell hi">Interattivo (chatbot, assistente)</div>
+                <div class="s-cell">Pipeline, batch, automazione</div>
+              </div>
+              <div class="spectrum-row col3">
+                <div class="s-cell lbl">Frequenza dell'ambiguità</div>
+                <div class="s-cell">Rara — vale la pena fermarsi</div>
+                <div class="s-cell hi">Frequente — il turno extra è costoso</div>
+              </div>
+              <div class="spectrum-row col3">
+                <div class="s-cell lbl">Interpretazione più probabile</div>
+                <div class="s-cell">Non ovvia — più interpretazioni plausibili</div>
+                <div class="s-cell hi">Abbastanza ovvia — un'interpretazione domina</div>
+              </div>
+            </div>
+          </div>
+
+          <div class="gl-section">
+            <div class="gl-section-lbl">Perché funziona — il meccanismo LLM</div>
+            <div class="mechanism">
+              <div class="mech-lbl">Scelta implicita vs. scelta trasparente</div>
+              <p>Il modello sceglie sempre un'interpretazione — non può sospendere il giudizio. Senza istruzioni, questa scelta è implicita e invisibile all'utente. <strong>L'istruzione "dichiara l'interpretazione" forza il modello a esternalizzare questa scelta</strong>, rendendola verificabile. È la differenza tra un processo opaco e un processo trasparente: il risultato può essere lo stesso, ma la trasparenza permette all'utente di intervenire se la scelta è sbagliata.</p>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+
+<!-- ═══════════════════════════
+     S4 — FUORI SCOPE
+═══════════════════════════ -->
+<div class="sect" id="s4">
+  <div class="sect-head">
+    <div class="sect-num">Linea guida 04</div>
+    <h2>Gestire richieste fuori scope</h2>
+    <p>Ogni agente specializzato riceverà richieste che vanno oltre il suo perimetro. Come si comporta in quei momenti definisce la sua affidabilità percepita quanto come si comporta nei casi normali.</p>
+  </div>
+  <div class="wrap">
+
+    <!-- GL 04 -->
+    <div class="gl-group" style="margin-top:32px;">
+      <div class="gl-group-title">Linea guida 04</div>
+      <div class="gl-card">
+        <div class="gl-header">
+          <div class="gl-stripe"></div>
+          <div class="gl-num">04</div>
+          <div class="gl-title-wrap">
+            <div class="gl-title">Progetta la risposta fuori-scope: rifiuta, reindirizza o declina con indicazione</div>
+            <div class="gl-subtitle">Non è sufficiente dire "non rispondere fuori scope" — bisogna definire cosa fare invece</div>
+          </div>
+          <div class="gl-impact-wrap">
+            <div class="gl-impact-stars" style="color:var(--accent)">★★★</div>
+            <div class="gl-impact-lbl">Impatto</div>
+          </div>
+        </div>
+        <div class="gl-body">
+
+          <div class="gl-section">
+            <div class="gl-section-lbl">La linea guida</div>
+            <p>Definire i confini del ruolo (GL04 del cluster A) è necessario ma non sufficiente. Bisogna anche definire <strong>come il modello si comporta concretamente</strong> quando riceve una richiesta fuori scope. Esistono tre pattern principali — la scelta dipende dal tipo di deployment e dalla relazione con l'utente.</p>
+          </div>
+
+          <div class="gl-section">
+            <div class="gl-section-lbl">I tre pattern di risposta fuori-scope</div>
+            <div class="failure-grid" style="margin-top:12px;">
+
+              <div class="failure-card">
+                <div class="fc-head">
+                  <div class="fc-icon">1</div>
+                  <div class="fc-title">Declina con indicazione</div>
+                </div>
+                <div class="fc-body">
+                  <div class="fc-what">Il più utile per l'utente: spiega perché non puoi rispondere e indica <strong>dove può trovare la risposta giusta</strong>. Non lasciare l'utente a mani vuote.</div>
+                  <div class="fc-prompt"><strong>Istruzione:</strong> "Se la richiesta è fuori dal tuo perimetro, dillo chiaramente e indica il tipo di risorsa o professionista a cui rivolgersi. Non rispondere comunque."</div>
+                </div>
+              </div>
+
+              <div class="failure-card">
+                <div class="fc-head">
+                  <div class="fc-icon">2</div>
+                  <div class="fc-title">Reindirizza al canale corretto</div>
+                </div>
+                <div class="fc-body">
+                  <div class="fc-what">In sistemi con più agenti o più canali: invece di rifiutare, indica <strong>a quale agente o sezione rivolgersi</strong>. Mantiene l'esperienza fluida.</div>
+                  <div class="fc-prompt"><strong>Istruzione:</strong> "Per richieste su [topic X], l'utente deve essere indirizzato a [canale/agente Y]. Indica esplicitamente questo reindirizzamento."</div>
+                </div>
+              </div>
+
+              <div class="failure-card">
+                <div class="fc-head">
+                  <div class="fc-icon">3</div>
+                  <div class="fc-title">Risposta parziale con disclaimer</div>
+                </div>
+                <div class="fc-body">
+                  <div class="fc-what">Quando la richiesta è parzialmente in scope: risponde alla parte in scope e <strong>segnala esplicitamente cosa esula dal perimetro</strong>. Utile per richieste miste.</div>
+                  <div class="fc-prompt"><strong>Istruzione:</strong> "Se la richiesta è parzialmente in scope, rispondi alla parte in perimetro e indica esplicitamente quale parte non puoi trattare."</div>
+                </div>
+              </div>
+
+            </div>
+          </div>
+
+          <div class="gl-section">
+            <div class="gl-section-lbl">Esempio — agente legale con scope definito</div>
+            <div class="compare-grid">
+              <div>
+                <div class="pex-lbl bad">❌ Risponde comunque (ignora i confini)</div>
+                <div class="prompt-box bad">Utente: "Ho un problema di lavoro con il mio datore."
+
+Agente (senza istruzioni fuori-scope): "Per le questioni di diritto del lavoro, devi considerare le seguenti opzioni..."
+[risponde su un topic fuori dal suo perimetro di diritto societario]</div>
+              </div>
+              <div>
+                <div class="pex-lbl good">✓ Declina con indicazione utile</div>
+                <div class="prompt-box good">Utente: "Ho un problema di lavoro con il mio datore."
+
+Agente (con istruzione fuori-scope): "Il diritto del lavoro è fuori dal mio perimetro di specializzazione, che copre diritto societario e contrattualistica commerciale. Per questa questione ti consiglio di consultare un avvocato specializzato in diritto del lavoro o i servizi di consulenza dei sindacati di categoria."</div>
+              </div>
+            </div>
+          </div>
+
+          <div class="gl-section">
+            <div class="gl-section-lbl">Perché funziona — il meccanismo LLM</div>
+            <div class="mechanism">
+              <div class="mech-lbl">Il bias verso la risposta utile</div>
+              <p>I modelli hanno un forte bias verso l'utilità — tendono a rispondere anche quando non dovrebbero, perché "rispondere" è il comportamento rinforzato nel training. Senza istruzioni esplicite sui confini, questo bias domina e il modello risponde fuori scope. <strong>L'istruzione esplicita non elimina il bias — lo sovrascrive con un comportamento alternativo ugualmente "utile" nel contesto</strong>: un rifiuto ben motivato con un'indicazione su dove andare è utile quanto (o più di) una risposta sbagliata.</p>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+
+<!-- ═══════════════════════════
+     S5 — FALLBACK E FAIL
+═══════════════════════════ -->
+<div class="sect" id="s5">
+  <div class="sect-head">
+    <div class="sect-num">Linee guida 05 – 06</div>
+    <h2>Fallback e failure mode espliciti</h2>
+    <p>Cosa fare quando tutto il resto non funziona — e come progettare i failure mode prima che si manifestino in produzione.</p>
+  </div>
+  <div class="wrap">
+
+    <!-- GL 05 -->
+    <div class="gl-group" style="margin-top:32px;">
+      <div class="gl-group-title">Linea guida 05</div>
+      <div class="gl-card">
+        <div class="gl-header">
+          <div class="gl-stripe"></div>
+          <div class="gl-num">05</div>
+          <div class="gl-title-wrap">
+            <div class="gl-title">Definisci un fallback generale per tutto ciò che non hai previsto esplicitamente</div>
+            <div class="gl-subtitle">Non puoi anticipare ogni caso limite — ma puoi definire il comportamento di default per tutti quelli non previsti</div>
+          </div>
+          <div class="gl-impact-wrap">
+            <div class="gl-impact-stars" style="color:var(--accent)">★★★</div>
+            <div class="gl-impact-lbl">Impatto</div>
+          </div>
+        </div>
+        <div class="gl-body">
+
+          <div class="gl-section">
+            <div class="gl-section-lbl">La linea guida</div>
+            <p>Per quanto dettagliato sia il prompt, ci sarà sempre qualcosa che non hai previsto. Il fallback generale è l'istruzione di "last resort" che copre tutti i casi non esplicitamente gestiti. <strong>Un buon fallback è conservativo, trasparente e orientato all'utente</strong>: preferisce segnalare il problema piuttosto che produrre un output potenzialmente sbagliato.</p>
+          </div>
+
+          <div class="gl-section">
+            <div class="gl-section-lbl">Il fallback generale — struttura e varianti</div>
+            <div style="margin-top:12px;">
+              <div class="pex-lbl neutral">Versione conservativa (per task critici)</div>
+              <div class="prompt-box good" style="margin-top:6px;">Se ti trovi in una situazione non coperta da queste istruzioni, <span class="hl">non improvvisare</span>: segnala esplicitamente che non sei sicuro di come procedere in questo caso specifico e chiedi indicazioni. È sempre meglio dichiarare incertezza che produrre un output non affidabile.</div>
+            </div>
+
+            <div style="margin-top:12px;">
+              <div class="pex-lbl neutral">Versione bilanciata (per task a basso rischio)</div>
+              <div class="prompt-box good" style="margin-top:6px;">Se ti trovi in un caso non esplicitamente coperto da queste istruzioni, <span class="hl">usa il buon senso</span> in coerenza con il tuo ruolo e il tuo obiettivo. Se ritieni di non poter gestire il caso correttamente, dillo. <span class="hl">In caso di dubbio, sbaglia per eccesso di cautela</span> piuttosto che per eccesso di proattività.</div>
+            </div>
+
+            <div style="margin-top:12px;">
+              <div class="pex-lbl neutral">Versione per pipeline automatizzate</div>
+              <div class="prompt-box good" style="margin-top:6px;">Per qualsiasi input che non rientra nei casi gestiti da queste istruzioni, <span class="hl">restituisci un oggetto JSON di errore</span> nel formato:
+{"error": true, "reason": "[descrizione del problema]", "input_received": "[sintesi dell'input]"}</div>
+            </div>
+          </div>
+
+          <div class="gl-section">
+            <div class="gl-section-lbl">Perché funziona — il meccanismo LLM</div>
+            <div class="mechanism">
+              <div class="mech-lbl">Ancoraggio del comportamento di default</div>
+              <p>In assenza di istruzioni specifiche, il modello usa il suo comportamento di default: risponde in modo utile, completo e assertivo. Il fallback esplicito <strong>rimpiazza questo default con uno specifico per il contesto</strong>: più cauto, più trasparente sui propri limiti. Non cambia il modello — cambia il punto di riferimento che usa quando non ha istruzioni più specifiche da seguire.</p>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </div>
+
+    <!-- GL 06 -->
+    <div class="gl-group" style="margin-top:8px;">
+      <div class="gl-group-title">Linea guida 06</div>
+      <div class="gl-card">
+        <div class="gl-header">
+          <div class="gl-stripe"></div>
+          <div class="gl-num">06</div>
+          <div class="gl-title-wrap">
+            <div class="gl-title">Costruisci la suite di test sui casi limite, non solo sui casi tipici</div>
+            <div class="gl-subtitle">Il test più importante è quello che il prompt fallisce — non quello che passa</div>
+          </div>
+          <div class="gl-impact-wrap">
+            <div class="gl-impact-stars" style="color:var(--accent)">★★★</div>
+            <div class="gl-impact-lbl">Impatto metodologico</div>
+          </div>
+        </div>
+        <div class="gl-body">
+
+          <div class="gl-section">
+            <div class="gl-section-lbl">La linea guida</div>
+            <p>Le istruzioni del cluster F si possono scrivere in astratto, ma la loro efficacia si misura solo testando casi limite reali. <strong>La suite di test per la robustezza deve essere costruita intenzionalmente sui casi difficili</strong>, non solo sui casi tipici. Ogni failure mode scoperto in produzione va aggiunto alla suite e gestito nel prompt.</p>
+          </div>
+
+          <div class="gl-section">
+            <div class="gl-section-lbl">Categorie di casi limite da includere nella suite</div>
+            <div class="dtree">
+              <div class="dt-head">Tipi di input anomali da testare sistematicamente</div>
+              <div class="dt-row head-row">
+                <div class="dt-num">#</div>
+                <div class="dt-question">Categoria</div>
+                <div class="dt-answer">Esempi concreti</div>
+              </div>
+              <div class="dt-row">
+                <div class="dt-num">1</div>
+                <div class="dt-question">Dati critici mancanti</div>
+                <div class="dt-answer">Document vuoto, campo obbligatorio assente, allegato corrotto, testo troncato a metà</div>
+              </div>
+              <div class="dt-row">
+                <div class="dt-num">2</div>
+                <div class="dt-question">Dati in formato inatteso</div>
+                <div class="dt-answer">PDF invece di testo, lingua diversa da quella attesa, formato data non standard, numeri con separatori diversi</div>
+              </div>
+              <div class="dt-row">
+                <div class="dt-num">3</div>
+                <div class="dt-question">Input ambigui ad alta frequenza</div>
+                <div class="dt-answer">Richieste che ammettono 2+ interpretazioni plausibili, domande con pronome referente ambiguo, task parzialmente in scope</div>
+              </div>
+              <div class="dt-row">
+                <div class="dt-num">4</div>
+                <div class="dt-question">Richieste ai confini dello scope</div>
+                <div class="dt-answer">Topic adiacente allo scope ma non esplicitamente incluso, richieste miste (in scope + fuori scope), domande generali sull'agente stesso</div>
+              </div>
+              <div class="dt-row">
+                <div class="dt-num">5</div>
+                <div class="dt-question">Input contraddittori</div>
+                <div class="dt-answer">Dati che si contraddicono nello stesso documento, istruzione dell'utente che contraddice le istruzioni del sistema</div>
+              </div>
+              <div class="dt-row">
+                <div class="dt-num">6</div>
+                <div class="dt-question">Input estremi</div>
+                <div class="dt-answer">Input molto corto (1 parola), input molto lungo (oltre il context window), input completamente irrilevante</div>
+              </div>
+            </div>
+          </div>
+
+          <div class="gl-section">
+            <div class="gl-section-lbl">Il ciclo di miglioramento della robustezza</div>
+            <div class="prompt-box neutral" style="margin-top:12px;">1. Scrivi il prompt con le istruzioni F che riesci ad anticipare
+2. Testa su suite di casi limite
+3. Identifica i failure mode (output sbagliati o non previsti)
+4. Aggiungi istruzione specifica per quel failure mode
+5. Aggiungi quel caso alla suite di test
+6. Ripeti — la suite cresce con ogni deployment in produzione</div>
+          </div>
+
+          <div class="gl-section">
+            <div class="gl-section-lbl">Perché funziona — il meccanismo LLM</div>
+            <div class="mechanism">
+              <div class="mech-lbl">Robustezza come proprietà emergente dal test sistematico</div>
+              <p>Non esiste un prompt robusto "a priori" — la robustezza è una proprietà che emerge dal ciclo di test e iterazione. <strong>Ogni failure mode scoperto e corretto riduce lo spazio dei comportamenti inattesi</strong>. Il prompt che ha attraversato 50 casi limite reali è strutturalmente più robusto di uno scritto da zero con la stessa cura, perché incorpora conoscenza empirica sui gap del modello nel contesto specifico.</p>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </div>
+
+    <div class="key-point" style="margin-top:32px;">
+      <div class="kp-label">Il principio del cluster F — sintesi</div>
+      <div class="kp-text">La robustezza non si progetta in astratto. Si costruisce testando i casi che non funzionano.</div>
+      <div class="kp-sub">Il cluster F è l'unico che non si può completare prima del deployment: si evolve con l'uso. Le linee guida di questo report forniscono la struttura di base (gestione dati mancanti, ambiguità, fuori scope, fallback), ma la vera robustezza emerge dal ciclo di test in produzione. La differenza tra un agente che regge sei mesi in produzione e uno che accumula eccezioni non gestite è quasi sempre qui: nel fatto che il suo prompt ha incorporato sistematicamente le lezioni dei failure mode reali.</div>
+    </div>
+
+  </div>
+</div>
+
+
+<!-- ═══════════════════════════
+     S6 — TEMPLATE
+═══════════════════════════ -->
+<div class="sect" id="s6">
+  <div class="sect-head">
+    <div class="sect-num">Sezione pratica</div>
+    <h2>Template e checklist del Cluster F</h2>
+    <p>Template per la sezione robustezza del system prompt, con esempio compilato sull'agente contrattuale e checklist di verifica.</p>
+  </div>
+  <div class="wrap">
+
+    <div class="template-box" style="margin-top:28px;"><span class="t-comment"># ── ROBUSTEZZA E CASI LIMITE (Cluster F) ─────────────────────</span>
+<span class="t-comment"># Aggiungi dopo i Cluster A–E</span>
+
+<span class="t-comment"># 1. DATI MANCANTI (GL 01+02)</span>
+<span class="t-hl">Dati critici</span><span class="t-val"> (senza questi non procedere):</span>
+<span class="t-bracket">- [dato critico 1]
+- [dato critico 2]</span>
+<span class="t-val">Se mancano: </span><span class="t-bracket">[comportamento — es: "non produrre output, indica quale dato manca"]</span>
+
+<span class="t-hl">Dati utili</span><span class="t-val"> (la loro assenza non blocca, ma va segnalata):</span>
+<span class="t-bracket">- [dato utile 1]</span>
+<span class="t-val">Se mancano: </span><span class="t-bracket">[comportamento — es: "procedi e indica [N.D.] nel campo corrispondente"]</span>
+
+<span class="t-comment"># 2. INPUT AMBIGUI (GL 03)</span>
+<span class="t-val">Se l'input ammette più interpretazioni:</span>
+<span class="t-bracket">[Scegli uno:]</span>
+<span class="t-comment">#    "Fai una sola domanda per disambiguare prima di procedere."</span>
+<span class="t-comment">#    "Dichiara l'interpretazione che stai usando, poi procedi."</span>
+<span class="t-comment">#    "Procedi con l'interpretazione più probabile e segnalala."</span>
+
+<span class="t-comment"># 3. RICHIESTE FUORI SCOPE (GL 04)</span>
+<span class="t-val">Se la richiesta è fuori dal tuo perimetro:</span>
+<span class="t-bracket">[Scegli uno:]</span>
+<span class="t-comment">#    "Dillo chiaramente e indica a chi/dove rivolgersi."</span>
+<span class="t-comment">#    "Rispondi alla parte in scope e segnala cosa non puoi trattare."</span>
+<span class="t-comment">#    "Reindirizza a [canale/agente specifico]."</span>
+
+<span class="t-comment"># 4. FALLBACK GENERALE (GL 05)</span>
+<span class="t-val">Per qualsiasi situazione non coperta da queste istruzioni:</span>
+<span class="t-bracket">[Comportamento di default conservativo specifico per il tuo contesto]</span>
+
+<span class="t-comment"># ── FINE SEZIONE ROBUSTEZZA — prosegue con Cluster G (solo per agenti agentic) ──</span></div>
+
+    <div class="prose" style="margin-top:36px;">
+      <p style="font-size:15px; font-weight:500; color:var(--ink2);">Esempio compilato — agente di analisi contrattuale (prompt completo A–F)</p>
+    </div>
+
+    <div class="template-box" style="margin-top:12px;"><span class="t-comment"># ── ROBUSTEZZA E CASI LIMITE ─────────────────────────────────</span>
+
+<span class="t-hl">Dati critici</span><span class="t-val"> — se mancano, non produrre la scheda di rischio:</span>
+<span class="t-str">- Testo leggibile del contratto (non accettare immagini non OCR o file corrotti)
+- Identificazione delle parti (almeno una delle due parti deve essere identificata)
+Se mancano: indica quale dato manca e perché impedisce l'analisi. Non produrre una scheda parziale.</span>
+
+<span class="t-hl">Dati utili</span><span class="t-val"> — se mancano, procedi e segnala con [N.D.]:</span>
+<span class="t-str">- Valore economico del contratto
+- Data di stipula o di efficacia
+- Allegati tecnici citati nel corpo</span>
+
+<span class="t-hl">Input ambigui</span><span class="t-val">:</span>
+<span class="t-str">Se il contratto è in lingua straniera: segnalalo all'utente e chiedi conferma prima di procedere con l'analisi.
+Se la richiesta dell'utente è ambigua (es: "analizza le clausole importanti"), dichiara quali criteri usi per definire "importante" prima di procedere.</span>
+
+<span class="t-hl">Fuori scope</span><span class="t-val">:</span>
+<span class="t-str">Se il documento allegato non è un contratto commerciale (es: statuto, verbale, CV), dillo esplicitamente e chiedi di caricare il documento corretto.
+Se la richiesta riguarda valutazioni fiscali o giuslavoristiche, indica che esulano dal tuo perimetro e suggerisci il professionista appropriato.</span>
+
+<span class="t-hl">Fallback generale</span><span class="t-val">:</span>
+<span class="t-str">Se ti trovi in un caso non previsto da queste istruzioni, non improvvisare: segnala la situazione all'utente con un messaggio breve che descrive il problema incontrato. È sempre preferibile un'ammissione esplicita di incertezza a un output non affidabile.</span></div>
+
+    <div class="prose" style="margin-top:36px;">
+      <p style="font-size:15px; font-weight:500; color:var(--ink2);">Checklist di verifica — Cluster F completato?</p>
+    </div>
+
+    <div class="checklist" style="margin-top:12px;">
+      <div class="check-item">
+        <div class="check-icon" style="background:var(--accent)">✓</div>
+        <div>Ho identificato i <strong>dati critici</strong> del task e definito cosa fare se mancano (fermarsi e segnalare).</div>
+      </div>
+      <div class="check-item">
+        <div class="check-icon" style="background:var(--accent)">✓</div>
+        <div>Ho identificato i <strong>dati utili non critici</strong> e definito come segnalarli senza bloccare l'output ([N.D.] o equivalente).</div>
+      </div>
+      <div class="check-item">
+        <div class="check-icon" style="background:var(--accent)">✓</div>
+        <div>Ho scelto una <strong>strategia per gli input ambigui</strong>: disambigua prima oppure dichiara e procedi — in base al contesto.</div>
+      </div>
+      <div class="check-item">
+        <div class="check-icon" style="background:var(--accent)">✓</div>
+        <div>Ho definito il <strong>comportamento fuori-scope</strong> con un'azione concreta (declina + indica / reindirizza / risposta parziale).</div>
+      </div>
+      <div class="check-item">
+        <div class="check-icon" style="background:var(--accent)">✓</div>
+        <div>Ho scritto un <strong>fallback generale</strong> per i casi non previsti — conservativo e trasparente.</div>
+      </div>
+      <div class="check-item">
+        <div class="check-icon" style="background:var(--accent)">✓</div>
+        <div>Ho costruito o pianificato una <strong>suite di test sui casi limite</strong> — almeno dati mancanti, input ambigui e richieste fuori scope.</div>
+      </div>
+    </div>
+
+    <div class="insight" style="margin-top:28px; border-color:#8b5c3a;">
+      <div class="insight-lbl" style="color:#8b5c3a;">Prossimo — Cluster G</div>
+      <p>Con A–F il prompt è completo per la grande maggioranza dei task. Il prossimo report (Cluster G) affronta il caso specifico degli <strong>agenti agentic</strong>: come cambia il prompt quando il modello opera in loop autonomo con strumenti — istruzioni sull'uso dei tool, criteri di terminazione, gestione degli errori nel loop, e i guardrail che prevengono azioni irreversibili.</p>
+    </div>
+
+  </div>
+</div>
+
+
+<!-- FOOTER -->
+<div class="footer">
+  <span>Serie Agenti AI — Leva 01 · Prompt Engineering · Cluster F · Robustezza e Casi Limite</span>
+  <span>Marzo 2026</span>
+</div>
+
+<script>
+function show(n) {
+  document.querySelectorAll('.sect').forEach(s => s.classList.remove('active'));
+  document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('s'+n).classList.add('active');
+  document.querySelectorAll('.nav-btn')[n-1].classList.add('active');
+  window.scrollTo({top:0, behavior:'smooth'});
+}
+</script>
+</body>
+</html>

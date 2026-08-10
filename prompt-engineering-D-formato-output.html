@@ -1,0 +1,1205 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Prompt Engineering — D · Formato dell'Output</title>
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Outfit:wght@200;300;400;500;600;700;800;900&family=IBM+Plex+Mono:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg:     #faf8f5;
+  --bg2:    #f2efe9;
+  --bg3:    #e9e5dc;
+  --ink:    #1b1915;
+  --ink2:   #2e2b25;
+  --ink3:   #6d685c;
+  --ink4:   #a19c8f;
+  --border: #d9d4c8;
+  --border2:#cac4b6;
+
+  --accent:  #b07d24;
+  --accent2: #7d5618;
+  --accent-light: #fdf6e8;
+}
+
+* { margin:0; padding:0; box-sizing:border-box; }
+html { scroll-behavior:smooth; }
+body {
+  background:var(--bg); color:var(--ink);
+  font-family:'Outfit', sans-serif; font-weight:300;
+  font-size:14px; line-height:1.75;
+}
+
+/* ── HEADER ── */
+.masthead {
+  background:var(--ink); color:rgba(255,255,255,0.9);
+  padding:60px 56px 52px; position:relative; overflow:hidden;
+}
+.masthead::before {
+  content:''; position:absolute; inset:0;
+  background:
+    repeating-linear-gradient(90deg,rgba(255,255,255,.012) 0,rgba(255,255,255,.012) 1px,transparent 1px,transparent 64px),
+    repeating-linear-gradient(0deg,rgba(255,255,255,.012) 0,rgba(255,255,255,.012) 1px,transparent 1px,transparent 64px);
+  pointer-events:none;
+}
+.masthead::after {
+  content:'D'; position:absolute; right:44px; bottom:-28px;
+  font-family:'Instrument Serif',serif; font-size:280px; line-height:1;
+  color:rgba(255,255,255,.025); pointer-events:none;
+}
+.mh-eye {
+  font-family:'IBM Plex Mono',monospace; font-size:10px;
+  letter-spacing:3px; text-transform:uppercase;
+  color:rgba(255,255,255,.25); margin-bottom:18px; position:relative;
+}
+.mh-cluster {
+  display:inline-block; font-family:'IBM Plex Mono',monospace;
+  font-size:10px; letter-spacing:2px; text-transform:uppercase;
+  padding:4px 12px; border:1px solid var(--accent);
+  color:var(--accent); margin-bottom:20px; position:relative;
+}
+.masthead h1 {
+  font-family:'Instrument Serif',serif; font-weight:400;
+  font-size:clamp(30px,4.5vw,54px); line-height:1.08;
+  letter-spacing:-1px; max-width:700px; position:relative;
+}
+.mh-sub {
+  margin-top:20px; font-size:15px; font-weight:300;
+  color:rgba(255,255,255,.38); max-width:660px;
+  line-height:1.7; position:relative;
+}
+.mh-meta {
+  margin-top:32px; display:flex; gap:32px; flex-wrap:wrap; position:relative;
+}
+.mh-stat { display:flex; flex-direction:column; gap:4px; }
+.mh-stat-val {
+  font-family:'IBM Plex Mono',monospace; font-size:22px; font-weight:500;
+  color:rgba(255,255,255,.85);
+}
+.mh-stat-lbl {
+  font-size:10px; letter-spacing:2px; text-transform:uppercase;
+  color:rgba(255,255,255,.25);
+}
+
+/* ── NAV ── */
+.nav {
+  background:var(--ink2); position:sticky; top:0; z-index:100;
+  display:flex; overflow-x:auto;
+  border-bottom:1px solid rgba(255,255,255,.06);
+}
+.nav-btn {
+  flex:1; min-width:120px; padding:13px 12px;
+  border:none; background:transparent; cursor:pointer;
+  font-family:'Outfit',sans-serif; font-size:10.5px; font-weight:600;
+  text-transform:uppercase; letter-spacing:.4px;
+  color:rgba(255,255,255,.3);
+  border-right:1px solid rgba(255,255,255,.06);
+  transition:all .2s; white-space:nowrap;
+}
+.nav-btn:last-child { border-right:none; }
+.nav-btn:hover { color:rgba(255,255,255,.6); }
+.nav-btn.active { color:#fff; background:rgba(255,255,255,.05); }
+
+/* ── SECTIONS ── */
+.sect { display:none; }
+.sect.active { display:block; animation:fadeIn .3s ease; }
+@keyframes fadeIn { from{opacity:0;transform:translateY(6px)} to{opacity:1;transform:translateY(0)} }
+
+.sect-head { padding:48px 56px 36px; border-bottom:1px solid var(--border); }
+.sect-num {
+  font-family:'IBM Plex Mono',monospace; font-size:10px;
+  letter-spacing:3px; text-transform:uppercase; color:var(--ink4); margin-bottom:10px;
+}
+.sect-head h2 {
+  font-family:'Instrument Serif',serif; font-weight:400;
+  font-size:clamp(26px,3.5vw,42px); line-height:1.1;
+  letter-spacing:-.5px; max-width:640px; margin-bottom:14px;
+}
+.sect-head p { color:var(--ink3); max-width:700px; font-size:14.5px; }
+.wrap { padding:0 56px 64px; }
+
+/* ── PROSE ── */
+.prose { max-width:760px; }
+.prose p { font-size:14.5px; color:var(--ink3); line-height:1.85; margin-bottom:16px; }
+.prose p strong { color:var(--ink2); font-weight:500; }
+.prose p em { font-style:italic; color:var(--ink2); }
+
+/* ── GUIDELINE CARD ── */
+.gl-group { margin-top:40px; }
+.gl-group-title {
+  font-family:'IBM Plex Mono',monospace; font-size:9px;
+  letter-spacing:3px; text-transform:uppercase;
+  color:var(--ink4); padding-bottom:10px; border-bottom:1px solid var(--border);
+}
+.gl-card { border:1px solid var(--border2); border-top:none; background:var(--bg); }
+.gl-header {
+  display:grid; grid-template-columns:5px 52px 1fr auto;
+  align-items:stretch; border-bottom:1px solid var(--border);
+}
+.gl-stripe { background:var(--accent); }
+.gl-num {
+  font-family:'Outfit',sans-serif; font-weight:800; font-size:20px; color:var(--bg3);
+  display:flex; align-items:center; justify-content:center;
+  border-right:1px solid var(--border);
+}
+.gl-title-wrap { padding:16px 20px; }
+.gl-title { font-family:'Instrument Serif',serif; font-size:20px; color:var(--ink2); line-height:1.2; }
+.gl-subtitle { font-size:12px; color:var(--ink4); margin-top:3px; }
+.gl-impact-wrap {
+  padding:14px 20px; display:flex; flex-direction:column;
+  align-items:flex-end; justify-content:center; gap:4px;
+}
+.gl-impact-stars { font-size:14px; }
+.gl-impact-lbl {
+  font-family:'IBM Plex Mono',monospace; font-size:8px;
+  letter-spacing:1px; text-transform:uppercase; color:var(--ink4);
+}
+.gl-body { padding:0; }
+.gl-section { padding:20px 24px; border-bottom:1px solid var(--border); }
+.gl-section:last-child { border-bottom:none; }
+.gl-section-lbl {
+  font-family:'IBM Plex Mono',monospace; font-size:9px;
+  letter-spacing:2px; text-transform:uppercase; color:var(--ink4);
+  margin-bottom:10px; padding-bottom:6px; border-bottom:1px solid var(--border);
+}
+.gl-section p { font-size:13.5px; color:var(--ink3); line-height:1.8; max-width:740px; }
+.gl-section p strong { color:var(--ink2); font-weight:500; }
+.gl-section p em { font-style:italic; color:var(--ink2); }
+
+/* ── PROMPT BOXES ── */
+.pex-lbl {
+  font-family:'IBM Plex Mono',monospace; font-size:9px;
+  letter-spacing:2px; text-transform:uppercase; margin-bottom:6px;
+}
+.pex-lbl.bad     { color:#c0392b; }
+.pex-lbl.good    { color:var(--accent); }
+.pex-lbl.neutral { color:var(--ink4); }
+
+.prompt-box {
+  font-family:'IBM Plex Mono',monospace; font-size:12px; line-height:1.75;
+  padding:14px 18px; border:1px solid; white-space:pre-wrap; word-break:break-word;
+}
+.prompt-box.bad     { border-color:#e8c5c5; background:#fdf5f5; color:#6b3030; }
+.prompt-box.good    { border-color:#e8d8a8; background:var(--accent-light); color:var(--accent2); }
+.prompt-box.neutral { border-color:var(--border2); background:var(--bg2); color:var(--ink3); }
+.prompt-box .hl     { font-weight:500; }
+.prompt-box.good .hl { color:var(--accent2); text-decoration:underline; text-decoration-color:rgba(176,125,36,.3); }
+.prompt-box.bad  .hl { color:#8b3030; }
+
+.compare-grid { display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-top:12px; }
+
+/* ── MECHANISM ── */
+.mechanism {
+  margin-top:14px; padding:14px 18px;
+  border-left:3px solid var(--accent); background:var(--accent-light);
+}
+.mech-lbl {
+  font-family:'IBM Plex Mono',monospace; font-size:9px;
+  letter-spacing:2px; text-transform:uppercase; color:var(--accent); margin-bottom:6px;
+}
+.mechanism p { font-size:13px; color:var(--ink3); line-height:1.65; }
+.mechanism p strong { color:var(--ink2); font-weight:500; }
+
+/* ── FORMAT TILES ── */
+.format-grid {
+  display:grid; grid-template-columns:repeat(auto-fill,minmax(220px,1fr));
+  gap:12px; margin-top:16px;
+}
+.format-tile {
+  border:1px solid var(--border2); background:var(--bg); overflow:hidden;
+}
+.ft-head {
+  padding:10px 14px; background:var(--bg2);
+  border-bottom:1px solid var(--border);
+  display:flex; align-items:center; gap:10px;
+}
+.ft-badge {
+  font-family:'IBM Plex Mono',monospace; font-size:8px;
+  letter-spacing:1px; text-transform:uppercase;
+  padding:2px 7px; background:var(--accent); color:#fff;
+}
+.ft-name { font-weight:600; font-size:13px; color:var(--ink2); }
+.ft-body { padding:12px 14px; }
+.ft-body p { font-size:12.5px; color:var(--ink3); line-height:1.6; }
+.ft-body p strong { color:var(--ink2); font-weight:500; }
+.ft-use {
+  margin-top:8px; padding:7px 10px;
+  background:var(--accent-light); border-left:3px solid var(--accent);
+  font-size:11.5px; color:var(--accent2); line-height:1.45;
+}
+.ft-warn {
+  margin-top:6px; padding:7px 10px;
+  background:#fdf5f5; border-left:3px solid #c0392b;
+  font-size:11.5px; color:#8b3030; line-height:1.45;
+}
+
+/* ── LIVE PREVIEW ── */
+.live-preview {
+  margin-top:16px; border:1px solid var(--border2);
+}
+.lp-head {
+  padding:10px 16px; background:var(--ink);
+  border-bottom:1px solid rgba(255,255,255,.06);
+  font-family:'IBM Plex Mono',monospace; font-size:9px;
+  letter-spacing:2px; text-transform:uppercase; color:rgba(255,255,255,.4);
+  display:flex; justify-content:space-between; align-items:center;
+}
+.lp-tag {
+  padding:2px 8px; border:1px solid;
+  font-size:8px; letter-spacing:1px;
+}
+.lp-tag.input  { border-color:rgba(255,255,255,.2); color:rgba(255,255,255,.4); }
+.lp-tag.output { border-color:var(--accent); color:var(--accent); }
+.lp-body {
+  display:grid; grid-template-columns:1fr 1fr;
+  gap:1px; background:var(--border);
+}
+.lp-col { background:var(--bg); padding:16px 18px; }
+.lp-col-lbl {
+  font-family:'IBM Plex Mono',monospace; font-size:8px;
+  letter-spacing:2px; text-transform:uppercase;
+  color:var(--ink4); margin-bottom:10px;
+}
+.lp-code {
+  font-family:'IBM Plex Mono',monospace; font-size:11.5px;
+  line-height:1.7; color:var(--ink3); white-space:pre-wrap;
+}
+.lp-code .kw  { color:var(--accent2); font-weight:500; }
+.lp-code .str { color:#3d7a45; }
+.lp-code .num { color:#2e7d9c; }
+.lp-code .dim { color:var(--ink4); }
+
+/* ── LENGTH MATRIX ── */
+.length-matrix { margin-top:16px; border:1px solid var(--border2); }
+.lm-row {
+  display:grid; grid-template-columns:180px 1fr 120px;
+  border-bottom:1px solid var(--border); font-size:12.5px;
+}
+.lm-row:last-child { border-bottom:none; }
+.lm-row.head {
+  background:var(--ink); color:rgba(255,255,255,.7);
+  font-family:'IBM Plex Mono',monospace; font-size:9px;
+  letter-spacing:1px; text-transform:uppercase;
+}
+.lm-cell {
+  padding:11px 14px; border-right:1px solid var(--border);
+  color:var(--ink3); line-height:1.5;
+}
+.lm-cell:last-child { border-right:none; }
+.lm-cell.lbl { font-weight:500; color:var(--ink2); background:var(--bg2); }
+.lm-cell.rec {
+  font-family:'IBM Plex Mono',monospace; font-size:11px;
+  color:var(--accent2); font-weight:500;
+}
+
+/* ── SPECTRUM ── */
+.spectrum { margin-top:16px; border:1px solid var(--border); overflow:hidden; }
+.spectrum-row { display:grid; border-bottom:1px solid var(--border); font-size:12.5px; }
+.spectrum-row:last-child { border-bottom:none; }
+.spectrum-row.head {
+  background:var(--ink); color:rgba(255,255,255,.7);
+  font-family:'IBM Plex Mono',monospace; font-size:9px;
+  letter-spacing:1px; text-transform:uppercase;
+}
+.spectrum-row.col3 { grid-template-columns:180px 1fr 1fr; }
+.spectrum-row.col4 { grid-template-columns:160px 1fr 1fr 1fr; }
+.s-cell {
+  padding:11px 14px; border-right:1px solid var(--border);
+  color:var(--ink3); line-height:1.5;
+}
+.s-cell:last-child { border-right:none; }
+.s-cell.lbl { font-weight:500; color:var(--ink2); background:var(--bg2); }
+.s-cell.hi  { background:var(--accent-light); color:var(--accent2); }
+.s-cell.lo  { background:#fdf5f5; color:#8b3030; }
+
+/* ── CHECKLIST ── */
+.checklist { margin-top:16px; }
+.check-item {
+  display:flex; gap:12px; align-items:flex-start;
+  padding:10px 0; border-bottom:1px solid var(--border);
+  font-size:13.5px; color:var(--ink3);
+}
+.check-item:last-child { border-bottom:none; }
+.check-icon {
+  width:20px; height:20px; border-radius:50%;
+  background:var(--accent); color:#fff;
+  display:flex; align-items:center; justify-content:center;
+  font-size:11px; font-weight:700; flex-shrink:0; margin-top:1px;
+}
+.check-item strong { color:var(--ink2); font-weight:500; }
+
+/* ── KEY POINT ── */
+.key-point {
+  margin-top:36px; padding:24px 28px;
+  border-left:4px solid var(--accent); background:var(--accent-light);
+}
+.kp-label {
+  font-family:'IBM Plex Mono',monospace; font-size:9px;
+  letter-spacing:2px; text-transform:uppercase; color:var(--accent); margin-bottom:8px;
+}
+.kp-text {
+  font-family:'Instrument Serif',serif; font-size:18px; line-height:1.45; color:var(--ink2);
+}
+.kp-sub { margin-top:10px; font-size:13px; color:var(--ink3); line-height:1.65; }
+
+/* ── INSIGHT ── */
+.insight {
+  margin:16px 0; padding:16px 20px;
+  border-left:4px solid var(--accent); background:var(--accent-light);
+}
+.insight-lbl {
+  font-family:'IBM Plex Mono',monospace; font-size:9px;
+  letter-spacing:2px; text-transform:uppercase; color:var(--accent); margin-bottom:6px;
+}
+.insight p { font-size:13.5px; color:var(--ink2); line-height:1.65; max-width:700px; }
+.insight p strong { font-weight:500; }
+
+/* ── TEMPLATE BOX ── */
+.template-box {
+  margin-top:20px; border:1px solid var(--border2); background:var(--ink);
+  padding:28px 32px; font-family:'IBM Plex Mono',monospace;
+  font-size:12.5px; line-height:1.9; color:rgba(255,255,255,.75);
+  white-space:pre-wrap; word-break:break-word;
+}
+.template-box .t-comment { color:rgba(255,255,255,.28); }
+.template-box .t-hl      { color:#f0c87a; }
+.template-box .t-bracket { color:rgba(255,255,255,.35); }
+.template-box .t-val     { color:rgba(255,255,255,.85); }
+.template-box .t-str     { color:#7dd3a8; }
+
+/* ── FOOTER ── */
+.footer {
+  padding:24px 56px; border-top:1px solid var(--border);
+  display:flex; justify-content:space-between; align-items:center;
+  font-family:'IBM Plex Mono',monospace; font-size:10px;
+  letter-spacing:1px; text-transform:uppercase; color:var(--ink4);
+}
+
+@media (max-width:700px) {
+  .masthead,.sect-head,.wrap,.footer { padding-left:20px; padding-right:20px; }
+  .compare-grid,.lp-body { grid-template-columns:1fr; }
+  .spectrum-row.col3,.spectrum-row.col4 { grid-template-columns:1fr; }
+  .gl-header { grid-template-columns:5px 40px 1fr; }
+  .gl-impact-wrap { display:none; }
+  .format-grid { grid-template-columns:1fr; }
+  .lm-row { grid-template-columns:1fr; }
+}
+</style>
+</head>
+<body>
+
+<!-- HEADER -->
+<div class="masthead">
+  <div class="mh-eye">Serie Agenti AI · Leva 01 · Prompt Engineering</div>
+  <div class="mh-cluster">Cluster D</div>
+  <h1>Formato dell'Output</h1>
+  <p class="mh-sub">Come specificare struttura, lunghezza, tono e lingua dell'output atteso. Un contenuto corretto nel formato sbagliato è spesso inutilizzabile — specialmente in pipeline automatizzate dove il formato è critico quanto la sostanza.</p>
+  <div class="mh-meta">
+    <div class="mh-stat"><div class="mh-stat-val">6</div><div class="mh-stat-lbl">Linee guida</div></div>
+    <div class="mh-stat"><div class="mh-stat-val">Critico</div><div class="mh-stat-lbl">In pipeline auto</div></div>
+    <div class="mh-stat"><div class="mh-stat-val">Medio</div><div class="mh-stat-lbl">In output per umani</div></div>
+    <div class="mh-stat"><div class="mh-stat-val">Basso</div><div class="mh-stat-lbl">Costo implementazione</div></div>
+  </div>
+</div>
+
+<!-- NAV -->
+<div class="nav">
+  <button class="nav-btn active" onclick="show(1)">Perché conta</button>
+  <button class="nav-btn" onclick="show(2)">Struttura</button>
+  <button class="nav-btn" onclick="show(3)">Formato dati</button>
+  <button class="nav-btn" onclick="show(4)">Lunghezza</button>
+  <button class="nav-btn" onclick="show(5)">Tono e lingua</button>
+  <button class="nav-btn" onclick="show(6)">Template</button>
+</div>
+
+
+<!-- ═══════════════════════════
+     S1 — PERCHÉ CONTA
+═══════════════════════════ -->
+<div class="sect active" id="s1">
+  <div class="sect-head">
+    <div class="sect-num">Introduzione</div>
+    <h2>Perché il formato è tanto importante quanto il contenuto</h2>
+    <p>Un output con contenuto perfetto nel formato sbagliato può essere completamente inutilizzabile. Il cluster D è spesso trascurato — e si paga in produzione.</p>
+  </div>
+  <div class="wrap">
+    <div class="prose" style="margin-top:28px;">
+      <p>I cluster A, B e C hanno costruito le condizioni perché il modello produca il <em>contenuto giusto</em>. Il cluster D si occupa di come quel contenuto <em>si presenta</em>: struttura, formato, lunghezza, tono, lingua. Può sembrare un dettaglio estetico — non lo è.</p>
+      <p>In un contesto di chat interattiva, un formato leggermente sbagliato è una seccatura. In un agente agentic dove l'output viene parsato da un sistema downstream, un JSON malformato o un campo mancante rompe l'intera pipeline. In un report destinato a un board, un tono sbagliato o una struttura caotica ne compromette la credibilità indipendentemente dalla qualità dell'analisi.</p>
+      <p><strong>Il formato non è separabile dal contenuto: è parte del contenuto.</strong> Un medico che scrive una diagnosi in gergo incomprensibile al paziente ha fallito il suo compito quanto uno che fa la diagnosi sbagliata. Il cluster D assicura che l'output arrivi nel modo in cui può essere usato.</p>
+    </div>
+
+    <div class="insight" style="margin-top:28px;">
+      <div class="insight-lbl">Il default del modello senza istruzioni di formato</div>
+      <p>In assenza di istruzioni specifiche, i modelli LLM tendono a produrre output <strong>più lunghi del necessario, con struttura markdown, formati misti, e lunghezza proporzionale alla complessità percepita del task</strong> — non alla lunghezza attesa dal destinatario. Questo comportamento deriva dai dati di training: la maggior parte dei testi di alta qualità visti dal modello è lunga, strutturata e dettagliata. Le istruzioni di formato correggono questa distorsione.</p>
+    </div>
+
+    <div class="key-point" style="margin-top:24px;">
+      <div class="kp-label">Il principio del cluster D</div>
+      <div class="kp-text">Specifica il formato ogni volta che l'output ha un destinatario — umano o sistema — con aspettative precise su come deve presentarsi.</div>
+      <div class="kp-sub">Per output destinati a un lettore umano in chat interattiva, le istruzioni di formato sono opzionali ma utili. Per output in pipeline automatizzate, per output inseriti in template, per output con limiti di caratteri o struttura imposta dall'interfaccia di destinazione: le istruzioni di formato sono obbligatorie. La regola pratica: se il formato sbagliato rende l'output inutilizzabile, specificarlo nel prompt è non negoziabile.</div>
+    </div>
+  </div>
+</div>
+
+
+<!-- ═══════════════════════════
+     S2 — STRUTTURA
+═══════════════════════════ -->
+<div class="sect" id="s2">
+  <div class="sect-head">
+    <div class="sect-num">Linee guida 01 – 02</div>
+    <h2>Struttura dell'output</h2>
+    <p>Come organizzare le informazioni nell'output: sezioni, ordine, gerarchia. La struttura non è solo estetica — determina come il lettore (umano o sistema) processa le informazioni.</p>
+  </div>
+  <div class="wrap">
+
+    <!-- GL 01 -->
+    <div class="gl-group" style="margin-top:32px;">
+      <div class="gl-group-title">Linea guida 01</div>
+      <div class="gl-card">
+        <div class="gl-header">
+          <div class="gl-stripe"></div>
+          <div class="gl-num">01</div>
+          <div class="gl-title-wrap">
+            <div class="gl-title">Specifica la struttura quando l'output ha più parti distinte</div>
+            <div class="gl-subtitle">L'ordine e la gerarchia delle informazioni cambiano come l'output viene usato</div>
+          </div>
+          <div class="gl-impact-wrap">
+            <div class="gl-impact-stars" style="color:var(--accent)">★★★</div>
+            <div class="gl-impact-lbl">Impatto</div>
+          </div>
+        </div>
+        <div class="gl-body">
+
+          <div class="gl-section">
+            <div class="gl-section-lbl">La linea guida</div>
+            <p>Quando l'output deve contenere più componenti distinte — riassunto + dettaglio, analisi + raccomandazione, problema + soluzione — specificare esplicitamente l'ordine e la struttura garantisce coerenza tra le invocazioni e facilita l'uso dell'output a valle. <strong>Senza struttura esplicita il modello sceglie l'organizzazione che gli sembra più naturale</strong> — che varia da invocazione a invocazione e raramente corrisponde esattamente a ciò che serve.</p>
+          </div>
+
+          <div class="gl-section">
+            <div class="gl-section-lbl">Come specificare la struttura</div>
+            <div class="compare-grid">
+              <div>
+                <div class="pex-lbl bad">❌ Struttura implicita</div>
+                <div class="prompt-box bad">Analizza il ticket di supporto e suggerisci una soluzione.</div>
+              </div>
+              <div>
+                <div class="pex-lbl good">✓ Struttura esplicita con sezioni</div>
+                <div class="prompt-box good">Analizza il ticket di supporto usando <span class="hl">questa struttura</span>:
+
+<span class="hl">PROBLEMA:</span> descrizione in 1 frase del problema segnalato
+<span class="hl">CATEGORIA:</span> [Bug / Domanda / Feature request / Altro]
+<span class="hl">PRIORITÀ:</span> [Alta / Media / Bassa] + motivazione in 1 riga
+<span class="hl">SOLUZIONE SUGGERITA:</span> passi concreti (lista puntata, max 4)
+<span class="hl">ESCALATION:</span> [Sì / No] — se Sì, a quale team e perché</div>
+              </div>
+            </div>
+
+            <div style="margin-top:14px;">
+              <div class="pex-lbl neutral">Struttura con sezione riassuntiva in testa (executive summary pattern)</div>
+              <div class="prompt-box good" style="margin-top:6px;">Struttura la risposta così:
+<span class="hl">SINTESI</span> (max 3 righe): la conclusione principale e l'azione raccomandata
+<span class="hl">ANALISI</span>: il ragionamento dettagliato che supporta la sintesi
+<span class="hl">LIMITAZIONI</span>: cosa non hai potuto valutare e perché
+
+<span class="hl">Metti sempre la SINTESI per prima</span>, anche se viene prodotta dopo l'analisi.</div>
+            </div>
+          </div>
+
+          <div class="gl-section">
+            <div class="gl-section-lbl">Struttura per output destinati a sistemi vs. output per umani</div>
+            <div class="spectrum">
+              <div class="spectrum-row head col3">
+                <div class="s-cell">Destinatario</div>
+                <div class="s-cell">Struttura consigliata</div>
+                <div class="s-cell">Cosa evitare</div>
+              </div>
+              <div class="spectrum-row col3">
+                <div class="s-cell lbl">Sistema / parser automatico</div>
+                <div class="s-cell hi">JSON o formato chiave:valore stretto, nessun testo libero fuori dal formato</div>
+                <div class="s-cell lo">Testo introduttivo, conclusioni, commenti fuori dal formato atteso</div>
+              </div>
+              <div class="spectrum-row col3">
+                <div class="s-cell lbl">Manager / decision maker</div>
+                <div class="s-cell hi">Sintesi in testa, dettaglio sotto, conclusione/azione in chiusura</div>
+                <div class="s-cell lo">Ragionamento lungo prima della conclusione; dettagli tecnici in evidenza</div>
+              </div>
+              <div class="spectrum-row col3">
+                <div class="s-cell lbl">Specialista / tecnico</div>
+                <div class="s-cell hi">Struttura per argomento, dettaglio pieno, riferimenti specifici</div>
+                <div class="s-cell lo">Sintesi eccessivamente compresse che perdono sfumature tecniche</div>
+              </div>
+              <div class="spectrum-row col3">
+                <div class="s-cell lbl">Cliente / utente non tecnico</div>
+                <div class="s-cell hi">Struttura narrativa lineare, un'informazione per paragrafo, call-to-action chiara</div>
+                <div class="s-cell lo">Liste puntate dense, gerarchie complesse, sezioni multiple</div>
+              </div>
+            </div>
+          </div>
+
+          <div class="gl-section">
+            <div class="gl-section-lbl">Perché funziona — il meccanismo LLM</div>
+            <div class="mechanism">
+              <div class="mech-lbl">Ancoraggio strutturale come pattern di continuazione</div>
+              <p>Il modello ha una forte tendenza a <strong>completare pattern strutturali già avviati</strong>. Quando il prompt definisce una struttura con sezioni nominate, il modello la usa come scaffolding da riempire — molto più affidabilmente di quanto farebbe senza indicazioni. Questo funziona perché nel training il modello ha visto moltissimi documenti con strutture simili (report, analisi, template) e ha imparato a completarle coerentemente.</p>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </div>
+
+    <!-- GL 02 -->
+    <div class="gl-group" style="margin-top:8px;">
+      <div class="gl-group-title">Linea guida 02</div>
+      <div class="gl-card">
+        <div class="gl-header">
+          <div class="gl-stripe"></div>
+          <div class="gl-num">02</div>
+          <div class="gl-title-wrap">
+            <div class="gl-title">Scegli consapevolmente tra prosa, liste e tabelle</div>
+            <div class="gl-subtitle">Ogni formato ha punti di forza e contesti di applicazione diversi — non sono intercambiabili</div>
+          </div>
+          <div class="gl-impact-wrap">
+            <div class="gl-impact-stars" style="color:var(--accent)">★★☆</div>
+            <div class="gl-impact-lbl">Impatto</div>
+          </div>
+        </div>
+        <div class="gl-body">
+
+          <div class="gl-section">
+            <div class="gl-section-lbl">La linea guida</div>
+            <p>I modelli tendono al markdown per default — liste puntate, grassetto, titoli — anche quando non è il formato più adatto. <strong>La scelta tra prosa continua, lista puntata e tabella non è estetica: dipende dalla natura delle informazioni e da come verranno usate.</strong> Specificarla esplicitamente produce output più appropriati e coerenti.</p>
+          </div>
+
+          <div class="gl-section">
+            <div class="gl-section-lbl">Quando usare quale formato</div>
+            <div class="format-grid">
+              <div class="format-tile">
+                <div class="ft-head">
+                  <div class="ft-badge">Prosa</div>
+                  <div class="ft-name">Testo continuo</div>
+                </div>
+                <div class="ft-body">
+                  <p>Ragionamenti, narrazioni, spiegazioni dove le idee si concatenano. Dove il <strong>flusso logico tra le frasi è parte del messaggio</strong>.</p>
+                  <div class="ft-use">✓ Analisi argomentate, email, report narrativi, spiegazioni di concetti</div>
+                  <div class="ft-warn">✗ Elenchi di elementi paralleli, comparazioni, dati tabulari</div>
+                </div>
+              </div>
+              <div class="format-tile">
+                <div class="ft-head">
+                  <div class="ft-badge">Lista</div>
+                  <div class="ft-name">Elementi paralleli</div>
+                </div>
+                <div class="ft-body">
+                  <p>Elementi omogenei e indipendenti tra loro. Quando <strong>l'ordine o la separazione visiva facilita la lettura</strong> e ogni elemento ha lo stesso peso.</p>
+                  <div class="ft-use">✓ Passi di un processo, requisiti, raccomandazioni, checklist</div>
+                  <div class="ft-warn">✗ Ragionamenti continui spezzettati artificialmente</div>
+                </div>
+              </div>
+              <div class="format-tile">
+                <div class="ft-head">
+                  <div class="ft-badge">Tabella</div>
+                  <div class="ft-name">Comparazioni</div>
+                </div>
+                <div class="ft-body">
+                  <p>Elementi con le stesse dimensioni di analisi da comparare su più assi. Quando <strong>la lettura trasversale (per colonna) è utile quanto quella sequenziale</strong>.</p>
+                  <div class="ft-use">✓ Comparazioni di opzioni, attributi di entità multiple, matrici</div>
+                  <div class="ft-warn">✗ Singole entità, testo argomentativo, output in plain text</div>
+                </div>
+              </div>
+              <div class="format-tile">
+                <div class="ft-head">
+                  <div class="ft-badge">JSON/YAML</div>
+                  <div class="ft-name">Dati strutturati</div>
+                </div>
+                <div class="ft-body">
+                  <p>Output destinati a essere parsati da sistemi automatici. Quando <strong>la struttura dei dati è più importante della leggibilità umana</strong>.</p>
+                  <div class="ft-use">✓ API, pipeline, output di classificazione, dati da inserire in DB</div>
+                  <div class="ft-warn">✗ Output per lettura umana diretta senza elaborazione</div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="gl-section">
+            <div class="gl-section-lbl">Il problema del markdown di default</div>
+            <div class="compare-grid">
+              <div>
+                <div class="pex-lbl bad">❌ Modello senza istruzioni — markdown ovunque</div>
+                <div class="prompt-box bad">**Analisi del rischio**
+
+Il contratto presenta diversi **elementi critici** da valutare:
+
+- **Penali**: Il fornitore è esposto a penali significative
+  - Ritardi di consegna: 10% per giorno
+  - Difetti di qualità: 5% per unità difettosa
+- **Responsabilità**: Limitata a 3 mesi di fatturato
+  - Esclude danni indiretti
+  - Esclude perdita di avviamento
+
+**Raccomandazione**: Procedere con cautela.</div>
+              </div>
+              <div>
+                <div class="pex-lbl good">✓ Con istruzione "usa solo prosa, nessun markdown"</div>
+                <div class="prompt-box good">Il contratto espone il fornitore a penali potenzialmente sproporzionate: il 10% per giorno di ritardo nella consegna può rapidamente superare il valore del contratto stesso. La clausola di limitazione di responsabilità a tre mesi di fatturato, escludendo esplicitamente i danni indiretti, crea un'asimmetria che favorisce nettamente il cliente. La raccomandazione è di negoziare un cap alle penali totali prima di procedere alla firma.</div>
+              </div>
+            </div>
+          </div>
+
+          <div class="gl-section">
+            <div class="gl-section-lbl">Perché funziona — il meccanismo LLM</div>
+            <div class="mechanism">
+              <div class="mech-lbl">Bias verso markdown nei dati di training RLHF</div>
+              <p>I valutatori umani usati nell'RLHF tendono a preferire output con struttura visiva — grassetto, titoli, liste — perché sembrano più organizzati e completi. Il modello ha quindi imparato ad aggiungere markdown anche quando non è necessario. <strong>Specificare esplicitamente "nessun markdown" o "solo prosa" disabilita questo comportamento di default</strong> e porta il modello a scegliere la forma più adatta alla sostanza.</p>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+
+<!-- ═══════════════════════════
+     S3 — FORMATO DATI (JSON)
+═══════════════════════════ -->
+<div class="sect" id="s3">
+  <div class="sect-head">
+    <div class="sect-num">Linea guida 03</div>
+    <h2>Output strutturati per sistemi: JSON e formati machine-readable</h2>
+    <p>Quando l'output viene consumato da un sistema invece che da un umano, il formato smette di essere una preferenza e diventa un requisito tecnico. Come specificarlo in modo che il modello lo rispetti sistematicamente.</p>
+  </div>
+  <div class="wrap">
+
+    <!-- GL 03 -->
+    <div class="gl-group" style="margin-top:32px;">
+      <div class="gl-group-title">Linea guida 03</div>
+      <div class="gl-card">
+        <div class="gl-header">
+          <div class="gl-stripe"></div>
+          <div class="gl-num">03</div>
+          <div class="gl-title-wrap">
+            <div class="gl-title">Per output machine-readable: schema esplicito + "nessun testo fuori dal formato"</div>
+            <div class="gl-subtitle">Due istruzioni che insieme quasi eliminano gli errori di parsing</div>
+          </div>
+          <div class="gl-impact-wrap">
+            <div class="gl-impact-stars" style="color:var(--accent)">★★★</div>
+            <div class="gl-impact-lbl">Impatto critico</div>
+          </div>
+        </div>
+        <div class="gl-body">
+
+          <div class="gl-section">
+            <div class="gl-section-lbl">La linea guida</div>
+            <p>Per output destinati a parser automatici servono due cose insieme: uno <strong>schema esplicito</strong> (i campi attesi, i loro tipi, i valori ammessi) e l'istruzione esplicita di non aggiungere nessun testo al di fuori del formato richiesto. La seconda è critica quanto la prima: il modello tende ad aggiungere commenti, spiegazioni o disclaimer anche quando gli è stato detto di rispondere solo in JSON.</p>
+          </div>
+
+          <div class="gl-section">
+            <div class="gl-section-lbl">Struttura di un'istruzione JSON completa</div>
+            <div class="prompt-box good" style="margin-top:12px;"><span class="hl">Rispondi SOLO con un oggetto JSON valido.</span>
+Nessun testo prima o dopo il JSON. Nessuna spiegazione. Nessun markdown.
+
+Schema atteso:
+{
+  <span class="hl">"sentiment"</span>: "Positivo" | "Neutro" | "Negativo",
+  <span class="hl">"topic"</span>: "Prodotto" | "Servizio" | "Consegna" | "Prezzo" | "Altro",
+  <span class="hl">"priorita_intervento"</span>: "Alta" | "Bassa",
+  <span class="hl">"sintesi"</span>: string  // max 20 parole
+}
+
+Regole:
+- priorita_intervento è "Alta" solo se sentiment è "Negativo" E topic è "Prodotto" o "Servizio"
+- sintesi deve essere in italiano
+- Non aggiungere campi non previsti dallo schema</div>
+          </div>
+
+          <div class="gl-section">
+            <div class="gl-section-lbl">Preview: istruzione → output atteso</div>
+            <div class="live-preview">
+              <div class="lp-head">
+                <span>Input → Output</span>
+                <span class="lp-tag input">PROMPT SCHEMA</span>
+              </div>
+              <div class="lp-body">
+                <div class="lp-col">
+                  <div class="lp-col-lbl">Input — recensione utente</div>
+                  <div class="lp-code">"Ho aspettato 3 settimane per la consegna e quando è arrivato il pacco era danneggiato. Il prodotto in sé sembra di buona qualità ma l'esperienza è stata pessima."</div>
+                </div>
+                <div class="lp-col">
+                  <div class="lp-col-lbl">Output — JSON corretto</div>
+                  <div class="lp-code">{
+  <span class="kw">"sentiment"</span>: <span class="str">"Negativo"</span>,
+  <span class="kw">"topic"</span>: <span class="str">"Consegna"</span>,
+  <span class="kw">"priorita_intervento"</span>: <span class="str">"Bassa"</span>,
+  <span class="kw">"sintesi"</span>: <span class="str">"Ritardo consegna e pacco danneggiato, prodotto ok"</span>
+}</div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="gl-section">
+            <div class="gl-section-lbl">Errori comuni nell'output JSON e come prevenirli</div>
+            <div class="spectrum">
+              <div class="spectrum-row head col3">
+                <div class="s-cell">Errore frequente</div>
+                <div class="s-cell">Come si manifesta</div>
+                <div class="s-cell">Prevenzione nel prompt</div>
+              </div>
+              <div class="spectrum-row col3">
+                <div class="s-cell lbl">Testo prima del JSON</div>
+                <div class="s-cell lo">"Ecco il JSON richiesto: { ... }"</div>
+                <div class="s-cell">"Rispondi SOLO con il JSON. Nessun testo introduttivo."</div>
+              </div>
+              <div class="spectrum-row col3">
+                <div class="s-cell lbl">JSON avvolto in markdown</div>
+                <div class="s-cell lo">```json<br>{ ... }<br>```</div>
+                <div class="s-cell">"Nessun markdown. Nessun ```json```."</div>
+              </div>
+              <div class="spectrum-row col3">
+                <div class="s-cell lbl">Valori fuori dall'enum</div>
+                <div class="s-cell lo">"sentiment": "Misto" invece di "Neutro"</div>
+                <div class="s-cell">Specificare i valori ammessi: "solo questi valori: X | Y | Z"</div>
+              </div>
+              <div class="spectrum-row col3">
+                <div class="s-cell lbl">Campi aggiuntivi non previsti</div>
+                <div class="s-cell lo">{ ..., "note_aggiuntive": "..." }</div>
+                <div class="s-cell">"Non aggiungere campi non previsti dallo schema."</div>
+              </div>
+              <div class="spectrum-row col3">
+                <div class="s-cell lbl">Commento dopo il JSON</div>
+                <div class="s-cell lo">{ ... }<br>"Nota: ho classificato come Neutro perché..."</div>
+                <div class="s-cell">"Nessun testo dopo il JSON. Se sei incerto su un campo, usa il valore di default previsto."</div>
+              </div>
+            </div>
+          </div>
+
+          <div class="gl-section">
+            <div class="gl-section-lbl">Perché funziona — il meccanismo LLM</div>
+            <div class="mechanism">
+              <div class="mech-lbl">Schema come pattern di completamento rigido</div>
+              <p>Fornire uno schema JSON esplicito nel prompt attiva nel modello un pattern di completamento molto più preciso di una descrizione verbale dei campi attesi. Il modello ha visto miliardi di esempi di JSON valido e sa come completare uno schema parziale. <strong>L'istruzione "nessun testo fuori dal JSON" è necessaria perché il modello ha anche imparato che gli output di alta qualità spesso includono spiegazioni</strong> — e tende ad aggiungerle per abitudine, anche quando non sono utili.</p>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+
+<!-- ═══════════════════════════
+     S4 — LUNGHEZZA
+═══════════════════════════ -->
+<div class="sect" id="s4">
+  <div class="sect-head">
+    <div class="sect-num">Linea guida 04</div>
+    <h2>Controllo della lunghezza</h2>
+    <p>I modelli tendono all'over-generation. Controllare la lunghezza non è censurare il contenuto — è assicurarsi che l'output sia calibrato sul tempo e sull'attenzione del destinatario.</p>
+  </div>
+  <div class="wrap">
+
+    <!-- GL 04 -->
+    <div class="gl-group" style="margin-top:32px;">
+      <div class="gl-group-title">Linea guida 04</div>
+      <div class="gl-card">
+        <div class="gl-header">
+          <div class="gl-stripe"></div>
+          <div class="gl-num">04</div>
+          <div class="gl-title-wrap">
+            <div class="gl-title">Specifica la lunghezza attesa con unità concrete</div>
+            <div class="gl-subtitle">"Conciso" è soggettivo. "Max 3 frasi" è un vincolo misurabile</div>
+          </div>
+          <div class="gl-impact-wrap">
+            <div class="gl-impact-stars" style="color:var(--accent)">★★☆</div>
+            <div class="gl-impact-lbl">Impatto</div>
+          </div>
+        </div>
+        <div class="gl-body">
+
+          <div class="gl-section">
+            <div class="gl-section-lbl">La linea guida</div>
+            <p>Le istruzioni di lunghezza vaghe ("sii conciso", "rispondi brevemente", "rispondi in modo esaustivo") vengono interpretate in modo molto diverso dal modello rispetto a quello che l'utente intende. <strong>Usa unità concrete e misurabili</strong>: parole, frasi, paragrafi, punti di lista, token. Il modello le rispetta con alta affidabilità quando sono specifiche.</p>
+          </div>
+
+          <div class="gl-section">
+            <div class="gl-section-lbl">Unità di lunghezza e quando usarle</div>
+            <div class="length-matrix">
+              <div class="lm-row head">
+                <div class="lm-cell">Unità</div>
+                <div class="lm-cell">Quando è la scelta giusta</div>
+                <div class="lm-cell">Esempio</div>
+              </div>
+              <div class="lm-row">
+                <div class="lm-cell lbl">Frasi</div>
+                <div class="lm-cell">Output brevi, risposte a singole domande, snippet di testo</div>
+                <div class="lm-cell rec">Max 2 frasi</div>
+              </div>
+              <div class="lm-row">
+                <div class="lm-cell lbl">Paragrafi</div>
+                <div class="lm-cell">Testo narrativo, spiegazioni, analisi con struttura libera</div>
+                <div class="lm-cell rec">Max 3 paragrafi</div>
+              </div>
+              <div class="lm-row">
+                <div class="lm-cell lbl">Parole</div>
+                <div class="lm-cell">Campi con limiti tecnici (metadati, descrizioni brevi, SMS)</div>
+                <div class="lm-cell rec">Max 150 parole</div>
+              </div>
+              <div class="lm-row">
+                <div class="lm-cell lbl">Punti di lista</div>
+                <div class="lm-cell">Elenchi: definisce l'ampiezza della copertura</div>
+                <div class="lm-cell rec">Max 5 punti</div>
+              </div>
+              <div class="lm-row">
+                <div class="lm-cell lbl">Nessun limite esplicito</div>
+                <div class="lm-cell">Documenti lunghi, analisi esaustive dove l'ampiezza è il valore</div>
+                <div class="lm-cell rec">Ometti l'istruzione</div>
+              </div>
+            </div>
+          </div>
+
+          <div class="gl-section">
+            <div class="gl-section-lbl">La gestione del trade-off lunghezza / completezza</div>
+            <p>Quando specifichi un limite di lunghezza, il modello deve inevitabilmente scegliere cosa omettere. <strong>Aiutalo a fare la scelta giusta dicendogli quale principio privilegiare</strong> quando deve tagliare.</p>
+            <div style="margin-top:12px;">
+              <div class="prompt-box good">Rispondi in max 200 parole.
+<span class="hl">Se devi tagliare, prioritizza:</span> conclusione e raccomandazione > ragionamento principale > dettagli di supporto.
+Non tagliare mai la conclusione per fare spazio ai dettagli.</div>
+            </div>
+          </div>
+
+          <div class="gl-section">
+            <div class="gl-section-lbl">Il problema dell'over-generation e del padding</div>
+            <div class="compare-grid">
+              <div>
+                <div class="pex-lbl bad">❌ Output con padding tipico</div>
+                <div class="prompt-box bad">Certamente! È una domanda interessante. Permettimi di analizzarla nel dettaglio.
+
+In primo luogo, occorre considerare che...
+[3 paragrafi di contesto non richiesto]
+
+In conclusione, quindi, per rispondere alla tua domanda...
+[risposta effettiva in 2 righe]
+
+Spero che questa risposta sia stata utile!</div>
+              </div>
+              <div>
+                <div class="pex-lbl good">✓ Con istruzione anti-padding</div>
+                <div class="prompt-box good"><span class="hl">Vai direttamente alla risposta.</span> Nessuna introduzione, nessun contesto non richiesto, nessuna frase di chiusura. Solo la risposta alla domanda posta.</div>
+              </div>
+            </div>
+          </div>
+
+          <div class="gl-section">
+            <div class="gl-section-lbl">Perché funziona — il meccanismo LLM</div>
+            <div class="mechanism">
+              <div class="mech-lbl">Over-generation come bias di training</div>
+              <p>Il modello ha imparato che gli output "completi" e "ben strutturati" sono valutati positivamente dai rater umani nell'RLHF. Questo crea un bias verso output più lunghi, con più contesto, più spiegazioni — anche quando non servono. <strong>Le istruzioni di lunghezza concrete invertono questo bias</strong>: il modello rispetta limiti numerici specifici con alta affidabilità, molto più di quanto faccia con aggettivi come "conciso".</p>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+
+<!-- ═══════════════════════════
+     S5 — TONO E LINGUA
+═══════════════════════════ -->
+<div class="sect" id="s5">
+  <div class="sect-head">
+    <div class="sect-num">Linee guida 05 – 06</div>
+    <h2>Tono specifico dell'output e lingua</h2>
+    <p>Il tono dell'output (distinto dal tono del ruolo definito in A) e la lingua in cui rispondere. Due istruzioni spesso dimenticate — con impatto immediato su chi legge.</p>
+  </div>
+  <div class="wrap">
+
+    <!-- GL 05 -->
+    <div class="gl-group" style="margin-top:32px;">
+      <div class="gl-group-title">Linea guida 05</div>
+      <div class="gl-card">
+        <div class="gl-header">
+          <div class="gl-stripe"></div>
+          <div class="gl-num">05</div>
+          <div class="gl-title-wrap">
+            <div class="gl-title">Usa descrizioni comportamentali per il tono dell'output</div>
+            <div class="gl-subtitle">Il tono del cluster D è diverso dal tono del cluster A: riguarda come è scritto l'output, non chi è il modello</div>
+          </div>
+          <div class="gl-impact-wrap">
+            <div class="gl-impact-stars" style="color:var(--accent)">★★☆</div>
+            <div class="gl-impact-lbl">Impatto</div>
+          </div>
+        </div>
+        <div class="gl-body">
+
+          <div class="gl-section">
+            <div class="gl-section-lbl">La distinzione cluster A vs. cluster D per il tono</div>
+            <p>Il tono in A riguarda la <em>persona</em> del modello — chi è, come si relaziona con l'interlocutore. Il tono in D riguarda le <em>caratteristiche stilistiche dell'output</em>: densità delle frasi, uso di tecnicismi, struttura degli argomenti, presenza di hedging. <strong>Sono complementari, non ridondanti.</strong></p>
+            <div class="insight" style="margin-top:12px;">
+              <div class="insight-lbl">Esempio della distinzione</div>
+              <p>Cluster A: <strong>"Sei un avvocato specializzato in diritto societario"</strong> — definisce chi sei e orienta il registro generale.<br><br>Cluster D: <strong>"Struttura ogni risposta iniziando con la conclusione; evita latinismi; usa frasi di max 25 parole"</strong> — definisce come è scritto il testo specificamente.</p>
+            </div>
+          </div>
+
+          <div class="gl-section">
+            <div class="gl-section-lbl">Dimensioni del tono specifiche dell'output</div>
+            <div class="spectrum">
+              <div class="spectrum-row head col3">
+                <div class="s-cell">Dimensione</div>
+                <div class="s-cell">Descrizione vaga ❌</div>
+                <div class="s-cell">Descrizione comportamentale ✓</div>
+              </div>
+              <div class="spectrum-row col3">
+                <div class="s-cell lbl">Assertività</div>
+                <div class="s-cell lo">"Sii diretto e assertivo"</div>
+                <div class="s-cell hi">"Inizia ogni punto con una affermazione, non con una qualifica. Usa 'è' invece di 'potrebbe essere'."</div>
+              </div>
+              <div class="spectrum-row col3">
+                <div class="s-cell lbl">Densità</div>
+                <div class="s-cell lo">"Sii denso e informativo"</div>
+                <div class="s-cell hi">"Nessuna frase ridondante. Ogni frase deve aggiungere un'informazione nuova."</div>
+              </div>
+              <div class="spectrum-row col3">
+                <div class="s-cell lbl">Hedging</div>
+                <div class="s-cell lo">"Non essere eccessivamente cauto"</div>
+                <div class="s-cell hi">"Usa 'potrebbe' o 'probabilmente' solo quando l'incertezza è materialmente rilevante, non per cautela generica."</div>
+              </div>
+              <div class="spectrum-row col3">
+                <div class="s-cell lbl">Registro</div>
+                <div class="s-cell lo">"Usa un tono formale"</div>
+                <div class="s-cell hi">"Niente contrazioni, niente espressioni colloquiali, niente punto interrogativo retorico, frasi complete."</div>
+              </div>
+              <div class="spectrum-row col3">
+                <div class="s-cell lbl">Struttura argomentativa</div>
+                <div class="s-cell lo">"Argomenta bene le tue affermazioni"</div>
+                <div class="s-cell hi">"Ogni affermazione significativa deve essere seguita da un'evidenza specifica (dato, esempio, citazione)."</div>
+              </div>
+            </div>
+          </div>
+
+          <div class="gl-section">
+            <div class="gl-section-lbl">Perché funziona — il meccanismo LLM</div>
+            <div class="mechanism">
+              <div class="mech-lbl">Criteri verificabili vs. aggettivi soggettivi</div>
+              <p>Il modello non ha un modo interno di valutare se sta sendo "abbastanza formale" o "abbastanza diretto" — questi aggettivi sono troppo soggettivi per guidare la generazione token per token. <strong>Le descrizioni comportamentali ("nessuna contrazione", "inizia con la conclusione") sono criteri binari verificabili</strong> che il modello può applicare sistematicamente durante la generazione.</p>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </div>
+
+    <!-- GL 06 -->
+    <div class="gl-group" style="margin-top:8px;">
+      <div class="gl-group-title">Linea guida 06</div>
+      <div class="gl-card">
+        <div class="gl-header">
+          <div class="gl-stripe"></div>
+          <div class="gl-num">06</div>
+          <div class="gl-title-wrap">
+            <div class="gl-title">Specifica esplicitamente la lingua dell'output</div>
+            <div class="gl-subtitle">Il modello risponde nella lingua dell'input per default — non sempre quello che vuoi</div>
+          </div>
+          <div class="gl-impact-wrap">
+            <div class="gl-impact-stars" style="color:var(--accent)">★★☆</div>
+            <div class="gl-impact-lbl">Impatto</div>
+          </div>
+        </div>
+        <div class="gl-body">
+
+          <div class="gl-section">
+            <div class="gl-section-lbl">La linea guida</div>
+            <p>Il comportamento di default del modello è rispondere nella lingua in cui è scritto l'input (il messaggio utente). Questo può creare problemi in tre situazioni: quando il system prompt è in una lingua e l'input in un'altra, quando si vuole che il modello risponda sempre in una lingua specifica indipendentemente dalla lingua dell'input, o quando si gestiscono documenti multilingua.</p>
+          </div>
+
+          <div class="gl-section">
+            <div class="gl-section-lbl">I tre casi e come gestirli</div>
+            <div style="margin-top:12px;">
+              <div class="pex-lbl neutral">Caso 1 — Output sempre in una lingua fissa</div>
+              <div class="prompt-box good" style="margin-top:6px;"><span class="hl">Rispondi sempre in italiano</span>, indipendentemente dalla lingua in cui ti viene posta la domanda.</div>
+            </div>
+            <div style="margin-top:12px;">
+              <div class="pex-lbl neutral">Caso 2 — Output nella lingua dell'utente (adattivo)</div>
+              <div class="prompt-box good" style="margin-top:6px;"><span class="hl">Rileva la lingua dell'utente</span> dalla sua prima frase e rispondi sempre in quella lingua per tutta la conversazione. Non cambiare lingua anche se ricevi input in lingue diverse.</div>
+            </div>
+            <div style="margin-top:12px;">
+              <div class="pex-lbl neutral">Caso 3 — Output in lingua diversa dall'input (es: traduzione, analisi di documenti)</div>
+              <div class="prompt-box good" style="margin-top:6px;">Analizzi documenti che possono essere in qualsiasi lingua. <span class="hl">Il tuo output è sempre in italiano</span>, indipendentemente dalla lingua del documento analizzato.</div>
+            </div>
+          </div>
+
+          <div class="gl-section">
+            <div class="gl-section-lbl">Nota su lingua e qualità dell'output</div>
+            <p>I modelli hanno prestazioni leggermente migliori in inglese rispetto ad altre lingue, in quanto la maggior parte dei dati di training è in inglese. Per task critici che richiedono ragionamento complesso, <strong>considera di far ragionare il modello in inglese e tradurre l'output in italiano</strong>: si ottiene spesso qualità leggermente superiore a costo di un minimo di latenza aggiuntiva.</p>
+            <div class="prompt-box good" style="margin-top:12px;"><span class="hl">Ragiona internamente in inglese</span> per tutta l'analisi.
+<span class="hl">Scrivi l'output finale in italiano.</span>
+Non mostrare il ragionamento in inglese nell'output.</div>
+          </div>
+
+          <div class="gl-section">
+            <div class="gl-section-lbl">Perché funziona — il meccanismo LLM</div>
+            <div class="mechanism">
+              <div class="mech-lbl">Lingua come pattern di continuazione dominante</div>
+              <p>La lingua del testo corrente è uno dei segnali più forti per il modello nel predire il token successivo: tende potentemente a continuare nella lingua già usata. <strong>Un'istruzione esplicita di lingua nel system prompt crea un ancoraggio che sovrascrive questo default</strong>, assicurando coerenza anche quando l'input è in una lingua diversa.</p>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </div>
+
+    <div class="key-point" style="margin-top:32px;">
+      <div class="kp-label">Il principio del cluster D — sintesi</div>
+      <div class="kp-text">Il formato è parte del contenuto. Un output perfetto nel formato sbagliato è un output sbagliato.</div>
+      <div class="kp-sub">Le istruzioni di formato non sono cosmesi — sono requisiti funzionali. In pipeline automatizzate definiscono la differenza tra successo e failure. Per output destinati a umani, definiscono se l'informazione arriva in modo utilizzabile o no. Il cluster D ha il costo di implementazione più basso tra tutti i cluster — poche righe di istruzione — con un impatto spesso immediato e misurabile sulla qualità percepita dell'output.</div>
+    </div>
+
+  </div>
+</div>
+
+
+<!-- ═══════════════════════════
+     S6 — TEMPLATE
+═══════════════════════════ -->
+<div class="sect" id="s6">
+  <div class="sect-head">
+    <div class="sect-num">Sezione pratica</div>
+    <h2>Template e checklist del Cluster D</h2>
+    <p>Un template modulare per le istruzioni di formato, con esempio compilato e checklist di verifica.</p>
+  </div>
+  <div class="wrap">
+
+    <div class="template-box" style="margin-top:28px;"><span class="t-comment"># ── FORMATO DELL'OUTPUT (Cluster D) ──────────────────────────</span>
+<span class="t-comment"># Aggiungi dopo il Cluster C. Usa solo le sezioni rilevanti.</span>
+
+<span class="t-comment"># 1. STRUTTURA (GL 01) — per output con più parti distinte</span>
+<span class="t-val">Struttura la risposta così:</span>
+<span class="t-hl">[NOME SEZIONE 1]</span><span class="t-val">: </span><span class="t-bracket">[descrizione del contenuto atteso]</span>
+<span class="t-hl">[NOME SEZIONE 2]</span><span class="t-val">: </span><span class="t-bracket">[descrizione del contenuto atteso]</span>
+<span class="t-hl">[NOME SEZIONE 3]</span><span class="t-val">: </span><span class="t-bracket">[opzionale]</span>
+
+<span class="t-comment"># 2. TIPO DI FORMATO (GL 02) — prosa / lista / tabella / JSON</span>
+<span class="t-bracket">[Scegli uno:]</span>
+<span class="t-comment">#    "Usa solo prosa continua. Nessun markdown, nessuna lista puntata."</span>
+<span class="t-comment">#    "Usa liste puntate per tutti gli elementi enumerabili."</span>
+<span class="t-comment">#    "Rispondi SOLO con JSON valido. Nessun testo fuori dal JSON."</span>
+
+<span class="t-comment"># 3. SCHEMA JSON (GL 03) — solo per output machine-readable</span>
+<span class="t-val">Schema atteso:</span>
+<span class="t-val">{</span>
+<span class="t-val">  </span><span class="t-str">"campo1"</span><span class="t-val">: </span><span class="t-bracket">tipo | "valore1" | "valore2"</span><span class="t-val">,</span>
+<span class="t-val">  </span><span class="t-str">"campo2"</span><span class="t-val">: </span><span class="t-bracket">string  // vincolo opzionale (es: max N parole)</span>
+<span class="t-val">}</span>
+<span class="t-val">Non aggiungere campi non previsti. Nessun markdown attorno al JSON.</span>
+
+<span class="t-comment"># 4. LUNGHEZZA (GL 04) — con unità concrete</span>
+<span class="t-bracket">[Scegli uno:]</span>
+<span class="t-comment">#    "Max [N] parole / frasi / paragrafi / punti."</span>
+<span class="t-comment">#    "Se devi tagliare, prioritizza: [X] > [Y] > [Z]."</span>
+<span class="t-comment">#    "Vai direttamente alla risposta. Nessuna introduzione, nessuna frase di chiusura."</span>
+
+<span class="t-comment"># 5. TONO DELL'OUTPUT (GL 05) — solo se distinto dal tono del ruolo</span>
+<span class="t-bracket">[Descrizioni comportamentali, non aggettivi vaghi:]</span>
+<span class="t-comment">#    "Inizia con la conclusione, non col ragionamento."</span>
+<span class="t-comment">#    "Ogni affermazione significativa è seguita da un'evidenza specifica."</span>
+<span class="t-comment">#    "Nessun hedging generico. Usa 'probabilmente' solo quando l'incertezza è rilevante."</span>
+
+<span class="t-comment"># 6. LINGUA (GL 06) — se non coincide con la lingua dell'input</span>
+<span class="t-bracket">[Solo se necessario:]</span>
+<span class="t-comment">#    "Rispondi sempre in italiano, indipendentemente dalla lingua dell'input."</span>
+<span class="t-comment">#    "Ragiona in inglese internamente. Output finale in italiano."</span>
+
+<span class="t-comment"># ── FINE SEZIONE FORMATO — prosegue con Cluster E ─────────────</span></div>
+
+    <div class="prose" style="margin-top:36px;">
+      <p style="font-size:15px; font-weight:500; color:var(--ink2);">Esempio compilato — agente di analisi contrattuale (continua dai Report A, B, C)</p>
+    </div>
+
+    <div class="template-box" style="margin-top:12px;"><span class="t-comment"># ── FORMATO DELL'OUTPUT ───────────────────────────────────────</span>
+
+<span class="t-val">Struttura la scheda di rischio così:</span>
+
+<span class="t-hl">SINTESI</span><span class="t-val"> (max 2 righe): giudizio complessivo sul contratto e raccomandazione
+         (Firma / Firma con modifiche X, Y / Non firmare senza rinegoziare)</span>
+
+<span class="t-hl">RISCHI IDENTIFICATI</span><span class="t-val">: lista puntata ordinata per severità decrescente.
+  Per ogni rischio:
+  • [ALTA/MEDIA/BASSA] Nome del rischio (art. N) — descrizione in max 2 righe</span>
+
+<span class="t-hl">MODIFICHE RACCOMANDATE</span><span class="t-val">: solo se presenti rischi ALTA o MEDIA.
+  Lista puntata: per ogni modifica, clausola di riferimento + testo suggerito (1 riga).</span>
+
+<span class="t-val">Lunghezza totale: <span class="t-hl">max 400 parole</span>.
+Se devi tagliare: mantieni SINTESI e rischi ALTA, comprimi i rischi MEDIA, ometti i BASSA.</span>
+
+<span class="t-val">Tono: <span class="t-hl">diretto e assertivo</span>. Nessun hedging generico.
+Nessuna frase introduttiva ("Ho analizzato il contratto...").
+Nessuna frase di chiusura ("Spero che questa analisi...").
+Usa italiano formale. Nessun markdown aggiuntivo oltre ai punti elenco.</span></div>
+
+    <div class="prose" style="margin-top:36px;">
+      <p style="font-size:15px; font-weight:500; color:var(--ink2);">Checklist di verifica — Cluster D completato?</p>
+    </div>
+
+    <div class="checklist" style="margin-top:12px;">
+      <div class="check-item">
+        <div class="check-icon" style="background:var(--accent)">✓</div>
+        <div>Ho specificato la <strong>struttura</strong> quando l'output ha più sezioni distinte — con nomi di sezione espliciti e contenuto atteso per ognuna.</div>
+      </div>
+      <div class="check-item">
+        <div class="check-icon" style="background:var(--accent)">✓</div>
+        <div>Ho scelto consapevolmente tra <strong>prosa, lista, tabella o JSON</strong> — non ho lasciato al modello la scelta del formato.</div>
+      </div>
+      <div class="check-item">
+        <div class="check-icon" style="background:var(--accent)">✓</div>
+        <div>Se l'output è machine-readable: ho fornito uno <strong>schema esplicito</strong> e ho aggiunto "nessun testo fuori dal JSON".</div>
+      </div>
+      <div class="check-item">
+        <div class="check-icon" style="background:var(--accent)">✓</div>
+        <div>Ho specificato la <strong>lunghezza</strong> con unità concrete (parole, frasi, paragrafi) — non con aggettivi come "conciso" o "esaustivo".</div>
+      </div>
+      <div class="check-item">
+        <div class="check-icon" style="background:var(--accent)">✓</div>
+        <div>Ho descritto il tono con <strong>comportamenti concreti</strong> invece di aggettivi vaghi — solo dove è distinto dal tono del ruolo (Cluster A).</div>
+      </div>
+      <div class="check-item">
+        <div class="check-icon" style="background:var(--accent)">✓</div>
+        <div>Ho specificato la <strong>lingua</strong> dell'output quando non coincide con la lingua dell'input o quando serve consistenza cross-lingua.</div>
+      </div>
+    </div>
+
+    <div class="insight" style="margin-top:28px; border-color:#c0562b;">
+      <div class="insight-lbl" style="color:#c0562b;">Prossimo — Cluster E</div>
+      <p>Con identità (A), obiettivo (B), ragionamento (C) e formato (D) definiti, il prompt copre le dimensioni fondamentali. Il prossimo report (Cluster E) affronta i <strong>few-shot examples</strong>: quando e come usare esempi concreti nel prompt per guidare il comportamento del modello — spesso più efficaci di qualsiasi istruzione verbale per catturare sfumature difficili da descrivere a parole.</p>
+    </div>
+
+  </div>
+</div>
+
+
+<!-- FOOTER -->
+<div class="footer">
+  <span>Serie Agenti AI — Leva 01 · Prompt Engineering · Cluster D · Formato dell'Output</span>
+  <span>Marzo 2026</span>
+</div>
+
+<script>
+function show(n) {
+  document.querySelectorAll('.sect').forEach(s => s.classList.remove('active'));
+  document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('s'+n).classList.add('active');
+  document.querySelectorAll('.nav-btn')[n-1].classList.add('active');
+  window.scrollTo({top:0, behavior:'smooth'});
+}
+</script>
+</body>
+</html>

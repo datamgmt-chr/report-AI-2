@@ -1,0 +1,614 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Contesto e Memoria — Report 2 · Strategie di gestione e blocco di stato</title>
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Outfit:wght@200;300;400;500;600;700;800;900&family=IBM+Plex+Mono:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg:     #faf8f5;
+  --bg2:    #f2efe9;
+  --bg3:    #e9e5dc;
+  --ink:    #1b1915;
+  --ink2:   #2e2b25;
+  --ink3:   #6d685c;
+  --ink4:   #a19c8f;
+  --border: #d9d4c8;
+  --border2:#cac4b6;
+
+  --accent:  #1a4a5a;
+  --accent2: #0e2e38;
+  --accent-light: #eaf4f7;
+
+  --s1: #3d7a45; --s1-l: #f4faf5;
+  --s2: #2e4a7a; --s2-l: #edf1f9;
+  --s3: #b07d24; --s3-l: #fdf6e8;
+  --s4: #7b5ea7; --s4-l: #f4f0fa;
+
+  --ok:   #3d7a45; --ok-l:  #f4faf5;
+  --bad:  #c0392b; --bad-l: #fdf5f5;
+  --warn: #b07d24; --warn-l:#fdf6e8;
+}
+
+* { margin:0; padding:0; box-sizing:border-box; }
+html { scroll-behavior:smooth; }
+body { background:var(--bg); color:var(--ink); font-family:'Outfit',sans-serif; font-weight:300; font-size:14px; line-height:1.75; }
+
+.masthead { background:var(--ink); color:rgba(255,255,255,.9); padding:60px 56px 52px; position:relative; overflow:hidden; }
+.masthead::before { content:''; position:absolute; inset:0; background: repeating-linear-gradient(90deg,rgba(255,255,255,.012) 0,rgba(255,255,255,.012) 1px,transparent 1px,transparent 64px), repeating-linear-gradient(0deg,rgba(255,255,255,.012) 0,rgba(255,255,255,.012) 1px,transparent 1px,transparent 64px); pointer-events:none; }
+.masthead::after { content:'②'; position:absolute; right:44px; bottom:-20px; font-size:240px; line-height:1; color:rgba(255,255,255,.025); pointer-events:none; font-family:'Instrument Serif',serif; }
+.mh-eye { font-family:'IBM Plex Mono',monospace; font-size:10px; letter-spacing:3px; text-transform:uppercase; color:rgba(255,255,255,.25); margin-bottom:18px; position:relative; }
+.mh-cluster { display:inline-block; font-family:'IBM Plex Mono',monospace; font-size:10px; letter-spacing:2px; text-transform:uppercase; padding:4px 12px; border:1px solid var(--accent); color:var(--accent); margin-bottom:20px; position:relative; }
+.masthead h1 { font-family:'Instrument Serif',serif; font-weight:400; font-size:clamp(30px,4.5vw,54px); line-height:1.08; letter-spacing:-1px; max-width:700px; position:relative; }
+.mh-sub { margin-top:20px; font-size:15px; font-weight:300; color:rgba(255,255,255,.38); max-width:660px; line-height:1.7; position:relative; }
+.mh-meta { margin-top:32px; display:flex; gap:32px; flex-wrap:wrap; position:relative; }
+.mh-stat { display:flex; flex-direction:column; gap:4px; }
+.mh-stat-val { font-family:'IBM Plex Mono',monospace; font-size:22px; font-weight:500; color:rgba(255,255,255,.85); }
+.mh-stat-lbl { font-size:10px; letter-spacing:2px; text-transform:uppercase; color:rgba(255,255,255,.25); }
+
+.nav { background:var(--ink2); position:sticky; top:0; z-index:100; display:flex; overflow-x:auto; border-bottom:1px solid rgba(255,255,255,.06); }
+.nav-btn { flex:1; min-width:100px; padding:13px 12px; border:none; background:transparent; cursor:pointer; font-family:'Outfit',sans-serif; font-size:10.5px; font-weight:600; text-transform:uppercase; letter-spacing:.4px; color:rgba(255,255,255,.3); border-right:1px solid rgba(255,255,255,.06); transition:all .2s; white-space:nowrap; }
+.nav-btn:last-child { border-right:none; }
+.nav-btn:hover { color:rgba(255,255,255,.6); }
+.nav-btn.active { color:#fff; background:rgba(255,255,255,.05); }
+
+.sect { display:none; }
+.sect.active { display:block; animation:fadeIn .3s ease; }
+@keyframes fadeIn { from{opacity:0;transform:translateY(6px)} to{opacity:1;transform:translateY(0)} }
+.sect-head { padding:48px 56px 36px; border-bottom:1px solid var(--border); }
+.sect-num { font-family:'IBM Plex Mono',monospace; font-size:10px; letter-spacing:3px; text-transform:uppercase; color:var(--ink4); margin-bottom:10px; }
+.sect-head h2 { font-family:'Instrument Serif',serif; font-weight:400; font-size:clamp(26px,3.5vw,42px); line-height:1.1; letter-spacing:-.5px; max-width:640px; margin-bottom:14px; }
+.sect-head p { color:var(--ink3); max-width:700px; font-size:14.5px; }
+.wrap { padding:0 56px 64px; }
+
+.prose { max-width:760px; }
+.prose p { font-size:14.5px; color:var(--ink3); line-height:1.85; margin-bottom:16px; }
+.prose p strong { color:var(--ink2); font-weight:500; }
+
+/* ── STRATEGY CARD ── */
+.strategy-card { border:1px solid var(--border2); background:var(--bg); overflow:hidden; margin-top:16px; }
+.sc-head { display:grid; grid-template-columns:5px 1fr auto; border-bottom:1px solid var(--border); }
+.sc-stripe { }
+.sc-title-wrap { padding:14px 20px; background:var(--bg2); }
+.sc-badge { font-family:'IBM Plex Mono',monospace; font-size:9px; letter-spacing:2px; text-transform:uppercase; margin-bottom:3px; }
+.sc-title { font-family:'Instrument Serif',serif; font-size:22px; color:var(--ink2); }
+.sc-tagline { font-size:12.5px; color:var(--ink4); margin-top:2px; }
+.sc-meta { padding:12px 16px; background:var(--bg2); display:flex; flex-direction:column; gap:4px; align-items:flex-end; justify-content:center; }
+.sc-badge-pill { font-family:'IBM Plex Mono',monospace; font-size:8px; letter-spacing:1px; text-transform:uppercase; padding:2px 7px; border:1px solid; white-space:nowrap; }
+
+.sc-body { display:grid; grid-template-columns:1fr 1fr; gap:1px; background:var(--border); }
+.sc-col { background:var(--bg); padding:14px 18px; }
+.sc-col-full { background:var(--bg); padding:14px 18px; grid-column:span 2; }
+.sc-col-lbl { font-family:'IBM Plex Mono',monospace; font-size:8px; letter-spacing:2px; text-transform:uppercase; color:var(--ink4); margin-bottom:7px; padding-bottom:4px; border-bottom:1px solid var(--border); }
+.sc-col p { font-size:13px; color:var(--ink3); line-height:1.65; margin-bottom:5px; }
+.sc-col p:last-child { margin-bottom:0; }
+.sc-col p strong { color:var(--ink2); font-weight:500; }
+
+/* ── CODE PANEL ── */
+.code-panel { margin-top:10px; border:1px solid var(--border2); }
+.cp-head { padding:7px 14px; background:var(--ink); border-bottom:1px solid rgba(255,255,255,.06); font-family:'IBM Plex Mono',monospace; font-size:8px; letter-spacing:2px; text-transform:uppercase; color:rgba(255,255,255,.4); }
+.cp-body { font-family:'IBM Plex Mono',monospace; font-size:11px; line-height:1.85; padding:12px 16px; background:var(--ink); color:rgba(255,255,255,.75); white-space:pre-wrap; overflow-x:auto; }
+.cp-body .k  { color:#93c5e8; }
+.cp-body .s  { color:#7dd3a8; }
+.cp-body .v  { color:#f4a87a; }
+.cp-body .cm { color:rgba(255,255,255,.28); }
+.cp-body .hl { color:#c4a8e8; font-weight:500; }
+.cp-body .w  { color:#f4c87a; }
+
+/* ── COMPARISON TABLE ── */
+.strat-table { width:100%; border-collapse:collapse; margin-top:20px; border:1px solid var(--border2); }
+.strat-table th, .strat-table td { padding:10px 13px; border:1px solid var(--border); font-size:12.5px; line-height:1.5; vertical-align:top; text-align:left; }
+.strat-table thead th { background:var(--ink); color:rgba(255,255,255,.8); font-family:'IBM Plex Mono',monospace; font-size:8px; letter-spacing:.5px; text-transform:uppercase; }
+.strat-table td:first-child { font-weight:500; color:var(--ink2); white-space:nowrap; }
+.strat-table tbody tr:nth-child(even) { background:var(--bg2); }
+.t-ok  { color:var(--ok);  font-family:'IBM Plex Mono',monospace; font-size:10px; font-weight:700; }
+.t-mid { color:var(--warn);font-family:'IBM Plex Mono',monospace; font-size:10px; font-weight:700; }
+.t-bad { color:var(--bad); font-family:'IBM Plex Mono',monospace; font-size:10px; font-weight:700; }
+
+/* ── STATE BLOCK ── */
+.state-anatomy { border:1px solid var(--border2); margin-top:16px; overflow:hidden; }
+.sa-head { padding:9px 16px; background:var(--ink); border-bottom:1px solid rgba(255,255,255,.06); font-family:'IBM Plex Mono',monospace; font-size:8px; letter-spacing:2px; text-transform:uppercase; color:rgba(255,255,255,.4); }
+.sa-layer { display:grid; grid-template-columns:130px 1fr; border-bottom:1px solid var(--border); }
+.sa-layer:last-child { border-bottom:none; }
+.sa-left { padding:12px 14px; background:var(--bg2); border-right:1px solid var(--border); display:flex; flex-direction:column; justify-content:center; }
+.sa-tag { font-family:'IBM Plex Mono',monospace; font-size:8px; letter-spacing:1px; text-transform:uppercase; color:var(--ink4); margin-bottom:2px; }
+.sa-name { font-weight:600; font-size:13px; color:var(--ink2); }
+.sa-right { padding:12px 16px; font-size:13px; color:var(--ink3); line-height:1.6; }
+.sa-right strong { color:var(--ink2); font-weight:500; }
+.sa-right code { font-family:'IBM Plex Mono',monospace; font-size:11px; background:var(--bg3); padding:1px 5px; }
+
+/* ── KEY POINT / INSIGHT ── */
+.key-point { margin-top:28px; padding:22px 26px; border-left:4px solid var(--accent); background:var(--accent-light); }
+.kp-label { font-family:'IBM Plex Mono',monospace; font-size:9px; letter-spacing:2px; text-transform:uppercase; color:var(--accent); margin-bottom:8px; }
+.kp-text { font-family:'Instrument Serif',serif; font-size:18px; line-height:1.45; color:var(--ink2); }
+.kp-sub { margin-top:10px; font-size:13px; color:var(--ink3); line-height:1.65; }
+.insight { margin:16px 0; padding:14px 18px; border-left:4px solid var(--accent); background:var(--accent-light); }
+.insight-lbl { font-family:'IBM Plex Mono',monospace; font-size:9px; letter-spacing:2px; text-transform:uppercase; color:var(--accent); margin-bottom:6px; }
+.insight p { font-size:13.5px; color:var(--ink2); line-height:1.65; }
+.insight p strong { font-weight:500; }
+
+.footer { padding:24px 56px; border-top:1px solid var(--border); display:flex; justify-content:space-between; align-items:center; font-family:'IBM Plex Mono',monospace; font-size:10px; letter-spacing:1px; text-transform:uppercase; color:var(--ink4); }
+
+@media (max-width:700px) {
+  .masthead,.sect-head,.wrap,.footer { padding-left:20px; padding-right:20px; }
+  .sc-body { grid-template-columns:1fr; }
+  .sc-col-full { grid-column:span 1; }
+  .sa-layer { grid-template-columns:1fr; }
+  .sa-left { border-right:none; border-bottom:1px solid var(--border); }
+}
+</style>
+</head>
+<body>
+
+<div class="masthead">
+  <div class="mh-eye">Contesto e Memoria · Serie in 3 report</div>
+  <div class="mh-cluster">Report 2 di 3</div>
+  <h1>Strategie di gestione e il blocco di stato</h1>
+  <p class="mh-sub">Quattro strategie concrete per gestire la crescita del contesto in un agente multi-turno — con i trade-off espliciti di ognuna. E il formato del blocco di stato: come strutturare le informazioni persistenti che vengono iniettate ad ogni sessione.</p>
+  <div class="mh-meta">
+    <div class="mh-stat"><div class="mh-stat-val">4</div><div class="mh-stat-lbl">Strategie di gestione</div></div>
+    <div class="mh-stat"><div class="mh-stat-val">Summarization</div><div class="mh-stat-lbl">La più bilanciata</div></div>
+    <div class="mh-stat"><div class="mh-stat-value">Blocco di stato</div><div class="mh-stat-lbl">Il formato pratico</div></div>
+    <div class="mh-stat"><div class="mh-stat-val">Ibrido</div><div class="mh-stat-lbl">La soluzione reale</div></div>
+  </div>
+</div>
+
+<div class="nav">
+  <button class="nav-btn active" onclick="show(1)">Il problema di base</button>
+  <button class="nav-btn" onclick="show(2)">Strategia 1 e 2</button>
+  <button class="nav-btn" onclick="show(3)">Strategia 3 e 4</button>
+  <button class="nav-btn" onclick="show(4)">Il blocco di stato</button>
+  <button class="nav-btn" onclick="show(5)">Confronto e ibrido</button>
+</div>
+
+
+<!-- ═══════════════════════════
+     S1 — IL PROBLEMA
+═══════════════════════════ -->
+<div class="sect active" id="s1">
+  <div class="sect-head">
+    <div class="sect-num">Sezione 01</div>
+    <h2>Il problema di base — la history cresce, il contesto non è infinito</h2>
+    <p>In un agente multi-turno, ogni risposta aggiunge messaggi al contesto. Dopo 20–30 turni, il contesto ha dimensioni significative. Dopo 100 turni, ha raggiunto o superato il limite. Come si gestisce questa crescita senza perdere le informazioni che contano?</p>
+  </div>
+  <div class="wrap">
+
+    <div class="prose" style="margin-top:28px;">
+      <p>Il problema non è solo tecnico — è semantico. Non tutti i turni della conversazione hanno lo stesso valore. Il turno in cui l'utente ha detto "preferisco risposte brevi" vale molto di più del turno in cui ha chiesto un calcolo semplice. Il turno in cui è stato stabilito l'obiettivo del workflow vale molto di più dei turni di elaborazione intermedia.</p>
+      <p>Una strategia di gestione del contesto deve rispondere a due domande: <strong>cosa tenere</strong> (selezione) e <strong>come tenerlo</strong> (formato). Le quattro strategie che seguono danno risposte diverse a entrambe le domande — con trade-off di complessità, costo e qualità molto diversi.</p>
+    </div>
+
+    <div class="key-point">
+      <div class="kp-label">Il criterio per scegliere la strategia</div>
+      <div class="kp-text">La strategia giusta dipende da quanto dura tipicamente una sessione e da quanto è costoso dimenticare qualcosa di importante.</div>
+      <div class="kp-sub">Una sessione di 5–10 turni con una domanda semplice: full history, nessun problema. Una sessione di 50+ turni su un task complesso: serve una strategia attiva. Un agente che lavora su un progetto per settimane con sessioni separate: serve un blocco di stato persistente. La complessità della strategia deve essere proporzionale alla durata e criticità della sessione.</div>
+    </div>
+
+  </div>
+</div>
+
+
+<!-- ═══════════════════════════
+     S2 — STRATEGIE 1 e 2
+═══════════════════════════ -->
+<div class="sect" id="s2">
+  <div class="sect-head">
+    <div class="sect-num">Sezione 02</div>
+    <h2>Strategia 1 — Full history · Strategia 2 — Sliding window</h2>
+    <p>Le due strategie più semplici — da usare quando la sessione è breve o quando la continuità recente è tutto ciò che conta.</p>
+  </div>
+  <div class="wrap">
+
+    <!-- S1: FULL HISTORY -->
+    <div class="strategy-card" style="margin-top:28px;">
+      <div class="sc-head">
+        <div class="sc-stripe" style="background:var(--s1)"></div>
+        <div class="sc-title-wrap">
+          <div class="sc-badge" style="color:var(--s1);">Strategia 01 — La più semplice</div>
+          <div class="sc-title">Full history — tieni tutto</div>
+          <div class="sc-tagline">Ogni messaggio viene aggiunto alla lista. Nessuna selezione, nessuna compressione.</div>
+        </div>
+        <div class="sc-meta">
+          <span class="sc-badge-pill" style="color:var(--ok); border-color:var(--ok);">Zero complessità</span>
+          <span class="sc-badge-pill" style="color:var(--bad); border-color:var(--bad);">Satura in sessioni lunghe</span>
+        </div>
+      </div>
+      <div class="sc-body">
+        <div class="sc-col">
+          <div class="sc-col-lbl">Come funziona</div>
+          <p>La lista <code>messages[]</code> cresce ad ogni turno. System prompt + ogni user message + ogni assistant message, nell'ordine. Il modello vede tutto — sempre.</p>
+          <p>Non c'è logica di gestione: il runtime semplicemente appende ogni nuovo messaggio alla lista e la passa al modello nella prossima chiamata.</p>
+          <div class="code-panel">
+            <div class="cp-head">Implementazione — full history</div>
+            <div class="cp-body"><span class="k">messages</span> = [
+  {<span class="s">"role"</span>: <span class="v">"system"</span>, <span class="s">"content"</span>: system_prompt},
+]
+
+<span class="cm"># Ad ogni turno, semplicemente appendi</span>
+<span class="k">messages</span>.append({<span class="s">"role"</span>: <span class="v">"user"</span>,      <span class="s">"content"</span>: user_input})
+<span class="k">messages</span>.append({<span class="s">"role"</span>: <span class="v">"assistant"</span>, <span class="s">"content"</span>: response})
+
+<span class="cm"># Nessun'altra logica — ma tieni d'occhio len(messages)</span></div>
+          </div>
+        </div>
+        <div class="sc-col">
+          <div class="sc-col-lbl">Trade-off e quando usarla</div>
+          <p><strong>Pro:</strong> zero perdita di informazioni, zero complessità di implementazione, zero rischio di perdere dettagli importanti.</p>
+          <p><strong>Contro:</strong> il costo per token cresce linearmente con ogni turno. Dopo 30–40 turni di conversazione tipica, si avvicina al 30–50% del context window. Dopo 100+ turni, satura.</p>
+          <p><strong>Quando usarla:</strong> sessioni brevi (< 20 turni), task in singola sessione con basso volume, prototipazione. Non adatta per sessioni lunghe, agenti continuativi, o sistemi ad alto volume dove il costo è un vincolo.</p>
+          <p><strong>Il segnale che è il momento di passare ad altra strategia:</strong> il costo per turno è significativamente più alto del turno 1, oppure il modello comincia a ignorare informazioni dei turni meno recenti.</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- S2: SLIDING WINDOW -->
+    <div class="strategy-card">
+      <div class="sc-head">
+        <div class="sc-stripe" style="background:var(--s2)"></div>
+        <div class="sc-title-wrap">
+          <div class="sc-badge" style="color:var(--s2);">Strategia 02 — La più veloce da implementare</div>
+          <div class="sc-title">Sliding window — tieni gli ultimi N turni</div>
+          <div class="sc-tagline">Solo i turni più recenti vengono passati al modello. La history vecchia viene scartata.</div>
+        </div>
+        <div class="sc-meta">
+          <span class="sc-badge-pill" style="color:var(--ok); border-color:var(--ok);">Costo controllato</span>
+          <span class="sc-badge-pill" style="color:var(--warn); border-color:var(--warn);">Perde il contesto storico</span>
+        </div>
+      </div>
+      <div class="sc-body">
+        <div class="sc-col">
+          <div class="sc-col-lbl">Come funziona</div>
+          <p>Mantieni solo gli ultimi N scambi (user + assistant) nella lista messaggi. Quando arriva il turno N+1, il turno più vecchio viene eliminato dalla lista — la finestra "scorre" in avanti.</p>
+          <div class="code-panel">
+            <div class="cp-head">Implementazione — sliding window (N=10 turni)</div>
+            <div class="cp-body"><span class="k">MAX_TURNS</span> = <span class="v">10</span>  <span class="cm"># ultimi 10 scambi = 20 messaggi</span>
+
+<span class="k">def</span> build_messages(history: list, user_input: str):
+  <span class="cm"># system prompt sempre all'inizio</span>
+  <span class="k">messages</span> = [{<span class="s">"role"</span>: <span class="v">"system"</span>, <span class="s">"content"</span>: system_prompt}]
+
+  <span class="cm"># ultimi MAX_TURNS scambi (coppie user+assistant)</span>
+  recent = history[-(MAX_TURNS * <span class="v">2</span>):]  <span class="cm"># *2 perché ogni turno = 2 msg</span>
+  <span class="k">messages</span>.extend(recent)
+
+  <span class="cm"># messaggio corrente</span>
+  <span class="k">messages</span>.append({<span class="s">"role"</span>: <span class="v">"user"</span>, <span class="s">"content"</span>: user_input})
+  <span class="k">return</span> messages</div>
+          </div>
+        </div>
+        <div class="sc-col">
+          <div class="sc-col-lbl">Trade-off e quando usarla</div>
+          <p><strong>Pro:</strong> il costo per chiamata è costante e prevedibile. La latenza non cresce. Semplicissima da implementare.</p>
+          <p><strong>Contro:</strong> le informazioni dei turni vecchi vengono perse definitivamente. Se l'utente ha stabilito una preferenza importante al turno 3 e ora siamo al turno 25, quella preferenza non è più nel contesto — il modello non sa che esiste.</p>
+          <p><strong>Quando usarla:</strong> conversazioni dove conta solo la continuità recente (assistente con domande indipendenti), sistemi ad alto volume dove il costo è il vincolo principale, chatbot dove ogni domanda è relativamente indipendente dalla storia lontana.</p>
+          <p><strong>Mitigazione del problema:</strong> combina la sliding window con un blocco di stato fisso all'inizio del sistema prompt che mantiene le informazioni critiche (preferenze, vincoli, obiettivi) indipendentemente dalla window.</p>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+
+<!-- ═══════════════════════════
+     S3 — STRATEGIE 3 e 4
+═══════════════════════════ -->
+<div class="sect" id="s3">
+  <div class="sect-head">
+    <div class="sect-num">Sezione 03</div>
+    <h2>Strategia 3 — Summarization · Strategia 4 — Selezione selettiva</h2>
+    <p>Le due strategie più sofisticate — per sessioni lunghe dove sia la completezza che l'efficienza contano.</p>
+  </div>
+  <div class="wrap">
+
+    <!-- S3: SUMMARIZATION -->
+    <div class="strategy-card" style="margin-top:28px;">
+      <div class="sc-head">
+        <div class="sc-stripe" style="background:var(--s3)"></div>
+        <div class="sc-title-wrap">
+          <div class="sc-badge" style="color:var(--s3);">Strategia 03 — La più bilanciata</div>
+          <div class="sc-title">Summarization progressiva</div>
+          <div class="sc-tagline">La history vecchia viene compressa in un riassunto. Il significato si mantiene, i dettagli si perdono.</div>
+        </div>
+        <div class="sc-meta">
+          <span class="sc-badge-pill" style="color:var(--warn); border-color:var(--warn);">Costo extra per summary</span>
+          <span class="sc-badge-pill" style="color:var(--ok); border-color:var(--ok);">Mantiene il filo narrativo</span>
+        </div>
+      </div>
+      <div class="sc-body">
+        <div class="sc-col">
+          <div class="sc-col-lbl">Come funziona — il meccanismo</div>
+          <p>Quando il contesto supera una soglia (es. 70% del context window), i turni più vecchi vengono compressi in un blocco di "summary" tramite una chiamata LLM separata. Il summary sostituisce i turni originali nel contesto. La window recente rimane intatta.</p>
+          <div class="code-panel">
+            <div class="cp-head">Summarization progressiva — schema</div>
+            <div class="cp-body"><span class="cm"># Soglia: 70% del context window</span>
+<span class="k">SUMMARY_THRESHOLD</span> = <span class="v">0.7</span>
+
+<span class="k">def</span> maybe_summarize(messages, model_context_limit):
+  token_count = estimate_tokens(messages)
+  <span class="k">if</span> token_count / model_context_limit < SUMMARY_THRESHOLD:
+    <span class="k">return</span> messages  <span class="cm"># sotto soglia — nessuna azione</span>
+
+  <span class="cm"># Dividi: old (da comprimere) + recent (da mantenere)</span>
+  midpoint = len(messages) // <span class="v">2</span>
+  old_messages = messages[<span class="v">1</span>:midpoint]  <span class="cm"># esclude system prompt</span>
+  recent      = messages[midpoint:]
+
+  <span class="cm"># Genera summary dei turni vecchi</span>
+  <span class="k">summary</span> = llm_call(
+    system=<span class="v">"Riassumi questa conversazione conservando: "</span>
+           <span class="v">"decisioni prese, preferenze espresse, "</span>
+           <span class="v">"informazioni chiave, stato del task."</span>,
+    messages=old_messages
+  )
+
+  <span class="cm"># Ricostruisci: system + summary block + recent</span>
+  <span class="k">return</span> [
+    messages[<span class="v">0</span>],     <span class="cm"># system prompt</span>
+    {<span class="s">"role"</span>: <span class="v">"system"</span>,
+     <span class="s">"content"</span>: <span class="v">f"RIEPILOGO CONVERSAZIONE PRECEDENTE:\n{summary}"</span>},
+    *recent            <span class="cm"># turni recenti intatti</span>
+  ]</div>
+          </div>
+        </div>
+        <div class="sc-col">
+          <div class="sc-col-lbl">Trade-off e quando usarla</div>
+          <p><strong>Pro:</strong> il significato della conversazione si preserva anche su sessioni molto lunghe. Il modello sa cosa è stato deciso e discusso, anche se non vede i turni originali. Il costo cresce molto lentamente.</p>
+          <p><strong>Contro:</strong> ogni summarization è una chiamata LLM extra (latenza + costo). La qualità del summary dipende dal prompt della summarization — un prompt generico perde informazioni importanti. I dettagli specifici (numeri esatti, citazioni precise) vengono persi nella compressione.</p>
+          <p><strong>Il prompt di summarization è critico.</strong> Non "riassumi questa conversazione" — specifica cosa preservare: decisioni prese, preferenze espresse dell'utente, stato del task, vincoli stabiliti. Ciò che non viene chiesto di preservare viene perso.</p>
+          <p><strong>Quando usarla:</strong> sessioni di lavoro su task complessi (analisi, scrittura, progettazione), conversazioni che durano molti turni dove il filo narrativo è importante.</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- S4: SELEZIONE SELETTIVA -->
+    <div class="strategy-card">
+      <div class="sc-head">
+        <div class="sc-stripe" style="background:var(--s4)"></div>
+        <div class="sc-title-wrap">
+          <div class="sc-badge" style="color:var(--s4);">Strategia 04 — La più efficiente</div>
+          <div class="sc-title">Selezione selettiva (retrieval sul contesto)</div>
+          <div class="sc-tagline">Solo i turni rilevanti per la domanda corrente vengono inclusi nel contesto.</div>
+        </div>
+        <div class="sc-meta">
+          <span class="sc-badge-pill" style="color:var(--s4); border-color:var(--s4);">Alta complessità</span>
+          <span class="sc-badge-pill" style="color:var(--ok); border-color:var(--ok);">Massima efficienza</span>
+        </div>
+      </div>
+      <div class="sc-body">
+        <div class="sc-col">
+          <div class="sc-col-lbl">Come funziona</div>
+          <p>I turni della conversazione vengono indicizzati (embedding) man mano che arrivano. Al turno N, prima di costruire il contesto, si esegue una ricerca per similarità tra la domanda corrente e i turni precedenti — includendo solo quelli più rilevanti.</p>
+          <p>È essenzialmente un RAG applicato alla history della conversazione invece che a un corpus di documenti. Il modello vede solo i turni contestualmente rilevanti, più una finestra degli ultimi K turni per mantenere la continuità immediata.</p>
+        </div>
+        <div class="sc-col">
+          <div class="sc-col-lbl">Trade-off e quando usarla</div>
+          <p><strong>Pro:</strong> il contesto rimane piccolo e rilevante anche dopo centinaia di turni. Il costo per turno è quasi costante. I turni irrilevanti non inquinano il contesto.</p>
+          <p><strong>Contro:</strong> richiede un sistema di embedding e retrieval (complessità infrastrutturale). Il retrieval può sbagliare — portare turni sbagliati o non portare quelli giusti. Non adatta per sessioni dove la continuità sequenziale è critica.</p>
+          <p><strong>Quando usarla:</strong> agenti con sessioni molto lunghe (100+ turni), knowledge base di conversazioni che copre settimane, sistemi dove l'utente torna su argomenti discussi molto tempo prima.</p>
+          <p><strong>Combinazione raccomandata:</strong> retrieval selettivo per i turni storici + sliding window (ultimi 5–10 turni) per la continuità immediata + blocco di stato per le informazioni critiche persistenti.</p>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+
+<!-- ═══════════════════════════
+     S4 — IL BLOCCO DI STATO
+═══════════════════════════ -->
+<div class="sect" id="s4">
+  <div class="sect-head">
+    <div class="sect-num">Sezione 04</div>
+    <h2>Il blocco di stato — il formato per la memoria persistente</h2>
+    <p>Indipendentemente dalla strategia di gestione della history, c'è sempre un insieme di informazioni che devono essere disponibili in ogni turno di ogni sessione. Il blocco di stato è la struttura che porta queste informazioni — non come history ma come contesto strutturato.</p>
+  </div>
+  <div class="wrap">
+
+    <div class="prose" style="margin-top:28px;">
+      <p>Il blocco di stato è una sezione del system prompt — o un messaggio separato iniettato all'inizio della conversazione — che contiene le informazioni critiche sul contesto dell'utente e del task. Non è un riassunto della history: è una struttura deliberatamente progettata che viene aggiornata dal sistema (non dal modello) in base agli eventi della conversazione.</p>
+    </div>
+
+    <div class="state-anatomy">
+      <div class="sa-head">Anatomia del blocco di stato — struttura consigliata</div>
+
+      <div class="sa-layer">
+        <div class="sa-left">
+          <div class="sa-tag">Sezione 1</div>
+          <div class="sa-name">Identità utente</div>
+        </div>
+        <div class="sa-right">
+          <strong>Chi è l'utente e il suo contesto.</strong> Nome, ruolo, organizzazione (se rilevante), livello di expertise nel dominio. Non informazioni demografiche generiche — solo ciò che impatta come l'agente deve rispondergli.<br>
+          <code>utente: Marco Bianchi · ruolo: Product Manager · expertise: base su Python</code>
+        </div>
+      </div>
+
+      <div class="sa-layer">
+        <div class="sa-left">
+          <div class="sa-tag">Sezione 2</div>
+          <div class="sa-name">Preferenze di interazione</div>
+        </div>
+        <div class="sa-right">
+          <strong>Come l'utente vuole essere servito.</strong> Stile di risposta (breve/dettagliato), formato preferito (bullet/prosa), lingua, tono (formale/informale). Si aggiorna quando l'utente esprime una preferenza esplicita o implicita.<br>
+          <code>stile: conciso · formato: bullet · lingua: italiano · evita tecnicismi eccessivi</code>
+        </div>
+      </div>
+
+      <div class="sa-layer">
+        <div class="sa-left">
+          <div class="sa-tag">Sezione 3</div>
+          <div class="sa-name">Task corrente</div>
+        </div>
+        <div class="sa-right">
+          <strong>Cosa sta cercando di fare in questa sessione o progetto.</strong> Obiettivo, vincoli, contesto specifico del task. Distingue il task di sessione (questo specifico lavoro) dal task di progetto (il lavoro più ampio).<br>
+          <code>task_sessione: analisi contratto Rossi SpA · task_progetto: due diligence acquisizione · scadenza: 15 aprile</code>
+        </div>
+      </div>
+
+      <div class="sa-layer">
+        <div class="sa-left">
+          <div class="sa-tag">Sezione 4</div>
+          <div class="sa-name">Decisioni e vincoli</div>
+        </div>
+        <div class="sa-right">
+          <strong>Decisioni già prese che non devono essere rimesse in discussione.</strong> Vincoli stabiliti, esclusioni, priorità. Questa è la sezione più importante per la continuità del task — evita che il modello risuggerisca opzioni già scartate.<br>
+          <code>deciso: usare template B non A · escluso: fornitore XYZ per motivi legali · priorità: rischio > costo</code>
+        </div>
+      </div>
+
+      <div class="sa-layer">
+        <div class="sa-left">
+          <div class="sa-tag">Sezione 5</div>
+          <div class="sa-name">Stato avanzamento</div>
+        </div>
+        <div class="sa-right">
+          <strong>Dove si è arrivati nel task multi-step.</strong> Passi completati, risultati intermedi, prossimo passo atteso. Permette di riprendere una sessione interrotta senza dover ricominciare dall'inizio.<br>
+          <code>completati: [estrazione testo, identificazione parti] · in corso: analisi clausole · prossimo: risk score</code>
+        </div>
+      </div>
+
+    </div>
+
+    <div class="code-panel" style="margin-top:16px;">
+      <div class="cp-head">Blocco di stato — come viene iniettato nel sistema prompt</div>
+      <div class="cp-body"><span class="cm"># Il blocco di stato è un dict Python aggiornato dal runtime</span>
+<span class="k">state</span> = {
+  <span class="s">"utente"</span>: {
+    <span class="s">"nome"</span>: <span class="v">"Marco Bianchi"</span>,
+    <span class="s">"ruolo"</span>: <span class="v">"Product Manager"</span>,
+    <span class="s">"expertise_python"</span>: <span class="v">"base"</span>
+  },
+  <span class="s">"preferenze"</span>: {
+    <span class="s">"stile"</span>: <span class="v">"conciso"</span>,
+    <span class="s">"formato"</span>: <span class="v">"bullet"</span>,
+    <span class="s">"lingua"</span>: <span class="v">"italiano"</span>
+  },
+  <span class="s">"task"</span>: {
+    <span class="s">"sessione"</span>: <span class="v">"analisi contratto Rossi SpA"</span>,
+    <span class="s">"progetto"</span>: <span class="v">"due diligence acquisizione"</span>,
+    <span class="s">"scadenza"</span>: <span class="v">"2026-04-15"</span>
+  },
+  <span class="s">"decisioni"</span>: [
+    <span class="v">"Usare template B non A"</span>,
+    <span class="v">"Escludere fornitore XYZ (motivi legali)"</span>
+  ],
+  <span class="s">"avanzamento"</span>: {
+    <span class="s">"completati"</span>: [<span class="v">"estrazione_testo"</span>, <span class="v">"identificazione_parti"</span>],
+    <span class="s">"in_corso"</span>: <span class="v">"analisi_clausole"</span>,
+    <span class="s">"prossimo"</span>: <span class="v">"risk_score"</span>
+  }
+}
+
+<span class="cm"># Viene serializzato e iniettato nel system prompt ad ogni turno</span>
+<span class="k">def</span> build_system_prompt(base_prompt: str, state: dict) -> str:
+  state_block = <span class="w">f"""
+--- CONTESTO UTENTE E TASK ---
+Utente: {state['utente']['nome']} ({state['utente']['ruolo']})
+Preferenze: {state['preferenze']['stile']}, {state['preferenze']['formato']}
+Task corrente: {state['task']['sessione']}
+Decisioni già prese: {'; '.join(state['decisioni'])}
+Avanzamento: completati {state['avanzamento']['completati']},
+             in corso: {state['avanzamento']['in_corso']}
+--- FINE CONTESTO ---
+"""</span>
+  <span class="k">return</span> base_prompt + state_block
+
+<span class="cm"># Il runtime aggiorna il dict dopo ogni turno se rileva nuove info</span></div>
+    </div>
+
+    <div class="insight" style="margin-top:16px;">
+      <div class="insight-lbl">Come si aggiorna il blocco di stato</div>
+      <p>Il blocco di stato non si aggiorna da solo — è il runtime che lo aggiorna, non il modello. Due meccanismi: <strong>aggiornamento esplicito</strong> (l'agente produce un tool_use per aggiornare specifici campi dello stato quando rileva una decisione o preferenza importante) e <strong>aggiornamento dal runtime</strong> (il codice applicativo aggiorna i campi di avanzamento man mano che i passi del workflow vengono completati). <strong>Non lasciare che il modello scriva liberamente nello stato — avrebbe effetti imprevedibili sulle sessioni future.</strong></p>
+    </div>
+
+  </div>
+</div>
+
+
+<!-- ═══════════════════════════
+     S5 — CONFRONTO E IBRIDO
+═══════════════════════════ -->
+<div class="sect" id="s5">
+  <div class="sect-head">
+    <div class="sect-num">Sezione finale</div>
+    <h2>Confronto e la strategia ibrida — come combinare</h2>
+    <p>Nessuna delle quattro strategie è ottimale da sola per tutti i casi. La soluzione reale per la maggior parte degli agenti è un ibrido — con layer diversi che gestiscono tipi diversi di informazione.</p>
+  </div>
+  <div class="wrap">
+
+    <table class="strat-table" style="margin-top:28px;">
+      <thead>
+        <tr><th>Strategia</th><th>Complessità</th><th>Perde informazioni?</th><th>Costo per turno</th><th>Ideale per</th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td style="color:var(--s1);">① Full history</td>
+          <td class="t-ok">Minima</td>
+          <td class="t-ok">No</td>
+          <td class="t-bad">Cresce linearmente</td>
+          <td>Sessioni brevi (< 20 turni)</td>
+        </tr>
+        <tr>
+          <td style="color:var(--s2);">② Sliding window</td>
+          <td class="t-ok">Bassa</td>
+          <td class="t-mid">Sì (turni vecchi)</td>
+          <td class="t-ok">Costante</td>
+          <td>Conversazioni continue, domande indipendenti</td>
+        </tr>
+        <tr>
+          <td style="color:var(--s3);">③ Summarization</td>
+          <td class="t-mid">Media</td>
+          <td class="t-mid">Parzialmente (dettagli)</td>
+          <td class="t-mid">Quasi costante + extra per summary</td>
+          <td>Task complessi su sessioni lunghe</td>
+        </tr>
+        <tr>
+          <td style="color:var(--s4);">④ Selezione selettiva</td>
+          <td class="t-bad">Alta</td>
+          <td class="t-ok">No (indicizza tutto)</td>
+          <td class="t-ok">Costante</td>
+          <td>Sessioni molto lunghe, KB di conversazioni</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <div class="key-point" style="margin-top:24px;">
+      <div class="kp-label">La strategia ibrida — il pattern raccomandato</div>
+      <div class="kp-text">Per la maggior parte degli agenti: blocco di stato fisso + sliding window per la history recente. Per agenti su task complessi: aggiungi summarization progressiva. Per agenti continuativi su sessioni lunghissime: aggiungi retrieval selettivo.</div>
+      <div class="kp-sub" style="margin-top:14px;">
+        <strong>Layer 1 — sempre:</strong> il blocco di stato nel system prompt. Contiene identità utente, preferenze, task corrente, decisioni e avanzamento. Aggiornato dal runtime. Non sostituito dalla history — integra informazioni strutturate che la history non porta in modo affidabile.
+        <br><br>
+        <strong>Layer 2 — per sessioni fino a 50 turni:</strong> sliding window degli ultimi 10–15 turni. Mantiene la continuità della conversazione recente senza il costo della full history.
+        <br><br>
+        <strong>Layer 3 — per sessioni molto lunghe:</strong> summarization progressiva quando il contesto supera il 60–70% del window. Il summary viene aggiunto prima della window recente, come "memoria intermedia".
+        <br><br>
+        <strong>Layer 4 — per agenti continuativi:</strong> retrieval selettivo dalla knowledge base delle conversazioni passate, per riportare nel contesto turni storici rilevanti per la domanda corrente.
+      </div>
+    </div>
+
+    <div class="insight" style="border-color:var(--warn); background:var(--warn-l);">
+      <div class="insight-lbl" style="color:var(--warn);">Prossimo — Report 3</div>
+      <p>Con le strategie chiare, il Report 3 affronta i <strong>5 problemi tipici</strong> della gestione del contesto — con i segnali diagnostici specifici per ognuno e le soluzioni pratiche. Plus: il context budget, come decidere deliberatamente come allocare i token disponibili tra i diversi componenti del contesto.</p>
+    </div>
+
+  </div>
+</div>
+
+<div class="footer">
+  <span>Contesto e Memoria · Report 2 di 3 · Strategie e blocco di stato</span>
+  <span>Marzo 2026</span>
+</div>
+
+<script>
+function show(n) {
+  document.querySelectorAll('.sect').forEach(s => s.classList.remove('active'));
+  document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('s'+n).classList.add('active');
+  document.querySelectorAll('.nav-btn')[n-1].classList.add('active');
+  window.scrollTo({top:0, behavior:'smooth'});
+}
+</script>
+</body>
+</html>

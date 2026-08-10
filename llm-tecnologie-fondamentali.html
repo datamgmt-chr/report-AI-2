@@ -1,0 +1,1230 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>LLM — Tecnologie Fondamentali</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400;0,500;1,400&family=JetBrains+Mono:wght@300;400;500&display=swap');
+
+:root {
+  --bg: #f7f5f0;
+  --ink: #1c1a17;
+  --surface: #edeae3;
+  --border: #d4cfc5;
+  --muted: #7a756a;
+  --rule: #ccc8be;
+
+  /* Level colors */
+  --l1: #1a5c8a;   /* architettura — blu profondo */
+  --l2: #7a3b1e;   /* training — terracotta */
+  --l3: #2e6b4f;   /* runtime — verde foresta */
+
+  /* Concept colors */
+  --c-transformer: #1a5c8a;
+  --c-embedding: #2874a8;
+  --c-autoregressive: #1e4f7a;
+  --c-pretrain: #7a3b1e;
+  --c-finetune: #9b4c28;
+  --c-rlhf: #b85c32;
+  --c-rag: #2e6b4f;
+  --c-tool: #3a8060;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  background: var(--bg);
+  color: var(--ink);
+  font-family: 'Lora', Georgia, serif;
+  font-size: 16px;
+  line-height: 1.8;
+  max-width: 920px;
+  margin: 0 auto;
+  padding: 60px 40px 120px;
+}
+
+/* COVER */
+.cover {
+  margin-bottom: 64px;
+  padding-bottom: 40px;
+  border-bottom: 2px solid var(--ink);
+}
+.cover-eyebrow {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--muted);
+  margin-bottom: 24px;
+}
+.cover h1 {
+  font-size: clamp(30px, 5.5vw, 54px);
+  font-weight: 400;
+  line-height: 1.1;
+  letter-spacing: -0.02em;
+  margin-bottom: 12px;
+}
+.cover h1 em { font-style: italic; }
+.cover-sub {
+  color: var(--muted);
+  font-size: 17px;
+  font-style: italic;
+}
+
+/* MAP */
+.map {
+  background: var(--ink);
+  border-radius: 6px;
+  padding: 32px 36px;
+  margin-bottom: 64px;
+  color: var(--bg);
+}
+.map-title {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: #888;
+  margin-bottom: 24px;
+}
+.map-levels {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 20px;
+}
+@media(max-width:640px){ .map-levels { grid-template-columns: 1fr; } }
+
+.map-level {
+  border-left: 3px solid;
+  padding: 14px 18px;
+  background: rgba(255,255,255,0.04);
+  border-radius: 0 4px 4px 0;
+}
+.map-level-label {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 9px;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  margin-bottom: 8px;
+  opacity: 0.6;
+}
+.map-level-title {
+  font-size: 14px;
+  font-weight: 500;
+  margin-bottom: 10px;
+}
+.map-level-items {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.map-item {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  opacity: 0.75;
+  padding: 3px 0;
+  border-bottom: 1px solid rgba(255,255,255,0.08);
+}
+.map-item:last-child { border: none; }
+
+/* LEVEL HEADERS */
+.level-header {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin: 56px 0 40px;
+  padding: 18px 24px;
+  border-radius: 4px;
+}
+.level-num {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 28px;
+  font-weight: 300;
+  opacity: 0.35;
+  line-height: 1;
+}
+.level-info {}
+.level-tag {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 9px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  opacity: 0.7;
+  margin-bottom: 4px;
+}
+.level-title {
+  font-size: 22px;
+  font-weight: 500;
+}
+
+/* CONCEPT SECTIONS */
+.concept {
+  margin-bottom: 64px;
+}
+.concept-header {
+  display: flex;
+  align-items: flex-start;
+  gap: 16px;
+  margin-bottom: 28px;
+}
+.concept-num {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  color: var(--muted);
+  padding-top: 4px;
+  flex-shrink: 0;
+  width: 32px;
+}
+.concept-header-text h2 {
+  font-size: 26px;
+  font-weight: 400;
+  letter-spacing: -0.01em;
+  margin-bottom: 2px;
+}
+.concept-header-text .concept-tag {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+p { margin-bottom: 18px; }
+
+.accent {
+  border-left: 3px solid;
+  padding: 14px 20px;
+  margin: 24px 0;
+  background: var(--surface);
+  border-radius: 0 4px 4px 0;
+  font-style: italic;
+  font-size: 15px;
+}
+.accent p { margin: 0; color: var(--ink); }
+
+/* DIAGRAM WRAPPER */
+.diagram {
+  margin: 32px 0;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 28px;
+  overflow-x: auto;
+}
+.diagram-caption {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 9px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--muted);
+  text-align: center;
+  margin-top: 16px;
+}
+
+/* INFO GRID */
+.info-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px;
+  margin: 24px 0;
+}
+@media(max-width:600px){ .info-grid { grid-template-columns: 1fr; } }
+.info-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  padding: 18px 20px;
+}
+.info-card-label {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 9px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  margin-bottom: 8px;
+}
+.info-card p {
+  font-size: 13.5px;
+  line-height: 1.6;
+  margin: 0;
+  color: var(--ink);
+}
+
+hr.rule {
+  border: none;
+  border-top: 1px solid var(--rule);
+  margin: 48px 0;
+}
+
+/* SVG base styles */
+svg text { font-family: 'JetBrains Mono', monospace; }
+
+/* FINAL SUMMARY */
+.summary-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+  margin: 32px 0;
+}
+.summary-table th {
+  background: var(--ink);
+  color: var(--bg);
+  padding: 10px 14px;
+  text-align: left;
+  font-family: 'JetBrains Mono', monospace;
+  font-weight: 400;
+  font-size: 9px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+.summary-table td {
+  padding: 11px 14px;
+  border-bottom: 1px solid var(--border);
+  vertical-align: top;
+  line-height: 1.5;
+}
+.summary-table tr:nth-child(even) td { background: var(--surface); }
+
+.pill {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: 2px;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px;
+  color: white;
+}
+</style>
+</head>
+<body>
+
+<!-- COVER -->
+<div class="cover">
+  <div class="cover-eyebrow">Report tecnico · Large Language Models</div>
+  <h1>Le tecnologie<br>fondamentali degli <em>LLM</em></h1>
+  <div class="cover-sub">Architetture, meccanismi di apprendimento e potenziamento a runtime — da Transformer a RAG</div>
+</div>
+
+<!-- MAP -->
+<div class="map">
+  <div class="map-title">Mappa dei concetti — tre livelli</div>
+  <div class="map-levels">
+    <div class="map-level" style="border-color: #4a9fd4;">
+      <div class="map-level-label">Livello 1</div>
+      <div class="map-level-title">Come il modello pensa</div>
+      <div class="map-level-items">
+        <div class="map-item">1.1 — Embedding</div>
+        <div class="map-item">1.2 — Transformer &amp; Self-Attention</div>
+        <div class="map-item">1.3 — Generazione autoregressiva</div>
+      </div>
+    </div>
+    <div class="map-level" style="border-color: #d4855a;">
+      <div class="map-level-label">Livello 2</div>
+      <div class="map-level-title">Come il modello impara</div>
+      <div class="map-level-items">
+        <div class="map-item">2.1 — Pre-training</div>
+        <div class="map-item">2.2 — Fine-tuning</div>
+        <div class="map-item">2.3 — RLHF</div>
+      </div>
+    </div>
+    <div class="map-level" style="border-color: #5aad80;">
+      <div class="map-level-label">Livello 3</div>
+      <div class="map-level-title">Come il modello agisce</div>
+      <div class="map-level-items">
+        <div class="map-item">3.1 — RAG</div>
+        <div class="map-item">3.2 — Tool Use / Function Calling</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+<!-- ═══════════════════════════════════════════ -->
+<!-- LEVEL 1 -->
+<!-- ═══════════════════════════════════════════ -->
+
+<div class="level-header" style="background: rgba(26,92,138,0.07); border-left: 4px solid var(--l1);">
+  <div class="level-num">01</div>
+  <div class="level-info">
+    <div class="level-tag" style="color:var(--l1)">Architetture e meccanismi interni</div>
+    <div class="level-title" style="color:var(--l1)">Come il modello pensa</div>
+  </div>
+</div>
+
+<!-- 1.1 EMBEDDING -->
+<div class="concept">
+  <div class="concept-header">
+    <div class="concept-num">1.1</div>
+    <div class="concept-header-text">
+      <h2>Embedding</h2>
+      <div class="concept-tag" style="color:var(--c-embedding)">La lingua del modello — vettori numerici ad alta dimensione</div>
+    </div>
+  </div>
+
+  <p>Prima che un LLM possa fare qualsiasi cosa, deve tradurre le parole in numeri. Il testo grezzo è incomprensibile per una macchina; servono vettori numerici su cui fare calcoli. Gli <strong>embedding</strong> sono questa traduzione: ogni token (parola o frammento di parola) viene convertito in un vettore di numeri in uno spazio ad altissima dimensionalità — tipicamente da 768 a 12.800 o più dimensioni a seconda del modello.</p>
+
+  <p>La proprietà fondamentale degli embedding non è solo la traduzione numerica, ma il fatto che le <em>relazioni semantiche diventano relazioni geometriche</em>. Parole con significato simile finiscono vicine in questo spazio. Parole con relazioni strutturali analoghe mantengono relazioni vettoriali analoghe. La celebre equazione "Re − Uomo + Donna ≈ Regina" funziona proprio perché le relazioni semantiche sono codificate come direzioni nello spazio vettoriale.</p>
+
+  <div class="accent" style="border-color: var(--c-embedding);">
+    <p>Gli embedding non vengono assegnati a mano: emergono dall'addestramento. Il modello impara che "gatto" e "felino" devono stare vicini perché appaiono in contesti simili in miliardi di testi. È la struttura statistica del linguaggio che plasma la geometria dello spazio.</p>
+  </div>
+
+  <!-- DIAGRAM 1.1 -->
+  <div class="diagram">
+    <svg viewBox="0 0 760 260" width="100%" style="display:block;">
+      <!-- BG -->
+      <rect width="760" height="260" fill="#edeae3" rx="4"/>
+
+      <!-- TOKEN BOX -->
+      <rect x="20" y="100" width="110" height="60" rx="4" fill="#1c1a17" opacity="0.08" stroke="#1c1a17" stroke-width="1"/>
+      <text x="75" y="124" text-anchor="middle" font-size="11" fill="#1c1a17" font-weight="500">"banca"</text>
+      <text x="75" y="142" text-anchor="middle" font-size="9" fill="#7a756a">token</text>
+
+      <!-- ARROW -->
+      <line x1="130" y1="130" x2="175" y2="130" stroke="#7a756a" stroke-width="1.5" marker-end="url(#arr1)"/>
+      <defs><marker id="arr1" markerWidth="6" markerHeight="6" refX="3" refY="3" orient="auto"><path d="M0,0 L6,3 L0,6 Z" fill="#7a756a"/></marker></defs>
+      <text x="152" y="122" text-anchor="middle" font-size="8" fill="#7a756a">lookup</text>
+
+      <!-- VECTOR -->
+      <rect x="178" y="80" width="120" height="100" rx="4" fill="white" stroke="#2874a8" stroke-width="1.5"/>
+      <text x="238" y="100" text-anchor="middle" font-size="9" fill="#2874a8">embedding vector</text>
+      <text x="238" y="116" text-anchor="middle" font-size="8" fill="#7a756a">dim: 4096</text>
+      <!-- mini bars -->
+      <rect x="194" y="122" width="18" height="4" rx="1" fill="#2874a8" opacity="0.7"/>
+      <rect x="194" y="130" width="28" height="4" rx="1" fill="#2874a8" opacity="0.5"/>
+      <rect x="194" y="138" width="10" height="4" rx="1" fill="#2874a8" opacity="0.8"/>
+      <rect x="194" y="146" width="34" height="4" rx="1" fill="#2874a8" opacity="0.4"/>
+      <rect x="194" y="154" width="22" height="4" rx="1" fill="#2874a8" opacity="0.6"/>
+      <rect x="194" y="162" width="14" height="4" rx="1" fill="#2874a8" opacity="0.9"/>
+      <text x="260" y="145" font-size="9" fill="#7a756a">[0.24, -0.81,</text>
+      <text x="260" y="157" font-size="9" fill="#7a756a"> 0.13,  0.67, ...]</text>
+
+      <!-- ARROW to space -->
+      <line x1="298" y1="130" x2="340" y2="130" stroke="#7a756a" stroke-width="1.5" marker-end="url(#arr2)"/>
+      <defs><marker id="arr2" markerWidth="6" markerHeight="6" refX="3" refY="3" orient="auto"><path d="M0,0 L6,3 L0,6 Z" fill="#7a756a"/></marker></defs>
+
+      <!-- SEMANTIC SPACE -->
+      <rect x="343" y="20" width="395" height="220" rx="6" fill="white" stroke="#d4cfc5" stroke-width="1"/>
+      <text x="540" y="42" text-anchor="middle" font-size="10" fill="#7a756a" letter-spacing="1">SPAZIO SEMANTICO (proiezione 2D)</text>
+
+      <!-- Cluster finance -->
+      <ellipse cx="430" cy="140" rx="52" ry="38" fill="rgba(40,116,168,0.06)" stroke="rgba(40,116,168,0.2)" stroke-dasharray="3"/>
+      <text x="430" y="100" text-anchor="middle" font-size="8" fill="#2874a8">finanza</text>
+      <circle cx="415" cy="125" r="5" fill="#2874a8"/>
+      <text x="415" y="118" text-anchor="middle" font-size="8" fill="#1c1a17">banca¹</text>
+      <circle cx="445" cy="135" r="5" fill="#2874a8" opacity="0.8"/>
+      <text x="445" y="128" text-anchor="middle" font-size="8" fill="#1c1a17">mutuo</text>
+      <circle cx="430" cy="155" r="5" fill="#2874a8" opacity="0.7"/>
+      <text x="430" y="170" text-anchor="middle" font-size="8" fill="#1c1a17">conto</text>
+      <circle cx="410" cy="148" r="5" fill="#2874a8" opacity="0.6"/>
+      <text x="395" y="148" text-anchor="middle" font-size="8" fill="#1c1a17">credito</text>
+
+      <!-- Cluster nature -->
+      <ellipse cx="620" cy="110" rx="55" ry="42" fill="rgba(46,107,79,0.06)" stroke="rgba(46,107,79,0.2)" stroke-dasharray="3"/>
+      <text x="620" y="68" text-anchor="middle" font-size="8" fill="#2e6b4f">natura / idrografia</text>
+      <circle cx="610" cy="90" r="5" fill="#2e6b4f"/>
+      <text x="610" y="83" text-anchor="middle" font-size="8" fill="#1c1a17">banca²</text>
+      <circle cx="635" cy="100" r="5" fill="#2e6b4f" opacity="0.8"/>
+      <text x="648" y="100" text-anchor="middle" font-size="8" fill="#1c1a17">riva</text>
+      <circle cx="620" cy="120" r="5" fill="#2e6b4f" opacity="0.7"/>
+      <text x="620" y="135" text-anchor="middle" font-size="8" fill="#1c1a17">fiume</text>
+      <circle cx="598" cy="112" r="5" fill="#2e6b4f" opacity="0.6"/>
+      <text x="580" y="112" text-anchor="middle" font-size="8" fill="#1c1a17">acqua</text>
+
+      <!-- distance line -->
+      <line x1="420" y1="125" x2="604" y2="90" stroke="#ccc" stroke-width="1" stroke-dasharray="4"/>
+      <text x="510" y="98" text-anchor="middle" font-size="8" fill="#aaa">distanza semantica</text>
+
+      <!-- Cluster animals -->
+      <circle cx="540" cy="190" r="5" fill="#9b4c28" opacity="0.8"/>
+      <text x="540" y="183" text-anchor="middle" font-size="8" fill="#1c1a17">gatto</text>
+      <circle cx="560" cy="200" r="5" fill="#9b4c28" opacity="0.7"/>
+      <text x="573" y="200" text-anchor="middle" font-size="8" fill="#1c1a17">felino</text>
+      <circle cx="524" cy="204" r="5" fill="#9b4c28" opacity="0.6"/>
+      <text x="510" y="218" text-anchor="middle" font-size="8" fill="#1c1a17">leopardo</text>
+    </svg>
+    <div class="diagram-caption">La stessa parola "banca" ha due posizioni diverse nello spazio semantico a seconda del senso. La prossimità geometrica riflette la prossimità semantica.</div>
+  </div>
+
+  <div class="info-grid">
+    <div class="info-card">
+      <div class="info-card-label" style="color:var(--c-embedding)">Proprietà chiave</div>
+      <p>Le relazioni semantiche diventano relazioni geometriche. Sinonimi vicini, contrari lontani in direzione opposta. Relazioni analoghe (re:uomo = regina:donna) formano parallelogrammi nello spazio.</p>
+    </div>
+    <div class="info-card">
+      <div class="info-card-label" style="color:var(--c-embedding)">Ruolo nell'LLM</div>
+      <p>Gli embedding sono il primo passo di ogni elaborazione: il testo grezzo viene tokenizzato, ogni token viene convertito in vettore, e questi vettori entrano nel Transformer. Senza embedding non ci sono calcoli.</p>
+    </div>
+  </div>
+</div>
+
+<hr class="rule">
+
+<!-- 1.2 TRANSFORMER -->
+<div class="concept">
+  <div class="concept-header">
+    <div class="concept-num">1.2</div>
+    <div class="concept-header-text">
+      <h2>Transformer &amp; Self-Attention</h2>
+      <div class="concept-tag" style="color:var(--c-transformer)">L'architettura centrale — relazioni globali e contestuali</div>
+    </div>
+  </div>
+
+  <p>Il Transformer (Google, 2017 — paper <em>"Attention Is All You Need"</em>) è l'architettura che ha reso possibili gli LLM moderni. Nasce per risolvere il limite fondamentale dei modelli precedenti (RNN): l'incapacità di mantenere dipendenze a lunga distanza in una sequenza, e l'impossibilità di parallelizzare il calcolo.</p>
+
+  <div class="accent" style="border-color: var(--c-transformer);">
+    <p>L'idea chiave: invece di leggere il testo in sequenza con memoria degradabile, ogni token "guarda" direttamente tutti gli altri e calcola quanto ciascuno è rilevante per interpretare se stesso. Questo in parallelo, su tutta la sequenza simultaneamente.</p>
+  </div>
+
+  <!-- DIAGRAM: RNN vs Transformer -->
+  <div class="diagram">
+    <svg viewBox="0 0 760 200" width="100%" style="display:block;">
+      <rect width="760" height="200" fill="#edeae3" rx="4"/>
+
+      <!-- RNN side -->
+      <text x="185" y="22" text-anchor="middle" font-size="10" fill="#7a756a" letter-spacing="1">MODELLO RNN (prima dei Transformer)</text>
+      <text x="185" y="38" text-anchor="middle" font-size="8" fill="#aaa">memoria che si degrada</text>
+
+      <!-- RNN nodes -->
+      <rect x="20" y="65" width="48" height="32" rx="3" fill="#d4cfc5" stroke="#aaa" stroke-width="1"/>
+      <text x="44" y="85" text-anchor="middle" font-size="9" fill="#444">Il</text>
+      <rect x="86" y="65" width="48" height="32" rx="3" fill="#d4cfc5" stroke="#aaa" stroke-width="1"/>
+      <text x="110" y="85" text-anchor="middle" font-size="9" fill="#444">gatto</text>
+      <rect x="152" y="65" width="48" height="32" rx="3" fill="#d4cfc5" stroke="#aaa" stroke-width="1"/>
+      <text x="176" y="85" text-anchor="middle" font-size="9" fill="#444">che</text>
+      <rect x="218" y="65" width="48" height="32" rx="3" fill="#d4cfc5" stroke="#aaa" stroke-width="1"/>
+      <text x="242" y="85" text-anchor="middle" font-size="9" fill="#444">...</text>
+      <rect x="284" y="65" width="48" height="32" rx="3" fill="#e07b54" stroke="#c06040" stroke-width="1"/>
+      <text x="308" y="85" text-anchor="middle" font-size="9" fill="white">malato</text>
+
+      <!-- RNN arrows -->
+      <defs>
+        <marker id="a1" markerWidth="5" markerHeight="5" refX="2.5" refY="2.5" orient="auto"><path d="M0,0 L5,2.5 L0,5 Z" fill="#aaa"/></marker>
+        <marker id="a2" markerWidth="5" markerHeight="5" refX="2.5" refY="2.5" orient="auto"><path d="M0,0 L5,2.5 L0,5 Z" fill="#1a5c8a"/></marker>
+        <marker id="a3" markerWidth="5" markerHeight="5" refX="2.5" refY="2.5" orient="auto"><path d="M0,0 L5,2.5 L0,5 Z" fill="#e07b54"/></marker>
+      </defs>
+      <line x1="68" y1="81" x2="84" y2="81" stroke="#aaa" stroke-width="2" marker-end="url(#a1)"/>
+      <line x1="134" y1="81" x2="150" y2="81" stroke="#aaa" stroke-width="1.5" marker-end="url(#a1)"/>
+      <line x1="200" y1="81" x2="216" y2="81" stroke="#aaa" stroke-width="1.2" marker-end="url(#a1)"/>
+      <line x1="266" y1="81" x2="282" y2="81" stroke="#aaa" stroke-width="1" stroke-dasharray="3" marker-end="url(#a1)"/>
+
+      <!-- memory label -->
+      <text x="44" y="115" text-anchor="middle" font-size="8" fill="#2e6b4f">memoria</text>
+      <text x="44" y="125" text-anchor="middle" font-size="8" fill="#2e6b4f">forte</text>
+      <text x="308" y="115" text-anchor="middle" font-size="8" fill="#e07b54">memoria</text>
+      <text x="308" y="125" text-anchor="middle" font-size="8" fill="#e07b54">degradata</text>
+      <text x="308" y="140" text-anchor="middle" font-size="8" fill="#e07b54">"gatto" quasi</text>
+      <text x="308" y="150" text-anchor="middle" font-size="8" fill="#e07b54">dimenticato</text>
+
+      <!-- divider -->
+      <line x1="380" y1="10" x2="380" y2="190" stroke="#d4cfc5" stroke-width="1"/>
+
+      <!-- TRANSFORMER side -->
+      <text x="570" y="22" text-anchor="middle" font-size="10" fill="#1a5c8a" letter-spacing="1">TRANSFORMER</text>
+      <text x="570" y="38" text-anchor="middle" font-size="8" fill="#2874a8">attention diretta tra tutti i token</text>
+
+      <!-- Transformer nodes -->
+      <rect x="400" y="80" width="42" height="28" rx="3" fill="#1a5c8a" opacity="0.15" stroke="#1a5c8a" stroke-width="1.5"/>
+      <text x="421" y="98" text-anchor="middle" font-size="9" fill="#1a5c8a">Il</text>
+      <rect x="458" y="80" width="42" height="28" rx="3" fill="#1a5c8a" opacity="0.15" stroke="#1a5c8a" stroke-width="1.5"/>
+      <text x="479" y="98" text-anchor="middle" font-size="9" fill="#1a5c8a">gatto</text>
+      <rect x="516" y="80" width="42" height="28" rx="3" fill="#1a5c8a" opacity="0.15" stroke="#1a5c8a" stroke-width="1.5"/>
+      <text x="537" y="98" text-anchor="middle" font-size="9" fill="#1a5c8a">che</text>
+      <rect x="574" y="80" width="42" height="28" rx="3" fill="#1a5c8a" opacity="0.15" stroke="#1a5c8a" stroke-width="1.5"/>
+      <text x="595" y="98" text-anchor="middle" font-size="9" fill="#1a5c8a">...</text>
+      <rect x="632" y="80" width="48" height="28" rx="3" fill="#1a5c8a" opacity="0.8" stroke="#1a5c8a" stroke-width="1.5"/>
+      <text x="656" y="98" text-anchor="middle" font-size="9" fill="white">malato</text>
+
+      <!-- Attention lines from malato to all -->
+      <line x1="648" y1="80" x2="479" y2="80" stroke="#1a5c8a" stroke-width="2" stroke-dasharray="none" opacity="0.8" marker-end="url(#a2)"/>
+      <text x="560" y="72" text-anchor="middle" font-size="8" fill="#1a5c8a">attention = 0.45</text>
+
+      <path d="M 648,108 Q 537,150 537,108" stroke="#1a5c8a" stroke-width="1" fill="none" opacity="0.4" stroke-dasharray="3"/>
+      <path d="M 648,108 Q 421,160 421,108" stroke="#1a5c8a" stroke-width="0.8" fill="none" opacity="0.25" stroke-dasharray="3"/>
+      <path d="M 648,108 Q 595,155 595,108" stroke="#1a5c8a" stroke-width="0.6" fill="none" opacity="0.2" stroke-dasharray="3"/>
+
+      <text x="570" y="170" text-anchor="middle" font-size="8" fill="#1a5c8a">"gatto" raggiunto direttamente — nessuna degradazione</text>
+    </svg>
+    <div class="diagram-caption">RNN: la memoria si degrada lungo la catena. Transformer: ogni token si connette direttamente a ogni altro con punteggi di attention appresi.</div>
+  </div>
+
+  <p><strong>Il meccanismo Q-K-V:</strong> Ogni token genera tre vettori — Query (Q: "cosa sto cercando?"), Key (K: "cosa offro?"), Value (V: "cosa trasmetto se vengo scelto?"). Il punteggio di attention tra due token è il prodotto scalare tra la Query del primo e la Key del secondo, normalizzato con softmax. Il risultato finale è la somma pesata dei Value di tutti i token, pesati dai loro punteggi.</p>
+
+  <!-- DIAGRAM: QKV mechanism -->
+  <div class="diagram">
+    <svg viewBox="0 0 760 230" width="100%" style="display:block;">
+      <rect width="760" height="230" fill="#edeae3" rx="4"/>
+
+      <defs>
+        <marker id="aq" markerWidth="5" markerHeight="5" refX="2.5" refY="2.5" orient="auto"><path d="M0,0 L5,2.5 L0,5 Z" fill="#b85c32"/></marker>
+        <marker id="ak" markerWidth="5" markerHeight="5" refX="2.5" refY="2.5" orient="auto"><path d="M0,0 L5,2.5 L0,5 Z" fill="#2874a8"/></marker>
+        <marker id="av" markerWidth="5" markerHeight="5" refX="2.5" refY="2.5" orient="auto"><path d="M0,0 L5,2.5 L0,5 Z" fill="#2e6b4f"/></marker>
+        <marker id="af" markerWidth="5" markerHeight="5" refX="2.5" refY="2.5" orient="auto"><path d="M0,0 L5,2.5 L0,5 Z" fill="#444"/></marker>
+      </defs>
+
+      <!-- Token input -->
+      <rect x="20" y="95" width="80" height="40" rx="4" fill="#1c1a17" opacity="0.08" stroke="#1c1a17" stroke-width="1"/>
+      <text x="60" y="118" text-anchor="middle" font-size="11" fill="#1c1a17">token xᵢ</text>
+      <text x="60" y="132" text-anchor="middle" font-size="8" fill="#7a756a">embedding</text>
+
+      <!-- Three projections -->
+      <line x1="100" y1="108" x2="136" y2="80" stroke="#b85c32" stroke-width="1.5" marker-end="url(#aq)"/>
+      <line x1="100" y1="115" x2="136" y2="115" stroke="#2874a8" stroke-width="1.5" marker-end="url(#ak)"/>
+      <line x1="100" y1="122" x2="136" y2="148" stroke="#2e6b4f" stroke-width="1.5" marker-end="url(#av)"/>
+
+      <!-- Projection labels -->
+      <text x="102" y="68" font-size="9" fill="#b85c32">× Wq</text>
+      <text x="102" y="112" font-size="9" fill="#2874a8">× Wk</text>
+      <text x="102" y="156" font-size="9" fill="#2e6b4f">× Wv</text>
+
+      <!-- Q K V boxes -->
+      <rect x="140" y="58" width="58" height="32" rx="3" fill="#b85c32" opacity="0.15" stroke="#b85c32" stroke-width="1.5"/>
+      <text x="169" y="78" text-anchor="middle" font-size="11" fill="#b85c32" font-weight="500">Q</text>
+
+      <rect x="140" y="99" width="58" height="32" rx="3" fill="#2874a8" opacity="0.15" stroke="#2874a8" stroke-width="1.5"/>
+      <text x="169" y="119" text-anchor="middle" font-size="11" fill="#2874a8" font-weight="500">K</text>
+
+      <rect x="140" y="140" width="58" height="32" rx="3" fill="#2e6b4f" opacity="0.15" stroke="#2e6b4f" stroke-width="1.5"/>
+      <text x="169" y="160" text-anchor="middle" font-size="11" fill="#2e6b4f" font-weight="500">V</text>
+
+      <!-- Labels -->
+      <text x="169" y="48" text-anchor="middle" font-size="8" fill="#b85c32">Query — "cosa cerco"</text>
+      <text x="169" y="92" text-anchor="middle" font-size="8" fill="#2874a8">Key — "cosa offro"</text>
+      <text x="169" y="185" text-anchor="middle" font-size="8" fill="#2e6b4f">Value — "cosa trasmetto"</text>
+
+      <!-- Dot product box -->
+      <rect x="256" y="68" width="100" height="52" rx="4" fill="white" stroke="#ccc" stroke-width="1"/>
+      <text x="306" y="88" text-anchor="middle" font-size="9" fill="#444">Q · Kᵀ</text>
+      <text x="306" y="100" text-anchor="middle" font-size="8" fill="#7a756a">prodotto scalare</text>
+      <text x="306" y="114" text-anchor="middle" font-size="8" fill="#7a756a">/ √d</text>
+
+      <line x1="198" y1="74" x2="254" y2="85" stroke="#b85c32" stroke-width="1" marker-end="url(#aq)" stroke-dasharray="2"/>
+      <line x1="198" y1="115" x2="254" y2="105" stroke="#2874a8" stroke-width="1" marker-end="url(#ak)" stroke-dasharray="2"/>
+
+      <!-- Softmax -->
+      <rect x="376" y="74" width="88" height="40" rx="4" fill="white" stroke="#ccc" stroke-width="1"/>
+      <text x="420" y="90" text-anchor="middle" font-size="9" fill="#444">softmax</text>
+      <text x="420" y="106" text-anchor="middle" font-size="8" fill="#7a756a">→ pesi 0..1</text>
+      <line x1="356" y1="94" x2="374" y2="94" stroke="#444" stroke-width="1.5" marker-end="url(#af)"/>
+
+      <!-- Weighted sum -->
+      <rect x="484" y="74" width="108" height="40" rx="4" fill="white" stroke="#ccc" stroke-width="1"/>
+      <text x="538" y="90" text-anchor="middle" font-size="9" fill="#444">∑ pesi × V</text>
+      <text x="538" y="106" text-anchor="middle" font-size="8" fill="#7a756a">somma pesata</text>
+      <line x1="464" y1="94" x2="482" y2="94" stroke="#444" stroke-width="1.5" marker-end="url(#af)"/>
+      <line x1="198" y1="155" x2="536" y2="116" stroke="#2e6b4f" stroke-width="1" stroke-dasharray="3" marker-end="url(#av)"/>
+
+      <!-- Output -->
+      <rect x="614" y="74" width="110" height="40" rx="4" fill="#1a5c8a" opacity="0.15" stroke="#1a5c8a" stroke-width="1.5"/>
+      <text x="669" y="91" text-anchor="middle" font-size="9" fill="#1a5c8a">output</text>
+      <text x="669" y="106" text-anchor="middle" font-size="8" fill="#1a5c8a">token contestualizzato</text>
+      <line x1="592" y1="94" x2="612" y2="94" stroke="#1a5c8a" stroke-width="1.5" marker-end="url(#a2)"/>
+
+      <!-- Multi-head note -->
+      <rect x="256" y="168" width="468" height="44" rx="4" fill="rgba(26,92,138,0.06)" stroke="rgba(26,92,138,0.2)" stroke-width="1"/>
+      <text x="490" y="184" text-anchor="middle" font-size="9" fill="#1a5c8a" font-weight="500">MULTI-HEAD ATTENTION</text>
+      <text x="490" y="200" text-anchor="middle" font-size="8" fill="#7a756a">Il processo Q·K·V viene ripetuto N volte in parallelo (es. 32 "teste") — ogni testa impara relazioni diverse</text>
+    </svg>
+    <div class="diagram-caption">Il meccanismo Q-K-V: ogni token proietta tre vettori. Il prodotto scalare Q·K produce punteggi di rilevanza; la softmax li normalizza; la somma pesata dei Value produce il token contestualizzato.</div>
+  </div>
+
+  <p><strong>Struttura del blocco Transformer:</strong> Un modello completo è una pila di N blocchi identici (da 12 nei modelli piccoli a 96+ nei modelli grandi). Ogni blocco contiene: Multi-Head Self-Attention → Add &amp; LayerNorm → Feed-Forward Network → Add &amp; LayerNorm. Le <em>residual connections</em> (il "Add") sommano l'input di ogni sotto-layer al suo output, garantendo che i gradienti fluiscano durante il training anche attraverso decine di blocchi sovrapposti.</p>
+
+  <p><strong>Positional Encoding:</strong> L'attention è parallela e non ha nozione intrinseca di ordine. Prima di entrare nel primo blocco, ogni embedding viene sommato a un vettore di posizione che codifica la sua posizione nella sequenza. Senza questo, "il cane morde l'uomo" e "l'uomo morde il cane" sarebbero indistinguibili.</p>
+
+  <div class="info-grid">
+    <div class="info-card">
+      <div class="info-card-label" style="color:var(--c-transformer)">Perché è rivoluzionario</div>
+      <p>Risolve simultaneamente tre problemi: long-range dependencies (connessione diretta), parallelizzabilità del training (no sequenzialità), scalabilità (aggiungere blocchi migliora le capacità in modo prevedibile).</p>
+    </div>
+    <div class="info-card">
+      <div class="info-card-label" style="color:var(--c-transformer)">Emergent capabilities</div>
+      <p>Scalando il numero di parametri e i dati, i modelli Transformer mostrano capacità qualitative nuove non presenti nei modelli più piccoli: ragionamento multi-step, in-context learning, following di istruzioni complesse.</p>
+    </div>
+  </div>
+</div>
+
+<hr class="rule">
+
+<!-- 1.3 AUTOREGRESSIVE -->
+<div class="concept">
+  <div class="concept-header">
+    <div class="concept-num">1.3</div>
+    <div class="concept-header-text">
+      <h2>Generazione Autoregressiva</h2>
+      <div class="concept-tag" style="color:var(--c-autoregressive)">Come un LLM produce testo — un token alla volta</div>
+    </div>
+  </div>
+
+  <p>Capito il Transformer, rimane una domanda: come passa dall'elaborare un input al <em>generare</em> un output? La risposta è la generazione autoregressiva: il modello non produce l'intera risposta in un colpo. Produce un token alla volta, e ogni token generato diventa parte del contesto per generare il successivo.</p>
+
+  <div class="accent" style="border-color: var(--c-autoregressive);">
+    <p>L'obiettivo di training è apparentemente banale: dato un testo, predire quale token viene dopo. Ma per farlo bene su trilioni di esempi il modello deve costruire internamente una rappresentazione del mondo, della grammatica, dei fatti, della logica.</p>
+  </div>
+
+  <!-- DIAGRAM autoregressive -->
+  <div class="diagram">
+    <svg viewBox="0 0 760 220" width="100%" style="display:block;">
+      <rect width="760" height="220" fill="#edeae3" rx="4"/>
+      <defs>
+        <marker id="aan" markerWidth="5" markerHeight="5" refX="2.5" refY="2.5" orient="auto"><path d="M0,0 L5,2.5 L0,5 Z" fill="#1e4f7a"/></marker>
+      </defs>
+
+      <!-- Step 1 -->
+      <text x="14" y="20" font-size="9" fill="#7a756a" letter-spacing="1">STEP 1</text>
+      <rect x="14" y="28" width="44" height="26" rx="3" fill="#1e4f7a" opacity="0.15" stroke="#1e4f7a" stroke-width="1"/>
+      <text x="36" y="44" text-anchor="middle" font-size="9" fill="#1e4f7a">La</text>
+      <rect x="62" y="28" width="44" height="26" rx="3" fill="#1e4f7a" opacity="0.15" stroke="#1e4f7a" stroke-width="1"/>
+      <text x="84" y="44" text-anchor="middle" font-size="9" fill="#1e4f7a">capitale</text>
+      <rect x="110" y="28" width="44" height="26" rx="3" fill="#1e4f7a" opacity="0.15" stroke="#1e4f7a" stroke-width="1"/>
+      <text x="132" y="44" text-anchor="middle" font-size="9" fill="#1e4f7a">d'Italia</text>
+      <rect x="158" y="28" width="44" height="26" rx="3" fill="#1e4f7a" opacity="0.15" stroke="#1e4f7a" stroke-width="1"/>
+      <text x="180" y="44" text-anchor="middle" font-size="9" fill="#1e4f7a">è</text>
+
+      <line x1="202" y1="41" x2="226" y2="41" stroke="#1e4f7a" stroke-width="1.5" marker-end="url(#aan)"/>
+
+      <!-- Transformer box -->
+      <rect x="228" y="20" width="80" height="42" rx="4" fill="#1e4f7a" opacity="0.8"/>
+      <text x="268" y="38" text-anchor="middle" font-size="10" fill="white">Transformer</text>
+      <text x="268" y="52" text-anchor="middle" font-size="8" fill="rgba(255,255,255,0.7)">+ softmax</text>
+
+      <line x1="308" y1="41" x2="330" y2="41" stroke="#1e4f7a" stroke-width="1.5" marker-end="url(#aan)"/>
+
+      <!-- Probability distribution -->
+      <rect x="333" y="14" width="130" height="56" rx="4" fill="white" stroke="#d4cfc5" stroke-width="1"/>
+      <text x="398" y="30" text-anchor="middle" font-size="9" fill="#444">distribuzione di probabilità</text>
+      <text x="350" y="44" font-size="8" fill="#1e4f7a">Roma</text>
+      <rect x="378" y="38" width="55" height="6" rx="1" fill="#1e4f7a" opacity="0.8"/>
+      <text x="436" y="44" font-size="8" fill="#7a756a">78%</text>
+      <text x="350" y="56" font-size="8" fill="#7a756a">Milano</text>
+      <rect x="378" y="50" width="14" height="6" rx="1" fill="#7a756a" opacity="0.5"/>
+      <text x="394" y="56" font-size="8" fill="#aaa"> 12% ···</text>
+
+      <!-- Token selected -->
+      <line x1="463" y1="41" x2="486" y2="41" stroke="#2e6b4f" stroke-width="1.5" stroke-dasharray="none" marker-end="url(#av)"/>
+      <defs><marker id="av2" markerWidth="5" markerHeight="5" refX="2.5" refY="2.5" orient="auto"><path d="M0,0 L5,2.5 L0,5 Z" fill="#2e6b4f"/></marker></defs>
+
+      <rect x="488" y="22" width="58" height="38" rx="4" fill="#2e6b4f" opacity="0.8"/>
+      <text x="517" y="38" text-anchor="middle" font-size="11" fill="white">Roma</text>
+      <text x="517" y="52" text-anchor="middle" font-size="8" fill="rgba(255,255,255,0.7)">scelto</text>
+
+      <!-- Loop arrow -->
+      <path d="M 517,60 Q 517,95 268,95 Q 19,95 19,68" stroke="#2e6b4f" stroke-width="1.5" fill="none" stroke-dasharray="4" marker-end="url(#av2)"/>
+      <text x="260" y="112" text-anchor="middle" font-size="8" fill="#2e6b4f">"Roma" aggiunto al contesto → nuovo step inizia</text>
+
+      <!-- Step 2 indication -->
+      <text x="14" y="145" font-size="9" fill="#7a756a" letter-spacing="1">STEP 2 (iterazione successiva)</text>
+      <rect x="14" y="153" width="44" height="26" rx="3" fill="#1e4f7a" opacity="0.08" stroke="#1e4f7a" stroke-width="0.5"/>
+      <text x="36" y="169" text-anchor="middle" font-size="9" fill="#aaa">La</text>
+      <rect x="62" y="153" width="44" height="26" rx="3" fill="#1e4f7a" opacity="0.08" stroke="#1e4f7a" stroke-width="0.5"/>
+      <text x="84" y="169" text-anchor="middle" font-size="9" fill="#aaa">capitale</text>
+      <rect x="110" y="153" width="44" height="26" rx="3" fill="#1e4f7a" opacity="0.08" stroke="#1e4f7a" stroke-width="0.5"/>
+      <text x="132" y="169" text-anchor="middle" font-size="9" fill="#aaa">d'Italia</text>
+      <rect x="158" y="153" width="44" height="26" rx="3" fill="#1e4f7a" opacity="0.08" stroke="#1e4f7a" stroke-width="0.5"/>
+      <text x="180" y="169" text-anchor="middle" font-size="9" fill="#aaa">è</text>
+      <rect x="206" y="153" width="44" height="26" rx="3" fill="#2e6b4f" opacity="0.6" stroke="#2e6b4f" stroke-width="1"/>
+      <text x="228" y="169" text-anchor="middle" font-size="9" fill="white">Roma</text>
+      <rect x="254" y="153" width="44" height="26" rx="3" fill="#edeae3" stroke="#aaa" stroke-width="1" stroke-dasharray="3"/>
+      <text x="276" y="169" text-anchor="middle" font-size="9" fill="#aaa">?</text>
+
+      <line x1="298" y1="166" x2="340" y2="166" stroke="#1e4f7a" stroke-width="1.5" marker-end="url(#aan)"/>
+      <rect x="343" y="153" width="80" height="26" rx="4" fill="#1e4f7a" opacity="0.8"/>
+      <text x="383" y="169" text-anchor="middle" font-size="9" fill="white">Transformer</text>
+      <line x1="423" y1="166" x2="450" y2="166" stroke="#1e4f7a" stroke-width="1.5" marker-end="url(#aan)"/>
+      <rect x="453" y="153" width="90" height="26" rx="4" fill="white" stroke="#d4cfc5"/>
+      <text x="498" y="169" text-anchor="middle" font-size="8" fill="#444">→ "è" (70%) / "," (18%)...</text>
+
+      <text x="600" y="170" font-size="8" fill="#7a756a">e così via</text>
+      <text x="600" y="182" font-size="8" fill="#7a756a">fino al token</text>
+      <text x="600" y="194" font-size="8" fill="#7a756a">[END]</text>
+    </svg>
+    <div class="diagram-caption">Generazione autoregressiva: ogni step produce un token che viene aggiunto al contesto; il processo si ripete fino al token di fine sequenza.</div>
+  </div>
+
+  <p>C'è un parametro che controlla quanto sia "creativa" o "deterministica" la selezione del token successivo: la <strong>temperatura</strong>. Con temperatura bassa il modello sceglie quasi sempre il token più probabile (output prevedibile e coerente); con temperatura alta la distribuzione di probabilità si "appiattisce" e token meno probabili vengono selezionati più spesso (output più vario e sorprendente, ma potenzialmente meno coerente).</p>
+</div>
+
+
+<!-- ═══════════════════════════════════════════ -->
+<!-- LEVEL 2 -->
+<!-- ═══════════════════════════════════════════ -->
+
+<div class="level-header" style="background: rgba(122,59,30,0.07); border-left: 4px solid var(--l2);">
+  <div class="level-num">02</div>
+  <div class="level-info">
+    <div class="level-tag" style="color:var(--l2)">Meccanismi di apprendimento</div>
+    <div class="level-title" style="color:var(--l2)">Come il modello impara</div>
+  </div>
+</div>
+
+<!-- 2.1 PRE-TRAINING -->
+<div class="concept">
+  <div class="concept-header">
+    <div class="concept-num">2.1</div>
+    <div class="concept-header-text">
+      <h2>Pre-training</h2>
+      <div class="concept-tag" style="color:var(--c-pretrain)">L'apprendimento su scala massiva — la fondazione del modello</div>
+    </div>
+  </div>
+
+  <p>Il pre-training è la fase in cui il modello "legge il mondo". Si tratta di addestrare il Transformer su quantità colossali di testo non strutturato — pagine web, libri, articoli scientifici, codice sorgente, forum — con un obiettivo semplice: data una sequenza di token, predire il token successivo (o, in varianti bidirezionali come BERT, predire un token mascherato nel mezzo).</p>
+
+  <p>La scala è ciò che distingue il pre-training degli LLM da qualsiasi addestramento precedente. GPT-3 è stato addestrato su 300 miliardi di token. LLaMA-3 su 15.000 miliardi. Questo richiede migliaia di GPU o TPU in parallelo per settimane o mesi — è qui che la parallelizzabilità del Transformer diventa critica: senza di essa, questi volumi sarebbero computazionalmente impossibili da gestire.</p>
+
+  <div class="accent" style="border-color: var(--c-pretrain);">
+    <p>L'obiettivo "predire il token successivo" è banale in apparenza. Ma per farlo bene su miliardi di frasi il modello deve costruire internamente una rappresentazione della grammatica, dei fatti del mondo, delle relazioni causali, degli stili, dei ragionamenti. La conoscenza non viene inserita: emerge come effetto collaterale dell'ottimizzazione.</p>
+  </div>
+
+  <!-- DIAGRAM pre-training -->
+  <div class="diagram">
+    <svg viewBox="0 0 760 180" width="100%" style="display:block;">
+      <rect width="760" height="180" fill="#edeae3" rx="4"/>
+      <defs>
+        <marker id="apt" markerWidth="5" markerHeight="5" refX="2.5" refY="2.5" orient="auto"><path d="M0,0 L5,2.5 L0,5 Z" fill="#7a3b1e"/></marker>
+      </defs>
+
+      <!-- Data sources -->
+      <rect x="10" y="30" width="80" height="22" rx="3" fill="#7a3b1e" opacity="0.12" stroke="#7a3b1e" stroke-width="1"/>
+      <text x="50" y="45" text-anchor="middle" font-size="9" fill="#7a3b1e">Web (CommonCrawl)</text>
+      <rect x="10" y="58" width="80" height="22" rx="3" fill="#7a3b1e" opacity="0.12" stroke="#7a3b1e" stroke-width="1"/>
+      <text x="50" y="73" text-anchor="middle" font-size="9" fill="#7a3b1e">Libri / Wikipedia</text>
+      <rect x="10" y="86" width="80" height="22" rx="3" fill="#7a3b1e" opacity="0.12" stroke="#7a3b1e" stroke-width="1"/>
+      <text x="50" y="101" text-anchor="middle" font-size="9" fill="#7a3b1e">Codice sorgente</text>
+      <rect x="10" y="114" width="80" height="22" rx="3" fill="#7a3b1e" opacity="0.12" stroke="#7a3b1e" stroke-width="1"/>
+      <text x="50" y="129" text-anchor="middle" font-size="9" fill="#7a3b1e">Articoli scientifici</text>
+
+      <text x="50" y="16" text-anchor="middle" font-size="9" fill="#7a756a">Trilioni di token</text>
+
+      <!-- Arrows -->
+      <line x1="90" y1="70" x2="120" y2="85" stroke="#7a3b1e" stroke-width="1" marker-end="url(#apt)"/>
+      <line x1="90" y1="97" x2="120" y2="90" stroke="#7a3b1e" stroke-width="1" marker-end="url(#apt)"/>
+
+      <!-- Training objective -->
+      <rect x="122" y="58" width="170" height="64" rx="4" fill="white" stroke="#d4cfc5"/>
+      <text x="207" y="78" text-anchor="middle" font-size="9" fill="#444">OBIETTIVO DI TRAINING</text>
+      <text x="207" y="94" text-anchor="middle" font-size="10" fill="#7a3b1e">P(token_t | token_1...t-1)</text>
+      <text x="207" y="110" text-anchor="middle" font-size="8" fill="#7a756a">massimizzare la prob. del token corretto</text>
+
+      <line x1="292" y1="90" x2="322" y2="90" stroke="#7a3b1e" stroke-width="1.5" marker-end="url(#apt)"/>
+
+      <!-- Model training -->
+      <rect x="324" y="48" width="120" height="84" rx="4" fill="#7a3b1e" opacity="0.8"/>
+      <text x="384" y="72" text-anchor="middle" font-size="10" fill="white">Transformer</text>
+      <text x="384" y="88" text-anchor="middle" font-size="8" fill="rgba(255,255,255,0.7)">miliardi di parametri</text>
+      <text x="384" y="104" text-anchor="middle" font-size="8" fill="rgba(255,255,255,0.5)">backpropagation</text>
+      <text x="384" y="118" text-anchor="middle" font-size="8" fill="rgba(255,255,255,0.5)">su migliaia di GPU</text>
+
+      <line x1="444" y1="90" x2="474" y2="90" stroke="#7a3b1e" stroke-width="1.5" marker-end="url(#apt)"/>
+
+      <!-- Foundation model outputs -->
+      <rect x="476" y="30" width="130" height="22" rx="3" fill="rgba(122,59,30,0.1)" stroke="#7a3b1e" stroke-width="1"/>
+      <text x="541" y="45" text-anchor="middle" font-size="8" fill="#7a3b1e">grammatica + sintassi</text>
+      <rect x="476" y="58" width="130" height="22" rx="3" fill="rgba(122,59,30,0.1)" stroke="#7a3b1e" stroke-width="1"/>
+      <text x="541" y="73" text-anchor="middle" font-size="8" fill="#7a3b1e">fatti del mondo</text>
+      <rect x="476" y="86" width="130" height="22" rx="3" fill="rgba(122,59,30,0.1)" stroke="#7a3b1e" stroke-width="1"/>
+      <text x="541" y="101" text-anchor="middle" font-size="8" fill="#7a3b1e">ragionamento / logica</text>
+      <rect x="476" y="114" width="130" height="22" rx="3" fill="rgba(122,59,30,0.1)" stroke="#7a3b1e" stroke-width="1"/>
+      <text x="541" y="129" text-anchor="middle" font-size="8" fill="#7a3b1e">stili + domini</text>
+      <text x="541" y="162" text-anchor="middle" font-size="9" fill="#7a756a">emerge dall'ottimizzazione</text>
+
+      <!-- Label -->
+      <text x="649" y="88" text-anchor="middle" font-size="9" fill="#7a3b1e" font-weight="500">Foundation</text>
+      <text x="649" y="100" text-anchor="middle" font-size="9" fill="#7a3b1e" font-weight="500">Model</text>
+    </svg>
+    <div class="diagram-caption">Pre-training: trilioni di token → obiettivo "predici il prossimo token" → il modello costruisce internamente rappresentazioni del mondo come effetto collaterale.</div>
+  </div>
+
+  <p>Il risultato del pre-training è un <strong>Foundation Model</strong> (modello base o modello fondazionale): un modello estremamente capace di completare testi, ma non ancora ottimizzato per seguire istruzioni o avere conversazioni utili. Sa molto, ma non è ancora "allineato" con le aspettative umane.</p>
+</div>
+
+<hr class="rule">
+
+<!-- 2.2 FINE-TUNING -->
+<div class="concept">
+  <div class="concept-header">
+    <div class="concept-num">2.2</div>
+    <div class="concept-header-text">
+      <h2>Fine-tuning</h2>
+      <div class="concept-tag" style="color:var(--c-finetune)">Specializzazione del modello su un dominio o compito</div>
+    </div>
+  </div>
+
+  <p>Il fine-tuning è un addestramento aggiuntivo, molto più piccolo, che adatta il Foundation Model a un compito specifico o a un comportamento desiderato. Invece di trilioni di token generici, si usano migliaia o milioni di esempi selezionati — coppie di input/output che mostrano al modello come deve rispondere in un determinato contesto.</p>
+
+  <p>Esistono due forme principali. Il <strong>full fine-tuning</strong> aggiorna tutti i parametri del modello — costoso ma massimamente adattivo. Il <strong>Parameter-Efficient Fine-Tuning (PEFT)</strong>, nella sua variante più diffusa chiamata <em>LoRA</em>, congela i pesi originali del modello e aggiunge un piccolo numero di parametri addizionali da addestrare: si ottiene gran parte del beneficio del fine-tuning con una frazione del costo computazionale.</p>
+
+  <div class="info-grid">
+    <div class="info-card">
+      <div class="info-card-label" style="color:var(--c-finetune)">Instruction fine-tuning</div>
+      <p>Il tipo più comune: si addestra il modello su migliaia di esempi "domanda → risposta desiderata" per insegnargli a seguire istruzioni. Trasforma il completatore di testo in un assistente.</p>
+    </div>
+    <div class="info-card">
+      <div class="info-card-label" style="color:var(--c-finetune)">Domain fine-tuning</div>
+      <p>Adatta il modello a un dominio specifico (legale, medico, finanziario) con dati tecnici del settore. Il modello base impara il vocabolario e i pattern del dominio.</p>
+    </div>
+  </div>
+</div>
+
+<hr class="rule">
+
+<!-- 2.3 RLHF -->
+<div class="concept">
+  <div class="concept-header">
+    <div class="concept-num">2.3</div>
+    <div class="concept-header-text">
+      <h2>RLHF</h2>
+      <div class="concept-tag" style="color:var(--c-rlhf)">Reinforcement Learning from Human Feedback — l'allineamento</div>
+    </div>
+  </div>
+
+  <p>Il fine-tuning su istruzioni migliora la capacità di seguire comandi, ma non garantisce che il modello sia <em>utile, onesto e sicuro</em>. Un modello potrebbe imparare a produrre risposte che sembrano plausibili ma sono false, o rispondere in modi dannosi. L'RLHF è la tecnica sviluppata per allineare il comportamento del modello alle preferenze umane.</p>
+
+  <div class="accent" style="border-color: var(--c-rlhf);">
+    <p>RLHF trasforma un giudizio umano soggettivo ("questa risposta è meglio di quella") in un segnale di apprendimento per il modello. È il passaggio che converte un Foundation Model potente ma grezzo in un assistente che gli utenti trovano genuinamente utile.</p>
+  </div>
+
+  <!-- DIAGRAM RLHF -->
+  <div class="diagram">
+    <svg viewBox="0 0 760 250" width="100%" style="display:block;">
+      <rect width="760" height="250" fill="#edeae3" rx="4"/>
+      <defs>
+        <marker id="ar" markerWidth="5" markerHeight="5" refX="2.5" refY="2.5" orient="auto"><path d="M0,0 L5,2.5 L0,5 Z" fill="#b85c32"/></marker>
+      </defs>
+
+      <!-- Phase labels -->
+      <text x="100" y="18" text-anchor="middle" font-size="9" fill="#b85c32" letter-spacing="1">FASE 1 — SFT</text>
+      <text x="340" y="18" text-anchor="middle" font-size="9" fill="#b85c32" letter-spacing="1">FASE 2 — REWARD MODEL</text>
+      <text x="620" y="18" text-anchor="middle" font-size="9" fill="#b85c32" letter-spacing="1">FASE 3 — PPO / REINFORCE</text>
+
+      <!-- Phase 1: SFT -->
+      <rect x="20" y="28" width="160" height="100" rx="4" fill="white" stroke="#d4cfc5"/>
+      <text x="100" y="50" text-anchor="middle" font-size="9" fill="#444">Supervised Fine-Tuning</text>
+      <text x="100" y="68" text-anchor="middle" font-size="8" fill="#7a756a">annotatori umani scrivono</text>
+      <text x="100" y="80" text-anchor="middle" font-size="8" fill="#7a756a">risposte "ideali" a prompt</text>
+      <rect x="36" y="90" width="128" height="30" rx="3" fill="rgba(184,92,50,0.1)" stroke="#b85c32" stroke-width="1"/>
+      <text x="100" y="108" text-anchor="middle" font-size="8" fill="#b85c32">Foundation Model → SFT Model</text>
+
+      <line x1="180" y1="78" x2="210" y2="78" stroke="#b85c32" stroke-width="1.5" marker-end="url(#ar)"/>
+
+      <!-- Phase 2: Reward Model -->
+      <rect x="212" y="28" width="256" height="160" rx="4" fill="white" stroke="#d4cfc5"/>
+      <text x="340" y="50" text-anchor="middle" font-size="9" fill="#444">Addestramento Reward Model</text>
+
+      <text x="260" y="72" text-anchor="middle" font-size="8" fill="#7a756a">stesso prompt</text>
+      <rect x="216" y="78" width="80" height="22" rx="2" fill="rgba(184,92,50,0.1)" stroke="#b85c32" stroke-width="1"/>
+      <text x="256" y="93" text-anchor="middle" font-size="8" fill="#b85c32">risposta A</text>
+      <rect x="216" y="106" width="80" height="22" rx="2" fill="rgba(184,92,50,0.06)" stroke="#b85c32" stroke-width="0.8" stroke-dasharray="3"/>
+      <text x="256" y="121" text-anchor="middle" font-size="8" fill="#b85c32">risposta B</text>
+
+      <text x="320" y="100" text-anchor="middle" font-size="16" fill="#b85c32">A &gt; B</text>
+      <text x="320" y="116" text-anchor="middle" font-size="8" fill="#7a756a">umano sceglie</text>
+
+      <rect x="350" y="70" width="100" height="70" rx="3" fill="rgba(184,92,50,0.08)" stroke="#b85c32" stroke-width="1"/>
+      <text x="400" y="90" text-anchor="middle" font-size="9" fill="#b85c32">Reward</text>
+      <text x="400" y="104" text-anchor="middle" font-size="9" fill="#b85c32">Model</text>
+      <text x="400" y="120" text-anchor="middle" font-size="8" fill="#7a756a">impara a predire</text>
+      <text x="400" y="132" text-anchor="middle" font-size="8" fill="#7a756a">preferenza umana</text>
+
+      <text x="340" y="206" text-anchor="middle" font-size="8" fill="#7a756a">migliaia di confronti A/B → reward model calibrato</text>
+
+      <line x1="468" y1="110" x2="498" y2="110" stroke="#b85c32" stroke-width="1.5" marker-end="url(#ar)"/>
+
+      <!-- Phase 3: PPO -->
+      <rect x="500" y="28" width="248" height="160" rx="4" fill="white" stroke="#d4cfc5"/>
+      <text x="624" y="50" text-anchor="middle" font-size="9" fill="#444">Fine-tuning con RL (PPO)</text>
+
+      <rect x="516" y="62" width="90" height="36" rx="3" fill="#b85c32" opacity="0.8"/>
+      <text x="561" y="78" text-anchor="middle" font-size="9" fill="white">LLM Policy</text>
+      <text x="561" y="90" text-anchor="middle" font-size="8" fill="rgba(255,255,255,0.7)">(il modello)</text>
+
+      <line x1="606" y1="80" x2="626" y2="80" stroke="#b85c32" stroke-width="1" marker-end="url(#ar)"/>
+
+      <rect x="628" y="62" width="90" height="36" rx="3" fill="rgba(184,92,50,0.1)" stroke="#b85c32" stroke-width="1"/>
+      <text x="673" y="78" text-anchor="middle" font-size="9" fill="#b85c32">Reward Score</text>
+      <text x="673" y="90" text-anchor="middle" font-size="8" fill="#7a756a">(dal reward model)</text>
+
+      <!-- Feedback loop -->
+      <path d="M 673,98 Q 673,140 561,140 Q 516,140 516,98" stroke="#b85c32" stroke-width="1.5" fill="none" stroke-dasharray="4" marker-end="url(#ar)"/>
+      <text x="624" y="162" text-anchor="middle" font-size="8" fill="#b85c32">aggiusta i pesi per massimizzare reward</text>
+    </svg>
+    <div class="diagram-caption">RLHF in tre fasi: SFT sul modello base → training del Reward Model su preferenze umane → ottimizzazione della policy LLM per massimizzare il reward.</div>
+  </div>
+
+  <p>Il processo in tre fasi: prima si fa un SFT (Supervised Fine-Tuning) con esempi di risposte ideali; poi si addestra un <em>Reward Model</em> separato su migliaia di confronti A/B dove umani scelgono quale risposta preferiscono; infine si usa un algoritmo di Reinforcement Learning (tipicamente PPO) per aggiustare i pesi del modello LLM in modo da massimizzare il punteggio assegnato dal Reward Model. Varianti più recenti come RLAIF (AI Feedback invece di Human Feedback) usano un altro LLM come valutatore, riducendo il costo del processo.</p>
+</div>
+
+
+<!-- ═══════════════════════════════════════════ -->
+<!-- LEVEL 3 -->
+<!-- ═══════════════════════════════════════════ -->
+
+<div class="level-header" style="background: rgba(46,107,79,0.07); border-left: 4px solid var(--l3);">
+  <div class="level-num">03</div>
+  <div class="level-info">
+    <div class="level-tag" style="color:var(--l3)">Potenziamento a runtime</div>
+    <div class="level-title" style="color:var(--l3)">Come il modello agisce</div>
+  </div>
+</div>
+
+<!-- 3.1 RAG -->
+<div class="concept">
+  <div class="concept-header">
+    <div class="concept-num">3.1</div>
+    <div class="concept-header-text">
+      <h2>RAG — Retrieval-Augmented Generation</h2>
+      <div class="concept-tag" style="color:var(--c-rag)">Connettere il modello a conoscenza esterna aggiornata</div>
+    </div>
+  </div>
+
+  <p>Un LLM ha una limitazione strutturale: la sua conoscenza è "congelata" al momento del training. Non sa cosa è successo dopo il suo cutoff date, non conosce i documenti interni della tua azienda, non ha accesso a database aggiornati in tempo reale. Il RAG risolve questo problema senza riaddestrare il modello.</p>
+
+  <p>L'idea è semplice ma potente: prima di generare la risposta, si <em>recupera</em> (retrieve) dalla base documentale esterna i frammenti più rilevanti alla domanda, e li si inserisce nel contesto (il prompt) che il modello riceve. Il modello genera quindi la risposta basandosi sia sulla sua conoscenza interna sia sui documenti recuperati.</p>
+
+  <div class="accent" style="border-color: var(--c-rag);">
+    <p>RAG non modifica il modello: lo <em>aumenta</em>. È un'architettura di sistema che circonda il modello, non una modifica al modello stesso. Questo lo rende molto più economico e flessibile del fine-tuning per aggiornare la conoscenza.</p>
+  </div>
+
+  <!-- DIAGRAM RAG -->
+  <div class="diagram">
+    <svg viewBox="0 0 760 240" width="100%" style="display:block;">
+      <rect width="760" height="240" fill="#edeae3" rx="4"/>
+      <defs>
+        <marker id="ag" markerWidth="5" markerHeight="5" refX="2.5" refY="2.5" orient="auto"><path d="M0,0 L5,2.5 L0,5 Z" fill="#2e6b4f"/></marker>
+        <marker id="ag2" markerWidth="5" markerHeight="5" refX="2.5" refY="2.5" orient="auto"><path d="M0,0 L5,2.5 L0,5 Z" fill="#3a8060"/></marker>
+      </defs>
+
+      <!-- User query -->
+      <rect x="16" y="100" width="100" height="40" rx="4" fill="#1c1a17" opacity="0.08" stroke="#1c1a17" stroke-width="1"/>
+      <text x="66" y="116" text-anchor="middle" font-size="9" fill="#1c1a17">Domanda</text>
+      <text x="66" y="130" text-anchor="middle" font-size="8" fill="#7a756a">utente</text>
+
+      <!-- Query embedding -->
+      <line x1="116" y1="120" x2="146" y2="100" stroke="#2e6b4f" stroke-width="1" marker-end="url(#ag)"/>
+      <line x1="116" y1="120" x2="146" y2="140" stroke="#2e6b4f" stroke-width="1" marker-end="url(#ag)"/>
+
+      <!-- Embedding of query -->
+      <rect x="148" y="82" width="80" height="28" rx="3" fill="#2e6b4f" opacity="0.12" stroke="#2e6b4f" stroke-width="1"/>
+      <text x="188" y="100" text-anchor="middle" font-size="8" fill="#2e6b4f">query embedding</text>
+
+      <!-- Vector DB -->
+      <rect x="148" y="122" width="80" height="36" rx="3" fill="#2e6b4f" opacity="0.8"/>
+      <text x="188" y="137" text-anchor="middle" font-size="9" fill="white">Vector DB</text>
+      <text x="188" y="149" text-anchor="middle" font-size="8" fill="rgba(255,255,255,0.7)">similarity search</text>
+
+      <!-- Arrow from embedding to DB -->
+      <line x1="188" y1="110" x2="188" y2="120" stroke="#2e6b4f" stroke-width="1" marker-end="url(#ag)"/>
+
+      <!-- Documents returned -->
+      <line x1="228" y1="140" x2="264" y2="130" stroke="#2e6b4f" stroke-width="1.5" marker-end="url(#ag)"/>
+
+      <rect x="266" y="80" width="120" height="100" rx="4" fill="white" stroke="#d4cfc5"/>
+      <text x="326" y="100" text-anchor="middle" font-size="9" fill="#444">Chunks rilevanti</text>
+      <rect x="280" y="108" width="92" height="16" rx="2" fill="rgba(46,107,79,0.1)" stroke="#2e6b4f" stroke-width="0.8"/>
+      <text x="326" y="120" text-anchor="middle" font-size="8" fill="#2e6b4f">doc 1 — score 0.92</text>
+      <rect x="280" y="130" width="92" height="16" rx="2" fill="rgba(46,107,79,0.08)" stroke="#2e6b4f" stroke-width="0.8"/>
+      <text x="326" y="142" text-anchor="middle" font-size="8" fill="#2e6b4f">doc 2 — score 0.87</text>
+      <rect x="280" y="152" width="92" height="16" rx="2" fill="rgba(46,107,79,0.05)" stroke="#2e6b4f" stroke-width="0.8"/>
+      <text x="326" y="164" text-anchor="middle" font-size="8" fill="#2e6b4f">doc 3 — score 0.71</text>
+
+      <!-- Augmented prompt assembly -->
+      <line x1="386" y1="130" x2="416" y2="120" stroke="#2e6b4f" stroke-width="1.5" marker-end="url(#ag)"/>
+      <line x1="116" y1="112" x2="436" y2="112" stroke="#2e6b4f" stroke-width="1" stroke-dasharray="4" marker-end="url(#ag)"/>
+
+      <rect x="418" y="62" width="148" height="120" rx="4" fill="#2e6b4f" opacity="0.08" stroke="#2e6b4f" stroke-width="1.5"/>
+      <text x="492" y="82" text-anchor="middle" font-size="9" fill="#2e6b4f">PROMPT AUMENTATO</text>
+      <line x1="426" y1="88" x2="558" y2="88" stroke="#2e6b4f" stroke-width="0.5" opacity="0.4"/>
+      <text x="492" y="104" text-anchor="middle" font-size="8" fill="#7a756a">Contesto: [doc1] [doc2]</text>
+      <text x="492" y="118" text-anchor="middle" font-size="8" fill="#7a756a">[doc3]</text>
+      <text x="492" y="134" text-anchor="middle" font-size="8" fill="#7a756a">---</text>
+      <text x="492" y="148" text-anchor="middle" font-size="8" fill="#7a756a">Domanda: [query utente]</text>
+      <text x="492" y="166" text-anchor="middle" font-size="8" fill="#7a756a">Rispondi basandoti sul</text>
+      <text x="492" y="176" text-anchor="middle" font-size="8" fill="#7a756a">contesto fornito.</text>
+
+      <line x1="566" y1="122" x2="598" y2="122" stroke="#2e6b4f" stroke-width="1.5" marker-end="url(#ag)"/>
+
+      <!-- LLM -->
+      <rect x="600" y="92" width="90" height="60" rx="4" fill="#2e6b4f" opacity="0.8"/>
+      <text x="645" y="116" text-anchor="middle" font-size="10" fill="white">LLM</text>
+      <text x="645" y="132" text-anchor="middle" font-size="8" fill="rgba(255,255,255,0.7)">genera risposta</text>
+      <text x="645" y="144" text-anchor="middle" font-size="8" fill="rgba(255,255,255,0.7)">con fonti</text>
+
+      <text x="645" y="175" text-anchor="middle" font-size="8" fill="#2e6b4f">↓</text>
+      <text x="645" y="190" text-anchor="middle" font-size="8" fill="#2e6b4f">Risposta fondata</text>
+      <text x="645" y="202" text-anchor="middle" font-size="8" fill="#2e6b4f">+ citazioni</text>
+    </svg>
+    <div class="diagram-caption">Pipeline RAG: la domanda dell'utente genera un embedding, che viene usato per recuperare i chunk più simili dal vector database; questi vengono iniettati nel prompt che l'LLM riceve.</div>
+  </div>
+
+  <p>Il componente tecnico che rende possibile il retrieval efficiente è il <strong>Vector Database</strong>: tutti i documenti della knowledge base vengono convertiti in embedding e indicizzati. Quando arriva una domanda, la query viene convertita nello stesso spazio vettoriale e si cercano i documenti più vicini per similarità coseno. I database vettoriali più usati (Pinecone, Weaviate, pgvector, Chroma) sono ottimizzati per questa ricerca di nearest neighbors ad alta dimensione.</p>
+
+  <div class="info-grid">
+    <div class="info-card">
+      <div class="info-card-label" style="color:var(--c-rag)">Vantaggi vs fine-tuning</div>
+      <p>La knowledge base si aggiorna aggiungendo documenti, senza riaddestrare nulla. Le risposte possono citare le fonti, riducendo le allucinazioni. Economico da mantenere.</p>
+    </div>
+    <div class="info-card">
+      <div class="info-card-label" style="color:var(--c-rag)">Limiti</div>
+      <p>La qualità dipende dalla qualità del retrieval. Se i documenti recuperati non contengono l'informazione giusta, il modello può comunque allucinare o rispondere basandosi su fonti irrilevanti.</p>
+    </div>
+  </div>
+</div>
+
+<hr class="rule">
+
+<!-- 3.2 TOOL USE -->
+<div class="concept">
+  <div class="concept-header">
+    <div class="concept-num">3.2</div>
+    <div class="concept-header-text">
+      <h2>Tool Use / Function Calling</h2>
+      <div class="concept-tag" style="color:var(--c-tool)">Connettere il modello al mondo — azioni, dati, sistemi esterni</div>
+    </div>
+  </div>
+
+  <p>RAG potenzia la conoscenza del modello. Il Tool Use fa qualcosa di più ampio: permette al modello di <em>agire</em> nel mondo. Invece di limitarsi a generare testo, un LLM con capacità di tool use può decidere di chiamare una funzione — cercare sul web, eseguire codice, leggere da un database, inviare un messaggio, prenotare un volo — e usare il risultato per completare il suo compito.</p>
+
+  <p>Il meccanismo è il seguente: le funzioni disponibili vengono descritte al modello (nome, parametri, cosa fanno) all'inizio del contesto. Quando il modello ritiene necessario usarne una, non chiama direttamente la funzione — <em>genera</em> una struttura JSON che descrive quale funzione chiamare e con quali parametri. Il sistema esterno esegue la chiamata reale, inserisce il risultato nel contesto, e il modello continua la generazione.</p>
+
+  <div class="accent" style="border-color: var(--c-tool);">
+    <p>Il modello non esegue mai direttamente il codice: decide di usare uno strumento e genera l'invocazione strutturata. È l'orchestratore esterno che controlla quali strumenti esistono davvero, esegue le chiamate, e decide se fidarsi dei risultati. Questa separazione è fondamentale per la sicurezza.</p>
+  </div>
+
+  <!-- DIAGRAM Tool Use -->
+  <div class="diagram">
+    <svg viewBox="0 0 760 220" width="100%" style="display:block;">
+      <rect width="760" height="220" fill="#edeae3" rx="4"/>
+      <defs>
+        <marker id="at" markerWidth="5" markerHeight="5" refX="2.5" refY="2.5" orient="auto"><path d="M0,0 L5,2.5 L0,5 Z" fill="#3a8060"/></marker>
+      </defs>
+
+      <!-- User -->
+      <rect x="14" y="90" width="90" height="40" rx="4" fill="#1c1a17" opacity="0.08" stroke="#1c1a17" stroke-width="1"/>
+      <text x="59" y="107" text-anchor="middle" font-size="9" fill="#1c1a17">"Qual è il</text>
+      <text x="59" y="119" text-anchor="middle" font-size="9" fill="#1c1a17">prezzo AAPL?"</text>
+
+      <line x1="104" y1="110" x2="134" y2="110" stroke="#3a8060" stroke-width="1.5" marker-end="url(#at)"/>
+
+      <!-- LLM box -->
+      <rect x="136" y="66" width="130" height="88" rx="4" fill="#2e6b4f" opacity="0.8"/>
+      <text x="201" y="90" text-anchor="middle" font-size="10" fill="white">LLM</text>
+      <text x="201" y="108" text-anchor="middle" font-size="8" fill="rgba(255,255,255,0.7)">decide: serve</text>
+      <text x="201" y="120" text-anchor="middle" font-size="8" fill="rgba(255,255,255,0.7)">get_stock_price()</text>
+      <text x="201" y="140" text-anchor="middle" font-size="8" fill="rgba(255,255,255,0.5)">genera JSON</text>
+
+      <!-- Tool call output -->
+      <line x1="266" y1="110" x2="296" y2="110" stroke="#3a8060" stroke-width="1.5" marker-end="url(#at)"/>
+
+      <rect x="298" y="78" width="160" height="64" rx="4" fill="white" stroke="#d4cfc5"/>
+      <text x="378" y="96" text-anchor="middle" font-size="9" fill="#444">Tool Call (JSON)</text>
+      <rect x="308" y="104" width="140" height="30" rx="2" fill="#f0f0f0" stroke="#ccc" stroke-width="0.5"/>
+      <text x="378" y="116" text-anchor="middle" font-size="8" fill="#444">{{</text>
+      <text x="378" y="127" text-anchor="middle" font-size="8" fill="#3a8060">"tool": "get_stock",</text>
+      <text x="378" y="136" text-anchor="middle" font-size="7" fill="#3a8060">"ticker": "AAPL"</text>
+
+      <!-- Orchestrator -->
+      <line x1="458" y1="110" x2="488" y2="110" stroke="#3a8060" stroke-width="1.5" marker-end="url(#at)"/>
+
+      <rect x="490" y="66" width="110" height="88" rx="4" fill="rgba(58,128,96,0.1)" stroke="#3a8060" stroke-width="1.5"/>
+      <text x="545" y="90" text-anchor="middle" font-size="9" fill="#3a8060">Orchestratore</text>
+      <text x="545" y="106" text-anchor="middle" font-size="8" fill="#7a756a">esegue la chiamata</text>
+      <text x="545" y="118" text-anchor="middle" font-size="8" fill="#7a756a">API reale</text>
+      <text x="545" y="134" text-anchor="middle" font-size="8" fill="#7a756a">→ $189.34</text>
+
+      <!-- Result back to LLM -->
+      <path d="M 545,154 Q 545,185 201,185 Q 136,185 136,154" stroke="#3a8060" stroke-width="1.5" fill="none" stroke-dasharray="4" marker-end="url(#at)"/>
+      <text x="340" y="200" text-anchor="middle" font-size="8" fill="#3a8060">risultato inserito nel contesto → LLM continua la generazione</text>
+
+      <!-- Tools available -->
+      <rect x="620" y="30" width="126" height="160" rx="4" fill="rgba(58,128,96,0.06)" stroke="#3a8060" stroke-width="1"/>
+      <text x="683" y="50" text-anchor="middle" font-size="9" fill="#3a8060">Tools disponibili</text>
+      <text x="683" y="68" text-anchor="middle" font-size="8" fill="#7a756a">get_stock_price()</text>
+      <text x="683" y="84" text-anchor="middle" font-size="8" fill="#7a756a">web_search()</text>
+      <text x="683" y="100" text-anchor="middle" font-size="8" fill="#7a756a">run_code()</text>
+      <text x="683" y="116" text-anchor="middle" font-size="8" fill="#7a756a">read_file()</text>
+      <text x="683" y="132" text-anchor="middle" font-size="8" fill="#7a756a">send_email()</text>
+      <text x="683" y="148" text-anchor="middle" font-size="8" fill="#7a756a">book_calendar()</text>
+      <text x="683" y="164" text-anchor="middle" font-size="8" fill="#7a756a">...</text>
+    </svg>
+    <div class="diagram-caption">Tool Use: l'LLM genera una tool call strutturata (JSON) → l'orchestratore esegue l'azione reale → il risultato viene iniettato nel contesto → l'LLM completa la risposta.</div>
+  </div>
+
+  <p>Il Tool Use è il fondamento tecnico degli <strong>agenti AI</strong>: un LLM che può usare strumenti può pianificare sequenze di azioni, verificare risultati intermedi, e iterare fino a completare compiti complessi. La differenza tra un chatbot e un agente è essenzialmente questa capacità di agire nel mondo esterno attraverso tool calls.</p>
+</div>
+
+
+<!-- ═══════════════════════════════════════════ -->
+<!-- SUMMARY TABLE -->
+<!-- ═══════════════════════════════════════════ -->
+
+<div style="margin-top:64px; padding-top:40px; border-top: 2px solid var(--ink);">
+  <h2 style="font-size:26px;font-weight:400;margin-bottom:8px;">Sintesi comparativa</h2>
+  <p style="color:var(--muted);font-style:italic;margin-bottom:32px;font-size:15px;">I sette concetti fondamentali a confronto su funzione, livello e impatto.</p>
+
+  <table class="summary-table">
+    <thead>
+      <tr>
+        <th>Tecnologia</th>
+        <th>Livello</th>
+        <th>Funzione</th>
+        <th>Senza di essa</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><strong>Embedding</strong></td>
+        <td><span class="pill" style="background:var(--l1)">Architettura</span></td>
+        <td>Traduce token in vettori semantici su cui fare calcoli</td>
+        <td>Il modello non può elaborare testo</td>
+      </tr>
+      <tr>
+        <td><strong>Transformer / Self-Attention</strong></td>
+        <td><span class="pill" style="background:var(--l1)">Architettura</span></td>
+        <td>Calcola relazioni contestuali tra tutti i token in parallelo</td>
+        <td>Impossibile catturare dipendenze a lunga distanza; training non parallelizzabile</td>
+      </tr>
+      <tr>
+        <td><strong>Generazione autoregressiva</strong></td>
+        <td><span class="pill" style="background:var(--l1)">Architettura</span></td>
+        <td>Produce output un token alla volta usando il contesto accumulato</td>
+        <td>Il modello non può generare sequenze di lunghezza variabile</td>
+      </tr>
+      <tr>
+        <td><strong>Pre-training</strong></td>
+        <td><span class="pill" style="background:var(--l2)">Training</span></td>
+        <td>Costruisce la conoscenza di base del mondo su scala massiva</td>
+        <td>Il modello non ha conoscenza: è una struttura vuota</td>
+      </tr>
+      <tr>
+        <td><strong>Fine-tuning</strong></td>
+        <td><span class="pill" style="background:var(--l2)">Training</span></td>
+        <td>Specializza il modello su compiti o domini specifici</td>
+        <td>Il modello sa molto ma non sa come essere utile</td>
+      </tr>
+      <tr>
+        <td><strong>RLHF</strong></td>
+        <td><span class="pill" style="background:var(--l2)">Training</span></td>
+        <td>Allinea il comportamento del modello alle preferenze umane</td>
+        <td>Risposte potenzialmente dannose, false o inutili</td>
+      </tr>
+      <tr>
+        <td><strong>RAG</strong></td>
+        <td><span class="pill" style="background:var(--l3)">Runtime</span></td>
+        <td>Aumenta il modello con conoscenza esterna aggiornata</td>
+        <td>Il modello è limitato alla conoscenza del suo training cutoff</td>
+      </tr>
+      <tr>
+        <td><strong>Tool Use</strong></td>
+        <td><span class="pill" style="background:var(--l3)">Runtime</span></td>
+        <td>Permette al modello di agire nel mondo attraverso funzioni esterne</td>
+        <td>Il modello può solo generare testo, non agire</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <div style="background:var(--surface);border:1px solid var(--border);border-radius:4px;padding:28px 32px;margin-top:16px;">
+    <div style="font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:0.12em;text-transform:uppercase;color:var(--muted);margin-bottom:16px;">Come si connettono</div>
+    <p style="margin-bottom:14px;">I tre livelli non sono indipendenti: ognuno costruisce sul precedente. Gli <strong>Embedding</strong> e il <strong>Transformer</strong> definiscono come il modello rappresenta e processa l'informazione. La <strong>Generazione autoregressiva</strong> definisce come produce l'output. Il <strong>Pre-training</strong> riempie questa struttura con conoscenza grezza. Il <strong>Fine-tuning</strong> e l'<strong>RLHF</strong> la affinano per essere utile e sicura. <strong>RAG</strong> e <strong>Tool Use</strong> la estendono a runtime oltre i limiti dell'addestramento.</p>
+    <p style="margin-bottom:0;">Un agente AI moderno usa tutti e otto questi elementi simultaneamente: una struttura Transformer con embedding contestuali che genera output autoregressivo, addestrata con pre-training + fine-tuning + RLHF, potenziata a runtime con RAG per la conoscenza e Tool Use per l'azione.</p>
+  </div>
+</div>
+
+</body>
+</html>

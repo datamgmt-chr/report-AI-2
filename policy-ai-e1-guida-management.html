@@ -1,0 +1,1022 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Come definire una policy AI aziendale — Guida per il management</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;700&family=DM+Serif+Display:ital@0;1&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg:       #f7f5f0;
+  --surface:  #ffffff;
+  --surface2: #f0ede6;
+  --border:   #e0dbd0;
+  --border2:  #ccc8be;
+  --ink:      #1a1916;
+  --ink2:     #4a4840;
+  --ink3:     #8a8780;
+  --ink4:     #b8b5ae;
+
+  --green:    #1a7a4a;
+  --green-l:  #e8f5ee;
+  --green-b:  #b8e0cc;
+  --amber:    #b85c00;
+  --amber-l:  #fff3e6;
+  --amber-b:  #ffc880;
+  --red:      #c02020;
+  --red-l:    #fdeaea;
+  --red-b:    #f0a0a0;
+  --blue:     #1a5a9a;
+  --blue-l:   #e8f0fa;
+  --blue-b:   #a8c8f0;
+  --violet:   #6040b0;
+  --violet-l: #f0eaff;
+}
+
+* { margin:0; padding:0; box-sizing:border-box; }
+html { scroll-behavior:smooth; }
+
+body {
+  background: var(--bg);
+  color: var(--ink);
+  font-family: 'DM Sans', sans-serif;
+  font-weight: 400;
+  font-size: 16px;
+  line-height: 1.78;
+}
+
+/* ── COVER ── */
+.cover {
+  background: var(--ink);
+  color: #fff;
+  padding: 72px 72px 60px;
+  position: relative; overflow: hidden;
+}
+.cover::before {
+  content: '';
+  position: absolute; top:0; left:0; right:0; bottom:0;
+  background: repeating-linear-gradient(-45deg,rgba(255,255,255,0.012) 0px,rgba(255,255,255,0.012) 1px,transparent 1px,transparent 14px);
+  pointer-events: none;
+}
+.cover-label { font-family:'DM Mono',monospace; font-size:10px; letter-spacing:4px; text-transform:uppercase; color:rgba(255,255,255,0.35); margin-bottom:22px; }
+.cover h1 { font-family:'DM Serif Display',serif; font-size:clamp(30px,4.5vw,54px); font-weight:400; line-height:1.08; letter-spacing:-1px; max-width:740px; margin-bottom:24px; }
+.cover h1 em { font-style:italic; color:rgba(255,255,255,0.55); }
+.cover-sub { font-size:16px; color:rgba(255,255,255,0.5); max-width:580px; line-height:1.7; margin-bottom:44px; }
+.cover-meta { display:flex; gap:48px; flex-wrap:wrap; padding-top:28px; border-top:1px solid rgba(255,255,255,0.12); }
+.cover-meta-item span { font-family:'DM Mono',monospace; font-size:10px; letter-spacing:2px; text-transform:uppercase; color:rgba(255,255,255,0.28); display:block; }
+.cover-meta-item strong { font-size:13px; font-weight:500; color:rgba(255,255,255,0.65); display:block; margin-top:3px; }
+
+/* ── TAB NAV ── */
+.tab-nav {
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+  padding: 0 72px;
+  display: flex; gap:0; overflow-x:auto; scrollbar-width:none;
+  position: sticky; top:0; z-index:100;
+}
+.tab-nav::-webkit-scrollbar { display:none; }
+.tab-btn {
+  display: block; padding: 14px 20px;
+  font-size: 13px; font-weight:500; color:var(--ink3);
+  border: none; background:transparent; cursor:pointer;
+  border-bottom: 2px solid transparent; white-space:nowrap;
+  transition: all 0.2s;
+}
+.tab-btn:hover { color:var(--ink); }
+.tab-btn.active { color:var(--ink); border-bottom-color:var(--ink); }
+
+/* ── PANELS ── */
+.tab-panel { display:none; }
+.tab-panel.active { display:block; animation:fadeIn 0.25s ease; }
+@keyframes fadeIn { from{opacity:0;transform:translateY(4px)} to{opacity:1;transform:translateY(0)} }
+
+.panel-body { max-width:840px; margin:0 auto; padding:56px 56px 88px; }
+
+/* ── TYPOGRAPHY ── */
+.panel-body h2 { font-family:'DM Serif Display',serif; font-size:clamp(24px,3.5vw,36px); font-weight:400; letter-spacing:-0.3px; line-height:1.2; margin-bottom:22px; color:var(--ink); }
+.panel-body h3 { font-size:18px; font-weight:700; color:var(--ink); margin:40px 0 14px; letter-spacing:-0.2px; }
+.panel-body h4 { font-size:15px; font-weight:600; color:var(--ink); margin:24px 0 8px; }
+.panel-body p  { font-size:15px; color:var(--ink2); margin-bottom:18px; line-height:1.85; }
+.panel-body p strong { color:var(--ink); font-weight:500; }
+.panel-body ul { margin:12px 0 18px 0; padding:0; list-style:none; }
+.panel-body ul li { font-size:15px; color:var(--ink2); padding:5px 0 5px 20px; position:relative; line-height:1.65; }
+.panel-body ul li::before { content:'·'; position:absolute; left:0; color:var(--ink3); font-size:18px; line-height:1.35; }
+.panel-body ul li strong { color:var(--ink); font-weight:500; }
+
+/* ── MODULE HEADER ── */
+.mod-header {
+  border-bottom: 2px solid var(--ink);
+  padding-bottom: 18px; margin-bottom: 32px;
+  display: flex; align-items: baseline; gap:16px;
+}
+.mod-num { font-family:'DM Mono',monospace; font-size:11px; letter-spacing:2px; color:var(--ink4); flex-shrink:0; }
+
+/* ── PRINCIPLE CARDS ── */
+.principle-grid { display:flex; flex-direction:column; gap:2px; margin:24px 0; }
+
+.principle-card {
+  display: grid; grid-template-columns: 56px 1fr;
+  background: var(--surface); border: 1px solid var(--border); overflow:hidden;
+}
+.pc-icon {
+  background: var(--surface2);
+  display:flex; align-items:center; justify-content:center;
+  font-size:22px; border-right:1px solid var(--border);
+}
+.pc-body { padding:16px 20px; }
+.pc-body h4 { font-size:14px; font-weight:700; color:var(--ink); margin:0 0 5px; }
+.pc-body p  { font-size:13px; color:var(--ink2); line-height:1.65; margin:0; }
+.pc-body p strong { color:var(--ink); font-weight:500; }
+
+/* ── ERROR CARDS ── */
+.error-list { display:flex; flex-direction:column; gap:2px; margin:24px 0; }
+
+.error-card {
+  display:grid; grid-template-columns:4px 1fr;
+  background:var(--surface); border:1px solid var(--border); overflow:hidden;
+}
+.error-stripe { background:var(--red); }
+.error-body { padding:16px 20px; }
+.error-body h4 { font-size:14px; font-weight:700; color:var(--red); margin-bottom:5px; }
+.error-body p  { font-size:13px; color:var(--ink2); line-height:1.65; margin-bottom:8px; }
+.error-body p:last-child { margin:0; }
+.error-body p strong { color:var(--ink); font-weight:500; }
+.error-fix { background:var(--green-l); border:1px solid var(--green-b); padding:10px 14px; font-size:13px; color:var(--green); line-height:1.6; margin-top:8px; }
+.error-fix strong { color:var(--green); font-weight:600; }
+
+/* ── CLASSIFICATION FRAMEWORK ── */
+.clf-grid { display:flex; flex-direction:column; gap:2px; margin:24px 0; }
+
+.clf-level {
+  background:var(--surface); border:1px solid var(--border); overflow:hidden;
+}
+
+.clf-header {
+  display:grid; grid-template-columns:8px 1fr;
+}
+.clf-stripe { }
+.clf-level.l1 .clf-stripe { background:var(--green); }
+.clf-level.l2 .clf-stripe { background:var(--amber); }
+.clf-level.l3 .clf-stripe { background:var(--red); }
+
+.clf-header-body {
+  padding:16px 20px; border-bottom:1px solid var(--border);
+  display:flex; align-items:center; gap:14px;
+}
+
+.clf-badge {
+  font-family:'DM Mono',monospace; font-size:9px; letter-spacing:2px;
+  text-transform:uppercase; padding:4px 10px; border-radius:2px; flex-shrink:0;
+}
+.clf-level.l1 .clf-badge { background:var(--green-l); color:var(--green); }
+.clf-level.l2 .clf-badge { background:var(--amber-l); color:var(--amber); }
+.clf-level.l3 .clf-badge { background:var(--red-l);   color:var(--red); }
+
+.clf-title { font-size:15px; font-weight:700; color:var(--ink); }
+
+.clf-body { padding:18px 20px; display:grid; grid-template-columns:1fr 1fr; gap:20px; }
+
+.clf-def { }
+.clf-def-label { font-family:'DM Mono',monospace; font-size:9px; letter-spacing:2px; text-transform:uppercase; color:var(--ink4); margin-bottom:6px; display:block; }
+.clf-def p { font-size:13px; color:var(--ink2); line-height:1.7; margin:0; }
+.clf-def p strong { color:var(--ink); font-weight:500; }
+
+.clf-examples { }
+.clf-ex-list { display:flex; flex-wrap:wrap; gap:5px; margin-top:2px; }
+.clf-ex {
+  font-size:11px; font-weight:500; padding:3px 9px; border-radius:14px;
+}
+.clf-level.l1 .clf-ex { background:var(--green-l); color:var(--green); }
+.clf-level.l2 .clf-ex { background:var(--amber-l); color:var(--amber); }
+.clf-level.l3 .clf-ex { background:var(--red-l);   color:var(--red); }
+
+/* ── GREY AREAS ── */
+.grey-list { display:flex; flex-direction:column; gap:2px; margin:24px 0; }
+
+.grey-item {
+  background:var(--surface); border:1px solid var(--border); overflow:hidden;
+}
+.grey-q {
+  display:flex; align-items:center; justify-content:space-between;
+  padding:16px 20px; cursor:pointer; gap:12px; user-select:none;
+}
+.grey-q-text { font-size:14px; font-weight:500; color:var(--ink); line-height:1.4; }
+.grey-arrow { font-size:18px; color:var(--ink4); flex-shrink:0; transition:transform 0.25s; }
+.grey-item.open .grey-arrow { transform:rotate(90deg); }
+.grey-a { display:none; padding:0 20px 18px; font-size:14px; color:var(--ink2); line-height:1.75; border-top:1px solid var(--border); padding-top:16px; }
+.grey-item.open .grey-a { display:block; }
+.grey-a strong { color:var(--ink); font-weight:500; }
+.grey-a .verdict { display:inline-block; font-weight:600; margin-right:6px; }
+.grey-a .verdict.ok   { color:var(--green); }
+.grey-a .verdict.warn { color:var(--amber); }
+.grey-a .verdict.stop { color:var(--red); }
+
+/* ── RULES FRAMEWORK ── */
+.rules-block { background:var(--surface); border:1px solid var(--border); margin:24px 0; overflow:hidden; }
+
+.rules-block-header {
+  padding:14px 20px; border-bottom:1px solid var(--border);
+  background:var(--surface2);
+}
+.rules-block-label { font-family:'DM Mono',monospace; font-size:9px; letter-spacing:2px; text-transform:uppercase; color:var(--ink4); }
+
+.rule-row {
+  display:grid; grid-template-columns:6px 1fr;
+  border-bottom:1px solid var(--border);
+}
+.rule-row:last-child { border:none; }
+
+.rule-sig { }
+.rule-row.ok   .rule-sig { background:var(--green); }
+.rule-row.warn .rule-sig { background:var(--amber); }
+.rule-row.stop .rule-sig { background:var(--red); }
+
+.rule-content { padding:14px 18px; }
+.rule-content strong { font-size:14px; font-weight:600; color:var(--ink); display:block; margin-bottom:3px; }
+.rule-content span { font-size:13px; color:var(--ink2); line-height:1.6; }
+
+/* ── POLICY ANATOMY ── */
+.anatomy-list { display:flex; flex-direction:column; gap:2px; margin:24px 0; }
+
+.anatomy-item {
+  display:grid; grid-template-columns:44px 1fr auto;
+  background:var(--surface); border:1px solid var(--border); overflow:hidden;
+}
+.an-num {
+  background:var(--ink); color:#fff;
+  display:flex; align-items:center; justify-content:center;
+  font-family:'DM Mono',monospace; font-size:12px; font-weight:500;
+  border-right:1px solid var(--border);
+}
+.an-body { padding:14px 18px; }
+.an-body h4 { font-size:14px; font-weight:700; color:var(--ink); margin-bottom:4px; }
+.an-body p  { font-size:13px; color:var(--ink2); line-height:1.6; margin:0; }
+.an-body p strong { color:var(--ink); font-weight:500; }
+.an-flag {
+  padding:14px 14px; border-left:1px solid var(--border);
+  display:flex; align-items:center; justify-content:center;
+  min-width:72px;
+}
+.an-flag span {
+  font-family:'DM Mono',monospace; font-size:9px; letter-spacing:1px;
+  text-transform:uppercase; padding:3px 8px; border-radius:2px; text-align:center;
+}
+.an-flag.must span { background:var(--red-l); color:var(--red); }
+.an-flag.rec  span { background:var(--amber-l); color:var(--amber); }
+.an-flag.opt  span { background:var(--green-l); color:var(--green); }
+
+/* ── COMMUNICATION PLAN ── */
+.comm-steps { display:flex; flex-direction:column; gap:2px; margin:24px 0; }
+
+.comm-step {
+  display:grid; grid-template-columns:80px 1fr;
+  background:var(--surface); border:1px solid var(--border); overflow:hidden;
+}
+.cs-phase {
+  background:var(--surface2); padding:16px 12px;
+  display:flex; flex-direction:column; align-items:center;
+  justify-content:center; gap:4px; border-right:1px solid var(--border);
+  text-align:center;
+}
+.cs-phase span { font-family:'DM Mono',monospace; font-size:9px; letter-spacing:1.5px; text-transform:uppercase; color:var(--ink4); }
+.cs-phase strong { font-size:13px; font-weight:700; color:var(--ink); line-height:1.2; }
+.cs-body { padding:16px 20px; }
+.cs-body h4 { font-size:14px; font-weight:700; color:var(--ink); margin-bottom:5px; }
+.cs-body p  { font-size:13px; color:var(--ink2); line-height:1.65; margin:0; }
+.cs-body p strong { color:var(--ink); font-weight:500; }
+
+/* ── RESISTANCE TABLE ── */
+.resist-table { width:100%; border-collapse:collapse; margin:24px 0; font-size:13px; }
+.resist-table th { font-family:'DM Mono',monospace; font-size:9px; letter-spacing:2px; text-transform:uppercase; color:var(--ink4); text-align:left; padding:10px 14px; border-bottom:1px solid var(--border2); background:var(--surface2); }
+.resist-table td { padding:13px 14px; border-bottom:1px solid var(--border); color:var(--ink2); vertical-align:top; line-height:1.6; }
+.resist-table tr:hover td { background:var(--surface); }
+.resist-table td:first-child { font-weight:500; color:var(--ink); width:220px; }
+
+/* ── MAINTENANCE SIGNALS ── */
+.signal-list { display:flex; flex-direction:column; gap:2px; margin:24px 0; }
+
+.signal-item {
+  display:grid; grid-template-columns:52px 1fr;
+  background:var(--surface); border:1px solid var(--border); overflow:hidden;
+}
+.sig-icon { background:var(--amber-l); display:flex; align-items:center; justify-content:center; font-size:20px; border-right:1px solid var(--border); }
+.sig-body { padding:14px 18px; }
+.sig-body h4 { font-size:14px; font-weight:600; color:var(--ink); margin-bottom:4px; }
+.sig-body p  { font-size:13px; color:var(--ink2); line-height:1.6; margin:0; }
+
+/* ── INFO BOX ── */
+.ibox { padding:20px 24px; margin:24px 0; font-size:14px; color:var(--ink2); line-height:1.75; border:1px solid; border-left-width:4px; }
+.ibox strong { color:var(--ink); font-weight:500; }
+.ibox.blue   { background:var(--blue-l);   border-color:var(--blue-b);   border-left-color:var(--blue); }
+.ibox.amber  { background:var(--amber-l);  border-color:var(--amber-b);  border-left-color:var(--amber); }
+.ibox.green  { background:var(--green-l);  border-color:var(--green-b);  border-left-color:var(--green); }
+.ibox.red    { background:var(--red-l);    border-color:var(--red-b);    border-left-color:var(--red); }
+.ibox-label  { font-family:'DM Mono',monospace; font-size:9px; letter-spacing:2.5px; text-transform:uppercase; margin-bottom:8px; display:block; }
+.ibox.blue  .ibox-label { color:var(--blue); }
+.ibox.amber .ibox-label { color:var(--amber); }
+.ibox.green .ibox-label { color:var(--green); }
+.ibox.red   .ibox-label { color:var(--red); }
+
+/* ── GOLDEN RULE ── */
+.golden { background:var(--ink); color:#fff; padding:28px 32px; margin:28px 0; }
+.golden-label { font-family:'DM Mono',monospace; font-size:9px; letter-spacing:2.5px; text-transform:uppercase; color:rgba(255,255,255,0.35); margin-bottom:12px; display:block; }
+.golden p { font-size:16px; font-weight:300; color:#fff; line-height:1.65; }
+.golden p strong { font-weight:600; }
+
+/* ── FOOTER ── */
+footer { border-top:1px solid var(--border); background:var(--surface); padding:32px 72px; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px; }
+footer p { font-family:'DM Mono',monospace; font-size:11px; color:var(--ink4); }
+
+@media (max-width: 760px) {
+  .cover, footer { padding-left:28px; padding-right:28px; }
+  .tab-nav { padding:0 16px; }
+  .panel-body { padding:40px 24px 60px; }
+  .clf-body { grid-template-columns:1fr; }
+  .anatomy-item { grid-template-columns:40px 1fr; }
+  .an-flag { display:none; }
+}
+</style>
+</head>
+<body>
+
+<header class="cover">
+  <div class="cover-label">Guida operativa · Documento E1</div>
+  <h1>Come definire<br>una <em>policy AI aziendale</em></h1>
+  <p class="cover-sub">Una guida pratica per il management: come classificare i dati, costruire le regole d'uso, scrivere il documento e farlo funzionare davvero — non solo sulla carta.</p>
+  <div class="cover-meta">
+    <div class="cover-meta-item"><span>Destinatari</span><strong>Management, Direzione, IT, HR</strong></div>
+    <div class="cover-meta-item"><span>Natura</span><strong>Guida strategico-operativa</strong></div>
+    <div class="cover-meta-item"><span>Companion</span><strong>Documento E2 — Kit operativo con template</strong></div>
+    <div class="cover-meta-item"><span>Anno</span><strong>2026</strong></div>
+  </div>
+</header>
+
+<nav class="tab-nav">
+  <button class="tab-btn active" data-tab="m1" onclick="switchTab('m1')">01 · Perché e come</button>
+  <button class="tab-btn" data-tab="m2" onclick="switchTab('m2')">02 · Classificare i dati</button>
+  <button class="tab-btn" data-tab="m3" onclick="switchTab('m3')">03 · Definire le regole</button>
+  <button class="tab-btn" data-tab="m4" onclick="switchTab('m4')">04 · Scrivere la policy</button>
+  <button class="tab-btn" data-tab="m5" onclick="switchTab('m5')">05 · Comunicare e formare</button>
+  <button class="tab-btn" data-tab="m6" onclick="switchTab('m6')">06 · Mantenere nel tempo</button>
+</nav>
+
+
+<!-- ══════════════════════════════════
+     MODULO 1 — PERCHÉ E COME
+══════════════════════════════════ -->
+<div class="tab-panel active" id="m1">
+<div class="panel-body">
+
+  <div class="mod-header">
+    <span class="mod-num">Modulo 01</span>
+    <h2>Perché serve una policy e come impostarla</h2>
+  </div>
+
+  <p>In molte aziende l'adozione degli strumenti AI è avvenuta — e sta avvenendo — in modo informale. I dipendenti scoprono strumenti come ChatGPT, li trovano utili, li usano. Nel frattempo, l'azienda non ha ancora stabilito regole chiare. Questa situazione non è necessariamente il risultato di disattenzione: è semplicemente la velocità con cui questi strumenti si sono diffusi, superiore alla capacità delle organizzazioni di rispondervi.</p>
+
+  <p>La domanda non è più "dobbiamo preoccuparci dell'AI?", ma <strong>"come stabiliamo le regole in modo che siano efficaci, proporzionate e sostenibili?"</strong></p>
+
+  <h3>Perché le regole informali non bastano</h3>
+
+  <p>Quando non esiste una policy esplicita, ogni persona decide autonomamente cosa è accettabile. Questo produce tre problemi che si sovrappongono.</p>
+
+  <p>Il primo è la <strong>disomogeneità</strong>: chi è naturalmente cauto non usa l'AI neanche per task completamente sicuri, perdendo produttività. Chi è meno cauto la usa su dati che non dovrebbe, esponendo l'azienda a rischi concreti. Due persone nello stesso ufficio si comportano in modo opposto — non perché abbiano valori diversi, ma perché non hanno ricevuto indicazioni.</p>
+
+  <p>Il secondo è la <strong>mancanza di copertura legale</strong>. Se si verifica un incidente — una violazione di NDA, una fuga di dati — l'azienda non può dimostrare di aver adottato "misure adeguate" se non le ha mai formalizzate. Le misure informali non esistono agli occhi di un tribunale o di un'autorità di controllo.</p>
+
+  <p>Il terzo è la <strong>difficoltà di aggiornamento</strong>. Il panorama degli strumenti AI cambia rapidamente. Senza una policy strutturata, ogni cambiamento richiede di ricominciare da zero la comunicazione. Con una policy formale, basta aggiornare le sezioni rilevanti.</p>
+
+  <h3>I tre errori più comuni</h3>
+
+  <div class="error-list">
+    <div class="error-card">
+      <div class="error-stripe"></div>
+      <div class="error-body">
+        <h4>Errore 1 — Scrivere una policy troppo generica</h4>
+        <p>"È vietato condividere dati riservati con strumenti AI" è una regola che non funziona. Non perché sia sbagliata — è corretta — ma perché non aiuta nessuno a capire cosa fare nel caso specifico. <strong>Una regola che non si può applicare in modo autonomo richiede ogni volta un'interpretazione</strong>, e le interpretazioni divergono.</p>
+        <div class="error-fix"><strong>Soluzione:</strong> ogni regola deve rispondere alla domanda "cosa faccio io, concretamente, quando mi trovo in questa situazione?". Se non si riesce a rispondere, la regola è troppo vaga.</div>
+      </div>
+    </div>
+    <div class="error-card">
+      <div class="error-stripe"></div>
+      <div class="error-body">
+        <h4>Errore 2 — Trattare la policy come un documento legale</h4>
+        <p>Una policy scritta come un contratto — linguaggio formale, riferimenti normativi, struttura da disciplinare — viene letta una volta e dimenticata. Il destinatario non è un avvocato: è un operatore, un commerciale, un tecnico che ha bisogno di sapere cosa fare nel giro di trenta secondi di incertezza.</p>
+        <div class="error-fix"><strong>Soluzione:</strong> la policy può avere una sezione formale per gli obblighi di compliance, ma deve essere accompagnata da una versione operativa in linguaggio semplice — esempi, semafori, casi concreti. Le due cose coesistono.</div>
+      </div>
+    </div>
+    <div class="error-card">
+      <div class="error-stripe"></div>
+      <div class="error-body">
+        <h4>Errore 3 — Non prevedere l'aggiornamento</h4>
+        <p>Una policy AI scritta oggi sarà parzialmente obsoleta tra dodici mesi. Nuovi strumenti, nuove capacità, nuovi rischi. Se la policy non include una cadenza di revisione e un responsabile nominato, tende a non essere mai aggiornata — e una policy ferma diventa gradualmente fuorviante.</p>
+        <div class="error-fix"><strong>Soluzione:</strong> inserire nella policy stessa la data di prossima revisione e il nome del responsabile. Non come formalità, ma come impegno operativo reale.</div>
+      </div>
+    </div>
+  </div>
+
+  <h3>I principi guida per una policy efficace</h3>
+  <p>Prima di iniziare a scrivere regole, vale la pena allinearsi su tre principi che orientano tutte le scelte successive.</p>
+
+  <div class="principle-grid">
+    <div class="principle-card">
+      <div class="pc-icon">⚖️</div>
+      <div class="pc-body">
+        <h4>Proporzionalità</h4>
+        <p>Le restrizioni devono essere proporzionate al rischio reale. Vietare tutto crea una policy che non viene seguita — le persone trovano il modo di aggirare regole percepite come eccessive. <strong>L'obiettivo non è bloccare l'AI, ma indirizzarne l'uso.</strong> Una policy proporzionata distingue i rischi alti da quelli bassi e risponde in modo diverso a ciascuno.</p>
+      </div>
+    </div>
+    <div class="principle-card">
+      <div class="pc-icon">📐</div>
+      <div class="pc-body">
+        <h4>Semplicità operativa</h4>
+        <p>Una regola è efficace nella misura in cui una persona media riesce ad applicarla autonomamente in un caso concreto. Se richiede ogni volta un'interpretazione o una consultazione, non è una regola — è una linea guida aspirazionale. <strong>Ogni regola deve essere testata su un caso d'uso reale</strong> prima di essere inserita nella policy.</p>
+      </div>
+    </div>
+    <div class="principle-card">
+      <div class="pc-icon">🔄</div>
+      <div class="pc-body">
+        <h4>Aggiornabilità</h4>
+        <p>Il panorama AI evolve più velocemente di qualsiasi policy. La struttura del documento deve consentire aggiornamenti parziali senza riscrivere tutto. Le sezioni sugli strumenti specifici e sui rischi tecnici cambieranno più spesso delle sezioni sui principi. <strong>Separare ciò che è stabile da ciò che cambierà</strong> nella struttura del documento.</p>
+      </div>
+    </div>
+  </div>
+
+  <h3>Chi deve essere al tavolo</h3>
+  <p>Una policy AI non si scrive in isolamento. Il documento che ne risulta deve essere credibile per le persone che lo applicheranno — e questo richiede che le funzioni più coinvolte abbiano contribuito alla sua definizione.</p>
+  <p>Il <strong>team core</strong> per la definizione della policy comprende tipicamente: chi ha responsabilità IT (conosce i rischi tecnici e gli strumenti in uso), chi ha responsabilità HR o legale (conosce gli obblighi normativi e sa come strutturare comunicazioni vincolanti), e un <strong>rappresentante delle funzioni operative</strong> — almeno uno tra ufficio tecnico e commerciale, che sono le funzioni con il profilo di rischio più alto e che devono riconoscere le regole come applicabili al loro contesto reale.</p>
+  <p>Il <strong>DPO</strong> (responsabile della protezione dei dati) deve essere consultato — non necessariamente parte del team redazionale, ma deve validare le sezioni relative ai dati personali.</p>
+  <p>Il <strong>management</strong> deve approvare e sponsorizzare la policy, non necessariamente scriverla. Una policy che arriva dall'IT senza endorsement della direzione viene percepita come una questione tecnica, non come un impegno aziendale.</p>
+
+  <div class="ibox blue">
+    <span class="ibox-label">Quanto tempo serve</span>
+    Per un'azienda manifatturiera di medie dimensioni senza una policy esistente, costruire una policy AI efficace richiede <strong>4–8 settimane</strong> di lavoro distribuito — non full-time. La distribuzione tipica: 1–2 settimane per la classificazione dei dati (Modulo 2), 1 settimana per le regole (Modulo 3), 1 settimana per la stesura (Modulo 4), 1–2 settimane per la comunicazione e la formazione (Modulo 5). Il tempo più lungo non è la scrittura — è la classificazione, che richiede di coinvolgere le funzioni e raccogliere input reali.
+  </div>
+
+</div>
+</div>
+
+
+<!-- ══════════════════════════════════
+     MODULO 2 — CLASSIFICARE I DATI
+══════════════════════════════════ -->
+<div class="tab-panel" id="m2">
+<div class="panel-body">
+
+  <div class="mod-header">
+    <span class="mod-num">Modulo 02</span>
+    <h2>Classificare i dati aziendali</h2>
+  </div>
+
+  <p>La classificazione dei dati è il fondamento su cui si costruisce tutto il resto. Senza una mappa chiara di quali dati sono riservati e quanto, le regole d'uso restano generiche e quindi inapplicabili. È il lavoro più importante — e spesso quello più trascurato, perché sembra ovvio ma non lo è.</p>
+
+  <p>La tentazione è quella di rimandare la classificazione e scrivere direttamente le regole. Va resistita: le regole senza classificazione producono ambiguità ("ma questo documento specifico è riservato?"), e le ambiguità portano a comportamenti incoerenti.</p>
+
+  <h3>Il framework in tre livelli</h3>
+  <p>Tre livelli sono sufficienti per la grande maggioranza dei contesti aziendali. Più livelli aumentano la precisione teorica ma riducono l'applicabilità pratica — le persone non ricordano cinque categorie, ne ricordano tre.</p>
+
+  <div class="clf-grid">
+
+    <div class="clf-level l1">
+      <div class="clf-header">
+        <div class="clf-stripe"></div>
+        <div class="clf-header-body">
+          <span class="clf-badge">Livello 1 · Verde</span>
+          <span class="clf-title">Informazioni condivisibili liberamente</span>
+        </div>
+      </div>
+      <div class="clf-body">
+        <div class="clf-def">
+          <span class="clf-def-label">Definizione</span>
+          <p>Informazioni già disponibili pubblicamente, o che non contengono dati specifici dell'azienda, dei suoi clienti, fornitori o processi. La loro condivisione non espone l'azienda ad alcun rischio significativo.</p>
+          <p><strong>Test pratico:</strong> "Questa informazione potrebbe trovarsi su Google o in un comunicato stampa aziendale?" Se sì, è probabilmente Livello 1.</p>
+        </div>
+        <div class="clf-examples">
+          <span class="clf-def-label">Esempi manifatturiero</span>
+          <div class="clf-ex-list">
+            <span class="clf-ex">Contenuti del sito web aziendale</span>
+            <span class="clf-ex">Normative e standard pubblici (ISO, EN)</span>
+            <span class="clf-ex">Listini prezzi pubblici</span>
+            <span class="clf-ex">Schede tecniche pubblicate</span>
+            <span class="clf-ex">Comunicati stampa e presentazioni istituzionali</span>
+            <span class="clf-ex">Testi generici senza riferimenti aziendali</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="clf-level l2">
+      <div class="clf-header">
+        <div class="clf-stripe"></div>
+        <div class="clf-header-body">
+          <span class="clf-badge">Livello 2 · Giallo</span>
+          <span class="clf-title">Informazioni riservate, condivisibili con anonimizzazione</span>
+        </div>
+      </div>
+      <div class="clf-body">
+        <div class="clf-def">
+          <span class="clf-def-label">Definizione</span>
+          <p>Informazioni interne che non devono uscire nella loro forma specifica, ma il cui contenuto generico — struttura, metodo, tipologia — può essere condiviso dopo aver rimosso tutti gli elementi identificativi (nomi, cifre reali, riferimenti specifici).</p>
+          <p><strong>Test pratico:</strong> "Se rimuovessi tutti i nomi e i numeri specifici, questa informazione diventerebbe generica?" Se sì, è probabilmente Livello 2.</p>
+        </div>
+        <div class="clf-examples">
+          <span class="clf-def-label">Esempi manifatturiero</span>
+          <div class="clf-ex-list">
+            <span class="clf-ex">Email con clienti (senza nome e dati contrattuali)</span>
+            <span class="clf-ex">Situazioni negoziali descritte in modo anonimo</span>
+            <span class="clf-ex">Problemi tecnici senza parametri specifici</span>
+            <span class="clf-ex">Strutture di documenti interni (senza contenuto)</span>
+            <span class="clf-ex">KPI aggregati senza riferimenti identificativi</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="clf-level l3">
+      <div class="clf-header">
+        <div class="clf-stripe"></div>
+        <div class="clf-header-body">
+          <span class="clf-badge">Livello 3 · Rosso</span>
+          <span class="clf-title">Informazioni altamente riservate — mai condivisibili</span>
+        </div>
+      </div>
+      <div class="clf-body">
+        <div class="clf-def">
+          <span class="clf-def-label">Definizione</span>
+          <p>Informazioni che rappresentano il core dell'IP aziendale, gli obblighi contrattuali verso terzi o i dati personali protetti normativamente. Non esiste anonimizzazione sufficiente — il dato stesso è troppo sensibile per lasciare il perimetro aziendale in qualsiasi forma verso sistemi AI esterni non approvati.</p>
+          <p><strong>Test pratico:</strong> "Se questa informazione fosse accessibile a un concorrente o a un giudice in un contenzioso, ci danneggerebbe?" Se sì, è Livello 3.</p>
+        </div>
+        <div class="clf-examples">
+          <span class="clf-def-label">Esempi manifatturiero</span>
+          <div class="clf-ex-list">
+            <span class="clf-ex">Specifiche tecniche di prodotto</span>
+            <span class="clf-ex">Disegni CAD e BOM</span>
+            <span class="clf-ex">Ricette e parametri di processo</span>
+            <span class="clf-ex">Offerte e prezzi negoziati</span>
+            <span class="clf-ex">Documenti coperti da NDA</span>
+            <span class="clf-ex">Dati personali di dipendenti</span>
+            <span class="clf-ex">Piani strategici riservati</span>
+            <span class="clf-ex">R&D non ancora brevettato</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <h3>Come costruire la mappa dei dati per funzione</h3>
+  <p>La classificazione astratta è necessaria ma non sufficiente. Ogni funzione aziendale deve riconoscere i propri dati nelle categorie — altrimenti la classificazione rimane teorica. Il modo più efficace per farlo è un workshop breve (non più di novanta minuti) con i responsabili delle funzioni principali, strutturato attorno a una domanda semplice: <em>"Quali sono le tre categorie di informazioni più critiche che gestisce la tua funzione, e perché sono critiche?"</em></p>
+  <p>Non è necessario catalogare ogni singolo tipo di documento — basta identificare le categorie principali per funzione. Il Documento E2 include un template compilabile per questa mappatura.</p>
+
+  <div class="ibox amber">
+    <span class="ibox-label">Il rischio dell'over-classification</span>
+    Classificare tutto come Livello 3 è una risposta comprensibile ma controproducente. Se tutto è "top secret", le persone smettono di prestare attenzione alla classificazione — e in pratica si comportano come se non esistesse. <strong>Una classificazione credibile distingue davvero i livelli.</strong> Se il 90% dei dati è Livello 3, la classificazione non sta funzionando: o le categorie sono mal definite, o i criteri sono troppo restrittivi.
+  </div>
+
+  <h3>I casi grigi: come gestire le ambiguità</h3>
+  <p>La classificazione non risolve sempre il caso specifico. Esistono situazioni genuine dove il livello non è immediatamente ovvio. Ecco le più frequenti in ambito manifatturiero:</p>
+
+  <div class="grey-list">
+
+    <div class="grey-item">
+      <div class="grey-q" onclick="toggleGrey(this)">
+        <span class="grey-q-text">Un calcolo tecnico che usa parametri del prodotto reale, ma non il nome del prodotto</span>
+        <span class="grey-arrow">›</span>
+      </div>
+      <div class="grey-a">
+        <span class="verdict stop">Livello 3.</span> I parametri tecnici specifici (dimensioni, materiali, tolleranze) identificano il prodotto anche senza nominarlo esplicitamente. La regola pratica: se un tecnico competente del settore potrebbe risalire al prodotto o al processo dai parametri condivisi, il dato è Livello 3. <strong>La soluzione è usare parametri fittizi ma plausibili per ottenere l'aiuto metodologico dall'AI, poi applicare il metodo ai dati reali offline.</strong>
+      </div>
+    </div>
+
+    <div class="grey-item">
+      <div class="grey-q" onclick="toggleGrey(this)">
+        <span class="grey-q-text">Dati aggregati di produzione (es. "la nostra efficienza media è X%") senza riferimenti a prodotti o clienti specifici</span>
+        <span class="grey-arrow">›</span>
+      </div>
+      <div class="grey-a">
+        <span class="verdict warn">Livello 2, con cautela.</span> I KPI aggregati senza elementi identificativi specifici sono generalmente condivisibili — ma dipende dalla soglia: un numero molto specifico può rivelare indirettamente informazioni sulle dimensioni o la competitività dell'azienda. <strong>Il criterio è: il dato è abbastanza aggregato da non rivelare nulla di specifico sull'azienda, sui suoi prodotti o sui suoi processi?</strong> Se sì, Livello 2. Se no, Livello 3.
+      </div>
+    </div>
+
+    <div class="grey-item">
+      <div class="grey-q" onclick="toggleGrey(this)">
+        <span class="grey-q-text">Un'email ricevuta da un fornitore con una specifica tecnica allegata</span>
+        <span class="grey-arrow">›</span>
+      </div>
+      <div class="grey-a">
+        <span class="verdict stop">Livello 3.</span> Le specifiche tecniche ricevute da fornitori sono spesso coperte da accordi di riservatezza impliciti o espliciti — il fornitore le ha condivise nell'ambito di un rapporto commerciale riservato. <strong>Prima di classificare qualsiasi dato ricevuto da terzi, verificare se esiste un NDA o se la comunicazione conteneva indicazioni di riservatezza.</strong> In caso di dubbio, trattare come Livello 3.
+      </div>
+    </div>
+
+    <div class="grey-item">
+      <div class="grey-q" onclick="toggleGrey(this)">
+        <span class="grey-q-text">Una procedura operativa interna che non contiene dati di prodotto ma descrive un processo aziendale specifico</span>
+        <span class="grey-arrow">›</span>
+      </div>
+      <div class="grey-a">
+        <span class="verdict warn">Livello 2–3, dipende dal contenuto.</span> Se la procedura descrive un processo che rappresenta un vantaggio competitivo (es. un metodo di lavorazione unico, una sequenza operativa proprietaria), è Livello 3. Se descrive un processo standard del settore con adattamenti non critici, può essere Livello 2 con anonimizzazione dei riferimenti specifici. <strong>Il criterio: "Se questa procedura fosse pubblicata online, darebbe ai concorrenti informazioni utili che non hanno?"</strong>
+      </div>
+    </div>
+
+    <div class="grey-item">
+      <div class="grey-q" onclick="toggleGrey(this)">
+        <span class="grey-q-text">Una presentazione commerciale che include case study di clienti anonimi</span>
+        <span class="grey-arrow">›</span>
+      </div>
+      <div class="grey-a">
+        <span class="verdict warn">Livello 2, con verifica.</span> Se i clienti sono genuinamente anonimi (non identificabili dal settore, dalla dimensione, dai prodotti descritti), la presentazione è Livello 2. <strong>Attenzione: in settori di nicchia, anche senza nomi espliciti un case study può essere riconoscibile.</strong> La verifica da fare: "Un operatore del settore che conosce i nostri clienti riconoscerebbe di chi si tratta?" Se sì, trattare come dati del cliente specifico (Livello 3).
+      </div>
+    </div>
+
+  </div>
+
+  <h3>Errori frequenti nella classificazione</h3>
+  <p>Due errori ricorrenti vale la pena nominare esplicitamente, perché sono sistematici.</p>
+  <p>Il primo è classificare per tipo di documento anziché per contenuto. Un file Word non è "automaticamente" Livello 2 — dipende da cosa c'è dentro. Una scheda di manutenzione generica è Livello 1; una scheda di manutenzione con i parametri operativi specifici dell'impianto è Livello 3. <strong>Il livello lo determina il contenuto, non il formato o il tipo di file.</strong></p>
+  <p>Il secondo è non aggiornare la classificazione quando cambiano i dati. Un'offerta commerciale in trattativa è Livello 3. La stessa offerta, una volta che il contratto è stato firmato e reso pubblico, può diventare Livello 2 o 1. <strong>La classificazione non è permanente</strong> — alcuni dati cambiano livello nel corso del tempo in funzione del loro ciclo di vita.</p>
+
+</div>
+</div>
+
+
+<!-- ══════════════════════════════════
+     MODULO 3 — DEFINIRE LE REGOLE
+══════════════════════════════════ -->
+<div class="tab-panel" id="m3">
+<div class="panel-body">
+
+  <div class="mod-header">
+    <span class="mod-num">Modulo 03</span>
+    <h2>Definire le regole d'uso</h2>
+  </div>
+
+  <p>Le regole d'uso traducono la classificazione in comportamenti concreti. La classificazione dice "questo dato è Livello 3". Le regole d'uso dicono "se hai un dato Livello 3 e devi fare X, ecco come ti comporti". Sono due cose diverse — e la seconda dipende dalla prima.</p>
+
+  <h3>Il principio di proporzionalità nelle regole</h3>
+  <p>Non tutte le situazioni richiedono lo stesso tipo di regola. Un framework efficace distingue tre tipi di regola per tre tipi di situazione.</p>
+
+  <p>Le <strong>regole assolute</strong> sono quelle che non ammettono eccezioni — le più facili da comunicare e da ricordare, ma da usare con parsimonia. "Non condividere mai specifiche tecniche di prodotto con strumenti AI esterni non approvati" è una regola assoluta. Se tutto diventa assoluto, le persone smettono di percepire la differenza tra ciò che è davvero critico e ciò che è solo prudente.</p>
+
+  <p>Le <strong>regole condizionali</strong> dipendono da una condizione verificabile: "Prima di condividere dati con uno strumento AI, verifica se si tratta di dati Livello 1, 2 o 3 e agisci di conseguenza." Richiedono un minimo di ragionamento ma sono più flessibili e coprono più situazioni.</p>
+
+  <p>Le <strong>procedure di escalation</strong> si applicano ai casi incerti: "Se non sei sicuro del livello di classificazione di un dato, chiedi al tuo responsabile prima di procedere." Non è una regola sull'azione — è una regola sul processo decisionale quando l'azione non è chiara.</p>
+
+  <h3>Le regole trasversali — valide per tutti</h3>
+
+  <div class="rules-block">
+    <div class="rules-block-header">
+      <span class="rules-block-label">Regole applicabili a tutti i dipendenti, indipendentemente dalla funzione</span>
+    </div>
+    <div class="rule-row ok">
+      <div class="rule-sig"></div>
+      <div class="rule-content">
+        <strong>Usare strumenti AI per struttura, metodo e linguaggio</strong>
+        <span>Chiedere aiuto su come impostare un documento, migliorare la chiarezza di un testo, imparare un metodo o una tecnica è un uso corretto e incoraggiato. Non richiede di condividere dati aziendali specifici.</span>
+      </div>
+    </div>
+    <div class="rule-row ok">
+      <div class="rule-sig"></div>
+      <div class="rule-content">
+        <strong>Anonimizzare prima di condividere dati Livello 2</strong>
+        <span>I dati Livello 2 possono essere condivisi solo dopo aver rimosso tutti gli elementi identificativi: nomi di clienti, prodotti, fornitori, cifre specifiche. Il testo risultante deve essere indistinguibile da un caso generico del settore.</span>
+      </div>
+    </div>
+    <div class="rule-row ok">
+      <div class="rule-sig"></div>
+      <div class="rule-content">
+        <strong>Verificare sempre gli output AI su informazioni critiche</strong>
+        <span>Le risposte di uno strumento AI non sono fonti autorevoli. Qualsiasi informazione tecnica, normativa o contrattuale prodotta da uno strumento AI va verificata su fonti primarie prima dell'uso in contesti operativi o documentali.</span>
+      </div>
+    </div>
+    <div class="rule-row warn">
+      <div class="rule-sig"></div>
+      <div class="rule-content">
+        <strong>Usare solo gli strumenti approvati dall'azienda per dati di lavoro</strong>
+        <span>Gli account personali di strumenti AI gratuiti non devono essere usati per attività lavorative che coinvolgono informazioni aziendali. Usare solo gli strumenti indicati dall'IT come approvati per uso aziendale.</span>
+      </div>
+    </div>
+    <div class="rule-row stop">
+      <div class="rule-sig"></div>
+      <div class="rule-content">
+        <strong>Non condividere mai dati Livello 3 con strumenti AI esterni</strong>
+        <span>Specifiche tecniche, dati coperti da NDA, dati personali, offerte commerciali, parametri di processo: nessuno di questi dati può essere inviato a sistemi AI non approvati, indipendentemente dal task da svolgere e dalla urgenza percepita.</span>
+      </div>
+    </div>
+    <div class="rule-row stop">
+      <div class="rule-sig"></div>
+      <div class="rule-content">
+        <strong>Segnalare immediatamente qualsiasi condivisione accidentale</strong>
+        <span>Se per errore viene condiviso un dato Livello 3 con uno strumento AI esterno, segnalarlo immediatamente al proprio responsabile. Nessun dipendente verrà penalizzato per aver segnalato un errore in buona fede. Il silenzio trasforma un incidente gestibile in un rischio cronico.</span>
+      </div>
+    </div>
+  </div>
+
+  <h3>Come costruire regole specifiche per funzione</h3>
+  <p>Le regole trasversali coprono la maggior parte delle situazioni. Le regole specifiche per funzione le integrano per i casi che le regole generali non risolvono esplicitamente — e che, nella pratica quotidiana, sono quelli che generano più dubbi.</p>
+  <p>Il metodo migliore per costruirle è partire dalle situazioni concrete più frequenti in quella funzione — non dai dati astratti. Per l'ufficio tecnico: "Quando un progettista vuole usare l'AI per aiutarsi con un calcolo, come si comporta?" Per il commerciale: "Quando un account manager vuole usare l'AI per migliorare la risposta a un cliente difficile, come si comporta?"</p>
+  <p>Ogni risposta a queste domande diventa una regola o un esempio nella policy. Il Modulo 5 del Documento B (la guida per i manager) già contiene le regole specifiche per sei funzioni aziendali — può essere usato direttamente come fonte.</p>
+
+  <h3>Come gestire gli strumenti approvati e non approvati</h3>
+  <p>Una policy AI deve rispondere a una domanda pratica che le persone si pongono immediatamente: <em>"Quali strumenti posso usare?"</em>. La risposta deve essere concreta, non solo principi.</p>
+  <p>Il framework più funzionale distingue tre categorie di strumenti. Gli <strong>strumenti approvati</strong> sono quelli che l'azienda ha valutato, per i quali esiste o esisterà un contratto enterprise con le garanzie necessarie, e che i dipendenti possono usare nel rispetto delle regole sulla classificazione dei dati. Gli <strong>strumenti in valutazione</strong> possono essere usati ma solo per dati Livello 1 — finché non è completata la valutazione di sicurezza. Gli <strong>strumenti non approvati</strong> — tipicamente account personali gratuiti — non devono essere usati per nessuna attività lavorativa che coinvolga dati aziendali.</p>
+
+  <div class="ibox green">
+    <span class="ibox-label">Il punto sul "non approvato"</span>
+    La distinzione tra "approvato" e "non approvato" non è un giudizio sulla qualità dello strumento — ChatGPT gratuito e ChatGPT enterprise sono lo stesso modello. È una distinzione sulle garanzie contrattuali. <strong>Comunicarlo chiaramente evita incomprensioni:</strong> non si sta dicendo che uno strumento è pericoloso o scadente, si sta dicendo che per uso aziendale serve un contratto con le protezioni adeguate.
+  </div>
+
+  <h3>Il test di applicabilità</h3>
+  <p>Prima di finalizzare qualsiasi regola, sottoporla a un test pratico semplice: chiedere a tre o quattro persone delle funzioni operative di applicarla a un caso concreto che conoscono. Se non riescono a farlo autonomamente, la regola è ancora troppo vaga. Il test non richiede un questionario formale — una conversazione di cinque minuti è sufficiente.</p>
+
+</div>
+</div>
+
+
+<!-- ══════════════════════════════════
+     MODULO 4 — SCRIVERE LA POLICY
+══════════════════════════════════ -->
+<div class="tab-panel" id="m4">
+<div class="panel-body">
+
+  <div class="mod-header">
+    <span class="mod-num">Modulo 04</span>
+    <h2>Scrivere la policy</h2>
+  </div>
+
+  <p>Una volta completata la classificazione dei dati e definite le regole, il passaggio alla stesura del documento è più meccanico di quanto sembri. Il vero lavoro è nei moduli precedenti — la policy è la loro formalizzazione scritta.</p>
+
+  <h3>Cosa deve contenere una policy AI efficace</h3>
+  <p>Una policy AI non è un documento che deve "coprire tutto" — è un documento che deve essere letto, capito e applicato. Questa distinzione ha conseguenze concrete sulla lunghezza, sul linguaggio e sulla struttura.</p>
+
+  <div class="anatomy-list">
+    <div class="anatomy-item">
+      <div class="an-num">01</div>
+      <div class="an-body">
+        <h4>Scopo e campo di applicazione</h4>
+        <p>A chi si applica la policy (tutti i dipendenti, i collaboratori, i consulenti?), quali strumenti copre (tutti i sistemi AI generativi? anche quelli integrati in software aziendali?), e da quando è in vigore. <strong>Essere espliciti sui confini evita malintesi successivi.</strong></p>
+      </div>
+      <div class="an-flag must"><span>Obbligatorio</span></div>
+    </div>
+    <div class="anatomy-item">
+      <div class="an-num">02</div>
+      <div class="an-body">
+        <h4>Classificazione dei dati</h4>
+        <p>I tre livelli con definizione e criteri. Non serve elencare ogni singolo tipo di documento — bastano i criteri e alcuni esempi rappresentativi per funzione. Il documento E2 include un template più dettagliato come allegato.</p>
+      </div>
+      <div class="an-flag must"><span>Obbligatorio</span></div>
+    </div>
+    <div class="anatomy-item">
+      <div class="an-num">03</div>
+      <div class="an-body">
+        <h4>Regole d'uso</h4>
+        <p>Le regole trasversali e le principali regole per funzione. Strutturate in modo da essere facilmente consultabili — non testo continuo, ma liste con segnali visivi chiari (cosa sì, cosa con cautela, cosa no).</p>
+      </div>
+      <div class="an-flag must"><span>Obbligatorio</span></div>
+    </div>
+    <div class="anatomy-item">
+      <div class="an-num">04</div>
+      <div class="an-body">
+        <h4>Strumenti approvati</h4>
+        <p>Lista degli strumenti che l'azienda ha approvato per uso aziendale, con eventuali note sulle condizioni d'uso (es. "solo per dati Livello 1 e 2"). Questa sezione richiede aggiornamenti frequenti man mano che nuovi strumenti vengono valutati.</p>
+      </div>
+      <div class="an-flag must"><span>Obbligatorio</span></div>
+    </div>
+    <div class="anatomy-item">
+      <div class="an-num">05</div>
+      <div class="an-body">
+        <h4>Procedura di segnalazione incidenti</h4>
+        <p>Chi contattare, come, entro quanto tempo, e con quale garanzia di non penalizzazione per chi segnala in buona fede. <strong>Senza questa sezione la policy è incompleta</strong> — le persone devono sapere cosa fare quando qualcosa va storto.</p>
+      </div>
+      <div class="an-flag must"><span>Obbligatorio</span></div>
+    </div>
+    <div class="anatomy-item">
+      <div class="an-num">06</div>
+      <div class="an-body">
+        <h4>Responsabile e data di revisione</h4>
+        <p>Nome o ruolo del responsabile della policy, data dell'ultima revisione, data della prossima revisione pianificata. Non è una formalità — è il meccanismo che impedisce alla policy di invecchiare silenziosamente.</p>
+      </div>
+      <div class="an-flag must"><span>Obbligatorio</span></div>
+    </div>
+    <div class="anatomy-item">
+      <div class="an-num">07</div>
+      <div class="an-body">
+        <h4>Contesto e motivazioni</h4>
+        <p>Una breve sezione che spiega perché la policy esiste e qual è l'obiettivo — non vietare l'AI, ma usarla responsabilmente. Aiuta le persone a interpretare i casi non esplicitamente coperti e a percepire le regole come ragionevoli anziché arbitrarie.</p>
+      </div>
+      <div class="an-flag rec"><span>Raccomandato</span></div>
+    </div>
+    <div class="anatomy-item">
+      <div class="an-num">08</div>
+      <div class="an-body">
+        <h4>Esempi pratici per funzione</h4>
+        <p>Casi concreti che mostrano come applicare le regole — cosa si può fare, cosa si fa solo con anonimizzazione, cosa non si fa. Possono essere un allegato separato (come i Documenti D1-D3 già prodotti) o una sezione interna alla policy.</p>
+      </div>
+      <div class="an-flag opt"><span>Opzionale</span></div>
+    </div>
+  </div>
+
+  <h3>Cosa non mettere nella policy</h3>
+  <p>Alcune cose allungano il documento senza aggiungere valore operativo — e riducono la probabilità che venga letto.</p>
+  <p><strong>Non serve una spiegazione tecnica dettagliata di come funzionano gli LLM.</strong> La policy non è un documento didattico — per quello esistono i materiali di formazione. Un paragrafo introduttivo sintetico è sufficiente.</p>
+  <p><strong>Non serve elencare ogni possibile strumento AI sul mercato.</strong> Il panorama cambia troppo velocemente. Meglio un principio chiaro ("usa solo strumenti approvati dall'IT") che una lista destinata a essere incompleta entro sei mesi.</p>
+  <p><strong>Non serve un linguaggio eccessivamente legale.</strong> Le clausole di limitazione della responsabilità appartengono ai contratti, non alle policy interne. Un dipendente che legge "il mancato rispetto della presente policy potrà comportare l'avvio di procedimenti disciplinari ai sensi dell'art. X del CCNL" capisce che deve fare attenzione, ma non capisce cosa deve fare. Le conseguenze si citano, ma brevemente.</p>
+
+  <h3>Il linguaggio giusto</h3>
+  <p>Una policy che vuole essere letta usa frasi corte, strutture parallele ("puoi... non puoi... devi..."), e esempi concreti invece di categorie astratte. Non è una questione di stile — è una questione di efficacia. Una policy che nessuno legge non protegge nessuno.</p>
+  <p>Un test pratico: leggere un paragrafo della bozza ad alta voce. Se suona goffo o richiede più di una lettura per essere capito, va riscritto. Se suona come qualcosa che si direbbe in una conversazione normale, è probabilmente buono.</p>
+
+  <div class="golden">
+    <span class="golden-label">Il criterio di completezza</span>
+    <p>Una policy AI è completa quando un nuovo dipendente, leggendola il primo giorno di lavoro, sa: <strong>quali strumenti può usare, su quali dati, in che modo, e cosa fare se ha un dubbio o commette un errore.</strong> Se una di queste quattro domande non trova risposta nella policy, la policy non è ancora completa.</p>
+  </div>
+
+</div>
+</div>
+
+
+<!-- ══════════════════════════════════
+     MODULO 5 — COMUNICARE E FORMARE
+══════════════════════════════════ -->
+<div class="tab-panel" id="m5">
+<div class="panel-body">
+
+  <div class="mod-header">
+    <span class="mod-num">Modulo 05</span>
+    <h2>Comunicare e formare</h2>
+  </div>
+
+  <p>Una policy ben scritta che non viene comunicata efficacemente vale quanto nessuna policy. L'obiettivo della comunicazione non è informare — è cambiare comportamenti. La distinzione è importante perché implica approcci molto diversi.</p>
+  <p>Informare significa trasmettere contenuto. Cambiare comportamenti significa far sì che le persone facciano qualcosa di diverso la prossima volta che si trovano in una situazione specifica. Questo richiede che il contenuto sia assorbito, compreso e tradotto in un'azione concreta — non solo letto.</p>
+
+  <h3>Il piano di comunicazione: la sequenza conta</h3>
+  <p>L'ordine in cui si comunica la policy non è indifferente. Comunicare le regole a tutti contemporaneamente, prima che i manager le conoscano, genera confusione — le persone fanno domande ai loro responsabili che non sono preparati a rispondere, e questo mina la credibilità di tutta l'iniziativa.</p>
+
+  <div class="comm-steps">
+    <div class="comm-step">
+      <div class="cs-phase"><span>Prima</span><strong>Direzione e sponsor</strong></div>
+      <div class="cs-body">
+        <h4>Allineare il vertice — settimana 1</h4>
+        <p>Prima di qualsiasi comunicazione formale, allineare la direzione e i responsabili delle funzioni principali. <strong>La policy deve essere percepita come un'iniziativa aziendale, non come un documento prodotto dall'IT.</strong> Questo richiede un endorsement esplicito — anche solo un'email o un messaggio del CEO o del direttore generale che introduce l'iniziativa.</p>
+      </div>
+    </div>
+    <div class="comm-step">
+      <div class="cs-phase"><span>Poi</span><strong>Manager e prime linee</strong></div>
+      <div class="cs-body">
+        <h4>Formare i manager — settimana 2</h4>
+        <p>I manager devono ricevere la formazione prima dei loro team. Devono conoscere le regole, capire le motivazioni, e essere preparati a rispondere alle domande più frequenti. <strong>Il Documento D2 (guida per manager) è lo strumento specifico per questa fase.</strong> Una sessione di 60–90 minuti con i responsabili di funzione è sufficiente — non serve un corso strutturato.</p>
+      </div>
+    </div>
+    <div class="comm-step">
+      <div class="cs-phase"><span>Infine</span><strong>Tutti i dipendenti</strong></div>
+      <div class="cs-body">
+        <h4>Comunicazione a tutti — settimana 3–4</h4>
+        <p>La comunicazione ai dipendenti avviene attraverso i canali aziendali standard (email, intranet, meeting di team) con il materiale operativo già predisposto. <strong>Il punto di contatto principale per le domande deve essere il diretto responsabile</strong>, che a questo punto è già formato. L'IT e il DPO gestiscono le domande tecniche e normative.</p>
+      </div>
+    </div>
+  </div>
+
+  <h3>Come condurre una sessione formativa efficace</h3>
+  <p>Non serve un corso formale con esame e attestato. Quello che serve è una conversazione strutturata che aiuti le persone a capire perché le regole esistono e come applicarle nel loro lavoro specifico. Una sessione di 30–45 minuti con un team di 10–15 persone è sufficiente se ben impostata.</p>
+  <p>La struttura più efficace parte dal concreto: aprire con due o tre situazioni reali che le persone riconoscono ("qualcuno di voi ha già usato ChatGPT per...?"), poi spiegare brevemente il rischio associato, poi introdurre le regole come risposta a quel rischio. Le regole che arrivano dopo un esempio concreto vengono comprese e ricordate molto meglio di quelle presentate in astratto.</p>
+  <p>Dedicare la parte finale della sessione alle domande — non alle domande che si vorrebbero ricevere, ma a quelle reali che le persone hanno. Spesso rivelano malintesi che non emergerebbero mai da un questionario.</p>
+
+  <h3>Come gestire le resistenze più comuni</h3>
+
+  <table class="resist-table">
+    <thead>
+      <tr>
+        <th>Resistenza</th>
+        <th>Perché emerge</th>
+        <th>Come risponderle</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>"Lo uso già da mesi e non è successo niente"</td>
+        <td>Assenza di feedback negativo percepita come conferma di sicurezza</td>
+        <td>Non contestare l'esperienza passata — riconoscerla. Spiegare che l'obiettivo non è punire il passato ma costruire abitudini per il futuro. Un rischio che non si è ancora materializzato resta un rischio.</td>
+      </tr>
+      <tr>
+        <td>"Queste regole rallentano il lavoro"</td>
+        <td>Le restrizioni vengono percepite come ostacoli alla produttività</td>
+        <td>Mostrare concretamente che la maggior parte dei task quotidiani rientra nella categoria "condivisibile liberamente" o "condivisibile con anonimizzazione". Solo una parte minoritaria è davvero vietata. Il punto è che quella parte è la più critica.</td>
+      </tr>
+      <tr>
+        <td>"Se non lo faccio io, lo fa qualcun altro"</td>
+        <td>Percezione che le regole siano applicate in modo non uniforme</td>
+        <td>Riconoscere che la policy ha senso solo se applicata uniformemente. Se il problema è reale (qualcuno non rispetta le regole), portarlo al responsabile — non giustificare la propria non conformità con quella altrui.</td>
+      </tr>
+      <tr>
+        <td>"Non capisco perché questo dato specifico sia riservato"</td>
+        <td>La classificazione non è stata spiegata con le motivazioni</td>
+        <td>Spiegare il ragionamento — non solo "è Livello 3" ma "è Livello 3 perché contiene parametri di processo che rappresentano il nostro vantaggio competitivo". Le regole con una motivazione comprensibile vengono seguite meglio di quelle arbitrarie.</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <h3>Come misurare se le persone hanno capito</h3>
+  <p>La misurazione dell'efficacia della formazione non richiede un test formale. Tre segnali pratici sono sufficienti per una prima valutazione.</p>
+  <p>Il primo segnale è la <strong>qualità delle domande</strong> che arrivano dopo la comunicazione. Domande su casi specifici ("ma in questa situazione posso...?") indicano comprensione delle regole e desiderio di applicarle correttamente. L'assenza totale di domande può indicare o comprensione completa o disinteresse — e il secondo è più frequente del primo.</p>
+  <p>Il secondo segnale è la <strong>frequenza delle segnalazioni di casi dubbi</strong>. Se nessuno chiede mai chiarimenti, le persone stanno probabilmente decidendo autonomamente in situazioni ambigue — il che è accettabile solo se la formazione era molto efficace.</p>
+  <p>Il terzo segnale, dopo 60–90 giorni, è un <strong>breve sondaggio anonimo</strong> a un campione di dipendenti: "Se stai per inviare un documento a uno strumento AI, sai come capire se puoi farlo?" Una risposta positiva alta indica comprensione; una bassa indica che serve un rinforzo.</p>
+
+</div>
+</div>
+
+
+<!-- ══════════════════════════════════
+     MODULO 6 — MANTENERE NEL TEMPO
+══════════════════════════════════ -->
+<div class="tab-panel" id="m6">
+<div class="panel-body">
+
+  <div class="mod-header">
+    <span class="mod-num">Modulo 06</span>
+    <h2>Mantenere la policy nel tempo</h2>
+  </div>
+
+  <p>Una policy AI che non viene aggiornata diventa obsoleta in modo quasi garantito entro dodici mesi — non perché venga ignorata, ma perché il panorama tecnologico, normativo e organizzativo cambia più velocemente di qualsiasi documento statico.</p>
+  <p>La manutenzione non è un'attività burocratica: è ciò che trasforma una policy da un documento di lancio a un sistema di governance reale. Un sistema che si aggiorna è un sistema vivo. Uno che non si aggiorna diventa gradualmente fuorviante.</p>
+
+  <h3>La revisione periodica: cadenza e struttura</h3>
+  <p>La cadenza raccomandata è <strong>annuale come base</strong>, con revisioni straordinarie al verificarsi di eventi specifici (vedi sotto). L'annuale non significa riscrivere tutto — significa verificare sistematicamente che le sezioni principali siano ancora accurate e pertinenti.</p>
+  <p>La revisione annuale dovrebbe rispondere a queste domande: le regole sugli strumenti approvati riflettono ancora gli strumenti che l'azienda usa? La classificazione dei dati è ancora accurata rispetto ai dati che l'azienda gestisce? Ci sono stati incidenti o casi dubbi che hanno rivelato lacune nelle regole? Il framework normativo (GDPR, AI Act) ha subito aggiornamenti rilevanti?</p>
+  <p>Chi conduce la revisione è il responsabile della policy (nominato nel documento) con il contributo di IT, HR/legale e un campione dei responsabili di funzione. Non è necessario coinvolgere tutti ogni anno — basta chi ha segnalato problemi o chi gestisce le aree più esposte ai cambiamenti.</p>
+
+  <h3>I segnali che indicano che la policy va aggiornata prima del ciclo annuale</h3>
+
+  <div class="signal-list">
+    <div class="signal-item">
+      <div class="sig-icon">🛠️</div>
+      <div class="sig-body">
+        <h4>L'azienda adotta un nuovo strumento AI significativo</h4>
+        <p>Ogni volta che viene introdotto uno strumento AI non previsto dalla policy — uno strumento enterprise nuovo, un'integrazione AI in un software esistente, un nuovo caso d'uso approvato — la policy deve essere aggiornata per includerlo esplicitamente. Non farlo crea un vuoto normativo che le persone riempiono con interpretazioni proprie.</p>
+      </div>
+    </div>
+    <div class="signal-item">
+      <div class="sig-icon">⚠️</div>
+      <div class="sig-body">
+        <h4>Si verifica un incidente o una near-miss</h4>
+        <p>Un incidente — condivisione accidentale di dati riservati, violazione di NDA, comportamento non conforme — è un segnale che la policy ha una lacuna o che la formazione è stata insufficiente. Ogni incidente deve essere analizzato per capire se la causa è una regola mancante, una regola poco chiara o un comportamento deliberatamente non conforme. Solo la terza situazione è un problema disciplinare; le prime due sono problemi della policy.</p>
+      </div>
+    </div>
+    <div class="signal-item">
+      <div class="sig-icon">📋</div>
+      <div class="sig-body">
+        <h4>Cambiamenti normativi rilevanti</h4>
+        <p>L'AI Act europeo è in progressiva applicazione fino al 2027. Il GDPR riceve interpretazioni aggiornate dall'EDPB. I termini di servizio dei principali provider AI cambiano con una certa frequenza. Qualsiasi cambiamento normativo o contrattuale che impatta il trattamento dei dati richiede una verifica della policy.</p>
+      </div>
+    </div>
+    <div class="signal-item">
+      <div class="sig-icon">👥</div>
+      <div class="sig-body">
+        <h4>Cambiamenti organizzativi significativi</h4>
+        <p>Un'acquisizione, una nuova business unit, un'espansione in nuovi mercati o paesi, un cambiamento nelle tipologie di clienti o contratti — tutti questi eventi possono creare nuove categorie di dati o nuovi obblighi di riservatezza che la policy esistente non copre.</p>
+      </div>
+    </div>
+  </div>
+
+  <h3>Come gestire un incidente</h3>
+  <p>La procedura di risposta a un incidente ha due obiettivi paralleli: gestire le conseguenze immediate dell'incidente specifico, e imparare da esso per migliorare il sistema. I due obiettivi richiedono azioni diverse e non devono essere confusi.</p>
+  <p>Per la <strong>gestione immediata</strong>: raccogliere i dettagli essenziali (cosa è stato condiviso, con quale strumento, in quale contesto), valutare se i dati condivisi richiedono azioni specifiche (notifica al DPO in caso di dati personali, verifica degli obblighi contrattuali in caso di NDA), e documentare l'incidente nel registro degli incidenti AI che dovrebbe essere parte del sistema di governance.</p>
+  <p>Per l'<strong>apprendimento sistematico</strong>: analizzare la causa radice dell'incidente — regola mancante, regola poco chiara, formazione insufficiente o comportamento deliberatamente non conforme. Aggiornare la policy o la formazione di conseguenza. Comunicare l'aggiornamento, possibilmente condividendo il caso (in modo anonimo) come esempio nella formazione futura.</p>
+
+  <h3>Come la policy evolve con i nuovi strumenti</h3>
+  <p>Il problema più ricorrente nella gestione nel tempo non è la mancanza di volontà di aggiornare, ma la velocità con cui i nuovi strumenti entrano nell'uso aziendale rispetto alla velocità della governance.</p>
+  <p>La soluzione strutturale è una <strong>procedura di onboarding degli strumenti AI</strong>: prima che un nuovo strumento venga adottato in modo diffuso, passa attraverso una valutazione IT (sicurezza, contratto, garanzie) e una categorizzazione rispetto alla policy esistente. Non è necessario che sia un processo lungo — per molti strumenti bastano pochi giorni. Ma deve essere un processo esplicito, non qualcosa che si scopre dopo che lo strumento è già in uso.</p>
+
+  <div class="ibox green">
+    <span class="ibox-label">La misura di successo finale</span>
+    Una policy AI funziona quando i dipendenti non la consultano perché hanno dubbi frequenti, ma perché sanno dove trovarla quando serve. <strong>L'obiettivo non è una policy perfetta — è un comportamento collettivo che protegge l'azienda e abilita l'uso produttivo dell'AI.</strong> La policy è lo strumento; il comportamento è il fine.
+  </div>
+
+  <div class="ibox blue">
+    <span class="ibox-label">Companion document</span>
+    Il <strong>Documento E2 — Kit operativo</strong> contiene i template pratici che completano questa guida: la checklist di avvio progetto, il template di mappatura dati per funzione, la bozza di regole operative adattabile, il template di policy completo, la scaletta per la sessione formativa e il template per la gestione degli incidenti.
+  </div>
+
+</div>
+</div>
+
+
+<footer>
+  <p>Comunicazione interna · Policy AI aziendale · 2026</p>
+  <p>Documento E1 — Guida strategica · Companion: Documento E2 — Kit operativo</p>
+</footer>
+
+<script>
+function switchTab(id) {
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+  document.querySelector(`[data-tab="${id}"]`).classList.add('active');
+  document.getElementById(id).classList.add('active');
+  window.scrollTo({top:0, behavior:'smooth'});
+}
+
+function toggleGrey(el) {
+  el.parentElement.classList.toggle('open');
+}
+</script>
+
+</body>
+</html>

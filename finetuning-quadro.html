@@ -1,0 +1,601 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Fine-tuning — Report Quadro · Quando usarlo (e quando no)</title>
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Outfit:wght@200;300;400;500;600;700;800;900&family=IBM+Plex+Mono:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg:     #faf8f5;
+  --bg2:    #f2efe9;
+  --bg3:    #e9e5dc;
+  --ink:    #1b1915;
+  --ink2:   #2e2b25;
+  --ink3:   #6d685c;
+  --ink4:   #a19c8f;
+  --border: #d9d4c8;
+  --border2:#cac4b6;
+
+  /* Leva Fine-tuning — verde scuro */
+  --accent:  #2e5a3a;
+  --accent2: #1a3a24;
+  --accent-light: #eef5f0;
+
+  --ok:   #3d7a45; --ok-l:  #f4faf5;
+  --bad:  #c0392b; --bad-l: #fdf5f5;
+  --warn: #b07d24; --warn-l:#fdf6e8;
+
+  /* Opzioni decisionali */
+  --opt-prompt: #2e4a7a; --opt-prompt-l: #edf1f9;
+  --opt-rag:    #7b5ea7; --opt-rag-l:    #f4f0fa;
+  --opt-ft:     #2e5a3a; --opt-ft-l:     #eef5f0;
+  --opt-arch:   #b07d24; --opt-arch-l:   #fdf6e8;
+}
+
+* { margin:0; padding:0; box-sizing:border-box; }
+html { scroll-behavior:smooth; }
+body { background:var(--bg); color:var(--ink); font-family:'Outfit',sans-serif; font-weight:300; font-size:14px; line-height:1.75; }
+
+.masthead { background:var(--ink); color:rgba(255,255,255,.9); padding:60px 56px 52px; position:relative; overflow:hidden; }
+.masthead::before { content:''; position:absolute; inset:0; background: repeating-linear-gradient(90deg,rgba(255,255,255,.012) 0,rgba(255,255,255,.012) 1px,transparent 1px,transparent 64px), repeating-linear-gradient(0deg,rgba(255,255,255,.012) 0,rgba(255,255,255,.012) 1px,transparent 1px,transparent 64px); pointer-events:none; }
+.masthead::after { content:'F'; position:absolute; right:44px; bottom:-28px; font-family:'Instrument Serif',serif; font-size:280px; line-height:1; color:rgba(255,255,255,.025); pointer-events:none; }
+.mh-eye { font-family:'IBM Plex Mono',monospace; font-size:10px; letter-spacing:3px; text-transform:uppercase; color:rgba(255,255,255,.25); margin-bottom:18px; position:relative; }
+.mh-cluster { display:inline-block; font-family:'IBM Plex Mono',monospace; font-size:10px; letter-spacing:2px; text-transform:uppercase; padding:4px 12px; border:1px solid var(--accent); color:var(--accent); margin-bottom:20px; position:relative; }
+.masthead h1 { font-family:'Instrument Serif',serif; font-weight:400; font-size:clamp(30px,4.5vw,54px); line-height:1.08; letter-spacing:-1px; max-width:700px; position:relative; }
+.mh-sub { margin-top:20px; font-size:15px; font-weight:300; color:rgba(255,255,255,.38); max-width:660px; line-height:1.7; position:relative; }
+.mh-meta { margin-top:32px; display:flex; gap:32px; flex-wrap:wrap; position:relative; }
+.mh-stat { display:flex; flex-direction:column; gap:4px; }
+.mh-stat-val { font-family:'IBM Plex Mono',monospace; font-size:22px; font-weight:500; color:rgba(255,255,255,.85); }
+.mh-stat-lbl { font-size:10px; letter-spacing:2px; text-transform:uppercase; color:rgba(255,255,255,.25); }
+
+.nav { background:var(--ink2); position:sticky; top:0; z-index:100; display:flex; overflow-x:auto; border-bottom:1px solid rgba(255,255,255,.06); }
+.nav-btn { flex:1; min-width:110px; padding:13px 12px; border:none; background:transparent; cursor:pointer; font-family:'Outfit',sans-serif; font-size:10.5px; font-weight:600; text-transform:uppercase; letter-spacing:.4px; color:rgba(255,255,255,.3); border-right:1px solid rgba(255,255,255,.06); transition:all .2s; white-space:nowrap; }
+.nav-btn:last-child { border-right:none; }
+.nav-btn:hover { color:rgba(255,255,255,.6); }
+.nav-btn.active { color:#fff; background:rgba(255,255,255,.05); }
+
+.sect { display:none; }
+.sect.active { display:block; animation:fadeIn .3s ease; }
+@keyframes fadeIn { from{opacity:0;transform:translateY(6px)} to{opacity:1;transform:translateY(0)} }
+.sect-head { padding:48px 56px 36px; border-bottom:1px solid var(--border); }
+.sect-num { font-family:'IBM Plex Mono',monospace; font-size:10px; letter-spacing:3px; text-transform:uppercase; color:var(--ink4); margin-bottom:10px; }
+.sect-head h2 { font-family:'Instrument Serif',serif; font-weight:400; font-size:clamp(26px,3.5vw,42px); line-height:1.1; letter-spacing:-.5px; max-width:640px; margin-bottom:14px; }
+.sect-head p { color:var(--ink3); max-width:700px; font-size:14.5px; }
+.wrap { padding:0 56px 64px; }
+
+.prose { max-width:760px; }
+.prose p { font-size:14.5px; color:var(--ink3); line-height:1.85; margin-bottom:16px; }
+.prose p strong { color:var(--ink2); font-weight:500; }
+.prose p em { font-style:italic; color:var(--ink2); }
+
+/* ── DECISION MAP ── */
+.dec-map { display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-top:20px; }
+.dm-card { border:1px solid var(--border2); background:var(--bg); overflow:hidden; }
+.dm-bar { height:4px; }
+.dm-head { padding:12px 16px; background:var(--bg2); border-bottom:1px solid var(--border); }
+.dm-badge { font-family:'IBM Plex Mono',monospace; font-size:9px; letter-spacing:2px; text-transform:uppercase; margin-bottom:3px; }
+.dm-title { font-weight:600; font-size:15px; color:var(--ink2); }
+.dm-body { padding:14px 16px; }
+.dm-desc { font-size:13px; color:var(--ink3); line-height:1.6; margin-bottom:8px; }
+.dm-desc strong { color:var(--ink2); font-weight:500; }
+.dm-use { margin-top:8px; }
+.dm-use-lbl { font-family:'IBM Plex Mono',monospace; font-size:9px; letter-spacing:1px; text-transform:uppercase; color:var(--ok); margin-bottom:4px; }
+.dm-use-item { font-size:12.5px; color:var(--ink3); padding:3px 0; display:flex; gap:6px; line-height:1.45; }
+.dm-use-item::before { content:'✓'; color:var(--ok); font-weight:700; flex-shrink:0; }
+.dm-not-lbl { font-family:'IBM Plex Mono',monospace; font-size:9px; letter-spacing:1px; text-transform:uppercase; color:var(--bad); margin-bottom:4px; margin-top:8px; }
+.dm-not-item { font-size:12.5px; color:var(--ink3); padding:3px 0; display:flex; gap:6px; line-height:1.45; }
+.dm-not-item::before { content:'✗'; color:var(--bad); font-weight:700; flex-shrink:0; }
+
+/* ── WIN CASES ── */
+.win-grid { display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-top:16px; }
+.win-card { border:1px solid var(--border2); background:var(--bg); overflow:hidden; border-left:4px solid var(--accent); }
+.wc-head { padding:12px 16px; background:var(--accent-light); border-bottom:1px solid var(--border); }
+.wc-num { font-family:'IBM Plex Mono',monospace; font-size:9px; letter-spacing:2px; text-transform:uppercase; color:var(--accent); margin-bottom:3px; }
+.wc-title { font-weight:600; font-size:14px; color:var(--ink2); }
+.wc-body { padding:12px 16px; }
+.wc-body p { font-size:13px; color:var(--ink3); line-height:1.6; }
+.wc-body p strong { color:var(--ink2); font-weight:500; }
+.wc-example { margin-top:8px; padding:7px 10px; font-family:'IBM Plex Mono',monospace; font-size:11px; line-height:1.6; border-left:3px solid var(--accent); background:var(--accent-light); color:var(--accent2); }
+
+/* ── NOT CASES ── */
+.not-grid { display:grid; grid-template-columns:1fr 1fr 1fr; gap:10px; margin-top:16px; }
+.not-card { border:1px solid var(--border2); background:var(--bg); padding:14px 16px; border-left:4px solid var(--bad); }
+.nc-label { font-family:'IBM Plex Mono',monospace; font-size:8px; letter-spacing:2px; text-transform:uppercase; color:var(--bad); margin-bottom:5px; }
+.nc-title { font-weight:600; font-size:13.5px; color:var(--ink2); margin-bottom:6px; }
+.nc-desc { font-size:12.5px; color:var(--ink3); line-height:1.55; }
+.nc-desc strong { color:var(--ink2); font-weight:500; }
+.nc-alt { margin-top:8px; padding:6px 10px; background:var(--ok-l); border-left:3px solid var(--ok); font-size:12px; color:#2e4a32; line-height:1.5; }
+.nc-alt strong { font-weight:500; }
+
+/* ── COST PANEL ── */
+.cost-panel { margin-top:16px; display:grid; grid-template-columns:1fr 1fr; gap:1px; background:var(--border); border:1px solid var(--border2); }
+.cp-col { background:var(--bg); padding:16px 20px; }
+.cp-label { font-family:'IBM Plex Mono',monospace; font-size:9px; letter-spacing:2px; text-transform:uppercase; color:var(--ink4); margin-bottom:8px; padding-bottom:6px; border-bottom:1px solid var(--border); }
+.cp-col p { font-size:13px; color:var(--ink3); line-height:1.65; margin-bottom:6px; }
+.cp-col p strong { color:var(--ink2); font-weight:500; }
+
+/* ── DECISION FLOW ── */
+.dec-flow { margin-top:16px; }
+.df-step { display:grid; grid-template-columns:36px 1fr; border:1px solid var(--border2); background:var(--bg); margin-bottom:2px; }
+.df-num { background:var(--accent); color:#fff; font-family:'IBM Plex Mono',monospace; font-size:11px; font-weight:500; display:flex; align-items:center; justify-content:center; }
+.df-content { padding:12px 16px; }
+.df-q { font-weight:600; font-size:13.5px; color:var(--ink2); margin-bottom:4px; }
+.df-a { font-size:13px; color:var(--ink3); line-height:1.6; }
+.df-a .go  { color:var(--ok);  font-weight:600; font-family:'IBM Plex Mono',monospace; font-size:11px; padding:1px 6px; background:var(--ok-l);  border:1px solid var(--ok);  }
+.df-a .no  { color:var(--bad); font-weight:600; font-family:'IBM Plex Mono',monospace; font-size:11px; padding:1px 6px; background:var(--bad-l); border:1px solid var(--bad); }
+.df-a .mid { color:var(--warn); font-weight:600; font-family:'IBM Plex Mono',monospace; font-size:11px; padding:1px 6px; background:var(--warn-l); border:1px solid var(--warn); }
+
+/* ── ROADMAP ── */
+.roadmap { margin-top:24px; }
+.rm-item { display:grid; grid-template-columns:48px 1fr; margin-bottom:2px; }
+.rm-step { display:flex; flex-direction:column; align-items:center; }
+.rm-circle { width:36px; height:36px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-family:'IBM Plex Mono',monospace; font-weight:500; font-size:11px; color:#fff; flex-shrink:0; background:var(--accent); }
+.rm-line { width:2px; flex:1; background:var(--border); margin:4px 0; min-height:16px; }
+.rm-content { padding:6px 0 20px 16px; }
+.rm-id { font-family:'IBM Plex Mono',monospace; font-size:9px; letter-spacing:2px; text-transform:uppercase; color:var(--ink4); margin-bottom:2px; }
+.rm-title { font-family:'Instrument Serif',serif; font-size:18px; color:var(--ink2); margin-bottom:4px; }
+.rm-desc { font-size:13px; color:var(--ink3); line-height:1.6; }
+.rm-desc strong { color:var(--ink2); font-weight:500; }
+
+/* ── KEY POINT / INSIGHT ── */
+.key-point { margin-top:36px; padding:24px 28px; border-left:4px solid var(--accent); background:var(--accent-light); }
+.kp-label { font-family:'IBM Plex Mono',monospace; font-size:9px; letter-spacing:2px; text-transform:uppercase; color:var(--accent); margin-bottom:8px; }
+.kp-text { font-family:'Instrument Serif',serif; font-size:18px; line-height:1.45; color:var(--ink2); }
+.kp-sub { margin-top:10px; font-size:13px; color:var(--ink3); line-height:1.65; }
+.insight { margin:16px 0; padding:16px 20px; border-left:4px solid var(--accent); background:var(--accent-light); }
+.insight-lbl { font-family:'IBM Plex Mono',monospace; font-size:9px; letter-spacing:2px; text-transform:uppercase; color:var(--accent); margin-bottom:6px; }
+.insight p { font-size:13.5px; color:var(--ink2); line-height:1.65; max-width:700px; }
+.insight p strong { font-weight:500; }
+.mechanism { margin-top:14px; padding:14px 18px; border-left:3px solid var(--accent); background:var(--accent-light); }
+.mech-lbl { font-family:'IBM Plex Mono',monospace; font-size:9px; letter-spacing:2px; text-transform:uppercase; color:var(--accent); margin-bottom:6px; }
+.mechanism p { font-size:13px; color:var(--ink3); line-height:1.65; }
+.mechanism p strong { color:var(--ink2); font-weight:500; }
+
+.footer { padding:24px 56px; border-top:1px solid var(--border); display:flex; justify-content:space-between; align-items:center; font-family:'IBM Plex Mono',monospace; font-size:10px; letter-spacing:1px; text-transform:uppercase; color:var(--ink4); }
+
+@media (max-width:700px) {
+  .masthead,.sect-head,.wrap,.footer { padding-left:20px; padding-right:20px; }
+  .dec-map,.win-grid,.cost-panel { grid-template-columns:1fr; }
+  .not-grid { grid-template-columns:1fr; }
+  .df-step { grid-template-columns:1fr; }
+  .df-num { display:none; }
+}
+</style>
+</head>
+<body>
+
+<div class="masthead">
+  <div class="mh-eye">Serie Agenti AI · Leva 07 · Fine-tuning</div>
+  <div class="mh-cluster">Report Quadro</div>
+  <h1>Quando usare il fine-tuning — e quando no</h1>
+  <p class="mh-sub">Il fine-tuning non è migliore del prompting in senso assoluto — è migliore per problemi specifici che il prompting non può risolvere. Prima di investire in un modello da mantenere, la domanda più importante è: ne ho davvero bisogno?</p>
+  <div class="mh-meta">
+    <div class="mh-stat"><div class="mh-stat-val">4</div><div class="mh-stat-lbl">Leve da confrontare</div></div>
+    <div class="mh-stat"><div class="mh-stat-val">4</div><div class="mh-stat-lbl">Casi in cui vince</div></div>
+    <div class="mh-stat"><div class="mh-stat-value">Ultima</div><div class="mh-stat-lbl">La leva da toccare</div></div>
+    <div class="mh-stat"><div class="mh-stat-val">4</div><div class="mh-stat-lbl">Report nella serie</div></div>
+  </div>
+</div>
+
+<div class="nav">
+  <button class="nav-btn active" onclick="show(1)">Le 4 opzioni a confronto</button>
+  <button class="nav-btn" onclick="show(2)">Quando il FT vince</button>
+  <button class="nav-btn" onclick="show(3)">Quando non serve</button>
+  <button class="nav-btn" onclick="show(4)">Il costo reale</button>
+  <button class="nav-btn" onclick="show(5)">La decisione e la serie</button>
+</div>
+
+
+<!-- ═══════════════════════════
+     S1 — LE 4 OPZIONI
+═══════════════════════════ -->
+<div class="sect active" id="s1">
+  <div class="sect-head">
+    <div class="sect-num">Introduzione</div>
+    <h2>Quattro leve, un problema — come orientarsi</h2>
+    <p>Quando le performance del sistema non sono soddisfacenti, ci sono quattro leve da considerare. Il fine-tuning è una di esse — e spesso non la prima da provare.</p>
+  </div>
+  <div class="wrap">
+
+    <div class="prose" style="margin-top:28px;">
+      <p>Prima di decidere se fare fine-tuning, è utile avere chiaro il panorama delle alternative. Ogni leva risolve una classe diversa di problemi — e le prime tre sono quasi sempre meno costose e più reversibili del fine-tuning.</p>
+    </div>
+
+    <div class="dec-map">
+
+      <div class="dm-card">
+        <div class="dm-bar" style="background:var(--opt-prompt)"></div>
+        <div class="dm-head">
+          <div class="dm-badge" style="color:var(--opt-prompt)">Leva 01</div>
+          <div class="dm-title">Prompt engineering</div>
+        </div>
+        <div class="dm-body">
+          <div class="dm-desc">Modificare il system prompt, le istruzioni, gli esempi few-shot, e la struttura della richiesta per ottenere il comportamento desiderato. <strong>La leva da provare sempre per prima.</strong></div>
+          <div class="dm-use">
+            <div class="dm-use-lbl">Efficace per</div>
+            <div class="dm-use-item">Cambiamenti di stile e tono</div>
+            <div class="dm-use-item">Modifiche al formato dell'output</div>
+            <div class="dm-use-item">Nuovi vincoli di comportamento</div>
+            <div class="dm-use-item">Task ben definibili con istruzioni</div>
+          </div>
+          <div class="dm-not-lbl">Limiti</div>
+          <div class="dm-not-item">Stile molto specifico difficile da descrivere in parole</div>
+          <div class="dm-not-item">Comportamento che richiede decine di esempi few-shot</div>
+        </div>
+      </div>
+
+      <div class="dm-card">
+        <div class="dm-bar" style="background:var(--opt-rag)"></div>
+        <div class="dm-head">
+          <div class="dm-badge" style="color:var(--opt-rag)">Leva 02</div>
+          <div class="dm-title">RAG — Retrieval Augmented Generation</div>
+        </div>
+        <div class="dm-body">
+          <div class="dm-desc">Fornire al modello le informazioni rilevanti al momento della generazione, recuperate da un corpus esterno. <strong>La risposta alla maggior parte dei problemi di "conoscenza mancante".</strong></div>
+          <div class="dm-use">
+            <div class="dm-use-lbl">Efficace per</div>
+            <div class="dm-use-item">Conoscenza di dominio aggiornabile</div>
+            <div class="dm-use-item">Dati interni dell'organizzazione</div>
+            <div class="dm-use-item">Fatti specifici che cambiano nel tempo</div>
+            <div class="dm-use-item">Riduzione delle hallucination su fatti</div>
+          </div>
+          <div class="dm-not-lbl">Limiti</div>
+          <div class="dm-not-item">Non modifica il modo in cui il modello ragiona</div>
+          <div class="dm-not-item">Non modifica lo stile o il formato dell'output</div>
+        </div>
+      </div>
+
+      <div class="dm-card">
+        <div class="dm-bar" style="background:var(--opt-arch)"></div>
+        <div class="dm-head">
+          <div class="dm-badge" style="color:var(--opt-arch)">Leva 03</div>
+          <div class="dm-title">Architettura e orchestrazione</div>
+        </div>
+        <div class="dm-body">
+          <div class="dm-desc">Riprogettare come il sistema usa il modello — scomposizione del task in passi, agenti specializzati, routing intelligente. <strong>Spesso risolve problemi che sembrano richiedere un modello migliore.</strong></div>
+          <div class="dm-use">
+            <div class="dm-use-lbl">Efficace per</div>
+            <div class="dm-use-item">Task complessi che beneficiano della scomposizione</div>
+            <div class="dm-use-item">Riduzione della latenza e del costo</div>
+            <div class="dm-use-item">Comportamenti diversi per tipi diversi di input</div>
+          </div>
+          <div class="dm-not-lbl">Limiti</div>
+          <div class="dm-not-item">Non migliora le capacità intrinseche del modello</div>
+          <div class="dm-not-item">Aggiunge complessità di sistema</div>
+        </div>
+      </div>
+
+      <div class="dm-card">
+        <div class="dm-bar" style="background:var(--opt-ft)"></div>
+        <div class="dm-head">
+          <div class="dm-badge" style="color:var(--opt-ft)">Leva 04</div>
+          <div class="dm-title">Fine-tuning</div>
+        </div>
+        <div class="dm-body">
+          <div class="dm-desc">Modificare i pesi del modello attraverso ulteriore training su esempi specifici del dominio. <strong>La leva più potente per problemi che le altre tre non risolvono — e la più costosa da mantenere.</strong></div>
+          <div class="dm-use">
+            <div class="dm-use-lbl">Efficace per</div>
+            <div class="dm-use-item">Stile molto specifico non descrivibile in parole</div>
+            <div class="dm-use-item">Comportamento coerente ad alto volume senza prompt lungo</div>
+            <div class="dm-use-item">Riduzione di latenza/costo su task ripetitivi</div>
+            <div class="dm-use-item">Output strutturato complesso e stabile nel tempo</div>
+          </div>
+          <div class="dm-not-lbl">Limiti</div>
+          <div class="dm-not-item">Richiede dataset di qualità da costruire e mantenere</div>
+          <div class="dm-not-item">Non aggiorna la conoscenza come il RAG</div>
+          <div class="dm-not-item">Costoso da ri-addestrare quando i requisiti cambiano</div>
+        </div>
+      </div>
+
+    </div>
+
+    <div class="key-point" style="margin-top:24px;">
+      <div class="kp-label">L'ordine che conta</div>
+      <div class="kp-text">Prima ottimizza il prompt. Se non basta, aggiungi RAG. Se non basta, ripensa l'architettura. Se non basta ancora — e il problema è genuinamente nelle capacità intrinseche del modello — allora considera il fine-tuning.</div>
+      <div class="kp-sub">Questo non è conservatorismo — è pragmatismo. Il prompt engineering è reversibile in un'ora. Il fine-tuning richiede settimane di lavoro e produce un modello da mantenere indefinitamente. Investire nell'ordine sbagliato significa pagare il costo più alto per un problema che avrebbe potuto essere risolto con quello più basso.</div>
+    </div>
+
+  </div>
+</div>
+
+
+<!-- ═══════════════════════════
+     S2 — QUANDO IL FT VINCE
+═══════════════════════════ -->
+<div class="sect" id="s2">
+  <div class="sect-head">
+    <div class="sect-num">Sezione 02</div>
+    <h2>I 4 casi in cui il fine-tuning vince genuinamente</h2>
+    <p>Quattro situazioni dove il fine-tuning produce risultati che le altre leve non possono raggiungere — non perché le altre siano insufficienti in generale, ma perché il problema specifico richiede quello che solo il fine-tuning può fare.</p>
+  </div>
+  <div class="wrap">
+
+    <div class="win-grid" style="margin-top:28px;">
+
+      <div class="win-card">
+        <div class="wc-head">
+          <div class="wc-num">Caso 01</div>
+          <div class="wc-title">Stile e voce molto specifici, non descrivibili in parole</div>
+        </div>
+        <div class="wc-body">
+          <p>Alcune organizzazioni hanno uno stile comunicativo così specifico che nessuna descrizione nel prompt lo cattura completamente — solo gli esempi lo trasmettono. Il tono legale di uno studio notarile, il registro di una testata giornalistica specifica, il gergo tecnico di una nicchia di settore.</p>
+          <p>Il fine-tuning con 50–200 esempi dello stile target è più efficace di qualsiasi prompt lungo che tenta di descriverlo — perché il modello impara il pattern direttamente dagli esempi invece di interpretarne la descrizione.</p>
+          <div class="wc-example">Indicatore: il team interno dice "le risposte
+sono quasi giuste ma mancano qualcosa di
+inafferrabile nello stile" anche con un
+prompt molto dettagliato.</div>
+        </div>
+      </div>
+
+      <div class="win-card">
+        <div class="wc-head">
+          <div class="wc-num">Caso 02</div>
+          <div class="wc-title">Comportamento coerente ad alto volume senza prompt lungo</div>
+        </div>
+        <div class="wc-body">
+          <p>Un sistema prompt lungo (2.000–5.000 token) che descrive il comportamento atteso consuma token a ogni chiamata — il che aumenta il costo e la latenza. Per sistemi ad alto volume con task ripetitivi e comportamento stabile, il fine-tuning può "incorporare" le istruzioni nel modello, riducendo la dimensione del prompt necessario.</p>
+          <p>Il risultato è un modello che segue le istruzioni senza che il prompt debba descriverle ogni volta — il comportamento è parte del modello, non del contesto.</p>
+          <div class="wc-example">Indicatore: il sistema prompt è oltre
+2.000 token e almeno il 60% descrive
+comportamenti che si applicano a ogni
+singola richiesta senza variare.</div>
+        </div>
+      </div>
+
+      <div class="win-card">
+        <div class="wc-head">
+          <div class="wc-num">Caso 03</div>
+          <div class="wc-title">Output strutturato complesso con schema stabile</div>
+        </div>
+        <div class="wc-body">
+          <p>Quando il task richiede un output con struttura molto specifica, campi annidati, o convenzioni non standard — e lo schema è stabile nel tempo — il fine-tuning riduce significativamente il retry rate rispetto al prompting puro.</p>
+          <p>Il modello fine-tuned "conosce" lo schema come pattern di output invece di doverlo interpretare dalle istruzioni a ogni chiamata. Su sistemi ad alto volume, anche una riduzione del retry rate dall'8% al 1% ha impatto significativo su latenza e costo.</p>
+          <div class="wc-example">Indicatore: retry rate per schema non valido
+&gt;3% nonostante prompt ottimizzato e
+structured output mode abilitato.</div>
+        </div>
+      </div>
+
+      <div class="win-card">
+        <div class="wc-head">
+          <div class="wc-num">Caso 04</div>
+          <div class="wc-title">Expertise di dominio tacita — il modello deve "pensare" come un esperto</div>
+        </div>
+        <div class="wc-body">
+          <p>Per alcuni task, la differenza tra una risposta buona e una eccellente non è nelle informazioni disponibili (gestibili con RAG) ma nel modo in cui vengono elaborate — le priorità implicite di un medico, il tipo di rischi che un avvocato contrattualista nota per primo, l'intuizione di un analista finanziario su cosa è rilevante.</p>
+          <p>Questa conoscenza tacita non si descrive facilmente in un prompt ma emerge naturalmente da centinaia di esempi di come un esperto del dominio ragiona e risponde.</p>
+          <div class="wc-example">Indicatore: i domain expert del team
+correggono sistematicamente l'output del
+modello base sugli stessi tipi di errori
+— e non riescono a descrivere il problema
+in termini che il prompt possa catturare.</div>
+        </div>
+      </div>
+
+    </div>
+
+    <div class="insight" style="margin-top:20px;">
+      <div class="insight-lbl">Il test pratico per tutti e 4 i casi</div>
+      <p>Prima di avviare il fine-tuning, fai questo test: scrivi 10 esempi dello stile/comportamento/output che vuoi. Mostrali a un collega e chiedi: "puoi scrivere un prompt che produca questo tipo di output?" Se la risposta è sì — o "ci vuole un po' ma si può fare" — il prompting è ancora la soluzione giusta. <strong>Il fine-tuning è giustificato quando la risposta è genuinamente "no, non si riesce a descrivere abbastanza bene".</strong></p>
+    </div>
+
+  </div>
+</div>
+
+
+<!-- ═══════════════════════════
+     S3 — QUANDO NON SERVE
+═══════════════════════════ -->
+<div class="sect" id="s3">
+  <div class="sect-head">
+    <div class="sect-num">Sezione 03</div>
+    <h2>Quando il fine-tuning non è la risposta</h2>
+    <p>Sei situazioni comuni dove il fine-tuning sembra la soluzione ma non lo è — e cosa usare invece.</p>
+  </div>
+  <div class="wrap">
+
+    <div class="not-grid" style="margin-top:28px;">
+
+      <div class="not-card">
+        <div class="nc-label">Non fare FT per questo</div>
+        <div class="nc-title">Insegnare fatti e conoscenza aggiornabile</div>
+        <div class="nc-desc">Il fine-tuning non è il modo giusto per insegnare fatti al modello — specie se la conoscenza si aggiorna nel tempo. Un modello fine-tuned su dati del 2024 "dimentica" i pesi originali in modo non uniforme e tende a confabulate.</div>
+        <div class="nc-alt"><strong>Usa RAG</strong> — fornisci la conoscenza nel context. Aggiornabile, verificabile, senza rischio di hallucination da overfitting.</div>
+      </div>
+
+      <div class="not-card">
+        <div class="nc-label">Non fare FT per questo</div>
+        <div class="nc-title">Correggere problemi risolvibili con un prompt migliore</div>
+        <div class="nc-desc">Se il modello fa qualcosa di sbagliato ma potresti descrivere chiaramente il comportamento corretto in un'istruzione, il problema è nel prompt — non nelle capacità del modello. Il fine-tuning è over-engineering.</div>
+        <div class="nc-alt"><strong>Ottimizza il prompt</strong> — aggiungi un'istruzione esplicita, un esempio, o una regola. Testa in un'ora invece di settimane.</div>
+      </div>
+
+      <div class="not-card">
+        <div class="nc-label">Non fare FT per questo</div>
+        <div class="nc-title">Task che cambiano frequentemente</div>
+        <div class="nc-desc">Se i requisiti del task cambiano ogni mese (nuovo formato, nuova policy, nuove eccezioni), il fine-tuning è insostenibile — ogni cambiamento richiede un nuovo ciclo di training e valutazione.</div>
+        <div class="nc-alt"><strong>Mantieni nel prompt</strong> — i vincoli che cambiano appartengono al context, non al modello. Aggiornare un prompt è un minuto; aggiornare un modello fine-tuned è settimane.</div>
+      </div>
+
+      <div class="not-card">
+        <div class="nc-label">Non fare FT per questo</div>
+        <div class="nc-title">Risolvere problemi di ragionamento complesso</div>
+        <div class="nc-desc">Se il modello base non riesce a ragionare correttamente su un tipo di problema, il fine-tuning su esempi della soluzione corretta raramente risolve il problema — può insegnare il pattern ma non la comprensione profonda che lo genera.</div>
+        <div class="nc-alt"><strong>Usa chain-of-thought nel prompt</strong> o scomponi il task (Orchestrazione). Se il modello base non ragiona bene, considera un modello base più capace.</div>
+      </div>
+
+      <div class="not-card">
+        <div class="nc-label">Non fare FT per questo</div>
+        <div class="nc-title">Volume insufficiente a giustificare il costo</div>
+        <div class="nc-desc">Il fine-tuning ha senso economicamente quando il risparmio su latenza e costo per token supera il costo di costruire il dataset, trainare il modello, valutarlo e mantenerlo nel tempo.</div>
+        <div class="nc-alt"><strong>Calcola il break-even</strong> — sotto ~10.000 operazioni/mese, il fine-tuning raramente si ammortizza. Usa un prompt più lungo invece.</div>
+      </div>
+
+      <div class="not-card">
+        <div class="nc-label">Non fare FT per questo</div>
+        <div class="nc-title">Aggiungere capacità completamente nuove</div>
+        <div class="nc-desc">Il fine-tuning migliora e specializza capacità già presenti nel modello base — non ne aggiunge di nuove. Se il modello base non sa fare qualcosa, il fine-tuning non lo insegna da zero.</div>
+        <div class="nc-alt"><strong>Scegli il modello base giusto</strong> (Leva 2) — il fine-tuning amplifica le capacità esistenti, non crea quelle mancanti.</div>
+      </div>
+
+    </div>
+
+  </div>
+</div>
+
+
+<!-- ═══════════════════════════
+     S4 — IL COSTO REALE
+═══════════════════════════ -->
+<div class="sect" id="s4">
+  <div class="sect-head">
+    <div class="sect-num">Sezione 04</div>
+    <h2>Il costo reale del fine-tuning come sistema</h2>
+    <p>Il fine-tuning non è un'operazione una tantum — è la creazione di un sistema da mantenere. Il costo del training è solo la parte visibile di un iceberg molto più grande.</p>
+  </div>
+  <div class="wrap">
+
+    <div class="prose" style="margin-top:28px;">
+      <p>Molti team sottostimano il costo del fine-tuning perché guardano solo il costo del training — che è relativamente modesto con le API dei vendor. Il costo reale è il costo totale di proprietà del modello fine-tuned nel tempo.</p>
+    </div>
+
+    <div class="cost-panel">
+      <div class="cp-col">
+        <div class="cp-label">Costi visibili (una tantum)</div>
+        <p><strong>Costruzione del dataset:</strong> raccogliere, filtrare, annotare e validare 200–1.000 esempi di alta qualità. Se fatto bene, richiede 20–80 ore di lavoro di un domain expert. È il costo più alto e il più spesso sottostimato.</p>
+        <p><strong>Costo del training:</strong> via API dei vendor moderni, il training di un modello su 500 esempi costa tipicamente decine di dollari. Irrilevante rispetto al dataset.</p>
+        <p><strong>Valutazione iniziale:</strong> testare il modello fine-tuned sul golden dataset (Report B della Leva 2), verificare l'assenza di regressioni su task non ottimizzati, comparare con il baseline.</p>
+      </div>
+      <div class="cp-col">
+        <div class="cp-label">Costi nascosti (ricorrenti)</div>
+        <p><strong>Manutenzione del dataset:</strong> ogni volta che i requisiti cambiano, il dataset va aggiornato. Se il modello base del vendor viene aggiornato, il fine-tuning va rifatto. Se emergono nuovi casi edge, vanno aggiunti esempi.</p>
+        <p><strong>Gestione delle regressioni:</strong> il fine-tuning ottimizza per i task del dataset ma può degradare su task non rappresentati. Ogni aggiornamento richiede una nuova valutazione completa.</p>
+        <p><strong>Lock-in del vendor:</strong> un modello fine-tuned su un vendor specifico non si trasferisce ad altri vendor. Se cambii provider, il dataset va adattato e il training va rifatto.</p>
+      </div>
+    </div>
+
+    <div class="mechanism" style="margin-top:16px;">
+      <div class="mech-lbl">La domanda da porsi prima di iniziare</div>
+      <p>"Siamo disposti a mantenere questo modello per i prossimi 12–18 mesi?" Se il task o i requisiti cambieranno significativamente in quel periodo, il fine-tuning è un investimento a rischio alto. <strong>La risposta onesta a questa domanda esclude il fine-tuning in molti più casi di quanto sembri inizialmente.</strong></p>
+    </div>
+
+  </div>
+</div>
+
+
+<!-- ═══════════════════════════
+     S5 — LA DECISIONE E LA SERIE
+═══════════════════════════ -->
+<div class="sect" id="s5">
+  <div class="sect-head">
+    <div class="sect-num">Sezione finale</div>
+    <h2>La guida decisionale e la serie</h2>
+  </div>
+  <div class="wrap">
+
+    <div class="prose" style="margin-top:28px;">
+      <p style="font-size:15px; font-weight:500; color:var(--ink2);">La guida decisionale — ho bisogno del fine-tuning?</p>
+    </div>
+
+    <div class="dec-flow" style="margin-top:12px;">
+      <div class="df-step">
+        <div class="df-num">1</div>
+        <div class="df-content">
+          <div class="df-q">Il problema è risolvibile ottimizzando il prompt o aggiungendo esempi few-shot?</div>
+          <div class="df-a"><span class="go">SÌ</span> → ottimizza il prompt prima. Il fine-tuning non è necessario. <span class="no">NO</span> → continua.</div>
+        </div>
+      </div>
+      <div class="df-step">
+        <div class="df-num">2</div>
+        <div class="df-content">
+          <div class="df-q">Il problema è che il modello non ha le informazioni di dominio giuste?</div>
+          <div class="df-a"><span class="go">SÌ</span> → usa RAG. Il fine-tuning non è la risposta per la conoscenza aggiornabile. <span class="no">NO</span> → continua.</div>
+        </div>
+      </div>
+      <div class="df-step">
+        <div class="df-num">3</div>
+        <div class="df-content">
+          <div class="df-q">Il problema migliorebbe scomponendo il task o usando un'architettura diversa?</div>
+          <div class="df-a"><span class="go">SÌ</span> → riprogetta l'architettura. Spesso risolve problemi che sembrano richiedere un modello migliore. <span class="no">NO</span> → continua.</div>
+        </div>
+      </div>
+      <div class="df-step">
+        <div class="df-num">4</div>
+        <div class="df-content">
+          <div class="df-q">Il problema rientra in uno dei 4 casi dove il fine-tuning vince genuinamente (stile inafferrabile, prompt lungo ad alto volume, output strutturato complesso stabile, expertise tacita)?</div>
+          <div class="df-a"><span class="go">SÌ</span> → il fine-tuning è giustificato. Procedi con i Report A, B, C. <span class="no">NO</span> → il problema potrebbe essere il modello base sbagliato (Leva 2) o un'aspettativa irrealistica sulle capacità del modello.</div>
+        </div>
+      </div>
+      <div class="df-step">
+        <div class="df-num">5</div>
+        <div class="df-content">
+          <div class="df-q">Il team è disposto a mantenere il dataset e il modello per i prossimi 12–18 mesi?</div>
+          <div class="df-a"><span class="go">SÌ</span> → procedi con consapevolezza dei costi ricorrenti. <span class="mid">INCERTO</span> → considera prima una soluzione più reversibile. <span class="no">NO</span> → il fine-tuning non è sostenibile per il vostro contesto attuale.</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="roadmap" style="margin-top:36px;">
+
+      <div class="rm-item">
+        <div class="rm-step"><div class="rm-circle">Q</div><div class="rm-line"></div></div>
+        <div class="rm-content">
+          <div class="rm-id">Questo report — Quadro</div>
+          <div class="rm-title">Quando usarlo (e quando no)</div>
+          <div class="rm-desc">Le 4 leve a confronto, i 4 casi in cui il fine-tuning vince, i 6 casi in cui non serve, il costo reale come sistema, la guida decisionale.</div>
+        </div>
+      </div>
+
+      <div class="rm-item">
+        <div class="rm-step"><div class="rm-circle">A</div><div class="rm-line"></div></div>
+        <div class="rm-content">
+          <div class="rm-id">Report A</div>
+          <div class="rm-title">Cosa si ottimizza: i tre tipi di fine-tuning</div>
+          <div class="rm-desc"><strong>Stile e formato</strong> (il più comune — impara come rispondere, non cosa dire): quando funziona, quando delude. <strong>Conoscenza di dominio</strong> (le trappole del training su fatti — confabulation, distributional shift): quando ha senso nonostante i rischi. <strong>Comportamento e allineamento</strong> (il più potente e il più rischioso): RLHF e DPO, quando è necessario. Per ognuno: come riconoscere se è il tipo giusto per il proprio caso.</div>
+        </div>
+      </div>
+
+      <div class="rm-item">
+        <div class="rm-step"><div class="rm-circle">B</div><div class="rm-line"></div></div>
+        <div class="rm-content">
+          <div class="rm-id">Report B</div>
+          <div class="rm-title">I dati di training — il fattore determinante</div>
+          <div class="rm-desc">Quanti esempi servono davvero e di quale qualità. Come costruire il dataset: selezione dei casi, formato, bilanciamento della distribuzione. I problemi più comuni: dataset troppo omogeneo, esempi che insegnano il comportamento sbagliato, label noise, distribuzione non rappresentativa. Come validare il dataset prima del training. Qualità vs. quantità: perché 100 esempi eccellenti battono 1.000 mediocri.</div>
+        </div>
+      </div>
+
+      <div class="rm-item">
+        <div class="rm-step"><div class="rm-circle">C</div></div>
+        <div class="rm-content">
+          <div class="rm-id">Report C</div>
+          <div class="rm-title">Il processo pratico e la valutazione</div>
+          <div class="rm-desc">Come avviare il fine-tuning via API senza infrastruttura propria. Monitorare il training: la loss curve, i segnali di overfitting, quando fermarsi. Valutare il modello fine-tuned: golden dataset, metriche specifiche, e — crucialmente — verifica delle regressioni su task non ottimizzati. Il ciclo iterativo: quando il primo round non basta e come migliorare. Quando smettere di iterare e accettare il risultato attuale.</div>
+        </div>
+      </div>
+
+    </div>
+
+    <div class="prose" style="margin-top:32px; padding-top:24px; border-top:1px solid var(--border);">
+      <p style="color:var(--ink4); font-size:13px;">Serie Agenti AI · Leva 07 · Fine-tuning · 4 report (Quadro + A–C) · Marzo 2026</p>
+    </div>
+
+  </div>
+</div>
+
+<div class="footer">
+  <span>Serie Agenti AI — Leva 07 · Fine-tuning · Report Quadro</span>
+  <span>Marzo 2026</span>
+</div>
+
+<script>
+function show(n) {
+  document.querySelectorAll('.sect').forEach(s => s.classList.remove('active'));
+  document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('s'+n).classList.add('active');
+  document.querySelectorAll('.nav-btn')[n-1].classList.add('active');
+  window.scrollTo({top:0, behavior:'smooth'});
+}
+</script>
+</body>
+</html>
