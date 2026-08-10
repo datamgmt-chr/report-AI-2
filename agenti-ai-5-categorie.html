@@ -1,0 +1,1775 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Le 5 Categorie di Agenti — Approfondimento</title>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@300;400;500;700;900&family=Archivo+Narrow:wght@400;500;700&family=JetBrains+Mono:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg:     #f5f2eb;
+  --bg2:    #ede9df;
+  --bg3:    #e4dfd3;
+  --ink:    #18160f;
+  --ink2:   #2e2c24;
+  --ink3:   #6b6858;
+  --ink4:   #aba898;
+  --border: #d4cfbf;
+  --border2:#bfbaa8;
+
+  --c1: #c47a00;  --c1l: #fff8e6;  /* enterprise — ambra */
+  --c2: #0060b8;  --c2l: #e6f0ff;  /* verticali — blu */
+  --c3: #c04000;  --c3l: #fff0e6;  /* no-code — ruggine */
+  --c4: #2d7a00;  --c4l: #eefae6;  /* open source — verde */
+  --c5: #700080;  --c5l: #f8e6ff;  /* embedded — viola */
+}
+
+* { margin:0; padding:0; box-sizing:border-box; }
+html { scroll-behavior:smooth; }
+
+body {
+  background: var(--bg);
+  color: var(--ink);
+  font-family: 'Archivo', sans-serif;
+  font-weight: 300;
+  font-size: 14px;
+  line-height: 1.7;
+}
+
+/* ── HEADER ── */
+.masthead {
+  background: var(--ink);
+  color: rgba(255,255,255,0.88);
+  padding: 56px 56px 48px;
+  position: relative;
+  overflow: hidden;
+}
+
+.masthead::after {
+  content: '5';
+  position: absolute;
+  right: 48px; bottom: -40px;
+  font-family: 'Archivo', sans-serif;
+  font-weight: 900;
+  font-size: 260px;
+  line-height: 1;
+  color: rgba(255,255,255,0.04);
+  pointer-events: none;
+  letter-spacing: -10px;
+}
+
+.masthead-eye {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px;
+  letter-spacing: 3px;
+  text-transform: uppercase;
+  color: rgba(255,255,255,0.3);
+  margin-bottom: 18px;
+}
+
+.masthead h1 {
+  font-family: 'Archivo', sans-serif;
+  font-weight: 900;
+  font-size: clamp(32px, 5vw, 64px);
+  line-height: 1.0;
+  letter-spacing: -2px;
+  max-width: 700px;
+}
+
+.masthead-sub {
+  margin-top: 20px;
+  font-size: 15px;
+  color: rgba(255,255,255,0.42);
+  max-width: 580px;
+  line-height: 1.7;
+}
+
+/* ── CATEGORY NAV TABS ── */
+.cat-nav {
+  display: flex;
+  background: var(--ink2);
+  border-bottom: 1px solid rgba(255,255,255,0.06);
+  overflow-x: auto;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+}
+
+.cat-tab {
+  flex: 1;
+  min-width: 140px;
+  padding: 0;
+  border: none;
+  cursor: pointer;
+  background: transparent;
+  border-right: 1px solid rgba(255,255,255,0.06);
+  transition: background 0.2s;
+}
+
+.cat-tab:last-child { border-right: none; }
+
+.cat-tab-inner {
+  padding: 16px 20px;
+  display: block;
+  text-align: left;
+}
+
+.cat-tab-num {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 9px;
+  letter-spacing: 2px;
+  color: rgba(255,255,255,0.25);
+  margin-bottom: 4px;
+  display: block;
+}
+
+.cat-tab-name {
+  font-family: 'Archivo', sans-serif;
+  font-weight: 700;
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: rgba(255,255,255,0.45);
+  display: block;
+  line-height: 1.2;
+  transition: color 0.2s;
+}
+
+.cat-tab.active .cat-tab-name { color: #fff; }
+.cat-tab.active { position: relative; }
+.cat-tab.active::after {
+  content: '';
+  position: absolute;
+  bottom: 0; left: 0; right: 0;
+  height: 3px;
+}
+
+.cat-tab[data-cat="1"].active::after { background: var(--c1); }
+.cat-tab[data-cat="2"].active::after { background: var(--c2); }
+.cat-tab[data-cat="3"].active::after { background: var(--c3); }
+.cat-tab[data-cat="4"].active::after { background: var(--c4); }
+.cat-tab[data-cat="5"].active::after { background: var(--c5); }
+
+.cat-tab:hover .cat-tab-name { color: rgba(255,255,255,0.75); }
+
+/* ── CATEGORY PANELS ── */
+.cat-panel {
+  display: none;
+}
+
+.cat-panel.active {
+  display: block;
+  animation: fadeIn 0.3s ease;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(8px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* ── PANEL HERO ── */
+.panel-hero {
+  padding: 48px 56px 40px;
+  border-bottom: 1px solid var(--border);
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 48px;
+  align-items: end;
+}
+
+.panel-hero-left {}
+
+.panel-hero-tag {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px;
+  letter-spacing: 3px;
+  text-transform: uppercase;
+  margin-bottom: 12px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.panel-hero-tag .tag-dot {
+  width: 10px; height: 10px;
+  border-radius: 50%;
+}
+
+.panel-hero h2 {
+  font-family: 'Archivo', sans-serif;
+  font-weight: 900;
+  font-size: clamp(30px, 4vw, 52px);
+  line-height: 1.0;
+  letter-spacing: -1.5px;
+  margin-bottom: 14px;
+}
+
+.panel-hero-essence {
+  font-size: 15px;
+  color: var(--ink3);
+  max-width: 600px;
+  line-height: 1.75;
+}
+
+.panel-hero-essence strong { color: var(--ink); font-weight: 500; }
+
+.panel-hero-right {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  min-width: 160px;
+}
+
+.hero-kpi {
+  text-align: right;
+  padding-top: 12px;
+  border-top: 1px solid var(--border);
+}
+
+.hero-kpi-val {
+  font-family: 'Archivo', sans-serif;
+  font-weight: 900;
+  font-size: 32px;
+  line-height: 1;
+  display: block;
+}
+
+.hero-kpi-label {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 9px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: var(--ink4);
+  margin-top: 4px;
+}
+
+/* ── SECTION BLOCKS ── */
+.panel-body {
+  padding: 0 56px 72px;
+}
+
+.block {
+  margin-top: 52px;
+}
+
+.block-header {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin-bottom: 24px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid var(--border2);
+}
+
+.block-icon {
+  font-size: 18px;
+  flex-shrink: 0;
+}
+
+.block-title {
+  font-family: 'Archivo Narrow', sans-serif;
+  font-weight: 700;
+  font-size: 18px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  flex: 1;
+}
+
+.block-tag {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px;
+  letter-spacing: 1px;
+  color: var(--ink4);
+}
+
+/* ── GRIDS ── */
+.two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 1px; background: var(--border); border: 1px solid var(--border2); }
+.three-col { display: grid; grid-template-columns: repeat(3,1fr); gap: 1px; background: var(--border); border: 1px solid var(--border2); }
+.four-col { display: grid; grid-template-columns: repeat(4,1fr); gap: 1px; background: var(--border); border: 1px solid var(--border2); }
+
+.cell {
+  background: var(--bg);
+  padding: 22px 20px;
+}
+
+.cell-label {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 9px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: var(--ink4);
+  margin-bottom: 8px;
+}
+
+.cell-title {
+  font-family: 'Archivo Narrow', sans-serif;
+  font-weight: 700;
+  font-size: 15px;
+  margin-bottom: 8px;
+  line-height: 1.2;
+}
+
+.cell-text {
+  font-size: 12px;
+  color: var(--ink3);
+  line-height: 1.6;
+}
+
+.cell-text strong { color: var(--ink2); font-weight: 500; }
+
+/* Pro/con cells */
+.cell.pro { background: #f4fbf0; }
+.cell.con { background: #fdf4f4; }
+.cell.pro .cell-label { color: #3a7a1a; }
+.cell.con .cell-label { color: #a01818; }
+
+/* ── USE CASES ── */
+.usecase-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1px;
+  background: var(--border);
+  border: 1px solid var(--border2);
+}
+
+.uc-item {
+  background: var(--bg);
+  padding: 20px;
+  position: relative;
+}
+
+.uc-num {
+  font-family: 'Archivo', sans-serif;
+  font-weight: 900;
+  font-size: 40px;
+  line-height: 1;
+  color: var(--bg3);
+  position: absolute;
+  top: 14px; right: 14px;
+}
+
+.uc-title {
+  font-family: 'Archivo Narrow', sans-serif;
+  font-weight: 700;
+  font-size: 14px;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+  margin-bottom: 8px;
+}
+
+.uc-desc {
+  font-size: 12px;
+  color: var(--ink3);
+  line-height: 1.5;
+}
+
+/* ── PERSONALIZATION LADDER ── */
+.pers-table {
+  border: 1px solid var(--border2);
+  overflow: hidden;
+}
+
+.pers-row {
+  display: grid;
+  grid-template-columns: 36px 180px 1fr 140px;
+  border-bottom: 1px solid var(--border);
+  align-items: stretch;
+}
+
+.pers-row:last-child { border-bottom: none; }
+.pers-row.header { background: var(--ink); }
+
+.pers-row.header .pers-cell {
+  color: rgba(255,255,255,0.4);
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 9px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  padding: 10px 14px;
+  border-right: 1px solid rgba(255,255,255,0.06);
+}
+
+.pers-lv {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: 'Archivo', sans-serif;
+  font-weight: 900;
+  font-size: 16px;
+  color: var(--bg3);
+  background: var(--bg2);
+  border-right: 1px solid var(--border);
+}
+
+.pers-name {
+  padding: 14px;
+  border-right: 1px solid var(--border);
+  background: var(--bg2);
+}
+
+.pers-name-title {
+  font-family: 'Archivo Narrow', sans-serif;
+  font-weight: 700;
+  font-size: 13px;
+  text-transform: uppercase;
+  margin-bottom: 3px;
+}
+
+.pers-name-sub {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 9px;
+  color: var(--ink4);
+  letter-spacing: 1px;
+}
+
+.pers-desc {
+  padding: 14px 16px;
+  font-size: 12px;
+  color: var(--ink3);
+  line-height: 1.55;
+}
+
+.pers-desc strong { color: var(--ink2); font-weight: 500; }
+
+.pers-avail {
+  padding: 14px;
+  border-left: 1px solid var(--border);
+  background: var(--bg2);
+  display: flex;
+  align-items: center;
+}
+
+.avail-badge {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px;
+  padding: 4px 9px;
+  border: 1px solid;
+  letter-spacing: 0.5px;
+  white-space: nowrap;
+}
+
+.av-yes  { border-color: #2d7a00; color: #2d7a00; }
+.av-part { border-color: #c47a00; color: #c47a00; }
+.av-no   { border-color: #c04000; color: #c04000; }
+
+/* ── SETUP TABLE ── */
+.setup-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1px;
+  background: var(--border);
+  border: 1px solid var(--border2);
+}
+
+.setup-cell {
+  background: var(--bg);
+  padding: 22px 20px;
+}
+
+.setup-cell-title {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: var(--ink4);
+  margin-bottom: 12px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid var(--border);
+}
+
+.setup-list {
+  list-style: none;
+}
+
+.setup-list li {
+  font-size: 12px;
+  color: var(--ink3);
+  padding: 6px 0;
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  gap: 10px;
+  line-height: 1.4;
+}
+
+.setup-list li:last-child { border-bottom: none; }
+.setup-list li::before { content: '·'; color: var(--ink4); flex-shrink: 0; font-size: 16px; line-height: 1.2; }
+.setup-list li strong { color: var(--ink2); font-weight: 500; }
+
+/* ── INTERFACE & INTEGRATION ── */
+.iface-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1px;
+  background: var(--border);
+  border: 1px solid var(--border2);
+}
+
+.iface-block {
+  background: var(--bg);
+  padding: 24px 20px;
+}
+
+.iface-block-title {
+  font-family: 'Archivo Narrow', sans-serif;
+  font-weight: 700;
+  font-size: 14px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: 14px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid var(--border);
+}
+
+.iface-list {
+  list-style: none;
+}
+
+.iface-list li {
+  font-size: 12px;
+  color: var(--ink3);
+  padding: 6px 0;
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  gap: 10px;
+  line-height: 1.4;
+}
+
+.iface-list li:last-child { border-bottom: none; }
+.iface-list li::before { content: '→'; color: var(--ink4); flex-shrink: 0; }
+.iface-list li strong { color: var(--ink2); font-weight: 500; }
+
+/* ── MULTI-AGENT BOX ── */
+.multiagent-box {
+  background: var(--ink);
+  color: rgba(255,255,255,0.82);
+  padding: 28px 28px;
+  margin-top: 24px;
+  display: grid;
+  grid-template-columns: 160px 1fr;
+  gap: 28px;
+  align-items: start;
+}
+
+.ma-label {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: rgba(255,255,255,0.3);
+  padding-top: 4px;
+}
+
+.ma-content h4 {
+  font-family: 'Archivo Narrow', sans-serif;
+  font-weight: 700;
+  font-size: 15px;
+  text-transform: uppercase;
+  color: #fff;
+  margin-bottom: 10px;
+}
+
+.ma-content p {
+  font-size: 13px;
+  color: rgba(255,255,255,0.45);
+  line-height: 1.65;
+  margin-bottom: 12px;
+}
+
+.ma-roles {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 12px;
+}
+
+.ma-role {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px;
+  padding: 4px 10px;
+  border: 1px solid rgba(255,255,255,0.15);
+  color: rgba(255,255,255,0.5);
+}
+
+/* ── COLORI ACCENT PER CATEGORIA ── */
+.c1-accent { border-left: 4px solid var(--c1); }
+.c2-accent { border-left: 4px solid var(--c2); }
+.c3-accent { border-left: 4px solid var(--c3); }
+.c4-accent { border-left: 4px solid var(--c4); }
+.c5-accent { border-left: 4px solid var(--c5); }
+
+/* ── FOOTER ── */
+footer {
+  border-top: 1px solid var(--border);
+  padding: 24px 56px;
+  display: flex;
+  justify-content: space-between;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px;
+  color: var(--ink4);
+  letter-spacing: 1px;
+}
+
+/* ── RESPONSIVE ── */
+@media (max-width: 860px) {
+  .masthead, .panel-hero, .panel-body { padding-left: 20px; padding-right: 20px; }
+  .panel-hero { grid-template-columns: 1fr; }
+  .two-col, .three-col, .four-col, .usecase-grid, .setup-grid, .iface-grid { grid-template-columns: 1fr; }
+  .pers-row { grid-template-columns: 36px 1fr; }
+  .pers-avail { grid-column: 2; }
+  .multiagent-box { grid-template-columns: 1fr; }
+  footer { padding: 20px; flex-direction: column; gap: 6px; }
+}
+</style>
+</head>
+<body>
+
+<!-- MASTHEAD -->
+<div class="masthead">
+  <div class="masthead-eye">Report approfondito · Categorie di agenti prebuilt · Febbraio 2026</div>
+  <h1>Le 5 categorie<br>di agenti pronti</h1>
+  <p class="masthead-sub">Particolarità, casi d'uso, vantaggi, limiti, personalizzazione, setup necessario e integrazione in sistemi multi-agente — per ogni categoria.</p>
+</div>
+
+<!-- NAV TABS -->
+<nav class="cat-nav">
+  <button class="cat-tab active" data-cat="1" onclick="showCat(1)">
+    <span class="cat-tab-inner">
+      <span class="cat-tab-num">01</span>
+      <span class="cat-tab-name" style="color:inherit">Piattaforme<br>Enterprise</span>
+    </span>
+  </button>
+  <button class="cat-tab" data-cat="2" onclick="showCat(2)">
+    <span class="cat-tab-inner">
+      <span class="cat-tab-num">02</span>
+      <span class="cat-tab-name">Verticali<br>SaaS</span>
+    </span>
+  </button>
+  <button class="cat-tab" data-cat="3" onclick="showCat(3)">
+    <span class="cat-tab-inner">
+      <span class="cat-tab-num">03</span>
+      <span class="cat-tab-name">No-code &<br>Marketplace</span>
+    </span>
+  </button>
+  <button class="cat-tab" data-cat="4" onclick="showCat(4)">
+    <span class="cat-tab-inner">
+      <span class="cat-tab-num">04</span>
+      <span class="cat-tab-name">Open<br>Source</span>
+    </span>
+  </button>
+  <button class="cat-tab" data-cat="5" onclick="showCat(5)">
+    <span class="cat-tab-inner">
+      <span class="cat-tab-num">05</span>
+      <span class="cat-tab-name">Embedded<br>in Prodotti</span>
+    </span>
+  </button>
+</nav>
+
+
+<!-- ═══════════════════════════════════
+     CAT 1 — PIATTAFORME ENTERPRISE
+═══════════════════════════════════ -->
+<div class="cat-panel active" id="panel-1">
+
+  <div class="panel-hero">
+    <div class="panel-hero-left">
+      <div class="panel-hero-tag" style="color:var(--c1)">
+        <div class="tag-dot" style="background:var(--c1)"></div>
+        Categoria 01
+      </div>
+      <h2>Piattaforme<br>Enterprise</h2>
+      <p class="panel-hero-essence">
+        Agenti prebuilt integrati in ecosistemi aziendali già esistenti — CRM, ERP, suite di produttività. La loro particolarità fondamentale è che <strong>non si costruiscono: si attivano</strong>. Il valore principale non è la tecnologia AI in sé, ma l'accesso nativo ai dati e ai processi già dentro la piattaforma. Salesforce Agentforce sa già chi sono i tuoi clienti, i loro contratti, la loro storia. Microsoft Copilot sa già i tuoi documenti, le tue email, il tuo calendario.
+      </p>
+    </div>
+    <div class="panel-hero-right">
+      <div class="hero-kpi">
+        <span class="hero-kpi-val" style="color:var(--c1)">Zero</span>
+        <div class="hero-kpi-label">Sviluppo necessario</div>
+      </div>
+      <div class="hero-kpi">
+        <span class="hero-kpi-val" style="color:var(--c1)">Alto</span>
+        <div class="hero-kpi-label">Lock-in vendor</div>
+      </div>
+      <div class="hero-kpi">
+        <span class="hero-kpi-val" style="color:var(--c1)">Nativa</span>
+        <div class="hero-kpi-label">Integrazione dati</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="panel-body">
+
+    <!-- PARTICOLARITÀ -->
+    <div class="block">
+      <div class="block-header">
+        <span class="block-icon">⚡</span>
+        <span class="block-title">Particolarità e differenze rispetto alle altre categorie</span>
+      </div>
+      <div class="three-col">
+        <div class="cell c1-accent">
+          <div class="cell-label">Differenza chiave 1</div>
+          <div class="cell-title">Accesso dati nativo</div>
+          <div class="cell-text">Non devi "portare i dati" all'agente — l'agente vive già dove vivono i dati. Agentforce accede direttamente a lead, opportunità, contratti Salesforce. Nessuna integrazione da costruire, nessun problema di sincronizzazione.</div>
+        </div>
+        <div class="cell c1-accent">
+          <div class="cell-label">Differenza chiave 2</div>
+          <div class="cell-title">Attivazione senza sviluppo</div>
+          <div class="cell-text">Non esiste una "fase di costruzione". L'agente viene attivato e configurato attraverso la stessa interfaccia admin della piattaforma. Un admin Salesforce può attivare Agentforce senza coinvolgere IT o sviluppatori.</div>
+        </div>
+        <div class="cell c1-accent">
+          <div class="cell-label">Differenza chiave 3</div>
+          <div class="cell-title">Responsabilità del vendor</div>
+          <div class="cell-text">Aggiornamenti, sicurezza, disponibilità, conformità — tutto in capo al vendor. Questo è un enorme vantaggio operativo, ma significa anche che non controlli la roadmap. Il vendor decide quando e se aggiungere funzionalità.</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- CASI D'USO -->
+    <div class="block">
+      <div class="block-header">
+        <span class="block-icon">🎯</span>
+        <span class="block-title">Casi e ambiti d'uso tipici</span>
+      </div>
+      <div class="usecase-grid">
+        <div class="uc-item">
+          <div class="uc-num">01</div>
+          <div class="uc-title">Gestione lead e opportunità</div>
+          <div class="uc-desc">L'agente qualifica lead in automatico, propone next action, redige email di follow-up personalizzate basandosi sulla storia CRM del contatto.</div>
+        </div>
+        <div class="uc-item">
+          <div class="uc-num">02</div>
+          <div class="uc-title">Customer service tier-1</div>
+          <div class="uc-desc">Risponde autonomamente a richieste standard dei clienti, accede alla storia dell'account, escalation automatica ai casi complessi con riepilogo contestuale.</div>
+        </div>
+        <div class="uc-item">
+          <div class="uc-num">03</div>
+          <div class="uc-title">HR e onboarding</div>
+          <div class="uc-desc">Risponde a domande su policy, benefit, procedure. Guida i nuovi assunti nel processo di onboarding. Collega i dati HR a ticket e task automatici.</div>
+        </div>
+        <div class="uc-item">
+          <div class="uc-num">04</div>
+          <div class="uc-title">IT helpdesk</div>
+          <div class="uc-desc">ServiceNow AI risolve ticket IT standard, reimposta password, approva richieste di accesso, smista i casi complessi con contesto pieno.</div>
+        </div>
+        <div class="uc-item">
+          <div class="uc-num">05</div>
+          <div class="uc-title">Finance e reportistica</div>
+          <div class="uc-desc">Genera report finanziari su richiesta in linguaggio naturale, risponde a domande su budget e forecast accedendo ai dati ERP in tempo reale.</div>
+        </div>
+        <div class="uc-item">
+          <div class="uc-num">06</div>
+          <div class="uc-title">Produttività personale</div>
+          <div class="uc-desc">M365 Copilot: riassume email, redige documenti Word, analizza fogli Excel, prepara slide PowerPoint — tutto nel contesto dei file e delle comunicazioni aziendali.</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- PRO/CON -->
+    <div class="block">
+      <div class="block-header">
+        <span class="block-icon">⚖️</span>
+        <span class="block-title">Vantaggi e limiti principali</span>
+      </div>
+      <div class="two-col">
+        <div class="cell pro">
+          <div class="cell-label">Vantaggi</div>
+          <ul class="setup-list">
+            <li><strong>Time-to-value immediato</strong> — attivi oggi, funziona oggi. Nessuna fase di sviluppo.</li>
+            <li><strong>Contesto dati nativo</strong> — l'agente conosce già i tuoi dati aziendali senza integrazioni.</li>
+            <li><strong>Supporto enterprise garantito</strong> — SLA, conformità, sicurezza certificate dal vendor.</li>
+            <li><strong>Aggiornamenti automatici</strong> — il vendor migliora il sistema senza intervento tuo.</li>
+            <li><strong>Adozione facilitata</strong> — gli utenti usano la stessa interfaccia che già conoscono.</li>
+            <li><strong>Governance centralizzata</strong> — permessi, audit trail, compliance gestiti dalla piattaforma.</li>
+          </ul>
+        </div>
+        <div class="cell con">
+          <div class="cell-label">Limiti</div>
+          <ul class="setup-list">
+            <li><strong>Vendor lock-in totale</strong> — uscire è molto costoso perché i dati e i flussi sono intrecciati.</li>
+            <li><strong>Flessibilità minima</strong> — puoi personalizzare solo nei parametri che il vendor decide di esporre.</li>
+            <li><strong>Costi elevati</strong> — canoni enterprise tipicamente alti, spesso per utente/mese.</li>
+            <li><strong>Opacità del modello</strong> — non sai quale LLM usa, quando cambia, con quali parametri.</li>
+            <li><strong>Dati al vendor</strong> — le tue conversazioni e i tuoi dati transitano nei server del vendor.</li>
+            <li><strong>Roadmap fuori controllo</strong> — se il vendor taglia una funzione, non puoi fare nulla.</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    <!-- PERSONALIZZAZIONE -->
+    <div class="block">
+      <div class="block-header">
+        <span class="block-icon">🎛️</span>
+        <span class="block-title">Livello e modalità di personalizzazione</span>
+      </div>
+      <div class="pers-table">
+        <div class="pers-row header">
+          <div class="pers-cell"></div>
+          <div class="pers-cell">Tipo</div>
+          <div class="pers-cell">Cosa puoi fare</div>
+          <div class="pers-cell">Disponibile</div>
+        </div>
+        <div class="pers-row">
+          <div class="pers-lv">1</div>
+          <div class="pers-name"><div class="pers-name-title">Istruzioni e tono</div><div class="pers-name-sub">Sempre disponibile</div></div>
+          <div class="pers-desc">Scrivi le istruzioni di comportamento: tono, argomenti da evitare, lingua, formato risposte. <strong>Non richiede competenze tecniche.</strong></div>
+          <div class="pers-avail"><span class="avail-badge av-yes">Sì — sempre</span></div>
+        </div>
+        <div class="pers-row">
+          <div class="pers-lv">2</div>
+          <div class="pers-name"><div class="pers-name-title">Knowledge base</div><div class="pers-name-sub">Upload documenti</div></div>
+          <div class="pers-desc">Carichi documenti aziendali — FAQ, policy, manuale prodotto. L'agente li usa come fonte primaria. <strong>La qualità dei documenti determina la qualità delle risposte.</strong></div>
+          <div class="pers-avail"><span class="avail-badge av-yes">Sì — sempre</span></div>
+        </div>
+        <div class="pers-row">
+          <div class="pers-lv">3</div>
+          <div class="pers-name"><div class="pers-name-title">Flussi e azioni</div><div class="pers-name-sub">Admin config</div></div>
+          <div class="pers-desc">Definisci quali azioni l'agente può compiere (creare record, mandare email, escalare), in quali condizioni, con quali approvazioni. <strong>Richiede conoscenza della piattaforma.</strong></div>
+          <div class="pers-avail"><span class="avail-badge av-part">Parziale</span></div>
+        </div>
+        <div class="pers-row">
+          <div class="pers-lv">4</div>
+          <div class="pers-name"><div class="pers-name-title">Connettori custom</div><div class="pers-name-sub">Config avanzata</div></div>
+          <div class="pers-desc">In alcuni casi puoi connettere sistemi esterni via API (es. un gestionale interno). Dipende dal piano e dalla piattaforma. <strong>Richiede credenziali API e configurazione tecnica.</strong></div>
+          <div class="pers-avail"><span class="avail-badge av-part">Piano enterprise</span></div>
+        </div>
+        <div class="pers-row">
+          <div class="pers-lv">5</div>
+          <div class="pers-name"><div class="pers-name-title">Codice / API</div><div class="pers-name-sub">Solo alcune piattaforme</div></div>
+          <div class="pers-desc">Alcune piattaforme (Copilot Studio) permettono di aggiungere logica custom via script o chiamate API esterne. <strong>Richiede sviluppatori.</strong></div>
+          <div class="pers-avail"><span class="avail-badge av-no">Raro / limitato</span></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- SETUP -->
+    <div class="block">
+      <div class="block-header">
+        <span class="block-icon">🛠️</span>
+        <span class="block-title">Cosa ti serve per usarli</span>
+      </div>
+      <div class="setup-grid">
+        <div class="setup-cell">
+          <div class="setup-cell-title">Software e piattaforme necessarie</div>
+          <ul class="setup-list">
+            <li>Abbonamento attivo alla piattaforma enterprise (Salesforce, M365, ServiceNow…)</li>
+            <li>Piano che include le funzionalità AI (spesso piano superiore o add-on separato)</li>
+            <li>Accesso admin alla piattaforma per attivare e configurare l'agente</li>
+            <li>Browser moderno — nessun software aggiuntivo da installare</li>
+          </ul>
+        </div>
+        <div class="setup-cell">
+          <div class="setup-cell-title">Hardware necessario</div>
+          <ul class="setup-list">
+            <li><strong>Nessun hardware speciale</strong> — tutto gira sui server del vendor</li>
+            <li>PC/Mac standard con browser per accedere all'interfaccia admin</li>
+            <li>Connessione internet stabile</li>
+          </ul>
+        </div>
+        <div class="setup-cell">
+          <div class="setup-cell-title">Competenze richieste</div>
+          <ul class="setup-list">
+            <li><strong>Admin della piattaforma</strong> — conosce la configurazione del CRM/ERP</li>
+            <li>Nessuna competenza di programmazione per il setup base</li>
+            <li>Per flussi avanzati: conoscenza di Salesforce Flow, Power Automate, ecc.</li>
+            <li>Per connettori custom: sviluppatore con conoscenza delle API della piattaforma</li>
+          </ul>
+        </div>
+        <div class="setup-cell">
+          <div class="setup-cell-title">Setup tipico (tempo)</div>
+          <ul class="setup-list">
+            <li><strong>Attivazione base:</strong> 1-2 ore (abilitazione + istruzioni iniziali)</li>
+            <li><strong>Caricamento knowledge base:</strong> 1-3 giorni (raccolta e pulizia documenti)</li>
+            <li><strong>Configurazione flussi:</strong> 1-4 settimane (dipende dalla complessità)</li>
+            <li><strong>Connettori custom:</strong> 2-8 settimane (richiede sviluppo)</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    <!-- INTERFACCIA E INTEGRAZIONE -->
+    <div class="block">
+      <div class="block-header">
+        <span class="block-icon">🔌</span>
+        <span class="block-title">Interfaccia tipica e integrazione multi-agentica</span>
+      </div>
+      <div class="iface-grid">
+        <div class="iface-block">
+          <div class="iface-block-title">Interfaccia tipica per l'utente finale</div>
+          <ul class="iface-list">
+            <li><strong>Chat embedded</strong> nella piattaforma (sidebar in Salesforce, pannello in Teams)</li>
+            <li><strong>Azioni contestuali</strong> — bottoni "Chiedi all'AI" su record specifici</li>
+            <li><strong>Suggerimenti automatici</strong> nel flusso di lavoro senza interazione esplicita</li>
+            <li><strong>Report e summary</strong> generati automaticamente su trigger (apertura opportunità, ecc.)</li>
+          </ul>
+        </div>
+        <div class="iface-block">
+          <div class="iface-block-title">Interfaccia per l'amministratore</div>
+          <ul class="iface-list">
+            <li><strong>Dashboard di configurazione</strong> nella stessa interfaccia admin della piattaforma</li>
+            <li><strong>Log delle conversazioni</strong> con metriche di risoluzione e escalation</li>
+            <li><strong>Editor di istruzioni</strong> per modificare il comportamento dell'agente</li>
+            <li><strong>Gestione knowledge base</strong> — upload, versioning, scadenza documenti</li>
+          </ul>
+        </div>
+      </div>
+      <div class="multiagent-box">
+        <div class="ma-label">Integrazione<br>multi-agentica</div>
+        <div class="ma-content">
+          <h4>Come si integra in un sistema multi-agent</h4>
+          <p>Le piattaforme enterprise sono tipicamente usate come <strong>agenti specialisti in un sistema più ampio</strong>: fanno bene ciò per cui sono ottimizzate (accesso ai dati CRM, ERP) ma delegano ad altri agenti i task fuori perimetro. L'integrazione avviene quasi sempre tramite API o webhook che la piattaforma espone.</p>
+          <p>Il pattern più comune: un agente orchestratore custom riceve il task, smista i sotto-task all'agente enterprise (per leggere/scrivere dati nel CRM) e ad altri agenti specializzati. L'agente enterprise diventa un "worker" con accesso privilegiato ai dati aziendali.</p>
+          <div class="ma-roles">
+            <span class="ma-role">Ruolo tipico: Worker specialista dati</span>
+            <span class="ma-role">Accesso: API REST della piattaforma</span>
+            <span class="ma-role">Limite: Non può essere orchestratore</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+
+<!-- ═══════════════════════════════════
+     CAT 2 — VERTICALI SAAS
+═══════════════════════════════════ -->
+<div class="cat-panel" id="panel-2">
+
+  <div class="panel-hero">
+    <div class="panel-hero-left">
+      <div class="panel-hero-tag" style="color:var(--c2)">
+        <div class="tag-dot" style="background:var(--c2)"></div>
+        Categoria 02
+      </div>
+      <h2>Verticali<br>SaaS</h2>
+      <p class="panel-hero-essence">
+        Prodotti costruiti interamente attorno a un <strong>singolo caso d'uso agente</strong>, venduti come software indipendente. La loro particolarità è la profondità verticale: non fanno tutto, ma fanno una cosa molto bene. Harvey conosce il diritto. Devin conosce il codice. Intercom Fin conosce il customer service. Compri un prodotto già specializzato, non una piattaforma generica da configurare.
+      </p>
+    </div>
+    <div class="panel-hero-right">
+      <div class="hero-kpi">
+        <span class="hero-kpi-val" style="color:var(--c2)">1</span>
+        <div class="hero-kpi-label">Caso d'uso per prodotto</div>
+      </div>
+      <div class="hero-kpi">
+        <span class="hero-kpi-val" style="color:var(--c2)">Alta</span>
+        <div class="hero-kpi-label">Specializzazione verticale</div>
+      </div>
+      <div class="hero-kpi">
+        <span class="hero-kpi-val" style="color:var(--c2)">SaaS</span>
+        <div class="hero-kpi-label">Modello commerciale</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="panel-body">
+
+    <div class="block">
+      <div class="block-header"><span class="block-icon">⚡</span><span class="block-title">Particolarità e differenze</span></div>
+      <div class="three-col">
+        <div class="cell c2-accent">
+          <div class="cell-label">Differenza chiave 1</div>
+          <div class="cell-title">Specializzazione profonda</div>
+          <div class="cell-text">Il modello è spesso fine-tuned o specializzato per il dominio (legal, medical, coding). Conosce il gergo, i pattern, le best practice del settore. Una piattaforma enterprise generica non raggiunge questo livello di dominio-specificity.</div>
+        </div>
+        <div class="cell c2-accent">
+          <div class="cell-label">Differenza chiave 2</div>
+          <div class="cell-title">Prodotto indipendente</div>
+          <div class="cell-text">Non è un add-on — è un prodotto autonomo con la propria interfaccia, la propria infrastruttura, il proprio supporto. Puoi adottarlo anche se non usi nessun'altra piattaforma enterprise. Più portabile, ma meno integrato nativamente.</div>
+        </div>
+        <div class="cell c2-accent">
+          <div class="cell-label">Differenza chiave 3</div>
+          <div class="cell-title">Integrazione via API</div>
+          <div class="cell-text">Non avendo un ecosistema proprio, si integra con i tuoi sistemi tramite API o connettori. Questo è più flessibile delle piattaforme enterprise ma richiede un minimo di lavoro tecnico per collegare i dati necessari.</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="block">
+      <div class="block-header"><span class="block-icon">🎯</span><span class="block-title">Casi e ambiti d'uso tipici</span></div>
+      <div class="usecase-grid">
+        <div class="uc-item"><div class="uc-num">01</div><div class="uc-title">Sviluppo software</div><div class="uc-desc">Devin, Claude Code, Cursor: ricevono task in linguaggio naturale, scrivono codice, eseguono test, correggono bug in autonomia.</div></div>
+        <div class="uc-item"><div class="uc-num">02</div><div class="uc-title">Customer support</div><div class="uc-desc">Intercom Fin, Sierra: gestiscono conversazioni con i clienti, risolvono autonomamente i casi standard, escalano quelli complessi.</div></div>
+        <div class="uc-item"><div class="uc-num">03</div><div class="uc-title">Servizi legali</div><div class="uc-desc">Harvey: analisi contratti, ricerca giurisprudenza, redazione documenti. Specializzato in terminologia e ragionamento giuridico.</div></div>
+        <div class="uc-item"><div class="uc-num">04</div><div class="uc-title">Marketing content</div><div class="uc-desc">Jasper: genera testi, campagne, copy rispettando il brand voice configurato. Integra brief → contenuto con iterazioni.</div></div>
+        <div class="uc-item"><div class="uc-num">05</div><div class="uc-title">Ricerca e intelligence</div><div class="uc-desc">Deep Research (OpenAI, Perplexity): ricercano, sintetizzano report multi-source su brief fornito. Autonomia nella scelta delle fonti.</div></div>
+        <div class="uc-item"><div class="uc-num">06</div><div class="uc-title">Sales outreach</div><div class="uc-desc">Agenti verticali per vendite: identificano prospect, personalizzano messaggi, gestiscono sequenze di follow-up in autonomia.</div></div>
+      </div>
+    </div>
+
+    <div class="block">
+      <div class="block-header"><span class="block-icon">⚖️</span><span class="block-title">Vantaggi e limiti</span></div>
+      <div class="two-col">
+        <div class="cell pro">
+          <div class="cell-label">Vantaggi</div>
+          <ul class="setup-list">
+            <li><strong>Qualità verticale superiore</strong> — nessun agente generico batte uno specialista nel suo dominio.</li>
+            <li><strong>Già ottimizzato per il caso d'uso</strong> — UI, flusso di lavoro, output format pensati per chi lo usa.</li>
+            <li><strong>Indipendente dall'ecosistema</strong> — non devi essere su Salesforce o Microsoft per usarlo.</li>
+            <li><strong>Prova rapida</strong> — trial gratuito spesso disponibile, validazione in giorni non mesi.</li>
+          </ul>
+        </div>
+        <div class="cell con">
+          <div class="cell-label">Limiti</div>
+          <ul class="setup-list">
+            <li><strong>Un prodotto per ogni caso d'uso</strong> — se hai 5 esigenze diverse, rischi 5 abbonamenti separati.</li>
+            <li><strong>Integrazione non nativa</strong> — devi connettere il tuo CRM, i tuoi dati, i tuoi sistemi via API.</li>
+            <li><strong>Vendor lock-in sul dominio</strong> — migrare a un concorrente richiede ri-configurazione completa.</li>
+            <li><strong>Costi per uso intensivo</strong> — i modelli pricing spesso scalano con volume, può diventare caro.</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    <div class="block">
+      <div class="block-header"><span class="block-icon">🎛️</span><span class="block-title">Personalizzazione</span></div>
+      <div class="pers-table">
+        <div class="pers-row header">
+          <div class="pers-cell"></div><div class="pers-cell">Tipo</div><div class="pers-cell">Cosa puoi fare</div><div class="pers-cell">Disponibile</div>
+        </div>
+        <div class="pers-row">
+          <div class="pers-lv">1</div>
+          <div class="pers-name"><div class="pers-name-title">Brand voice e istruzioni</div><div class="pers-name-sub">Sempre</div></div>
+          <div class="pers-desc">Definisci tono, stile, regole di comunicazione specifiche per la tua azienda. <strong>Harvey risponde come uno studio legale italiano, Jasper scrive nel tuo brand voice.</strong></div>
+          <div class="pers-avail"><span class="avail-badge av-yes">Sì — sempre</span></div>
+        </div>
+        <div class="pers-row">
+          <div class="pers-lv">2</div>
+          <div class="pers-name"><div class="pers-name-title">Knowledge base proprietaria</div><div class="pers-name-sub">Upload dati</div></div>
+          <div class="pers-desc">Carichi i tuoi documenti specifici: procedure interne, catalogo prodotti, storico contratti. L'agente risponde basandosi su questi dati prima di usare conoscenza generica.</div>
+          <div class="pers-avail"><span class="avail-badge av-yes">Sì — quasi sempre</span></div>
+        </div>
+        <div class="pers-row">
+          <div class="pers-lv">3</div>
+          <div class="pers-name"><div class="pers-name-title">Integrazioni CRM/tool</div><div class="pers-name-sub">Via connettori</div></div>
+          <div class="pers-desc">Connetti l'agente ai tuoi sistemi tramite connettori prebuilt (Salesforce, HubSpot, Jira) o API custom. <strong>Richiede credenziali e configurazione tecnica base.</strong></div>
+          <div class="pers-avail"><span class="avail-badge av-yes">Sì — spesso</span></div>
+        </div>
+        <div class="pers-row">
+          <div class="pers-lv">4</div>
+          <div class="pers-name"><div class="pers-name-title">Workflow personalizzati</div><div class="pers-name-sub">Config avanzata</div></div>
+          <div class="pers-desc">In alcuni prodotti puoi definire flussi di lavoro custom: quando escalare, quali approvazioni richiedere, come strutturare l'output. Dipende molto dal prodotto specifico.</div>
+          <div class="pers-avail"><span class="avail-badge av-part">Dipende dal prodotto</span></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="block">
+      <div class="block-header"><span class="block-icon">🛠️</span><span class="block-title">Cosa ti serve</span></div>
+      <div class="setup-grid">
+        <div class="setup-cell">
+          <div class="setup-cell-title">Software e piattaforme</div>
+          <ul class="setup-list">
+            <li>Abbonamento al prodotto SaaS verticale (trial spesso disponibile)</li>
+            <li>Account e credenziali dei sistemi da connettere (CRM, project mgmt, ecc.)</li>
+            <li>Browser moderno — nessun software aggiuntivo</li>
+          </ul>
+        </div>
+        <div class="setup-cell">
+          <div class="setup-cell-title">Hardware</div>
+          <ul class="setup-list">
+            <li><strong>Nessun hardware speciale</strong> — tutto cloud</li>
+            <li>PC/Mac standard con browser</li>
+            <li>Eccezione: Claude Code richiede terminale locale</li>
+          </ul>
+        </div>
+        <div class="setup-cell">
+          <div class="setup-cell-title">Competenze richieste</div>
+          <ul class="setup-list">
+            <li>Utente finale: nessuna competenza tecnica</li>
+            <li>Admin: configurazione integrazioni base (seguire documentazione)</li>
+            <li>Per API custom: sviluppatore con conoscenza REST API</li>
+            <li>Competenza di dominio per valutare la qualità output (es. legale per Harvey)</li>
+          </ul>
+        </div>
+        <div class="setup-cell">
+          <div class="setup-cell-title">Setup tipico</div>
+          <ul class="setup-list">
+            <li><strong>Attivazione e configurazione base:</strong> ore/1 giorno</li>
+            <li><strong>Upload knowledge base:</strong> 1-3 giorni</li>
+            <li><strong>Connessione sistemi aziendali:</strong> 1-5 giorni</li>
+            <li><strong>Fine-tuning del comportamento:</strong> 2-4 settimane di uso e aggiustamento</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    <div class="block">
+      <div class="block-header"><span class="block-icon">🔌</span><span class="block-title">Interfaccia e integrazione multi-agentica</span></div>
+      <div class="iface-grid">
+        <div class="iface-block">
+          <div class="iface-block-title">Interfaccia tipica</div>
+          <ul class="iface-list">
+            <li><strong>Web app dedicata</strong> con dashboard, history conversazioni, metriche</li>
+            <li><strong>Widget embeddabile</strong> nel tuo sito/app (tipico per agenti di customer support)</li>
+            <li><strong>Integrazione in tool esistenti</strong> — Devin dentro GitHub, Cursor dentro VS Code</li>
+            <li><strong>API-first</strong> — molti prodotti espongono API per chiamarli da altri sistemi</li>
+          </ul>
+        </div>
+        <div class="iface-block">
+          <div class="iface-block-title">Interfaccia amministratore</div>
+          <ul class="iface-list">
+            <li><strong>Dashboard metriche</strong> — tasso di risoluzione, volume, escalation rate</li>
+            <li><strong>Editor istruzioni e knowledge base</strong></li>
+            <li><strong>Gestione integrazioni</strong> — connect/disconnect sistemi esterni</li>
+            <li><strong>Log conversazioni</strong> per quality review e training</li>
+          </ul>
+        </div>
+      </div>
+      <div class="multiagent-box">
+        <div class="ma-label">Integrazione<br>multi-agentica</div>
+        <div class="ma-content">
+          <h4>Come si integra in un sistema multi-agent</h4>
+          <p>I verticali SaaS sono i <strong>worker specialisti più facili da integrare</strong>: quasi tutti espongono API REST che un orchestratore può chiamare. Il pattern tipico è: l'orchestratore riceve il task, identifica la parte che richiede la specializzazione verticale, chiama l'API dell'agente SaaS, riceve il risultato e lo passa al passo successivo.</p>
+          <p>Es: un orchestratore che gestisce un processo di vendor management chiama Harvey per l'analisi del contratto, un agente custom per la valutazione finanziaria, e Jasper per la comunicazione con il vendor — tutto coordinato da un'unica logica centrale.</p>
+          <div class="ma-roles">
+            <span class="ma-role">Ruolo tipico: Worker verticale specializzato</span>
+            <span class="ma-role">Accesso: API REST + webhook</span>
+            <span class="ma-role">Vantaggio: Qualità dominio-specifica imbattibile</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+<!-- ═══════════════════════════════════
+     CAT 3 — NO-CODE & MARKETPLACE
+═══════════════════════════════════ -->
+<div class="cat-panel" id="panel-3">
+
+  <div class="panel-hero">
+    <div class="panel-hero-left">
+      <div class="panel-hero-tag" style="color:var(--c3)">
+        <div class="tag-dot" style="background:var(--c3)"></div>
+        Categoria 03
+      </div>
+      <h2>No-code &<br>Marketplace</h2>
+      <p class="panel-hero-essence">
+        Piattaforme visive dove l'agente si costruisce e adatta <strong>collegando blocchi grafici</strong>, senza scrivere codice. La particolarità è il marketplace integrato: non parti da zero, importi un template preconfigurato e lo adatti. Il valore è la <strong>velocità di prototipazione e il basso costo di accesso</strong> per team senza sviluppatori.
+      </p>
+    </div>
+    <div class="panel-hero-right">
+      <div class="hero-kpi">
+        <span class="hero-kpi-val" style="color:var(--c3)">Ore</span>
+        <div class="hero-kpi-label">Time-to-prototype</div>
+      </div>
+      <div class="hero-kpi">
+        <span class="hero-kpi-val" style="color:var(--c3)">Zero</span>
+        <div class="hero-kpi-label">Codice richiesto (base)</div>
+      </div>
+      <div class="hero-kpi">
+        <span class="hero-kpi-val" style="color:var(--c3)">Media</span>
+        <div class="hero-kpi-label">Flessibilità massima</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="panel-body">
+
+    <div class="block">
+      <div class="block-header"><span class="block-icon">⚡</span><span class="block-title">Particolarità e differenze</span></div>
+      <div class="three-col">
+        <div class="cell c3-accent">
+          <div class="cell-label">Differenza chiave 1</div>
+          <div class="cell-title">Visual builder + marketplace</div>
+          <div class="cell-text">La combinazione unica: non solo costruisci visualmente, ma importi template già pronti di altri utenti dalla community. Questo abbassa drasticamente il tempo per avere qualcosa di funzionante — parti da un template, non da una canvas vuota.</div>
+        </div>
+        <div class="cell c3-accent">
+          <div class="cell-label">Differenza chiave 2</div>
+          <div class="cell-title">LLM agnostico</div>
+          <div class="cell-text">A differenza delle piattaforme enterprise, qui <strong>porti la tua API key</strong> — scegli tu GPT-4, Claude, Gemini o un modello locale. Questa libertà di scelta del modello è una differenza fondamentale rispetto alle piattaforme chiuse.</div>
+        </div>
+        <div class="cell c3-accent">
+          <div class="cell-label">Differenza chiave 3</div>
+          <div class="cell-title">Self-hostabile</div>
+          <div class="cell-text">Flowise, n8n e altri possono girare sui tuoi server. I dati non escono dall'azienda. Questo è un vantaggio enorme rispetto sia ai SaaS verticali che alle piattaforme enterprise per chi ha requisiti di privacy stretti.</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="block">
+      <div class="block-header"><span class="block-icon">🎯</span><span class="block-title">Casi d'uso tipici</span></div>
+      <div class="usecase-grid">
+        <div class="uc-item"><div class="uc-num">01</div><div class="uc-title">Agente RAG su documenti</div><div class="uc-desc">Chatbot che risponde a domande su documenti aziendali (manuali, policy, contratti). Template prebuilt, basta caricare i PDF.</div></div>
+        <div class="uc-item"><div class="uc-num">02</div><div class="uc-title">Automazione workflow</div><div class="uc-desc">n8n: quando arriva un'email con allegato → l'agente lo analizza → aggiorna il CRM → notifica su Slack. Zero codice.</div></div>
+        <div class="uc-item"><div class="uc-num">03</div><div class="uc-title">Prototipazione rapida</div><div class="uc-desc">Validare un'idea di agente in ore prima di decidere se investire nello sviluppo con un framework. Il classico uso "esplora e impara".</div></div>
+        <div class="uc-item"><div class="uc-num">04</div><div class="uc-title">Agente per il team business</div><div class="uc-desc">Il marketing crea e gestisce il proprio agente di content generation senza dipendere dall'IT per ogni modifica al prompt.</div></div>
+        <div class="uc-item"><div class="uc-num">05</div><div class="uc-title">Integrazione multi-app</div><div class="uc-desc">Collegare con AI tools che non hanno integrazioni native: Zapier connette l'agente a 7000+ app come ponte universale.</div></div>
+        <div class="uc-item"><div class="uc-num">06</div><div class="uc-title">Chatbot su sito web</div><div class="uc-desc">Dify permette di deployare in poche ore un chatbot con knowledge base aziendale sul proprio sito, senza sviluppo frontend.</div></div>
+      </div>
+    </div>
+
+    <div class="block">
+      <div class="block-header"><span class="block-icon">⚖️</span><span class="block-title">Vantaggi e limiti</span></div>
+      <div class="two-col">
+        <div class="cell pro">
+          <div class="cell-label">Vantaggi</div>
+          <ul class="setup-list">
+            <li><strong>Prototipazione in ore</strong> — un agente RAG base in meno di una giornata.</li>
+            <li><strong>Accessibile senza dev</strong> — team business può costruire e gestire in autonomia.</li>
+            <li><strong>Scelta del modello LLM libera</strong> — non sei vincolato al vendor della piattaforma.</li>
+            <li><strong>Self-hosting disponibile</strong> — dati sotto controllo, GDPR-friendly.</li>
+            <li><strong>Community e template</strong> — migliaia di casi d'uso già risolti da altri.</li>
+          </ul>
+        </div>
+        <div class="cell con">
+          <div class="cell-label">Limiti</div>
+          <ul class="setup-list">
+            <li><strong>Tetto di flessibilità</strong> — quando esci dal catalogo dei nodi disponibili, sei bloccato.</li>
+            <li><strong>Scalabilità limitata</strong> — non pensati per volumi enterprise, possono avere problemi sotto carico.</li>
+            <li><strong>Debug difficile</strong> — quando qualcosa va storto nel flusso, capire dove è complesso.</li>
+            <li><strong>Costi cloud possono sorprendere</strong> — il canone piattaforma + i costi API del LLM si sommano.</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    <div class="block">
+      <div class="block-header"><span class="block-icon">🎛️</span><span class="block-title">Personalizzazione</span></div>
+      <div class="pers-table">
+        <div class="pers-row header">
+          <div class="pers-cell"></div><div class="pers-cell">Tipo</div><div class="pers-cell">Cosa puoi fare</div><div class="pers-cell">Disponibile</div>
+        </div>
+        <div class="pers-row">
+          <div class="pers-lv">1</div>
+          <div class="pers-name"><div class="pers-name-title">Flusso visivo</div><div class="pers-name-sub">Drag & drop</div></div>
+          <div class="pers-desc">Modifica il grafo visivo — aggiungi, rimuovi, riordina nodi. Cambia le connessioni tra i blocchi. <strong>È il livello di personalizzazione principale di questa categoria.</strong></div>
+          <div class="pers-avail"><span class="avail-badge av-yes">Sì — sempre</span></div>
+        </div>
+        <div class="pers-row">
+          <div class="pers-lv">2</div>
+          <div class="pers-name"><div class="pers-name-title">Scelta del modello</div><div class="pers-name-sub">API key propria</div></div>
+          <div class="pers-desc">Scegli quale LLM usare portando la tua API key. Puoi anche cambiare modello da un nodo all'altro: uno veloce per classificare, uno potente per generare.</div>
+          <div class="pers-avail"><span class="avail-badge av-yes">Sì — sempre</span></div>
+        </div>
+        <div class="pers-row">
+          <div class="pers-lv">3</div>
+          <div class="pers-name"><div class="pers-name-title">Codice custom nei nodi</div><div class="pers-name-sub">Low-code</div></div>
+          <div class="pers-desc">Molte piattaforme (n8n, Flowise) permettono di aggiungere snippet JavaScript o Python in nodi specifici per logica non coperta dai blocchi standard.</div>
+          <div class="pers-avail"><span class="avail-badge av-part">Piattaforme low-code</span></div>
+        </div>
+        <div class="pers-row">
+          <div class="pers-lv">4</div>
+          <div class="pers-name"><div class="pers-name-title">Plugin custom</div><div class="pers-name-sub">Sviluppo nodi</div></div>
+          <div class="pers-desc">Flowise permette di sviluppare nodi custom come plugin. Richiede sviluppatori Node.js ma estende la piattaforma con funzionalità completamente custom.</div>
+          <div class="pers-avail"><span class="avail-badge av-part">Solo Flowise/avanzati</span></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="block">
+      <div class="block-header"><span class="block-icon">🛠️</span><span class="block-title">Cosa ti serve</span></div>
+      <div class="setup-grid">
+        <div class="setup-cell">
+          <div class="setup-cell-title">Software e piattaforme</div>
+          <ul class="setup-list">
+            <li>Account sulla piattaforma (Flowise, Dify, n8n, Zapier — molti con piano gratuito)</li>
+            <li><strong>API key del LLM scelto</strong> (OpenAI, Anthropic, Google — costo separato)</li>
+            <li>Per self-hosting: Docker installato sul server</li>
+            <li>Browser moderno per l'interfaccia visiva</li>
+          </ul>
+        </div>
+        <div class="setup-cell">
+          <div class="setup-cell-title">Hardware</div>
+          <ul class="setup-list">
+            <li><strong>Cloud hosted:</strong> nessun hardware speciale</li>
+            <li><strong>Self-hosted:</strong> server Linux con 4+ GB RAM, Docker</li>
+            <li>Per modelli locali: GPU NVIDIA con 8+ GB VRAM (opzionale)</li>
+          </ul>
+        </div>
+        <div class="setup-cell">
+          <div class="setup-cell-title">Competenze richieste</div>
+          <ul class="setup-list">
+            <li>Nessuna programmazione per uso base con template</li>
+            <li>Logica di flusso e comprensione di come funzionano le API</li>
+            <li>Per self-hosting: admin Linux/Docker base</li>
+            <li>Per nodi custom: JavaScript/Python (solo per esigenze avanzate)</li>
+          </ul>
+        </div>
+        <div class="setup-cell">
+          <div class="setup-cell-title">Setup tipico</div>
+          <ul class="setup-list">
+            <li><strong>Importare template e testare:</strong> 1-4 ore</li>
+            <li><strong>Adattare al caso d'uso:</strong> 1-3 giorni</li>
+            <li><strong>Self-hosting su server:</strong> 2-8 ore (con Docker)</li>
+            <li><strong>Integrazioni API esterne:</strong> 1-3 giorni</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    <div class="block">
+      <div class="block-header"><span class="block-icon">🔌</span><span class="block-title">Interfaccia e integrazione multi-agentica</span></div>
+      <div class="iface-grid">
+        <div class="iface-block">
+          <div class="iface-block-title">Interfaccia tipica</div>
+          <ul class="iface-list">
+            <li><strong>Canvas visiva</strong> con nodi collegati — il flusso è il "codice"</li>
+            <li><strong>Chat preview integrata</strong> per testare l'agente direttamente nella piattaforma</li>
+            <li><strong>Widget embeddabile</strong> nel sito via snippet HTML (Flowise, Dify)</li>
+            <li><strong>API endpoint generato</strong> automaticamente per ogni agente deployato</li>
+          </ul>
+        </div>
+        <div class="iface-block">
+          <div class="iface-block-title">Interfaccia amministratore</div>
+          <ul class="iface-list">
+            <li><strong>Visual editor</strong> — modifica il flusso in tempo reale</li>
+            <li><strong>Log delle esecuzioni</strong> con traccia di ogni nodo attraversato</li>
+            <li><strong>Test runner</strong> per simulare input e vedere l'output di ogni step</li>
+            <li><strong>Gestione API keys e credenziali</strong> dei servizi connessi</li>
+          </ul>
+        </div>
+      </div>
+      <div class="multiagent-box">
+        <div class="ma-label">Integrazione<br>multi-agentica</div>
+        <div class="ma-content">
+          <h4>Come si integra in un sistema multi-agent</h4>
+          <p>Le piattaforme no-code sono spesso usate come <strong>interfaccia di gestione</strong> per team non tecnici, mentre il motore agente è costruito con un framework. Il flusso visivo di n8n può orchestrare chiamate a più agenti specializzati — diventando esso stesso un orchestratore visivo senza codice.</p>
+          <p>Flowise genera automaticamente endpoint API per ogni agente costruito — questi endpoint possono essere chiamati da orchestratori esterni (LangGraph, codice Python) come se fossero servizi REST standard. È uno dei modi più semplici per esporre un agente RAG a un sistema più grande.</p>
+          <div class="ma-roles">
+            <span class="ma-role">Ruolo tipico: Orchestratore visivo o Worker RAG</span>
+            <span class="ma-role">Accesso: API endpoint autogenerato</span>
+            <span class="ma-role">Ideale per: Interfaccia team non tecnico</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+<!-- ═══════════════════════════════════
+     CAT 4 — OPEN SOURCE
+═══════════════════════════════════ -->
+<div class="cat-panel" id="panel-4">
+
+  <div class="panel-hero">
+    <div class="panel-hero-left">
+      <div class="panel-hero-tag" style="color:var(--c4)">
+        <div class="tag-dot" style="background:var(--c4)"></div>
+        Categoria 04
+      </div>
+      <h2>Open<br>Source</h2>
+      <p class="panel-hero-essence">
+        Repository pubblici su GitHub — il codice è visibile, modificabile, deployabile ovunque. La particolarità è la <strong>trasparenza totale e l'assenza di lock-in</strong>: sai esattamente cosa fa ogni riga di codice, puoi modificare qualsiasi comportamento, non paghi canoni. Il costo è la responsabilità tecnica: sei tu a gestire deployment, sicurezza, aggiornamenti.
+      </p>
+    </div>
+    <div class="panel-hero-right">
+      <div class="hero-kpi">
+        <span class="hero-kpi-val" style="color:var(--c4)">100%</span>
+        <div class="hero-kpi-label">Codice visibile</div>
+      </div>
+      <div class="hero-kpi">
+        <span class="hero-kpi-val" style="color:var(--c4)">Zero</span>
+        <div class="hero-kpi-label">Canone software</div>
+      </div>
+      <div class="hero-kpi">
+        <span class="hero-kpi-val" style="color:var(--c4)">Alta</span>
+        <div class="hero-kpi-label">Competenza richiesta</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="panel-body">
+
+    <div class="block">
+      <div class="block-header"><span class="block-icon">⚡</span><span class="block-title">Particolarità e differenze</span></div>
+      <div class="three-col">
+        <div class="cell c4-accent">
+          <div class="cell-label">Differenza chiave 1</div>
+          <div class="cell-title">Trasparenza totale</div>
+          <div class="cell-text">Puoi leggere ogni riga di codice, capire esattamente come l'agente ragiona, modificare qualsiasi comportamento. Nessun'altra categoria offre questo livello di comprensione e controllo. Fondamentale per chi ha requisiti di compliance o vuole capire davvero cosa succede.</div>
+        </div>
+        <div class="cell c4-accent">
+          <div class="cell-label">Differenza chiave 2</div>
+          <div class="cell-title">Punto di partenza, non prodotto finito</div>
+          <div class="cell-text">A differenza dei SaaS verticali, gli agenti open source sono <strong>template tecnici</strong>, non prodotti pronti per gli utenti finali. Richiedono un team tecnico per il deployment, la personalizzazione e la manutenzione. Il valore è nella struttura già progettata, non nell'esperienza utente.</div>
+        </div>
+        <div class="cell c4-accent">
+          <div class="cell-label">Differenza chiave 3</div>
+          <div class="cell-title">Community come supporto</div>
+          <div class="cell-text">Non hai un vendor a cui mandare ticket — hai una community GitHub. Per i progetti popolari (LangChain, CrewAI) la community è enorme e i problemi comuni sono già risolti. Per quelli meno noti, sei spesso da solo.</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="block">
+      <div class="block-header"><span class="block-icon">🎯</span><span class="block-title">Casi d'uso tipici</span></div>
+      <div class="usecase-grid">
+        <div class="uc-item"><div class="uc-num">01</div><div class="uc-title">Ricerca e sperimentazione</div><div class="uc-desc">Team R&D che vuole esplorare architetture agentiche senza costi di licenza. AutoGPT per esperimenti di autonomia, BabyAGI per task decomposition.</div></div>
+        <div class="uc-item"><div class="uc-num">02</div><div class="uc-title">Agente coding in locale</div><div class="uc-desc">Open Interpreter, Claude Code: eseguono codice Python/JS/Shell sul computer locale in risposta a istruzioni naturali. Nessun dato esce dal device.</div></div>
+        <div class="uc-item"><div class="uc-num">03</div><div class="uc-title">Base per sistema custom</div><div class="uc-desc">LangChain Templates, CrewAI: punto di partenza che un team tecnico personalizza per costruire il proprio agente aziendale specifico.</div></div>
+        <div class="uc-item"><div class="uc-num">04</div><div class="uc-title">Self-hosting per privacy</div><div class="uc-desc">Flowise, Dify open source: deployati su server propri con modelli locali (Llama, Mistral). Zero dati all'esterno. Ideale per settori regolamentati.</div></div>
+        <div class="uc-item"><div class="uc-num">05</div><div class="uc-title">Benchmark e valutazione</div><div class="uc-desc">Confrontare diversi approcci agentici, testare modelli open source vs proprietari, misurare performance su task specifici.</div></div>
+        <div class="uc-item"><div class="uc-num">06</div><div class="uc-title">Formazione tecnica</div><div class="uc-desc">Studiare il codice sorgente di AutoGPT o LangChain per capire come funzionano gli agenti internamente — la migliore scuola pratica.</div></div>
+      </div>
+    </div>
+
+    <div class="block">
+      <div class="block-header"><span class="block-icon">⚖️</span><span class="block-title">Vantaggi e limiti</span></div>
+      <div class="two-col">
+        <div class="cell pro">
+          <div class="cell-label">Vantaggi</div>
+          <ul class="setup-list">
+            <li><strong>Zero lock-in</strong> — il codice è tuo, puoi forkarlo, modificarlo, deployarlo ovunque.</li>
+            <li><strong>Privacy totale</strong> — con modelli self-hosted, nessun dato esce dai tuoi server.</li>
+            <li><strong>Costo software zero</strong> — paghi solo infrastruttura e, se li usi, i costi API dei modelli.</li>
+            <li><strong>Massima flessibilità</strong> — puoi cambiare qualsiasi comportamento modificando il codice.</li>
+            <li><strong>Trasparenza</strong> — sai esattamente come funziona. Fondamentale per compliance e audit.</li>
+          </ul>
+        </div>
+        <div class="cell con">
+          <div class="cell-label">Limiti</div>
+          <ul class="setup-list">
+            <li><strong>Richiede sviluppatori esperti</strong> — non accessibile senza competenze Python avanzate.</li>
+            <li><strong>Setup complesso</strong> — deployment, sicurezza, aggiornamenti sono tutti responsabilità tua.</li>
+            <li><strong>No supporto garantito</strong> — community forum invece di SLA. Problemi critici: sei da solo.</li>
+            <li><strong>Qualità variabile</strong> — non tutti i repository open source sono ben mantenuti o sicuri.</li>
+            <li><strong>UX grezza</strong> — pensati per sviluppatori, non per utenti finali business.</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    <div class="block">
+      <div class="block-header"><span class="block-icon">🎛️</span><span class="block-title">Personalizzazione</span></div>
+      <div class="pers-table">
+        <div class="pers-row header">
+          <div class="pers-cell"></div><div class="pers-cell">Tipo</div><div class="pers-cell">Cosa puoi fare</div><div class="pers-cell">Disponibile</div>
+        </div>
+        <div class="pers-row">
+          <div class="pers-lv">1</div>
+          <div class="pers-name"><div class="pers-name-title">Configurazione</div><div class="pers-name-sub">File config / env</div></div>
+          <div class="pers-desc">Variabili d'ambiente, file di configurazione YAML/JSON: scegli il modello, le API key, i parametri base. <strong>Richiede lettura della documentazione.</strong></div>
+          <div class="pers-avail"><span class="avail-badge av-yes">Sì — sempre</span></div>
+        </div>
+        <div class="pers-row">
+          <div class="pers-lv">2</div>
+          <div class="pers-name"><div class="pers-name-title">Prompt e tool</div><div class="pers-name-sub">Modifica diretta</div></div>
+          <div class="pers-desc">Modifica i prompt di sistema, aggiungi o rimuovi strumenti, cambia la logica di quando vengono chiamati. <strong>Richiede comprensione del codice Python.</strong></div>
+          <div class="pers-avail"><span class="avail-badge av-yes">Sì — sempre</span></div>
+        </div>
+        <div class="pers-row">
+          <div class="pers-lv">3</div>
+          <div class="pers-name"><div class="pers-name-title">Architettura agente</div><div class="pers-name-sub">Modifica loop</div></div>
+          <div class="pers-desc">Cambia il loop agente, la strategia di memoria, il pattern di ragionamento. <strong>Richiede comprensione dell'architettura del progetto.</strong></div>
+          <div class="pers-avail"><span class="avail-badge av-yes">Sì — sempre</span></div>
+        </div>
+        <div class="pers-row">
+          <div class="pers-lv">4</div>
+          <div class="pers-name"><div class="pers-name-title">Fork e refactoring</div><div class="pers-name-sub">Modifica totale</div></div>
+          <div class="pers-desc">Forki il repository e lo riscrivi parzialmente o completamente. <strong>Il progetto open source diventa il tuo codebase</strong> — massima flessibilità, massima responsabilità di manutenzione.</div>
+          <div class="pers-avail"><span class="avail-badge av-yes">Sì — sempre</span></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="block">
+      <div class="block-header"><span class="block-icon">🛠️</span><span class="block-title">Cosa ti serve</span></div>
+      <div class="setup-grid">
+        <div class="setup-cell">
+          <div class="setup-cell-title">Software necessario</div>
+          <ul class="setup-list">
+            <li>Python 3.10+ installato</li>
+            <li>Git per clonare il repository</li>
+            <li>pip/poetry per gestione dipendenze</li>
+            <li>API key del modello LLM scelto (o Ollama per modelli locali)</li>
+            <li>IDE (VS Code, PyCharm) per modificare il codice</li>
+          </ul>
+        </div>
+        <div class="setup-cell">
+          <div class="setup-cell-title">Hardware</div>
+          <ul class="setup-list">
+            <li><strong>Con API cloud:</strong> qualsiasi PC/Mac moderno</li>
+            <li><strong>Con modelli locali (Llama 8B):</strong> 16 GB RAM, GPU NVIDIA 8GB VRAM</li>
+            <li><strong>Con modelli locali grandi (70B):</strong> GPU NVIDIA 40+ GB VRAM o multi-GPU</li>
+            <li>Server Linux per deployment in produzione</li>
+          </ul>
+        </div>
+        <div class="setup-cell">
+          <div class="setup-cell-title">Competenze richieste</div>
+          <ul class="setup-list">
+            <li><strong>Python intermedio/avanzato</strong> — obbligatorio</li>
+            <li>Comprensione delle API REST e gestione delle API key</li>
+            <li>Git e GitHub per versioning</li>
+            <li>Linux base per deployment su server</li>
+            <li>Docker per containerizzazione (consigliato)</li>
+            <li>Conoscenza dell'architettura agente specifica del progetto</li>
+          </ul>
+        </div>
+        <div class="setup-cell">
+          <div class="setup-cell-title">Setup tipico</div>
+          <ul class="setup-list">
+            <li><strong>Clone + install dipendenze:</strong> 30 min - 2 ore</li>
+            <li><strong>Configurazione e primo test:</strong> 2-8 ore</li>
+            <li><strong>Personalizzazione per caso d'uso:</strong> 1-4 settimane</li>
+            <li><strong>Deployment in produzione:</strong> 1-2 settimane</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    <div class="block">
+      <div class="block-header"><span class="block-icon">🔌</span><span class="block-title">Interfaccia e integrazione multi-agentica</span></div>
+      <div class="iface-grid">
+        <div class="iface-block">
+          <div class="iface-block-title">Interfaccia tipica</div>
+          <ul class="iface-list">
+            <li><strong>Terminale/CLI</strong> — la maggior parte degli agenti open source parte da riga di comando</li>
+            <li><strong>Web UI minimale</strong> — alcuni (AutoGPT, Flowise) hanno un'interfaccia browser basic</li>
+            <li><strong>Nessuna UI</strong> — molti template sono librerie da integrare, non applicazioni standalone</li>
+            <li><strong>API server</strong> — puoi wrappare l'agente in un server FastAPI/Flask e esporlo come servizio</li>
+          </ul>
+        </div>
+        <div class="iface-block">
+          <div class="iface-block-title">Interfaccia sviluppatore</div>
+          <ul class="iface-list">
+            <li><strong>Codice direttamente modificabile</strong> — l'IDE è l'interfaccia principale</li>
+            <li><strong>Log e print statements</strong> per debug (LangSmith opzionale)</li>
+            <li><strong>Jupyter notebook</strong> per sperimentazione rapida di componenti</li>
+            <li><strong>Test suite</strong> per validare le modifiche (nei progetti più maturi)</li>
+          </ul>
+        </div>
+      </div>
+      <div class="multiagent-box">
+        <div class="ma-label">Integrazione<br>multi-agentica</div>
+        <div class="ma-content">
+          <h4>Come si integra in un sistema multi-agent</h4>
+          <p>Gli agenti open source sono i <strong>building block più flessibili</strong> per sistemi multi-agent. Puoi usarli sia come orchestratori (LangGraph) che come worker specializzati. L'integrazione avviene nel codice: importi la libreria, istanzi l'agente, lo chiami come una funzione Python con input e output definiti da te.</p>
+          <p>CrewAI e AutoGen sono progettati nativamente per sistemi multi-agent: definisci il team di agenti, i loro ruoli e il modo in cui comunicano, tutto nel codice. Non hai i limiti dei sistemi chiusi — puoi costruire esattamente il sistema che ti serve.</p>
+          <div class="ma-roles">
+            <span class="ma-role">Ruolo tipico: Orchestratore o worker tecnico</span>
+            <span class="ma-role">Accesso: Import Python / API server custom</span>
+            <span class="ma-role">Vantaggio: Nessun limite architetturale</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+<!-- ═══════════════════════════════════
+     CAT 5 — EMBEDDED
+═══════════════════════════════════ -->
+<div class="cat-panel" id="panel-5">
+
+  <div class="panel-hero">
+    <div class="panel-hero-left">
+      <div class="panel-hero-tag" style="color:var(--c5)">
+        <div class="tag-dot" style="background:var(--c5)"></div>
+        Categoria 05
+      </div>
+      <h2>Embedded<br>in Prodotti</h2>
+      <p class="panel-hero-essence">
+        Agenti che <strong>non si acquistano separatamente</strong> — vivono già dentro strumenti che usi ogni giorno. GitHub Copilot è dentro il tuo IDE. Notion AI è dentro il tuo workspace. M365 Copilot è dentro Word, Excel, Teams. La particolarità è che l'adozione è quasi invisibile: non c'è una "decisione di acquistare un agente", c'è una decisione di aggiornare/espandere uno strumento già in uso.
+      </p>
+    </div>
+    <div class="panel-hero-right">
+      <div class="hero-kpi">
+        <span class="hero-kpi-val" style="color:var(--c5)">Zero</span>
+        <div class="hero-kpi-label">Onboarding separato</div>
+      </div>
+      <div class="hero-kpi">
+        <span class="hero-kpi-val" style="color:var(--c5)">Nativa</span>
+        <div class="hero-kpi-label">UX nel workflow</div>
+      </div>
+      <div class="hero-kpi">
+        <span class="hero-kpi-val" style="color:var(--c5)">Alta</span>
+        <div class="hero-kpi-label">Adozione spontanea</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="panel-body">
+
+    <div class="block">
+      <div class="block-header"><span class="block-icon">⚡</span><span class="block-title">Particolarità e differenze</span></div>
+      <div class="three-col">
+        <div class="cell c5-accent">
+          <div class="cell-label">Differenza chiave 1</div>
+          <div class="cell-title">Adozione frictionless</div>
+          <div class="cell-text">Non c'è un processo di onboarding separato, una nuova interfaccia da imparare, una nuova password da ricordare. L'agente appare dentro lo strumento già aperto. Questo abbassa drasticamente la resistenza all'adozione — gli utenti lo usano perché è lì, non perché hanno deciso di "usare l'AI".</div>
+        </div>
+        <div class="cell c5-accent">
+          <div class="cell-label">Differenza chiave 2</div>
+          <div class="cell-title">Contesto implicito</div>
+          <div class="cell-text">L'agente vede già quello su cui stai lavorando senza che tu debba spiegarglielo. GitHub Copilot conosce il tuo codebase. Notion AI conosce le tue pagine. M365 Copilot conosce le tue email. Questo contesto implicito produce risultati molto più rilevanti rispetto a un chatbot generico.</div>
+        </div>
+        <div class="cell c5-accent">
+          <div class="cell-label">Differenza chiave 3</div>
+          <div class="cell-title">Totale opacità tecnica</div>
+          <div class="cell-text">Non sai quale modello usa, come è implementato, quando cambia. Non hai configurazione tecnica, non hai accesso alle API interne. È l'opposto diametrale dell'open source. L'unico controllo che hai è attraverso i parametri esposti dall'interfaccia utente.</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="block">
+      <div class="block-header"><span class="block-icon">🎯</span><span class="block-title">Casi d'uso tipici</span></div>
+      <div class="usecase-grid">
+        <div class="uc-item"><div class="uc-num">01</div><div class="uc-title">Completamento codice</div><div class="uc-desc">GitHub Copilot, Cursor: suggerisce e completa codice inline mentre scrivi. In modalità agente: modifica file multipli, esegue test, corregge errori in autonomia su task descritti in linguaggio naturale.</div></div>
+        <div class="uc-item"><div class="uc-num">02</div><div class="uc-title">Produttività documenti</div><div class="uc-desc">M365 Copilot in Word: redige, riassume, trasforma testo. In Excel: analizza dati, genera formule, crea grafici. In PowerPoint: genera presentazioni da brief testuale.</div></div>
+        <div class="uc-item"><div class="uc-num">03</div><div class="uc-title">Gestione email e meeting</div><div class="uc-desc">M365 Copilot in Outlook e Teams: riassume thread lunghi, redige risposte, genera note di meeting, identifica action item dai meeting registrati.</div></div>
+        <div class="uc-item"><div class="uc-num">04</div><div class="uc-title">Knowledge management</div><div class="uc-desc">Notion AI: risponde a domande usando come contesto tutte le pagine del workspace. Genera documenti, riassume pagine, collega informazioni disperse.</div></div>
+        <div class="uc-item"><div class="uc-num">05</div><div class="uc-title">Navigazione web autonoma</div><div class="uc-desc">Operator (OpenAI): naviga siti web per completare task — prenota, compila form, fa acquisti, estrae dati — vedendo lo schermo come farebbe un umano.</div></div>
+        <div class="uc-item"><div class="uc-num">06</div><div class="uc-title">Design e creatività</div><div class="uc-desc">Figma AI, Canva AI: suggerisce design, genera varianti, adatta layout. Embedded nel tool di design già in uso dal team creativo.</div></div>
+      </div>
+    </div>
+
+    <div class="block">
+      <div class="block-header"><span class="block-icon">⚖️</span><span class="block-title">Vantaggi e limiti</span></div>
+      <div class="two-col">
+        <div class="cell pro">
+          <div class="cell-label">Vantaggi</div>
+          <ul class="setup-list">
+            <li><strong>Adozione immediata e spontanea</strong> — gli utenti lo trovano già nei tool che usano.</li>
+            <li><strong>Contesto implicito ricchissimo</strong> — conosce già file, email, codice su cui stai lavorando.</li>
+            <li><strong>Zero cambio di workflow</strong> — non impari una nuova interfaccia, usi quella che conosci.</li>
+            <li><strong>Aggiornamenti automatici</strong> — il vendor migliora l'agente senza che tu faccia nulla.</li>
+            <li><strong>Licenza bundled</strong> — spesso incluso nel piano esistente o con piccolo add-on.</li>
+          </ul>
+        </div>
+        <div class="cell con">
+          <div class="cell-label">Limiti</div>
+          <ul class="setup-list">
+            <li><strong>Dipendenza dal prodotto host</strong> — se smetti di usare Notion, perdi Notion AI.</li>
+            <li><strong>Personalizzazione minima</strong> — puoi cambiare solo quello che l'interfaccia espone.</li>
+            <li><strong>Nessun controllo tecnico</strong> — non sai come funziona, non puoi debuggarlo, non sai dove vanno i dati.</li>
+            <li><strong>Non integrabile come servizio</strong> — difficile usarlo come componente in un sistema più ampio.</li>
+            <li><strong>Lock-in doppio</strong> — sei vincolato sia al prodotto che alla funzionalità AI dentro di esso.</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    <div class="block">
+      <div class="block-header"><span class="block-icon">🎛️</span><span class="block-title">Personalizzazione</span></div>
+      <div class="pers-table">
+        <div class="pers-row header">
+          <div class="pers-cell"></div><div class="pers-cell">Tipo</div><div class="pers-cell">Cosa puoi fare</div><div class="pers-cell">Disponibile</div>
+        </div>
+        <div class="pers-row">
+          <div class="pers-lv">1</div>
+          <div class="pers-name"><div class="pers-name-title">Prompt contestuale</div><div class="pers-name-sub">Interazione diretta</div></div>
+          <div class="pers-desc">Dai istruzioni specifiche nell'interazione — "rispondi in modo formale", "usa solo dati degli ultimi 3 mesi", "struttura in bullet points". <strong>Il livello di personalizzazione più immediato.</strong></div>
+          <div class="pers-avail"><span class="avail-badge av-yes">Sì — sempre</span></div>
+        </div>
+        <div class="pers-row">
+          <div class="pers-lv">2</div>
+          <div class="pers-name"><div class="pers-name-title">Preferenze utente</div><div class="pers-name-sub">Settings del prodotto</div></div>
+          <div class="pers-desc">Preferenze di lingua, tono, output format nelle impostazioni del prodotto. Copilot Studio permette di configurare istruzioni persistenti per M365 Copilot a livello organizzazione.</div>
+          <div class="pers-avail"><span class="avail-badge av-part">Limitato</span></div>
+        </div>
+        <div class="pers-row">
+          <div class="pers-lv">3</div>
+          <div class="pers-name"><div class="pers-name-title">Plugin / Extensions</div><div class="pers-name-sub">Solo alcuni prodotti</div></div>
+          <div class="pers-desc">GitHub Copilot extensions permettono di aggiungere contesto da sistemi esterni (Jira, Sentry, ecc.). Copilot connectors in M365 accedono a dati aziendali aggiuntivi. <strong>Richiede configurazione IT.</strong></div>
+          <div class="pers-avail"><span class="avail-badge av-part">Solo alcuni prodotti</span></div>
+        </div>
+        <div class="pers-row">
+          <div class="pers-lv">4</div>
+          <div class="pers-name"><div class="pers-name-title">API / Webhooks</div><div class="pers-name-sub">Molto raro</div></div>
+          <div class="pers-desc">Pochissimi agenti embedded espongono API per integrazione esterna. Operator (OpenAI) ha un'API. La maggior parte è completamente chiusa a integrazioni programmatiche.</div>
+          <div class="pers-avail"><span class="avail-badge av-no">Raro</span></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="block">
+      <div class="block-header"><span class="block-icon">🛠️</span><span class="block-title">Cosa ti serve</span></div>
+      <div class="setup-grid">
+        <div class="setup-cell">
+          <div class="setup-cell-title">Software e piattaforme</div>
+          <ul class="setup-list">
+            <li>Piano del prodotto host che include la funzionalità AI (spesso add-on)</li>
+            <li>Account del prodotto host già attivo (GitHub, Microsoft 365, Notion…)</li>
+            <li>Nessun software aggiuntivo — l'agente appare dentro il prodotto già installato</li>
+          </ul>
+        </div>
+        <div class="setup-cell">
+          <div class="setup-cell-title">Hardware</div>
+          <ul class="setup-list">
+            <li><strong>Nessun hardware speciale</strong> — tutto cloud</li>
+            <li>PC/Mac con il prodotto host già installato</li>
+            <li>Connessione internet stabile</li>
+          </ul>
+        </div>
+        <div class="setup-cell">
+          <div class="setup-cell-title">Competenze richieste</div>
+          <ul class="setup-list">
+            <li>Nessuna competenza tecnica — è pensato per l'utente finale normale</li>
+            <li>Conoscenza del prodotto host (già posseduta dagli utenti attuali)</li>
+            <li>Per plugin/extensions avanzate: IT admin con conoscenza della piattaforma</li>
+          </ul>
+        </div>
+        <div class="setup-cell">
+          <div class="setup-cell-title">Setup tipico</div>
+          <ul class="setup-list">
+            <li><strong>Attivazione:</strong> click su "Abilita" o aggiornamento del piano</li>
+            <li><strong>Onboarding utente:</strong> 0-2 ore (l'interfaccia è quella già nota)</li>
+            <li><strong>Configurazione organizzazione:</strong> 1-3 giorni per IT admin (policy, permessi)</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    <div class="block">
+      <div class="block-header"><span class="block-icon">🔌</span><span class="block-title">Interfaccia e integrazione multi-agentica</span></div>
+      <div class="iface-grid">
+        <div class="iface-block">
+          <div class="iface-block-title">Interfaccia tipica</div>
+          <ul class="iface-list">
+            <li><strong>Inline nel documento/codice</strong> — il suggerimento appare dove stai lavorando</li>
+            <li><strong>Pannello laterale</strong> — chat contestuale a fianco del contenuto principale</li>
+            <li><strong>Comando naturale</strong> — "/" o "@" per attivare l'agente nel contesto corrente</li>
+            <li><strong>Automazione silente</strong> — l'agente agisce in background (note di meeting, riassunti email)</li>
+          </ul>
+        </div>
+        <div class="iface-block">
+          <div class="iface-block-title">Interfaccia IT/Admin</div>
+          <ul class="iface-list">
+            <li><strong>Admin center del prodotto</strong> — stessa console di gestione già usata per il prodotto host</li>
+            <li><strong>Policy di utilizzo</strong> — chi può usare la funzione, su quali dati</li>
+            <li><strong>Audit log</strong> — traccia delle interazioni per compliance</li>
+            <li><strong>Gestione plugin/extensions</strong> per chi li supporta</li>
+          </ul>
+        </div>
+      </div>
+      <div class="multiagent-box">
+        <div class="ma-label">Integrazione<br>multi-agentica</div>
+        <div class="ma-content">
+          <h4>Come si integra in un sistema multi-agent</h4>
+          <p>Gli agenti embedded sono la categoria <strong>più difficile da integrare</strong> in sistemi multi-agent, perché sono progettati per l'interazione umana diretta, non per essere chiamati programmaticamente da altri agenti. Non espongono API pubbliche nella maggior parte dei casi.</p>
+          <p>L'eccezione principale è <strong>Operator di OpenAI</strong>, che ha un'API e può essere usato come worker in sistemi più ampi per task che richiedono navigazione web. GitHub Copilot Extensions permettono ad agenti esterni di "comparire" dentro l'IDE di Copilot come strumenti aggiuntivi — un approccio inverso interessante.</p>
+          <p>Il caso d'uso multi-agent più realistico: l'utente usa manualmente questi agenti per parti specifiche del lavoro, mentre il sistema multi-agent automatizzato gestisce altri componenti in parallelo — non c'è comunicazione diretta tra i due livelli.</p>
+          <div class="ma-roles">
+            <span class="ma-role">Ruolo tipico: Assistente umano (non automatizzabile)</span>
+            <span class="ma-role">Accesso: Solo UI manuale (eccezione: Operator API)</span>
+            <span class="ma-role">Limite: Non chiamabile programmaticamente</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<footer>
+  <span>Agenti AI · Approfondimento 5 categorie · Febbraio 2026</span>
+  <span>agenti-ai-5-categorie.html</span>
+</footer>
+
+<script>
+function showCat(n) {
+  document.querySelectorAll('.cat-panel').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.cat-tab').forEach(t => t.classList.remove('active'));
+  document.getElementById('panel-' + n).classList.add('active');
+  document.querySelector('.cat-tab[data-cat="' + n + '"]').classList.add('active');
+  window.scrollTo({ top: document.querySelector('.cat-nav').offsetTop - 10, behavior: 'smooth' });
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,655 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Decisioni per Stack — Matrice</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;700;800&family=Fira+Code:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #0f0f0f;
+  --grid: rgba(255,255,255,0.04);
+  --c1: #e8f542;
+  --c2: #42c8f5;
+  --c3: #42f59b;
+  --c4: #f5a442;
+  --c5: #c342f5;
+  --text: rgba(255,255,255,0.85);
+  --muted: rgba(255,255,255,0.35);
+  --dim: rgba(255,255,255,0.08);
+  --border: rgba(255,255,255,0.08);
+  --yes-bg: rgba(66,245,155,0.07);
+  --no-bg: rgba(245,66,66,0.07);
+  --partial-bg: rgba(245,164,66,0.07);
+}
+
+* { margin:0; padding:0; box-sizing:border-box; }
+html { scroll-behavior: smooth; }
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: 'Fira Code', monospace;
+  font-size: 13px;
+  line-height: 1.6;
+  background-image:
+    linear-gradient(var(--grid) 1px, transparent 1px),
+    linear-gradient(90deg, var(--grid) 1px, transparent 1px);
+  background-size: 40px 40px;
+  min-height: 100vh;
+}
+
+/* ── HEADER ── */
+header {
+  padding: 48px 48px 32px;
+  border-bottom: 1px solid var(--border);
+}
+
+.eyebrow {
+  font-size: 10px;
+  letter-spacing: 3px;
+  text-transform: uppercase;
+  color: var(--muted);
+  margin-bottom: 10px;
+}
+
+header h1 {
+  font-family: 'Syne', sans-serif;
+  font-size: clamp(22px, 3vw, 38px);
+  font-weight: 800;
+  letter-spacing: -0.5px;
+  line-height: 1.1;
+}
+
+header p {
+  margin-top: 10px;
+  font-size: 12px;
+  color: var(--muted);
+}
+
+/* ── LEGENDA ── */
+.legend {
+  display: flex;
+  gap: 28px;
+  padding: 16px 48px;
+  border-bottom: 1px solid var(--border);
+  flex-wrap: wrap;
+}
+
+.legend-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 11px;
+  color: var(--muted);
+}
+
+.legend-badge {
+  font-size: 10px;
+  padding: 2px 10px;
+  border: 1px solid;
+  font-weight: 500;
+}
+
+.legend-badge.yes   { border-color: #42f59b; color: #42f59b; background: var(--yes-bg); }
+.legend-badge.no    { border-color: #f54242; color: #f54242; background: var(--no-bg); }
+.legend-badge.part  { border-color: #f5a442; color: #f5a442; background: var(--partial-bg); }
+
+/* ── TABLE WRAPPER ── */
+.table-wrap {
+  overflow-x: auto;
+  padding: 32px 48px 64px;
+}
+
+/* ── MAIN TABLE ── */
+table {
+  width: 100%;
+  border-collapse: collapse;
+  min-width: 860px;
+}
+
+/* ── HEADER ROW ── */
+thead th {
+  padding: 0;
+  border-right: 1px solid var(--border);
+  vertical-align: bottom;
+}
+
+thead th:last-child { border-right: none; }
+
+.th-inner {
+  padding: 16px 20px 20px;
+  text-align: left;
+}
+
+/* Decision column */
+thead th.col-decision .th-inner {
+  font-size: 10px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+/* Stack columns */
+thead th.col-stack .th-inner {
+  border-top: 3px solid;
+}
+
+.col-c1 .th-inner { border-color: var(--c1); }
+.col-c2 .th-inner { border-color: var(--c2); }
+.col-c3 .th-inner { border-color: var(--c3); }
+.col-c4 .th-inner { border-color: var(--c4); }
+.col-c5 .th-inner { border-color: var(--c5); }
+
+.th-stack-num {
+  font-size: 9px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  margin-bottom: 6px;
+}
+.col-c1 .th-stack-num { color: var(--c1); }
+.col-c2 .th-stack-num { color: var(--c2); }
+.col-c3 .th-stack-num { color: var(--c3); }
+.col-c4 .th-stack-num { color: var(--c4); }
+.col-c5 .th-stack-num { color: var(--c5); }
+
+.th-stack-name {
+  font-family: 'Syne', sans-serif;
+  font-size: 13px;
+  font-weight: 700;
+  line-height: 1.2;
+  color: var(--text);
+}
+
+/* ── GROUP HEADER ROWS ── */
+tr.group-header td {
+  background: rgba(255,255,255,0.03);
+  border-top: 1px solid rgba(255,255,255,0.12);
+  border-bottom: 1px solid var(--border);
+  padding: 10px 20px;
+  font-size: 9px;
+  letter-spacing: 3px;
+  text-transform: uppercase;
+  color: var(--muted);
+  font-weight: 500;
+}
+
+/* ── DATA ROWS ── */
+tbody tr.data-row {
+  border-bottom: 1px solid var(--border);
+  transition: background 0.15s;
+}
+
+tbody tr.data-row:hover {
+  background: rgba(255,255,255,0.025);
+}
+
+/* Decision label cell */
+td.cell-decision {
+  padding: 16px 20px;
+  border-right: 1px solid var(--border);
+  vertical-align: top;
+  min-width: 200px;
+}
+
+.dec-name {
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--text);
+  margin-bottom: 4px;
+}
+
+.dec-desc {
+  font-size: 10px;
+  color: var(--muted);
+  line-height: 1.5;
+}
+
+/* Stack value cells */
+td.cell-val {
+  padding: 14px 18px;
+  border-right: 1px solid var(--border);
+  vertical-align: top;
+  min-width: 160px;
+}
+
+td.cell-val:last-child { border-right: none; }
+
+/* YES / NO / PARTIAL backgrounds */
+td.cell-val.yes     { background: var(--yes-bg); }
+td.cell-val.no      { background: var(--no-bg); }
+td.cell-val.partial { background: var(--partial-bg); }
+
+/* Badge inside cell */
+.val-badge {
+  display: inline-block;
+  font-size: 10px;
+  font-weight: 500;
+  padding: 2px 10px;
+  border: 1px solid;
+  margin-bottom: 7px;
+  letter-spacing: 0.5px;
+}
+
+.yes    .val-badge { border-color: #42f59b; color: #42f59b; }
+.no     .val-badge { border-color: #f54242; color: #f54242; }
+.partial .val-badge { border-color: #f5a442; color: #f5a442; }
+
+.val-detail {
+  font-size: 10px;
+  color: var(--muted);
+  line-height: 1.5;
+}
+
+/* ── FOOTER ── */
+footer {
+  border-top: 1px solid var(--border);
+  padding: 20px 48px;
+  display: flex;
+  justify-content: space-between;
+  font-size: 10px;
+  color: var(--muted);
+  letter-spacing: 1px;
+}
+
+@media (max-width: 700px) {
+  header { padding: 32px 20px 24px; }
+  .legend { padding: 12px 20px; }
+  .table-wrap { padding: 20px 20px 48px; }
+  footer { padding: 16px 20px; flex-direction: column; gap: 6px; }
+}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="eyebrow">Schema decisionale · Agenti AI · Stack tecnologici</div>
+  <h1>Quali decisioni prendi tu<br>per ogni stack?</h1>
+  <p>Ogni riga è una decisione. Ogni colonna è uno stack. Le celle mostrano se la decisione è tua, parziale o gestita da altri.</p>
+</header>
+
+<div class="legend">
+  <div class="legend-item"><span class="legend-badge yes">SÌ</span> Decisione interamente tua</div>
+  <div class="legend-item"><span class="legend-badge part">PARZIALE</span> Decidi entro limiti imposti</div>
+  <div class="legend-item"><span class="legend-badge no">NO</span> Gestito dal framework / vendor</div>
+</div>
+
+<div class="table-wrap">
+<table>
+  <thead>
+    <tr>
+      <th class="col-decision">
+        <div class="th-inner">Decisione</div>
+      </th>
+      <th class="col-stack col-c1">
+        <div class="th-inner">
+          <div class="th-stack-num">01</div>
+          <div class="th-stack-name">Custom<br>Vanilla</div>
+        </div>
+      </th>
+      <th class="col-stack col-c2">
+        <div class="th-inner">
+          <div class="th-stack-num">02</div>
+          <div class="th-stack-name">Framework<br>Orchestrazione</div>
+        </div>
+      </th>
+      <th class="col-stack col-c3">
+        <div class="th-inner">
+          <div class="th-stack-num">03</div>
+          <div class="th-stack-name">Multi-<br>Agent</div>
+        </div>
+      </th>
+      <th class="col-stack col-c4">
+        <div class="th-inner">
+          <div class="th-stack-num">04</div>
+          <div class="th-stack-name">No-code<br>Low-code</div>
+        </div>
+      </th>
+      <th class="col-stack col-c5">
+        <div class="th-inner">
+          <div class="th-stack-num">05</div>
+          <div class="th-stack-name">Proprietario<br>Verticale</div>
+        </div>
+      </th>
+    </tr>
+  </thead>
+  <tbody>
+
+    <!-- ── GRUPPO: MODELLO ── -->
+    <tr class="group-header"><td colspan="6">Modello AI</td></tr>
+
+    <tr class="data-row">
+      <td class="cell-decision">
+        <div class="dec-name">Quale LLM usare</div>
+        <div class="dec-desc">GPT-4, Claude, Gemini, Llama…</div>
+      </td>
+      <td class="cell-val yes"><span class="val-badge">SÌ</span><div class="val-detail">Libertà totale. Qualsiasi provider via API.</div></td>
+      <td class="cell-val yes"><span class="val-badge">SÌ</span><div class="val-detail">Libertà totale. I framework supportano tutti i provider.</div></td>
+      <td class="cell-val yes"><span class="val-badge">SÌ</span><div class="val-detail">Puoi usare modelli diversi per agenti diversi.</div></td>
+      <td class="cell-val partial"><span class="val-badge">PARZIALE</span><div class="val-detail">Scegli tra i provider integrati nella piattaforma.</div></td>
+      <td class="cell-val no"><span class="val-badge">NO</span><div class="val-detail">Il vendor sceglie e può cambiare senza preavviso.</div></td>
+    </tr>
+
+    <tr class="data-row">
+      <td class="cell-decision">
+        <div class="dec-name">Quale versione del modello</div>
+        <div class="dec-desc">Es. GPT-4o vs GPT-4o-mini</div>
+      </td>
+      <td class="cell-val yes"><span class="val-badge">SÌ</span><div class="val-detail">Scegli tu, cambi quando vuoi.</div></td>
+      <td class="cell-val yes"><span class="val-badge">SÌ</span><div class="val-detail">Configurabile nel framework.</div></td>
+      <td class="cell-val yes"><span class="val-badge">SÌ</span><div class="val-detail">Puoi ottimizzare: modello leggero per routing, potente per ragionamento.</div></td>
+      <td class="cell-val partial"><span class="val-badge">PARZIALE</span><div class="val-detail">Dipende dai connector disponibili sulla piattaforma.</div></td>
+      <td class="cell-val no"><span class="val-badge">NO</span><div class="val-detail">Opaco. Non sai quale versione viene usata.</div></td>
+    </tr>
+
+    <tr class="data-row">
+      <td class="cell-decision">
+        <div class="dec-name">Parametri del modello</div>
+        <div class="dec-desc">Temperatura, max token, top-p…</div>
+      </td>
+      <td class="cell-val yes"><span class="val-badge">SÌ</span><div class="val-detail">Controllo completo su ogni parametro.</div></td>
+      <td class="cell-val yes"><span class="val-badge">SÌ</span><div class="val-detail">Configurabili, con default ragionevoli già impostati.</div></td>
+      <td class="cell-val yes"><span class="val-badge">SÌ</span><div class="val-detail">Configurabili per ogni singolo agente.</div></td>
+      <td class="cell-val partial"><span class="val-badge">PARZIALE</span><div class="val-detail">Solo i parametri esposti dall'interfaccia.</div></td>
+      <td class="cell-val no"><span class="val-badge">NO</span><div class="val-detail">Gestiti internamente dal vendor.</div></td>
+    </tr>
+
+    <tr class="data-row">
+      <td class="cell-decision">
+        <div class="dec-name">Usare un modello self-hosted</div>
+        <div class="dec-desc">Llama, Mistral su server proprio — nessun dato esce</div>
+      </td>
+      <td class="cell-val yes"><span class="val-badge">SÌ</span><div class="val-detail">Piena libertà. Serve GPU adeguata.</div></td>
+      <td class="cell-val yes"><span class="val-badge">SÌ</span><div class="val-detail">I framework supportano endpoint locali (Ollama, vLLM).</div></td>
+      <td class="cell-val yes"><span class="val-badge">SÌ</span><div class="val-detail">Possibile, ma aumenta la complessità infrastrutturale.</div></td>
+      <td class="cell-val partial"><span class="val-badge">PARZIALE</span><div class="val-detail">Solo alcune piattaforme (es. Flowise self-hosted) lo supportano.</div></td>
+      <td class="cell-val no"><span class="val-badge">NO</span><div class="val-detail">Non applicabile. Il modello è del vendor.</div></td>
+    </tr>
+
+
+    <!-- ── GRUPPO: ARCHITETTURA ── -->
+    <tr class="group-header"><td colspan="6">Architettura dell'agente</td></tr>
+
+    <tr class="data-row">
+      <td class="cell-decision">
+        <div class="dec-name">Come funziona il loop</div>
+        <div class="dec-desc">Quando itera, quando si ferma, come gestisce gli errori</div>
+      </td>
+      <td class="cell-val yes"><span class="val-badge">SÌ</span><div class="val-detail">Scrivi tu ogni riga del loop in Python.</div></td>
+      <td class="cell-val partial"><span class="val-badge">PARZIALE</span><div class="val-detail">Il framework gestisce il loop. Configuri il comportamento.</div></td>
+      <td class="cell-val partial"><span class="val-badge">PARZIALE</span><div class="val-detail">Il framework gestisce il loop di ogni agente. Tu definisci il grafo.</div></td>
+      <td class="cell-val no"><span class="val-badge">NO</span><div class="val-detail">Gestito dalla piattaforma. Non è accessibile.</div></td>
+      <td class="cell-val no"><span class="val-badge">NO</span><div class="val-detail">Completamente opaco.</div></td>
+    </tr>
+
+    <tr class="data-row">
+      <td class="cell-decision">
+        <div class="dec-name">Pattern di ragionamento</div>
+        <div class="dec-desc">ReAct, Plan-and-Execute, Reflexion…</div>
+      </td>
+      <td class="cell-val yes"><span class="val-badge">SÌ</span><div class="val-detail">Implementi tu il pattern che vuoi.</div></td>
+      <td class="cell-val yes"><span class="val-badge">SÌ</span><div class="val-detail">Scegli tra i pattern prebuilt del framework.</div></td>
+      <td class="cell-val yes"><span class="val-badge">SÌ</span><div class="val-detail">Configurabile per ogni agente nel sistema.</div></td>
+      <td class="cell-val no"><span class="val-badge">NO</span><div class="val-detail">Fisso nella piattaforma.</div></td>
+      <td class="cell-val no"><span class="val-badge">NO</span><div class="val-detail">Non accessibile.</div></td>
+    </tr>
+
+    <tr class="data-row">
+      <td class="cell-decision">
+        <div class="dec-name">Prompt di sistema</div>
+        <div class="dec-desc">Chi è l'agente, cosa sa fare, come si comporta</div>
+      </td>
+      <td class="cell-val yes"><span class="val-badge">SÌ</span><div class="val-detail">Scrivi tu interamente il system prompt.</div></td>
+      <td class="cell-val yes"><span class="val-badge">SÌ</span><div class="val-detail">Scrivi tu, il framework lo inserisce nel formato corretto.</div></td>
+      <td class="cell-val yes"><span class="val-badge">SÌ</span><div class="val-detail">Ogni agente ha il suo prompt di sistema dedicato.</div></td>
+      <td class="cell-val yes"><span class="val-badge">SÌ</span><div class="val-detail">Campo di testo editabile nell'interfaccia.</div></td>
+      <td class="cell-val partial"><span class="val-badge">PARZIALE</span><div class="val-detail">Personalizzi tono e regole nei parametri esposti. Il prompt base è del vendor.</div></td>
+    </tr>
+
+    <tr class="data-row">
+      <td class="cell-decision">
+        <div class="dec-name">Gestione degli errori e retry</div>
+        <div class="dec-desc">Cosa succede se uno strumento fallisce</div>
+      </td>
+      <td class="cell-val yes"><span class="val-badge">SÌ</span><div class="val-detail">Scrivi tu la logica di retry, fallback, escalation.</div></td>
+      <td class="cell-val partial"><span class="val-badge">PARZIALE</span><div class="val-detail">Il framework ha default. Puoi sovrascrivere il comportamento.</div></td>
+      <td class="cell-val partial"><span class="val-badge">PARZIALE</span><div class="val-detail">Configurabile, ma più complesso su sistemi con più agenti.</div></td>
+      <td class="cell-val no"><span class="val-badge">NO</span><div class="val-detail">Gestito dalla piattaforma con comportamento fisso.</div></td>
+      <td class="cell-val no"><span class="val-badge">NO</span><div class="val-detail">Il vendor gestisce internamente.</div></td>
+    </tr>
+
+
+    <!-- ── GRUPPO: STRUMENTI ── -->
+    <tr class="group-header"><td colspan="6">Strumenti (tool use)</td></tr>
+
+    <tr class="data-row">
+      <td class="cell-decision">
+        <div class="dec-name">Quali strumenti esporre all'agente</div>
+        <div class="dec-desc">Ricerca web, esecuzione codice, API esterne…</div>
+      </td>
+      <td class="cell-val yes"><span class="val-badge">SÌ</span><div class="val-detail">Definisci tu ogni funzione che l'agente può chiamare.</div></td>
+      <td class="cell-val yes"><span class="val-badge">SÌ</span><div class="val-detail">Scegli tra tool prebuilt + puoi aggiungere tool custom.</div></td>
+      <td class="cell-val yes"><span class="val-badge">SÌ</span><div class="val-detail">Ogni agente ha il suo set di strumenti. Tu definisci chi può fare cosa.</div></td>
+      <td class="cell-val partial"><span class="val-badge">PARZIALE</span><div class="val-detail">Scegli dai connector disponibili. Limitato al catalogo della piattaforma.</div></td>
+      <td class="cell-val partial"><span class="val-badge">PARZIALE</span><div class="val-detail">Il vendor definisce gli strumenti base. Puoi aggiungere API custom in alcuni casi.</div></td>
+    </tr>
+
+    <tr class="data-row">
+      <td class="cell-decision">
+        <div class="dec-name">Schema input/output degli strumenti</div>
+        <div class="dec-desc">Come il modello chiama lo strumento e come riceve il risultato</div>
+      </td>
+      <td class="cell-val yes"><span class="val-badge">SÌ</span><div class="val-detail">Definisci tu ogni parametro e il formato della risposta.</div></td>
+      <td class="cell-val partial"><span class="val-badge">PARZIALE</span><div class="val-detail">Il framework ha uno schema standard. Puoi customizzare i tool custom.</div></td>
+      <td class="cell-val partial"><span class="val-badge">PARZIALE</span><div class="val-detail">Come il framework, con complessità aggiuntiva per la comunicazione inter-agente.</div></td>
+      <td class="cell-val no"><span class="val-badge">NO</span><div class="val-detail">Gestito dalla piattaforma.</div></td>
+      <td class="cell-val no"><span class="val-badge">NO</span><div class="val-detail">Non accessibile.</div></td>
+    </tr>
+
+    <tr class="data-row">
+      <td class="cell-decision">
+        <div class="dec-name">Integrare API aziendali custom</div>
+        <div class="dec-desc">CRM interno, gestionale, database proprietario…</div>
+      </td>
+      <td class="cell-val yes"><span class="val-badge">SÌ</span><div class="val-detail">Scrivi una funzione Python che chiama qualsiasi API.</div></td>
+      <td class="cell-val yes"><span class="val-badge">SÌ</span><div class="val-detail">Crei un tool custom nel framework. Flessibile.</div></td>
+      <td class="cell-val yes"><span class="val-badge">SÌ</span><div class="val-detail">Come il framework, assegnabile a specifici agenti.</div></td>
+      <td class="cell-val partial"><span class="val-badge">PARZIALE</span><div class="val-detail">Possibile se la piattaforma ha un nodo "HTTP request" o webhook.</div></td>
+      <td class="cell-val partial"><span class="val-badge">PARZIALE</span><div class="val-detail">Dipende dal vendor. Alcuni lo permettono con configurazione avanzata.</div></td>
+    </tr>
+
+
+    <!-- ── GRUPPO: MEMORIA ── -->
+    <tr class="group-header"><td colspan="6">Memoria e dati</td></tr>
+
+    <tr class="data-row">
+      <td class="cell-decision">
+        <div class="dec-name">Tipo di memoria</div>
+        <div class="dec-desc">In-context, vector DB, database SQL…</div>
+      </td>
+      <td class="cell-val yes"><span class="val-badge">SÌ</span><div class="val-detail">Scegli e implementi tu la strategia di memoria.</div></td>
+      <td class="cell-val yes"><span class="val-badge">SÌ</span><div class="val-detail">Scegli tra componenti prebuilt (ConversationMemory, VectorStore, ecc.).</div></td>
+      <td class="cell-val yes"><span class="val-badge">SÌ</span><div class="val-detail">Progetti lo stato condiviso tra agenti — decisione critica.</div></td>
+      <td class="cell-val partial"><span class="val-badge">PARZIALE</span><div class="val-detail">Scegli il nodo memoria dall'interfaccia. Opzioni limitate.</div></td>
+      <td class="cell-val no"><span class="val-badge">NO</span><div class="val-detail">Gestita dal vendor internamente.</div></td>
+    </tr>
+
+    <tr class="data-row">
+      <td class="cell-decision">
+        <div class="dec-name">Quale vector database</div>
+        <div class="dec-desc">Pinecone, Chroma, pgvector, Weaviate…</div>
+      </td>
+      <td class="cell-val yes"><span class="val-badge">SÌ</span><div class="val-detail">Libertà totale. Integri quello che preferisci.</div></td>
+      <td class="cell-val yes"><span class="val-badge">SÌ</span><div class="val-detail">Scegli tra le integrazioni del framework. Tutte le opzioni principali sono supportate.</div></td>
+      <td class="cell-val yes"><span class="val-badge">SÌ</span><div class="val-detail">Come il framework.</div></td>
+      <td class="cell-val partial"><span class="val-badge">PARZIALE</span><div class="val-detail">Alcune piattaforme permettono di connettere un DB esterno. Non sempre disponibile.</div></td>
+      <td class="cell-val no"><span class="val-badge">NO</span><div class="val-detail">Il vendor usa il proprio storage interno.</div></td>
+    </tr>
+
+    <tr class="data-row">
+      <td class="cell-decision">
+        <div class="dec-name">Strategia RAG</div>
+        <div class="dec-desc">Come suddividere i doc (chunking), come recuperare i pezzi rilevanti</div>
+      </td>
+      <td class="cell-val yes"><span class="val-badge">SÌ</span><div class="val-detail">Implementi tu ogni aspetto del pipeline RAG.</div></td>
+      <td class="cell-val yes"><span class="val-badge">SÌ</span><div class="val-detail">Scegli la strategia di chunking e retrieval tra quelle offerte dal framework.</div></td>
+      <td class="cell-val yes"><span class="val-badge">SÌ</span><div class="val-detail">Configurabile, tipicamente gestito da un agente dedicato al retrieval.</div></td>
+      <td class="cell-val partial"><span class="val-badge">PARZIALE</span><div class="val-detail">Puoi caricare documenti e la piattaforma gestisce il RAG. Poca granularità.</div></td>
+      <td class="cell-val no"><span class="val-badge">NO</span><div class="val-detail">Gestito internamente. Accedi ai dati dell'ecosistema del vendor.</div></td>
+    </tr>
+
+    <tr class="data-row">
+      <td class="cell-decision">
+        <div class="dec-name">Dove risiedono fisicamente i dati</div>
+        <div class="dec-desc">Server propri, cloud europeo, cloud del vendor…</div>
+      </td>
+      <td class="cell-val yes"><span class="val-badge">SÌ</span><div class="val-detail">Controllo totale. Puoi mantenere tutto on-premise.</div></td>
+      <td class="cell-val yes"><span class="val-badge">SÌ</span><div class="val-detail">Dipende da dove deploya il modello e il DB. Tua scelta.</div></td>
+      <td class="cell-val yes"><span class="val-badge">SÌ</span><div class="val-detail">Come il framework, con più componenti da gestire.</div></td>
+      <td class="cell-val partial"><span class="val-badge">PARZIALE</span><div class="val-detail">Alcune piattaforme sono self-hostabili (Flowise, n8n). Altre solo cloud.</div></td>
+      <td class="cell-val no"><span class="val-badge">NO</span><div class="val-detail">I dati vanno nei sistemi del vendor. Verifica data residency nel contratto.</div></td>
+    </tr>
+
+
+    <!-- ── GRUPPO: MULTI-AGENT SPECIFICO ── -->
+    <tr class="group-header"><td colspan="6">Coordinamento (rilevante soprattutto per multi-agent)</td></tr>
+
+    <tr class="data-row">
+      <td class="cell-decision">
+        <div class="dec-name">Quanti agenti e con quali ruoli</div>
+        <div class="dec-desc">Ricercatore, scrittore, revisore, orchestratore…</div>
+      </td>
+      <td class="cell-val yes"><span class="val-badge">SÌ</span><div class="val-detail">Decidi tutto, implementi tutto.</div></td>
+      <td class="cell-val partial"><span class="val-badge">PARZIALE</span><div class="val-detail">LangGraph lo supporta. Un singolo agente è il caso standard.</div></td>
+      <td class="cell-val yes"><span class="val-badge">SÌ</span><div class="val-detail">Decisione centrale nell'architettura multi-agent. Critica.</div></td>
+      <td class="cell-val no"><span class="val-badge">NO</span><div class="val-detail">Non applicabile. Singolo flusso.</div></td>
+      <td class="cell-val no"><span class="val-badge">NO</span><div class="val-detail">Non applicabile. Architettura interna del vendor.</div></td>
+    </tr>
+
+    <tr class="data-row">
+      <td class="cell-decision">
+        <div class="dec-name">Pattern di coordinamento</div>
+        <div class="dec-desc">Gerarchico, sequenziale, mesh (agenti che si parlano liberi)</div>
+      </td>
+      <td class="cell-val yes"><span class="val-badge">SÌ</span><div class="val-detail">Implementi tu il pattern di comunicazione.</div></td>
+      <td class="cell-val partial"><span class="val-badge">PARZIALE</span><div class="val-detail">LangGraph supporta pattern multipli. Gli altri framework meno.</div></td>
+      <td class="cell-val yes"><span class="val-badge">SÌ</span><div class="val-detail">Scegli il pattern nel framework (CrewAI: sequenziale o gerarchico; AutoGen: conversazionale).</div></td>
+      <td class="cell-val no"><span class="val-badge">NO</span><div class="val-detail">Non applicabile.</div></td>
+      <td class="cell-val no"><span class="val-badge">NO</span><div class="val-detail">Non applicabile.</div></td>
+    </tr>
+
+    <tr class="data-row">
+      <td class="cell-decision">
+        <div class="dec-name">Cosa gli agenti si passano</div>
+        <div class="dec-desc">Struttura e formato dello stato condiviso</div>
+      </td>
+      <td class="cell-val yes"><span class="val-badge">SÌ</span><div class="val-detail">Definisci tu le strutture dati di comunicazione.</div></td>
+      <td class="cell-val partial"><span class="val-badge">PARZIALE</span><div class="val-detail">LangGraph ha un oggetto stato tipizzato. Configuri tu i campi.</div></td>
+      <td class="cell-val yes"><span class="val-badge">SÌ</span><div class="val-detail">Decisione di design fondamentale. Sbagliare qui rompe tutto.</div></td>
+      <td class="cell-val no"><span class="val-badge">NO</span><div class="val-detail">Non applicabile.</div></td>
+      <td class="cell-val no"><span class="val-badge">NO</span><div class="val-detail">Non applicabile.</div></td>
+    </tr>
+
+
+    <!-- ── GRUPPO: CONTROLLO E SICUREZZA ── -->
+    <tr class="group-header"><td colspan="6">Controllo, sicurezza e governance</td></tr>
+
+    <tr class="data-row">
+      <td class="cell-decision">
+        <div class="dec-name">Human in the loop</div>
+        <div class="dec-desc">Dove l'agente si ferma e chiede conferma all'umano</div>
+      </td>
+      <td class="cell-val yes"><span class="val-badge">SÌ</span><div class="val-detail">Implementi tu i checkpoint nel codice.</div></td>
+      <td class="cell-val yes"><span class="val-badge">SÌ</span><div class="val-detail">LangGraph ha interrupt nativo. Negli altri framework si implementa manualmente.</div></td>
+      <td class="cell-val yes"><span class="val-badge">SÌ</span><div class="val-detail">Critico — scegli in quali punti del grafo inserire approvazioni umane.</div></td>
+      <td class="cell-val partial"><span class="val-badge">PARZIALE</span><div class="val-detail">Alcune piattaforme lo supportano. Non universale.</div></td>
+      <td class="cell-val partial"><span class="val-badge">PARZIALE</span><div class="val-detail">Configurabile nei parametri del vendor (es. approvazioni in Agentforce).</div></td>
+    </tr>
+
+    <tr class="data-row">
+      <td class="cell-decision">
+        <div class="dec-name">Quali dati rendere accessibili</div>
+        <div class="dec-desc">Cosa l'agente può leggere e scrivere</div>
+      </td>
+      <td class="cell-val yes"><span class="val-badge">SÌ</span><div class="val-detail">Decidi tu quali funzioni esponi e con quali permessi.</div></td>
+      <td class="cell-val yes"><span class="val-badge">SÌ</span><div class="val-detail">Configuri i tool e i permessi di accesso.</div></td>
+      <td class="cell-val yes"><span class="val-badge">SÌ</span><div class="val-detail">Puoi granulare per agente: chi vede cosa.</div></td>
+      <td class="cell-val partial"><span class="val-badge">PARZIALE</span><div class="val-detail">Configuri le connessioni, ma con visibilità limitata su cosa passa davvero.</div></td>
+      <td class="cell-val yes"><span class="val-badge">SÌ</span><div class="val-detail">Decidi quali oggetti/record del sistema il vendor può usare. Decisione di privacy critica.</div></td>
+    </tr>
+
+    <tr class="data-row">
+      <td class="cell-decision">
+        <div class="dec-name">Logging e audit trail</div>
+        <div class="dec-desc">Traccia di cosa ha fatto l'agente e perché</div>
+      </td>
+      <td class="cell-val yes"><span class="val-badge">SÌ</span><div class="val-detail">Implementi tu il sistema di logging.</div></td>
+      <td class="cell-val yes"><span class="val-badge">SÌ</span><div class="val-detail">LangSmith e tool simili tracciano ogni step del ragionamento.</div></td>
+      <td class="cell-val partial"><span class="val-badge">PARZIALE</span><div class="val-detail">Disponibile ma più complesso — ogni agente va monitorato separatamente.</div></td>
+      <td class="cell-val partial"><span class="val-badge">PARZIALE</span><div class="val-detail">Dashboard della piattaforma. Limitata rispetto a soluzioni custom.</div></td>
+      <td class="cell-val partial"><span class="val-badge">PARZIALE</span><div class="val-detail">Il vendor offre log, ma con granularità e formato fissi.</div></td>
+    </tr>
+
+    <tr class="data-row">
+      <td class="cell-decision">
+        <div class="dec-name">Limiti di comportamento dell'agente</div>
+        <div class="dec-desc">Cosa non può fare, che azioni sono vietate</div>
+      </td>
+      <td class="cell-val yes"><span class="val-badge">SÌ</span><div class="val-detail">Totale responsabilità tua. Implementi guardrail nel codice.</div></td>
+      <td class="cell-val yes"><span class="val-badge">SÌ</span><div class="val-detail">Puoi aggiungere guardrail. Alcuni framework hanno componenti predefiniti.</div></td>
+      <td class="cell-val yes"><span class="val-badge">SÌ</span><div class="val-detail">Più critico — più agenti = più superficie da proteggere.</div></td>
+      <td class="cell-val partial"><span class="val-badge">PARZIALE</span><div class="val-detail">Definisci nel prompt e nella configurazione. La piattaforma aggiunge i propri limiti.</div></td>
+      <td class="cell-val partial"><span class="val-badge">PARZIALE</span><div class="val-detail">Configuri parametri esposti. Il vendor applica i propri limiti di sicurezza.</div></td>
+    </tr>
+
+
+    <!-- ── GRUPPO: INFRASTRUTTURA ── -->
+    <tr class="group-header"><td colspan="6">Infrastruttura e deployment</td></tr>
+
+    <tr class="data-row">
+      <td class="cell-decision">
+        <div class="dec-name">Dove gira l'agente</div>
+        <div class="dec-desc">Server proprio, AWS/Azure/GCP, edge, on-premise</div>
+      </td>
+      <td class="cell-val yes"><span class="val-badge">SÌ</span><div class="val-detail">Decidi tu ogni aspetto del deployment.</div></td>
+      <td class="cell-val yes"><span class="val-badge">SÌ</span><div class="val-detail">Il framework è portabile. Deploya dove vuoi.</div></td>
+      <td class="cell-val yes"><span class="val-badge">SÌ</span><div class="val-detail">Come il framework, con più componenti da orchestrare.</div></td>
+      <td class="cell-val partial"><span class="val-badge">PARZIALE</span><div class="val-detail">Alcune piattaforme (Flowise, n8n) sono self-hostabili. Altre solo cloud.</div></td>
+      <td class="cell-val no"><span class="val-badge">NO</span><div class="val-detail">Gira sui server del vendor. Non hai scelta.</div></td>
+    </tr>
+
+    <tr class="data-row">
+      <td class="cell-decision">
+        <div class="dec-name">Come scala al crescere del carico</div>
+        <div class="dec-desc">Più utenti, più richieste in parallelo</div>
+      </td>
+      <td class="cell-val yes"><span class="val-badge">SÌ</span><div class="val-detail">Progetti e implementi tu la scalabilità.</div></td>
+      <td class="cell-val partial"><span class="val-badge">PARZIALE</span><div class="val-detail">Il framework non scala da solo. Devi configurare l'infrastruttura.</div></td>
+      <td class="cell-val partial"><span class="val-badge">PARZIALE</span><div class="val-detail">Come il framework, con complessità maggiore per il coordinamento multi-agente.</div></td>
+      <td class="cell-val no"><span class="val-badge">NO</span><div class="val-detail">La piattaforma scala automaticamente (entro i limiti del piano tariffario).</div></td>
+      <td class="cell-val no"><span class="val-badge">NO</span><div class="val-detail">Gestita dal vendor. È uno dei vantaggi principali dello stack proprietario.</div></td>
+    </tr>
+
+    <tr class="data-row">
+      <td class="cell-decision">
+        <div class="dec-name">Costo operativo e monitoraggio</div>
+        <div class="dec-desc">Quanto spendo, come lo tengo sotto controllo</div>
+      </td>
+      <td class="cell-val yes"><span class="val-badge">SÌ</span><div class="val-detail">Hai visibilità totale e puoi ottimizzare ogni chiamata API.</div></td>
+      <td class="cell-val yes"><span class="val-badge">SÌ</span><div class="val-detail">Visibilità completa + strumenti di cost tracking (LangSmith, ecc.).</div></td>
+      <td class="cell-val partial"><span class="val-badge">PARZIALE</span><div class="val-detail">Visibilità alta ma i costi sono moltiplicati per N agenti. Richiede attenzione.</div></td>
+      <td class="cell-val partial"><span class="val-badge">PARZIALE</span><div class="val-detail">Dashboard della piattaforma. Costi possono scalare male con l'uso intensivo.</div></td>
+      <td class="cell-val no"><span class="val-badge">NO</span><div class="val-detail">Canone fisso. Prevedibile ma spesso alto. Nessuna ottimizzazione possibile.</div></td>
+    </tr>
+
+  </tbody>
+</table>
+</div>
+
+<footer>
+  <span>Agenti AI · Matrice decisionale per stack · Febbraio 2026</span>
+  <span>agenti-ai-matrice-decisioni.html</span>
+</footer>
+
+</body>
+</html>

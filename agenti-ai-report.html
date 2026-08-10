@@ -1,0 +1,825 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Agenti AI — Guida Introduttiva</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=IBM+Plex+Mono:wght@400;600&family=IBM+Plex+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0e0e0e;
+    --surface: #161616;
+    --surface2: #1f1f1f;
+    --border: #2a2a2a;
+    --accent: #c8f04a;
+    --accent2: #4af0c8;
+    --text: #e8e8e0;
+    --text-muted: #888880;
+    --text-dim: #555550;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'IBM Plex Sans', sans-serif;
+    font-weight: 300;
+    line-height: 1.7;
+    min-height: 100vh;
+  }
+
+  /* HERO */
+  .hero {
+    padding: 80px 60px 60px;
+    border-bottom: 1px solid var(--border);
+    position: relative;
+    overflow: hidden;
+  }
+
+  .hero::before {
+    content: '';
+    position: absolute;
+    top: -100px; right: -100px;
+    width: 500px; height: 500px;
+    background: radial-gradient(circle, rgba(200,240,74,0.07) 0%, transparent 70%);
+    pointer-events: none;
+  }
+
+  .hero-label {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin-bottom: 24px;
+    opacity: 0;
+    animation: fadeUp 0.6s ease forwards 0.1s;
+  }
+
+  .hero h1 {
+    font-family: 'Playfair Display', serif;
+    font-size: clamp(42px, 6vw, 72px);
+    font-weight: 700;
+    line-height: 1.1;
+    letter-spacing: -1px;
+    max-width: 700px;
+    opacity: 0;
+    animation: fadeUp 0.7s ease forwards 0.2s;
+  }
+
+  .hero h1 em {
+    font-style: italic;
+    color: var(--accent);
+  }
+
+  .hero-sub {
+    margin-top: 24px;
+    font-size: 16px;
+    color: var(--text-muted);
+    max-width: 520px;
+    opacity: 0;
+    animation: fadeUp 0.7s ease forwards 0.35s;
+  }
+
+  .hero-meta {
+    margin-top: 48px;
+    display: flex;
+    gap: 40px;
+    opacity: 0;
+    animation: fadeUp 0.7s ease forwards 0.5s;
+  }
+
+  .hero-meta span {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 11px;
+    color: var(--text-dim);
+    letter-spacing: 1px;
+  }
+
+  .hero-meta strong {
+    display: block;
+    font-family: 'IBM Plex Sans', sans-serif;
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--text-muted);
+    letter-spacing: 0;
+    margin-top: 2px;
+  }
+
+  /* LAYOUT */
+  .container {
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 0 60px;
+  }
+
+  /* NAV SIDEBAR */
+  .layout {
+    display: grid;
+    grid-template-columns: 220px 1fr;
+    gap: 0;
+    min-height: calc(100vh - 300px);
+  }
+
+  .sidebar {
+    border-right: 1px solid var(--border);
+    padding: 48px 32px 48px 60px;
+    position: sticky;
+    top: 0;
+    height: 100vh;
+    overflow-y: auto;
+  }
+
+  .sidebar-label {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    color: var(--text-dim);
+    margin-bottom: 20px;
+  }
+
+  .sidebar nav a {
+    display: block;
+    font-size: 13px;
+    color: var(--text-muted);
+    text-decoration: none;
+    padding: 8px 0;
+    border-bottom: 1px solid var(--border);
+    transition: color 0.2s;
+  }
+
+  .sidebar nav a:hover { color: var(--accent); }
+
+  .sidebar nav a.sub {
+    padding-left: 12px;
+    font-size: 12px;
+    color: var(--text-dim);
+    border-bottom: none;
+  }
+
+  /* CONTENT */
+  .content {
+    padding: 48px 60px 80px;
+  }
+
+  /* SECTIONS */
+  .section {
+    margin-bottom: 80px;
+    opacity: 0;
+    transform: translateY(20px);
+    animation: fadeUp 0.6s ease forwards;
+  }
+
+  .section:nth-child(1) { animation-delay: 0.1s; }
+  .section:nth-child(2) { animation-delay: 0.2s; }
+  .section:nth-child(3) { animation-delay: 0.3s; }
+  .section:nth-child(4) { animation-delay: 0.4s; }
+  .section:nth-child(5) { animation-delay: 0.5s; }
+  .section:nth-child(6) { animation-delay: 0.6s; }
+
+  .section-header {
+    display: flex;
+    align-items: baseline;
+    gap: 16px;
+    margin-bottom: 32px;
+    padding-bottom: 16px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .section-num {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 12px;
+    color: var(--accent);
+    letter-spacing: 1px;
+    flex-shrink: 0;
+  }
+
+  .section h2 {
+    font-family: 'Playfair Display', serif;
+    font-size: clamp(22px, 3vw, 32px);
+    font-weight: 700;
+    letter-spacing: -0.5px;
+  }
+
+  .section p {
+    font-size: 15px;
+    color: var(--text-muted);
+    margin-bottom: 20px;
+    max-width: 680px;
+  }
+
+  .section p strong {
+    color: var(--text);
+    font-weight: 500;
+  }
+
+  /* COMPARISON CARDS */
+  .cards {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 1px;
+    background: var(--border);
+    border: 1px solid var(--border);
+    margin: 28px 0;
+  }
+
+  .card {
+    background: var(--surface);
+    padding: 28px;
+    transition: background 0.2s;
+  }
+
+  .card:hover { background: var(--surface2); }
+
+  .card-tag {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--accent2);
+    margin-bottom: 12px;
+  }
+
+  .card h3 {
+    font-family: 'Playfair Display', serif;
+    font-size: 18px;
+    font-weight: 700;
+    margin-bottom: 10px;
+  }
+
+  .card p {
+    font-size: 13px;
+    color: var(--text-muted);
+    margin-bottom: 0;
+  }
+
+  .card .examples {
+    margin-top: 14px;
+    padding-top: 14px;
+    border-top: 1px solid var(--border);
+  }
+
+  .card .examples span {
+    display: inline-block;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 11px;
+    background: var(--bg);
+    color: var(--text-dim);
+    padding: 3px 8px;
+    margin: 2px 2px 2px 0;
+    border: 1px solid var(--border);
+  }
+
+  /* SPECTRUM BAR */
+  .spectrum {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    padding: 28px;
+    margin: 28px 0;
+  }
+
+  .spectrum-label {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 10px;
+    color: var(--text-dim);
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    margin-bottom: 20px;
+  }
+
+  .spectrum-bar {
+    position: relative;
+    height: 4px;
+    background: linear-gradient(to right, var(--border), var(--accent));
+    margin: 32px 0 24px;
+    border-radius: 2px;
+  }
+
+  .spectrum-points {
+    display: flex;
+    justify-content: space-between;
+  }
+
+  .spectrum-point {
+    text-align: center;
+    flex: 1;
+  }
+
+  .spectrum-point .dot {
+    width: 10px; height: 10px;
+    border-radius: 50%;
+    background: var(--border);
+    border: 2px solid var(--accent);
+    margin: 0 auto 8px;
+    margin-top: -19px;
+  }
+
+  .spectrum-point:last-child .dot { background: var(--accent); }
+  .spectrum-point:nth-child(3) .dot { background: rgba(200,240,74,0.4); }
+  .spectrum-point:nth-child(2) .dot { background: rgba(200,240,74,0.15); }
+
+  .spectrum-point h4 {
+    font-size: 12px;
+    font-weight: 500;
+    margin-bottom: 4px;
+  }
+
+  .spectrum-point p {
+    font-size: 11px;
+    color: var(--text-dim);
+    margin: 0;
+  }
+
+  /* EXAMPLE BOX */
+  .example-box {
+    border: 1px solid var(--border);
+    background: var(--surface);
+    margin: 28px 0;
+    overflow: hidden;
+  }
+
+  .example-box-header {
+    background: var(--surface2);
+    padding: 12px 20px;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 11px;
+    color: var(--accent);
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .example-row {
+    display: grid;
+    grid-template-columns: 160px 1fr;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .example-row:last-child { border-bottom: none; }
+
+  .example-type {
+    padding: 16px 20px;
+    background: var(--bg);
+    border-right: 1px solid var(--border);
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 11px;
+    color: var(--text-dim);
+    display: flex;
+    align-items: center;
+  }
+
+  .example-content {
+    padding: 16px 20px;
+    font-size: 13px;
+    color: var(--text-muted);
+  }
+
+  .example-content strong { color: var(--accent2); font-weight: 500; }
+
+  /* TAXONOMY */
+  .taxonomy-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1px;
+    background: var(--border);
+    border: 1px solid var(--border);
+    margin: 28px 0;
+  }
+
+  .tax-item {
+    background: var(--surface);
+    padding: 24px;
+  }
+
+  .tax-num {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 32px;
+    font-weight: 600;
+    color: var(--border);
+    line-height: 1;
+    margin-bottom: 12px;
+  }
+
+  .tax-item h3 {
+    font-size: 15px;
+    font-weight: 500;
+    margin-bottom: 12px;
+    color: var(--text);
+  }
+
+  .tax-item ul {
+    list-style: none;
+    padding: 0;
+  }
+
+  .tax-item ul li {
+    font-size: 13px;
+    color: var(--text-muted);
+    padding: 5px 0;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    gap: 10px;
+    align-items: baseline;
+  }
+
+  .tax-item ul li:last-child { border-bottom: none; }
+
+  .tax-item ul li::before {
+    content: '→';
+    color: var(--accent);
+    font-size: 11px;
+    flex-shrink: 0;
+  }
+
+  .li-name { font-weight: 500; color: var(--text); }
+
+  /* COMBINE BOX */
+  .combine-box {
+    background: var(--surface);
+    border: 1px solid var(--accent);
+    padding: 28px;
+    margin: 28px 0;
+    position: relative;
+  }
+
+  .combine-box::before {
+    content: 'ESEMPIO REALE';
+    position: absolute;
+    top: -1px; left: 28px;
+    background: var(--accent);
+    color: var(--bg);
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 2px;
+    padding: 3px 10px;
+  }
+
+  .combine-box p {
+    margin-top: 12px;
+    font-size: 14px;
+  }
+
+  .combine-box .tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 16px;
+  }
+
+  .combine-box .tag {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 11px;
+    padding: 5px 12px;
+    border: 1px solid var(--accent);
+    color: var(--accent);
+    background: transparent;
+  }
+
+  /* ANIMATIONS */
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  /* FOOTER */
+  footer {
+    border-top: 1px solid var(--border);
+    padding: 32px 60px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  footer p {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 11px;
+    color: var(--text-dim);
+  }
+
+  /* SCROLLBAR */
+  ::-webkit-scrollbar { width: 4px; }
+  ::-webkit-scrollbar-track { background: var(--bg); }
+  ::-webkit-scrollbar-thumb { background: var(--border); }
+
+  @media (max-width: 768px) {
+    .hero { padding: 48px 24px 40px; }
+    .layout { grid-template-columns: 1fr; }
+    .sidebar { display: none; }
+    .content { padding: 32px 24px; }
+    .taxonomy-grid { grid-template-columns: 1fr; }
+    .cards { grid-template-columns: 1fr; }
+    footer { padding: 24px; flex-direction: column; gap: 8px; }
+  }
+</style>
+</head>
+<body>
+
+<!-- HERO -->
+<div class="hero">
+  <div class="hero-label">Report introduttivo · Intelligenza Artificiale</div>
+  <h1>Agenti <em>AI</em> —<br>Guida Essenziale</h1>
+  <p class="hero-sub">Cosa sono, come si distinguono dagli altri strumenti AI, esempi concreti e tassonomie per orientarsi in un panorama in rapida evoluzione.</p>
+  <div class="hero-meta">
+    <div>
+      <span>Sezioni</span>
+      <strong>4 argomenti</strong>
+    </div>
+    <div>
+      <span>Tassonomie</span>
+      <strong>5 dimensioni</strong>
+    </div>
+    <div>
+      <span>Aggiornato</span>
+      <strong>Febbraio 2026</strong>
+    </div>
+  </div>
+</div>
+
+<!-- BODY -->
+<div class="layout">
+
+  <!-- SIDEBAR -->
+  <aside class="sidebar">
+    <div class="sidebar-label">Indice</div>
+    <nav>
+      <a href="#cosa-sono">1. Cosa sono gli agenti AI</a>
+      <a href="#differenze" class="sub">↳ Differenze</a>
+      <a href="#esempi">2. Esempi concreti</a>
+      <a href="#esempi-llm" class="sub">↳ LLM base</a>
+      <a href="#esempi-tool" class="sub">↳ Tool use</a>
+      <a href="#esempi-agenti" class="sub">↳ Agenti</a>
+      <a href="#tassonomie">3. Tassonomie</a>
+      <a href="#tax1" class="sub">↳ Per autonomia</a>
+      <a href="#tax2" class="sub">↳ Per architettura</a>
+      <a href="#tax3" class="sub">↳ Per dominio</a>
+      <a href="#tax4" class="sub">↳ Per ambiente</a>
+      <a href="#tax5" class="sub">↳ Per struttura</a>
+      <a href="#sintesi">4. Sintesi</a>
+    </nav>
+  </aside>
+
+  <!-- CONTENT -->
+  <main class="content">
+
+    <!-- SEZIONE 1: COSA SONO -->
+    <section class="section" id="cosa-sono">
+      <div class="section-header">
+        <span class="section-num">01</span>
+        <h2>Cosa sono gli agenti AI</h2>
+      </div>
+
+      <p>Gli <strong>agenti AI</strong> sono sistemi basati su modelli di linguaggio (o altri modelli AI) che non si limitano a rispondere a una domanda, ma <strong>pianificano ed eseguono sequenze di azioni autonomamente</strong> per raggiungere un obiettivo.</p>
+
+      <p>La differenza fondamentale rispetto ad altri strumenti AI sta nel <strong>grado di autonomia e nella capacità di agire nel mondo</strong>. Il ciclo tipico di un agente è: <strong>ragiona → agisce → osserva il risultato → ragiona di nuovo.</strong></p>
+
+      <div class="spectrum" id="differenze">
+        <div class="spectrum-label">Spettro di autonomia — da reattivo ad autonomo</div>
+        <div class="spectrum-bar"></div>
+        <div class="spectrum-points">
+          <div class="spectrum-point">
+            <div class="dot"></div>
+            <h4>LLM base</h4>
+            <p>Input → Output testuale. Nessuna azione.</p>
+          </div>
+          <div class="spectrum-point">
+            <div class="dot"></div>
+            <h4>Chatbot</h4>
+            <p>Conversazione, ma nessuna azione nel mondo.</p>
+          </div>
+          <div class="spectrum-point">
+            <div class="dot"></div>
+            <h4>Tool use</h4>
+            <p>Chiama strumenti, guidato dall'utente passo per passo.</p>
+          </div>
+          <div class="spectrum-point">
+            <div class="dot"></div>
+            <h4>Agente AI</h4>
+            <p>Pianifica e agisce autonomamente verso un obiettivo.</p>
+          </div>
+        </div>
+      </div>
+
+      <p>Le quattro dimensioni chiave che distinguono un agente da un semplice LLM sono: <strong>autonomia</strong> (decide lui la sequenza di azioni), <strong>pianificazione</strong> (scompone obiettivi complessi), <strong>memoria e stato</strong> (mantiene contesto nel tempo), e <strong>capacità di agire</strong> (interagisce con sistemi reali — browser, API, file system, database, altri agenti).</p>
+    </section>
+
+    <!-- SEZIONE 2: ESEMPI -->
+    <section class="section" id="esempi">
+      <div class="section-header">
+        <span class="section-num">02</span>
+        <h2>Esempi concreti per categoria</h2>
+      </div>
+
+      <p>Non esiste una linea netta tra le categorie — molti prodotti commerciali si autodefiniscono "agenti" con autonomia limitata. Il vero discrimine è: <strong>quanto l'utente deve guidare ogni singolo passo?</strong></p>
+
+      <div class="cards" id="esempi-llm">
+
+        <div class="card">
+          <div class="card-tag">Categoria 01</div>
+          <h3>LLM Base</h3>
+          <p>Modelli accessibili via API o interfaccia minimale. Fanno solo inference: prendono un input e producono un output testuale. Nessuno strumento, nessuna memoria, nessuna azione.</p>
+          <div class="examples">
+            <span>GPT-4 via API</span>
+            <span>Claude API</span>
+            <span>Gemini</span>
+            <span>Llama</span>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-tag">Categoria 02</div>
+          <h3>Chatbot conversazionali</h3>
+          <p>LLM con interfaccia chat. Rispondono, spiegano, scrivono — ma non fanno nulla di concreto fuori dalla conversazione. Versioni storiche senza tool use.</p>
+          <div class="examples">
+            <span>ChatGPT originale</span>
+            <span>Claude.ai base</span>
+            <span>Bing Chat (v1)</span>
+          </div>
+        </div>
+
+        <div class="card" id="esempi-tool">
+          <div class="card-tag">Categoria 03</div>
+          <h3>LLM con Tool Use</h3>
+          <p>Il modello può chiamare strumenti esterni, ma è l'utente a orchestrare ogni passo. Il modello esegue azioni quando esplicitamente istruito, non di propria iniziativa.</p>
+          <div class="examples">
+            <span>ChatGPT + plugin</span>
+            <span>Claude.ai (oggi)</span>
+            <span>GitHub Copilot</span>
+            <span>Code Interpreter</span>
+          </div>
+        </div>
+
+        <div class="card" id="esempi-agenti">
+          <div class="card-tag">Categoria 04 — Agenti</div>
+          <h3>Agenti di sviluppo</h3>
+          <p>Ricevono un task ad alto livello ("implementa questa feature") e in autonomia aprono il terminale, scrivono codice, testano, debuggano e iterano.</p>
+          <div class="examples">
+            <span>Devin (Cognition)</span>
+            <span>Claude Code</span>
+            <span>Cursor (agentico)</span>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-tag">Categoria 04 — Agenti</div>
+          <h3>Agenti di navigazione</h3>
+          <p>Navigano siti web autonomamente per completare task reali: prenotare ristoranti, compilare form, fare acquisti, estrarre dati da pagine.</p>
+          <div class="examples">
+            <span>Operator (OpenAI)</span>
+            <span>Browser Use</span>
+            <span>Claude Computer Use</span>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-tag">Categoria 04 — Agenti</div>
+          <h3>Agenti enterprise</h3>
+          <p>Integrati in CRM, ERP e suite aziendali. Gestiscono autonomamente ticket di supporto, qualificano lead, aggiornano record, automatizzano workflow.</p>
+          <div class="examples">
+            <span>Salesforce Agentforce</span>
+            <span>MS Copilot Studio</span>
+            <span>Zapier AI Agents</span>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-tag">Categoria 04 — Agenti</div>
+          <h3>Agenti di ricerca</h3>
+          <p>Pianificano ricerche complesse, interrogano decine di fonti in autonomia e sintetizzano report strutturati. Decidono da soli quali query fare e come integrare i risultati.</p>
+          <div class="examples">
+            <span>Perplexity Deep Research</span>
+            <span>OpenAI Deep Research</span>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- ESEMPIO CONCRETO -->
+      <div class="example-box">
+        <div class="example-box-header">Stesso task, tre strumenti diversi</div>
+        <div class="example-row">
+          <div class="example-type">LLM base</div>
+          <div class="example-content">"Come scrivo un'email di follow-up?" → <strong>Ti dà il testo.</strong> Fine.</div>
+        </div>
+        <div class="example-row">
+          <div class="example-type">Tool use</div>
+          <div class="example-content">"Scrivi un'email di follow-up e mandamela" → genera il testo e chiama l'API di Gmail, <strong>ma solo se tu glielo dici esplicitamente.</strong></div>
+        </div>
+        <div class="example-row">
+          <div class="example-type">Agente AI</div>
+          <div class="example-content">"Gestisci i follow-up sui lead di questa settimana" → <strong>legge il CRM, identifica chi non ha risposto, personalizza ogni email, le manda, aggiorna il CRM, e ti manda un riepilogo.</strong> Tutto da solo.</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- SEZIONE 3: TASSONOMIE -->
+    <section class="section" id="tassonomie">
+      <div class="section-header">
+        <span class="section-num">03</span>
+        <h2>Tassonomie degli agenti AI</h2>
+      </div>
+
+      <p>Non esiste una tassonomia unica "ufficiale". Gli agenti AI possono essere classificati lungo <strong>cinque dimensioni complementari</strong>, che non sono in conflitto ma si sovrappongono e si completano.</p>
+
+      <div class="taxonomy-grid">
+
+        <!-- TAX 1 -->
+        <div class="tax-item" id="tax1">
+          <div class="tax-num">01</div>
+          <h3>Per grado di autonomia</h3>
+          <ul>
+            <li><span class="li-name">Assistenti reattivi</span> — rispondono a comandi, nessuna iniziativa propria</li>
+            <li><span class="li-name">Semi-autonomi</span> — pianificano ma chiedono conferma umana sulle azioni critiche (human in the loop)</li>
+            <li><span class="li-name">Autonomi</span> — eseguono sequenze lunghe senza intervento, chiedono aiuto solo se bloccati</li>
+            <li><span class="li-name">Fully autonomous</span> — operano in background continuativamente (ancora in gran parte sperimentali)</li>
+          </ul>
+        </div>
+
+        <!-- TAX 2 -->
+        <div class="tax-item" id="tax2">
+          <div class="tax-num">02</div>
+          <h3>Per architettura interna</h3>
+          <ul>
+            <li><span class="li-name">ReAct</span> — alterna ragionamento esplicito e azioni. Pattern più diffuso (LangChain, LlamaIndex)</li>
+            <li><span class="li-name">Plan-and-Execute</span> — costruisce un piano completo poi lo esegue. Efficiente su task lunghi</li>
+            <li><span class="li-name">Reflexion</span> — valuta ogni risultato e si auto-corregge. Più robusto, più lento</li>
+            <li><span class="li-name">Multi-agent</span> — più agenti specializzati collaborano. Framework: AutoGen, CrewAI, LangGraph</li>
+          </ul>
+        </div>
+
+        <!-- TAX 3 -->
+        <div class="tax-item" id="tax3">
+          <div class="tax-num">03</div>
+          <h3>Per dominio applicativo</h3>
+          <ul>
+            <li><span class="li-name">Produttività personale</span> — email, calendario, note, ricerche (Notion AI, M365 Copilot)</li>
+            <li><span class="li-name">Sviluppo software</span> — scrivono, testano, debuggano codice (Devin, Claude Code)</li>
+            <li><span class="li-name">Customer service</span> — ticket, FAQ, escalation (Intercom Fin, Agentforce)</li>
+            <li><span class="li-name">Ricerca e analisi</span> — multi-source synthesis (Perplexity Deep Research)</li>
+            <li><span class="li-name">RPA aumentata</span> — automazione di processo con ragionamento (UiPath AI, Zapier)</li>
+            <li><span class="li-name">Embodied / Fisici</span> — controllano robot nel mondo reale (Figure AI)</li>
+          </ul>
+        </div>
+
+        <!-- TAX 4 -->
+        <div class="tax-item" id="tax4">
+          <div class="tax-num">04</div>
+          <h3>Per modalità di interazione con l'ambiente</h3>
+          <ul>
+            <li><span class="li-name">Text-only</span> — agiscono solo tramite testo, chiamate API, comandi</li>
+            <li><span class="li-name">Computer use</span> — vedono lo schermo, controllano mouse e tastiera (Claude CU, Operator)</li>
+            <li><span class="li-name">Multimodali</span> — elaborano testo, immagini, audio, video (Gemini in contesti agentici)</li>
+            <li><span class="li-name">Embodied</span> — interagiscono col mondo fisico tramite sensori e attuatori (robotica)</li>
+          </ul>
+        </div>
+
+        <!-- TAX 5 -->
+        <div class="tax-item" id="tax5" style="grid-column: 1 / -1;">
+          <div class="tax-num">05</div>
+          <h3>Per struttura organizzativa (nei sistemi multi-agent)</h3>
+          <ul style="display: grid; grid-template-columns: 1fr 1fr; gap: 0 24px;">
+            <li><span class="li-name">Single agent</span> — un solo agente fa tutto</li>
+            <li><span class="li-name">Gerarchico</span> — orchestratore + agenti subordinati specializzati. Pattern più comune in enterprise</li>
+            <li><span class="li-name">A rete (mesh)</span> — agenti comunicano senza gerarchia fissa, negoziando i ruoli. Flessibile ma complesso</li>
+            <li><span class="li-name">Pipeline sequenziale</span> — output di un agente = input del successivo. Usato per content production e data processing</li>
+          </ul>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- SEZIONE 4: SINTESI -->
+    <section class="section" id="sintesi">
+      <div class="section-header">
+        <span class="section-num">04</span>
+        <h2>Come usare le tassonomie insieme</h2>
+      </div>
+
+      <p>Le cinque tassonomie non sono in conflitto — si usano <strong>in combinazione</strong> per descrivere con precisione qualsiasi agente. Ogni dimensione aggiunge una prospettiva diversa sullo stesso sistema.</p>
+
+      <div class="combine-box">
+        <p>Esempio: <strong>Devin</strong> (agente di Cognition AI per la programmazione)</p>
+        <div class="tags">
+          <div class="tag">Autonomo [Tax. 1]</div>
+          <div class="tag">ReAct + Reflexion [Tax. 2]</div>
+          <div class="tag">Sviluppo software [Tax. 3]</div>
+          <div class="tag">Computer use [Tax. 4]</div>
+          <div class="tag">Single agent [Tax. 5]</div>
+        </div>
+      </div>
+
+      <p>Il vero discrimine tra uno strumento AI tradizionale e un agente rimane sempre la stessa domanda: <strong>quanto l'utente deve guidare ogni singolo passo?</strong> Meno guida serve, più siamo di fronte a un vero agente.</p>
+    </section>
+
+  </main>
+</div>
+
+<footer>
+  <p>Report generato con Claude · Anthropic · 2026</p>
+  <p>agenti-ai-report.html</p>
+</footer>
+
+</body>
+</html>

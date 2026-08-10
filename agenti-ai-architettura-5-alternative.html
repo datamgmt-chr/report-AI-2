@@ -1,0 +1,1112 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>L'Architettura Declinata — 5 Alternative a Confronto</title>
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif&family=Outfit:wght@200;300;400;500;600;700;800;900&family=IBM+Plex+Mono:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg:     #faf8f5;
+  --bg2:    #f2efe9;
+  --bg3:    #e9e5dc;
+  --ink:    #1b1915;
+  --ink2:   #2e2b25;
+  --ink3:   #6d685c;
+  --ink4:   #a19c8f;
+  --border: #d9d4c8;
+  --border2:#cac4b6;
+
+  /* Component colors (from report 07) */
+  --core: #c0562b;
+  --brain: #2e7d9c;
+  --prompt: #7b5ea7;
+  --mem: #b8860b;
+  --tool: #4a8c3f;
+  --rag: #3a7ca5;
+  --ui: #c47a00;
+  --infra: #8b7355;
+  --guard: #c0392b;
+
+  /* Ownership colors */
+  --own-you:   #c0562b;   /* lo costruisci tu */
+  --own-plat:  #2e7d9c;   /* fornito dalla piattaforma/framework */
+  --own-conf:  #b8860b;   /* lo configuri tu */
+  --own-no:    #999;      /* non accessibile / non presente */
+
+  /* Alternative accent colors */
+  --alt1: #d44;       /* custom */
+  --alt2: #e88c30;    /* framework */
+  --alt3: #2e9e7a;    /* no-code */
+  --alt4: #7b5ea7;    /* marketplace */
+  --alt5: #3a7ca5;    /* open source */
+}
+
+* { margin:0; padding:0; box-sizing:border-box; }
+html { scroll-behavior:smooth; }
+
+body {
+  background: var(--bg);
+  color: var(--ink);
+  font-family: 'Outfit', sans-serif;
+  font-weight: 300;
+  font-size: 14px;
+  line-height: 1.75;
+}
+
+/* ── HEADER ── */
+.masthead {
+  background: var(--ink);
+  color: rgba(255,255,255,0.9);
+  padding: 60px 56px 52px;
+  position: relative;
+  overflow: hidden;
+}
+
+.masthead::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background:
+    repeating-linear-gradient(90deg, rgba(255,255,255,0.012) 0, rgba(255,255,255,0.012) 1px, transparent 1px, transparent 64px),
+    repeating-linear-gradient(0deg, rgba(255,255,255,0.012) 0, rgba(255,255,255,0.012) 1px, transparent 1px, transparent 64px);
+  pointer-events: none;
+}
+
+.mh-eye {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 10px;
+  letter-spacing: 3px;
+  text-transform: uppercase;
+  color: rgba(255,255,255,0.25);
+  margin-bottom: 18px;
+  position: relative;
+}
+
+.masthead h1 {
+  font-family: 'Instrument Serif', serif;
+  font-weight: 400;
+  font-size: clamp(30px, 4.5vw, 54px);
+  line-height: 1.08;
+  letter-spacing: -1px;
+  max-width: 700px;
+  position: relative;
+}
+
+.mh-sub {
+  margin-top: 20px;
+  font-size: 15px;
+  font-weight: 300;
+  color: rgba(255,255,255,0.38);
+  max-width: 660px;
+  line-height: 1.7;
+  position: relative;
+}
+
+/* ── NAV ── */
+.nav {
+  background: var(--ink2);
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  display: flex;
+  overflow-x: auto;
+  border-bottom: 1px solid rgba(255,255,255,0.06);
+}
+
+.nav-btn {
+  flex: 1;
+  min-width: 100px;
+  padding: 13px 12px;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  font-family: 'Outfit', sans-serif;
+  font-size: 10.5px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+  color: rgba(255,255,255,0.3);
+  border-right: 1px solid rgba(255,255,255,0.06);
+  transition: all 0.2s;
+  white-space: nowrap;
+}
+
+.nav-btn:last-child { border-right: none; }
+.nav-btn:hover { color: rgba(255,255,255,0.6); }
+.nav-btn.active { color: #fff; background: rgba(255,255,255,0.05); }
+
+/* ── SECTIONS ── */
+.sect { display: none; }
+.sect.active { display: block; animation: fadeIn 0.3s ease; }
+@keyframes fadeIn { from { opacity:0; transform:translateY(6px); } to { opacity:1; transform:translateY(0); } }
+
+.sect-head {
+  padding: 48px 56px 36px;
+  border-bottom: 1px solid var(--border);
+}
+
+.sect-num {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 10px;
+  letter-spacing: 3px;
+  text-transform: uppercase;
+  color: var(--ink4);
+  margin-bottom: 10px;
+}
+
+.sect-head h2 {
+  font-family: 'Instrument Serif', serif;
+  font-weight: 400;
+  font-size: clamp(24px, 3.5vw, 40px);
+  line-height: 1.12;
+  max-width: 620px;
+  margin-bottom: 14px;
+}
+
+.sect-head p {
+  color: var(--ink3);
+  max-width: 700px;
+  font-size: 14.5px;
+}
+
+.wrap { padding: 0 56px 56px; }
+
+/* ── LEGEND ── */
+.legend {
+  display: flex;
+  gap: 24px;
+  flex-wrap: wrap;
+  padding: 16px 20px;
+  background: var(--bg2);
+  border: 1px solid var(--border);
+  margin-top: 24px;
+  margin-bottom: 8px;
+}
+
+.leg-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+  font-weight: 500;
+}
+
+.leg-box {
+  width: 22px;
+  height: 12px;
+  border-radius: 2px;
+  flex-shrink: 0;
+}
+
+/* ── COMPONENT GRID (per-alternative) ── */
+.comp-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  gap: 1px;
+  background: var(--border);
+  border: 1px solid var(--border2);
+  margin-top: 16px;
+}
+
+.cg-item {
+  background: var(--bg);
+  padding: 18px 20px;
+  display: grid;
+  grid-template-columns: 8px 1fr;
+  gap: 14px;
+}
+
+.cg-accent { border-radius: 2px; }
+
+.cg-content {}
+
+.cg-head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 8px;
+}
+
+.cg-name {
+  font-weight: 700;
+  font-size: 13px;
+}
+
+.cg-badge {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 9px;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  padding: 2px 8px;
+  border-radius: 2px;
+  font-weight: 500;
+}
+
+.badge-you   { background: rgba(192,86,43,0.1);  color: var(--own-you); }
+.badge-plat  { background: rgba(46,125,156,0.1);  color: var(--own-plat); }
+.badge-conf  { background: rgba(184,134,11,0.1);  color: var(--own-conf); }
+.badge-no    { background: rgba(150,150,150,0.1); color: var(--own-no); }
+
+.cg-text {
+  font-size: 12.5px;
+  color: var(--ink3);
+  line-height: 1.6;
+}
+
+.cg-text strong { color: var(--ink2); font-weight: 500; }
+
+/* ── KEY POINT ── */
+.key-point {
+  margin-top: 32px;
+  padding: 22px 26px;
+  border-left: 4px solid;
+  background: var(--bg2);
+}
+
+.kp-label {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 9px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  margin-bottom: 6px;
+}
+
+.kp-text {
+  font-family: 'Instrument Serif', serif;
+  font-size: 17px;
+  line-height: 1.45;
+  color: var(--ink2);
+}
+
+.kp-sub {
+  margin-top: 8px;
+  font-size: 13px;
+  color: var(--ink3);
+  line-height: 1.65;
+}
+
+/* ── PROSE ── */
+.prose { margin-top: 24px; max-width: 740px; }
+.prose p {
+  font-size: 14px;
+  color: var(--ink3);
+  line-height: 1.8;
+  margin-bottom: 14px;
+}
+.prose p strong { color: var(--ink2); font-weight: 500; }
+
+/* ── IDENTITY CARD ── */
+.id-card {
+  margin-top: 24px;
+  display: grid;
+  grid-template-columns: 8px 1fr;
+  gap: 0;
+  border: 1px solid var(--border2);
+}
+
+.id-accent { }
+
+.id-body {
+  padding: 24px 28px;
+}
+
+.id-title {
+  font-family: 'Instrument Serif', serif;
+  font-size: 26px;
+  margin-bottom: 4px;
+}
+
+.id-sub {
+  font-size: 13px;
+  color: var(--ink4);
+  margin-bottom: 16px;
+}
+
+.id-stats {
+  display: flex;
+  gap: 32px;
+  flex-wrap: wrap;
+  margin-bottom: 16px;
+}
+
+.id-stat-val {
+  font-weight: 800;
+  font-size: 28px;
+  line-height: 1;
+}
+
+.id-stat-label {
+  font-size: 10px;
+  color: var(--ink4);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-top: 2px;
+}
+
+.id-desc {
+  font-size: 14px;
+  color: var(--ink3);
+  line-height: 1.75;
+  max-width: 680px;
+}
+
+.id-desc strong { color: var(--ink2); font-weight: 500; }
+
+/* ── COMPARISON MATRIX ── */
+.matrix-scroll {
+  overflow-x: auto;
+  margin-top: 20px;
+  border: 1px solid var(--border2);
+}
+
+.matrix {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 11.5px;
+  min-width: 950px;
+}
+
+.matrix th, .matrix td {
+  padding: 10px 12px;
+  border: 1px solid var(--border);
+  vertical-align: top;
+  text-align: center;
+}
+
+.matrix thead th {
+  background: var(--ink);
+  color: rgba(255,255,255,0.82);
+  font-weight: 600;
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+  position: sticky;
+  top: 44px;
+  z-index: 50;
+}
+
+.matrix thead th:first-child { text-align: left; min-width: 140px; }
+.matrix .row-head { text-align: left; font-weight: 600; background: var(--bg2); white-space: nowrap; }
+
+.mx-you  { background: rgba(192,86,43,0.08); color: var(--own-you); font-weight: 500; }
+.mx-plat { background: rgba(46,125,156,0.08); color: var(--own-plat); font-weight: 500; }
+.mx-conf { background: rgba(184,134,11,0.08); color: var(--own-conf); font-weight: 500; }
+.mx-no   { background: rgba(150,150,150,0.06); color: #aaa; }
+
+/* ── SVG DIAGRAMS ── */
+.diagram-wrap {
+  margin-top: 20px;
+  padding: 28px 20px;
+  background: var(--ink);
+  border: 1px solid var(--border2);
+  overflow-x: auto;
+}
+
+.diagram-wrap svg { display: block; margin: 0 auto; }
+
+/* ── FOOTER ── */
+.footer {
+  background: var(--ink);
+  color: rgba(255,255,255,0.22);
+  padding: 28px 56px;
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 10px;
+  letter-spacing: 1px;
+  display: flex;
+  justify-content: space-between;
+}
+
+@media (max-width: 860px) {
+  .masthead, .sect-head, .wrap, .footer { padding-left: 20px; padding-right: 20px; }
+  .comp-grid { grid-template-columns: 1fr; }
+  .id-stats { gap: 20px; }
+  .footer { flex-direction: column; gap: 6px; }
+}
+</style>
+</head>
+<body>
+
+<!-- HEADER -->
+<div class="masthead">
+  <div class="mh-eye">Serie Agenti AI — Report 08</div>
+  <h1>La stessa architettura,<br>cinque modi di costruirla</h1>
+  <p class="mh-sub">I 9 componenti dell'architettura di riferimento declinati sulle 5 alternative di costruzione. Per ciascuna: chi fornisce cosa, cosa personalizzi, cosa non puoi toccare — e perché.</p>
+</div>
+
+<!-- NAV -->
+<nav class="nav">
+  <button class="nav-btn active" onclick="show(0)">Panoramica</button>
+  <button class="nav-btn" onclick="show(1)">Custom</button>
+  <button class="nav-btn" onclick="show(2)">Framework</button>
+  <button class="nav-btn" onclick="show(3)">No-code</button>
+  <button class="nav-btn" onclick="show(4)">Marketplace</button>
+  <button class="nav-btn" onclick="show(5)">Open Source</button>
+  <button class="nav-btn" onclick="show(6)">Confronto</button>
+</nav>
+
+
+<!-- ═══════════════════════════
+     S0 — PANORAMICA
+═══════════════════════════ -->
+<div class="sect active" id="s0">
+  <div class="sect-head">
+    <div class="sect-num">Panoramica</div>
+    <h2>Le 5 alternative e il codice colore</h2>
+    <p>Ogni alternativa di costruzione produce un diagramma architetturale diverso — non perché i componenti cambino, ma perché cambia chi è responsabile di ciascuno. Il codice colore che useremo in tutto il report distingue quattro stati possibili per ogni componente.</p>
+  </div>
+  <div class="wrap">
+
+    <div class="legend">
+      <div class="leg-item"><div class="leg-box" style="background:var(--own-you)"></div><strong>Lo costruisci tu</strong> — implementazione, codice, design a tuo carico</div>
+      <div class="leg-item"><div class="leg-box" style="background:var(--own-conf)"></div><strong>Lo configuri tu</strong> — la piattaforma lo fornisce, tu lo personalizzi</div>
+      <div class="leg-item"><div class="leg-box" style="background:var(--own-plat)"></div><strong>Fornito dalla piattaforma / framework</strong> — pronto all'uso</div>
+      <div class="leg-item"><div class="leg-box" style="background:var(--own-no)"></div><strong>Non accessibile / non modificabile</strong> — esiste ma non lo controlli</div>
+    </div>
+
+    <div class="prose">
+      <p>Le 5 alternative differiscono radicalmente nel rapporto tra ciò che costruisci e ciò che ti viene dato. Si posizionano lungo uno spettro che va dal <strong>controllo totale</strong> (stack custom — tutto rosso/terracotta) all'<strong>assenza di controllo</strong> (marketplace — quasi tutto grigio). Le tre alternative intermedie — framework, no-code, open source — occupano posizioni diverse lungo questo spettro, con profili di "ownership" sorprendentemente distinti.</p>
+    </div>
+
+    <!-- Summary matrix -->
+    <div class="matrix-scroll" style="margin-top:24px;">
+      <table class="matrix">
+        <thead>
+          <tr>
+            <th style="text-align:left">Componente</th>
+            <th style="border-bottom:3px solid var(--alt1)">Stack Custom</th>
+            <th style="border-bottom:3px solid var(--alt2)">Framework</th>
+            <th style="border-bottom:3px solid var(--alt3)">No-code / Low-code</th>
+            <th style="border-bottom:3px solid var(--alt4)">Marketplace</th>
+            <th style="border-bottom:3px solid var(--alt5)">Open Source (repo)</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td class="row-head">01 · Orchestratore</td>
+            <td class="mx-you">Costruisci tu</td>
+            <td class="mx-plat">Fornito dal framework</td>
+            <td class="mx-conf">Configuri visualmente</td>
+            <td class="mx-no">Non accessibile</td>
+            <td class="mx-conf">Parti dal codice, modifichi</td>
+          </tr>
+          <tr>
+            <td class="row-head">02 · Modello LLM</td>
+            <td class="mx-you">Scegli e integri tu</td>
+            <td class="mx-conf">Scegli tu, integrazione pronta</td>
+            <td class="mx-conf">Scegli da menu, connetti API key</td>
+            <td class="mx-no">Fisso (deciso dal vendor)</td>
+            <td class="mx-conf">Scegli tu, integrazione nel codice</td>
+          </tr>
+          <tr>
+            <td class="row-head">03 · Prompt</td>
+            <td class="mx-you">Scrivi tu da zero</td>
+            <td class="mx-you">Scrivi tu (con pattern)</td>
+            <td class="mx-conf">Editor guidato</td>
+            <td class="mx-conf">Campo di istruzioni</td>
+            <td class="mx-conf">Parti da prompt esistente, modifichi</td>
+          </tr>
+          <tr>
+            <td class="row-head">04 · Memoria</td>
+            <td class="mx-you">Progetti e implementi</td>
+            <td class="mx-plat">Moduli pronti, configuri</td>
+            <td class="mx-plat">Integrata nella piattaforma</td>
+            <td class="mx-no">Gestita dal vendor</td>
+            <td class="mx-conf">Codice pronto, adatti</td>
+          </tr>
+          <tr>
+            <td class="row-head">05 · Strumenti</td>
+            <td class="mx-you">Implementi ogni connettore</td>
+            <td class="mx-conf">Wrapper pronti + custom</td>
+            <td class="mx-conf">Nodi precostruiti (400+)</td>
+            <td class="mx-no">Quelli previsti dal vendor</td>
+            <td class="mx-conf">Connettori nel repo, estendi</td>
+          </tr>
+          <tr>
+            <td class="row-head">06 · RAG</td>
+            <td class="mx-you">Pipeline completa da zero</td>
+            <td class="mx-plat">Componenti pronti, assembli</td>
+            <td class="mx-conf">Nodo RAG preconfigurato</td>
+            <td class="mx-conf">Upload documenti</td>
+            <td class="mx-conf">Pipeline nel repo, adatti</td>
+          </tr>
+          <tr>
+            <td class="row-head">07 · Guardrail</td>
+            <td class="mx-you">Progetti e implementi</td>
+            <td class="mx-you">Implementi (pochi aiuti)</td>
+            <td class="mx-conf">Configurazioni base</td>
+            <td class="mx-no">Gestiti dal vendor</td>
+            <td class="mx-conf">Se presenti nel repo, adatti</td>
+          </tr>
+          <tr>
+            <td class="row-head">08 · Interfaccia</td>
+            <td class="mx-you">Costruisci da zero</td>
+            <td class="mx-you">Costruisci (nessun aiuto)</td>
+            <td class="mx-plat">Widget / chat inclusa</td>
+            <td class="mx-no">Interfaccia della piattaforma</td>
+            <td class="mx-conf">Se inclusa nel repo, adatti</td>
+          </tr>
+          <tr>
+            <td class="row-head">09 · Infrastruttura</td>
+            <td class="mx-you">Tutta a tuo carico</td>
+            <td class="mx-you">Tutta a tuo carico</td>
+            <td class="mx-plat">Hosting cloud incluso</td>
+            <td class="mx-no">Del vendor</td>
+            <td class="mx-you">Tutta a tuo carico</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="key-point" style="border-color:var(--core); margin-top:28px;">
+      <div class="kp-label" style="color:var(--core)">Lettura rapida della matrice</div>
+      <div class="kp-text">Più terracotta c'è nella colonna, più lavoro è tuo. Più teal c'è, più la piattaforma lavora per te. Più grigio c'è, meno controllo hai.</div>
+      <div class="kp-sub">Lo stack custom è quasi tutto terracotta (massimo lavoro, massimo controllo). Il marketplace è quasi tutto grigio (zero lavoro, zero controllo). Le tre alternative intermedie hanno profili molto diversi: il framework ti dà l'orchestrazione ma non l'interfaccia; il no-code ti dà l'interfaccia ma limita l'orchestrazione; l'open source ti dà un punto di partenza per tutto ma nulla è "finito".</div>
+    </div>
+
+  </div>
+</div>
+
+
+<!-- ═══════════════════════════
+     S1 — STACK CUSTOM
+═══════════════════════════ -->
+<div class="sect" id="s1">
+  <div class="sect-head">
+    <div class="sect-num">Alternativa 01</div>
+    <h2>Stack Custom — Codice puro su API LLM</h2>
+    <p>Tutto da costruire. Ogni componente è responsabilità tua. È la baseline rispetto alla quale misurare tutte le altre alternative.</p>
+  </div>
+  <div class="wrap">
+
+    <div class="id-card">
+      <div class="id-accent" style="background:var(--alt1)"></div>
+      <div class="id-body">
+        <div class="id-title">Stack Custom</div>
+        <div class="id-sub">Codice Python/JS diretto sulle API del modello LLM</div>
+        <div class="id-stats">
+          <div><div class="id-stat-val" style="color:var(--alt1)">9 / 9</div><div class="id-stat-label">componenti a tuo carico</div></div>
+          <div><div class="id-stat-val" style="color:var(--alt1)">0</div><div class="id-stat-label">forniti da terzi</div></div>
+          <div><div class="id-stat-val" style="color:var(--alt1)">Massima</div><div class="id-stat-label">libertà</div></div>
+        </div>
+        <div class="id-desc">Prendi le API di Claude, GPT o un altro modello e scrivi tu l'intera architettura: il loop di ragionamento, la gestione della memoria, ogni connettore, i guardrail, l'interfaccia, il deploy. <strong>Nessun intermediario tra te e il modello.</strong> È la scelta di chi ha esigenze che nessun framework copre, o di chi vuole il controllo totale sulla catena.</div>
+      </div>
+    </div>
+
+    <div class="comp-grid">
+      <div class="cg-item"><div class="cg-accent" style="background:var(--own-you)"></div><div class="cg-content">
+        <div class="cg-head"><span class="cg-name">01 · Orchestratore</span><span class="cg-badge badge-you">Costruisci tu</span></div>
+        <div class="cg-text">Scrivi il loop agentico da zero: il ciclo ragiona→agisci→osserva, la gestione degli errori, le condizioni di uscita, il passaggio di stato. <strong>È la parte più complessa</strong> e la più facile da sbagliare. Senza un framework che impone pattern, ogni decisione architetturale è tua — inclusa la possibilità di prendere strade sbagliate che scoprirai solo in produzione.</div>
+      </div></div>
+
+      <div class="cg-item"><div class="cg-accent" style="background:var(--own-you)"></div><div class="cg-content">
+        <div class="cg-head"><span class="cg-name">02 · Modello LLM</span><span class="cg-badge badge-you">Scegli e integri tu</span></div>
+        <div class="cg-text">Libertà totale nella scelta. Puoi usare modelli diversi per step diversi, cambiare modello in qualsiasi momento, ottimizzare per costo o qualità. Ma devi <strong>gestire tu l'integrazione</strong>: autenticazione, formato delle richieste, parsing delle risposte, gestione del rate limiting, fallback se l'API non risponde.</div>
+      </div></div>
+
+      <div class="cg-item"><div class="cg-accent" style="background:var(--own-you)"></div><div class="cg-content">
+        <div class="cg-head"><span class="cg-name">03 · Prompt</span><span class="cg-badge badge-you">Scrivi tu da zero</span></div>
+        <div class="cg-text">Nessun template, nessun pattern suggerito. Devi progettare tu la struttura del ragionamento, le istruzioni di sistema, le definizioni dei tool, i few-shot examples. <strong>Massima libertà creativa</strong>, ma anche massima responsabilità: un prompt mal strutturato degrada tutto il sistema.</div>
+      </div></div>
+
+      <div class="cg-item"><div class="cg-accent" style="background:var(--own-you)"></div><div class="cg-content">
+        <div class="cg-head"><span class="cg-name">04 · Memoria</span><span class="cg-badge badge-you">Progetti e implementi</span></div>
+        <div class="cg-text">Scegli tu cosa ricordare, come e dove. Puoi implementare esattamente il tipo di memoria che serve al tuo caso — ma devi gestire tutto: <strong>serializzazione, persistenza, retrieval, cleanup, limiti di dimensione</strong>. Un buffer in-memory è banale; una memoria a lungo termine con retrieval semantico richiede settimane.</div>
+      </div></div>
+
+      <div class="cg-item"><div class="cg-accent" style="background:var(--own-you)"></div><div class="cg-content">
+        <div class="cg-head"><span class="cg-name">05 · Strumenti</span><span class="cg-badge badge-you">Ogni connettore a tuo carico</span></div>
+        <div class="cg-text">Per ogni API esterna: scrivere il connettore, gestire autenticazione, parsing delle risposte, error handling, rate limiting. Con 5 sistemi da integrare, questo step può essere <strong>il 60% dell'intero progetto</strong>. Nessun wrapper precostruito — ogni riga di codice è tua.</div>
+      </div></div>
+
+      <div class="cg-item"><div class="cg-accent" style="background:var(--own-you)"></div><div class="cg-content">
+        <div class="cg-head"><span class="cg-name">06 · RAG</span><span class="cg-badge badge-you">Pipeline da zero</span></div>
+        <div class="cg-text">Se serve: ingestion, chunking, embedding, vector store, retrieval, ranking. Ogni pezzo da implementare. <strong>La qualità del chunking</strong> è la decisione più impattante e la più difficile da azzeccare al primo tentativo — servono iterazioni.</div>
+      </div></div>
+
+      <div class="cg-item"><div class="cg-accent" style="background:var(--own-you)"></div><div class="cg-content">
+        <div class="cg-head"><span class="cg-name">07 · Guardrail</span><span class="cg-badge badge-you">Tutto da progettare</span></div>
+        <div class="cg-text">Filtri input, validazione output, limiti di azione, human-in-the-loop, rate limiting, PII detection — tutto da implementare. <strong>Spesso sottovalutato</strong> nella pianificazione iniziale: sembra semplice finché non incontri il primo edge case in produzione.</div>
+      </div></div>
+
+      <div class="cg-item"><div class="cg-accent" style="background:var(--own-you)"></div><div class="cg-content">
+        <div class="cg-head"><span class="cg-name">08 · Interfaccia</span><span class="cg-badge badge-you">Da zero</span></div>
+        <div class="cg-text">Chat web, widget, API, integrazione Slack — qualsiasi canale tu scelga, lo costruisci. Include UX, gestione attese, streaming, feedback. <strong>Progetto frontend a sé stante</strong> che spesso richiede competenze diverse da quelle del backend agentico.</div>
+      </div></div>
+
+      <div class="cg-item"><div class="cg-accent" style="background:var(--own-you)"></div><div class="cg-content">
+        <div class="cg-head"><span class="cg-name">09 · Infrastruttura</span><span class="cg-badge badge-you">Tutta a tuo carico</span></div>
+        <div class="cg-text">Deploy, container, scaling, monitoring, logging, gestione costi, sicurezza di rete. <strong>Competenze DevOps necessarie</strong> oltre a quelle di AI engineering. È la barriera che separa "funziona sul mio PC" da "è disponibile per gli utenti".</div>
+      </div></div>
+    </div>
+
+    <div class="key-point" style="border-color:var(--alt1);">
+      <div class="kp-label" style="color:var(--alt1)">Quando ha senso</div>
+      <div class="kp-text">Quando il tuo pattern agentico è radicalmente diverso da quelli previsti dai framework, quando hai requisiti di performance estremi, o quando il controllo totale sulla catena è un requisito non negoziabile.</div>
+      <div class="kp-sub">Nella pratica, pochissimi progetti giustificano uno stack completamente custom. Anche chi parte "da zero" finisce quasi sempre per usare almeno alcune librerie o componenti esterni. Il vero stack custom puro è più un estremo teorico che una pratica comune.</div>
+    </div>
+
+  </div>
+</div>
+
+
+<!-- ═══════════════════════════
+     S2 — FRAMEWORK
+═══════════════════════════ -->
+<div class="sect" id="s2">
+  <div class="sect-head">
+    <div class="sect-num">Alternativa 02</div>
+    <h2>Framework di Orchestrazione</h2>
+    <p>Il framework ti dà l'orchestratore, i pattern, le integrazioni base. Tu costruisci la logica di business, il prompt, l'interfaccia. Il compromesso più popolare tra controllo e velocità.</p>
+  </div>
+  <div class="wrap">
+
+    <div class="id-card">
+      <div class="id-accent" style="background:var(--alt2)"></div>
+      <div class="id-body">
+        <div class="id-title">Framework di Orchestrazione</div>
+        <div class="id-sub">LangGraph, LangChain, CrewAI, Autogen</div>
+        <div class="id-stats">
+          <div><div class="id-stat-val" style="color:var(--alt2)">4 / 9</div><div class="id-stat-label">a tuo carico</div></div>
+          <div><div class="id-stat-val" style="color:var(--alt2)">3</div><div class="id-stat-label">forniti dal framework</div></div>
+          <div><div class="id-stat-val" style="color:var(--alt2)">2</div><div class="id-stat-label">da configurare</div></div>
+        </div>
+        <div class="id-desc">Il framework fornisce il cuore architetturale — l'orchestratore, i moduli di memoria, i wrapper per gli strumenti, i componenti RAG — ma <strong>non costruisce il tuo agente per te</strong>. La logica di business, il prompt, i guardrail, l'interfaccia e l'infrastruttura restano responsabilità tua. È come avere i Lego: i pezzi sono standardizzati, il progetto è personalizzato.</div>
+      </div>
+    </div>
+
+    <div class="comp-grid">
+      <div class="cg-item"><div class="cg-accent" style="background:var(--own-plat)"></div><div class="cg-content">
+        <div class="cg-head"><span class="cg-name">01 · Orchestratore</span><span class="cg-badge badge-plat">Fornito dal framework</span></div>
+        <div class="cg-text"><strong>Il vantaggio principale del framework.</strong> LangGraph ti dà una state machine con nodi, archi, stato condiviso e checkpoint. CrewAI ti dà un modello a ruoli con delegazione. Non scrivi il loop — <strong>dichiari il flusso</strong> e il framework lo esegue. Include gestione errori, retry, e persistenza dello stato. Risparmi settimane di implementazione e, soprattutto, eviti errori architetturali.</div>
+      </div></div>
+
+      <div class="cg-item"><div class="cg-accent" style="background:var(--own-conf)"></div><div class="cg-content">
+        <div class="cg-head"><span class="cg-name">02 · Modello LLM</span><span class="cg-badge badge-conf">Scegli tu, integrazione pronta</span></div>
+        <div class="cg-text">Il framework fornisce <strong>wrapper per tutti i modelli principali</strong> (Claude, GPT, Gemini, Llama, ecc.). Cambiare modello è spesso una riga di codice. Puoi usare modelli diversi per nodi diversi del grafo. L'integrazione — autenticazione, formato, parsing — è gestita dal framework.</div>
+      </div></div>
+
+      <div class="cg-item"><div class="cg-accent" style="background:var(--own-you)"></div><div class="cg-content">
+        <div class="cg-head"><span class="cg-name">03 · Prompt</span><span class="cg-badge badge-you">Scrivi tu (con pattern)</span></div>
+        <div class="cg-text">Il prompt resta responsabilità tua, ma il framework ti dà <strong>pattern</strong>: template per ReAct, CoT, structured output. Non parti da foglio bianco — parti da un pattern validato che personalizzi. La differenza è sottile ma importante: il pattern ti previene errori strutturali che scopriresti dopo settimane.</div>
+      </div></div>
+
+      <div class="cg-item"><div class="cg-accent" style="background:var(--own-plat)"></div><div class="cg-content">
+        <div class="cg-head"><span class="cg-name">04 · Memoria</span><span class="cg-badge badge-plat">Moduli pronti, configuri</span></div>
+        <div class="cg-text"><strong>Componenti di memoria precostruiti:</strong> buffer, summary, vector-backed, conversational. Li importi, li configuri (dimensione, backend, strategia di retrieval), e funzionano. 1-2 giorni invece di 2 settimane. LangGraph aggiunge checkpoint automatici che permettono di riprendere workflow interrotti.</div>
+      </div></div>
+
+      <div class="cg-item"><div class="cg-accent" style="background:var(--own-conf)"></div><div class="cg-content">
+        <div class="cg-head"><span class="cg-name">05 · Strumenti</span><span class="cg-badge badge-conf">Wrapper pronti + custom</span></div>
+        <div class="cg-text">LangChain ha <strong>centinaia di wrapper precostruiti</strong> per API comuni (Google, Wikipedia, database SQL, file system, browser). Per API non coperte, scrivi un tool custom seguendo l'interfaccia standard del framework. Il vantaggio: ogni tool ha lo stesso formato, semplificando l'orchestrazione.</div>
+      </div></div>
+
+      <div class="cg-item"><div class="cg-accent" style="background:var(--own-plat)"></div><div class="cg-content">
+        <div class="cg-head"><span class="cg-name">06 · RAG</span><span class="cg-badge badge-plat">Componenti pronti, assembli</span></div>
+        <div class="cg-text"><strong>Pipeline RAG come pezzi componibili:</strong> document loaders (PDF, HTML, Word, ecc.), text splitters (con diverse strategie di chunking), embedding models, vector stores (Chroma, Pinecone, pgvector). Assembli i pezzi — l'ottimizzazione fine (parametri di chunking, soglie di relevance) resta tua.</div>
+      </div></div>
+
+      <div class="cg-item"><div class="cg-accent" style="background:var(--own-you)"></div><div class="cg-content">
+        <div class="cg-head"><span class="cg-name">07 · Guardrail</span><span class="cg-badge badge-you">Implementi tu</span></div>
+        <div class="cg-text">I framework offrono <strong>poco aiuto</strong> sui guardrail. Puoi usare librerie esterne (Guardrails AI, NeMo Guardrails), ma l'integrazione e la configurazione sono a tuo carico. È un gap noto dell'ecosistema: la sicurezza è lasciata allo sviluppatore.</div>
+      </div></div>
+
+      <div class="cg-item"><div class="cg-accent" style="background:var(--own-you)"></div><div class="cg-content">
+        <div class="cg-head"><span class="cg-name">08 · Interfaccia</span><span class="cg-badge badge-you">Costruisci tu</span></div>
+        <div class="cg-text"><strong>Il framework non include UI.</strong> Questo è un gap significativo: dopo aver costruito un agente funzionante con LangGraph, devi comunque costruire l'interfaccia separatamente (Streamlit per prototipo, React per produzione). Aggiunge un progetto frontend al progetto agentico.</div>
+      </div></div>
+
+      <div class="cg-item"><div class="cg-accent" style="background:var(--own-you)"></div><div class="cg-content">
+        <div class="cg-head"><span class="cg-name">09 · Infrastruttura</span><span class="cg-badge badge-you">A tuo carico</span></div>
+        <div class="cg-text">Deploy, hosting, scaling sono responsabilità tua. Il framework <strong>facilita il monitoring</strong> grazie all'integrazione nativa con LangSmith e Langfuse (tracing dettagliato pronto all'uso), ma il resto dell'infrastruttura — container, server, rete — è classico DevOps.</div>
+      </div></div>
+    </div>
+
+    <div class="key-point" style="border-color:var(--alt2);">
+      <div class="kp-label" style="color:var(--alt2)">Il profilo del framework</div>
+      <div class="kp-text">Il framework è forte sul "centro" dell'architettura (orchestratore, memoria, strumenti, RAG) e debole sugli "estremi" (interfaccia, infrastruttura, guardrail).</div>
+      <div class="kp-sub">Questo spiega perché nella pratica il framework è quasi sempre combinato con altri strumenti: Streamlit o React per l'interfaccia, Docker/AWS per l'infra, librerie esterne per i guardrail. Il framework non è una soluzione completa — è un acceleratore potente per il nucleo agentico.</div>
+    </div>
+
+  </div>
+</div>
+
+
+<!-- ═══════════════════════════
+     S3 — NO-CODE
+═══════════════════════════ -->
+<div class="sect" id="s3">
+  <div class="sect-head">
+    <div class="sect-num">Alternativa 03</div>
+    <h2>Piattaforme No-code / Low-code</h2>
+    <p>Costruisci visualmente: trascini nodi, connetti flussi, configuri parametri. Il codice entra solo per le eccezioni. Accessibile a chi non programma, ma con limiti precisi sulla complessità gestibile.</p>
+  </div>
+  <div class="wrap">
+
+    <div class="id-card">
+      <div class="id-accent" style="background:var(--alt3)"></div>
+      <div class="id-body">
+        <div class="id-title">No-code / Low-code</div>
+        <div class="id-sub">n8n, Flowise, Dify, Relevance AI</div>
+        <div class="id-stats">
+          <div><div class="id-stat-val" style="color:var(--alt3)">1 / 9</div><div class="id-stat-label">a tuo carico</div></div>
+          <div><div class="id-stat-val" style="color:var(--alt3)">3</div><div class="id-stat-label">forniti dalla piattaforma</div></div>
+          <div><div class="id-stat-val" style="color:var(--alt3)">5</div><div class="id-stat-label">da configurare</div></div>
+        </div>
+        <div class="id-desc">La piattaforma fornisce l'infrastruttura, l'interfaccia e i moduli base. Tu <strong>costruisci il flusso</strong> trascinando e connettendo nodi visualmente — ogni nodo è un'azione (chiama LLM, cerca in database, manda email). È costruzione vera, non semplice configurazione, ma senza scrivere codice. Il compromesso è che <strong>la complessità massima gestibile è limitata</strong> dalla piattaforma.</div>
+      </div>
+    </div>
+
+    <div class="comp-grid">
+      <div class="cg-item"><div class="cg-accent" style="background:var(--own-conf)"></div><div class="cg-content">
+        <div class="cg-head"><span class="cg-name">01 · Orchestratore</span><span class="cg-badge badge-conf">Configuri visualmente</span></div>
+        <div class="cg-text">Costruisci il flusso con un <strong>editor drag-and-drop</strong>: nodi (azioni) connessi da archi (condizioni). Il motore di esecuzione è della piattaforma, ma la logica del flusso è tua. Potente per flussi lineari e branching semplice; <strong>limitato per loop complessi, retry sofisticati e gestione stato avanzata</strong>. Quando il numero di nodi supera 30-40, il flusso visuale diventa meno gestibile del codice equivalente.</div>
+      </div></div>
+
+      <div class="cg-item"><div class="cg-accent" style="background:var(--own-conf)"></div><div class="cg-content">
+        <div class="cg-head"><span class="cg-name">02 · Modello LLM</span><span class="cg-badge badge-conf">Scegli da menu</span></div>
+        <div class="cg-text">Le piattaforme offrono <strong>integrazioni precostruite</strong> con i principali provider (OpenAI, Anthropic, Google, modelli locali via Ollama). Porti la tua API key, scegli il modello da un dropdown, configuri temperatura e parametri. Cambiare modello è un click. Limitazione: non tutti i modelli sono supportati, e le opzioni avanzate (streaming, tool use specifico) possono essere limitate.</div>
+      </div></div>
+
+      <div class="cg-item"><div class="cg-accent" style="background:var(--own-conf)"></div><div class="cg-content">
+        <div class="cg-head"><span class="cg-name">03 · Prompt</span><span class="cg-badge badge-conf">Editor guidato</span></div>
+        <div class="cg-text">Editor di prompt integrato, spesso con <strong>suggerimenti e template</strong>. Puoi scrivere istruzioni di sistema, aggiungere variabili dinamiche, definire il formato dell'output. Meno potente della libertà totale del codice (difficile fare prompt engineering sofisticato in un campo testo), ma accessibile a non-programmatori.</div>
+      </div></div>
+
+      <div class="cg-item"><div class="cg-accent" style="background:var(--own-plat)"></div><div class="cg-content">
+        <div class="cg-head"><span class="cg-name">04 · Memoria</span><span class="cg-badge badge-plat">Integrata</span></div>
+        <div class="cg-text">Memoria conversazionale tipicamente <strong>inclusa e gestita dalla piattaforma</strong>. Configuri tipo e durata. Memoria a lungo termine e stato del workflow variano: <strong>Dify</strong> offre memoria persistente, <strong>Flowise</strong> supporta diversi backend. Limiti sulla personalizzazione delle strategie di retrieval.</div>
+      </div></div>
+
+      <div class="cg-item"><div class="cg-accent" style="background:var(--own-conf)"></div><div class="cg-content">
+        <div class="cg-head"><span class="cg-name">05 · Strumenti</span><span class="cg-badge badge-conf">Nodi precostruiti</span></div>
+        <div class="cg-text"><strong>Il punto di forza del no-code.</strong> n8n ha 400+ nodi per servizi diversi (Gmail, Slack, Notion, database SQL, HTTP generico). Trascini il nodo, configuri le credenziali, colleghi. Per servizi non coperti, molte piattaforme offrono un nodo "HTTP generico" — che richiede però conoscenze tecniche sulle API.</div>
+      </div></div>
+
+      <div class="cg-item"><div class="cg-accent" style="background:var(--own-conf)"></div><div class="cg-content">
+        <div class="cg-head"><span class="cg-name">06 · RAG</span><span class="cg-badge badge-conf">Nodo preconfigurato</span></div>
+        <div class="cg-text">Nodi RAG precostruiti: carichi documenti, la piattaforma gestisce chunking, embedding e storage. <strong>Funziona out-of-the-box</strong> per casi semplici. Limiti: poco controllo sul chunking, scelta ristretta di vector store, difficile ottimizzare il retrieval per casi specifici.</div>
+      </div></div>
+
+      <div class="cg-item"><div class="cg-accent" style="background:var(--own-conf)"></div><div class="cg-content">
+        <div class="cg-head"><span class="cg-name">07 · Guardrail</span><span class="cg-badge badge-conf">Configurazioni base</span></div>
+        <div class="cg-text">Opzioni di base: <strong>content filtering, token limits, timeout</strong>. Alcune piattaforme offrono nodi di validazione che puoi inserire nel flusso. Human-in-the-loop spesso supportato come nodo "attendi approvazione". Per guardrail sofisticati (PII detection, compliance), le opzioni sono limitate.</div>
+      </div></div>
+
+      <div class="cg-item"><div class="cg-accent" style="background:var(--own-plat)"></div><div class="cg-content">
+        <div class="cg-head"><span class="cg-name">08 · Interfaccia</span><span class="cg-badge badge-plat">Inclusa</span></div>
+        <div class="cg-text"><strong>Un vantaggio netto rispetto al framework.</strong> Le piattaforme includono widget di chat, embed code per il sito, e API. Dify e Flowise offrono interfacce chat personalizzabili (colori, logo, messaggio iniziale). Per un'interfaccia completamente custom serve comunque sviluppo frontend, ma per casi standard il widget basta.</div>
+      </div></div>
+
+      <div class="cg-item"><div class="cg-accent" style="background:var(--own-plat)"></div><div class="cg-content">
+        <div class="cg-head"><span class="cg-name">09 · Infrastruttura</span><span class="cg-badge badge-plat">Cloud incluso</span></div>
+        <div class="cg-text"><strong>Le versioni cloud (Dify Cloud, Relevance AI)</strong> gestiscono hosting, scaling e disponibilità. Zero DevOps. Le versioni self-hosted (n8n, Flowise) richiedono setup Docker — più semplice di un deploy custom ma non trasparente. Il monitoring è base: log di esecuzione, non tracing dettagliato come LangSmith.</div>
+      </div></div>
+    </div>
+
+    <div class="key-point" style="border-color:var(--alt3);">
+      <div class="kp-label" style="color:var(--alt3)">Il profilo del no-code</div>
+      <div class="kp-text">Il no-code è forte sugli "estremi" dell'architettura (interfaccia, infrastruttura, strumenti) e limitato sul "centro" (orchestrazione complessa, guardrail sofisticati).</div>
+      <div class="kp-sub">È il profilo inverso del framework: dove il framework è forte (orchestratore, pattern avanzati), il no-code è debole — e viceversa. Questo spiega perché i due approcci hanno target diversi: il no-code per chi non programma e ha flussi relativamente semplici; il framework per sviluppatori con esigenze di flussi complessi.</div>
+    </div>
+
+  </div>
+</div>
+
+
+<!-- ═══════════════════════════
+     S4 — MARKETPLACE
+═══════════════════════════ -->
+<div class="sect" id="s4">
+  <div class="sect-head">
+    <div class="sect-num">Alternativa 04</div>
+    <h2>Marketplace / Agenti Configurabili</h2>
+    <p>Non costruisci: usi. L'agente esiste già, tu lo personalizzi nei limiti consentiti. Il massimo della velocità, il minimo del controllo architetturale.</p>
+  </div>
+  <div class="wrap">
+
+    <div class="id-card">
+      <div class="id-accent" style="background:var(--alt4)"></div>
+      <div class="id-body">
+        <div class="id-title">Marketplace / Agenti Configurabili</div>
+        <div class="id-sub">GPT Store, Poe Bots, Claude Projects, Coze</div>
+        <div class="id-stats">
+          <div><div class="id-stat-val" style="color:var(--alt4)">0 / 9</div><div class="id-stat-label">a tuo carico</div></div>
+          <div><div class="id-stat-val" style="color:var(--alt4)">2</div><div class="id-stat-label">da configurare</div></div>
+          <div><div class="id-stat-val" style="color:var(--alt4)">7</div><div class="id-stat-label">non accessibili</div></div>
+        </div>
+        <div class="id-desc">L'intera architettura è della piattaforma. L'orchestratore, il modello, la memoria, l'interfaccia — tutto è predefinito. Tu puoi personalizzare solo il <strong>prompt</strong> (le istruzioni di comportamento) e la <strong>knowledge base</strong> (i documenti che l'agente consulta). È la via più rapida per avere un agente funzionante, ma <strong>il confine tra ciò che puoi e non puoi fare è rigido</strong>.</div>
+      </div>
+    </div>
+
+    <div class="comp-grid">
+      <div class="cg-item"><div class="cg-accent" style="background:var(--own-no)"></div><div class="cg-content">
+        <div class="cg-head"><span class="cg-name">01 · Orchestratore</span><span class="cg-badge badge-no">Non accessibile</span></div>
+        <div class="cg-text">Il loop di ragionamento è interno alla piattaforma. <strong>Non lo vedi, non lo modifichi, non sai come funziona.</strong> Se il modello ragiona in tre passi e tu ne vorresti cinque, non puoi cambiarlo. Se la gestione errori non ti soddisfa, non hai leva. Il vantaggio: non devi progettarlo. Il limite: non puoi adattarlo.</div>
+      </div></div>
+
+      <div class="cg-item"><div class="cg-accent" style="background:var(--own-no)"></div><div class="cg-content">
+        <div class="cg-head"><span class="cg-name">02 · Modello LLM</span><span class="cg-badge badge-no">Fisso</span></div>
+        <div class="cg-text">Il vendor decide quale modello usa l'agente. Un GPT custom usa GPT-4o (o il modello che OpenAI decide). Un Claude Project usa Claude. <strong>Non puoi scegliere, non puoi cambiare, non sai quando il vendor aggiornerà il modello.</strong> Se il comportamento cambia dopo un aggiornamento, non hai possibilità di intervento.</div>
+      </div></div>
+
+      <div class="cg-item"><div class="cg-accent" style="background:var(--own-conf)"></div><div class="cg-content">
+        <div class="cg-head"><span class="cg-name">03 · Prompt</span><span class="cg-badge badge-conf">Campo di istruzioni</span></div>
+        <div class="cg-text"><strong>L'unico componente su cui hai influenza significativa.</strong> Scrivi istruzioni di sistema in un campo testo: chi è l'agente, come si comporta, cosa non deve fare. È prompt engineering puro, senza strutture o pattern del framework. La qualità delle istruzioni determina quasi interamente la qualità dell'agente — è la tua unica leva.</div>
+      </div></div>
+
+      <div class="cg-item"><div class="cg-accent" style="background:var(--own-no)"></div><div class="cg-content">
+        <div class="cg-head"><span class="cg-name">04 · Memoria</span><span class="cg-badge badge-no">Gestita dal vendor</span></div>
+        <div class="cg-text">La piattaforma gestisce la memoria conversazionale internamente. Non puoi cambiare strategia, dimensione, o tipo. Memoria a lungo termine tra sessioni diverse: <strong>raramente disponibile</strong>. Non puoi implementare stato di workflow. Il "ricordare" dell'agente è ciò che il vendor ha previsto.</div>
+      </div></div>
+
+      <div class="cg-item"><div class="cg-accent" style="background:var(--own-no)"></div><div class="cg-content">
+        <div class="cg-head"><span class="cg-name">05 · Strumenti</span><span class="cg-badge badge-no">Quelli previsti</span></div>
+        <div class="cg-text">Alcuni marketplace offrono strumenti predefiniti: <strong>web browsing, code execution, DALL·E</strong> (per GPT). Non puoi aggiungere connettori a sistemi tuoi. Non puoi collegare il CRM, il gestionale, le API interne. L'agente opera nel perimetro deciso dal vendor — e basta.</div>
+      </div></div>
+
+      <div class="cg-item"><div class="cg-accent" style="background:var(--own-conf)"></div><div class="cg-content">
+        <div class="cg-head"><span class="cg-name">06 · RAG</span><span class="cg-badge badge-conf">Upload documenti</span></div>
+        <div class="cg-text"><strong>Il secondo punto di personalizzazione.</strong> Carichi file (PDF, testo, immagini) e la piattaforma li rende interrogabili dall'agente. La pipeline (chunking, embedding, retrieval) è gestita internamente — non puoi modificarla. La qualità dipende dalla piattaforma e dalla qualità dei documenti che carichi.</div>
+      </div></div>
+
+      <div class="cg-item"><div class="cg-accent" style="background:var(--own-no)"></div><div class="cg-content">
+        <div class="cg-head"><span class="cg-name">07 · Guardrail</span><span class="cg-badge badge-no">Del vendor</span></div>
+        <div class="cg-text">I guardrail sono quelli della piattaforma: content policy, limiti di utilizzo, filtri di sicurezza. <strong>Non puoi aggiungerne di tuoi</strong> (tranne tramite il prompt — "non parlare mai di X"). Se la policy del vendor è troppo restrittiva per il tuo caso, o troppo permissiva, non puoi aggiustarla.</div>
+      </div></div>
+
+      <div class="cg-item"><div class="cg-accent" style="background:var(--own-no)"></div><div class="cg-content">
+        <div class="cg-head"><span class="cg-name">08 · Interfaccia</span><span class="cg-badge badge-no">Della piattaforma</span></div>
+        <div class="cg-text">L'utente interagisce tramite la piattaforma: la chat di ChatGPT, la conversazione di Claude, l'interfaccia di Poe. <strong>Non puoi embeddarla nel tuo sito</strong> (con poche eccezioni), non puoi personalizzare l'UX, non puoi integrare in workflow aziendali. L'agente vive nel "recinto" della piattaforma.</div>
+      </div></div>
+
+      <div class="cg-item"><div class="cg-accent" style="background:var(--own-no)"></div><div class="cg-content">
+        <div class="cg-head"><span class="cg-name">09 · Infrastruttura</span><span class="cg-badge badge-no">Del vendor</span></div>
+        <div class="cg-text">Zero infrastruttura da gestire. Disponibilità, scaling, sicurezza — tutto responsabilità del vendor. <strong>Nessun costo infrastrutturale</strong> oltre all'abbonamento alla piattaforma. Zero monitoring, zero logging accessibile, zero personalizzazione operativa.</div>
+      </div></div>
+    </div>
+
+    <div class="key-point" style="border-color:var(--alt4);">
+      <div class="kp-label" style="color:var(--alt4)">Il profilo del marketplace</div>
+      <div class="kp-text">Il marketplace ha il profilo più estremo: quasi tutto grigio. Le uniche leve sono il prompt e i documenti. Tutto il resto è fuori dal tuo controllo.</div>
+      <div class="kp-sub">Questa è la differenza architetturale fondamentale tra marketplace e no-code che giustifica la separazione. Con il no-code <em>costruisci</em> il flusso, scegli il modello, configuri gli strumenti. Con il marketplace <em>scrivi istruzioni</em> e carichi file. Sono due livelli di agency radicalmente diversi — anche se nessuno dei due richiede codice.</div>
+    </div>
+
+  </div>
+</div>
+
+
+<!-- ═══════════════════════════
+     S5 — OPEN SOURCE
+═══════════════════════════ -->
+<div class="sect" id="s5">
+  <div class="sect-head">
+    <div class="sect-num">Alternativa 05</div>
+    <h2>Open Source da Repository</h2>
+    <p>Parti da un agente già scritto da altri — un template, un boilerplate, un progetto completo su GitHub — e lo adatti al tuo caso. Il punto di partenza è codice funzionante, non un'infrastruttura vuota.</p>
+  </div>
+  <div class="wrap">
+
+    <div class="id-card">
+      <div class="id-accent" style="background:var(--alt5)"></div>
+      <div class="id-body">
+        <div class="id-title">Open Source da Repository</div>
+        <div class="id-sub">Template GitHub, boilerplate, progetti clonabili</div>
+        <div class="id-stats">
+          <div><div class="id-stat-val" style="color:var(--alt5)">2 / 9</div><div class="id-stat-label">a tuo carico</div></div>
+          <div><div class="id-stat-val" style="color:var(--alt5)">0</div><div class="id-stat-label">forniti (è tutto codice tuo)</div></div>
+          <div><div class="id-stat-val" style="color:var(--alt5)">7</div><div class="id-stat-label">punto di partenza da adattare</div></div>
+        </div>
+        <div class="id-desc">La differenza rispetto al framework è nel punto di partenza. Con il framework <strong>costruisci da un'infrastruttura</strong> — hai i pezzi, assembli il progetto. Con l'open source da repository <strong>parti da un progetto funzionante</strong> — qualcuno ha già assemblato i pezzi, tu li modifichi. Il codice è tutto leggibile e modificabile, ma la qualità e la manutenzione variano enormemente da progetto a progetto.</div>
+      </div>
+    </div>
+
+    <div class="comp-grid">
+      <div class="cg-item"><div class="cg-accent" style="background:var(--own-conf)"></div><div class="cg-content">
+        <div class="cg-head"><span class="cg-name">01 · Orchestratore</span><span class="cg-badge badge-conf">Già implementato, modifichi</span></div>
+        <div class="cg-text"><strong>Il loop agentico è già scritto.</strong> Vedi come funziona, capisci le scelte fatte, e le modifichi dove serve. Il valore formativo è enorme: leggere un orchestratore funzionante insegna pattern che un tutorial non trasmette. Il rischio: se il progetto originale ha fatto scelte architetturali sbagliate, le erediti — e potresti non accorgertene subito.</div>
+      </div></div>
+
+      <div class="cg-item"><div class="cg-accent" style="background:var(--own-conf)"></div><div class="cg-content">
+        <div class="cg-head"><span class="cg-name">02 · Modello LLM</span><span class="cg-badge badge-conf">Già integrato, cambi</span></div>
+        <div class="cg-text">Il progetto è tipicamente scritto per un modello specifico (spesso GPT o Claude). Puoi cambiarlo, ma potrebbe richiedere adattamenti nel prompt e nel parsing delle risposte. L'integrazione è già fatta — <strong>ma potrebbe non essere ottimizzata</strong> per il modello che vuoi usare tu.</div>
+      </div></div>
+
+      <div class="cg-item"><div class="cg-accent" style="background:var(--own-conf)"></div><div class="cg-content">
+        <div class="cg-head"><span class="cg-name">03 · Prompt</span><span class="cg-badge badge-conf">Già scritto, adatti</span></div>
+        <div class="cg-text">Parti da un prompt funzionante — spesso il risultato di iterazioni dell'autore originale. Lo adatti al tuo caso: tono, regole, contesto. <strong>Valore formativo alto</strong>: leggere un prompt di qualità è il modo migliore per imparare prompt engineering. Rischio: il prompt potrebbe essere ottimizzato per un caso diverso dal tuo.</div>
+      </div></div>
+
+      <div class="cg-item"><div class="cg-accent" style="background:var(--own-conf)"></div><div class="cg-content">
+        <div class="cg-head"><span class="cg-name">04 · Memoria</span><span class="cg-badge badge-conf">Già implementata, adatti</span></div>
+        <div class="cg-text">La memoria è nel codice: vedi esattamente come funziona, quale strategia usa, dove persiste. Puoi modificarla liberamente. <strong>Qualità molto variabile:</strong> alcuni progetti hanno memoria sofisticata, altri hanno solo un buffer conversazionale base. Valuta prima di scegliere il repo.</div>
+      </div></div>
+
+      <div class="cg-item"><div class="cg-accent" style="background:var(--own-conf)"></div><div class="cg-content">
+        <div class="cg-head"><span class="cg-name">05 · Strumenti</span><span class="cg-badge badge-conf">Quelli del repo, estendi</span></div>
+        <div class="cg-text">Il progetto include i connettori che l'autore ha implementato. Potresti trovare quello che ti serve, o no. <strong>Aggiungere tool mancanti è standard</strong> — segui il pattern esistente nel codice. Il vantaggio rispetto al framework: vedi l'implementazione concreta, non solo l'interfaccia astratta.</div>
+      </div></div>
+
+      <div class="cg-item"><div class="cg-accent" style="background:var(--own-conf)"></div><div class="cg-content">
+        <div class="cg-head"><span class="cg-name">06 · RAG</span><span class="cg-badge badge-conf">Se presente, adatti</span></div>
+        <div class="cg-text">Molti template includono una pipeline RAG. Se il caso d'uso del repo è simile al tuo, parti avvantaggiato. <strong>Attenzione:</strong> i parametri di chunking sono spesso quelli di default e non ottimizzati. La pipeline funziona ma potrebbe richiedere tuning significativo per il tuo dominio.</div>
+      </div></div>
+
+      <div class="cg-item"><div class="cg-accent" style="background:var(--own-conf)"></div><div class="cg-content">
+        <div class="cg-head"><span class="cg-name">07 · Guardrail</span><span class="cg-badge badge-conf">Variabile</span></div>
+        <div class="cg-text"><strong>Spesso assenti o minimi.</strong> I progetti open source tendono a concentrarsi sulla funzionalità, non sulla sicurezza. Se il repo ha guardrail, è un buon punto di partenza. Se non li ha — ed è il caso più frequente — li devi aggiungere tu da zero, come nel custom.</div>
+      </div></div>
+
+      <div class="cg-item"><div class="cg-accent" style="background:var(--own-conf)"></div><div class="cg-content">
+        <div class="cg-head"><span class="cg-name">08 · Interfaccia</span><span class="cg-badge badge-conf">Se inclusa, adatti</span></div>
+        <div class="cg-text">Alcuni progetti includono un frontend (spesso Streamlit, Gradio, o React). <strong>La qualità varia enormemente</strong>: da prototipo funzionante a demo minimal. Se il repo include un'interfaccia, hai un punto di partenza. Se non la include, sei nella stessa situazione del framework — la costruisci tu.</div>
+      </div></div>
+
+      <div class="cg-item"><div class="cg-accent" style="background:var(--own-you)"></div><div class="cg-content">
+        <div class="cg-head"><span class="cg-name">09 · Infrastruttura</span><span class="cg-badge badge-you">A tuo carico</span></div>
+        <div class="cg-text">Il repo ti dà il codice, non il deploy. Hosting, scaling, monitoring sono responsabilità tua. Alcuni progetti includono <strong>Dockerfile o docker-compose</strong> — un aiuto concreto ma non una soluzione completa. Il monitoring è quasi sempre assente: lo devi aggiungere.</div>
+      </div></div>
+    </div>
+
+    <div class="key-point" style="border-color:var(--alt5);">
+      <div class="kp-label" style="color:var(--alt5)">Il profilo dell'open source da repository</div>
+      <div class="kp-text">L'open source è quasi tutto "oro" (parti da qualcosa e adatti). Il vantaggio è la velocità del punto di partenza e il valore formativo. Il rischio è ereditare scelte architetturali non adatte al tuo caso.</div>
+      <div class="kp-sub">La differenza chiave con il framework: il framework ti dà un'<strong>infrastruttura neutrale</strong> — i pezzi sono generici e tu li componi. L'open source ti dà un <strong>progetto opinionato</strong> — qualcuno ha già fatto le scelte per te, e tu parti da lì. Il framework è più flessibile ma richiede più lavoro iniziale. L'open source è più veloce ma più vincolato alle scelte dell'autore originale.</div>
+    </div>
+
+  </div>
+</div>
+
+
+<!-- ═══════════════════════════
+     S6 — CONFRONTO
+═══════════════════════════ -->
+<div class="sect" id="s6">
+  <div class="sect-head">
+    <div class="sect-num">Confronto</div>
+    <h2>I 5 profili a confronto</h2>
+    <p>Le differenze architetturali chiave tra le 5 alternative, le implicazioni pratiche, e la domanda fondamentale che emerge dal confronto.</p>
+  </div>
+  <div class="wrap">
+
+    <div class="prose">
+      <p>Guardando la matrice di sintesi, emergono <strong>tre pattern</strong> che vale la pena rendere espliciti.</p>
+
+      <p>Il primo è che <strong>framework e no-code sono complementi, non sostituti</strong>. Il framework è forte dove il no-code è debole (orchestrazione complessa, pattern avanzati, guardrail) e debole dove il no-code è forte (interfaccia, infrastruttura, accessibilità). Hanno target diversi e risolvono problemi diversi. Scegliere tra i due non è una questione di "meglio/peggio" ma di profilo del team e complessità del caso d'uso.</p>
+
+      <p>Il secondo è che <strong>marketplace e no-code sono radicalmente diversi</strong>, nonostante entrambi non richiedano codice. Con il no-code costruisci — scegli il modello, disegni il flusso, configuri gli strumenti. Con il marketplace configuri — scrivi istruzioni e carichi documenti. La differenza è nel numero di componenti su cui hai voce: 7 nel no-code, 2 nel marketplace. Nella matrice, il no-code è quasi tutto oro (configuri), il marketplace è quasi tutto grigio (non accessibile). Confonderli porta a aspettative sbagliate.</p>
+
+      <p>Il terzo è che <strong>l'open source da repository è l'alternativa più imprevedibile</strong>. Il suo profilo dipende interamente dalla qualità del progetto che scegli. Un repo eccellente può darti un agente quasi pronto per la produzione. Un repo mediocre può darti più problemi che soluzioni — codice fragile, scelte architetturali sbagliate, dipendenze non mantenute. La competenza necessaria per <em>valutare</em> un repository è essa stessa una competenza non banale.</p>
+    </div>
+
+    <!-- Final matrix: components × ownership count -->
+    <div class="matrix-scroll" style="margin-top:28px;">
+      <table class="matrix">
+        <thead>
+          <tr>
+            <th style="text-align:left">Metrica</th>
+            <th style="border-bottom:3px solid var(--alt1)">Custom</th>
+            <th style="border-bottom:3px solid var(--alt2)">Framework</th>
+            <th style="border-bottom:3px solid var(--alt3)">No-code</th>
+            <th style="border-bottom:3px solid var(--alt4)">Marketplace</th>
+            <th style="border-bottom:3px solid var(--alt5)">Open Source</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td class="row-head">Costruisci tu</td>
+            <td class="mx-you">9</td>
+            <td class="mx-you">4</td>
+            <td class="mx-you">1</td>
+            <td>0</td>
+            <td class="mx-you">2</td>
+          </tr>
+          <tr>
+            <td class="row-head">Configuri</td>
+            <td>0</td>
+            <td class="mx-conf">2</td>
+            <td class="mx-conf">5</td>
+            <td class="mx-conf">2</td>
+            <td class="mx-conf">7</td>
+          </tr>
+          <tr>
+            <td class="row-head">Fornito dalla piattaforma</td>
+            <td>0</td>
+            <td class="mx-plat">3</td>
+            <td class="mx-plat">3</td>
+            <td>0</td>
+            <td>0</td>
+          </tr>
+          <tr>
+            <td class="row-head">Non accessibile</td>
+            <td>0</td>
+            <td>0</td>
+            <td>0</td>
+            <td class="mx-no">7</td>
+            <td>0</td>
+          </tr>
+          <tr>
+            <td class="row-head">Competenze richieste</td>
+            <td>Dev AI senior</td>
+            <td>Dev Python + framework</td>
+            <td>Logica dei processi</td>
+            <td>Prompt engineering</td>
+            <td>Dev Python + eval codice</td>
+          </tr>
+          <tr>
+            <td class="row-head">Timeline tipica</td>
+            <td>2-6 mesi</td>
+            <td>2-6 settimane</td>
+            <td>1-5 giorni</td>
+            <td>1-4 ore</td>
+            <td>1-4 settimane</td>
+          </tr>
+          <tr>
+            <td class="row-head">Punto di forza</td>
+            <td>Libertà totale</td>
+            <td>Orchestrazione robusta</td>
+            <td>Accessibilità + integrazioni</td>
+            <td>Velocità assoluta</td>
+            <td>Punto di partenza + formazione</td>
+          </tr>
+          <tr>
+            <td class="row-head">Punto debole</td>
+            <td>Tutto a tuo carico</td>
+            <td>No UI, no infra</td>
+            <td>Limiti di complessità</td>
+            <td>Zero controllo</td>
+            <td>Qualità imprevedibile</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="key-point" style="border-color:var(--core); margin-top: 32px;">
+      <div class="kp-label" style="color:var(--core)">La domanda che emerge</div>
+      <div class="kp-text">Non "quale alternativa è migliore?" — ma "su quali componenti voglio investire il mio tempo e le mie competenze, e per quali accetto di usare ciò che altri hanno già costruito?"</div>
+      <div class="kp-sub">Se il tuo vantaggio competitivo è nell'orchestrazione (un workflow unico), investi lì e usa il precostruito per tutto il resto. Se il tuo vantaggio è nella qualità della knowledge base, il marketplace potrebbe bastare. Se hai bisogno di integrazioni con molti sistemi ma flussi semplici, il no-code è la scelta. Se vuoi capire come funziona un agente prima di scegliere, parti da un repository open source e studia il codice. Ogni alternativa è la risposta giusta a una domanda diversa.</div>
+    </div>
+
+  </div>
+</div>
+
+
+<!-- FOOTER -->
+<div class="footer">
+  <span>Serie Agenti AI — Report 08 · L'Architettura Declinata</span>
+  <span>Marzo 2026</span>
+</div>
+
+
+<script>
+function show(n) {
+  document.querySelectorAll('.sect').forEach(s => s.classList.remove('active'));
+  document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('s'+n).classList.add('active');
+  document.querySelectorAll('.nav-btn')[n].classList.add('active');
+  window.scrollTo({top:0, behavior:'smooth'});
+}
+</script>
+
+</body>
+</html>

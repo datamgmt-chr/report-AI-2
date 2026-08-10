@@ -1,0 +1,1649 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Tassonomia dei Modelli LLM — Classificazione Sistematica</title>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&family=IBM+Plex+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0e0e0e;
+    --bg2: #141414;
+    --bg3: #1a1a1a;
+    --bg4: #202020;
+    --bg5: #262626;
+    --phosphor: #39ff14;
+    --phosphor-dim: #27b30d;
+    --phosphor-faint: rgba(57,255,20,0.07);
+    --phosphor-faint2: rgba(57,255,20,0.04);
+    --phosphor-border: rgba(57,255,20,0.2);
+    --phosphor-border2: rgba(57,255,20,0.1);
+    --white: #e8e8e8;
+    --white-dim: #a0a0a0;
+    --white-faint: #606060;
+    --amber: #ffaa00;
+    --amber-faint: rgba(255,170,0,0.07);
+    --amber-border: rgba(255,170,0,0.2);
+    --red: #ff3333;
+    --red-faint: rgba(255,51,51,0.07);
+    --red-border: rgba(255,51,51,0.2);
+    --blue: #4499ff;
+    --blue-faint: rgba(68,153,255,0.07);
+    --blue-border: rgba(68,153,255,0.2);
+    --cyan: #00ccff;
+    --cyan-faint: rgba(0,204,255,0.07);
+    --border: rgba(255,255,255,0.08);
+    --border2: rgba(255,255,255,0.05);
+    --mono: 'IBM Plex Mono', monospace;
+    --sans: 'IBM Plex Sans', sans-serif;
+  }
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--bg);
+    color: var(--white);
+    font-family: var(--mono);
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* Scanline effect */
+  body::after {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background: repeating-linear-gradient(
+      0deg,
+      transparent,
+      transparent 2px,
+      rgba(0,0,0,0.03) 2px,
+      rgba(0,0,0,0.03) 4px
+    );
+    pointer-events: none;
+    z-index: 100;
+  }
+
+  .page-wrap {
+    max-width: 1120px;
+    margin: 0 auto;
+    padding: 0 32px 80px;
+  }
+
+  /* ── HEADER ── */
+  header {
+    padding: 48px 0 0;
+    border-bottom: 1px solid var(--border);
+    margin-bottom: 40px;
+  }
+
+  .sys-bar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 11px;
+    color: var(--phosphor-dim);
+    letter-spacing: 1px;
+    margin-bottom: 32px;
+    padding-bottom: 12px;
+    border-bottom: 1px solid var(--phosphor-border2);
+  }
+
+  .sys-bar-left { display: flex; gap: 24px; }
+
+  .prompt-line {
+    font-size: 11px;
+    color: var(--phosphor-dim);
+    margin-bottom: 12px;
+  }
+
+  .prompt-line span { color: var(--phosphor); }
+
+  h1 {
+    font-family: var(--mono);
+    font-size: clamp(26px, 4vw, 48px);
+    font-weight: 700;
+    color: var(--phosphor);
+    letter-spacing: -1px;
+    line-height: 1.0;
+    margin-bottom: 8px;
+    text-shadow: 0 0 30px rgba(57,255,20,0.3);
+  }
+
+  .h1-sub {
+    font-size: 14px;
+    color: var(--white-dim);
+    margin-bottom: 20px;
+    font-weight: 300;
+    letter-spacing: 1px;
+  }
+
+  .header-meta {
+    display: flex;
+    gap: 32px;
+    font-size: 11px;
+    color: var(--white-faint);
+    padding: 14px 0;
+    letter-spacing: 1px;
+  }
+
+  .meta-item { display: flex; gap: 8px; }
+  .meta-key { color: var(--phosphor-dim); }
+
+  /* ── TABS ── */
+  .tabs {
+    display: flex;
+    gap: 0;
+    margin-bottom: 40px;
+    border: 1px solid var(--border);
+    overflow: hidden;
+    overflow-x: auto;
+  }
+
+  .tab {
+    font-family: var(--mono);
+    font-size: 11px;
+    letter-spacing: 1px;
+    color: var(--white-faint);
+    padding: 12px 20px;
+    cursor: pointer;
+    border: none;
+    background: transparent;
+    border-right: 1px solid var(--border);
+    white-space: nowrap;
+    transition: all 0.15s;
+  }
+
+  .tab:last-child { border-right: none; }
+  .tab:hover { background: var(--bg3); color: var(--white-dim); }
+  .tab.active { background: var(--phosphor-faint); color: var(--phosphor); border-bottom: 2px solid var(--phosphor); }
+
+  .section { display: none; }
+  .section.active { display: block; animation: blink-in 0.2s ease; }
+  @keyframes blink-in { from { opacity: 0; } to { opacity: 1; } }
+
+  /* ── MODULE HEADERS ── */
+  .mod-header {
+    display: flex;
+    align-items: baseline;
+    gap: 16px;
+    margin-bottom: 8px;
+  }
+
+  h2 {
+    font-family: var(--mono);
+    font-size: 22px;
+    font-weight: 600;
+    color: var(--white);
+    letter-spacing: -0.5px;
+  }
+
+  .mod-id {
+    font-size: 11px;
+    color: var(--phosphor-dim);
+    letter-spacing: 2px;
+  }
+
+  h3 {
+    font-family: var(--mono);
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--phosphor);
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    margin-bottom: 16px;
+  }
+
+  h4 {
+    font-family: var(--mono);
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--white);
+    margin-bottom: 8px;
+  }
+
+  p {
+    font-family: var(--sans);
+    font-size: 15px;
+    line-height: 1.75;
+    color: var(--white-dim);
+    margin-bottom: 14px;
+  }
+
+  .section-intro {
+    font-family: var(--sans);
+    font-size: 15px;
+    line-height: 1.75;
+    color: var(--white-dim);
+    max-width: 720px;
+    margin-bottom: 36px;
+    padding-bottom: 28px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .rule { border: none; border-top: 1px solid var(--border); margin: 36px 0; }
+
+  /* ── CARDS ── */
+  .card {
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    border-radius: 2px;
+    padding: 24px 28px;
+    margin-bottom: 16px;
+    position: relative;
+  }
+
+  .card-accent { position: absolute; top: 0; left: 0; width: 2px; height: 100%; }
+  .ca-green { background: var(--phosphor); }
+  .ca-amber { background: var(--amber); }
+  .ca-red { background: var(--red); }
+  .ca-blue { background: var(--blue); }
+  .ca-cyan { background: var(--cyan); }
+
+  /* ── VARIABLE BLOCKS ── */
+  .var-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+    margin-bottom: 16px;
+  }
+
+  @media (max-width: 768px) { .var-grid { grid-template-columns: 1fr; } }
+
+  .var-block {
+    background: var(--bg3);
+    border: 1px solid var(--border);
+    padding: 18px 20px;
+    border-radius: 2px;
+  }
+
+  .var-num {
+    font-size: 28px;
+    font-weight: 700;
+    color: var(--phosphor);
+    line-height: 1;
+    margin-bottom: 4px;
+    text-shadow: 0 0 20px rgba(57,255,20,0.25);
+  }
+
+  .var-name {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--white);
+    margin-bottom: 6px;
+  }
+
+  .var-desc {
+    font-family: var(--sans);
+    font-size: 13px;
+    color: var(--white-dim);
+    line-height: 1.6;
+  }
+
+  /* ── TAXONOMY TREE ── */
+  .tree-wrap {
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    padding: 24px;
+    border-radius: 2px;
+    margin-bottom: 20px;
+    font-size: 13px;
+  }
+
+  .tree-root {
+    color: var(--phosphor);
+    font-weight: 600;
+    font-size: 14px;
+    margin-bottom: 12px;
+  }
+
+  .tree-l1 {
+    margin-left: 20px;
+    border-left: 1px solid var(--phosphor-border);
+    padding-left: 16px;
+    margin-bottom: 10px;
+  }
+
+  .tree-l1-label {
+    color: var(--amber);
+    font-weight: 600;
+    margin-bottom: 6px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .tree-l1-label::before { content: '├─'; color: var(--white-faint); font-size: 12px; }
+
+  .tree-l2 {
+    margin-left: 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+  }
+
+  .tree-l2-item {
+    color: var(--white-dim);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-family: var(--sans);
+    font-size: 13px;
+    line-height: 1.5;
+  }
+
+  .tree-l2-item::before { content: '└─'; color: var(--white-faint); font-size: 11px; flex-shrink: 0; font-family: var(--mono); }
+
+  .tree-tag {
+    font-family: var(--mono);
+    font-size: 10px;
+    padding: 1px 6px;
+    border-radius: 1px;
+  }
+
+  .tt-g { background: var(--phosphor-faint); color: var(--phosphor); border: 1px solid var(--phosphor-border2); }
+  .tt-a { background: var(--amber-faint); color: var(--amber); border: 1px solid var(--amber-border); }
+  .tt-r { background: var(--red-faint); color: var(--red); border: 1px solid var(--red-border); }
+  .tt-b { background: var(--blue-faint); color: var(--blue); border: 1px solid var(--blue-border); }
+
+  /* ── DATA TABLE ── */
+  .dt {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 20px 0;
+    font-size: 13px;
+  }
+
+  .dt th {
+    font-family: var(--mono);
+    font-size: 10px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--phosphor-dim);
+    padding: 10px 14px;
+    border-bottom: 1px solid var(--phosphor-border);
+    text-align: left;
+    background: var(--bg2);
+    white-space: nowrap;
+  }
+
+  .dt td {
+    padding: 11px 14px;
+    border-bottom: 1px solid var(--border2);
+    color: var(--white-dim);
+    vertical-align: top;
+    font-family: var(--sans);
+    font-size: 14px;
+    line-height: 1.55;
+  }
+
+  .dt tr:hover td { background: var(--bg3); }
+  .dt td:first-child { font-family: var(--mono); font-size: 12px; color: var(--white); font-weight: 500; white-space: nowrap; }
+
+  /* ── MODEL CARDS ── */
+  .model-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 12px;
+    margin: 20px 0;
+  }
+
+  @media (max-width: 900px) { .model-grid { grid-template-columns: 1fr 1fr; } }
+  @media (max-width: 600px) { .model-grid { grid-template-columns: 1fr; } }
+
+  .model-card {
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    border-radius: 2px;
+    overflow: hidden;
+  }
+
+  .model-card-header {
+    padding: 10px 14px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  .model-name {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--white);
+  }
+
+  .model-vendor {
+    font-size: 10px;
+    color: var(--white-faint);
+    letter-spacing: 1px;
+  }
+
+  .model-body {
+    padding: 12px 14px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+
+  .model-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 11px;
+  }
+
+  .model-row-key { color: var(--white-faint); letter-spacing: 1px; }
+  .model-row-val { color: var(--white-dim); font-weight: 500; }
+
+  .tier-badge {
+    font-size: 10px;
+    padding: 2px 8px;
+    border-radius: 1px;
+    letter-spacing: 1px;
+    font-family: var(--mono);
+  }
+
+  .tier-frontier { background: var(--phosphor-faint); color: var(--phosphor); border: 1px solid var(--phosphor-border); }
+  .tier-balanced { background: var(--blue-faint); color: var(--blue); border: 1px solid var(--blue-border); }
+  .tier-fast { background: var(--amber-faint); color: var(--amber); border: 1px solid var(--amber-border); }
+  .tier-open { background: var(--cyan-faint); color: var(--cyan); border: 1px solid rgba(0,204,255,0.2); }
+  .tier-spec { background: var(--red-faint); color: var(--red); border: 1px solid var(--red-border); }
+
+  /* ── DIMENSION BARS ── */
+  .dim-table {
+    width: 100%;
+    margin: 20px 0;
+  }
+
+  .dim-row {
+    display: grid;
+    grid-template-columns: 180px 1fr 80px;
+    gap: 16px;
+    align-items: center;
+    padding: 8px 0;
+    border-bottom: 1px solid var(--border2);
+  }
+
+  .dim-label {
+    font-size: 12px;
+    color: var(--white-dim);
+    letter-spacing: 0.5px;
+  }
+
+  .dim-bar-wrap {
+    height: 8px;
+    background: var(--bg3);
+    border-radius: 1px;
+    overflow: hidden;
+    border: 1px solid var(--border2);
+  }
+
+  .dim-bar {
+    height: 100%;
+    border-radius: 1px;
+    transition: width 0.8s ease;
+  }
+
+  .db-g { background: var(--phosphor); box-shadow: 0 0 6px rgba(57,255,20,0.4); }
+  .db-a { background: var(--amber); }
+  .db-b { background: var(--blue); }
+  .db-r { background: var(--red); }
+
+  .dim-val {
+    font-size: 11px;
+    color: var(--white-faint);
+    text-align: right;
+    font-family: var(--mono);
+  }
+
+  /* ── CALLOUTS ── */
+  .callout {
+    background: var(--bg2);
+    border-left: 2px solid var(--phosphor);
+    padding: 14px 18px;
+    margin: 20px 0;
+    border-radius: 0 2px 2px 0;
+  }
+
+  .callout-label {
+    font-size: 10px;
+    color: var(--phosphor-dim);
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    margin-bottom: 6px;
+  }
+
+  .callout p { color: var(--white-dim); margin-bottom: 0; font-size: 14px; }
+
+  .callout.amber { border-left-color: var(--amber); }
+  .callout.amber .callout-label { color: var(--amber); }
+
+  .callout.red { border-left-color: var(--red); }
+  .callout.red .callout-label { color: var(--red); }
+
+  .callout.blue { border-left-color: var(--blue); }
+  .callout.blue .callout-label { color: var(--blue); }
+
+  /* ── COMPARISON MATRIX ── */
+  .cmp {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 12px;
+    margin: 20px 0;
+    overflow: hidden;
+  }
+
+  .cmp th {
+    font-family: var(--mono);
+    font-size: 10px;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    padding: 10px 12px;
+    border: 1px solid var(--border);
+    text-align: center;
+    white-space: nowrap;
+  }
+
+  .cmp th:first-child { text-align: left; background: var(--bg2); color: var(--white-faint); }
+  .cmp th.th-frontier { background: var(--phosphor-faint); color: var(--phosphor); }
+  .cmp th.th-balanced { background: var(--blue-faint); color: var(--blue); }
+  .cmp th.th-fast { background: var(--amber-faint); color: var(--amber); }
+  .cmp th.th-open { background: var(--cyan-faint); color: var(--cyan); }
+
+  .cmp td {
+    padding: 10px 12px;
+    border: 1px solid var(--border2);
+    text-align: center;
+    font-family: var(--sans);
+    font-size: 13px;
+    color: var(--white-dim);
+    vertical-align: middle;
+  }
+
+  .cmp td:first-child {
+    text-align: left;
+    background: var(--bg2);
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--white-dim);
+    letter-spacing: 0.5px;
+  }
+
+  .cmp tr:hover td { background: var(--bg3); }
+  .cmp tr:hover td:first-child { background: var(--bg3); }
+
+  .dot-5 { color: var(--phosphor); text-shadow: 0 0 6px rgba(57,255,20,0.5); }
+  .dot-4 { color: var(--phosphor-dim); }
+  .dot-3 { color: var(--amber); }
+  .dot-2 { color: var(--white-faint); }
+  .dot-1 { color: var(--red); }
+
+  /* ── DECISION FLOW ── */
+  .dflow {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 0;
+    margin: 24px 0;
+  }
+
+  .dflow-item {
+    display: flex;
+    gap: 16px;
+    padding-bottom: 20px;
+    position: relative;
+  }
+
+  .dflow-item::before {
+    content: '';
+    position: absolute;
+    left: 15px;
+    top: 32px;
+    bottom: 0;
+    width: 1px;
+    background: var(--border);
+  }
+
+  .dflow-item:last-child::before { display: none; }
+
+  .dflow-num {
+    width: 32px;
+    height: 32px;
+    background: var(--bg3);
+    border: 1px solid var(--phosphor-border);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 12px;
+    color: var(--phosphor);
+    flex-shrink: 0;
+    border-radius: 1px;
+    font-weight: 600;
+  }
+
+  .dflow-content { flex: 1; padding-top: 4px; }
+  .dflow-q { font-size: 14px; font-weight: 600; color: var(--white); margin-bottom: 6px; }
+  .dflow-a { font-family: var(--sans); font-size: 13px; color: var(--white-dim); line-height: 1.6; }
+
+  .inline-tag {
+    display: inline-block;
+    font-family: var(--mono);
+    font-size: 10px;
+    padding: 1px 7px;
+    border-radius: 1px;
+    margin: 0 3px;
+  }
+
+  .it-g { background: var(--phosphor-faint); color: var(--phosphor); border: 1px solid var(--phosphor-border); }
+  .it-a { background: var(--amber-faint); color: var(--amber); border: 1px solid var(--amber-border); }
+  .it-b { background: var(--blue-faint); color: var(--blue); border: 1px solid var(--blue-border); }
+  .it-c { background: var(--cyan-faint); color: var(--cyan); border: 1px solid rgba(0,204,255,0.2); }
+
+  /* ── SECTION GRID ── */
+  .s3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px; margin: 16px 0; }
+  .s2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin: 16px 0; }
+  @media (max-width: 768px) { .s3, .s2 { grid-template-columns: 1fr; } }
+
+  /* ── AXIS LABELS ── */
+  .axis-wrap {
+    border: 1px solid var(--border);
+    padding: 20px 24px;
+    background: var(--bg2);
+    border-radius: 2px;
+    margin: 20px 0;
+  }
+
+  .axis-title {
+    font-size: 11px;
+    color: var(--phosphor-dim);
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    margin-bottom: 16px;
+    border-bottom: 1px solid var(--border);
+    padding-bottom: 10px;
+  }
+
+  .axis-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 10px;
+    flex-wrap: wrap;
+  }
+
+  .axis-name {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--white);
+    min-width: 160px;
+  }
+
+  .axis-spectrum {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    flex: 1;
+  }
+
+  .axis-pole {
+    font-size: 11px;
+    color: var(--white-faint);
+    white-space: nowrap;
+  }
+
+  .axis-line {
+    flex: 1;
+    height: 2px;
+    background: linear-gradient(90deg, var(--phosphor), var(--white-faint));
+    border-radius: 1px;
+    min-width: 60px;
+  }
+
+  .axis-examples {
+    font-family: var(--sans);
+    font-size: 12px;
+    color: var(--white-faint);
+    min-width: 200px;
+  }
+</style>
+</head>
+<body>
+<div class="page-wrap">
+
+  <header>
+    <div class="sys-bar">
+      <div class="sys-bar-left">
+        <span>SYS:AGENTI_AI_SERIES</span>
+        <span>MODULE:06</span>
+        <span>VER:1.0.0</span>
+      </div>
+      <span>2026-02-20 // STATO DELL'ARTE</span>
+    </div>
+    <div class="prompt-line">root@llm-taxonomy:~$ <span>./classificazione --mode=sistematica --scope=mercato-corrente</span></div>
+    <h1>TASSONOMIA<br>DEI MODELLI LLM</h1>
+    <div class="h1-sub">CLASSIFICAZIONE SISTEMATICA // VARIABILI DISCRIMINANTI // MAPPA DEL MERCATO</div>
+    <div class="header-meta">
+      <div class="meta-item"><span class="meta-key">SERIE:</span> AGENTI AI</div>
+      <div class="meta-item"><span class="meta-key">SCOPE:</span> FRONTIER + OPEN SOURCE</div>
+      <div class="meta-item"><span class="meta-key">TASSONOMIE:</span> 5</div>
+      <div class="meta-item"><span class="meta-key">VARIABILI:</span> 8 DISCRIMINANTI</div>
+    </div>
+  </header>
+
+  <nav class="tabs">
+    <button class="tab active" onclick="showTab('intro')">00 — Variabili</button>
+    <button class="tab" onclick="showTab('t1')">T1 — Capacità</button>
+    <button class="tab" onclick="showTab('t2')">T2 — Accesso</button>
+    <button class="tab" onclick="showTab('t3')">T3 — Modalità</button>
+    <button class="tab" onclick="showTab('t4')">T4 — Architettura</button>
+    <button class="tab" onclick="showTab('t5')">T5 — Uso Pratico</button>
+    <button class="tab" onclick="showTab('mappa')">Mappa Modelli</button>
+  </nav>
+
+  <!-- ══════════════ TAB 00: VARIABILI ══════════════ -->
+  <section id="intro" class="section active">
+    <div class="mod-header">
+      <h2>Le Variabili Discriminanti</h2>
+      <span class="mod-id">// MOD-00</span>
+    </div>
+    <p class="section-intro">Prima di costruire le tassonomie, occorre identificare le variabili che creano distinzioni reali e rilevanti per chi deve scegliere un modello. Non tutte le variabili pesano allo stesso modo in tutti i contesti d'uso.</p>
+
+    <h3>Le 8 variabili che contano davvero</h3>
+
+    <div class="var-grid">
+      <div class="var-block">
+        <div class="var-num">V1</div>
+        <div class="var-name">Capacità di ragionamento</div>
+        <div class="var-desc">Qualità del ragionamento multi-step, performance su task complessi, gestione dell'ambiguità. È la variabile più direttamente correlata alla qualità dell'output su task difficili. Proxy empirico: benchmark come MMLU, GPQA, SWE-bench, LMSYS Arena.</div>
+      </div>
+      <div class="var-block">
+        <div class="var-num">V2</div>
+        <div class="var-name">Velocità (latenza)</div>
+        <div class="var-desc">Token al secondo, time-to-first-token. Critica per applicazioni interattive e agenti con molte chiamate in sequenza. I modelli grandi sono più lenti; i modelli piccoli e distillati sono spesso sorprendentemente veloci su task semplici.</div>
+      </div>
+      <div class="var-block">
+        <div class="var-num">V3</div>
+        <div class="var-name">Costo per token</div>
+        <div class="var-desc">Input/output token price. Varia di 50–100x tra modelli frontier e modelli fast. Su volumi alti è la variabile economica dominante. Va sempre valutata in combinazione con V1: il costo reale è costo/(qualità task specifico).</div>
+      </div>
+      <div class="var-block">
+        <div class="var-num">V4</div>
+        <div class="var-name">Context window</div>
+        <div class="var-desc">Lunghezza massima del contesto (input + output). Determina quanti documenti, quanta history, quante istruzioni si possono fornire in una singola chiamata. Oggi varia da 8K a 1M+ token. Critica per RAG, agenti con long context, analisi di documenti lunghi.</div>
+      </div>
+      <div class="var-block">
+        <div class="var-num">V5</div>
+        <div class="var-name">Modalità di accesso</div>
+        <div class="var-desc">API proprietaria vs pesi scaricabili (open weights) vs self-hosted. Determina data privacy, costi su scala, possibilità di fine-tuning, dipendenza dal vendor. Per molte organizzazioni questa è la variabile non negoziabile prima di qualsiasi altra.</div>
+      </div>
+      <div class="var-block">
+        <div class="var-num">V6</div>
+        <div class="var-name">Modalità input/output</div>
+        <div class="var-desc">Testo, immagini, audio, video, codice, tool use, function calling, output strutturato. I modelli solo-testo sono più semplici da integrare; i modelli multimodali aprono use case impossibili altrimenti. Il function calling affidabile è critico per gli agenti.</div>
+      </div>
+      <div class="var-block">
+        <div class="var-num">V7</div>
+        <div class="var-name">Specializzazione di dominio</div>
+        <div class="var-desc">General purpose vs verticale (codice, medicina, diritto, scienze). I modelli general purpose sono più flessibili; i verticali superano i general su task specifici nel loro dominio ma performano peggio fuori. La specializzazione può avvenire via pre-training o fine-tuning post.</div>
+      </div>
+      <div class="var-block">
+        <div class="var-num">V8</div>
+        <div class="var-name">Tipo di ragionamento</div>
+        <div class="var-desc">Standard (risposta diretta) vs extended thinking / chain-of-thought esplicito (il modello "pensa" prima di rispondere). I modelli "thinking" (o3, Claude 3.7 Sonnet Extended Thinking) sono significativamente più lenti e costosi ma superiori su ragionamento complesso.</div>
+      </div>
+    </div>
+
+    <hr class="rule">
+
+    <h3>Come le variabili si relazionano tra loro</h3>
+
+    <div class="axis-wrap">
+      <div class="axis-title">// Assi di trade-off principali</div>
+      <div class="axis-row">
+        <div class="axis-name">Capacità vs Velocità</div>
+        <div class="axis-spectrum">
+          <span class="axis-pole">Frontier lento</span>
+          <div class="axis-line"></div>
+          <span class="axis-pole">Fast leggero</span>
+        </div>
+        <div class="axis-examples">Claude Opus ←→ Claude Haiku</div>
+      </div>
+      <div class="axis-row">
+        <div class="axis-name">Capacità vs Costo</div>
+        <div class="axis-spectrum">
+          <span class="axis-pole">Migliore / costoso</span>
+          <div class="axis-line"></div>
+          <span class="axis-pole">Economico / buono</span>
+        </div>
+        <div class="axis-examples">GPT-4o ←→ GPT-4o mini</div>
+      </div>
+      <div class="axis-row">
+        <div class="axis-name">Privacy vs Praticità</div>
+        <div class="axis-spectrum">
+          <span class="axis-pole">Self-hosted totale</span>
+          <div class="axis-line"></div>
+          <span class="axis-pole">API cloud</span>
+        </div>
+        <div class="axis-examples">Llama self-hosted ←→ Claude API</div>
+      </div>
+      <div class="axis-row">
+        <div class="axis-name">Flessibilità vs Precisione</div>
+        <div class="axis-spectrum">
+          <span class="axis-pole">General purpose</span>
+          <div class="axis-line"></div>
+          <span class="axis-pole">Dominio specifico</span>
+        </div>
+        <div class="axis-examples">GPT-4o ←→ CodeLlama / Med-PaLM</div>
+      </div>
+      <div class="axis-row">
+        <div class="axis-name">Thinking vs Velocità</div>
+        <div class="axis-spectrum">
+          <span class="axis-pole">Ragionamento profondo</span>
+          <div class="axis-line"></div>
+          <span class="axis-pole">Risposta immediata</span>
+        </div>
+        <div class="axis-examples">o3 / DeepSeek R1 ←→ Gemini Flash</div>
+      </div>
+    </div>
+
+    <div class="callout">
+      <div class="callout-label">// Principio guida</div>
+      <p>Non esiste un modello ottimale per tutti i task. La tassonomia serve a identificare quale variabile è critica per il tuo caso d'uso specifico, e quindi quale classe di modelli è il punto di partenza giusto.</p>
+    </div>
+
+  </section>
+
+  <!-- ══════════════ TAB T1: CAPACITÀ ══════════════ -->
+  <section id="t1" class="section">
+    <div class="mod-header">
+      <h2>Tassonomia per Capacità e Tier</h2>
+      <span class="mod-id">// T1 // VAR: V1 + V2 + V3</span>
+    </div>
+    <p class="section-intro">La classificazione più pratica per chi deve scegliere un modello per un task. Si basa sul bilanciamento tra capacità di ragionamento, velocità e costo — le tre variabili che determinano il ROI per la maggior parte dei casi d'uso.</p>
+
+    <h3>I Quattro Tier</h3>
+
+    <div class="card">
+      <div class="card-accent ca-green"></div>
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:12px">
+        <h4>TIER 1 — Frontier</h4>
+        <span class="tier-badge tier-frontier">FRONTIER</span>
+      </div>
+      <p>I modelli più capaci disponibili. Massima qualità su ragionamento complesso, coding avanzato, analisi sfumata, task che richiedono comprensione profonda. Usati dove la qualità è non negoziabile e il costo è secondario o il volume è basso.</p>
+      <p>Esempi attuali: <strong>Claude Opus 4</strong>, <strong>GPT-4o</strong>, <strong>Gemini 1.5 Ultra</strong>, <strong>Llama 3.1 405B</strong>.</p>
+      <div class="dim-table">
+        <div class="dim-row">
+          <div class="dim-label">Capacità ragionamento</div>
+          <div class="dim-bar-wrap"><div class="dim-bar db-g" style="width:95%"></div></div>
+          <div class="dim-val">95/100</div>
+        </div>
+        <div class="dim-row">
+          <div class="dim-label">Velocità (token/s)</div>
+          <div class="dim-bar-wrap"><div class="dim-bar db-r" style="width:30%"></div></div>
+          <div class="dim-val">30/100</div>
+        </div>
+        <div class="dim-row">
+          <div class="dim-label">Convenienza costo</div>
+          <div class="dim-bar-wrap"><div class="dim-bar db-r" style="width:15%"></div></div>
+          <div class="dim-val">15/100</div>
+        </div>
+        <div class="dim-row">
+          <div class="dim-label">Context window</div>
+          <div class="dim-bar-wrap"><div class="dim-bar db-g" style="width:90%"></div></div>
+          <div class="dim-val">200k+</div>
+        </div>
+      </div>
+      <div class="callout" style="margin-top:8px">
+        <div class="callout-label">// Quando usarli</div>
+        <p>Task complessi che richiedono ragionamento profondo, analisi multi-step, orchestrazione di agenti, task critici dove un errore ha costo elevato. Non usarli per task routinari ad alto volume.</p>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-accent ca-blue"></div>
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:12px">
+        <h4>TIER 2 — Balanced</h4>
+        <span class="tier-badge tier-balanced">BALANCED</span>
+      </div>
+      <p>Il "sweet spot" per la maggior parte dei task in produzione. Ottima qualità su task standard, velocità accettabile, costo gestibile. È il tier da cui iniziare quasi sempre quando si costruisce un agente.</p>
+      <p>Esempi attuali: <strong>Claude Sonnet 4.5</strong>, <strong>GPT-4o mini</strong> (nelle versioni più capaci), <strong>Gemini 1.5 Pro</strong>, <strong>Llama 3.1 70B</strong>, <strong>Mistral Large</strong>.</p>
+      <div class="dim-table">
+        <div class="dim-row">
+          <div class="dim-label">Capacità ragionamento</div>
+          <div class="dim-bar-wrap"><div class="dim-bar db-b" style="width:78%"></div></div>
+          <div class="dim-val">78/100</div>
+        </div>
+        <div class="dim-row">
+          <div class="dim-label">Velocità (token/s)</div>
+          <div class="dim-bar-wrap"><div class="dim-bar db-a" style="width:65%"></div></div>
+          <div class="dim-val">65/100</div>
+        </div>
+        <div class="dim-row">
+          <div class="dim-label">Convenienza costo</div>
+          <div class="dim-bar-wrap"><div class="dim-bar db-a" style="width:60%"></div></div>
+          <div class="dim-val">60/100</div>
+        </div>
+        <div class="dim-row">
+          <div class="dim-label">Context window</div>
+          <div class="dim-bar-wrap"><div class="dim-bar db-b" style="width:80%"></div></div>
+          <div class="dim-val">128k–200k</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-accent ca-amber"></div>
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:12px">
+        <h4>TIER 3 — Fast / Light</h4>
+        <span class="tier-badge tier-fast">FAST</span>
+      </div>
+      <p>Modelli ottimizzati per velocità e costo. Performance ridotta rispetto ai tier superiori, ma sufficiente per task ben definiti, classificazione, estrazione semplice, interazioni conversazionali standard. Ideali come worker in sistemi multi-agent dove l'orchestratore è Tier 1/2.</p>
+      <p>Esempi attuali: <strong>Claude Haiku 3.5</strong>, <strong>GPT-4o mini</strong>, <strong>Gemini 2.0 Flash</strong>, <strong>Llama 3.1 8B</strong>, <strong>Mistral 7B</strong>, <strong>Phi-4</strong>.</p>
+      <div class="dim-table">
+        <div class="dim-row">
+          <div class="dim-label">Capacità ragionamento</div>
+          <div class="dim-bar-wrap"><div class="dim-bar db-a" style="width:52%"></div></div>
+          <div class="dim-val">52/100</div>
+        </div>
+        <div class="dim-row">
+          <div class="dim-label">Velocità (token/s)</div>
+          <div class="dim-bar-wrap"><div class="dim-bar db-g" style="width:90%"></div></div>
+          <div class="dim-val">90/100</div>
+        </div>
+        <div class="dim-row">
+          <div class="dim-label">Convenienza costo</div>
+          <div class="dim-bar-wrap"><div class="dim-bar db-g" style="width:88%"></div></div>
+          <div class="dim-val">88/100</div>
+        </div>
+        <div class="dim-row">
+          <div class="dim-label">Context window</div>
+          <div class="dim-bar-wrap"><div class="dim-bar db-a" style="width:50%"></div></div>
+          <div class="dim-val">8k–128k</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-accent ca-cyan"></div>
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:12px">
+        <h4>TIER 4 — Reasoning / Thinking</h4>
+        <span class="tier-badge tier-spec">THINKING</span>
+      </div>
+      <p>Una categoria emersa nel 2024–2025. Modelli che producono un "pensiero interno" esteso prima di rispondere. Superiori su ragionamento matematico, logica formale, coding complesso, problem solving multi-step. Molto più lenti e costosi dei modelli standard, anche frontier.</p>
+      <p>Esempi attuali: <strong>OpenAI o1 / o3</strong>, <strong>Claude 3.7 Sonnet (Extended Thinking)</strong>, <strong>DeepSeek R1</strong>, <strong>Gemini 2.0 Flash Thinking</strong>, <strong>QwQ-32B</strong>.</p>
+      <div class="callout amber" style="margin-top:8px">
+        <div class="callout-label">// Attenzione</div>
+        <p>Non usare i modelli thinking per task semplici — il costo e la latenza sono sproporzionati. Sono giustificati solo quando la qualità del ragionamento è la variabile critica e non c'è vincolo di tempo o budget severo.</p>
+      </div>
+    </div>
+
+    <hr class="rule">
+
+    <h3>Matrice di selezione per task</h3>
+    <table class="cmp">
+      <thead>
+        <tr>
+          <th>Task</th>
+          <th class="th-frontier">Frontier</th>
+          <th class="th-balanced">Balanced</th>
+          <th class="th-fast">Fast</th>
+          <th class="th-open">Thinking</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>Ragionamento complesso / analisi</td>
+          <td class="dot-5">●●●●●</td>
+          <td class="dot-4">●●●●○</td>
+          <td class="dot-2">●●○○○</td>
+          <td class="dot-5">●●●●●</td>
+        </tr>
+        <tr>
+          <td>Generazione testo / contenuti</td>
+          <td class="dot-5">●●●●●</td>
+          <td class="dot-5">●●●●●</td>
+          <td class="dot-3">●●●○○</td>
+          <td class="dot-2">●●○○○</td>
+        </tr>
+        <tr>
+          <td>Coding standard</td>
+          <td class="dot-5">●●●●●</td>
+          <td class="dot-4">●●●●○</td>
+          <td class="dot-3">●●●○○</td>
+          <td class="dot-4">●●●●○</td>
+        </tr>
+        <tr>
+          <td>Coding complesso / bug sottili</td>
+          <td class="dot-4">●●●●○</td>
+          <td class="dot-3">●●●○○</td>
+          <td class="dot-1">●○○○○</td>
+          <td class="dot-5">●●●●●</td>
+        </tr>
+        <tr>
+          <td>Classificazione / estrazione</td>
+          <td class="dot-3">●●●○○</td>
+          <td class="dot-4">●●●●○</td>
+          <td class="dot-5">●●●●●</td>
+          <td class="dot-1">●○○○○</td>
+        </tr>
+        <tr>
+          <td>Q&A su documenti (RAG)</td>
+          <td class="dot-4">●●●●○</td>
+          <td class="dot-5">●●●●●</td>
+          <td class="dot-3">●●●○○</td>
+          <td class="dot-2">●●○○○</td>
+        </tr>
+        <tr>
+          <td>Matematica / logica formale</td>
+          <td class="dot-3">●●●○○</td>
+          <td class="dot-2">●●○○○</td>
+          <td class="dot-1">●○○○○</td>
+          <td class="dot-5">●●●●●</td>
+        </tr>
+        <tr>
+          <td>Conversazione interattiva</td>
+          <td class="dot-3">●●●○○</td>
+          <td class="dot-4">●●●●○</td>
+          <td class="dot-5">●●●●●</td>
+          <td class="dot-1">●○○○○</td>
+        </tr>
+        <tr>
+          <td>Orchestrazione agenti</td>
+          <td class="dot-5">●●●●●</td>
+          <td class="dot-4">●●●●○</td>
+          <td class="dot-1">●○○○○</td>
+          <td class="dot-3">●●●○○</td>
+        </tr>
+      </tbody>
+    </table>
+
+  </section>
+
+  <!-- ══════════════ TAB T2: ACCESSO ══════════════ -->
+  <section id="t2" class="section">
+    <div class="mod-header">
+      <h2>Tassonomia per Modalità di Accesso</h2>
+      <span class="mod-id">// T2 // VAR: V5</span>
+    </div>
+    <p class="section-intro">La variabile di accesso è spesso la più vincolante in contesti enterprise. Determina privacy dei dati, costi su scala, possibilità di customizzazione, e dipendenza dal vendor. Va valutata prima delle altre.</p>
+
+    <div class="tree-wrap">
+      <div class="tree-root">MODELLI LLM // CLASSIFICAZIONE PER ACCESSO</div>
+      <div class="tree-l1">
+        <div class="tree-l1-label">API PROPRIETARIE (closed source)</div>
+        <div class="tree-l2">
+          <div class="tree-l2-item">Pesi non accessibili — solo interfaccia API <span class="tree-tag tt-r">dati al vendor</span></div>
+          <div class="tree-l2-item">Pay-per-token — nessun costo fisso infrastruttura <span class="tree-tag tt-g">setup rapido</span></div>
+          <div class="tree-l2-item">Fine-tuning limitato o assente (Anthropic: no; OpenAI: sì su modelli selezionati)</div>
+          <div class="tree-l2-item">SLA, supporto enterprise, compliance certificazioni (SOC2, HIPAA ecc.)</div>
+          <div class="tree-l2-item"><em>Esempi: Claude (Anthropic), GPT-4o (OpenAI), Gemini (Google), Command R (Cohere)</em></div>
+        </div>
+      </div>
+      <div class="tree-l1">
+        <div class="tree-l1-label">OPEN WEIGHTS (pesi scaricabili)</div>
+        <div class="tree-l2">
+          <div class="tree-l2-item">Pesi scaricabili — eseguibile on-premise o su infrastruttura propria <span class="tree-tag tt-g">privacy totale</span></div>
+          <div class="tree-l2-item">Fine-tuning possibile su dati propri <span class="tree-tag tt-g">massima customizzazione</span></div>
+          <div class="tree-l2-item">Costo fisso infrastruttura (GPU) — conveniente ad alto volume <span class="tree-tag tt-a">complessità ops</span></div>
+          <div class="tree-l2-item">Licenze variabili: alcune commerciali (Llama 3), alcune Apache 2.0 (Mistral 7B, Falcon)</div>
+          <div class="tree-l2-item"><em>Esempi: Llama 3.1 (Meta), Mistral/Mixtral, Qwen 2.5 (Alibaba), Phi-4 (Microsoft), Gemma (Google)</em></div>
+        </div>
+      </div>
+      <div class="tree-l1">
+        <div class="tree-l1-label">API DI TERZE PARTI (hosting open weights)</div>
+        <div class="tree-l2">
+          <div class="tree-l2-item">Modelli open hostati da provider (Together AI, Fireworks, Groq, AWS Bedrock) <span class="tree-tag tt-a">dati a provider terzo</span></div>
+          <div class="tree-l2-item">Più veloce del self-hosting, meno privacy del self-hosting</div>
+          <div class="tree-l2-item">Utile per prototipare con open weights senza infrastruttura propria</div>
+          <div class="tree-l2-item"><em>Esempi: Llama via Groq, Mistral via Together AI, Llama via AWS Bedrock</em></div>
+        </div>
+      </div>
+      <div class="tree-l1">
+        <div class="tree-l1-label">FULLY OPEN SOURCE (pesi + codice + dati training)</div>
+        <div class="tree-l2">
+          <div class="tree-l2-item">Rari — pochi modelli rilasciano anche i dati di training <span class="tree-tag tt-b">massima trasparenza</span></div>
+          <div class="tree-l2-item">Importanti per ricerca, audit, compliance in settori regolati</div>
+          <div class="tree-l2-item"><em>Esempi: OLMo (Allen AI), alcuni modelli Falcon (TII), BLOOM</em></div>
+        </div>
+      </div>
+    </div>
+
+    <h3>Matrice decisionale accesso</h3>
+    <table class="dt">
+      <thead>
+        <tr>
+          <th>Criterio</th>
+          <th>API Proprietaria</th>
+          <th>Open Weights Self-hosted</th>
+          <th>API Terze Parti</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>PRIVACY DATI</td>
+          <td>Dati al vendor — policy dipende da contratto</td>
+          <td>Dati restano interni — privacy totale</td>
+          <td>Dati al provider hosting</td>
+        </tr>
+        <tr>
+          <td>SETUP TIME</td>
+          <td>Minuti — API key e call</td>
+          <td>Giorni/settimane — infrastruttura GPU</td>
+          <td>Ore — account + API key</td>
+        </tr>
+        <tr>
+          <td>COSTO BASSO VOLUME</td>
+          <td>Ottimo — pay per use</td>
+          <td>Costoso — GPU anche senza uso</td>
+          <td>Buono — pay per use</td>
+        </tr>
+        <tr>
+          <td>COSTO ALTO VOLUME</td>
+          <td>Costoso — scala linearmente</td>
+          <td>Ottimo — costo marginale vicino a zero</td>
+          <td>Medio</td>
+        </tr>
+        <tr>
+          <td>FINE-TUNING</td>
+          <td>Limitato (OpenAI sì, Anthropic no)</td>
+          <td>Completo — qualsiasi tecnica</td>
+          <td>Dipende dal provider</td>
+        </tr>
+        <tr>
+          <td>QUALITÀ MODELLI TOP</td>
+          <td>Massima — frontier inaccessibili altrove</td>
+          <td>Buona ma gap vs frontier</td>
+          <td>Buona — stessi modelli open</td>
+        </tr>
+        <tr>
+          <td>COMPLIANCE / AUDIT</td>
+          <td>Certificazioni enterprise disponibili</td>
+          <td>Controllo totale — ideale per settori regolati</td>
+          <td>Varia per provider</td>
+        </tr>
+        <tr>
+          <td>DIPENDENZA VENDOR</td>
+          <td>Alta — pricing e policy possono cambiare</td>
+          <td>Nulla — portabilità totale</td>
+          <td>Media</td>
+        </tr>
+      </tbody>
+    </table>
+
+  </section>
+
+  <!-- ══════════════ TAB T3: MODALITÀ ══════════════ -->
+  <section id="t3" class="section">
+    <div class="mod-header">
+      <h2>Tassonomia per Modalità Input/Output</h2>
+      <span class="mod-id">// T3 // VAR: V6</span>
+    </div>
+    <p class="section-intro">La modalità di input e output determina quali task sono possibili. I modelli language-only restano la maggioranza, ma la multimodalità è in rapida espansione e apre use case che prima erano inaccessibili agli LLM.</p>
+
+    <div class="s2">
+      <div class="card">
+        <div class="card-accent ca-green"></div>
+        <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:10px">
+          <h4>Text-Only</h4>
+          <span class="tree-tag tt-g">BASE</span>
+        </div>
+        <p style="font-size:14px">Input e output solo testuali. Il paradigma originale. Ancora dominante per la maggior parte dei task enterprise. Più semplice da integrare, più prevedibile nel comportamento.</p>
+        <p style="font-size:13px;color:var(--white-faint)">Esempi: vecchie versioni GPT-3/4, Mistral, molti modelli open</p>
+      </div>
+
+      <div class="card">
+        <div class="card-accent ca-blue"></div>
+        <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:10px">
+          <h4>Vision + Text (Multimodale)</h4>
+          <span class="tree-tag tt-b">MULTIMODALE</span>
+        </div>
+        <p style="font-size:14px">Input: testo + immagini. Output: testo. Apre use case su documenti scansionati, analisi di grafici, comprensione di UI, descrizione di immagini, estrazione da PDF non parsabili.</p>
+        <p style="font-size:13px;color:var(--white-faint)">Esempi: Claude 3+, GPT-4o, Gemini 1.5, Llama 3.2 Vision</p>
+      </div>
+
+      <div class="card">
+        <div class="card-accent ca-amber"></div>
+        <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:10px">
+          <h4>Audio + Text</h4>
+          <span class="tree-tag tt-a">AUDIO</span>
+        </div>
+        <p style="font-size:14px">Input: audio/voce. Output: testo (e a volte audio). Critico per interfacce vocali, trascrizione e analisi di call, assistenti voice-first. Spesso richiede pipeline separata (Whisper + LLM).</p>
+        <p style="font-size:13px;color:var(--white-faint)">Esempi: GPT-4o (nativo), Gemini 2.0 (nativo), altrimenti Whisper + any LLM</p>
+      </div>
+
+      <div class="card">
+        <div class="card-accent ca-cyan"></div>
+        <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:10px">
+          <h4>Tool Use / Function Calling</h4>
+          <span class="tree-tag tt-b">AGENTICI</span>
+        </div>
+        <p style="font-size:14px">Il modello può chiamare funzioni esterne in modo strutturato. Fondamentale per gli agenti. La qualità del function calling varia significativamente tra modelli — è una variabile critica da testare su task agentici.</p>
+        <p style="font-size:13px;color:var(--white-faint)">Eccellenti: Claude 3+, GPT-4o. Buoni: Llama 3.1+, Mistral Large. Variabile: modelli più piccoli</p>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-accent ca-cyan"></div>
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:10px">
+        <h4>Omnimodal (in evoluzione)</h4>
+        <span class="tree-tag tt-b">FRONTIER 2025+</span>
+      </div>
+      <p>Input: testo, immagini, audio, video, documenti. Output: testo, immagini (alcuni), audio (alcuni). Il paradigma verso cui si stanno muovendo i modelli frontier. GPT-4o e Gemini 2.0 sono i casi più avanzati. La generazione nativa di immagini e audio da LLM è ancora emergente.</p>
+      <div class="callout amber">
+        <div class="callout-label">// Nota pratica</div>
+        <p>Per la maggior parte degli use case agentici enterprise oggi, text + vision + function calling è la combinazione rilevante. Audio e video nativi restano casi d'uso di nicchia o in fase sperimentale.</p>
+      </div>
+    </div>
+
+  </section>
+
+  <!-- ══════════════ TAB T4: ARCHITETTURA ══════════════ -->
+  <section id="t4" class="section">
+    <div class="mod-header">
+      <h2>Tassonomia per Architettura Interna</h2>
+      <span class="mod-id">// T4 // VAR: V7 + V8</span>
+    </div>
+    <p class="section-intro">La tassonomia più tecnica — meno rilevante per chi sviluppa agenti (è quasi sempre una black box), ma importante per capire perché certi modelli si comportano in certi modi e dove hanno i loro limiti strutturali.</p>
+
+    <h3>Per tipo di ragionamento</h3>
+
+    <div class="s2">
+      <div class="card">
+        <div class="card-accent ca-green"></div>
+        <h4>Standard (auto-regressive)</h4>
+        <p style="font-size:14px">Il paradigma dominante. Il modello genera un token alla volta, senza revisione esplicita. Il "ragionamento" emerge come pattern nel testo generato. Veloce, efficiente, ma limitato su task che richiedono pianificazione profonda o backtracking.</p>
+        <p style="font-size:13px;color:var(--white-faint)">Esempi: praticamente tutti i modelli pre-2024</p>
+      </div>
+      <div class="card">
+        <div class="card-accent ca-blue"></div>
+        <h4>Extended Thinking / Chain-of-Thought</h4>
+        <p style="font-size:14px">Il modello produce un "scratchpad" interno di ragionamento prima della risposta finale. Il token budget del thinking è separato. Superiore su ragionamento formale, matematica, coding complesso. Costo e latenza molto più alti.</p>
+        <p style="font-size:13px;color:var(--white-faint)">Esempi: o1/o3 (OpenAI), Claude 3.7 Extended Thinking, DeepSeek R1, QwQ</p>
+      </div>
+    </div>
+
+    <h3 style="margin-top:28px">Per struttura del modello</h3>
+
+    <table class="dt">
+      <thead>
+        <tr>
+          <th>Architettura</th>
+          <th>Descrizione</th>
+          <th>Vantaggio</th>
+          <th>Svantaggio</th>
+          <th>Esempi</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>Dense Transformer</td>
+          <td>Tutti i parametri attivi ad ogni forward pass. Architettura standard.</td>
+          <td>Semplice, prevedibile, ben compreso</td>
+          <td>Costo computazionale scala con #parametri</td>
+          <td>Llama, Mistral 7B, GPT-3</td>
+        </tr>
+        <tr>
+          <td>Mixture of Experts (MoE)</td>
+          <td>Solo un sottoinsieme di "esperti" si attiva per ogni token. Parametri totali alti, parametri attivi bassi.</td>
+          <td>Efficienza computazionale alta, buona qualità per i FLOP spesi</td>
+          <td>Più complesso da deployare, spesso incoerente su task che richiedono tutti gli esperti</td>
+          <td>Mixtral 8x7B, Mixtral 8x22B, GPT-4 (presunto), Gemini 1.5</td>
+        </tr>
+        <tr>
+          <td>State Space Models (SSM)</td>
+          <td>Alternativa al transformer per sequenze lunghe. Attenzione lineare invece di quadratica.</td>
+          <td>Efficiente su context window lunghissime, memoria costante</td>
+          <td>Meno capability sui task standard rispetto ai transformer equivalenti</td>
+          <td>Mamba, Jamba (AI21)</td>
+        </tr>
+        <tr>
+          <td>Hybrid (SSM + Transformer)</td>
+          <td>Combina layer SSM e layer di attenzione tradizionale.</td>
+          <td>Efficienza su sequenze lunghe + capability transformer</td>
+          <td>Architettura emergente, meno matura</td>
+          <td>Jamba 1.5, alcuni modelli ricerca</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <h3 style="margin-top:28px">Per specializzazione</h3>
+    <div class="s3">
+      <div class="card">
+        <div class="card-accent ca-green"></div>
+        <h4>General Purpose</h4>
+        <p style="font-size:14px">Training su dati eterogenei — testo, codice, scienze, cultura. Massima flessibilità, nessuna specializzazione. Il 95% dei modelli rilevanti rientra in questa categoria.</p>
+      </div>
+      <div class="card">
+        <div class="card-accent ca-amber"></div>
+        <h4>Domain-Specific</h4>
+        <p style="font-size:14px">Pre-training o fine-tuning su dati di un dominio specifico. Supera i general purpose nel dominio, performance peggiore fuori. Esempi: CodeLlama (coding), BioMedLM (biomedica), LexLM (legal).</p>
+      </div>
+      <div class="card">
+        <div class="card-accent ca-cyan"></div>
+        <h4>Task-Specific / Instruct</h4>
+        <p style="font-size:14px">Fine-tuning per seguire istruzioni o un task specifico (classificazione, sintesi, traduzione). Spesso modelli piccoli + fine-tuning battono modelli grandi general purpose su task narrowi e ben definiti.</p>
+      </div>
+    </div>
+
+  </section>
+
+  <!-- ══════════════ TAB T5: USO PRATICO ══════════════ -->
+  <section id="t5" class="section">
+    <div class="mod-header">
+      <h2>Tassonomia per Uso Pratico</h2>
+      <span class="mod-id">// T5 // VAR: COMPOSITA</span>
+    </div>
+    <p class="section-intro">La tassonomia più utile per chi sviluppa agenti. Classifica i modelli non per caratteristica tecnica ma per il ruolo che ricoprono in un sistema agentivo. Un buon sistema usa spesso modelli diversi per ruoli diversi.</p>
+
+    <h3>Ruoli in un sistema agentivo</h3>
+
+    <div class="dflow">
+      <div class="dflow-item">
+        <div class="dflow-num">R1</div>
+        <div class="dflow-content">
+          <div class="dflow-q">Orchestratore / Planner</div>
+          <div class="dflow-a">Riceve l'obiettivo, scompone in sotto-task, decide quale agente/tool attivare, gestisce gli errori. Deve essere il modello più capace disponibile — gli errori di pianificazione si amplificano su tutta la pipeline. <span class="inline-tag it-g">Tier 1 o Thinking</span> — non fare economia qui.</div>
+        </div>
+      </div>
+      <div class="dflow-item">
+        <div class="dflow-num">R2</div>
+        <div class="dflow-content">
+          <div class="dflow-q">Worker Generalista</div>
+          <div class="dflow-a">Esegue task di media complessità: generazione testo, analisi documenti, Q&A su knowledge base, coding standard. Il "cavallo di battaglia" della maggior parte delle pipeline. <span class="inline-tag it-b">Tier 2 (Balanced)</span> — il miglior rapporto qualità/costo nella maggior parte dei casi.</div>
+        </div>
+      </div>
+      <div class="dflow-item">
+        <div class="dflow-num">R3</div>
+        <div class="dflow-content">
+          <div class="dflow-q">Worker Veloce / High-Volume</div>
+          <div class="dflow-a">Gestisce task semplici e ripetitivi ad alto volume: classificazione, routing, estrazione semplice, triaging. La velocità e il costo basso sono le variabili critiche, non la qualità assoluta. <span class="inline-tag it-a">Tier 3 (Fast)</span> — in alcuni casi un modello fine-tunato piccolo supera un modello grande general purpose sul task specifico.</div>
+        </div>
+      </div>
+      <div class="dflow-item">
+        <div class="dflow-num">R4</div>
+        <div class="dflow-content">
+          <div class="dflow-q">Validator / Critic</div>
+          <div class="dflow-a">Valuta l'output di altri agenti rispetto a criteri espliciti. Deve essere indipendente dal modello che ha generato l'output da valutare (per evitare bias di auto-conferma). Spesso lo stesso tier del worker che valuta, o superiore su task critici. <span class="inline-tag it-b">Tier 2+</span></div>
+        </div>
+      </div>
+      <div class="dflow-item">
+        <div class="dflow-num">R5</div>
+        <div class="dflow-content">
+          <div class="dflow-q">Reasoner / Solver</div>
+          <div class="dflow-a">Task che richiedono ragionamento profondo: matematica, logica formale, debugging complesso, analisi di casi edge. Giustifica i modelli thinking anche con i loro costi. <span class="inline-tag it-g">Tier 4 (Thinking)</span> — ma solo quando davvero necessario.</div>
+        </div>
+      </div>
+    </div>
+
+    <hr class="rule">
+
+    <h3>Framework di selezione in 5 domande</h3>
+    <table class="dt">
+      <thead>
+        <tr>
+          <th>Domanda</th>
+          <th>Se SÌ</th>
+          <th>Se NO</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>I dati possono uscire dall'org?</td>
+          <td>API proprietaria è accettabile</td>
+          <td>Self-hosted open weights obbligatorio</td>
+        </tr>
+        <tr>
+          <td>Il task richiede ragionamento complesso?</td>
+          <td>Tier 1 o Thinking</td>
+          <td>Tier 2 o Tier 3 — non sprecare budget</td>
+        </tr>
+        <tr>
+          <td>Il volume è alto (>1M token/giorno)?</td>
+          <td>Tier 3 o self-hosted — il costo conta</td>
+          <td>API proprietaria, Tier 2 va bene</td>
+        </tr>
+        <tr>
+          <td>Il task richiede immagini o audio?</td>
+          <td>Modello multimodale (Claude 3+, GPT-4o)</td>
+          <td>Modello text-only, spesso più economico</td>
+        </tr>
+        <tr>
+          <td>Serve function calling affidabile?</td>
+          <td>Claude 3+, GPT-4o — testati e robusti</td>
+          <td>Qualsiasi tier è accettabile</td>
+        </tr>
+      </tbody>
+    </table>
+
+  </section>
+
+  <!-- ══════════════ TAB MAPPA MODELLI ══════════════ -->
+  <section id="mappa" class="section">
+    <div class="mod-header">
+      <h2>Mappa dei Modelli Correnti</h2>
+      <span class="mod-id">// REF // FEB 2026</span>
+    </div>
+    <p class="section-intro">Panoramica dei modelli principali attualmente disponibili, classificati per tier, vendor, e caratteristiche chiave. Il mercato cambia rapidamente — questa è una fotografia del febbraio 2026.</p>
+
+    <h3>Frontier & Balanced — Proprietari</h3>
+    <div class="model-grid">
+      <div class="model-card">
+        <div class="model-card-header">
+          <div>
+            <div class="model-name">Claude Opus 4</div>
+            <div class="model-vendor">ANTHROPIC</div>
+          </div>
+          <span class="tier-badge tier-frontier">FRONTIER</span>
+        </div>
+        <div class="model-body">
+          <div class="model-row"><span class="model-row-key">CONTEXT</span><span class="model-row-val">200k token</span></div>
+          <div class="model-row"><span class="model-row-key">VISION</span><span class="model-row-val">Sì</span></div>
+          <div class="model-row"><span class="model-row-key">TOOL USE</span><span class="model-row-val">Eccellente</span></div>
+          <div class="model-row"><span class="model-row-key">THINKING</span><span class="model-row-val">No (Sonnet sì)</span></div>
+          <div class="model-row"><span class="model-row-key">BEST FOR</span><span class="model-row-val">Orchestrazione, analisi</span></div>
+        </div>
+      </div>
+
+      <div class="model-card">
+        <div class="model-card-header">
+          <div>
+            <div class="model-name">Claude Sonnet 4.5</div>
+            <div class="model-vendor">ANTHROPIC</div>
+          </div>
+          <span class="tier-badge tier-balanced">BALANCED</span>
+        </div>
+        <div class="model-body">
+          <div class="model-row"><span class="model-row-key">CONTEXT</span><span class="model-row-val">200k token</span></div>
+          <div class="model-row"><span class="model-row-key">VISION</span><span class="model-row-val">Sì</span></div>
+          <div class="model-row"><span class="model-row-key">TOOL USE</span><span class="model-row-val">Eccellente</span></div>
+          <div class="model-row"><span class="model-row-key">THINKING</span><span class="model-row-val">Sì (Extended)</span></div>
+          <div class="model-row"><span class="model-row-key">BEST FOR</span><span class="model-row-val">Worker generale, agenti</span></div>
+        </div>
+      </div>
+
+      <div class="model-card">
+        <div class="model-card-header">
+          <div>
+            <div class="model-name">Claude Haiku 3.5</div>
+            <div class="model-vendor">ANTHROPIC</div>
+          </div>
+          <span class="tier-badge tier-fast">FAST</span>
+        </div>
+        <div class="model-body">
+          <div class="model-row"><span class="model-row-key">CONTEXT</span><span class="model-row-val">200k token</span></div>
+          <div class="model-row"><span class="model-row-key">VISION</span><span class="model-row-val">Sì</span></div>
+          <div class="model-row"><span class="model-row-key">TOOL USE</span><span class="model-row-val">Buono</span></div>
+          <div class="model-row"><span class="model-row-key">VELOCITÀ</span><span class="model-row-val">Molto alta</span></div>
+          <div class="model-row"><span class="model-row-key">BEST FOR</span><span class="model-row-val">High-volume, classificazione</span></div>
+        </div>
+      </div>
+
+      <div class="model-card">
+        <div class="model-card-header">
+          <div>
+            <div class="model-name">GPT-4o</div>
+            <div class="model-vendor">OPENAI</div>
+          </div>
+          <span class="tier-badge tier-frontier">FRONTIER</span>
+        </div>
+        <div class="model-body">
+          <div class="model-row"><span class="model-row-key">CONTEXT</span><span class="model-row-val">128k token</span></div>
+          <div class="model-row"><span class="model-row-key">VISION</span><span class="model-row-val">Sì + Audio</span></div>
+          <div class="model-row"><span class="model-row-key">TOOL USE</span><span class="model-row-val">Eccellente</span></div>
+          <div class="model-row"><span class="model-row-key">MULTIMODALE</span><span class="model-row-val">Più avanzato</span></div>
+          <div class="model-row"><span class="model-row-key">BEST FOR</span><span class="model-row-val">Use case multimodali</span></div>
+        </div>
+      </div>
+
+      <div class="model-card">
+        <div class="model-card-header">
+          <div>
+            <div class="model-name">o3 / o1</div>
+            <div class="model-vendor">OPENAI</div>
+          </div>
+          <span class="tier-badge tier-spec">THINKING</span>
+        </div>
+        <div class="model-body">
+          <div class="model-row"><span class="model-row-key">CONTEXT</span><span class="model-row-val">200k token</span></div>
+          <div class="model-row"><span class="model-row-key">THINKING</span><span class="model-row-val">Nativo — esteso</span></div>
+          <div class="model-row"><span class="model-row-key">LATENZA</span><span class="model-row-val">Molto alta</span></div>
+          <div class="model-row"><span class="model-row-key">COSTO</span><span class="model-row-val">Molto alto</span></div>
+          <div class="model-row"><span class="model-row-key">BEST FOR</span><span class="model-row-val">Matematica, coding complesso</span></div>
+        </div>
+      </div>
+
+      <div class="model-card">
+        <div class="model-card-header">
+          <div>
+            <div class="model-name">Gemini 2.0 Flash</div>
+            <div class="model-vendor">GOOGLE</div>
+          </div>
+          <span class="tier-badge tier-fast">FAST</span>
+        </div>
+        <div class="model-body">
+          <div class="model-row"><span class="model-row-key">CONTEXT</span><span class="model-row-val">1M token</span></div>
+          <div class="model-row"><span class="model-row-key">VISION</span><span class="model-row-val">Sì + Video</span></div>
+          <div class="model-row"><span class="model-row-key">VELOCITÀ</span><span class="model-row-val">Molto alta</span></div>
+          <div class="model-row"><span class="model-row-key">CONTEXT WINDOW</span><span class="model-row-val">Record assoluto</span></div>
+          <div class="model-row"><span class="model-row-key">BEST FOR</span><span class="model-row-val">Documenti lunghi, velocità</span></div>
+        </div>
+      </div>
+    </div>
+
+    <h3 style="margin-top:28px">Open Weights principali</h3>
+    <div class="model-grid">
+      <div class="model-card">
+        <div class="model-card-header">
+          <div>
+            <div class="model-name">Llama 3.1 70B / 405B</div>
+            <div class="model-vendor">META</div>
+          </div>
+          <span class="tier-badge tier-open">OPEN</span>
+        </div>
+        <div class="model-body">
+          <div class="model-row"><span class="model-row-key">LICENZA</span><span class="model-row-val">Meta Llama 3.1</span></div>
+          <div class="model-row"><span class="model-row-key">CONTEXT</span><span class="model-row-val">128k token</span></div>
+          <div class="model-row"><span class="model-row-key">TOOL USE</span><span class="model-row-val">Buono (70B+)</span></div>
+          <div class="model-row"><span class="model-row-key">BEST FOR</span><span class="model-row-val">Self-hosted generale</span></div>
+        </div>
+      </div>
+
+      <div class="model-card">
+        <div class="model-card-header">
+          <div>
+            <div class="model-name">Qwen 2.5 72B</div>
+            <div class="model-vendor">ALIBABA</div>
+          </div>
+          <span class="tier-badge tier-open">OPEN</span>
+        </div>
+        <div class="model-body">
+          <div class="model-row"><span class="model-row-key">LICENZA</span><span class="model-row-val">Apache 2.0</span></div>
+          <div class="model-row"><span class="model-row-key">CONTEXT</span><span class="model-row-val">128k token</span></div>
+          <div class="model-row"><span class="model-row-key">CODING</span><span class="model-row-val">Eccellente</span></div>
+          <div class="model-row"><span class="model-row-key">BEST FOR</span><span class="model-row-val">Coding, multilingua</span></div>
+        </div>
+      </div>
+
+      <div class="model-card">
+        <div class="model-card-header">
+          <div>
+            <div class="model-name">DeepSeek R1</div>
+            <div class="model-vendor">DEEPSEEK</div>
+          </div>
+          <span class="tier-badge tier-spec">THINKING</span>
+        </div>
+        <div class="model-body">
+          <div class="model-row"><span class="model-row-key">LICENZA</span><span class="model-row-val">MIT</span></div>
+          <div class="model-row"><span class="model-row-key">THINKING</span><span class="model-row-val">Sì — chain-of-thought</span></div>
+          <div class="model-row"><span class="model-row-key">NOTA</span><span class="model-row-val">Vendor cinese — privacy concern</span></div>
+          <div class="model-row"><span class="model-row-key">BEST FOR</span><span class="model-row-val">Thinking open, STEM</span></div>
+        </div>
+      </div>
+
+      <div class="model-card">
+        <div class="model-card-header">
+          <div>
+            <div class="model-name">Mistral Large 2</div>
+            <div class="model-vendor">MISTRAL AI</div>
+          </div>
+          <span class="tier-badge tier-balanced">BALANCED</span>
+        </div>
+        <div class="model-body">
+          <div class="model-row"><span class="model-row-key">LICENZA</span><span class="model-row-val">MRL (commercial)</span></div>
+          <div class="model-row"><span class="model-row-key">CONTEXT</span><span class="model-row-val">128k token</span></div>
+          <div class="model-row"><span class="model-row-key">TOOL USE</span><span class="model-row-val">Buono</span></div>
+          <div class="model-row"><span class="model-row-key">BEST FOR</span><span class="model-row-val">EU-friendly, general</span></div>
+        </div>
+      </div>
+
+      <div class="model-card">
+        <div class="model-card-header">
+          <div>
+            <div class="model-name">Phi-4</div>
+            <div class="model-vendor">MICROSOFT</div>
+          </div>
+          <span class="tier-badge tier-fast">FAST</span>
+        </div>
+        <div class="model-body">
+          <div class="model-row"><span class="model-row-key">PARAMS</span><span class="model-row-val">14B — molto compatto</span></div>
+          <div class="model-row"><span class="model-row-key">LICENZA</span><span class="model-row-val">MIT</span></div>
+          <div class="model-row"><span class="model-row-key">HARDWARE</span><span class="model-row-val">Gira su Mac M2+</span></div>
+          <div class="model-row"><span class="model-row-key">BEST FOR</span><span class="model-row-val">Edge, sviluppo locale</span></div>
+        </div>
+      </div>
+
+      <div class="model-card">
+        <div class="model-card-header">
+          <div>
+            <div class="model-name">Gemma 3 (9B / 27B)</div>
+            <div class="model-vendor">GOOGLE</div>
+          </div>
+          <span class="tier-badge tier-open">OPEN</span>
+        </div>
+        <div class="model-body">
+          <div class="model-row"><span class="model-row-key">LICENZA</span><span class="model-row-val">Gemma ToS</span></div>
+          <div class="model-row"><span class="model-row-key">VISION</span><span class="model-row-val">Sì (27B)</span></div>
+          <div class="model-row"><span class="model-row-key">HARDWARE</span><span class="model-row-val">Efficiente su GPU consumer</span></div>
+          <div class="model-row"><span class="model-row-key">BEST FOR</span><span class="model-row-val">Self-hosted vision task</span></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="callout red" style="margin-top:24px">
+      <div class="callout-label">// Avvertenza sulla mappa</div>
+      <p>Il mercato degli LLM evolve ogni 2–3 mesi. Nuovi modelli entrano, i prezzi scendono, le context window si allargano. Questa fotografia è accurata a febbraio 2026 ma va riverificata prima di decisioni architetturali importanti. I benchmark pubblici sono utili ma non sostituiscono la valutazione sul proprio task specifico.</p>
+    </div>
+
+  </section>
+
+</div>
+
+<script>
+  function showTab(id) {
+    document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+    document.getElementById(id).classList.add('active');
+    event.target.classList.add('active');
+  }
+</script>
+</body>
+</html>

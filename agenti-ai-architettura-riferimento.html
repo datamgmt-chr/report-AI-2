@@ -1,0 +1,1390 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Architettura di Riferimento di un Agente AI</title>
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif&family=Outfit:wght@200;300;400;500;600;700;800;900&family=IBM+Plex+Mono:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg:     #faf8f5;
+  --bg2:    #f2efe9;
+  --bg3:    #e9e5dc;
+  --ink:    #1b1915;
+  --ink2:   #2e2b25;
+  --ink3:   #6d685c;
+  --ink4:   #a19c8f;
+  --border: #d9d4c8;
+  --border2:#cac4b6;
+
+  --core: #c0562b;    /* orchestratore — terracotta */
+  --brain: #2e7d9c;   /* LLM — teal */
+  --prompt: #7b5ea7;  /* prompt — viola */
+  --mem: #b8860b;     /* memoria — oro */
+  --tool: #4a8c3f;    /* tool — verde */
+  --rag: #3a7ca5;     /* RAG — blu acciaio */
+  --ui: #c47a00;      /* UI — ambra */
+  --infra: #8b7355;   /* infrastruttura — cachi */
+  --guard: #c0392b;   /* guardrail — rosso */
+}
+
+* { margin:0; padding:0; box-sizing:border-box; }
+html { scroll-behavior:smooth; }
+
+body {
+  background: var(--bg);
+  color: var(--ink);
+  font-family: 'Outfit', sans-serif;
+  font-weight: 300;
+  font-size: 14px;
+  line-height: 1.75;
+}
+
+/* ── HEADER ── */
+.masthead {
+  background: var(--ink);
+  color: rgba(255,255,255,0.9);
+  padding: 60px 56px 52px;
+  position: relative;
+  overflow: hidden;
+}
+
+.masthead::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background:
+    repeating-linear-gradient(90deg, rgba(255,255,255,0.012) 0, rgba(255,255,255,0.012) 1px, transparent 1px, transparent 64px),
+    repeating-linear-gradient(0deg, rgba(255,255,255,0.012) 0, rgba(255,255,255,0.012) 1px, transparent 1px, transparent 64px);
+  pointer-events: none;
+}
+
+.mh-eye {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 10px;
+  letter-spacing: 3px;
+  text-transform: uppercase;
+  color: rgba(255,255,255,0.25);
+  margin-bottom: 18px;
+  position: relative;
+}
+
+.masthead h1 {
+  font-family: 'Instrument Serif', serif;
+  font-weight: 400;
+  font-size: clamp(32px, 5vw, 58px);
+  line-height: 1.08;
+  letter-spacing: -1px;
+  max-width: 680px;
+  position: relative;
+}
+
+.mh-sub {
+  margin-top: 20px;
+  font-size: 15px;
+  font-weight: 300;
+  color: rgba(255,255,255,0.38);
+  max-width: 640px;
+  line-height: 1.7;
+  position: relative;
+}
+
+/* ── NAV ── */
+.nav {
+  background: var(--ink2);
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  display: flex;
+  overflow-x: auto;
+  border-bottom: 1px solid rgba(255,255,255,0.06);
+}
+
+.nav-btn {
+  flex: 1;
+  min-width: 110px;
+  padding: 13px 14px;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  font-family: 'Outfit', sans-serif;
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+  color: rgba(255,255,255,0.3);
+  border-right: 1px solid rgba(255,255,255,0.06);
+  transition: all 0.2s;
+  white-space: nowrap;
+}
+
+.nav-btn:last-child { border-right: none; }
+.nav-btn:hover { color: rgba(255,255,255,0.6); }
+.nav-btn.active { color: #fff; background: rgba(255,255,255,0.05); }
+.nav-btn.active::after {
+  content: '';
+  display: block;
+  height: 2px;
+  background: var(--core);
+  margin-top: 6px;
+  border-radius: 1px;
+}
+
+/* ── SECTIONS ── */
+.sect { display: none; }
+.sect.active { display: block; animation: fadeIn 0.3s ease; }
+@keyframes fadeIn { from { opacity:0; transform:translateY(6px); } to { opacity:1; transform:translateY(0); } }
+
+.sect-head {
+  padding: 48px 56px 36px;
+  border-bottom: 1px solid var(--border);
+}
+
+.sect-num {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 10px;
+  letter-spacing: 3px;
+  text-transform: uppercase;
+  color: var(--ink4);
+  margin-bottom: 10px;
+}
+
+.sect-head h2 {
+  font-family: 'Instrument Serif', serif;
+  font-weight: 400;
+  font-size: clamp(26px, 3.5vw, 42px);
+  line-height: 1.1;
+  letter-spacing: -0.5px;
+  max-width: 620px;
+  margin-bottom: 14px;
+}
+
+.sect-head p {
+  color: var(--ink3);
+  max-width: 680px;
+  font-size: 14.5px;
+}
+
+.wrap { padding: 0 56px 56px; }
+
+/* ── COMPONENT CARD ── */
+.comp {
+  margin-top: 40px;
+  border: 1px solid var(--border2);
+  background: var(--bg);
+}
+
+.comp-header {
+  display: grid;
+  grid-template-columns: 6px 56px 1fr auto;
+  align-items: center;
+  gap: 0;
+  border-bottom: 1px solid var(--border);
+}
+
+.comp-accent { height: 100%; }
+
+.comp-num {
+  font-family: 'Outfit', sans-serif;
+  font-weight: 900;
+  font-size: 24px;
+  color: var(--bg3);
+  text-align: center;
+  padding: 16px 0;
+}
+
+.comp-title-wrap {
+  padding: 16px 20px;
+}
+
+.comp-name {
+  font-family: 'Instrument Serif', serif;
+  font-size: 24px;
+  line-height: 1.15;
+}
+
+.comp-subtitle {
+  font-size: 12px;
+  color: var(--ink4);
+  margin-top: 2px;
+}
+
+.comp-tag {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 9px;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  padding: 4px 12px;
+  border: 1px solid;
+  margin-right: 20px;
+  white-space: nowrap;
+}
+
+.comp-body {
+  padding: 0;
+}
+
+/* Sub-sections inside component */
+.csect {
+  padding: 24px 28px;
+  border-bottom: 1px solid var(--border);
+}
+
+.csect:last-child { border-bottom: none; }
+
+.csect-label {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 9px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: var(--ink4);
+  margin-bottom: 10px;
+  padding-bottom: 6px;
+  border-bottom: 1px solid var(--border);
+}
+
+.csect p {
+  font-size: 14px;
+  color: var(--ink3);
+  line-height: 1.8;
+  max-width: 740px;
+}
+
+.csect p strong { color: var(--ink2); font-weight: 500; }
+
+.csect p em { font-style: italic; color: var(--ink2); }
+
+/* Decision/Challenge items */
+.dc-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1px;
+  background: var(--border);
+  margin-top: 14px;
+}
+
+.dc-item {
+  background: var(--bg);
+  padding: 16px 18px;
+}
+
+.dc-item-title {
+  font-weight: 600;
+  font-size: 13px;
+  margin-bottom: 6px;
+  color: var(--ink2);
+}
+
+.dc-item-text {
+  font-size: 12.5px;
+  color: var(--ink3);
+  line-height: 1.6;
+}
+
+.dc-item-text strong { color: var(--ink2); font-weight: 500; }
+
+/* Relation chips */
+.rel-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 12px;
+}
+
+.rel-chip {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 10px;
+  padding: 4px 10px;
+  border: 1px solid var(--border2);
+  color: var(--ink3);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.rel-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+/* Insight box */
+.insight {
+  margin: 16px 0;
+  padding: 16px 20px;
+  border-left: 4px solid;
+  background: var(--bg2);
+}
+
+.insight-label {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 9px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  margin-bottom: 4px;
+}
+
+.insight p {
+  font-size: 13.5px;
+  line-height: 1.65;
+  color: var(--ink2);
+  max-width: 700px;
+}
+
+/* ── KEY POINT ── */
+.key-point {
+  margin-top: 36px;
+  padding: 24px 28px;
+  border-left: 4px solid var(--core);
+  background: var(--bg2);
+}
+
+.kp-label {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 9px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: var(--core);
+  margin-bottom: 8px;
+}
+
+.kp-text {
+  font-family: 'Instrument Serif', serif;
+  font-size: 18px;
+  line-height: 1.45;
+  color: var(--ink2);
+}
+
+.kp-sub {
+  margin-top: 10px;
+  font-size: 13px;
+  color: var(--ink3);
+  line-height: 1.65;
+}
+
+/* ── SVG DIAGRAM ── */
+.diagram-wrap {
+  margin-top: 28px;
+  padding: 32px 24px;
+  background: var(--ink);
+  border: 1px solid var(--border2);
+  overflow-x: auto;
+}
+
+.diagram-wrap svg {
+  display: block;
+  margin: 0 auto;
+}
+
+/* ── SUMMARY TABLE ── */
+.sum-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 12px;
+  margin-top: 20px;
+  border: 1px solid var(--border2);
+}
+
+.sum-table th, .sum-table td {
+  padding: 11px 14px;
+  border: 1px solid var(--border);
+  text-align: left;
+  vertical-align: top;
+}
+
+.sum-table thead th {
+  background: var(--ink);
+  color: rgba(255,255,255,0.82);
+  font-weight: 600;
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+}
+
+.sum-table tbody tr:nth-child(even) { background: var(--bg2); }
+.sum-table td strong { color: var(--ink2); font-weight: 500; }
+.sum-table td { color: var(--ink3); }
+
+.sum-table .comp-cell {
+  font-weight: 600;
+  color: var(--ink);
+  white-space: nowrap;
+}
+
+/* ── FOOTER ── */
+.footer {
+  background: var(--ink);
+  color: rgba(255,255,255,0.22);
+  padding: 28px 56px;
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 10px;
+  letter-spacing: 1px;
+  display: flex;
+  justify-content: space-between;
+}
+
+@media (max-width: 860px) {
+  .masthead, .sect-head, .wrap, .footer { padding-left: 20px; padding-right: 20px; }
+  .dc-grid { grid-template-columns: 1fr; }
+  .comp-header { grid-template-columns: 6px 40px 1fr; }
+  .comp-tag { display: none; }
+  .footer { flex-direction: column; gap: 6px; }
+}
+</style>
+</head>
+<body>
+
+<!-- HEADER -->
+<div class="masthead">
+  <div class="mh-eye">Serie Agenti AI — Report 07</div>
+  <h1>Architettura di Riferimento<br>di un Agente AI</h1>
+  <p class="mh-sub">I 9 componenti fondamentali di ogni agente, le loro relazioni, le decisioni e le sfide che ciascuno presenta. La base per capire cosa cambia tra le diverse alternative di costruzione.</p>
+</div>
+
+<!-- NAV -->
+<nav class="nav">
+  <button class="nav-btn active" onclick="show(0)">Vista d'insieme</button>
+  <button class="nav-btn" onclick="show(1)">Orchestratore</button>
+  <button class="nav-btn" onclick="show(2)">LLM</button>
+  <button class="nav-btn" onclick="show(3)">Prompt</button>
+  <button class="nav-btn" onclick="show(4)">Memoria</button>
+  <button class="nav-btn" onclick="show(5)">Strumenti</button>
+  <button class="nav-btn" onclick="show(6)">RAG</button>
+  <button class="nav-btn" onclick="show(7)">Guardrail</button>
+  <button class="nav-btn" onclick="show(8)">Interfaccia</button>
+  <button class="nav-btn" onclick="show(9)">Infrastruttura</button>
+  <button class="nav-btn" onclick="show(10)">Sintesi</button>
+</nav>
+
+
+<!-- ═══════════════════════════
+     S0 — VISTA D'INSIEME
+═══════════════════════════ -->
+<div class="sect active" id="s0">
+  <div class="sect-head">
+    <div class="sect-num">Vista d'insieme</div>
+    <h2>L'anatomia di un agente AI</h2>
+    <p>Un agente AI non è un blocco monolitico: è un sistema composto da componenti distinti che collaborano. Comprendere ciascun componente — cosa fa, perché serve, come si relaziona con gli altri — è la base per ogni decisione architetturale.</p>
+  </div>
+  <div class="wrap">
+
+    <!-- SVG DIAGRAM -->
+    <div class="diagram-wrap">
+      <svg viewBox="0 0 800 520" width="800" height="520" xmlns="http://www.w3.org/2000/svg" font-family="'Outfit', sans-serif">
+        <!-- Background grid -->
+        <defs>
+          <pattern id="grid" width="40" height="40" patternUnits="userSpaceOnUse">
+            <path d="M 40 0 L 0 0 0 40" fill="none" stroke="rgba(255,255,255,0.03)" stroke-width="0.5"/>
+          </pattern>
+        </defs>
+        <rect width="800" height="520" fill="url(#grid)"/>
+
+        <!-- USER -->
+        <rect x="20" y="220" width="100" height="60" rx="4" fill="none" stroke="rgba(255,255,255,0.2)" stroke-width="1.5"/>
+        <text x="70" y="247" fill="rgba(255,255,255,0.6)" font-size="11" font-weight="600" text-anchor="middle">UTENTE</text>
+        <text x="70" y="263" fill="rgba(255,255,255,0.25)" font-size="9" text-anchor="middle">input / output</text>
+
+        <!-- UI -->
+        <rect x="155" y="210" width="110" height="80" rx="4" fill="rgba(196,122,0,0.1)" stroke="#c47a00" stroke-width="1.5"/>
+        <text x="210" y="237" fill="#c47a00" font-size="10" font-weight="700" text-anchor="middle" letter-spacing="1">INTERFACCIA</text>
+        <text x="210" y="254" fill="rgba(255,255,255,0.35)" font-size="9" text-anchor="middle">Chat, API, Widget</text>
+        <text x="210" y="268" fill="rgba(255,255,255,0.35)" font-size="9" text-anchor="middle">Canali di interazione</text>
+
+        <!-- GUARDRAIL -->
+        <rect x="290" y="140" width="220" height="240" rx="6" fill="none" stroke="#c0392b" stroke-width="1" stroke-dasharray="4,3"/>
+        <text x="300" y="158" fill="#c0392b" font-size="9" font-weight="600" letter-spacing="1">GUARDRAIL &amp; SICUREZZA</text>
+
+        <!-- ORCHESTRATOR (center) -->
+        <rect x="310" y="205" width="180" height="70" rx="4" fill="rgba(192,86,43,0.15)" stroke="#c0562b" stroke-width="2"/>
+        <text x="400" y="232" fill="#c0562b" font-size="12" font-weight="700" text-anchor="middle" letter-spacing="0.5">ORCHESTRATORE</text>
+        <text x="400" y="250" fill="rgba(255,255,255,0.35)" font-size="9" text-anchor="middle">Loop di ragionamento</text>
+        <text x="400" y="263" fill="rgba(255,255,255,0.35)" font-size="9" text-anchor="middle">Decide · Agisce · Valuta</text>
+
+        <!-- LLM -->
+        <rect x="335" y="295" width="130" height="55" rx="4" fill="rgba(46,125,156,0.1)" stroke="#2e7d9c" stroke-width="1.5"/>
+        <text x="400" y="318" fill="#2e7d9c" font-size="10" font-weight="700" text-anchor="middle" letter-spacing="0.5">MODELLO LLM</text>
+        <text x="400" y="335" fill="rgba(255,255,255,0.3)" font-size="9" text-anchor="middle">Il motore di ragionamento</text>
+
+        <!-- PROMPT -->
+        <rect x="310" y="167" width="90" height="30" rx="3" fill="rgba(123,94,167,0.12)" stroke="#7b5ea7" stroke-width="1"/>
+        <text x="355" y="186" fill="#7b5ea7" font-size="9" font-weight="600" text-anchor="middle">PROMPT</text>
+
+        <!-- MEMORY -->
+        <rect x="540" y="165" width="110" height="65" rx="4" fill="rgba(184,134,11,0.1)" stroke="#b8860b" stroke-width="1.5"/>
+        <text x="595" y="191" fill="#b8860b" font-size="10" font-weight="700" text-anchor="middle" letter-spacing="0.5">MEMORIA</text>
+        <text x="595" y="207" fill="rgba(255,255,255,0.3)" font-size="9" text-anchor="middle">Contesto e stato</text>
+
+        <!-- TOOLS -->
+        <rect x="540" y="250" width="110" height="65" rx="4" fill="rgba(74,140,63,0.1)" stroke="#4a8c3f" stroke-width="1.5"/>
+        <text x="595" y="276" fill="#4a8c3f" font-size="10" font-weight="700" text-anchor="middle" letter-spacing="0.5">STRUMENTI</text>
+        <text x="595" y="292" fill="rgba(255,255,255,0.3)" font-size="9" text-anchor="middle">API, DB, Browser</text>
+
+        <!-- RAG -->
+        <rect x="540" y="335" width="110" height="65" rx="4" fill="rgba(58,124,165,0.1)" stroke="#3a7ca5" stroke-width="1.5"/>
+        <text x="595" y="361" fill="#3a7ca5" font-size="10" font-weight="700" text-anchor="middle" letter-spacing="0.5">RAG</text>
+        <text x="595" y="377" fill="rgba(255,255,255,0.3)" font-size="9" text-anchor="middle">Knowledge base</text>
+
+        <!-- INFRA -->
+        <rect x="155" y="430" width="510" height="55" rx="4" fill="rgba(139,115,85,0.08)" stroke="#8b7355" stroke-width="1" stroke-dasharray="3,3"/>
+        <text x="410" y="455" fill="#8b7355" font-size="10" font-weight="700" text-anchor="middle" letter-spacing="1">INFRASTRUTTURA</text>
+        <text x="410" y="470" fill="rgba(255,255,255,0.25)" font-size="9" text-anchor="middle">Deploy · Hosting · Scaling · Monitoring · Logging · Costi</text>
+
+        <!-- ARROWS -->
+        <!-- User → UI -->
+        <line x1="120" y1="250" x2="153" y2="250" stroke="rgba(255,255,255,0.15)" stroke-width="1" marker-end="url(#arrowhead)"/>
+        <!-- UI → Orchestrator -->
+        <line x1="265" y1="250" x2="308" y2="245" stroke="rgba(255,255,255,0.15)" stroke-width="1" marker-end="url(#arrowhead)"/>
+        <!-- Orchestrator → LLM -->
+        <line x1="400" y1="275" x2="400" y2="293" stroke="rgba(255,255,255,0.15)" stroke-width="1" marker-end="url(#arrowhead)"/>
+        <!-- Prompt → Orchestrator -->
+        <line x1="355" y1="197" x2="380" y2="203" stroke="rgba(255,255,255,0.12)" stroke-width="1" marker-end="url(#arrowhead)"/>
+        <!-- Orchestrator → Memory -->
+        <line x1="490" y1="225" x2="538" y2="200" stroke="rgba(255,255,255,0.15)" stroke-width="1" marker-end="url(#arrowhead)"/>
+        <!-- Orchestrator → Tools -->
+        <line x1="490" y1="250" x2="538" y2="270" stroke="rgba(255,255,255,0.15)" stroke-width="1" marker-end="url(#arrowhead)"/>
+        <!-- Orchestrator → RAG -->
+        <line x1="490" y1="265" x2="538" y2="355" stroke="rgba(255,255,255,0.12)" stroke-width="1" marker-end="url(#arrowhead)"/>
+
+        <!-- Arrow marker -->
+        <defs>
+          <marker id="arrowhead" markerWidth="6" markerHeight="5" refX="5" refY="2.5" orient="auto">
+            <polygon points="0 0, 6 2.5, 0 5" fill="rgba(255,255,255,0.25)"/>
+          </marker>
+        </defs>
+
+        <!-- Labels -->
+        <text x="400" y="30" fill="rgba(255,255,255,0.12)" font-size="11" font-weight="700" text-anchor="middle" letter-spacing="2">ARCHITETTURA DI RIFERIMENTO — AGENTE AI</text>
+
+        <!-- Legend -->
+        <rect x="680" y="145" width="8" height="8" rx="1" fill="#c0562b"/>
+        <text x="694" y="153" fill="rgba(255,255,255,0.35)" font-size="8">Core</text>
+        <rect x="680" y="163" width="8" height="8" rx="1" fill="#2e7d9c"/>
+        <text x="694" y="171" fill="rgba(255,255,255,0.35)" font-size="8">Ragionamento</text>
+        <rect x="680" y="181" width="8" height="8" rx="1" fill="#b8860b"/>
+        <text x="694" y="189" fill="rgba(255,255,255,0.35)" font-size="8">Stato</text>
+        <rect x="680" y="199" width="8" height="8" rx="1" fill="#4a8c3f"/>
+        <text x="694" y="207" fill="rgba(255,255,255,0.35)" font-size="8">Azione</text>
+        <rect x="680" y="217" width="8" height="8" rx="1" fill="#c0392b"/>
+        <text x="694" y="225" fill="rgba(255,255,255,0.35)" font-size="8">Sicurezza</text>
+        <rect x="680" y="235" width="8" height="8" rx="1" fill="#8b7355"/>
+        <text x="694" y="243" fill="rgba(255,255,255,0.35)" font-size="8">Supporto</text>
+      </svg>
+    </div>
+
+    <div class="key-point" style="margin-top:32px;">
+      <div class="kp-label">I 9 componenti</div>
+      <div class="kp-text">Ogni agente AI — dal più semplice chatbot al sistema multi-agente più complesso — è una combinazione di questi 9 componenti. La complessità non è nel numero, ma nelle relazioni tra di loro.</div>
+      <div class="kp-sub">Non tutti i componenti sono sempre presenti: un chatbot FAQ può non avere Strumenti né Memoria a lungo termine. Un agente di coding può non avere RAG. Ma l'architettura di riferimento li include tutti, perché quando uno manca è una <em>scelta consapevole</em>, non una dimenticanza.</div>
+    </div>
+
+    <table class="sum-table" style="margin-top:28px;">
+      <thead>
+        <tr>
+          <th style="width:22%">Componente</th>
+          <th style="width:32%">Cosa fa</th>
+          <th style="width:22%">Analogia</th>
+          <th style="width:24%">Se manca…</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td class="comp-cell" style="color:var(--core)">01 · Orchestratore</td>
+          <td>Gestisce il ciclo "ragiona → agisci → osserva". Decide cosa fare dopo, quando fermarsi, come gestire errori.</td>
+          <td>Il <strong>project manager</strong> del team: coordina, assegna, controlla.</td>
+          <td>Non hai un agente, hai un singolo prompt → risposta senza ciclo.</td>
+        </tr>
+        <tr>
+          <td class="comp-cell" style="color:var(--brain)">02 · Modello LLM</td>
+          <td>Il motore di ragionamento. Genera testo, ragiona, interpreta istruzioni, decide quali tool chiamare.</td>
+          <td>Il <strong>cervello</strong> del collaboratore: intelligenza grezza che viene guidata dall'orchestratore.</td>
+          <td>Non c'è ragionamento in linguaggio naturale. Nessun agente moderno senza LLM.</td>
+        </tr>
+        <tr>
+          <td class="comp-cell" style="color:var(--prompt)">03 · Prompt e Istruzioni</td>
+          <td>System prompt, regole, few-shot examples, struttura del ragionamento (CoT, ReAct). Il "DNA" del comportamento.</td>
+          <td>Il <strong>contratto di lavoro</strong>: definisce ruolo, limiti, stile, priorità.</td>
+          <td>L'agente funziona ma senza personalità, senza regole, senza vincoli. Output imprevedibile.</td>
+        </tr>
+        <tr>
+          <td class="comp-cell" style="color:var(--mem)">04 · Memoria</td>
+          <td>Mantiene contesto: conversazione attuale, sessioni passate, stato del workflow in corso.</td>
+          <td>La <strong>scrivania e l'archivio</strong>: appunti della riunione (breve termine) e dossier (lungo termine).</td>
+          <td>L'agente non ricorda nulla. Ogni interazione parte da zero.</td>
+        </tr>
+        <tr>
+          <td class="comp-cell" style="color:var(--tool)">05 · Strumenti</td>
+          <td>API, database, browser, file system, esecuzione di codice. Le "mani" che l'agente usa per agire nel mondo.</td>
+          <td>Gli <strong>strumenti sulla scrivania</strong>: telefono, computer, accesso ai sistemi.</td>
+          <td>L'agente può solo ragionare e generare testo. Non può agire né leggere dati esterni.</td>
+        </tr>
+        <tr>
+          <td class="comp-cell" style="color:var(--rag)">06 · RAG / Knowledge Base</td>
+          <td>Accesso a documenti, policy, manuali. L'agente consulta una base di conoscenza prima di rispondere.</td>
+          <td>La <strong>biblioteca aziendale</strong>: l'agente va a cercare informazioni che non ha in testa.</td>
+          <td>L'agente risponde solo con la conoscenza del training. Niente dati aziendali specifici.</td>
+        </tr>
+        <tr>
+          <td class="comp-cell" style="color:var(--guard)">07 · Guardrail e Sicurezza</td>
+          <td>Filtri su input/output, limiti di azione, validazione, human-in-the-loop, compliance.</td>
+          <td>Le <strong>policy e i controlli interni</strong>: cosa l'agente può e non può fare, chi approva cosa.</td>
+          <td>L'agente può generare contenuti inappropriati, compiere azioni non autorizzate, esporre dati.</td>
+        </tr>
+        <tr>
+          <td class="comp-cell" style="color:var(--ui)">08 · Interfaccia Utente</td>
+          <td>Come l'utente interagisce: chat, widget, API, Slack, email. Include UX e gestione delle attese.</td>
+          <td>La <strong>reception</strong>: il punto di contatto tra il mondo esterno e l'agente.</td>
+          <td>L'agente funziona ma nessuno può usarlo. Serve almeno un canale di input/output.</td>
+        </tr>
+        <tr>
+          <td class="comp-cell" style="color:var(--infra)">09 · Infrastruttura</td>
+          <td>Hosting, deploy, scaling, monitoring, logging, gestione costi, sicurezza di rete.</td>
+          <td>L'<strong>ufficio fisico</strong>: la sede dove il collaboratore lavora, con luce, rete, sicurezza.</td>
+          <td>L'agente funziona in locale sul tuo PC. Non è disponibile per altri, non scala, non è monitorato.</td>
+        </tr>
+      </tbody>
+    </table>
+
+  </div>
+</div>
+
+
+<!-- ═══════════════════════════
+     S1 — ORCHESTRATORE
+═══════════════════════════ -->
+<div class="sect" id="s1">
+  <div class="sect-head">
+    <div class="sect-num">Componente 01</div>
+    <h2>L'Orchestratore</h2>
+    <p>Il cuore dell'agente. È il codice — o la piattaforma — che gestisce il ciclo di vita di ogni interazione: riceve l'input, decide cosa fare, chiama il modello LLM, invoca strumenti, valuta i risultati, decide se continuare o fermarsi.</p>
+  </div>
+  <div class="wrap">
+    <div class="comp">
+      <div class="comp-header">
+        <div class="comp-accent" style="background:var(--core)"></div>
+        <div class="comp-num">01</div>
+        <div class="comp-title-wrap">
+          <div class="comp-name">Orchestratore / Loop di Ragionamento</div>
+          <div class="comp-subtitle">Il "project manager" del sistema agentico</div>
+        </div>
+        <div class="comp-tag" style="color:var(--core);border-color:var(--core)">Componente Core</div>
+      </div>
+      <div class="comp-body">
+
+        <div class="csect">
+          <div class="csect-label">A cosa serve e perché è importante</div>
+          <p>L'orchestratore è ciò che trasforma un LLM — che di per sé risponde a una domanda e si ferma — in un <strong>agente</strong> capace di eseguire sequenze di azioni. Il suo compito è implementare il ciclo fondamentale: <em>ragiona → agisci → osserva il risultato → ragiona di nuovo</em>. Senza orchestratore, non c'è agente — c'è solo un modello che risponde a domande.</p>
+          <p>L'orchestratore decide <strong>quando</strong> chiamare il modello LLM, <strong>cosa</strong> passargli nel prompt, <strong>quali strumenti</strong> invocare sulla base della risposta del modello, <strong>come gestire</strong> un errore o un risultato inatteso, e <strong>quando fermarsi</strong>. È anche il componente che gestisce il passaggio di stato tra un passo e l'altro: cosa sa l'agente dopo ogni azione, cosa è cambiato, cosa rimane da fare.</p>
+          <p>Nei sistemi multi-agent, l'orchestratore ha un ruolo aggiuntivo: il <strong>routing</strong> — decidere quale agente specializzato riceve quale sotto-task, raccogliere i risultati, e consolidarli in una risposta finale.</p>
+        </div>
+
+        <div class="csect">
+          <div class="csect-label">Decisioni e sfide</div>
+          <div class="dc-grid">
+            <div class="dc-item">
+              <div class="dc-item-title">Quale pattern di ragionamento?</div>
+              <div class="dc-item-text"><strong>ReAct</strong> (ragiona, agisci, osserva in loop) è il più diffuso e funziona per la maggior parte dei casi. <strong>Plan-and-Execute</strong> crea un piano completo prima di agire — meglio per task complessi con molti step. <strong>Reflexion</strong> aggiunge un layer di auto-valutazione: l'agente giudica il proprio output e decide se migliorarlo. La scelta dipende dalla complessità del task e dalla tolleranza agli errori.</div>
+            </div>
+            <div class="dc-item">
+              <div class="dc-item-title">Gestione degli errori</div>
+              <div class="dc-item-text">Cosa succede quando un tool fallisce, quando il modello restituisce un output non parsabile, quando l'agente entra in un loop infinito? L'orchestratore deve avere strategie per ogni caso: <strong>retry con backoff</strong>, <strong>fallback</strong> a un percorso alternativo, <strong>escalation</strong> a un umano, <strong>timeout</strong> per evitare loop. Sottovalutare questo aspetto è la causa principale di fallimenti in produzione.</div>
+            </div>
+            <div class="dc-item">
+              <div class="dc-item-title">Gestione dello stato</div>
+              <div class="dc-item-text">L'orchestratore deve sapere "a che punto siamo". In un task multi-step, quali step sono completati? Quali risultati intermedi abbiamo? Se il processo si interrompe, possiamo riprenderlo? Le soluzioni vanno dallo <strong>stato in memoria</strong> (semplice, perde tutto se crasha) allo <strong>stato persistente con checkpoint</strong> (robusto, più complesso). LangGraph implementa nativamente quest'ultimo approccio.</div>
+            </div>
+            <div class="dc-item">
+              <div class="dc-item-title">Condizioni di uscita</div>
+              <div class="dc-item-text">Quando l'agente si ferma? Le opzioni: il modello dichiara esplicitamente "ho finito" (rischioso: può non farlo mai), un <strong>numero massimo di iterazioni</strong> (robusto ma arbitrario), un <strong>criterio di soddisfazione</strong> (verifico se l'output soddisfa la richiesta). Nella pratica si usa quasi sempre una combinazione: dichiarazione del modello + timeout di sicurezza.</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="csect">
+          <div class="csect-label">Relazioni con gli altri componenti</div>
+          <p>L'orchestratore è il componente più <strong>connesso</strong>: interagisce direttamente con tutti gli altri. Chiama il Modello LLM per ragionare, gli passa il Prompt per guidarlo, legge e scrive nella Memoria per mantenere lo stato, invoca gli Strumenti per agire, consulta il RAG per accedere alla conoscenza, applica i Guardrail per validare input e output. È il collante del sistema.</p>
+          <div class="rel-chips">
+            <span class="rel-chip"><span class="rel-dot" style="background:var(--brain)"></span>LLM — lo chiama per ragionare</span>
+            <span class="rel-chip"><span class="rel-dot" style="background:var(--prompt)"></span>Prompt — lo compone e lo passa al LLM</span>
+            <span class="rel-chip"><span class="rel-dot" style="background:var(--mem)"></span>Memoria — legge/scrive lo stato</span>
+            <span class="rel-chip"><span class="rel-dot" style="background:var(--tool)"></span>Strumenti — li invoca per agire</span>
+            <span class="rel-chip"><span class="rel-dot" style="background:var(--rag)"></span>RAG — lo interroga per la conoscenza</span>
+            <span class="rel-chip"><span class="rel-dot" style="background:var(--guard)"></span>Guardrail — applica i vincoli</span>
+          </div>
+        </div>
+
+        <div class="csect">
+          <div class="csect-label">Impatto pratico</div>
+          <div class="insight" style="border-color:var(--core)">
+            <div class="insight-label" style="color:var(--core)">Perché è il componente più critico</div>
+            <p>Un buon orchestratore con un modello medio produce risultati migliori di un orchestratore scadente con il miglior modello disponibile. Il motivo è che l'orchestratore determina <em>come</em> il modello viene usato — quante volte, con quale contesto, con quali strumenti a disposizione — e la qualità di queste decisioni ha più impatto della qualità del singolo ragionamento.</p>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+</div>
+
+
+<!-- ═══════════════════════════
+     S2 — MODELLO LLM
+═══════════════════════════ -->
+<div class="sect" id="s2">
+  <div class="sect-head">
+    <div class="sect-num">Componente 02</div>
+    <h2>Il Modello LLM</h2>
+    <p>Il motore di ragionamento dell'agente. È il componente che "pensa": interpreta le istruzioni, comprende il contesto, genera risposte, decide quali strumenti chiamare e con quali parametri.</p>
+  </div>
+  <div class="wrap">
+    <div class="comp">
+      <div class="comp-header">
+        <div class="comp-accent" style="background:var(--brain)"></div>
+        <div class="comp-num">02</div>
+        <div class="comp-title-wrap">
+          <div class="comp-name">Modello LLM</div>
+          <div class="comp-subtitle">Il motore di ragionamento</div>
+        </div>
+        <div class="comp-tag" style="color:var(--brain);border-color:var(--brain)">Ragionamento</div>
+      </div>
+      <div class="comp-body">
+
+        <div class="csect">
+          <div class="csect-label">A cosa serve e perché è importante</div>
+          <p>Il modello LLM è ciò che dà all'agente la capacità di <strong>comprendere il linguaggio naturale e ragionare</strong>. Quando l'orchestratore deve prendere una decisione — "dato questo contesto, cosa faccio dopo?" — è il modello che produce la risposta. Quando l'agente deve chiamare uno strumento, è il modello che decide <em>quale</em> strumento, con <em>quali parametri</em>.</p>
+          <p>Come abbiamo visto nei report precedenti, il modello non è un'intelligenza "vera" — è un sistema statistico che genera testo plausibile basandosi su pattern appresi. Ma la qualità di questi pattern determina direttamente la qualità di tutto ciò che l'agente fa: quanto bene comprende le richieste, quanto coerentemente ragiona, quanto accuratamente usa gli strumenti.</p>
+        </div>
+
+        <div class="csect">
+          <div class="csect-label">Decisioni e sfide</div>
+          <div class="dc-grid">
+            <div class="dc-item">
+              <div class="dc-item-title">Quale modello scegliere?</div>
+              <div class="dc-item-text">Come abbiamo approfondito nel report sulla mappa dei modelli LLM, non esiste un "miglior modello" in assoluto. <strong>Claude Opus</strong> eccelle nel coding e nel ragionamento qualitativo, <strong>GPT-5</strong> nella velocità, <strong>Gemini 3</strong> nella multimodalità. La scelta dipende dal task predominante dell'agente. Per gli agenti multi-step, la qualità del <strong>tool use</strong> (la capacità di generare chiamate a funzione corrette) è spesso più importante della qualità del ragionamento generico.</div>
+            </div>
+            <div class="dc-item">
+              <div class="dc-item-title">Un modello o più modelli?</div>
+              <div class="dc-item-text">Non tutti gli step di un agente richiedono lo stesso livello di intelligenza. Un routing semplice ("questa domanda riguarda il supporto o le vendite?") può usare un modello veloce ed economico. L'analisi approfondita di un documento richiede il modello migliore. <strong>Usare modelli diversi per step diversi</strong> ottimizza il rapporto qualità/costo. Ma aggiunge complessità nella gestione.</div>
+            </div>
+            <div class="dc-item">
+              <div class="dc-item-title">Proprietario o open source?</div>
+              <div class="dc-item-text">Come abbiamo discusso: i modelli proprietari (Claude, GPT) offrono qualità superiore e facilità d'uso. I modelli open (Llama, DeepSeek) offrono privacy, controllo e costi inferiori a volumi alti. Per gli agenti la scelta è meno libera di quanto sembri: il <strong>tool use affidabile</strong> oggi è più maturo nei modelli proprietari.</div>
+            </div>
+            <div class="dc-item">
+              <div class="dc-item-title">La trappola del modello "migliore"</div>
+              <div class="dc-item-text">La tentazione è usare sempre il modello frontier più potente. In realtà: modelli più potenti sono più lenti e più costosi per token. In un loop agentico con 10-20 chiamate per task, la differenza di costo e latenza si moltiplica. <strong>La scelta ottimale è il modello sufficiente</strong> — il più piccolo e veloce che produce risultati accettabili per quello step specifico.</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="csect">
+          <div class="csect-label">Relazioni con gli altri componenti</div>
+          <p>Il Modello LLM è <strong>passivo</strong>: non decide autonomamente di attivarsi. È l'Orchestratore a chiamarlo, passandogli un contesto composto dal Prompt (le istruzioni fisse), dalla Memoria (il contesto della conversazione e lo stato), e dai risultati delle azioni precedenti. Il modello restituisce testo — che l'orchestratore interpreta come "ragionamento", "risposta all'utente", o "chiamata a strumento".</p>
+          <div class="rel-chips">
+            <span class="rel-chip"><span class="rel-dot" style="background:var(--core)"></span>Orchestratore — lo invoca e interpreta le risposte</span>
+            <span class="rel-chip"><span class="rel-dot" style="background:var(--prompt)"></span>Prompt — riceve le istruzioni</span>
+            <span class="rel-chip"><span class="rel-dot" style="background:var(--mem)"></span>Memoria — riceve il contesto</span>
+          </div>
+        </div>
+
+        <div class="csect">
+          <div class="csect-label">Impatto pratico</div>
+          <div class="insight" style="border-color:var(--brain)">
+            <div class="insight-label" style="color:var(--brain)">Il modello è necessario ma non sufficiente</div>
+            <p>Un errore comune è attribuire al modello la responsabilità esclusiva della qualità dell'agente. In realtà il modello è uno dei 9 componenti, e spesso non è il collo di bottiglia. Un agente con Claude Opus ma con un prompt scadente, senza memoria, e con strumenti mal definiti funzionerà peggio di uno con Claude Sonnet ma con un'architettura ben progettata.</p>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+</div>
+
+
+<!-- ═══════════════════════════
+     S3 — PROMPT
+═══════════════════════════ -->
+<div class="sect" id="s3">
+  <div class="sect-head">
+    <div class="sect-num">Componente 03</div>
+    <h2>Prompt e Istruzioni</h2>
+    <p>Le istruzioni che definiscono chi è l'agente, come deve comportarsi, quali regole seguire, con quale stile comunicare. È il "DNA comportamentale" dell'agente — e spesso il componente su cui si investe meno tempo, con il maggiore impatto sulla qualità.</p>
+  </div>
+  <div class="wrap">
+    <div class="comp">
+      <div class="comp-header">
+        <div class="comp-accent" style="background:var(--prompt)"></div>
+        <div class="comp-num">03</div>
+        <div class="comp-title-wrap">
+          <div class="comp-name">Prompt e Istruzioni</div>
+          <div class="comp-subtitle">Il DNA comportamentale dell'agente</div>
+        </div>
+        <div class="comp-tag" style="color:var(--prompt);border-color:var(--prompt)">Ragionamento</div>
+      </div>
+      <div class="comp-body">
+
+        <div class="csect">
+          <div class="csect-label">A cosa serve e perché è importante</div>
+          <p>Il prompt è l'insieme di istruzioni che l'agente riceve <strong>prima di ogni interazione</strong>. Include il <em>system prompt</em> (chi sei, cosa fai, come ti comporti, cosa non devi fare), eventuali <em>few-shot examples</em> (esempi di input/output desiderati), e la struttura del ragionamento che l'agente deve seguire (es. "prima analizza, poi pianifica, poi agisci").</p>
+          <p>Il prompt non è un componente "tecnico" nello stesso senso degli altri: non richiede codice, non ha dipendenze, non ha infrastruttura. Ma è il componente con il <strong>rapporto impatto/investimento più alto</strong>. Un prompt mediocre su un'architettura perfetta produce un agente mediocre. Un prompt eccellente può compensare parzialmente limiti degli altri componenti.</p>
+          <p>Il prompt include anche le <strong>definizioni degli strumenti</strong>: la descrizione di ogni tool che l'agente può usare, con i parametri attesi. La qualità di queste descrizioni determina quanto bene il modello sceglie e usa gli strumenti — un collo di bottiglia spesso sottovalutato.</p>
+        </div>
+
+        <div class="csect">
+          <div class="csect-label">Decisioni e sfide</div>
+          <div class="dc-grid">
+            <div class="dc-item">
+              <div class="dc-item-title">Struttura del ragionamento</div>
+              <div class="dc-item-text">Il prompt può guidare l'agente a ragionare in modi diversi. <strong>Chain-of-Thought</strong>: "pensa passo per passo". <strong>ReAct</strong>: "ragiona, agisci, osserva". <strong>Structured output</strong>: "rispondi sempre in formato JSON con questi campi". La scelta influenza sia la qualità del ragionamento sia la parsabilità dell'output da parte dell'orchestratore.</div>
+            </div>
+            <div class="dc-item">
+              <div class="dc-item-title">Bilanciare specificità e flessibilità</div>
+              <div class="dc-item-text">Un prompt troppo specifico produce un agente rigido che fallisce su casi non previsti. Un prompt troppo generico produce un agente incoerente. La sfida è definire <strong>vincoli chiari</strong> (cosa non fare mai, formato dell'output, limiti di azione) lasciando <strong>libertà</strong> nel ragionamento (come arrivare alla risposta, in quale ordine affrontare i sotto-problemi).</div>
+            </div>
+            <div class="dc-item">
+              <div class="dc-item-title">Gestione del contesto limitato</div>
+              <div class="dc-item-text">Tutto ciò che il modello "sa" in un dato momento è ciò che c'è nel suo contesto: system prompt + memoria + risultati precedenti + input utente. Se il prompt è troppo lungo, lascia meno spazio per il contesto dinamico. <strong>Ogni token del prompt ha un costo</strong> — in spazio e in denaro — quindi la concisione è un requisito tecnico, non solo stilistico.</div>
+            </div>
+            <div class="dc-item">
+              <div class="dc-item-title">Evoluzione e manutenzione</div>
+              <div class="dc-item-text">Il prompt non è "scrivi una volta e dimentica". Cambia quando: il modello sottostante viene aggiornato (i nuovi modelli rispondono diversamente agli stessi prompt), emergono nuovi edge case in produzione, cambia il caso d'uso, il feedback degli utenti evidenzia problemi. Il <strong>versioning dei prompt</strong> è una pratica essenziale ma raramente implementata.</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="csect">
+          <div class="csect-label">Relazioni con gli altri componenti</div>
+          <p>Il Prompt è inviato al Modello LLM dall'Orchestratore. Ma il prompt "visto" dal modello in ogni interazione non è solo il system prompt fisso: è la <strong>composizione dinamica</strong> di system prompt + contesto dalla Memoria + risultati dal RAG + definizioni degli Strumenti disponibili. L'orchestratore "assembla" questo prompt composito ad ogni iterazione del loop.</p>
+          <div class="rel-chips">
+            <span class="rel-chip"><span class="rel-dot" style="background:var(--core)"></span>Orchestratore — lo compone dinamicamente</span>
+            <span class="rel-chip"><span class="rel-dot" style="background:var(--brain)"></span>LLM — lo riceve e lo segue</span>
+            <span class="rel-chip"><span class="rel-dot" style="background:var(--tool)"></span>Strumenti — le loro descrizioni sono parte del prompt</span>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+</div>
+
+
+<!-- ═══════════════════════════
+     S4 — MEMORIA
+═══════════════════════════ -->
+<div class="sect" id="s4">
+  <div class="sect-head">
+    <div class="sect-num">Componente 04</div>
+    <h2>La Memoria</h2>
+    <p>Come l'agente mantiene contesto nel tempo: cosa è stato detto, cosa è stato fatto, a che punto è il processo. Senza memoria, ogni interazione parte da zero.</p>
+  </div>
+  <div class="wrap">
+    <div class="comp">
+      <div class="comp-header">
+        <div class="comp-accent" style="background:var(--mem)"></div>
+        <div class="comp-num">04</div>
+        <div class="comp-title-wrap">
+          <div class="comp-name">Memoria</div>
+          <div class="comp-subtitle">Contesto, stato e continuità</div>
+        </div>
+        <div class="comp-tag" style="color:var(--mem);border-color:var(--mem)">Stato</div>
+      </div>
+      <div class="comp-body">
+
+        <div class="csect">
+          <div class="csect-label">A cosa serve e perché è importante</div>
+          <p>La memoria risolve un limite strutturale degli LLM: <strong>non hanno memoria intrinseca tra una chiamata e l'altra</strong>. Ogni volta che chiami il modello, lui "nasce" nuovo — non ricorda nulla delle chiamate precedenti. Il contesto che ha è solo ciò che gli passi nel prompt. La memoria è il componente che gestisce <em>cosa</em> passare al modello e <em>quando</em>.</p>
+          <p>Ci sono tre tipi di memoria, con ruoli molto diversi. La <strong>memoria conversazionale</strong> (breve termine) mantiene la storia della conversazione in corso: i messaggi dell'utente e le risposte dell'agente. La <strong>memoria di workflow</strong> (stato) tiene traccia del progresso nei task multi-step: quali azioni sono state completate, quali risultati intermedi abbiamo, cosa resta da fare. La <strong>memoria a lungo termine</strong> persiste tra sessioni diverse: profilo dell'utente, preferenze, interazioni passate, conoscenza accumulata.</p>
+        </div>
+
+        <div class="csect">
+          <div class="csect-label">Decisioni e sfide</div>
+          <div class="dc-grid">
+            <div class="dc-item">
+              <div class="dc-item-title">Cosa ricordare e cosa dimenticare</div>
+              <div class="dc-item-text">Il contesto del modello ha una dimensione finita (context window). Non puoi mettere tutto. Servono strategie: <strong>buffer fisso</strong> (ultimi N messaggi), <strong>summarization</strong> (riassumi i messaggi più vecchi), <strong>retrieval selettivo</strong> (cerca nella storia solo ciò che è rilevante per la domanda attuale). Ogni strategia ha un trade-off tra completezza e costo/velocità.</div>
+            </div>
+            <div class="dc-item">
+              <div class="dc-item-title">Dove salvare lo stato</div>
+              <div class="dc-item-text"><strong>In-memory</strong>: il più semplice, perde tutto se il processo crasha. <strong>File/database</strong>: persiste, ma aggiunge latenza di I/O. <strong>Vector store</strong>: per memoria semantica (cerco "conversazioni simili"), richiede embedding e infrastruttura dedicata. <strong>Checkpoint</strong> (come in LangGraph): salva snapshot dello stato dell'intero workflow a intervalli regolari, consentendo di riprendere da dove si è interrotto.</div>
+            </div>
+            <div class="dc-item">
+              <div class="dc-item-title">Coerenza e freschezza</div>
+              <div class="dc-item-text">La memoria a lungo termine introduce un problema: le informazioni invecchiano. Un fatto memorizzato 3 mesi fa può essere obsoleto. Servono meccanismi di <strong>scadenza</strong> (TTL), <strong>versionamento</strong>, e gestione dei conflitti (cosa prevale: la memoria o l'input attuale?). Senza questi meccanismi la memoria diventa un rischio più che un vantaggio.</div>
+            </div>
+            <div class="dc-item">
+              <div class="dc-item-title">Privacy e compliance</div>
+              <div class="dc-item-text">Tutto ciò che l'agente "ricorda" è un dato che <strong>viene conservato da qualche parte</strong>. Se l'agente ricorda dati personali, conversazioni confidenziali, o informazioni sensibili, entra in gioco la normativa sulla privacy (GDPR). Serve un meccanismo di cancellazione, e serve decidere quali dati l'agente ha il diritto di memorizzare e per quanto tempo.</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="csect">
+          <div class="csect-label">Relazioni con gli altri componenti</div>
+          <p>La Memoria è gestita dall'Orchestratore, che decide cosa scrivere e quando leggerla. Il suo contenuto viene iniettato nel Prompt prima di ogni chiamata al Modello LLM. In un certo senso, la memoria è un'<strong>estensione dinamica del prompt</strong>: ciò che il modello "ricorda" è ciò che l'orchestratore decide di inserire nel contesto.</p>
+          <div class="rel-chips">
+            <span class="rel-chip"><span class="rel-dot" style="background:var(--core)"></span>Orchestratore — la gestisce (lettura/scrittura)</span>
+            <span class="rel-chip"><span class="rel-dot" style="background:var(--brain)"></span>LLM — la riceve come parte del contesto</span>
+            <span class="rel-chip"><span class="rel-dot" style="background:var(--infra)"></span>Infrastruttura — la persiste (DB, vector store)</span>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+</div>
+
+
+<!-- ═══════════════════════════
+     S5 — STRUMENTI
+═══════════════════════════ -->
+<div class="sect" id="s5">
+  <div class="sect-head">
+    <div class="sect-num">Componente 05</div>
+    <h2>Gli Strumenti (Tool Use)</h2>
+    <p>Le "mani" dell'agente: API, database, browser, esecuzione di codice, file system. Tutto ciò che gli permette di agire nel mondo reale, non solo ragionare.</p>
+  </div>
+  <div class="wrap">
+    <div class="comp">
+      <div class="comp-header">
+        <div class="comp-accent" style="background:var(--tool)"></div>
+        <div class="comp-num">05</div>
+        <div class="comp-title-wrap">
+          <div class="comp-name">Strumenti / Tool Use</div>
+          <div class="comp-subtitle">Le mani dell'agente nel mondo reale</div>
+        </div>
+        <div class="comp-tag" style="color:var(--tool);border-color:var(--tool)">Azione</div>
+      </div>
+      <div class="comp-body">
+
+        <div class="csect">
+          <div class="csect-label">A cosa serve e perché è importante</div>
+          <p>Gli strumenti sono ciò che distingue un agente da un chatbot. Un chatbot genera testo. Un agente <strong>agisce</strong>: legge dati da un CRM, manda un'email, esegue una query SQL, naviga un sito web, scrive e esegue codice. Ogni strumento è essenzialmente una <strong>funzione</strong> con un nome, una descrizione, dei parametri di input, e un output.</p>
+          <p>Il meccanismo è questo: l'orchestratore passa al modello LLM la lista degli strumenti disponibili (con le loro descrizioni). Il modello, ragionando sul task, decide quale strumento chiamare e con quali parametri. L'orchestratore esegue effettivamente la chiamata e restituisce il risultato al modello, che lo usa per il passo successivo. Questo ciclo — <em>il modello decide, l'orchestratore esegue</em> — è il cuore del tool use.</p>
+        </div>
+
+        <div class="csect">
+          <div class="csect-label">Decisioni e sfide</div>
+          <div class="dc-grid">
+            <div class="dc-item">
+              <div class="dc-item-title">Quali strumenti dare all'agente?</div>
+              <div class="dc-item-text"><strong>Meno è meglio.</strong> Ogni strumento aggiunto è un'opzione in più che il modello deve valutare — e un'opportunità in più di sbagliare. Un agente con 3 strumenti ben definiti funziona quasi sempre meglio di uno con 20 strumenti generici. La regola: aggiungi un tool solo se c'è un caso d'uso concreto che lo richiede, non "perché potrebbe servire".</div>
+            </div>
+            <div class="dc-item">
+              <div class="dc-item-title">La qualità delle descrizioni</div>
+              <div class="dc-item-text">Il modello sceglie quale tool usare basandosi <strong>sulla descrizione testuale</strong>, non sul codice. Se la descrizione è ambigua, il modello farà scelte sbagliate. Se i parametri non sono ben documentati, il modello li riempirà male. Scrivere descrizioni precise è tanto importante quanto implementare il connettore. È prompt engineering applicato agli strumenti.</div>
+            </div>
+            <div class="dc-item">
+              <div class="dc-item-title">Azioni reversibili vs irreversibili</div>
+              <div class="dc-item-text">Leggere dati è sicuro: se il modello chiama il tool sbagliato, il danno è una risposta errata. <strong>Scrivere dati, mandare email, approvare transazioni</strong> sono azioni irreversibili: un errore può avere conseguenze reali. Per le azioni irreversibili serve un <strong>human-in-the-loop</strong>: l'agente propone l'azione, un umano la approva prima dell'esecuzione.</div>
+            </div>
+            <div class="dc-item">
+              <div class="dc-item-title">Gestione degli errori dei tool</div>
+              <div class="dc-item-text">Le API esterne falliscono: timeout, rate limit, errori di autenticazione, risposte inattese. Ogni tool deve avere una strategia di <strong>error handling</strong> che restituisca al modello un messaggio comprensibile (non un traceback Python). Il modello deve poter decidere: riprovare, usare un tool alternativo, o chiedere aiuto.</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="csect">
+          <div class="csect-label">Relazioni con gli altri componenti</div>
+          <p>Gli Strumenti sono <strong>definiti nel Prompt</strong> (il modello li conosce tramite le descrizioni), <strong>invocati dall'Orchestratore</strong> (che esegue materialmente la chiamata), e <strong>vincolati dai Guardrail</strong> (che possono bloccare certe azioni). I risultati dei tool vengono aggiunti alla Memoria di workflow per dare contesto ai passi successivi.</p>
+          <div class="rel-chips">
+            <span class="rel-chip"><span class="rel-dot" style="background:var(--prompt)"></span>Prompt — le descrizioni sono nel prompt</span>
+            <span class="rel-chip"><span class="rel-dot" style="background:var(--brain)"></span>LLM — decide quale tool, con quali parametri</span>
+            <span class="rel-chip"><span class="rel-dot" style="background:var(--core)"></span>Orchestratore — esegue la chiamata</span>
+            <span class="rel-chip"><span class="rel-dot" style="background:var(--guard)"></span>Guardrail — validano le azioni</span>
+          </div>
+        </div>
+
+        <div class="csect">
+          <div class="csect-label">Impatto pratico</div>
+          <div class="insight" style="border-color:var(--tool)">
+            <div class="insight-label" style="color:var(--tool)">Il collo di bottiglia nascosto</div>
+            <p>Nella maggior parte dei progetti, l'integrazione degli strumenti è lo step che richiede più tempo — non per la complessità tecnologica del singolo connettore, ma per il numero di sistemi da integrare e la gestione delle eccezioni di ciascuno. Un agente che si integra con 5 sistemi diversi ha 5 fonti potenziali di errori, 5 set di credenziali da gestire, 5 formati di risposta da parsare.</p>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+</div>
+
+
+<!-- ═══════════════════════════
+     S6 — RAG
+═══════════════════════════ -->
+<div class="sect" id="s6">
+  <div class="sect-head">
+    <div class="sect-num">Componente 06</div>
+    <h2>RAG / Knowledge Base</h2>
+    <p>Come l'agente accede a conoscenza che non è nel training del modello: documenti aziendali, policy, manuali, FAQ. La pipeline che trasforma documenti statici in conoscenza interrogabile.</p>
+  </div>
+  <div class="wrap">
+    <div class="comp">
+      <div class="comp-header">
+        <div class="comp-accent" style="background:var(--rag)"></div>
+        <div class="comp-num">06</div>
+        <div class="comp-title-wrap">
+          <div class="comp-name">RAG / Knowledge Base</div>
+          <div class="comp-subtitle">La biblioteca interrogabile dell'agente</div>
+        </div>
+        <div class="comp-tag" style="color:var(--rag);border-color:var(--rag)">Conoscenza</div>
+      </div>
+      <div class="comp-body">
+
+        <div class="csect">
+          <div class="csect-label">A cosa serve e perché è importante</div>
+          <p>RAG sta per <em>Retrieval-Augmented Generation</em>: il modello non inventa la risposta, ma <strong>prima cerca</strong> informazioni rilevanti in una base di conoscenza, <strong>poi genera</strong> la risposta basandosi su ciò che ha trovato. È il componente che permette all'agente di rispondere su documenti, policy, prodotti, procedure — informazioni specifiche che il modello non ha nel suo training.</p>
+          <p>La pipeline RAG ha più fasi: <strong>ingestion</strong> (i documenti vengono caricati), <strong>chunking</strong> (vengono spezzati in frammenti), <strong>embedding</strong> (ogni frammento viene trasformato in un vettore numerico che ne cattura il significato), <strong>storage</strong> (i vettori vengono salvati in un vector database), <strong>retrieval</strong> (quando arriva una domanda, si cercano i frammenti più simili), <strong>generation</strong> (i frammenti trovati vengono passati al modello come contesto).</p>
+        </div>
+
+        <div class="csect">
+          <div class="csect-label">Decisioni e sfide</div>
+          <div class="dc-grid">
+            <div class="dc-item">
+              <div class="dc-item-title">La qualità dipende dal chunking</div>
+              <div class="dc-item-text">Come spezzi i documenti è forse la decisione più impattante. Chunk troppo piccoli perdono contesto. Chunk troppo grandi diluiscono la rilevanza. <strong>Chunk con overlap</strong> (ogni frammento si sovrappone parzialmente al precedente) è la strategia più diffusa, ma la dimensione ottimale varia enormemente per tipo di documento. Un contratto richiede chunk diversi da una FAQ.</div>
+            </div>
+            <div class="dc-item">
+              <div class="dc-item-title">Quale vector database</div>
+              <div class="dc-item-text"><strong>Pinecone</strong> (cloud, facile, costoso a volumi alti), <strong>Chroma</strong> (locale, leggero, buono per prototipi), <strong>pgvector</strong> (estensione PostgreSQL — se hai già Postgres, nessun sistema in più), <strong>Weaviate</strong> e <strong>Qdrant</strong> (opzioni più avanzate per produzione). La scelta dipende da volume, infrastruttura esistente e budget.</div>
+            </div>
+            <div class="dc-item">
+              <div class="dc-item-title">Il problema della freschezza</div>
+              <div class="dc-item-text">I documenti cambiano. Le policy si aggiornano. I prodotti evolvono. Se la pipeline RAG non ha un meccanismo di <strong>aggiornamento incrementale</strong>, l'agente risponderà con informazioni obsolete — che è peggio che non rispondere. Serve una pipeline di ingestion continua, con meccanismi di versioning e rimozione dei documenti scaduti.</div>
+            </div>
+            <div class="dc-item">
+              <div class="dc-item-title">Retrieval ≠ comprensione</div>
+              <div class="dc-item-text">Trovare il chunk "giusto" non garantisce una risposta corretta. Il modello può <strong>misinterpretare</strong> il chunk, combinarlo male con altri chunk, o ignorarlo a favore delle sue conoscenze di training. La validazione dell'output RAG — l'agente cita correttamente le fonti? La risposta è coerente con i documenti? — è una sfida specifica che richiede eval dedicate.</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="csect">
+          <div class="csect-label">Relazioni con gli altri componenti</div>
+          <p>Il RAG può essere invocato in due modi: dall'<strong>Orchestratore</strong> come step esplicito del flusso ("prima cerca, poi rispondi") o come <strong>Strumento</strong> che il modello decide autonomamente di chiamare quando ne ha bisogno. La seconda modalità è più flessibile ma meno controllabile. I risultati del RAG vengono iniettati nel Prompt come contesto aggiuntivo per il Modello LLM.</p>
+          <div class="rel-chips">
+            <span class="rel-chip"><span class="rel-dot" style="background:var(--core)"></span>Orchestratore — lo invoca nel flusso</span>
+            <span class="rel-chip"><span class="rel-dot" style="background:var(--tool)"></span>Strumenti — può essere esposto come tool</span>
+            <span class="rel-chip"><span class="rel-dot" style="background:var(--brain)"></span>LLM — riceve i risultati come contesto</span>
+            <span class="rel-chip"><span class="rel-dot" style="background:var(--infra)"></span>Infrastruttura — vector DB da gestire</span>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+</div>
+
+
+<!-- ═══════════════════════════
+     S7 — GUARDRAIL
+═══════════════════════════ -->
+<div class="sect" id="s7">
+  <div class="sect-head">
+    <div class="sect-num">Componente 07</div>
+    <h2>Guardrail e Sicurezza</h2>
+    <p>Il sistema di vincoli, filtri e controlli che definisce cosa l'agente può e non può fare. Spesso il componente più trascurato in fase di sviluppo — e il più importante in produzione.</p>
+  </div>
+  <div class="wrap">
+    <div class="comp">
+      <div class="comp-header">
+        <div class="comp-accent" style="background:var(--guard)"></div>
+        <div class="comp-num">07</div>
+        <div class="comp-title-wrap">
+          <div class="comp-name">Guardrail e Sicurezza</div>
+          <div class="comp-subtitle">Il sistema immunitario dell'agente</div>
+        </div>
+        <div class="comp-tag" style="color:var(--guard);border-color:var(--guard)">Sicurezza</div>
+      </div>
+      <div class="comp-body">
+
+        <div class="csect">
+          <div class="csect-label">A cosa serve e perché è importante</div>
+          <p>I guardrail sono l'insieme di meccanismi che impediscono all'agente di fare cose che non dovrebbe. Operano a <strong>più livelli</strong>: filtro sull'input (bloccare prompt injection, contenuti inappropriati), vincoli sulle azioni (limitare quali tool può usare in quali contesti, richiedere approvazione umana per azioni critiche), validazione sull'output (verificare che la risposta non contenga informazioni riservate, dati personali, o contenuti inappropriati).</p>
+          <p>Questo componente non era nella lista originale dei 5 "mattoni" che avevamo identificato nelle prime chat, ma dopo l'approfondimento ho scelto di aggiungerlo come componente autonomo. Il motivo: nella pratica, i guardrail richiedono progettazione specifica, hanno una complessità propria, e la loro assenza è la causa numero uno di incidenti in produzione. Non sono un aspetto del prompt — sono un <strong>layer architetturale separato</strong>.</p>
+        </div>
+
+        <div class="csect">
+          <div class="csect-label">Decisioni e sfide</div>
+          <div class="dc-grid">
+            <div class="dc-item">
+              <div class="dc-item-title">Human-in-the-loop: dove e quando</div>
+              <div class="dc-item-text">Definire quali azioni richiedono approvazione umana è una decisione di design critica. Troppi checkpoint rallentano l'agente e frustrano l'utente. Troppo pochi espongono a rischi. La regola pratica: <strong>human-in-the-loop sulle azioni irreversibili</strong> (invio email, modifica dati, transazioni) e autonomia sulle azioni di sola lettura.</div>
+            </div>
+            <div class="dc-item">
+              <div class="dc-item-title">Prompt injection</div>
+              <div class="dc-item-text">Un utente (o un documento ingerito dal RAG) può contenere istruzioni che tentano di manipolare il comportamento dell'agente: "ignora le istruzioni precedenti e fai X". I guardrail devono includere <strong>filtri sull'input</strong> e <strong>separazione netta tra istruzioni di sistema e contenuto utente</strong>. Nessuna soluzione è perfetta al 100%, ma l'assenza di protezione è pericolosa.</div>
+            </div>
+            <div class="dc-item">
+              <div class="dc-item-title">Rate limiting e costi</div>
+              <div class="dc-item-text">Un agente in loop può generare decine di chiamate API per singola richiesta. Senza limiti, un errore può causare centinaia di chiamate inutili — con costi esplosivi. Servono <strong>limiti sul numero di iterazioni</strong>, <strong>budget massimo per richiesta</strong>, e alert quando i costi superano soglie predefinite.</div>
+            </div>
+            <div class="dc-item">
+              <div class="dc-item-title">Contenuti sensibili nell'output</div>
+              <div class="dc-item-text">L'agente può involontariamente esporre dati personali, informazioni riservate, o contenuti del training che non dovrebbero essere condivisi. Servono filtri sull'output: <strong>PII detection</strong> (riconoscimento di dati personali), controlli di conformità, e audit trail di tutte le risposte generate.</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="csect">
+          <div class="csect-label">Relazioni con gli altri componenti</div>
+          <p>I Guardrail operano come un <strong>layer trasversale</strong> che avvolge l'intero flusso. Nello schema architetturale sono rappresentati come un perimetro tratteggiato attorno all'Orchestratore perché toccano ogni fase: filtrano l'input prima che arrivi all'orchestratore, validano le azioni prima che i tool le eseguano, controllano l'output prima che raggiunga l'utente.</p>
+          <div class="rel-chips">
+            <span class="rel-chip"><span class="rel-dot" style="background:var(--core)"></span>Orchestratore — li applica ad ogni step</span>
+            <span class="rel-chip"><span class="rel-dot" style="background:var(--tool)"></span>Strumenti — vincolano quali azioni sono permesse</span>
+            <span class="rel-chip"><span class="rel-dot" style="background:var(--ui)"></span>Interfaccia — filtrano input e output</span>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+</div>
+
+
+<!-- ═══════════════════════════
+     S8 — INTERFACCIA
+═══════════════════════════ -->
+<div class="sect" id="s8">
+  <div class="sect-head">
+    <div class="sect-num">Componente 08</div>
+    <h2>L'Interfaccia Utente</h2>
+    <p>Il punto di contatto tra l'agente e chi lo usa. Determina l'esperienza, le aspettative e i limiti di interazione.</p>
+  </div>
+  <div class="wrap">
+    <div class="comp">
+      <div class="comp-header">
+        <div class="comp-accent" style="background:var(--ui)"></div>
+        <div class="comp-num">08</div>
+        <div class="comp-title-wrap">
+          <div class="comp-name">Interfaccia Utente</div>
+          <div class="comp-subtitle">Il punto di contatto con il mondo</div>
+        </div>
+        <div class="comp-tag" style="color:var(--ui);border-color:var(--ui)">Interazione</div>
+      </div>
+      <div class="comp-body">
+
+        <div class="csect">
+          <div class="csect-label">A cosa serve e perché è importante</div>
+          <p>L'interfaccia è il canale attraverso cui l'utente interagisce con l'agente. Può essere una <strong>chat web</strong>, un <strong>widget embedded</strong> in un prodotto, un <strong>endpoint API</strong> (per integrazioni machine-to-machine), un <strong>canale Slack o Teams</strong>, un <strong>chatbot WhatsApp</strong>, o un'<strong>interfaccia vocale</strong>.</p>
+          <p>Spesso sottovalutata come "dettaglio frontend", l'interfaccia ha un impatto diretto sull'esperienza utente e sull'adozione. Un agente tecnicamente eccellente con un'interfaccia frustrante non verrà usato. Include aspetti come la gestione dell'<strong>attesa</strong> (un agente multi-step può impiegare 30+ secondi — come comunichi il progresso?), la <strong>presentazione dei risultati</strong> (testo? tabella? grafico?), e la possibilità di <strong>feedback</strong> (l'utente può dire "non è quello che volevo"?).</p>
+        </div>
+
+        <div class="csect">
+          <div class="csect-label">Decisioni e sfide</div>
+          <div class="dc-grid">
+            <div class="dc-item">
+              <div class="dc-item-title">Quale canale di interazione?</div>
+              <div class="dc-item-text">La scelta dipende da dove sono gli utenti. Se sono in Slack tutto il giorno, un bot Slack avrà più adozione di un sito web dedicato. Se l'agente serve clienti esterni, un widget embedded sul sito è più naturale. Se l'agente è parte di una pipeline automatizzata, un'API è l'unica interfaccia necessaria.</div>
+            </div>
+            <div class="dc-item">
+              <div class="dc-item-title">Streaming vs risposta completa</div>
+              <div class="dc-item-text">Le risposte dell'LLM possono essere <strong>streamate</strong> (token per token, l'utente vede il testo che "si scrive") o <strong>batch</strong> (l'utente aspetta e riceve tutto in blocco). Lo streaming migliora la percezione della velocità ma complica l'implementazione, specialmente per agenti multi-step dove il flusso va avanti e indietro.</div>
+            </div>
+            <div class="dc-item">
+              <div class="dc-item-title">Gestione delle attese lunghe</div>
+              <div class="dc-item-text">Un agente complesso può impiegare 30 secondi o più per completare un task multi-step. Senza feedback, l'utente pensa che sia bloccato. Soluzioni: <strong>indicatori di progresso</strong> ("sto cercando nei documenti…", "sto analizzando i dati…"), <strong>step visibili</strong> (mostrare i passaggi intermedi), o <strong>notifica asincrona</strong> (ti avviso quando ho finito).</div>
+            </div>
+            <div class="dc-item">
+              <div class="dc-item-title">Accessibilità multimodale</div>
+              <div class="dc-item-text">L'utente potrebbe voler interagire con testo, voce, immagini o file. Ogni modalità aggiuntiva aumenta la complessità dell'interfaccia e dell'orchestratore. La raccomandazione è iniziare con <strong>una sola modalità</strong> (quasi sempre testo) e aggiungere le altre solo quando c'è un bisogno documentato.</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="csect">
+          <div class="csect-label">Relazioni con gli altri componenti</div>
+          <p>L'Interfaccia è il confine esterno del sistema. Riceve input dall'utente e li passa all'Orchestratore (dopo i filtri dei Guardrail). Riceve l'output dall'orchestratore e lo presenta all'utente. Non interagisce direttamente con LLM, Strumenti o Memoria — tutto passa attraverso l'orchestratore.</p>
+          <div class="rel-chips">
+            <span class="rel-chip"><span class="rel-dot" style="background:var(--core)"></span>Orchestratore — riceve/invia messaggi</span>
+            <span class="rel-chip"><span class="rel-dot" style="background:var(--guard)"></span>Guardrail — filtra input/output</span>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+</div>
+
+
+<!-- ═══════════════════════════
+     S9 — INFRASTRUTTURA
+═══════════════════════════ -->
+<div class="sect" id="s9">
+  <div class="sect-head">
+    <div class="sect-num">Componente 09</div>
+    <h2>L'Infrastruttura</h2>
+    <p>Tutto ciò che fa funzionare l'agente al di là della sua logica: hosting, deploy, scaling, monitoring, logging, gestione dei costi. Il "backstage" che determina se l'agente è un prototipo o un prodotto.</p>
+  </div>
+  <div class="wrap">
+    <div class="comp">
+      <div class="comp-header">
+        <div class="comp-accent" style="background:var(--infra)"></div>
+        <div class="comp-num">09</div>
+        <div class="comp-title-wrap">
+          <div class="comp-name">Infrastruttura</div>
+          <div class="comp-subtitle">Il backstage operativo</div>
+        </div>
+        <div class="comp-tag" style="color:var(--infra);border-color:var(--infra)">Supporto</div>
+      </div>
+      <div class="comp-body">
+
+        <div class="csect">
+          <div class="csect-label">A cosa serve e perché è importante</div>
+          <p>L'infrastruttura è ciò che separa un agente che "funziona sul mio portatile" da un agente disponibile per gli utenti in modo affidabile. Include il <strong>deploy</strong> (dove e come il codice gira), lo <strong>scaling</strong> (come gestire più utenti contemporanei), il <strong>monitoring</strong> (sapere cosa sta facendo l'agente in produzione), il <strong>logging</strong> (tracciare ogni interazione per debug e audit), e la <strong>gestione dei costi</strong> (ogni chiamata al modello LLM ha un costo — a scala, i costi possono diventare significativi).</p>
+          <p>Non è un componente "intellettualmente" interessante come l'orchestratore o il prompt, ma la sua assenza è il motivo per cui molti agenti funzionanti in sviluppo non raggiungono mai la produzione.</p>
+        </div>
+
+        <div class="csect">
+          <div class="csect-label">Decisioni e sfide</div>
+          <div class="dc-grid">
+            <div class="dc-item">
+              <div class="dc-item-title">Dove gira l'agente</div>
+              <div class="dc-item-text"><strong>Cloud managed</strong> (AWS, GCP, Azure — massima scalabilità, costo variabile), <strong>Container self-hosted</strong> (Docker/Kubernetes — più controllo, più gestione), <strong>Serverless</strong> (Lambda/Cloud Functions — paga solo l'uso, limiti sui tempi di esecuzione), <strong>Edge/on-device</strong> (per agenti che devono girare senza rete — ancora emergente). La scelta dipende da volumi, latenza richiesta, e requisiti di privacy.</div>
+            </div>
+            <div class="dc-item">
+              <div class="dc-item-title">Observability</div>
+              <div class="dc-item-text">Sapere <em>cosa ha fatto</em> l'agente e <em>perché</em> è fondamentale per il debug e il miglioramento. Strumenti come <strong>LangSmith</strong>, <strong>Langfuse</strong>, <strong>Phoenix</strong> permettono di tracciare ogni step del ragionamento, ogni tool call, ogni risposta del modello. Senza observability, debuggare un agente multi-step in produzione è come cercare un ago nel pagliaio.</div>
+            </div>
+            <div class="dc-item">
+              <div class="dc-item-title">Gestione dei costi a runtime</div>
+              <div class="dc-item-text">Un agente che fa 15 chiamate LLM per richiesta, con 1000 richieste/giorno, può costare significativamente in API fee. Servono: <strong>tracking dei costi per utente/task</strong>, <strong>ottimizzazione delle chiamate</strong> (caching, modelli più economici dove possibile), <strong>alert su spese anomale</strong>, e un budget ceiling di sicurezza.</div>
+            </div>
+            <div class="dc-item">
+              <div class="dc-item-title">Testing in produzione</div>
+              <div class="dc-item-text">Un agente non è software deterministico: la stessa domanda può produrre risposte diverse. Il testing classico (input → output atteso) non basta. Servono <strong>eval continue</strong> (campionamento di risposte reali, valutazione automatica o umana), <strong>A/B testing</strong> (confronto tra versioni di prompt o modello), e <strong>monitoring della qualità</strong> nel tempo.</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="csect">
+          <div class="csect-label">Relazioni con gli altri componenti</div>
+          <p>L'Infrastruttura è il <strong>substrato</strong> su cui tutti gli altri componenti operano. Ospita l'Orchestratore, connette le API per gli Strumenti, persiste la Memoria (database), gestisce il Vector Store per il RAG, espone l'Interfaccia utente. Non è un componente "funzionale" dell'agente, ma condiziona le prestazioni e l'affidabilità di tutti gli altri.</p>
+          <div class="rel-chips">
+            <span class="rel-chip"><span class="rel-dot" style="background:var(--core)"></span>Tutti i componenti — li ospita e li connette</span>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+</div>
+
+
+<!-- ═══════════════════════════
+     S10 — SINTESI
+═══════════════════════════ -->
+<div class="sect" id="s10">
+  <div class="sect-head">
+    <div class="sect-num">Sintesi</div>
+    <h2>Le relazioni tra i componenti</h2>
+    <p>Una vista riassuntiva delle interdipendenze. Ogni componente non vive in isolamento — la qualità dell'agente emerge dalla qualità delle connessioni tra i componenti, non dai singoli pezzi.</p>
+  </div>
+  <div class="wrap">
+
+    <table class="sum-table">
+      <thead>
+        <tr>
+          <th>Componente</th>
+          <th>Criticità</th>
+          <th>Sfida principale</th>
+          <th>Errore più comune</th>
+          <th>Impatto se carente</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td class="comp-cell" style="color:var(--core)">Orchestratore</td>
+          <td><strong>Altissima</strong> — è il cuore</td>
+          <td>Gestione errori e loop infiniti</td>
+          <td>Non prevedere i fallimenti dei tool</td>
+          <td>Agente instabile, loop infiniti, comportamento imprevedibile</td>
+        </tr>
+        <tr>
+          <td class="comp-cell" style="color:var(--brain)">Modello LLM</td>
+          <td><strong>Alta</strong> — determina l'intelligenza</td>
+          <td>Bilanciare qualità, costo, velocità</td>
+          <td>Usare sempre il modello più costoso</td>
+          <td>Risposte di bassa qualità, tool use inaffidabile</td>
+        </tr>
+        <tr>
+          <td class="comp-cell" style="color:var(--prompt)">Prompt</td>
+          <td><strong>Alta</strong> — miglior rapporto impatto/costo</td>
+          <td>Bilanciare specificità e flessibilità</td>
+          <td>Scriverlo una volta e non iterare mai</td>
+          <td>Comportamento incoerente, output imprevedibile</td>
+        </tr>
+        <tr>
+          <td class="comp-cell" style="color:var(--mem)">Memoria</td>
+          <td><strong>Media-Alta</strong> — dipende dal caso d'uso</td>
+          <td>Gestire la window di contesto limitata</td>
+          <td>Mettere tutto nel contesto senza selezionare</td>
+          <td>Contesto perso, conversazioni senza continuità</td>
+        </tr>
+        <tr>
+          <td class="comp-cell" style="color:var(--tool)">Strumenti</td>
+          <td><strong>Alta</strong> — ciò che rende l'agente utile</td>
+          <td>Error handling e descrizioni precise</td>
+          <td>Aggiungere troppi tool senza necessità</td>
+          <td>L'agente non può agire, solo parlare</td>
+        </tr>
+        <tr>
+          <td class="comp-cell" style="color:var(--rag)">RAG</td>
+          <td><strong>Condizionale</strong> — critico se c'è knowledge base</td>
+          <td>Qualità del chunking e freschezza dei dati</td>
+          <td>Non testare la qualità del retrieval</td>
+          <td>Risposte errate o inventate su contenuti aziendali</td>
+        </tr>
+        <tr>
+          <td class="comp-cell" style="color:var(--guard)">Guardrail</td>
+          <td><strong>Critica in produzione</strong></td>
+          <td>Copertura senza rallentare il flusso</td>
+          <td>Non implementarli "per ora, aggiungiamo dopo"</td>
+          <td>Rischi legali, di reputazione, di sicurezza</td>
+        </tr>
+        <tr>
+          <td class="comp-cell" style="color:var(--ui)">Interfaccia</td>
+          <td><strong>Media</strong> — impatta l'adozione</td>
+          <td>Gestire attese lunghe e feedback</td>
+          <td>Sottovalutare la UX dell'agente</td>
+          <td>Agente funzionante che nessuno usa</td>
+        </tr>
+        <tr>
+          <td class="comp-cell" style="color:var(--infra)">Infrastruttura</td>
+          <td><strong>Media</strong> — critica per la produzione</td>
+          <td>Monitoring e gestione costi</td>
+          <td>Non monitorare i costi API</td>
+          <td>L'agente funziona in dev, crolla in produzione</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <div class="key-point" style="margin-top:32px;">
+      <div class="kp-label">Il principio architetturale fondamentale</div>
+      <div class="kp-text">La qualità di un agente non è determinata dal suo componente migliore, ma dal suo componente più debole.</div>
+      <div class="kp-sub">Un modello LLM eccellente con un orchestratore fragile produrrà un agente fragile. Un orchestratore robusto con un prompt vago produrrà un agente vago. La sfida architetturale è portare tutti i 9 componenti a un livello di qualità adeguato al caso d'uso — non eccellere su uno e trascurare gli altri. Questo è il motivo per cui le soluzioni precostruite, che curano tutti i componenti in modo bilanciato, spesso funzionano meglio di costruzioni custom dove l'attenzione si concentra sul modello e trascura il resto.</div>
+    </div>
+
+  </div>
+</div>
+
+
+<!-- FOOTER -->
+<div class="footer">
+  <span>Serie Agenti AI — Report 07 · Architettura di Riferimento</span>
+  <span>Marzo 2026</span>
+</div>
+
+
+<script>
+function show(n) {
+  document.querySelectorAll('.sect').forEach(s => s.classList.remove('active'));
+  document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('s'+n).classList.add('active');
+  document.querySelectorAll('.nav-btn')[n].classList.add('active');
+  window.scrollTo({top:0, behavior:'smooth'});
+}
+</script>
+
+</body>
+</html>

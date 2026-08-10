@@ -1,0 +1,1138 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>I 12 Step di Sviluppo — Cosa Risparmia Ogni Categoria</title>
+<link href="https://fonts.googleapis.com/css2?family=Libre+Baskerville:ital,wght@0,400;0,700;1,400&family=Red+Hat+Display:wght@300;400;500;600;700;800;900&family=IBM+Plex+Mono:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg:     #faf9f6;
+  --bg2:    #f3f1ec;
+  --bg3:    #eae7e0;
+  --ink:    #1c1a16;
+  --ink2:   #302d26;
+  --ink3:   #706b5f;
+  --ink4:   #a5a095;
+  --border: #ddd9cf;
+  --border2:#ccc7bb;
+
+  --c1: #b8860b;  --c1bg: #fdf6e3;
+  --c2: #2e7d9c;  --c2bg: #e8f4f8;
+  --c3: #c0562b;  --c3bg: #fdf0ea;
+  --c4: #4a8c3f;  --c4bg: #eef6ec;
+  --c5: #7b5ea7;  --c5bg: #f3eef8;
+
+  --elim:   #2d7a3a;  --elim-bg:  #e8f5ea;
+  --accel:  #b8860b;  --accel-bg: #fdf6e3;
+  --invar:  #706b5f;  --invar-bg: #f3f1ec;
+  --compl:  #c0392b;  --compl-bg: #fdedea;
+}
+
+* { margin:0; padding:0; box-sizing:border-box; }
+html { scroll-behavior:smooth; }
+
+body {
+  background: var(--bg);
+  color: var(--ink);
+  font-family: 'Red Hat Display', sans-serif;
+  font-weight: 400;
+  font-size: 14px;
+  line-height: 1.75;
+}
+
+/* ── HEADER ── */
+.masthead {
+  background: var(--ink);
+  color: rgba(255,255,255,0.9);
+  padding: 60px 56px 52px;
+  position: relative;
+  overflow: hidden;
+}
+
+.masthead::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background:
+    repeating-linear-gradient(90deg, rgba(255,255,255,0.012) 0px, rgba(255,255,255,0.012) 1px, transparent 1px, transparent 72px),
+    repeating-linear-gradient(0deg, rgba(255,255,255,0.012) 0px, rgba(255,255,255,0.012) 1px, transparent 1px, transparent 72px);
+  pointer-events: none;
+}
+
+.masthead::after {
+  content: '12';
+  position: absolute;
+  right: 40px; bottom: -30px;
+  font-family: 'Red Hat Display', sans-serif;
+  font-weight: 900;
+  font-size: 220px;
+  line-height: 1;
+  color: rgba(255,255,255,0.025);
+  pointer-events: none;
+  letter-spacing: -8px;
+}
+
+.mh-eye {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 10px;
+  letter-spacing: 3px;
+  text-transform: uppercase;
+  color: rgba(255,255,255,0.25);
+  margin-bottom: 18px;
+  position: relative;
+}
+
+.masthead h1 {
+  font-family: 'Libre Baskerville', serif;
+  font-weight: 700;
+  font-size: clamp(30px, 4.5vw, 54px);
+  line-height: 1.1;
+  letter-spacing: -1px;
+  max-width: 700px;
+  position: relative;
+}
+
+.mh-sub {
+  margin-top: 20px;
+  font-size: 15px;
+  font-weight: 300;
+  color: rgba(255,255,255,0.38);
+  max-width: 640px;
+  line-height: 1.7;
+  position: relative;
+}
+
+/* ── NAV ── */
+.nav {
+  background: var(--ink2);
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  display: flex;
+  overflow-x: auto;
+  border-bottom: 1px solid rgba(255,255,255,0.06);
+}
+
+.nav-btn {
+  flex: 1;
+  min-width: 130px;
+  padding: 14px 16px;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  font-family: 'Red Hat Display', sans-serif;
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+  color: rgba(255,255,255,0.32);
+  border-right: 1px solid rgba(255,255,255,0.06);
+  transition: all 0.2s;
+  white-space: nowrap;
+}
+
+.nav-btn:last-child { border-right: none; }
+.nav-btn:hover { color: rgba(255,255,255,0.65); background: rgba(255,255,255,0.03); }
+.nav-btn.active { color: #fff; background: rgba(255,255,255,0.05); }
+.nav-btn.active::after {
+  content: '';
+  display: block;
+  height: 2px;
+  background: var(--c3);
+  margin-top: 8px;
+  border-radius: 1px;
+}
+
+/* ── SECTIONS ── */
+.sect { display: none; }
+.sect.active { display: block; animation: fadeIn 0.3s ease; }
+@keyframes fadeIn { from { opacity:0; transform:translateY(6px); } to { opacity:1; transform:translateY(0); } }
+
+.sect-head {
+  padding: 48px 56px 36px;
+  border-bottom: 1px solid var(--border);
+}
+
+.sect-num {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 10px;
+  letter-spacing: 3px;
+  text-transform: uppercase;
+  color: var(--ink4);
+  margin-bottom: 10px;
+}
+
+.sect-head h2 {
+  font-family: 'Libre Baskerville', serif;
+  font-weight: 700;
+  font-size: clamp(24px, 3.5vw, 40px);
+  line-height: 1.12;
+  letter-spacing: -0.5px;
+  max-width: 620px;
+  margin-bottom: 14px;
+}
+
+.sect-head p {
+  color: var(--ink3);
+  font-size: 14.5px;
+  max-width: 680px;
+}
+
+.wrap { padding: 0 56px 56px; }
+
+/* ── STEP CARDS ── */
+.step-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 1px;
+  background: var(--border);
+  border: 1px solid var(--border2);
+  margin-top: 24px;
+}
+
+.step-card {
+  background: var(--bg);
+  padding: 22px 20px;
+}
+
+.sc-phase {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 9px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  padding: 2px 8px;
+  display: inline-block;
+  margin-bottom: 10px;
+  border: 1px solid;
+}
+
+.phase-design  { color: var(--c2); border-color: var(--c2); background: var(--c2bg); }
+.phase-build   { color: var(--c3); border-color: var(--c3); background: var(--c3bg); }
+.phase-run     { color: var(--c4); border-color: var(--c4); background: var(--c4bg); }
+.phase-evolve  { color: var(--c5); border-color: var(--c5); background: var(--c5bg); }
+
+.sc-num {
+  font-family: 'Red Hat Display', sans-serif;
+  font-weight: 900;
+  font-size: 28px;
+  color: var(--bg3);
+  line-height: 1;
+  margin-bottom: 6px;
+}
+
+.sc-name {
+  font-weight: 700;
+  font-size: 15px;
+  margin-bottom: 8px;
+}
+
+.sc-desc {
+  font-size: 12.5px;
+  color: var(--ink3);
+  line-height: 1.6;
+}
+
+/* ── IMPACT LEGEND ── */
+.legend {
+  display: flex;
+  gap: 24px;
+  flex-wrap: wrap;
+  margin: 24px 0 12px;
+  padding: 16px 20px;
+  background: var(--bg2);
+  border: 1px solid var(--border);
+}
+
+.leg-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+}
+
+.leg-dot {
+  width: 20px;
+  height: 10px;
+  border-radius: 2px;
+  flex-shrink: 0;
+}
+
+/* ── MATRIX ── */
+.matrix-scroll {
+  overflow-x: auto;
+  margin-top: 8px;
+  border: 1px solid var(--border2);
+}
+
+.matrix {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 11.5px;
+  min-width: 1050px;
+}
+
+.matrix th, .matrix td {
+  padding: 10px 11px;
+  border: 1px solid var(--border);
+  vertical-align: top;
+  text-align: left;
+}
+
+.matrix thead th {
+  background: var(--ink);
+  color: rgba(255,255,255,0.82);
+  font-weight: 600;
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+  text-align: center;
+  position: sticky;
+  top: 46px;
+  z-index: 50;
+}
+
+.matrix thead th:first-child { text-align: left; min-width: 170px; }
+
+.matrix .phase-row td {
+  background: var(--ink);
+  color: rgba(255,255,255,0.5);
+  font-weight: 700;
+  font-size: 9px;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  text-align: left;
+  padding: 8px 12px;
+}
+
+.matrix .step-name {
+  font-weight: 600;
+  white-space: nowrap;
+  background: var(--bg2);
+  min-width: 170px;
+}
+
+.matrix .step-name .sn-num {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 9px;
+  color: var(--ink4);
+  margin-right: 6px;
+}
+
+/* Impact cells */
+.ix { text-align: center; font-size: 11px; line-height: 1.45; }
+.ix-elim  { background: var(--elim-bg); }
+.ix-accel { background: var(--accel-bg); }
+.ix-invar { background: var(--invar-bg); }
+.ix-compl { background: var(--compl-bg); }
+
+.ix .tag {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 9px;
+  font-weight: 500;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  display: block;
+  margin-bottom: 3px;
+}
+
+.ix-elim .tag  { color: var(--elim); }
+.ix-accel .tag { color: var(--accel); }
+.ix-invar .tag { color: var(--invar); }
+.ix-compl .tag { color: var(--compl); }
+
+.ix .why {
+  font-size: 10px;
+  color: var(--ink3);
+  line-height: 1.4;
+}
+
+/* ── DEEP DIVE SECTIONS ── */
+.deep {
+  margin-top: 40px;
+}
+
+.deep-title {
+  font-family: 'Libre Baskerville', serif;
+  font-weight: 700;
+  font-size: 22px;
+  margin-bottom: 6px;
+}
+
+.deep-sub {
+  font-size: 13px;
+  color: var(--ink4);
+  margin-bottom: 20px;
+}
+
+.deep-accordion {
+  border: 1px solid var(--border2);
+}
+
+.da-header {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 16px 20px;
+  background: var(--bg2);
+  border-bottom: 1px solid var(--border);
+  cursor: pointer;
+  user-select: none;
+  transition: background 0.15s;
+}
+
+.da-header:hover { background: var(--bg3); }
+
+.da-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
+
+.da-label {
+  font-weight: 700;
+  font-size: 14px;
+  flex: 1;
+}
+
+.da-arrow {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 11px;
+  color: var(--ink4);
+  transition: transform 0.2s;
+}
+
+.da-body {
+  display: none;
+  padding: 24px 28px;
+  border-bottom: 1px solid var(--border);
+}
+
+.da-body.open {
+  display: block;
+  animation: fadeIn 0.25s ease;
+}
+
+.prose p {
+  font-size: 14px;
+  color: var(--ink3);
+  line-height: 1.85;
+  margin-bottom: 14px;
+  max-width: 740px;
+}
+
+.prose p strong { color: var(--ink2); font-weight: 600; }
+
+.prose p em { font-style: italic; color: var(--ink2); }
+
+.insight {
+  margin: 20px 0;
+  padding: 18px 22px;
+  border-left: 4px solid var(--c3);
+  background: var(--bg2);
+}
+
+.insight-label {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 9px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: var(--c3);
+  margin-bottom: 6px;
+}
+
+.insight p {
+  font-family: 'Libre Baskerville', serif;
+  font-size: 15px;
+  line-height: 1.55;
+  color: var(--ink2);
+  margin-bottom: 0;
+}
+
+.mini-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 12px;
+  margin: 16px 0;
+  border: 1px solid var(--border);
+}
+
+.mini-table th, .mini-table td {
+  padding: 9px 12px;
+  border: 1px solid var(--border);
+  text-align: left;
+}
+
+.mini-table th {
+  background: var(--bg3);
+  font-weight: 700;
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+}
+
+.mini-table td { color: var(--ink3); }
+.mini-table td strong { color: var(--ink2); font-weight: 500; }
+
+/* ── KEY POINT ── */
+.key-point {
+  margin-top: 36px;
+  padding: 24px 28px;
+  border-left: 4px solid var(--c3);
+  background: var(--bg2);
+}
+
+.kp-label {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 9px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: var(--c3);
+  margin-bottom: 8px;
+}
+
+.kp-text {
+  font-family: 'Libre Baskerville', serif;
+  font-size: 18px;
+  line-height: 1.45;
+  color: var(--ink2);
+}
+
+.kp-sub {
+  margin-top: 10px;
+  font-size: 13px;
+  color: var(--ink3);
+  line-height: 1.65;
+}
+
+/* ── SUMMARY CARDS ── */
+.sum-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 1px;
+  background: var(--border);
+  border: 1px solid var(--border2);
+  margin-top: 24px;
+}
+
+.sum-card {
+  background: var(--bg);
+  padding: 24px 22px;
+}
+
+.sum-dot-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 12px;
+}
+
+.sum-dot { width: 10px; height: 10px; border-radius: 50%; }
+
+.sum-cat {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 9px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: var(--ink4);
+}
+
+.sum-title {
+  font-weight: 700;
+  font-size: 16px;
+  margin-bottom: 4px;
+}
+
+.sum-stat {
+  font-family: 'Red Hat Display', sans-serif;
+  font-weight: 900;
+  font-size: 36px;
+  line-height: 1;
+  margin-bottom: 4px;
+}
+
+.sum-stat-label {
+  font-size: 11px;
+  color: var(--ink4);
+  margin-bottom: 12px;
+}
+
+.sum-text {
+  font-size: 13px;
+  color: var(--ink3);
+  line-height: 1.6;
+}
+
+.sum-text strong { color: var(--ink2); font-weight: 500; }
+
+/* ── FOOTER ── */
+.footer {
+  background: var(--ink);
+  color: rgba(255,255,255,0.22);
+  padding: 28px 56px;
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 10px;
+  letter-spacing: 1px;
+  display: flex;
+  justify-content: space-between;
+}
+
+@media (max-width: 860px) {
+  .masthead, .sect-head, .wrap, .footer { padding-left: 20px; padding-right: 20px; }
+  .step-grid { grid-template-columns: 1fr; }
+  .sum-grid { grid-template-columns: 1fr; }
+  .footer { flex-direction: column; gap: 6px; }
+}
+</style>
+</head>
+<body>
+
+<!-- HEADER -->
+<div class="masthead">
+  <div class="mh-eye">Serie Agenti AI — Report 06</div>
+  <h1>I 12 Step di Sviluppo:<br>cosa risparmia ogni categoria</h1>
+  <p class="mh-sub">Per ciascuno dei 12 step necessari a costruire un agente AI, l'impatto concreto delle 5 categorie di agenti precostruiti: cosa viene eliminato, cosa viene accelerato, cosa resta invariato — e perché.</p>
+</div>
+
+<!-- NAV -->
+<nav class="nav">
+  <button class="nav-btn active" onclick="show(0)">I 12 Step</button>
+  <button class="nav-btn" onclick="show(1)">La Matrice</button>
+  <button class="nav-btn" onclick="show(2)">Approfondimenti</button>
+  <button class="nav-btn" onclick="show(3)">Sintesi per Categoria</button>
+</nav>
+
+
+<!-- ═══════════════════════════
+     S0 — I 12 STEP
+═══════════════════════════ -->
+<div class="sect active" id="s0">
+  <div class="sect-head">
+    <div class="sect-num">Capitolo 01</div>
+    <h2>Anatomia dello sviluppo di un agente AI</h2>
+    <p>Costruire un agente da zero richiede 12 step distinti, raggruppati in 4 macro-fasi. Questo è il "costo pieno" della costruzione autonoma — il riferimento rispetto al quale misurare i vantaggi del precostruito.</p>
+  </div>
+  <div class="wrap">
+
+    <div class="step-grid">
+      <!-- DESIGN -->
+      <div class="step-card">
+        <div class="sc-phase phase-design">Progettazione</div>
+        <div class="sc-num">01</div>
+        <div class="sc-name">Definizione caso d'uso e requisiti</div>
+        <div class="sc-desc">Cosa deve fare l'agente, quali input e output, quali sistemi tocca, quali vincoli di business e compliance. Include l'analisi dei flussi esistenti e l'identificazione di dove l'agente crea valore.</div>
+      </div>
+      <div class="step-card">
+        <div class="sc-phase phase-design">Progettazione</div>
+        <div class="sc-num">02</div>
+        <div class="sc-name">Scelta del modello LLM</div>
+        <div class="sc-desc">Quale modello usare (o più modelli per ruoli diversi): valutazione di capacità, costi per token, latenza, context window, supporto tool use. Include benchmark sul proprio caso d'uso specifico.</div>
+      </div>
+      <div class="step-card">
+        <div class="sc-phase phase-design">Progettazione</div>
+        <div class="sc-num">03</div>
+        <div class="sc-desc">System prompt, few-shot examples, struttura del ragionamento (Chain-of-Thought, ReAct). Come l'agente "pensa", in quale ordine, con quali vincoli. Il cuore intellettuale dell'agente.</div>
+        <div class="sc-name">Prompt e logica di ragionamento</div>
+      </div>
+
+      <!-- BUILD -->
+      <div class="step-card">
+        <div class="sc-phase phase-build">Costruzione</div>
+        <div class="sc-num">04</div>
+        <div class="sc-name">Implementazione della memoria</div>
+        <div class="sc-desc">Memoria conversazionale (contesto della sessione), memoria a lungo termine (tra sessioni diverse), stato del workflow (a che punto è il processo). Scelta tra soluzioni in-memory, database, vector store.</div>
+      </div>
+      <div class="step-card">
+        <div class="sc-phase phase-build">Costruzione</div>
+        <div class="sc-num">05</div>
+        <div class="sc-name">Integrazione strumenti (tool use)</div>
+        <div class="sc-desc">Connettori verso API esterne, database, file system, browser, altri servizi. Include la definizione delle funzioni che l'agente può chiamare, i parametri, la gestione delle risposte e degli errori di ogni tool.</div>
+      </div>
+      <div class="step-card">
+        <div class="sc-phase phase-build">Costruzione</div>
+        <div class="sc-num">06</div>
+        <div class="sc-name">Orchestrazione del flusso</div>
+        <div class="sc-desc">Il loop di ragionamento dell'agente: come decide il prossimo passo, quando si ferma, come gestisce branching, retry, errori, condizioni di uscita. Nei multi-agent: routing, delegazione, consolidamento dei risultati.</div>
+      </div>
+      <div class="step-card">
+        <div class="sc-phase phase-build">Costruzione</div>
+        <div class="sc-num">07</div>
+        <div class="sc-name">Integrazione dati / RAG</div>
+        <div class="sc-desc">Se l'agente usa knowledge base: ingestion dei documenti, chunking, embedding, vector store, pipeline di retrieval, ranking dei risultati. Include la gestione dell'aggiornamento dei documenti nel tempo.</div>
+      </div>
+      <div class="step-card">
+        <div class="sc-phase phase-build">Costruzione</div>
+        <div class="sc-num">08</div>
+        <div class="sc-name">Interfaccia utente</div>
+        <div class="sc-desc">Come l'utente interagisce con l'agente: chat web, widget embedded, API, integrazione in un prodotto esistente, canale Slack/Teams. Include UX, gestione delle attese, visualizzazione dei risultati.</div>
+      </div>
+
+      <!-- RUN -->
+      <div class="step-card">
+        <div class="sc-phase phase-run">Produzione</div>
+        <div class="sc-num">09</div>
+        <div class="sc-name">Testing e valutazione</div>
+        <div class="sc-desc">Eval sistematiche su casi reali, misurazione della qualità delle risposte, identificazione dei failure mode, test di regressione. Costruzione di un dataset di test rappresentativo del caso d'uso.</div>
+      </div>
+      <div class="step-card">
+        <div class="sc-phase phase-run">Produzione</div>
+        <div class="sc-num">10</div>
+        <div class="sc-name">Deploy e infrastruttura</div>
+        <div class="sc-desc">Hosting, containerizzazione, scaling automatico, gestione della latenza, disponibilità, gestione dei costi a runtime. Configurazione di API keys, rate limiting, autenticazione.</div>
+      </div>
+      <div class="step-card">
+        <div class="sc-phase phase-run">Produzione</div>
+        <div class="sc-num">11</div>
+        <div class="sc-name">Monitoring e observability</div>
+        <div class="sc-desc">Tracciare cosa fa l'agente in produzione: log delle conversazioni, metriche di qualità, costi per interazione, latenze, alert su anomalie o comportamenti inattesi. Visibilità per debug e ottimizzazione.</div>
+      </div>
+
+      <!-- EVOLVE -->
+      <div class="step-card">
+        <div class="sc-phase phase-evolve">Evoluzione</div>
+        <div class="sc-num">12</div>
+        <div class="sc-name">Manutenzione e evoluzione</div>
+        <div class="sc-desc">Aggiornamento dei prompt quando il modello sottostante cambia versione, nuove integrazioni, gestione del feedback utente, evoluzione del caso d'uso. Costo continuo e spesso sottostimato.</div>
+      </div>
+    </div>
+
+    <div class="key-point">
+      <div class="kp-label">Nota importante</div>
+      <div class="kp-text">I 12 step non hanno tutti lo stesso peso: alcuni richiedono giorni, altri mesi. E il peso relativo cambia radicalmente in base alla complessità del caso d'uso.</div>
+      <div class="kp-sub">Lo step 6 (orchestrazione) può essere banale per un chatbot FAQ e richiedere settimane per un agente multi-step con branching complesso. Lo step 7 (RAG) può non servire affatto se l'agente non usa knowledge base. Lo step 5 (tool use) può essere l'80% del lavoro se l'agente deve integrarsi con molti sistemi. Quando valutiamo l'impatto di una categoria precostruita, dobbiamo tenere presente che "eliminare uno step" può significare risparmiare un'ora o tre mesi — dipende dal contesto.</div>
+    </div>
+  </div>
+</div>
+
+
+<!-- ═══════════════════════════
+     S1 — LA MATRICE
+═══════════════════════════ -->
+<div class="sect" id="s1">
+  <div class="sect-head">
+    <div class="sect-num">Capitolo 02</div>
+    <h2>La matrice: 12 step × 5 categorie</h2>
+    <p>Per ogni incrocio tra step di sviluppo e categoria precostruita: l'impatto concreto (eliminato, accelerato, invariato, complicato) e la motivazione sottostante. Scorri orizzontalmente per vedere tutte le categorie.</p>
+  </div>
+  <div class="wrap">
+
+    <div class="legend">
+      <div class="leg-item"><div class="leg-dot" style="background:var(--elim)"></div><strong>Eliminato</strong> — non devi farlo</div>
+      <div class="leg-item"><div class="leg-dot" style="background:var(--accel)"></div><strong>Accelerato</strong> — lo fai molto più velocemente</div>
+      <div class="leg-item"><div class="leg-dot" style="background:var(--invar)"></div><strong>Invariato</strong> — lo fai comunque tu</div>
+      <div class="leg-item"><div class="leg-dot" style="background:var(--compl)"></div><strong>Complicato / Impossibile</strong> — diventa più difficile o non fattibile</div>
+    </div>
+
+    <div class="matrix-scroll">
+      <table class="matrix">
+        <thead>
+          <tr>
+            <th>Step</th>
+            <th style="border-left:3px solid var(--c1)">01 · Enterprise</th>
+            <th style="border-left:3px solid var(--c2)">02 · Verticali SaaS</th>
+            <th style="border-left:3px solid var(--c3)">03 · No-code / Mktplace</th>
+            <th style="border-left:3px solid var(--c4)">04 · Open Source</th>
+            <th style="border-left:3px solid var(--c5)">05 · Embedded</th>
+          </tr>
+        </thead>
+        <tbody>
+
+          <!-- PHASE: PROGETTAZIONE -->
+          <tr class="phase-row"><td colspan="6">▸ Fase 1 — Progettazione</td></tr>
+
+          <tr>
+            <td class="step-name"><span class="sn-num">01</span>Definizione caso d'uso</td>
+            <td class="ix ix-accel"><span class="tag">Accelerato</span><span class="why">I casi d'uso sono pre-catalogati. Scegli tra quelli disponibili, non parti da foglio bianco.</span></td>
+            <td class="ix ix-accel"><span class="tag">Accelerato</span><span class="why">Il verticale ha già definito i pattern del dominio. Ti orienti rapidamente su cosa è fattibile.</span></td>
+            <td class="ix ix-invar"><span class="tag">Invariato</span><span class="why">La piattaforma non ti guida sulla scelta del caso d'uso. La definizione resta interamente tua.</span></td>
+            <td class="ix ix-invar"><span class="tag">Invariato</span><span class="why">Il framework non sceglie il problema per te. Template possono ispirare, ma la definizione è tua.</span></td>
+            <td class="ix ix-elim"><span class="tag">Eliminato</span><span class="why">Non c'è scelta: l'agente fa quello che il prodotto prevede. Non definisci il caso d'uso, lo trovi già definito.</span></td>
+          </tr>
+
+          <tr>
+            <td class="step-name"><span class="sn-num">02</span>Scelta modello LLM</td>
+            <td class="ix ix-elim"><span class="tag">Eliminato</span><span class="why">Il vendor sceglie il modello. Non hai voce in capitolo — né responsabilità. Il modello può cambiare senza preavviso.</span></td>
+            <td class="ix ix-elim"><span class="tag">Eliminato</span><span class="why">Il SaaS gestisce il modello internamente. Alcuni permettono di scegliere tra 2-3 opzioni, ma è marginale.</span></td>
+            <td class="ix ix-accel"><span class="tag">Accelerato</span><span class="why">Le piattaforme offrono integrazioni pronte con i modelli principali. Puoi cambiare modello con un click.</span></td>
+            <td class="ix ix-accel"><span class="tag">Accelerato</span><span class="why">I framework supportano più modelli nativamente. Facilmente testabili. La scelta resta tua, ma l'infra è pronta.</span></td>
+            <td class="ix ix-elim"><span class="tag">Eliminato</span><span class="why">Deciso dal vendor del prodotto. GitHub Copilot usa i modelli di OpenAI/Anthropic, tu non scegli.</span></td>
+          </tr>
+
+          <tr>
+            <td class="step-name"><span class="sn-num">03</span>Prompt e ragionamento</td>
+            <td class="ix ix-accel"><span class="tag">Accelerato</span><span class="why">Configurazione guidata: tono, istruzioni, guardrail. Non scrivi prompt da zero, compili campi strutturati.</span></td>
+            <td class="ix ix-accel"><span class="tag">Accelerato</span><span class="why">Il prompt di dominio è già scritto e ottimizzato. Tu personalizzi tono, regole di business, eccezioni.</span></td>
+            <td class="ix ix-accel"><span class="tag">Accelerato</span><span class="why">Template di prompt disponibili. Editor visuale per istruzioni. Ma per risultati ottimali serve comunque prompt engineering.</span></td>
+            <td class="ix ix-accel"><span class="tag">Accelerato</span><span class="why">Template e pattern (ReAct, CoT) già implementati nel framework. Non reinventi il loop, configuri il pattern.</span></td>
+            <td class="ix ix-elim"><span class="tag">Eliminato</span><span class="why">Il prompt è interno al prodotto. Non lo vedi, non lo modifichi, non hai bisogno di scriverlo.</span></td>
+          </tr>
+
+          <!-- PHASE: COSTRUZIONE -->
+          <tr class="phase-row"><td colspan="6">▸ Fase 2 — Costruzione</td></tr>
+
+          <tr>
+            <td class="step-name"><span class="sn-num">04</span>Memoria</td>
+            <td class="ix ix-elim"><span class="tag">Eliminato</span><span class="why">La piattaforma gestisce la memoria conversazionale e lo stato del workflow nativamente. Non devi progettarla.</span></td>
+            <td class="ix ix-elim"><span class="tag">Eliminato</span><span class="why">Il SaaS gestisce memoria e contesto internamente. Le conversazioni sono persistite e disponibili per l'analisi.</span></td>
+            <td class="ix ix-accel"><span class="tag">Accelerato</span><span class="why">Moduli di memoria precostituiti. Configuri tipo e durata, non implementi la logica da zero.</span></td>
+            <td class="ix ix-accel"><span class="tag">Accelerato</span><span class="why">Componenti di memoria pronti (buffer, summary, vector). Li importi e configuri. 1 giorno invece di 2 settimane.</span></td>
+            <td class="ix ix-elim"><span class="tag">Eliminato</span><span class="why">Gestita dal prodotto. Notion AI ricorda il contesto del documento, Copilot il contesto del codice.</span></td>
+          </tr>
+
+          <tr>
+            <td class="step-name"><span class="sn-num">05</span>Integrazione strumenti</td>
+            <td class="ix ix-elim"><span class="tag">Eliminato</span><span class="why">L'agente accede ai dati della piattaforma nativamente. Salesforce, ServiceNow, M365 — i tool sono già integrati nel prodotto.</span></td>
+            <td class="ix ix-accel"><span class="tag">Accelerato</span><span class="why">Integrazioni native con i tool di settore (helpdesk, CRM, ticketing). Custom connectors per il resto, con SDK.</span></td>
+            <td class="ix ix-accel"><span class="tag">Accelerato</span><span class="why">Centinaia di connettori pre-configurati (n8n ha 400+). Ma connettori verso sistemi interni custom vanno costruiti.</span></td>
+            <td class="ix ix-accel"><span class="tag">Accelerato</span><span class="why">Wrapper e connettori per le API più comuni. Ma la definizione delle funzioni e la gestione errori restano da fare.</span></td>
+            <td class="ix ix-elim"><span class="tag">Eliminato</span><span class="why">L'agente opera solo dentro il prodotto host. Nessun tool esterno — ma anche nessuna possibilità di aggiungerne.</span></td>
+          </tr>
+
+          <tr>
+            <td class="step-name"><span class="sn-num">06</span>Orchestrazione flusso</td>
+            <td class="ix ix-accel"><span class="tag">Accelerato</span><span class="why">Flussi preconfigurati e configurabili. Non scrivi il loop — scegli tra pattern predefiniti (sequenziale, con approvazione, ecc.).</span></td>
+            <td class="ix ix-elim"><span class="tag">Eliminato</span><span class="why">Il flusso è interno al prodotto e ottimizzato per il dominio. Non lo progetti: è il cuore del valore del verticale.</span></td>
+            <td class="ix ix-accel"><span class="tag">Accelerato</span><span class="why">Editor visuale per costruire flussi drag-and-drop. Potente per flussi lineari; limitato per branching complesso.</span></td>
+            <td class="ix ix-accel"><span class="tag">Accelerato</span><span class="why">Pattern pronti (grafi, pipeline, router). LangGraph ti dà state machine; CrewAI ti dà ruoli. La logica custom è tua.</span></td>
+            <td class="ix ix-elim"><span class="tag">Eliminato</span><span class="why">Nessuna orchestrazione da costruire. L'agente embedded esegue task singoli nel contesto dello strumento.</span></td>
+          </tr>
+
+          <tr>
+            <td class="step-name"><span class="sn-num">07</span>RAG / integrazione dati</td>
+            <td class="ix ix-accel"><span class="tag">Accelerato</span><span class="why">Upload di documenti con pipeline RAG gestita dal vendor. Chunking, embedding, retrieval — configurazione, non implementazione.</span></td>
+            <td class="ix ix-accel"><span class="tag">Accelerato</span><span class="why">Knowledge base come feature integrata. Carichi documenti, il SaaS gestisce la pipeline. Qualità variabile per dominio.</span></td>
+            <td class="ix ix-accel"><span class="tag">Accelerato</span><span class="why">Nodi RAG precostituiti nelle piattaforme. Funzionano out-of-the-box per casi semplici. Limiti su chunking avanzato.</span></td>
+            <td class="ix ix-accel"><span class="tag">Accelerato</span><span class="why">Pipeline RAG come componenti (LangChain loaders, vector stores). Assembli pezzi pronti. Ottimizzazione fine resta manuale.</span></td>
+            <td class="ix ix-compl"><span class="tag">N/A o limitato</span><span class="why">L'embedded usa il contesto del prodotto, non knowledge base custom. Non puoi aggiungere documenti tuoi in modo strutturato.</span></td>
+          </tr>
+
+          <tr>
+            <td class="step-name"><span class="sn-num">08</span>Interfaccia utente</td>
+            <td class="ix ix-elim"><span class="tag">Eliminato</span><span class="why">L'agente vive dentro l'interfaccia della piattaforma. Sidebar chat in Salesforce, pannello in Teams. Nessuna UI da costruire.</span></td>
+            <td class="ix ix-elim"><span class="tag">Eliminato</span><span class="why">Widget o chat integrata fornita dal SaaS. Personalizzabile in colori e posizione, ma l'UX è predefinita.</span></td>
+            <td class="ix ix-accel"><span class="tag">Accelerato</span><span class="why">Chat widget precostruiti e API. Template di interfaccia. Ma per un'esperienza custom serve sviluppo frontend.</span></td>
+            <td class="ix ix-invar"><span class="tag">Invariato</span><span class="why">Il framework non include UI. Devi costruire l'interfaccia separatamente (Streamlit, React, ecc.) o usare widget di terze parti.</span></td>
+            <td class="ix ix-elim"><span class="tag">Eliminato</span><span class="why">L'interfaccia è il prodotto stesso. Non c'è una "UI dell'agente" separata — l'agente è dentro l'editor, l'IDE, il tool.</span></td>
+          </tr>
+
+          <!-- PHASE: PRODUZIONE -->
+          <tr class="phase-row"><td colspan="6">▸ Fase 3 — Produzione</td></tr>
+
+          <tr>
+            <td class="step-name"><span class="sn-num">09</span>Testing e valutazione</td>
+            <td class="ix ix-accel"><span class="tag">Accelerato</span><span class="why">Ambienti di test integrati. Scenari preconfigurati. Ma il testing sul <em>tuo</em> caso d'uso specifico resta sempre da fare.</span></td>
+            <td class="ix ix-accel"><span class="tag">Accelerato</span><span class="why">Il verticale è già testato su migliaia di interazioni di dominio. Tu testi le personalizzazioni, non il motore.</span></td>
+            <td class="ix ix-invar"><span class="tag">Invariato</span><span class="why">Le piattaforme no-code offrono preview, non eval strutturate. Il testing reale è responsabilità tua.</span></td>
+            <td class="ix ix-accel"><span class="tag">Accelerato</span><span class="why">Tool di eval integrati (LangSmith, Langfuse). Ma costruire il dataset di test e definire le metriche resta tuo.</span></td>
+            <td class="ix ix-elim"><span class="tag">Eliminato</span><span class="why">Il testing è responsabilità del vendor del prodotto. Tu sei un utente, non un tester.</span></td>
+          </tr>
+
+          <tr>
+            <td class="step-name"><span class="sn-num">10</span>Deploy e infrastruttura</td>
+            <td class="ix ix-elim"><span class="tag">Eliminato</span><span class="why">Tutto sui server del vendor. SLA garantiti, scaling automatico, zero infrastruttura da gestire.</span></td>
+            <td class="ix ix-elim"><span class="tag">Eliminato</span><span class="why">SaaS = infrastruttura gestita. Paghi per l'uso, non per i server. Uptime e scaling sono problema del vendor.</span></td>
+            <td class="ix ix-accel"><span class="tag">Accelerato</span><span class="why">Le piattaforme cloud (Dify, Relevance AI) gestiscono l'hosting. Self-hosted (n8n) richiede deploy, ma con Docker è rapido.</span></td>
+            <td class="ix ix-invar"><span class="tag">Invariato</span><span class="why">Il framework non fa deploy per te. Devi containerizzare, configurare server, gestire scaling. È infra classica.</span></td>
+            <td class="ix ix-elim"><span class="tag">Eliminato</span><span class="why">L'agente gira dentro il prodotto. Nessuna infrastruttura da gestire.</span></td>
+          </tr>
+
+          <tr>
+            <td class="step-name"><span class="sn-num">11</span>Monitoring</td>
+            <td class="ix ix-accel"><span class="tag">Accelerato</span><span class="why">Dashboard di analytics integrata. Metriche di utilizzo, conversazioni, escalation. Ma non sempre con la granularità che vorresti.</span></td>
+            <td class="ix ix-accel"><span class="tag">Accelerato</span><span class="why">Analytics di dominio: tasso di risoluzione, CSAT, tempo medio. Metriche specifiche del settore già pronte.</span></td>
+            <td class="ix ix-accel"><span class="tag">Accelerato</span><span class="why">Log di esecuzione nelle piattaforme. Visibilità sul flusso. Ma monitoring avanzato (qualità risposte) è da costruire.</span></td>
+            <td class="ix ix-accel"><span class="tag">Accelerato</span><span class="why">Integrazione nativa con LangSmith, Langfuse, Phoenix. Tracing dettagliato pronto all'uso. Customizzazione completa.</span></td>
+            <td class="ix ix-elim"><span class="tag">Eliminato</span><span class="why">Responsabilità del vendor. Non hai (né hai bisogno di) visibilità sulle metriche tecniche dell'agente.</span></td>
+          </tr>
+
+          <!-- PHASE: EVOLUZIONE -->
+          <tr class="phase-row"><td colspan="6">▸ Fase 4 — Evoluzione</td></tr>
+
+          <tr>
+            <td class="step-name"><span class="sn-num">12</span>Manutenzione e evoluzione</td>
+            <td class="ix ix-accel"><span class="tag">Accelerato ma ambiguo</span><span class="why">Il vendor aggiorna il sistema. Pro: non fai nulla. Contro: le modifiche possono rompere comportamenti su cui contavi.</span></td>
+            <td class="ix ix-accel"><span class="tag">Accelerato ma ambiguo</span><span class="why">Il SaaS evolve il prodotto. Ottieni miglioramenti gratis, ma anche cambiamenti non richiesti. La roadmap non è tua.</span></td>
+            <td class="ix ix-invar"><span class="tag">Invariato</span><span class="why">La piattaforma si aggiorna, ma i tuoi flussi li mantieni tu. Cambio modello = possibili rotture nel tuo workflow.</span></td>
+            <td class="ix ix-accel"><span class="tag">Accelerato</span><span class="why">La community aggiorna i componenti. Ma integrare le nuove versioni nel tuo codice è lavoro tuo (LangChain breaking changes).</span></td>
+            <td class="ix ix-elim"><span class="tag">Eliminato</span><span class="why">Il prodotto evolve autonomamente. L'agente embedded migliora senza tuo intervento.</span></td>
+          </tr>
+
+        </tbody>
+      </table>
+    </div>
+
+  </div>
+</div>
+
+
+<!-- ═══════════════════════════
+     S2 — APPROFONDIMENTI
+═══════════════════════════ -->
+<div class="sect" id="s2">
+  <div class="sect-head">
+    <div class="sect-num">Capitolo 03</div>
+    <h2>Approfondimenti: i temi densi</h2>
+    <p>Alcuni incroci della matrice meritano un'analisi più approfondita, perché nascondono sfumature importanti che una cella sintetica non riesce a trasmettere.</p>
+  </div>
+  <div class="wrap">
+
+    <div class="deep">
+      <div class="deep-accordion">
+
+        <!-- DEEP 1 -->
+        <div class="da-header" onclick="toggleDA(this)">
+          <div class="da-dot" style="background:var(--c3)"></div>
+          <div class="da-label">Perché "eliminato" non è sempre un vantaggio</div>
+          <div class="da-arrow">▼</div>
+        </div>
+        <div class="da-body">
+          <div class="prose">
+            <p>Nella matrice ci sono molte celle verdi ("eliminato") nelle colonne Enterprise ed Embedded. Sembra un vantaggio inequivocabile — meno lavoro è sempre meglio, no? Non necessariamente.</p>
+            <p>Quando uno step viene "eliminato" da una categoria precostruita, in realtà succedono due cose: il lavoro non devi farlo tu, ma <strong>perdi anche la possibilità di controllare come viene fatto</strong>. Questo è irrilevante per step dove il tuo approccio sarebbe standard (deploy, infrastruttura, monitoring di base). Ma diventa critico per step dove il "come" è strategico.</p>
+            <p>Prendiamo lo step 02 — <strong>scelta del modello LLM</strong>. Quando una piattaforma enterprise lo "elimina", significa che il vendor sceglie per te quale modello usa l'agente. In superficie è comodo. In pratica, significa tre cose: non puoi ottimizzare per il tuo caso d'uso specifico, non puoi sfruttare le specializzazioni dei diversi modelli (come abbiamo visto nel report sulla mappa dei modelli LLM), e quando il vendor cambia modello — cosa che succede regolarmente — il comportamento del tuo agente cambia senza che tu abbia voce in capitolo.</p>
+            <p>Lo stesso vale per lo step 06 — <strong>orchestrazione</strong>. Quando un verticale SaaS lo elimina, ti dà un flusso ottimizzato per il caso d'uso standard del settore. Se il tuo flusso coincide con quello standard, è un vantaggio enorme. Se diverge in punti critici, è un vincolo strutturale che nessuna configurazione può aggirare.</p>
+          </div>
+          <div class="insight">
+            <div class="insight-label">Regola pratica</div>
+            <p>"Eliminato" è un vantaggio netto per gli step infrastrutturali (deploy, monitoring, UI). È un vantaggio con riserva per gli step che definiscono il comportamento dell'agente (modello, prompt, orchestrazione, memoria). La distinzione è: se lo step è "commodity" puoi delegarlo tranquillamente; se è "strategico" delegarlo ha un prezzo nascosto.</p>
+          </div>
+        </div>
+
+        <!-- DEEP 2 -->
+        <div class="da-header" onclick="toggleDA(this)">
+          <div class="da-dot" style="background:var(--c2)"></div>
+          <div class="da-label">La conoscenza di dominio: il vantaggio più difficile da replicare</div>
+          <div class="da-arrow">▼</div>
+        </div>
+        <div class="da-body">
+          <div class="prose">
+            <p>Guardando la colonna dei <strong>Verticali SaaS</strong>, emerge un pattern interessante: molte celle sono "accelerato", non "eliminato". Sembrerebbe un vantaggio minore rispetto alle piattaforme enterprise. In realtà, il vantaggio dei verticali si gioca su un piano diverso e spesso superiore.</p>
+            <p>Il punto è che quando un verticale "accelera" lo step 03 (prompt e ragionamento) o lo step 06 (orchestrazione), non sta solo risparmiando tempo di implementazione. Sta portando <strong>anni di esperienza di dominio compressa nel prodotto</strong>. Un verticale di customer service come Intercom Fin ha ottimizzato i prompt per gestire clienti frustrati, ha sviluppato logiche di escalation basate su migliaia di conversazioni reali, ha calibrato il tono di risposta su metriche di soddisfazione reali.</p>
+            <p>Replicare questa conoscenza da zero non richiede solo competenze tecniche — richiede <strong>dati e iterazioni</strong> che un team che parte oggi semplicemente non ha. Anche con il miglior prompt engineer del mondo, ci vogliono mesi di interazioni reali per raggiungere il livello di sofisticazione che un verticale maturo offre dal primo giorno.</p>
+            <p>Questo spiega un fenomeno che altrimenti sembrerebbe paradossale: alcune aziende usano il verticale SaaS anche quando avrebbero le competenze tecniche per costruire da zero. Non lo fanno per risparmiare tempo di sviluppo — lo fanno perché la qualità dal giorno uno è strutturalmente superiore grazie alla conoscenza di dominio incorporata.</p>
+          </div>
+          <div class="insight">
+            <div class="insight-label">Implicazione strategica</div>
+            <p>Quando valuti un verticale, non confrontare solo i costi di sviluppo. Confronta la qualità che il verticale offre al giorno uno con la qualità che il tuo agente custom raggiungerà dopo 6 mesi di iterazioni. Il gap iniziale è spesso il vero argomento a favore del verticale.</p>
+          </div>
+        </div>
+
+        <!-- DEEP 3 -->
+        <div class="da-header" onclick="toggleDA(this)">
+          <div class="da-dot" style="background:var(--c4)"></div>
+          <div class="da-label">Open source: "accelerato" ovunque, ma il tipo di accelerazione cambia</div>
+          <div class="da-arrow">▼</div>
+        </div>
+        <div class="da-body">
+          <div class="prose">
+            <p>La colonna open source è quasi interamente gialla ("accelerato"), il che potrebbe far pensare a un vantaggio uniforme. In realtà, ci sono <strong>tre tipi di accelerazione molto diversi</strong> nascosti sotto la stessa etichetta.</p>
+            <p><strong>Tipo 1 — Componenti pronti</strong> (step 04, 05, 07). Qui l'accelerazione è concreta e misurabile: un modulo di memoria che altrimenti scriveresti da zero è disponibile come package da importare. Un connettore API già testato. Una pipeline RAG con chunking e embedding preconfigurati. Il tempo risparmiato è reale: da settimane a giorni per ciascun componente. L'impegno residuo è configurazione e integrazione, non implementazione.</p>
+            <p><strong>Tipo 2 — Pattern architetturali</strong> (step 03, 06). Qui l'accelerazione è più sottile ma potenzialmente più preziosa. Il framework non ti dà un pezzo di codice da usare — ti dà un <em>modo di pensare il problema</em> che è stato validato dalla community. Quando LangGraph ti impone di modellare il flusso come una state machine con nodi e archi, non ti sta solo risparmiando codice: ti sta prevenendo errori architetturali che avresti scoperto dopo settimane di sviluppo. Il rischio qui è opposto: se il pattern del framework non si adatta al tuo caso, forzarlo è controproducente.</p>
+            <p><strong>Tipo 3 — Tooling di supporto</strong> (step 09, 11). Strumenti come LangSmith, Langfuse, Phoenix per monitoring e eval. L'accelerazione è nell'avere un'infrastruttura di observability sofisticata senza doverla costruire. Però attenzione: lo strumento è pronto, ma il <em>contenuto</em> del testing — i dataset di eval, le metriche di qualità, i criteri di successo — resta interamente responsabilità tua.</p>
+          </div>
+          <table class="mini-table">
+            <thead><tr><th>Tipo di accelerazione</th><th>Step coinvolti</th><th>Cosa risparmi</th><th>Cosa resta da fare</th></tr></thead>
+            <tbody>
+              <tr><td><strong>Componenti pronti</strong></td><td>04, 05, 07</td><td>Implementazione da zero</td><td>Configurazione, integrazione, test</td></tr>
+              <tr><td><strong>Pattern architetturali</strong></td><td>03, 06</td><td>Design architetturale, errori strutturali</td><td>Logica di business custom, prompt specifici</td></tr>
+              <tr><td><strong>Tooling di supporto</strong></td><td>09, 11</td><td>Infrastruttura di monitoring/eval</td><td>Contenuto: dataset, metriche, criteri</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <!-- DEEP 4 -->
+        <div class="da-header" onclick="toggleDA(this)">
+          <div class="da-dot" style="background:var(--c1)"></div>
+          <div class="da-label">Lo step 05 (tool use): il vero ago della bilancia</div>
+          <div class="da-arrow">▼</div>
+        </div>
+        <div class="da-body">
+          <div class="prose">
+            <p>Se c'è uno step che da solo può spostare l'intera analisi build-vs-buy, è lo step 05 — <strong>integrazione degli strumenti</strong>. E il motivo è semplice: è lo step con la varianza di complessità più alta.</p>
+            <p>Un agente che usa 2 API ben documentate ha uno step 05 da pochi giorni. Un agente che deve integrarsi con 8 sistemi diversi — CRM, ERP, email, calendario, tool interni, database legacy — ha uno step 05 che può richiedere <strong>mesi</strong>, tra sviluppo dei connettori, gestione dell'autenticazione, handling degli errori per ogni sistema, e test di integrazione.</p>
+            <p>Questo spiega perché le piattaforme enterprise hanno un vantaggio così forte su questo step. Quando Salesforce Agentforce "elimina" lo step 05, non sta eliminando qualche giorno di lavoro — sta eliminando potenzialmente il 60-70% dell'intero sforzo di sviluppo di un agente equivalente costruito da zero, perché tutti i dati del CRM sono già accessibili nativamente.</p>
+            <p>Lo stesso ragionamento vale, in misura minore, per le piattaforme no-code con librerie di connettori: n8n con i suoi 400+ connettori non elimina lo step 05, ma lo riduce drasticamente per i sistemi supportati. Il problema emerge quando devi integrare <strong>il sistema che il connettore non copre</strong> — ed è spesso quello il sistema più critico per il tuo caso d'uso specifico.</p>
+          </div>
+          <div class="insight">
+            <div class="insight-label">Test decisivo</div>
+            <p>Prima di scegliere tra build e buy, elenca i sistemi con cui l'agente deve integrarsi. Se sono tutti coperti da una piattaforma precostruita, il vantaggio del precostruito è schiacciante. Se ce n'è anche uno solo non coperto e critico, il precostruito perde gran parte del suo vantaggio.</p>
+          </div>
+        </div>
+
+        <!-- DEEP 5 -->
+        <div class="da-header" onclick="toggleDA(this)">
+          <div class="da-dot" style="background:var(--c5)"></div>
+          <div class="da-label">Lo step 12 (manutenzione): il costo che nessuno calcola</div>
+          <div class="da-arrow">▼</div>
+        </div>
+        <div class="da-body">
+          <div class="prose">
+            <p>Lo step 12 è il grande trascurato nelle analisi build-vs-buy, perché è un costo che <strong>si materializza nel futuro</strong> e che al momento della decisione sembra marginale. Ma è spesso il costo dominante nel lungo periodo.</p>
+            <p>Quando costruisci un agente custom, lo step 12 include: aggiornamento dei prompt quando il modello rilascia una nuova versione (e il comportamento cambia sottilmente), gestione dei breaking change del framework, aggiornamento dei connettori quando le API esterne cambiano, evoluzione delle funzionalità in risposta al feedback utente, scaling dell'infrastruttura al crescere dell'uso, e gestione dei nuovi edge case che emergono in produzione.</p>
+            <p>Nella matrice, tutti i precostruiti segnano almeno un "accelerato" su questo step — ma con una sfumatura cruciale che ho etichettato <em>"accelerato ma ambiguo"</em> per enterprise e verticali. Il motivo è che con il precostruito ottieni la manutenzione "gratis" (il vendor aggiorna il sistema) ma <strong>perdi il controllo sulla direzione dell'evoluzione</strong>. Il vendor può deprecare una feature che usi, cambiare il modello sottostante, modificare il pricing. Ogni aggiornamento automatico è sia un beneficio (non fai nulla) sia un rischio (può rompere qualcosa).</p>
+            <p>Con l'open source il trade-off è diverso: la community mantiene i componenti, ma integrare i loro aggiornamenti nel tuo codice resta lavoro tuo. LangChain è notorio per i breaking change tra versioni — ogni aggiornamento richiede testing e potenziale refactoring.</p>
+          </div>
+          <div class="insight">
+            <div class="insight-label">Regola pratica</div>
+            <p>Per ogni agente che costruisci, metti a budget un costo di manutenzione continua pari al 20-30% del costo di sviluppo iniziale, ogni anno. Se questo costo ti sembra insostenibile, il precostruito è probabilmente la scelta giusta — anche se il costo di licenza sembra alto.</p>
+          </div>
+        </div>
+
+        <!-- DEEP 6 -->
+        <div class="da-header" onclick="toggleDA(this)">
+          <div class="da-dot" style="background:var(--compl)"></div>
+          <div class="da-label">Quando il precostruito complica le cose: i casi "rossi"</div>
+          <div class="da-arrow">▼</div>
+        </div>
+        <div class="da-body">
+          <div class="prose">
+            <p>Nella matrice c'è una sola cella rossa esplicita (Embedded × RAG), ma i casi in cui il precostruito <strong>aggiunge complessità nascosta</strong> meritano una discussione.</p>
+            <p>Il caso più frequente non è che il precostruito "complichi" uno step singolo, ma che <strong>sposti la complessità da uno step a un altro</strong>. Esempio: una piattaforma enterprise elimina gli step 04-08 (costruzione), ma lo step 09 (testing) diventa paradossalmente più difficile, perché non hai visibilità interna su come l'agente ragiona. Se il risultato è sbagliato, capire <em>dove</em> nel flusso il problema è nato richiede reverse engineering del comportamento — cosa che con un agente custom sarebbe banale perché hai accesso al codice.</p>
+            <p>Un altro caso: il no-code accelera la costruzione ma può <strong>complicare lo step 12</strong> (manutenzione) se il progetto cresce. Flussi visualmente costruiti che diventano complessi sono notoriamente difficili da debuggare e da refactorare. C'è un punto — solitamente quando il numero di nodi supera le 30-40 unità — in cui il flusso visuale diventa meno gestibile del codice equivalente.</p>
+            <p>Un terzo caso, più sottile: l'open source può <strong>complicare lo step 10</strong> (deploy) rispetto al codice puro. Il framework aggiunge dipendenze, requisiti di versioning, potenziali incompatibilità. Un agente in codice puro con tre file Python è banale da containerizzare; un progetto LangGraph con venti dipendenze è più fragile.</p>
+          </div>
+          <div class="insight">
+            <div class="insight-label">Principio generale</div>
+            <p>La complessità non si elimina, si sposta. Ogni categoria precostruita sposta la complessità da certi step (quelli che accelera) ad altri (debugging, vendor management, limiti di personalizzazione). La domanda giusta non è "quale approccio ha meno complessità totale?" ma "dove preferisco che la complessità risieda?".</p>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+  </div>
+</div>
+
+
+<!-- ═══════════════════════════
+     S3 — SINTESI PER CATEGORIA
+═══════════════════════════ -->
+<div class="sect" id="s3">
+  <div class="sect-head">
+    <div class="sect-num">Capitolo 04</div>
+    <h2>Sintesi: il profilo di risparmio di ogni categoria</h2>
+    <p>Per ogni categoria, il bilancio complessivo sullo sforzo di sviluppo: quanti step risparmia, dove concentra il vantaggio, e il trade-off principale da tenere presente.</p>
+  </div>
+  <div class="wrap">
+
+    <div class="sum-grid">
+
+      <!-- C1 -->
+      <div class="sum-card">
+        <div class="sum-dot-row">
+          <div class="sum-dot" style="background:var(--c1)"></div>
+          <div class="sum-cat">Categoria 01</div>
+        </div>
+        <div class="sum-title">Piattaforme Enterprise</div>
+        <div class="sum-stat" style="color:var(--c1)">7 / 12</div>
+        <div class="sum-stat-label">step eliminati o quasi eliminati</div>
+        <div class="sum-text">
+          Il risparmio si concentra sulla <strong>fase di costruzione</strong> (step 04-08) e sull'<strong>infrastruttura</strong> (step 10-11): tutto ciò che è "implementazione tecnica" viene eliminato dal vendor. Il costo residuo è nella definizione del caso d'uso (step 01), nel testing sul proprio contesto (step 09), e nella gestione della dipendenza dal vendor (step 12).
+          <br><br>
+          <strong>Trade-off chiave:</strong> massimo risparmio, minimo controllo. Funziona se il tuo caso d'uso è coperto nativamente. Se diverge dal previsto, non hai leva per adattare.
+        </div>
+      </div>
+
+      <!-- C2 -->
+      <div class="sum-card">
+        <div class="sum-dot-row">
+          <div class="sum-dot" style="background:var(--c2)"></div>
+          <div class="sum-cat">Categoria 02</div>
+        </div>
+        <div class="sum-title">Verticali SaaS</div>
+        <div class="sum-stat" style="color:var(--c2)">5 / 12</div>
+        <div class="sum-stat-label">step eliminati, 5 accelerati</div>
+        <div class="sum-text">
+          L'eliminazione copre orchestrazione (step 06), UI (step 08), deploy (step 10), monitoring (step 11) e in parte testing (step 09). Ma il vantaggio dominante non è quantitativo: è la <strong>conoscenza di dominio</strong> che accelera gli step 03 (prompt) e 05 (integrazioni) con una qualità che il custom raggiunge solo dopo mesi di iterazione.
+          <br><br>
+          <strong>Trade-off chiave:</strong> qualità alta dal giorno uno nel dominio coperto. Se il tuo dominio diverge o se la personalizzazione è critica, il verticale diventa un vincolo.
+        </div>
+      </div>
+
+      <!-- C3 -->
+      <div class="sum-card">
+        <div class="sum-dot-row">
+          <div class="sum-dot" style="background:var(--c3)"></div>
+          <div class="sum-cat">Categoria 03</div>
+        </div>
+        <div class="sum-title">No-code & Marketplace</div>
+        <div class="sum-stat" style="color:var(--c3)">1 / 12</div>
+        <div class="sum-stat-label">step eliminato, 8 accelerati</div>
+        <div class="sum-text">
+          Pochi step eliminati, molti accelerati: il profilo tipico di uno strumento che <strong>democratizza la costruzione</strong> piuttosto che sostituirla. L'accelerazione è concentrata sulla velocità di implementazione (step 03-08) e sull'accessibilità (competenze richieste minime).
+          <br><br>
+          <strong>Trade-off chiave:</strong> massima accessibilità e velocità di sperimentazione. Ma il testing serio (step 09), la manutenzione (step 12) e la gestione della complessità crescente restano interamente a tuo carico — e diventano progressivamente più difficili man mano che il flusso cresce.
+        </div>
+      </div>
+
+      <!-- C4 -->
+      <div class="sum-card">
+        <div class="sum-dot-row">
+          <div class="sum-dot" style="background:var(--c4)"></div>
+          <div class="sum-cat">Categoria 04</div>
+        </div>
+        <div class="sum-title">Open Source</div>
+        <div class="sum-stat" style="color:var(--c4)">0 / 12</div>
+        <div class="sum-stat-label">step eliminati, 10 accelerati</div>
+        <div class="sum-text">
+          Nessuno step eliminato: l'open source <strong>non sostituisce la costruzione, la potenzia</strong>. L'accelerazione è su quasi tutto il percorso, con tre tipologie diverse: componenti pronti (step 04, 05, 07), pattern architetturali (step 03, 06), e tooling di supporto (step 09, 11). L'unico step invariato è il deploy (step 10).
+          <br><br>
+          <strong>Trade-off chiave:</strong> massima flessibilità e controllo, con accelerazione significativa. Ma richiede competenze di sviluppo e l'impegno di mantenere aggiornate le dipendenze nel tempo.
+        </div>
+      </div>
+
+      <!-- C5 -->
+      <div class="sum-card" style="grid-column: 1 / -1;">
+        <div class="sum-dot-row">
+          <div class="sum-dot" style="background:var(--c5)"></div>
+          <div class="sum-cat">Categoria 05</div>
+        </div>
+        <div class="sum-title">Embedded in Prodotti</div>
+        <div class="sum-stat" style="color:var(--c5)">11 / 12</div>
+        <div class="sum-stat-label">step eliminati</div>
+        <div class="sum-text">
+          Il profilo più estremo: quasi tutto è eliminato perché <strong>non stai costruendo un agente — stai usando una feature di un prodotto</strong>. L'unico step che sopravvive, in forma residuale, è la definizione del caso d'uso (step 01), nella misura in cui devi capire se e come usare la feature AI del tuo strumento.
+          <br><br>
+          <strong>Trade-off chiave:</strong> zero sforzo, zero personalizzazione. L'embedded è il potenziamento AI più accessibile in assoluto, ma è anche il più vincolato. Non puoi estenderlo, non puoi farlo operare fuori dal prodotto host, non puoi cambiare il modello che usa. È complementare a un agente custom, non alternativo.
+        </div>
+      </div>
+
+    </div>
+
+    <div class="key-point" style="margin-top:40px;">
+      <div class="kp-label">La sintesi finale</div>
+      <div class="kp-text">Ogni categoria ha un "profilo di risparmio" diverso: l'enterprise elimina l'infrastruttura, il verticale comprime la curva di apprendimento di dominio, il no-code democratizza la costruzione, l'open source accelera senza vincolare, l'embedded annulla lo sforzo ma anche il controllo.</div>
+      <div class="kp-sub">La scelta migliore non è quella che "elimina più step" in assoluto, ma quella che elimina o accelera gli step più costosi <em>nel tuo contesto specifico</em>. Se il tuo collo di bottiglia è l'integrazione con sistemi enterprise, l'eliminazione nativa di quello step (Cat. 1) vale più dell'accelerazione di tutti gli altri step messi insieme. Se il tuo collo di bottiglia è la conoscenza di dominio, il verticale SaaS (Cat. 2) ti dà in un giorno ciò che costruiresti in sei mesi. Se il tuo collo di bottiglia è la personalizzazione, solo l'open source + framework (Cat. 4) ti lascia la libertà necessaria.</div>
+    </div>
+
+  </div>
+</div>
+
+
+<!-- FOOTER -->
+<div class="footer">
+  <span>Serie Agenti AI — Report 06 · 12 Step × 5 Categorie</span>
+  <span>Marzo 2026</span>
+</div>
+
+
+<script>
+function show(n) {
+  document.querySelectorAll('.sect').forEach(s => s.classList.remove('active'));
+  document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('s'+n).classList.add('active');
+  document.querySelectorAll('.nav-btn')[n].classList.add('active');
+  window.scrollTo({top:0, behavior:'smooth'});
+}
+
+function toggleDA(header) {
+  const body = header.nextElementSibling;
+  const arrow = header.querySelector('.da-arrow');
+  const isOpen = body.classList.contains('open');
+  document.querySelectorAll('.da-body').forEach(b => b.classList.remove('open'));
+  document.querySelectorAll('.da-arrow').forEach(a => a.textContent = '▼');
+  if (!isOpen) {
+    body.classList.add('open');
+    arrow.textContent = '▲';
+  }
+}
+</script>
+
+</body>
+</html>

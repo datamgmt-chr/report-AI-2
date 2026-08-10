@@ -1,0 +1,694 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Il Panorama degli Strumenti — A Cosa Può Connettersi un Agente AI</title>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,400;0,9..144,600;0,9..144,700;0,9..144,800;0,9..144,900;1,9..144,400&family=Karla:wght@300;400;500;600;700&family=IBM+Plex+Mono:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg:#f7f5f0;--bg2:#efece5;--bg3:#e5e1d8;--ink:#1e1d1a;--ink2:#2d2b25;--ink3:#65614f;--ink4:#9e9a89;
+  --border:#d6d1c4;--border2:#c5c0b1;
+  --c1:#2e7d9c;--c2:#c0562b;--c3:#3d7a45;--c4:#7b5ea7;--c5:#b07d24;--c6:#3a6b8c;--c7:#8b5c3a;
+  --read:#3d7a45;--write:#c0562b;--accent:#2e7d9c;
+}
+*{margin:0;padding:0;box-sizing:border-box}html{scroll-behavior:smooth}
+body{background:var(--bg);color:var(--ink);font-family:'Karla',sans-serif;font-weight:400;font-size:14px;line-height:1.78}
+
+.masthead{background:var(--ink);color:rgba(255,255,255,0.9);padding:60px 56px 52px;position:relative;overflow:hidden}
+.masthead::before{content:'';position:absolute;inset:0;background:repeating-linear-gradient(90deg,rgba(255,255,255,0.01) 0,rgba(255,255,255,0.01) 1px,transparent 1px,transparent 60px),repeating-linear-gradient(0deg,rgba(255,255,255,0.01) 0,rgba(255,255,255,0.01) 1px,transparent 1px,transparent 60px);pointer-events:none}
+.mh-eye{font-family:'IBM Plex Mono',monospace;font-size:10px;letter-spacing:3px;text-transform:uppercase;color:rgba(255,255,255,0.25);margin-bottom:18px;position:relative}
+.masthead h1{font-family:'Fraunces',serif;font-weight:800;font-size:clamp(28px,4.5vw,50px);line-height:1.08;letter-spacing:-1px;max-width:700px;position:relative}
+.mh-sub{margin-top:20px;font-size:15px;font-weight:300;color:rgba(255,255,255,0.38);max-width:660px;line-height:1.7;position:relative}
+
+.nav{background:var(--ink2);position:sticky;top:0;z-index:100;display:flex;overflow-x:auto;border-bottom:1px solid rgba(255,255,255,0.06)}
+.nav-btn{flex:1;min-width:75px;padding:12px 7px;border:none;background:transparent;cursor:pointer;font-family:'Karla',sans-serif;font-size:9.5px;font-weight:700;text-transform:uppercase;letter-spacing:0.2px;color:rgba(255,255,255,0.28);border-right:1px solid rgba(255,255,255,0.06);transition:all 0.2s;white-space:nowrap}
+.nav-btn:last-child{border-right:none}
+.nav-btn:hover{color:rgba(255,255,255,0.55)}
+.nav-btn.active{color:#fff;background:rgba(255,255,255,0.05)}
+
+.sect{display:none}.sect.active{display:block;animation:fadeIn 0.3s ease}
+@keyframes fadeIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
+
+.sect-head{padding:48px 56px 36px;border-bottom:1px solid var(--border)}
+.sect-num{font-family:'IBM Plex Mono',monospace;font-size:10px;letter-spacing:3px;text-transform:uppercase;color:var(--ink4);margin-bottom:10px}
+.sect-head h2{font-family:'Fraunces',serif;font-weight:800;font-size:clamp(24px,3.5vw,38px);line-height:1.12;max-width:620px;margin-bottom:14px}
+.sect-head p{color:var(--ink3);max-width:700px;font-size:14.5px}
+.wrap{padding:0 56px 56px}
+
+/* ── CATEGORY CARD ── */
+.cat{margin-top:36px;border:1px solid var(--border2)}
+.cat-header{display:grid;grid-template-columns:8px 1fr;border-bottom:1px solid var(--border)}
+.cat-accent{}
+.cat-head-body{padding:22px 26px}
+.cat-name{font-family:'Fraunces',serif;font-weight:800;font-size:22px;line-height:1.15;margin-bottom:4px}
+.cat-sub{font-size:13px;color:var(--ink4);margin-bottom:14px}
+.cat-tags{display:flex;flex-wrap:wrap;gap:6px}
+.cat-tag{font-family:'IBM Plex Mono',monospace;font-size:9px;padding:3px 8px;border:1px solid var(--border2);color:var(--ink3);letter-spacing:0.3px}
+.cat-body{padding:0}
+
+.cs{padding:22px 26px;border-bottom:1px solid var(--border)}
+.cs:last-child{border-bottom:none}
+.cs-label{font-family:'IBM Plex Mono',monospace;font-size:9px;letter-spacing:2px;text-transform:uppercase;color:var(--ink4);margin-bottom:10px;padding-bottom:5px;border-bottom:1px solid var(--border)}
+.cs p{font-size:14px;color:var(--ink3);line-height:1.8;max-width:740px}
+.cs p strong{color:var(--ink2);font-weight:600}
+
+/* Grid items */
+.cg{display:grid;grid-template-columns:1fr 1fr;gap:1px;background:var(--border);margin-top:12px}
+.cg-item{background:var(--bg);padding:14px 16px}
+.cg-title{font-weight:700;font-size:13px;margin-bottom:5px;color:var(--ink2)}
+.cg-text{font-size:12.5px;color:var(--ink3);line-height:1.6}
+.cg-text strong{color:var(--ink2);font-weight:600}
+
+/* Maturity bar */
+.mat-row{display:flex;align-items:center;gap:12px;margin-top:10px}
+.mat-label{font-size:11px;font-weight:600;color:var(--ink3);width:70px;text-align:right}
+.mat-track{flex:1;height:10px;background:var(--bg3);border-radius:2px;overflow:hidden}
+.mat-fill{height:100%;border-radius:2px}
+.mat-val{font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--ink4);width:30px}
+
+/* RW badges */
+.rw-badge{font-family:'IBM Plex Mono',monospace;font-size:9px;letter-spacing:0.5px;text-transform:uppercase;padding:2px 8px;border-radius:2px;font-weight:500;display:inline-block;margin-right:6px}
+.rw-read{background:rgba(61,122,69,0.1);color:var(--read)}
+.rw-write{background:rgba(192,86,43,0.1);color:var(--write)}
+.rw-both{background:rgba(46,125,156,0.1);color:var(--accent)}
+
+/* ── KEY POINT ── */
+.key-point{margin-top:32px;padding:22px 26px;border-left:4px solid var(--accent);background:var(--bg2)}
+.kp-label{font-family:'IBM Plex Mono',monospace;font-size:9px;letter-spacing:2px;text-transform:uppercase;color:var(--accent);margin-bottom:6px}
+.kp-text{font-family:'Fraunces',serif;font-weight:600;font-size:17px;line-height:1.45;color:var(--ink2)}
+.kp-sub{margin-top:8px;font-size:13px;color:var(--ink3);line-height:1.65}
+
+/* ── INSIGHT ── */
+.insight{margin:16px 0;padding:16px 20px;border-left:4px solid;background:var(--bg2)}
+.insight-label{font-family:'IBM Plex Mono',monospace;font-size:9px;letter-spacing:2px;text-transform:uppercase;margin-bottom:4px}
+.insight p{font-size:13.5px;line-height:1.65;color:var(--ink2);max-width:700px}
+
+/* ── MATRIX ── */
+.matrix-scroll{overflow-x:auto;margin-top:20px;border:1px solid var(--border2)}
+.matrix{width:100%;border-collapse:collapse;font-size:11.5px;min-width:850px}
+.matrix th,.matrix td{padding:10px 12px;border:1px solid var(--border);vertical-align:top}
+.matrix thead th{background:var(--ink);color:rgba(255,255,255,0.82);font-weight:700;font-size:10px;text-transform:uppercase;letter-spacing:0.3px;text-align:center;position:sticky;top:42px;z-index:50}
+.matrix thead th:first-child{text-align:left;min-width:130px}
+.matrix .row-head{text-align:left;font-weight:700;background:var(--bg2);white-space:nowrap}
+.matrix td{text-align:center;color:var(--ink3)}
+.matrix td strong{color:var(--ink2);font-weight:600}
+.mx-easy{background:rgba(61,122,69,0.08)!important;color:#2a6232;font-weight:600}
+.mx-mod{background:rgba(176,125,36,0.08)!important;color:#8a6d1a;font-weight:500}
+.mx-hard{background:rgba(192,86,43,0.08)!important;color:#a0421f;font-weight:500}
+.mx-no{background:rgba(150,150,150,0.06)!important;color:#aaa}
+
+/* ── PROSE ── */
+.prose{margin-top:20px;max-width:740px}
+.prose p{font-size:14px;color:var(--ink3);line-height:1.8;margin-bottom:14px}
+.prose p strong{color:var(--ink2);font-weight:600}
+
+/* ── DARK BOX ── */
+.dark-box{background:var(--ink);color:rgba(255,255,255,0.85);padding:32px 28px;margin-top:24px;position:relative;overflow:hidden}
+.dark-box::before{content:'';position:absolute;inset:0;background:repeating-linear-gradient(90deg,rgba(255,255,255,0.015) 0,rgba(255,255,255,0.015) 1px,transparent 1px,transparent 50px),repeating-linear-gradient(0deg,rgba(255,255,255,0.015) 0,rgba(255,255,255,0.015) 1px,transparent 1px,transparent 50px);pointer-events:none}
+.dark-title{font-family:'Fraunces',serif;font-weight:700;font-size:20px;margin-bottom:6px;position:relative}
+.dark-desc{font-size:13px;color:rgba(255,255,255,0.35);margin-bottom:20px;max-width:600px;position:relative}
+.dark-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;position:relative}
+.dark-card{background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);padding:18px 16px}
+.dk-label{font-family:'IBM Plex Mono',monospace;font-size:9px;letter-spacing:1.5px;text-transform:uppercase;color:rgba(255,255,255,0.3);margin-bottom:6px}
+.dk-title{font-weight:700;font-size:14px;margin-bottom:6px}
+.dk-text{font-size:12px;color:rgba(255,255,255,0.4);line-height:1.6}
+.dk-text strong{color:rgba(255,255,255,0.7);font-weight:600}
+
+.footer{background:var(--ink);color:rgba(255,255,255,0.22);padding:28px 56px;font-family:'IBM Plex Mono',monospace;font-size:10px;letter-spacing:1px;display:flex;justify-content:space-between}
+@media(max-width:860px){.masthead,.sect-head,.wrap,.footer{padding-left:20px;padding-right:20px}.cg,.dark-grid{grid-template-columns:1fr}.footer{flex-direction:column;gap:6px}}
+</style>
+</head>
+<body>
+
+<div class="masthead">
+  <div class="mh-eye">Serie Agenti AI — Report 13</div>
+  <h1>A cosa può connettersi<br>un agente AI</h1>
+  <p class="mh-sub">Il panorama completo degli strumenti: 7 categorie di capacità, cosa è possibile oggi, i limiti reali, la distinzione lettura/scrittura, il protocollo MCP, e come la scelta dell'alternativa di costruzione determina cosa puoi integrare.</p>
+</div>
+
+<nav class="nav">
+  <button class="nav-btn active" onclick="show(0)">Panoramica</button>
+  <button class="nav-btn" onclick="show(1)">Dati strutturati</button>
+  <button class="nav-btn" onclick="show(2)">Dati non struttur.</button>
+  <button class="nav-btn" onclick="show(3)">Comunicazione</button>
+  <button class="nav-btn" onclick="show(4)">Web e ricerca</button>
+  <button class="nav-btn" onclick="show(5)">Esecuzione codice</button>
+  <button class="nav-btn" onclick="show(6)">Azioni su app</button>
+  <button class="nav-btn" onclick="show(7)">Mondo fisico</button>
+  <button class="nav-btn" onclick="show(8)">Lettura vs scrittura</button>
+  <button class="nav-btn" onclick="show(9)">MCP</button>
+  <button class="nav-btn" onclick="show(10)">Le 5 alternative</button>
+</nav>
+
+
+<!-- ═══════════════════
+     S0 — PANORAMICA
+═══════════════════ -->
+<div class="sect active" id="s0">
+  <div class="sect-head">
+    <div class="sect-num">Vista d'insieme</div>
+    <h2>Le 7 categorie di capacità</h2>
+    <p>Ogni strumento dà all'agente una capacità specifica. Classificare gli strumenti per tipo di capacità — non per tecnologia — aiuta a capire cosa è possibile costruire e dove sono i confini.</p>
+  </div>
+  <div class="wrap">
+
+    <div class="prose">
+      <p>Un agente senza strumenti è un chatbot: può solo ragionare e generare testo. Gli strumenti sono ciò che trasforma il ragionamento in <strong>azione</strong>. Ma non tutti gli strumenti sono uguali: leggere un dato dal CRM e mandare un'email al cliente sono entrambi "tool use", ma hanno implicazioni radicalmente diverse in termini di rischio, reversibilità e complessità di implementazione.</p>
+      <p>Le 7 categorie che seguono coprono l'intero spettro di ciò che un agente può fare oggi, dal più maturo (accesso a database) al più emergente (interazione con il mondo fisico). Per ognuna: cosa è possibile, con quale maturità, quali sono i limiti reali, e le implicazioni pratiche.</p>
+    </div>
+
+    <div class="dark-box">
+      <div class="dark-title">Le 7 categorie in sintesi</div>
+      <div class="dark-desc">Dal più maturo al più emergente</div>
+      <div class="dark-grid">
+        <div class="dark-card">
+          <div class="dk-label" style="color:var(--c1)">Categoria 01</div>
+          <div class="dk-title">Dati strutturati</div>
+          <div class="dk-text">Database SQL, CRM, ERP, fogli di calcolo. <strong>L'agente legge e scrive dati organizzati in tabelle e record.</strong> La categoria più matura.</div>
+        </div>
+        <div class="dark-card">
+          <div class="dk-label" style="color:var(--c2)">Categoria 02</div>
+          <div class="dk-title">Dati non strutturati</div>
+          <div class="dk-text">Documenti, email, file, immagini. <strong>L'agente cerca, legge, estrae informazioni da contenuti liberi.</strong> Include RAG ma va oltre.</div>
+        </div>
+        <div class="dark-card">
+          <div class="dk-label" style="color:var(--c3)">Categoria 03</div>
+          <div class="dk-title">Comunicazione</div>
+          <div class="dk-text">Email, Slack, Teams, SMS, WhatsApp. <strong>L'agente manda messaggi, risponde, notifica.</strong> Maturità alta sui canali principali.</div>
+        </div>
+        <div class="dark-card">
+          <div class="dk-label" style="color:var(--c4)">Categoria 04</div>
+          <div class="dk-title">Web e ricerca</div>
+          <div class="dk-text">Web search, scraping, navigazione browser. <strong>L'agente accede a informazioni pubbliche e interagisce con siti web.</strong></div>
+        </div>
+        <div class="dark-card">
+          <div class="dk-label" style="color:var(--c5)">Categoria 05</div>
+          <div class="dk-title">Esecuzione codice</div>
+          <div class="dk-text">Python, SQL, shell. <strong>L'agente scrive ed esegue codice.</strong> Il tool più potente: rende l'agente programmabile.</div>
+        </div>
+        <div class="dark-card">
+          <div class="dk-label" style="color:var(--c6)">Categoria 06</div>
+          <div class="dk-title">Azioni su applicazioni</div>
+          <div class="dk-text">Jira, calendario, social media, e-commerce. <strong>L'agente opera dentro applicazioni tramite API.</strong> Il territorio più ampio e vario.</div>
+        </div>
+        <div class="dark-card" style="grid-column:1/-1">
+          <div class="dk-label" style="color:var(--c7)">Categoria 07</div>
+          <div class="dk-title">Mondo fisico e interfacce</div>
+          <div class="dk-text">Computer use, IoT, dispositivi. <strong>L'agente interagisce con il mondo fisico o con interfacce grafiche.</strong> La categoria più emergente — maturità ancora bassa.</div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+
+<!-- ═══════════════════
+     S1 — DATI STRUTTURATI
+═══════════════════ -->
+<div class="sect" id="s1">
+  <div class="sect-head"><div class="sect-num">Categoria 01</div><h2>Accesso a Dati Strutturati</h2><p>Database, CRM, ERP, fogli di calcolo. L'agente legge, interroga e scrive dati organizzati in tabelle e record. La categoria più matura e più utilizzata.</p></div>
+  <div class="wrap">
+    <div class="cat">
+      <div class="cat-header"><div class="cat-accent" style="background:var(--c1)"></div><div class="cat-head-body">
+        <div class="cat-name">Dati Strutturati</div>
+        <div class="cat-sub">L'agente accede a informazioni organizzate in schemi predefiniti</div>
+        <div class="cat-tags">
+          <span class="cat-tag">Database SQL/NoSQL</span><span class="cat-tag">CRM (Salesforce, HubSpot)</span><span class="cat-tag">ERP (SAP, Oracle)</span><span class="cat-tag">Fogli di calcolo</span><span class="cat-tag">API REST con dati strutturati</span>
+        </div>
+      </div></div>
+      <div class="cat-body">
+        <div class="cs">
+          <div class="cs-label">Cosa è possibile oggi</div>
+          <p>L'agente può <strong>generare query SQL</strong> a partire da domande in linguaggio naturale ("quali clienti hanno ordinato più di 10k€ nel Q3?"), eseguirle, e interpretare i risultati. Può leggere e scrivere record in CRM ed ERP tramite le loro API. Può leggere e modificare fogli di calcolo (Google Sheets, Excel). Per i database, il text-to-SQL è una delle capacità più mature degli LLM — i modelli frontier raggiungono il 85-90% di accuratezza su schemi ben documentati.</p>
+        </div>
+        <div class="cs">
+          <div class="cs-label">Limiti reali</div>
+          <div class="cg">
+            <div class="cg-item"><div class="cg-title">Schema complesso = errori</div><div class="cg-text">Su database con 50+ tabelle, relazioni complesse e naming non intuitivo, il text-to-SQL degrada significativamente. L'agente ha bisogno di una <strong>descrizione dello schema</strong> nel prompt — che occupa contesto e può non bastare per schemi molto ampi.</div></div>
+            <div class="cg-item"><div class="cg-title">Scrittura = rischio</div><div class="cg-text">Leggere dati è sicuro. <strong>Scrivere</strong> (UPDATE, DELETE, INSERT) introduce rischi reali: un errore nella query può corrompere dati. Serve human-in-the-loop o almeno un meccanismo di preview ("ecco la query che eseguirei, confermi?").</div></div>
+            <div class="cg-item"><div class="cg-title">Autenticazione e permessi</div><div class="cg-text">L'agente deve avere credenziali per accedere al database. Gestire <strong>permessi granulari</strong> (l'agente può leggere la tabella clienti ma non la tabella stipendi) richiede configurazione specifica, spesso non banale.</div></div>
+            <div class="cg-item"><div class="cg-title">Performance su query pesanti</div><div class="cg-text">L'agente può generare query corrette ma <strong>inefficienti</strong> — che bloccano il database per secondi. Senza limiti di tempo o ottimizzazione, una query mal scritta può impattare la produzione.</div></div>
+          </div>
+        </div>
+        <div class="cs">
+          <div class="cs-label">Maturità</div>
+          <div class="mat-row"><div class="mat-label">Lettura</div><div class="mat-track"><div class="mat-fill" style="width:85%;background:var(--c1)"></div></div><div class="mat-val">85%</div></div>
+          <div class="mat-row"><div class="mat-label">Scrittura</div><div class="mat-track"><div class="mat-fill" style="width:55%;background:var(--c1)"></div></div><div class="mat-val">55%</div></div>
+          <p style="font-size:12px;color:var(--ink4);margin-top:8px">Lettura matura e affidabile per schemi semplici. Scrittura possibile ma richiede guardrail robusti.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+<!-- ═══════════════════
+     S2 — DATI NON STRUTTURATI
+═══════════════════ -->
+<div class="sect" id="s2">
+  <div class="sect-head"><div class="sect-num">Categoria 02</div><h2>Accesso a Dati Non Strutturati</h2><p>Documenti, email, file su drive, immagini, PDF. L'agente cerca, legge ed estrae informazioni da contenuti non organizzati in schemi.</p></div>
+  <div class="wrap">
+    <div class="cat">
+      <div class="cat-header"><div class="cat-accent" style="background:var(--c2)"></div><div class="cat-head-body">
+        <div class="cat-name">Dati Non Strutturati</div>
+        <div class="cat-sub">L'agente naviga il "caos" dei contenuti aziendali</div>
+        <div class="cat-tags">
+          <span class="cat-tag">Google Drive / OneDrive / SharePoint</span><span class="cat-tag">Email (Gmail, Outlook)</span><span class="cat-tag">PDF, Word, Excel</span><span class="cat-tag">Knowledge base (Confluence, Notion)</span><span class="cat-tag">Immagini e scan</span>
+        </div>
+      </div></div>
+      <div class="cat-body">
+        <div class="cs">
+          <div class="cs-label">Cosa è possibile oggi</div>
+          <p>L'agente può <strong>cercare documenti per significato</strong> (ricerca semantica, non solo per keyword), <strong>leggere e estrarre informazioni</strong> da PDF, Word, presentazioni, <strong>analizzare immagini</strong> con modelli multimodali (leggere tabelle da screenshot, interpretare grafici, OCR su documenti scansionati), e <strong>navigare la casella email</strong> cercando messaggi rilevanti. La pipeline RAG che abbiamo approfondito nel Report 07 è il meccanismo principale per i documenti; l'accesso diretto via API (Google Drive, Outlook) è il meccanismo per email e file.</p>
+        </div>
+        <div class="cs">
+          <div class="cs-label">Limiti reali</div>
+          <div class="cg">
+            <div class="cg-item"><div class="cg-title">Qualità dell'estrazione</div><div class="cg-text">PDF scansionati, documenti con layout complesso (tabelle multi-pagina, colonne), immagini di bassa qualità producono <strong>estrazioni imperfette</strong>. L'OCR ha migliorato enormemente ma non è al 100%. Documenti tecnici con formule o diagrammi restano problematici.</div></div>
+            <div class="cg-item"><div class="cg-title">Volume e costi</div><div class="cg-text">Indicizzare migliaia di documenti richiede embedding per ciascuno — <strong>costo computazionale iniziale</strong> e spazio di storage nel vector database. L'aggiornamento incrementale (nuovi documenti, documenti modificati) è un problema operativo spesso sottovalutato.</div></div>
+            <div class="cg-item"><div class="cg-title">Permessi di accesso</div><div class="cg-text">In una organizzazione, non tutti possono vedere tutti i documenti. L'agente deve <strong>rispettare i permessi</strong> dell'utente che lo sta usando — il che richiede integrazione con il sistema di autorizzazione dell'organizzazione. Tecnicamente possibile ma complesso.</div></div>
+            <div class="cg-item"><div class="cg-title">Freschezza</div><div class="cg-text">Un documento aggiornato ieri deve produrre risposte aggiornate oggi. Se la pipeline di ingestion non ha <strong>aggiornamento continuo</strong>, l'agente risponde con informazioni obsolete — che è peggio di non rispondere.</div></div>
+          </div>
+        </div>
+        <div class="cs">
+          <div class="cs-label">Maturità</div>
+          <div class="mat-row"><div class="mat-label">Testo</div><div class="mat-track"><div class="mat-fill" style="width:80%;background:var(--c2)"></div></div><div class="mat-val">80%</div></div>
+          <div class="mat-row"><div class="mat-label">Immagini</div><div class="mat-track"><div class="mat-fill" style="width:60%;background:var(--c2)"></div></div><div class="mat-val">60%</div></div>
+          <div class="mat-row"><div class="mat-label">PDF complessi</div><div class="mat-track"><div class="mat-fill" style="width:50%;background:var(--c2)"></div></div><div class="mat-val">50%</div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+<!-- ═══════════════════
+     S3 — COMUNICAZIONE
+═══════════════════ -->
+<div class="sect" id="s3">
+  <div class="sect-head"><div class="sect-num">Categoria 03</div><h2>Comunicazione</h2><p>L'agente manda messaggi, risponde, notifica. I canali: email, Slack, Teams, SMS, WhatsApp, notifiche push.</p></div>
+  <div class="wrap">
+    <div class="cat">
+      <div class="cat-header"><div class="cat-accent" style="background:var(--c3)"></div><div class="cat-head-body">
+        <div class="cat-name">Comunicazione</div>
+        <div class="cat-sub">L'agente parla con il mondo esterno attraverso i canali di messaggistica</div>
+        <div class="cat-tags"><span class="cat-tag">Gmail / Outlook</span><span class="cat-tag">Slack</span><span class="cat-tag">Microsoft Teams</span><span class="cat-tag">SMS / WhatsApp</span><span class="cat-tag">Notifiche</span></div>
+      </div></div>
+      <div class="cat-body">
+        <div class="cs">
+          <div class="cs-label">Cosa è possibile oggi</div>
+          <p>L'agente può <strong>comporre e inviare email</strong> personalizzate (con contesto da CRM, storico conversazioni), <strong>mandare messaggi Slack/Teams</strong> in canali specifici, <strong>rispondere a messaggi in arrivo</strong> su vari canali (il pattern del chatbot multi-canale), e <strong>inviare notifiche</strong> basate su trigger (alert, promemoria, aggiornamenti). I connettori per i canali principali sono maturi e ben documentati.</p>
+        </div>
+        <div class="cs">
+          <div class="cs-label">Limiti reali</div>
+          <div class="cg">
+            <div class="cg-item"><div class="cg-title">Irreversibilità</div><div class="cg-text"><strong>Un'email inviata non si può richiamare.</strong> Un messaggio Slack pubblicato è visibile immediatamente. La comunicazione è l'azione irreversibile per eccellenza — e la più visibile. Errori qui hanno impatto reputazionale diretto. Il human-in-the-loop è quasi obbligatorio per comunicazioni esterne.</div></div>
+            <div class="cg-item"><div class="cg-title">Tono e contesto</div><div class="cg-text">Il tono giusto dipende dal contesto (cliente arrabbiato vs follow-up amichevole) e dalla storia della relazione. L'agente può sbagliare tono con conseguenze relazionali. Richiede <strong>prompt engineering molto curato</strong> e idealmente accesso allo storico delle comunicazioni.</div></div>
+            <div class="cg-item"><div class="cg-title">Rate limit e anti-spam</div><div class="cg-text">Le API di email hanno <strong>limiti di invio</strong>. Gmail limita a 500 email/giorno per account consumer, 2000 per Workspace. Un agente che manda email in massa rischia di far finire il dominio in blacklist. Servono rate limiting e warmup del dominio.</div></div>
+            <div class="cg-item"><div class="cg-title">Multi-thread e contesto</div><div class="cg-text">Gestire una conversazione email con più botta-e-risposta richiede che l'agente <strong>mantenga il contesto del thread</strong> e risponda coerentemente con quanto detto prima. Tecnicamente possibile ma aggiunge complessità di memoria e orchestrazione.</div></div>
+          </div>
+        </div>
+        <div class="cs">
+          <div class="cs-label">Maturità</div>
+          <div class="mat-row"><div class="mat-label">Lettura</div><div class="mat-track"><div class="mat-fill" style="width:90%;background:var(--c3)"></div></div><div class="mat-val">90%</div></div>
+          <div class="mat-row"><div class="mat-label">Invio</div><div class="mat-track"><div class="mat-fill" style="width:80%;background:var(--c3)"></div></div><div class="mat-val">80%</div></div>
+          <div class="mat-row"><div class="mat-label">Conversazione</div><div class="mat-track"><div class="mat-fill" style="width:60%;background:var(--c3)"></div></div><div class="mat-val">60%</div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+<!-- ═══════════════════
+     S4 — WEB
+═══════════════════ -->
+<div class="sect" id="s4">
+  <div class="sect-head"><div class="sect-num">Categoria 04</div><h2>Web e Ricerca</h2><p>L'agente accede a informazioni pubbliche: web search, scraping di siti, navigazione browser. Dalla ricerca semplice all'automazione browser completa.</p></div>
+  <div class="wrap">
+    <div class="cat">
+      <div class="cat-header"><div class="cat-accent" style="background:var(--c4)"></div><div class="cat-head-body">
+        <div class="cat-name">Web e Ricerca</div>
+        <div class="cat-sub">L'agente va a cercare informazioni nel mondo</div>
+        <div class="cat-tags"><span class="cat-tag">Web search (Google, Bing, Tavily)</span><span class="cat-tag">Web scraping</span><span class="cat-tag">Browsing automatizzato</span><span class="cat-tag">API di dati pubblici</span></div>
+      </div></div>
+      <div class="cat-body">
+        <div class="cs">
+          <div class="cs-label">Cosa è possibile oggi</div>
+          <p>L'agente può <strong>fare ricerche web</strong> e leggere i risultati (tramite API come Tavily, Serper, o il web search nativo di alcuni modelli), <strong>visitare pagine web</strong> e estrarne il contenuto testuale, e nei casi più avanzati <strong>navigare siti web interattivamente</strong> (cliccare, compilare form, navigare tra pagine) tramite browser automation (Playwright, Selenium, o il computer use nativo di alcuni modelli). La ricerca web è il tool più comune in assoluto — quasi tutti i framework lo includono nativamente.</p>
+        </div>
+        <div class="cs">
+          <div class="cs-label">Limiti reali</div>
+          <div class="cg">
+            <div class="cg-item"><div class="cg-title">Qualità dei risultati</div><div class="cg-text">La ricerca web restituisce ciò che i motori di ricerca mostrano — che non è necessariamente ciò che è vero o rilevante. L'agente <strong>non ha modo intrinseco di verificare l'affidabilità delle fonti</strong>. Serve un layer di valutazione della qualità delle fonti.</div></div>
+            <div class="cg-item"><div class="cg-title">Siti che bloccano il scraping</div><div class="cg-text">Molti siti hanno <strong>protezioni anti-bot</strong> (CAPTCHA, rate limiting, blocco user agent). L'agente non può accedere a tutto il web — solo a ciò che è tecnicamente accessibile. I siti dietro paywall o login sono inaccessibili senza credenziali.</div></div>
+            <div class="cg-item"><div class="cg-title">Browser automation = fragile</div><div class="cg-text">La navigazione automatizzata di siti web è intrinsecamente <strong>fragile</strong>: una modifica al layout del sito rompe il flusso. Il computer use dei modelli recenti (Claude, GPT) è più robusto perché usa la visione, ma è lento e costoso.</div></div>
+            <div class="cg-item"><div class="cg-title">Aspetti legali</div><div class="cg-text">Il scraping di siti web ha <strong>implicazioni legali</strong> variabili per giurisdizione. I termini di servizio di molti siti lo vietano esplicitamente. L'uso commerciale di dati scrappati può esporre a rischi legali.</div></div>
+          </div>
+        </div>
+        <div class="cs">
+          <div class="cs-label">Maturità</div>
+          <div class="mat-row"><div class="mat-label">Web search</div><div class="mat-track"><div class="mat-fill" style="width:90%;background:var(--c4)"></div></div><div class="mat-val">90%</div></div>
+          <div class="mat-row"><div class="mat-label">Page reading</div><div class="mat-track"><div class="mat-fill" style="width:75%;background:var(--c4)"></div></div><div class="mat-val">75%</div></div>
+          <div class="mat-row"><div class="mat-label">Browser autom.</div><div class="mat-track"><div class="mat-fill" style="width:35%;background:var(--c4)"></div></div><div class="mat-val">35%</div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+<!-- ═══════════════════
+     S5 — CODE EXECUTION
+═══════════════════ -->
+<div class="sect" id="s5">
+  <div class="sect-head"><div class="sect-num">Categoria 05</div><h2>Esecuzione di Codice</h2><p>L'agente scrive ed esegue codice: Python, SQL, shell script. Il tool più potente perché rende l'agente programmabile: qualsiasi cosa esprimibile in codice diventa un'azione possibile.</p></div>
+  <div class="wrap">
+    <div class="cat">
+      <div class="cat-header"><div class="cat-accent" style="background:var(--c5)"></div><div class="cat-head-body">
+        <div class="cat-name">Esecuzione di Codice</div>
+        <div class="cat-sub">Il tool "universale" — se puoi codificarlo, l'agente può farlo</div>
+        <div class="cat-tags"><span class="cat-tag">Python (data analysis, scripting)</span><span class="cat-tag">SQL (query dirette)</span><span class="cat-tag">Shell/Bash</span><span class="cat-tag">Code interpreter (sandboxed)</span></div>
+      </div></div>
+      <div class="cat-body">
+        <div class="cs">
+          <div class="cs-label">Cosa è possibile oggi</div>
+          <p>L'agente può <strong>scrivere codice Python per analizzare dati</strong> (pandas, numpy, matplotlib), <strong>eseguire calcoli complessi</strong> che il ragionamento linguistico non può fare con precisione, <strong>trasformare e pulire dati</strong>, <strong>generare visualizzazioni</strong>, e usare qualsiasi libreria Python come strumento. Il code interpreter (sandbox sicuro per l'esecuzione) è disponibile in ChatGPT, Claude, e come componente in framework e piattaforme no-code. È il tool che più di ogni altro rende l'agente <strong>general-purpose</strong>: qualsiasi task esprimibile come script diventa un'azione.</p>
+        </div>
+        <div class="cs">
+          <div class="cs-label">Limiti reali</div>
+          <div class="cg">
+            <div class="cg-item"><div class="cg-title">Sicurezza del sandbox</div><div class="cg-text">Il codice generato dall'agente deve girare in un <strong>ambiente isolato</strong> (sandbox) per evitare che possa accedere a file di sistema, rete o dati sensibili. I sandbox precostruiti (ChatGPT, Claude) sono sicuri; quelli custom richiedono configurazione attenta.</div></div>
+            <div class="cg-item"><div class="cg-title">Bug nel codice generato</div><div class="cg-text">Il codice generato dall'LLM <strong>può avere bug</strong> — errori logici, edge case non gestiti, errori di tipo. L'esecuzione fallisce con un traceback. L'agente può leggere il traceback e correggere (loop scrivi → esegui → correggi), ma servono orchestrazione e iterazioni.</div></div>
+            <div class="cg-item"><div class="cg-title">Librerie disponibili</div><div class="cg-text">L'ambiente sandbox può avere un <strong>set limitato di librerie</strong> preinstallate. Se il task richiede una libreria non presente, l'installazione potrebbe non essere possibile (per sicurezza del sandbox) o richiedere configurazione specifica.</div></div>
+            <div class="cg-item"><div class="cg-title">Tempo di esecuzione</div><div class="cg-text">Script pesanti (analisi di grandi dataset, training di modelli) possono <strong>superare i limiti di timeout</strong> del sandbox. L'esecuzione di codice è pensata per task puntuali, non per computazioni di lunga durata.</div></div>
+          </div>
+        </div>
+        <div class="cs">
+          <div class="cs-label">Maturità e impatto pratico</div>
+          <div class="mat-row"><div class="mat-label">Analisi dati</div><div class="mat-track"><div class="mat-fill" style="width:85%;background:var(--c5)"></div></div><div class="mat-val">85%</div></div>
+          <div class="mat-row"><div class="mat-label">Scripting</div><div class="mat-track"><div class="mat-fill" style="width:75%;background:var(--c5)"></div></div><div class="mat-val">75%</div></div>
+          <div class="insight" style="border-color:var(--c5);margin-top:14px">
+            <div class="insight-label" style="color:var(--c5)">Perché è il tool più potente</div>
+            <p>L'esecuzione di codice trasforma i limiti del ragionamento linguistico. L'LLM non sa fare 17×23 con certezza, ma sa scrivere <code>print(17*23)</code> e leggere il risultato. Qualsiasi calcolo, trasformazione dati, o analisi che un programmatore umano saprebbe scrivere diventa accessibile all'agente — con la precisione della macchina, non dell'approssimazione linguistica.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+<!-- ═══════════════════
+     S6 — AZIONI SU APP
+═══════════════════ -->
+<div class="sect" id="s6">
+  <div class="sect-head"><div class="sect-num">Categoria 06</div><h2>Azioni su Applicazioni</h2><p>L'agente opera dentro applicazioni tramite le loro API: crea ticket, prenota appuntamenti, pubblica post, aggiorna record. Il territorio più ampio e vario.</p></div>
+  <div class="wrap">
+    <div class="cat">
+      <div class="cat-header"><div class="cat-accent" style="background:var(--c6)"></div><div class="cat-head-body">
+        <div class="cat-name">Azioni su Applicazioni</div>
+        <div class="cat-sub">L'agente fa cose dentro i tool che usi ogni giorno</div>
+        <div class="cat-tags"><span class="cat-tag">Jira / Linear / Asana (project management)</span><span class="cat-tag">Google Calendar / Outlook Calendar</span><span class="cat-tag">Social media (LinkedIn, X, Instagram)</span><span class="cat-tag">E-commerce (Shopify, Stripe)</span><span class="cat-tag">Qualsiasi app con API</span></div>
+      </div></div>
+      <div class="cat-body">
+        <div class="cs">
+          <div class="cs-label">Cosa è possibile oggi</div>
+          <p>Questa è la categoria più ampia: <strong>qualsiasi applicazione che espone un'API</strong> può diventare uno strumento dell'agente. Creare un ticket in Jira, prenotare una sala riunioni in Google Calendar, pubblicare un post su LinkedIn, processare un pagamento in Stripe, aggiornare lo stato di un ordine in Shopify — tutto è tecnicamente possibile. Il numero di azioni disponibili è limitato solo dal numero di API accessibili.</p>
+          <p>Le piattaforme no-code come n8n hanno <strong>400+ connettori precostruiti</strong> che coprono le applicazioni più diffuse. I framework come LangChain offrono wrapper per le API più comuni. Il protocollo MCP (che approfondiremo nella sezione dedicata) sta ulteriormente semplificando l'aggiunta di nuove integrazioni.</p>
+        </div>
+        <div class="cs">
+          <div class="cs-label">Limiti reali</div>
+          <div class="cg">
+            <div class="cg-item"><div class="cg-title">API ≠ UI</div><div class="cg-text">Le API espongono solo una <strong>parte</strong> delle funzionalità dell'applicazione — spesso non tutte. Un'azione che un utente fa in 2 click nell'interfaccia potrebbe richiedere 5 chiamate API sequenziali, o non essere possibile via API. Verifica sempre che l'azione specifica sia supportata dall'API.</div></div>
+            <div class="cg-item"><div class="cg-title">Autenticazione complessa</div><div class="cg-text">Ogni applicazione ha il suo sistema di autenticazione: OAuth2, API key, JWT, session token. Gestire <strong>credenziali per 10 applicazioni diverse</strong> — con refresh token, scadenze, permessi granulari — è un problema di ingegneria significativo, non un dettaglio.</div></div>
+            <div class="cg-item"><div class="cg-title">Rate limiting</div><div class="cg-text">Ogni API ha limiti al numero di chiamate per minuto/ora. Un agente che fa molte azioni in sequenza può <strong>raggiungere i limiti</strong> e essere temporaneamente bloccato. Serve rate limiting lato agente per evitarlo.</div></div>
+            <div class="cg-item"><div class="cg-title">Cambiamenti nelle API</div><div class="cg-text">Le API cambiano: nuove versioni, endpoint deprecati, formati di risposta modificati. Ogni connettore richiede <strong>manutenzione continua</strong>. Un'integrazione che funziona oggi può rompersi tra 3 mesi senza che nessuno se ne accorga — finché un utente segnala il problema.</div></div>
+          </div>
+        </div>
+        <div class="cs">
+          <div class="cs-label">Maturità</div>
+          <div class="mat-row"><div class="mat-label">App standard</div><div class="mat-track"><div class="mat-fill" style="width:80%;background:var(--c6)"></div></div><div class="mat-val">80%</div></div>
+          <div class="mat-row"><div class="mat-label">App custom</div><div class="mat-track"><div class="mat-fill" style="width:40%;background:var(--c6)"></div></div><div class="mat-val">40%</div></div>
+          <p style="font-size:12px;color:var(--ink4);margin-top:8px">Per le applicazioni SaaS popolari, i connettori esistono e sono affidabili. Per applicazioni interne o di nicchia, ogni integrazione è lavoro custom.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+<!-- ═══════════════════
+     S7 — MONDO FISICO
+═══════════════════ -->
+<div class="sect" id="s7">
+  <div class="sect-head"><div class="sect-num">Categoria 07</div><h2>Mondo Fisico e Interfacce</h2><p>L'agente interagisce con il mondo fisico o con interfacce grafiche. Computer use, IoT, robotica. La categoria più emergente.</p></div>
+  <div class="wrap">
+    <div class="cat">
+      <div class="cat-header"><div class="cat-accent" style="background:var(--c7)"></div><div class="cat-head-body">
+        <div class="cat-name">Mondo Fisico e Interfacce</div>
+        <div class="cat-sub">Il confine più avanzato — e più fragile — di ciò che un agente può fare</div>
+        <div class="cat-tags"><span class="cat-tag">Computer use (mouse, tastiera, schermo)</span><span class="cat-tag">IoT / sensori</span><span class="cat-tag">Robotica</span><span class="cat-tag">Domotica</span></div>
+      </div></div>
+      <div class="cat-body">
+        <div class="cs">
+          <div class="cs-label">Cosa è possibile oggi</div>
+          <p>Il <strong>computer use</strong> — la capacità dell'agente di controllare mouse, tastiera e leggere lo schermo — è la novità più significativa del 2025. Claude e altri modelli possono "vedere" screenshot e decidere dove cliccare, cosa digitare, come navigare un'interfaccia grafica. Questo è potente perché <strong>bypassa il problema dell'API</strong>: se un'applicazione non ha API, l'agente può comunque usarla come farebbe un umano.</p>
+          <p>L'<strong>IoT e la domotica</strong> sono tecnicamente possibili se i dispositivi espongono API (e molti lo fanno: luci smart, termostati, serrature). La <strong>robotica</strong> industriale è un campo in rapida evoluzione ma ancora di nicchia per gli agenti LLM.</p>
+        </div>
+        <div class="cs">
+          <div class="cs-label">Limiti reali</div>
+          <div class="cg">
+            <div class="cg-item"><div class="cg-title">Lentezza</div><div class="cg-text">Il computer use richiede uno <strong>screenshot a ogni step</strong>, che il modello deve interpretare prima di agire. Ogni azione richiede secondi, non millisecondi. Un flusso che un umano completa in 30 secondi può richiedere 5+ minuti per l'agente. Per task frequenti, un'integrazione API è sempre preferibile.</div></div>
+            <div class="cg-item"><div class="cg-title">Fragilità</div><div class="cg-text">L'interfaccia può cambiare (un popup inatteso, un layout diverso, una notifica che copre un bottone) e <strong>l'agente si perde</strong>. La robustezza è significativamente inferiore rispetto alle integrazioni API. Utile come fallback o per app senza API, non come scelta primaria.</div></div>
+            <div class="cg-item"><div class="cg-title">Sicurezza</div><div class="cg-text">Dare a un agente il <strong>controllo del computer</strong> è un rischio di sicurezza serio. L'agente può potenzialmente accedere a qualsiasi applicazione aperta, leggere qualsiasi dato sullo schermo. Servono ambienti sandboxed e supervisione.</div></div>
+            <div class="cg-item"><div class="cg-title">IoT: frammentazione</div><div class="cg-text">I dispositivi IoT usano protocolli diversi (MQTT, Zigbee, Z-Wave, API proprietarie). Non esiste uno <strong>standard unificato</strong> — ogni integrazione è specifica per dispositivo/produttore. MCP potrebbe aiutare in futuro ma siamo agli inizi.</div></div>
+          </div>
+        </div>
+        <div class="cs">
+          <div class="cs-label">Maturità</div>
+          <div class="mat-row"><div class="mat-label">Computer use</div><div class="mat-track"><div class="mat-fill" style="width:30%;background:var(--c7)"></div></div><div class="mat-val">30%</div></div>
+          <div class="mat-row"><div class="mat-label">IoT</div><div class="mat-track"><div class="mat-fill" style="width:25%;background:var(--c7)"></div></div><div class="mat-val">25%</div></div>
+          <div class="mat-row"><div class="mat-label">Robotica</div><div class="mat-track"><div class="mat-fill" style="width:15%;background:var(--c7)"></div></div><div class="mat-val">15%</div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+<!-- ═══════════════════
+     S8 — LETTURA VS SCRITTURA
+═══════════════════ -->
+<div class="sect" id="s8">
+  <div class="sect-head">
+    <div class="sect-num">Tema trasversale</div>
+    <h2>Lettura vs Scrittura: la distinzione che cambia tutto</h2>
+    <p>La differenza tra un tool che legge e uno che scrive non è tecnica — è di rischio. Questa distinzione taglia trasversalmente tutte le 7 categorie e ha un impatto diretto su come progetti l'agente.</p>
+  </div>
+  <div class="wrap">
+
+    <div class="dark-box">
+      <div class="dark-title">Due mondi diversi</div>
+      <div class="dark-desc">Lo stesso tool, due profili di rischio opposti</div>
+      <div class="dark-grid">
+        <div class="dark-card" style="border-top:3px solid var(--read)">
+          <div class="dk-label" style="color:var(--read)">Lettura</div>
+          <div class="dk-title">Sicura, reversibile, senza conseguenze</div>
+          <div class="dk-text">Leggere un record dal CRM, cercare nel web, consultare un documento, leggere un'email. <strong>Non cambia nulla nel mondo esterno.</strong> Se il risultato è sbagliato, l'unica conseguenza è una risposta errata — correggibile. L'agente può operare in autonomia completa sulle azioni di lettura.</div>
+        </div>
+        <div class="dark-card" style="border-top:3px solid var(--write)">
+          <div class="dk-label" style="color:var(--write)">Scrittura</div>
+          <div class="dk-title">Rischiosa, spesso irreversibile, con conseguenze reali</div>
+          <div class="dk-text">Mandare un'email, aggiornare un record, pubblicare un post, creare un ticket, processare un pagamento. <strong>Cambia qualcosa nel mondo esterno.</strong> Un errore ha conseguenze reali e potenzialmente non annullabili. Serve supervisione: human-in-the-loop, preview, o almeno logging dettagliato.</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="prose" style="margin-top:24px;">
+      <p>La regola pratica è semplice: <strong>l'agente è autonomo in lettura, supervisionato in scrittura</strong>. Ma nella pratica ci sono sfumature importanti.</p>
+      <p>Esistono <strong>scritture a basso rischio</strong> — creare una bozza (non inviarla), aggiornare un campo interno non visibile ai clienti, aggiungere un commento a un ticket. Per queste azioni, l'autonomia è ragionevole con logging dettagliato. Ed esistono <strong>letture ad alto rischio</strong> — accedere a dati sensibili (stipendi, dati medici, informazioni classificate) dove anche la sola lettura richiede autorizzazione e audit trail.</p>
+      <p>Il consiglio operativo: quando progetti un agente, <strong>classifica ogni tool come lettura o scrittura</strong> e per ogni tool di scrittura decidi esplicitamente il livello di supervisione: autonomo con logging, preview prima dell'esecuzione, o approvazione umana obbligatoria. Questa classificazione dovrebbe essere fatta prima di scrivere una riga di codice o configurare un nodo.</p>
+    </div>
+
+    <div class="key-point">
+      <div class="kp-label">L'implicazione strategica</div>
+      <div class="kp-text">Inizia dando all'agente solo tool di lettura. Aggiungi le azioni di scrittura una alla volta, con supervisione, e allargale solo quando la qualità delle decisioni dell'agente è dimostrata dal testing.</div>
+      <div class="kp-sub">Molti agenti in produzione operano con successo usando solo tool di lettura + generazione di testo. L'agente cerca, analizza, e presenta raccomandazioni — l'umano decide e agisce. Questo pattern è meno "agente autonomo" ma molto più sicuro, e in molti contesti il valore è nell'analisi, non nell'azione.</div>
+    </div>
+
+  </div>
+</div>
+
+
+<!-- ═══════════════════
+     S9 — MCP
+═══════════════════ -->
+<div class="sect" id="s9">
+  <div class="sect-head">
+    <div class="sect-num">Tema trasversale</div>
+    <h2>MCP: il protocollo che sta cambiando le regole</h2>
+    <p>Il Model Context Protocol (MCP) di Anthropic sta diventando lo standard per connettere agenti a strumenti. Cos'è, come funziona, e perché cambia il panorama pratico delle integrazioni.</p>
+  </div>
+  <div class="wrap">
+
+    <div class="prose">
+      <p>Fino a poco tempo fa, ogni integrazione tra agente e strumento era <strong>un lavoro a sé</strong>: scrivere il connettore, gestire l'autenticazione, definire il formato dei parametri, gestire gli errori. Ogni combinazione agente×tool richiedeva codice specifico. Con 5 agenti e 10 tool, hai potenzialmente 50 connettori da scrivere e mantenere.</p>
+      <p><strong>MCP cambia questa logica.</strong> Introduce un protocollo standard — un'interfaccia comune — tra agente e strumento. Lo strumento espone le sue capacità in un formato standard (un "MCP server"); l'agente le consuma tramite un'interfaccia standard (un "MCP client"). Se entrambi parlano MCP, l'integrazione è automatica.</p>
+      <p>L'analogia più calzante è <strong>USB</strong>: prima di USB, ogni periferica aveva il suo connettore proprietario. USB ha standardizzato l'interfaccia — qualsiasi periferica USB funziona con qualsiasi computer USB. MCP fa la stessa cosa per il collegamento tra agenti e strumenti.</p>
+    </div>
+
+    <div class="cat" style="margin-top:24px;">
+      <div class="cat-header"><div class="cat-accent" style="background:var(--accent)"></div><div class="cat-head-body">
+        <div class="cat-name">MCP in pratica</div>
+        <div class="cat-sub">Cosa cambia concretamente per chi costruisce agenti</div>
+      </div></div>
+      <div class="cat-body">
+        <div class="cs">
+          <div class="cs-label">Come funziona</div>
+          <p>Un <strong>MCP server</strong> è un programma che espone le capacità di un servizio (es. Google Calendar, Slack, un database) in un formato standard. Descrive quali azioni sono disponibili, quali parametri accettano, cosa restituiscono. Un <strong>MCP client</strong> — integrato nell'agente o nel framework — scopre automaticamente queste capacità e le rende disponibili al modello LLM come tool.</p>
+          <p>Il risultato pratico: se qualcuno ha già scritto un MCP server per Google Calendar, <strong>tu non devi scrivere nessun connettore</strong>. Lo aggiungi alla configurazione del tuo agente, e il calendario diventa un tool disponibile. Se domani vuoi aggiungere Slack, aggiungi il server MCP di Slack — senza toccare il codice dell'agente.</p>
+        </div>
+        <div class="cs">
+          <div class="cs-label">Stato dell'ecosistema (inizio 2026)</div>
+          <div class="cg">
+            <div class="cg-item"><div class="cg-title">Server MCP disponibili</div><div class="cg-text">Centinaia di server MCP già disponibili come open source per i servizi più comuni: <strong>Google Drive, Slack, GitHub, database SQL, file system, browser, e molti altri</strong>. Anthropic mantiene un registry ufficiale. Il numero cresce rapidamente.</div></div>
+            <div class="cg-item"><div class="cg-title">Supporto nei framework</div><div class="cg-text">LangChain e LangGraph supportano MCP nativamente. Claude lo supporta nell'app e nell'API. <strong>L'adozione è rapida</strong> perché il protocollo è aperto e relativamente semplice da implementare. OpenAI e Google stanno valutando il supporto.</div></div>
+            <div class="cg-item"><div class="cg-title">Scrivere un MCP server custom</div><div class="cg-text">Se hai un sistema interno senza MCP server, puoi <strong>scriverne uno</strong>. È significativamente più semplice che scrivere un connettore ad hoc: il formato è standardizzato, la documentazione è buona, e il server è riutilizzabile da qualsiasi agente MCP-compatibile.</div></div>
+            <div class="cg-item"><div class="cg-title">Limiti attuali</div><div class="cg-text">Il protocollo è giovane: <strong>la gestione dell'autenticazione</strong> è ancora rudimentale in molti server, le <strong>performance</strong> possono essere inferiori a integrazioni native ottimizzate, e la <strong>standardizzazione non è completa</strong> — server diversi interpretano il protocollo con sfumature diverse.</div></div>
+          </div>
+        </div>
+        <div class="cs">
+          <div class="cs-label">Impatto pratico</div>
+          <div class="insight" style="border-color:var(--accent)">
+            <div class="insight-label" style="color:var(--accent)">Perché MCP è importante per te</div>
+            <p>MCP riduce drasticamente il costo della leva "Strumenti": aggiungere un tool passa da "scrivo un connettore custom" a "aggiungo un server MCP dalla community". Per chi costruisce con framework o codice custom, è un acceleratore enorme. Per chi usa no-code, le piattaforme stanno integrando il supporto MCP come nuova fonte di connettori. È il cambiamento più pratico e concreto nel mondo degli agenti AI dell'ultimo anno.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+
+<!-- ═══════════════════
+     S10 — LE 5 ALTERNATIVE
+═══════════════════ -->
+<div class="sect" id="s10">
+  <div class="sect-head">
+    <div class="sect-num">Mappatura</div>
+    <h2>Le 7 categorie nelle 5 alternative di costruzione</h2>
+    <p>Non tutte le alternative di costruzione ti danno accesso uguale a tutte le categorie di strumenti. Questa matrice mostra dove è facile, dove è possibile ma richiede lavoro, e dove è impossibile.</p>
+  </div>
+  <div class="wrap">
+
+    <div class="matrix-scroll">
+      <table class="matrix">
+        <thead>
+          <tr>
+            <th>Categoria tool</th>
+            <th>Custom</th>
+            <th>Framework</th>
+            <th>No-code</th>
+            <th>Marketplace</th>
+            <th>Open Source</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td class="row-head" style="color:var(--c1)">Dati strutturati</td>
+            <td class="mx-easy"><strong>Facile</strong><br>Connettore diretto</td>
+            <td class="mx-easy"><strong>Facile</strong><br>Wrapper SQL pronti</td>
+            <td class="mx-mod"><strong>Possibile</strong><br>Nodi DB disponibili</td>
+            <td class="mx-no"><strong>No</strong><br>Non possibile</td>
+            <td class="mx-easy"><strong>Facile</strong><br>Se nel repo</td>
+          </tr>
+          <tr>
+            <td class="row-head" style="color:var(--c2)">Dati non strutturati</td>
+            <td class="mx-easy"><strong>Facile</strong><br>RAG custom completo</td>
+            <td class="mx-easy"><strong>Facile</strong><br>Pipeline RAG pronte</td>
+            <td class="mx-mod"><strong>Possibile</strong><br>Nodi RAG preconfigurati</td>
+            <td class="mx-mod"><strong>Upload file</strong><br>Pipeline nascosta</td>
+            <td class="mx-easy"><strong>Facile</strong><br>Pipeline nel repo</td>
+          </tr>
+          <tr>
+            <td class="row-head" style="color:var(--c3)">Comunicazione</td>
+            <td class="mx-easy"><strong>Facile</strong><br>API dirette</td>
+            <td class="mx-easy"><strong>Facile</strong><br>Wrapper pronti</td>
+            <td class="mx-easy"><strong>Facile</strong><br>400+ connettori</td>
+            <td class="mx-no"><strong>No</strong><br>Solo chat interna</td>
+            <td class="mx-mod"><strong>Possibile</strong><br>Dipende dal repo</td>
+          </tr>
+          <tr>
+            <td class="row-head" style="color:var(--c4)">Web e ricerca</td>
+            <td class="mx-easy"><strong>Facile</strong><br>API Tavily/Serper</td>
+            <td class="mx-easy"><strong>Facile</strong><br>Tool nativo</td>
+            <td class="mx-easy"><strong>Facile</strong><br>Nodo web search</td>
+            <td class="mx-mod"><strong>Limitato</strong><br>Web browsing nativo se disponibile</td>
+            <td class="mx-easy"><strong>Facile</strong><br>Quasi sempre incluso</td>
+          </tr>
+          <tr>
+            <td class="row-head" style="color:var(--c5)">Esecuzione codice</td>
+            <td class="mx-easy"><strong>Facile</strong><br>Sandbox custom</td>
+            <td class="mx-mod"><strong>Possibile</strong><br>Integrabile ma non nativo</td>
+            <td class="mx-hard"><strong>Difficile</strong><br>Nodo code limitato</td>
+            <td class="mx-mod"><strong>Se disponibile</strong><br>Code interpreter del vendor</td>
+            <td class="mx-mod"><strong>Possibile</strong><br>Se nel repo</td>
+          </tr>
+          <tr>
+            <td class="row-head" style="color:var(--c6)">Azioni su app</td>
+            <td class="mx-mod"><strong>Ogni connettore custom</strong><br>Flessibile ma costoso</td>
+            <td class="mx-mod"><strong>Wrapper + custom</strong><br>MCP in espansione</td>
+            <td class="mx-easy"><strong>Facile</strong><br>Punto di forza del no-code</td>
+            <td class="mx-no"><strong>No</strong><br>Solo tool del vendor</td>
+            <td class="mx-mod"><strong>Possibile</strong><br>Quelli del repo</td>
+          </tr>
+          <tr>
+            <td class="row-head" style="color:var(--c7)">Mondo fisico</td>
+            <td class="mx-hard"><strong>Possibile</strong><br>Computer use o API IoT custom</td>
+            <td class="mx-hard"><strong>Possibile</strong><br>Integrabile con sforzo</td>
+            <td class="mx-no"><strong>No</strong><br>Non supportato</td>
+            <td class="mx-no"><strong>No</strong></td>
+            <td class="mx-hard"><strong>Raro</strong><br>Pochi repo coprono questo</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="prose" style="margin-top:24px;">
+      <p>Dalla matrice emergono tre pattern importanti.</p>
+      <p><strong>Il no-code eccelle sulle azioni applicative</strong> (Categoria 06) grazie alla libreria di connettori precostruiti — è il suo punto di forza più netto. Ma è debole sull'esecuzione di codice e impossibilitato sul mondo fisico. Se il tuo agente ha bisogno di calcoli complessi o analisi dati sofisticate, il no-code non è l'alternativa giusta.</p>
+      <p><strong>Il marketplace è il più limitato</strong>: accesso ai dati non strutturati (upload file) e web search sono le uniche categorie realmente accessibili. Tutto il resto è fuori perimetro. Questo conferma quanto emerso nei report precedenti: il marketplace funziona per agenti knowledge + generation, non per agenti che devono agire.</p>
+      <p><strong>MCP sta spostando la colonna "Framework" verso il verde</strong> sulla Categoria 06. Ogni nuovo MCP server che viene pubblicato rende più facile integrare un'applicazione — senza scrivere un connettore custom. La tendenza è chiara: tra 12 mesi, molte celle "possibile ma richiede lavoro" diventeranno "facile".</p>
+    </div>
+
+    <div class="key-point" style="margin-top:28px;">
+      <div class="kp-label">La sintesi operativa</div>
+      <div class="kp-text">Prima di scegliere l'alternativa di costruzione, elenca i tool di cui hai bisogno e verifica che siano accessibili nell'alternativa che stai considerando.</div>
+      <div class="kp-sub">È un errore comune scegliere l'alternativa per comodità di costruzione e poi scoprire che il tool critico non è integrabile. La matrice sopra ti dà una guida rapida, ma la verifica concreta — "il connettore per il mio specifico sistema esiste?" — va sempre fatta prima di impegnarsi.</div>
+    </div>
+
+  </div>
+</div>
+
+
+<div class="footer">
+  <span>Serie Agenti AI — Report 13 · Il Panorama degli Strumenti</span>
+  <span>Marzo 2026</span>
+</div>
+
+<script>
+function show(n) {
+  document.querySelectorAll('.sect').forEach(s => s.classList.remove('active'));
+  document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('s'+n).classList.add('active');
+  document.querySelectorAll('.nav-btn')[n].classList.add('active');
+  window.scrollTo({top:0, behavior:'smooth'});
+}
+</script>
+
+</body>
+</html>

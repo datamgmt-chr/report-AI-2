@@ -1,0 +1,1937 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Stack Tecnologici per Agenti AI — Report Approfondito</title>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,wght@0,300;0,600;0,900;1,300;1,600&family=Fira+Code:wght@300;400;500&family=Lato:wght@300;400;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #f7f4ee;
+  --bg2: #eee9df;
+  --ink: #1a1814;
+  --ink2: #3d3a34;
+  --ink3: #7a756c;
+  --ink4: #b0aa9f;
+  --red: #c0392b;
+  --red-light: #f5e6e4;
+  --blue: #1a3a5c;
+  --blue-light: #e4ecf5;
+  --green: #1f4a2e;
+  --green-light: #e4f0e8;
+  --amber: #7a4a00;
+  --amber-light: #fdf0d8;
+  --border: #d8d2c6;
+  --border2: #c4bdb0;
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+html { scroll-behavior: smooth; }
+
+body {
+  background: var(--bg);
+  color: var(--ink);
+  font-family: 'Lato', sans-serif;
+  font-weight: 300;
+  line-height: 1.8;
+  font-size: 15px;
+}
+
+/* ── COVER ── */
+.cover {
+  min-height: 100vh;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  position: relative;
+  overflow: hidden;
+}
+
+.cover-left {
+  background: var(--ink);
+  padding: 80px 64px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  position: relative;
+}
+
+.cover-left::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: 
+    repeating-linear-gradient(
+      0deg,
+      transparent,
+      transparent 39px,
+      rgba(255,255,255,0.03) 39px,
+      rgba(255,255,255,0.03) 40px
+    );
+  pointer-events: none;
+}
+
+.cover-right {
+  background: var(--bg2);
+  padding: 80px 64px;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  border-left: 3px solid var(--ink);
+}
+
+.cover-label {
+  font-family: 'Fira Code', monospace;
+  font-size: 11px;
+  letter-spacing: 3px;
+  text-transform: uppercase;
+  color: rgba(255,255,255,0.35);
+  margin-bottom: 48px;
+}
+
+.cover h1 {
+  font-family: 'Fraunces', serif;
+  font-size: clamp(36px, 4.5vw, 58px);
+  font-weight: 900;
+  line-height: 1.05;
+  color: #fff;
+  letter-spacing: -1px;
+}
+
+.cover h1 em {
+  font-style: italic;
+  font-weight: 300;
+  display: block;
+  color: rgba(255,255,255,0.55);
+  font-size: 0.7em;
+  letter-spacing: 0;
+  margin-top: 8px;
+}
+
+.cover-meta {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 24px;
+  margin-top: 64px;
+}
+
+.cover-meta-item {
+  border-top: 1px solid rgba(255,255,255,0.12);
+  padding-top: 16px;
+}
+
+.cover-meta-item .label {
+  font-family: 'Fira Code', monospace;
+  font-size: 10px;
+  color: rgba(255,255,255,0.3);
+  letter-spacing: 2px;
+  text-transform: uppercase;
+}
+
+.cover-meta-item .value {
+  font-size: 14px;
+  color: rgba(255,255,255,0.7);
+  margin-top: 4px;
+  font-weight: 400;
+}
+
+/* Right side of cover */
+.cover-right-label {
+  font-family: 'Fira Code', monospace;
+  font-size: 10px;
+  color: var(--ink3);
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  margin-bottom: 32px;
+}
+
+.cover-toc h3 {
+  font-family: 'Fraunces', serif;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--ink2);
+  margin-bottom: 16px;
+}
+
+.cover-toc a {
+  display: flex;
+  align-items: baseline;
+  gap: 12px;
+  text-decoration: none;
+  padding: 8px 0;
+  border-bottom: 1px solid var(--border);
+  color: var(--ink2);
+  font-size: 13px;
+  transition: color 0.2s;
+}
+
+.cover-toc a:hover { color: var(--red); }
+
+.cover-toc a .num {
+  font-family: 'Fira Code', monospace;
+  font-size: 10px;
+  color: var(--ink4);
+  flex-shrink: 0;
+  width: 20px;
+}
+
+.cover-toc a .dots {
+  flex: 1;
+  height: 1px;
+  background: repeating-linear-gradient(to right, var(--border) 0, var(--border) 3px, transparent 3px, transparent 8px);
+  margin: 0 4px;
+  align-self: center;
+}
+
+/* ── PAGE STRUCTURE ── */
+.page {
+  max-width: 1080px;
+  margin: 0 auto;
+  padding: 80px 60px;
+  border-bottom: 1px solid var(--border);
+}
+
+.page:last-child { border-bottom: none; }
+
+/* ── SECTION HEADERS ── */
+.section-eyebrow {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 40px;
+}
+
+.section-num {
+  font-family: 'Fira Code', monospace;
+  font-size: 11px;
+  color: var(--ink4);
+  letter-spacing: 1px;
+  flex-shrink: 0;
+}
+
+.section-line {
+  flex: 1;
+  height: 1px;
+  background: var(--border);
+}
+
+.section-tag {
+  font-family: 'Fira Code', monospace;
+  font-size: 10px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: var(--ink4);
+  flex-shrink: 0;
+}
+
+h2.section-title {
+  font-family: 'Fraunces', serif;
+  font-size: clamp(28px, 3.5vw, 44px);
+  font-weight: 900;
+  line-height: 1.1;
+  letter-spacing: -0.5px;
+  margin-bottom: 24px;
+}
+
+h2.section-title em {
+  font-style: italic;
+  font-weight: 300;
+}
+
+.section-intro {
+  font-size: 16px;
+  color: var(--ink2);
+  max-width: 680px;
+  margin-bottom: 48px;
+  line-height: 1.8;
+}
+
+/* ── PROSE ── */
+p { color: var(--ink2); margin-bottom: 20px; max-width: 700px; }
+p strong { color: var(--ink); font-weight: 700; }
+
+h3.sub {
+  font-family: 'Fraunces', serif;
+  font-size: 22px;
+  font-weight: 600;
+  letter-spacing: -0.3px;
+  color: var(--ink);
+  margin: 40px 0 16px;
+}
+
+h4.mini {
+  font-family: 'Lato', sans-serif;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: var(--ink3);
+  margin: 28px 0 12px;
+}
+
+/* ── ANALOGY BOX ── */
+.analogy {
+  background: var(--ink);
+  color: rgba(255,255,255,0.85);
+  padding: 32px 40px;
+  margin: 32px 0;
+  position: relative;
+}
+
+.analogy::before {
+  content: '"';
+  font-family: 'Fraunces', serif;
+  font-size: 120px;
+  color: rgba(255,255,255,0.06);
+  position: absolute;
+  top: -20px;
+  left: 24px;
+  line-height: 1;
+}
+
+.analogy-label {
+  font-family: 'Fira Code', monospace;
+  font-size: 10px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: rgba(255,255,255,0.35);
+  margin-bottom: 12px;
+}
+
+.analogy p {
+  color: rgba(255,255,255,0.85);
+  font-style: italic;
+  font-size: 16px;
+  max-width: none;
+  margin: 0;
+}
+
+/* ── ARCHITECTURE DIAGRAM ── */
+.arch-diagram {
+  border: 1px solid var(--border2);
+  margin: 32px 0;
+  overflow: hidden;
+}
+
+.arch-diagram-header {
+  background: var(--ink);
+  color: rgba(255,255,255,0.7);
+  font-family: 'Fira Code', monospace;
+  font-size: 11px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  padding: 12px 20px;
+}
+
+.arch-layers {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  background: var(--border);
+}
+
+.arch-layer {
+  background: var(--bg);
+  display: grid;
+  grid-template-columns: 180px 1fr;
+  min-height: 70px;
+}
+
+.arch-layer-name {
+  background: var(--bg2);
+  padding: 16px 20px;
+  border-right: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+}
+
+.arch-layer-name .layer-label {
+  font-family: 'Fira Code', monospace;
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--ink2);
+  letter-spacing: 0.5px;
+}
+
+.arch-layer-name .layer-icon {
+  font-size: 20px;
+  margin-right: 10px;
+}
+
+.arch-layer-content {
+  padding: 16px 24px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.arch-chip {
+  font-family: 'Fira Code', monospace;
+  font-size: 11px;
+  padding: 5px 12px;
+  border: 1px solid var(--border2);
+  background: var(--bg2);
+  color: var(--ink2);
+  white-space: nowrap;
+}
+
+.arch-chip.highlight {
+  border-color: var(--ink);
+  background: var(--ink);
+  color: rgba(255,255,255,0.85);
+}
+
+.arch-chip.red { border-color: var(--red); color: var(--red); background: var(--red-light); }
+.arch-chip.blue { border-color: var(--blue); color: var(--blue); background: var(--blue-light); }
+.arch-chip.green { border-color: var(--green); color: var(--green); background: var(--green-light); }
+.arch-chip.amber { border-color: var(--amber); color: var(--amber); background: var(--amber-light); }
+
+/* ── STACK FAMILY CARD ── */
+.family-card {
+  border: 2px solid var(--border2);
+  margin-bottom: 60px;
+  overflow: hidden;
+}
+
+.family-card-header {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: center;
+  gap: 24px;
+  padding: 28px 32px;
+  border-bottom: 2px solid var(--border2);
+}
+
+.family-card-header.custom { background: #1a1814; }
+.family-card-header.framework { background: var(--blue); }
+.family-card-header.multiagent { background: var(--green); }
+.family-card-header.nocode { background: var(--amber); }
+.family-card-header.proprietary { background: #3a2a4a; }
+
+.family-num {
+  font-family: 'Fraunces', serif;
+  font-size: 56px;
+  font-weight: 900;
+  color: rgba(255,255,255,0.15);
+  line-height: 1;
+}
+
+.family-title-block h3 {
+  font-family: 'Fraunces', serif;
+  font-size: 26px;
+  font-weight: 900;
+  color: #fff;
+  letter-spacing: -0.3px;
+}
+
+.family-title-block p {
+  font-size: 13px;
+  color: rgba(255,255,255,0.55);
+  margin: 4px 0 0;
+  max-width: none;
+}
+
+.family-badge {
+  font-family: 'Fira Code', monospace;
+  font-size: 11px;
+  padding: 6px 14px;
+  border: 1px solid rgba(255,255,255,0.2);
+  color: rgba(255,255,255,0.6);
+  white-space: nowrap;
+}
+
+.family-body {
+  padding: 32px;
+}
+
+.family-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 24px;
+  margin: 24px 0;
+}
+
+.family-panel {
+  background: var(--bg2);
+  border: 1px solid var(--border);
+  padding: 24px;
+}
+
+.family-panel h4 {
+  font-family: 'Lato', sans-serif;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: var(--ink3);
+  margin-bottom: 16px;
+}
+
+.family-panel ul {
+  list-style: none;
+}
+
+.family-panel ul li {
+  font-size: 13px;
+  color: var(--ink2);
+  padding: 7px 0;
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  gap: 10px;
+  line-height: 1.5;
+}
+
+.family-panel ul li:last-child { border-bottom: none; }
+
+.family-panel ul li::before {
+  content: '·';
+  color: var(--ink4);
+  flex-shrink: 0;
+  font-size: 16px;
+  line-height: 1.4;
+}
+
+.pro li::before { content: '+'; color: var(--green) !important; font-weight: 700; }
+.con li::before { content: '−'; color: var(--red) !important; font-weight: 700; }
+
+/* ── SKILL MATRIX ── */
+.skill-matrix {
+  border: 1px solid var(--border2);
+  margin: 32px 0;
+  overflow-x: auto;
+}
+
+.skill-matrix table {
+  width: 100%;
+  border-collapse: collapse;
+  min-width: 600px;
+}
+
+.skill-matrix th {
+  background: var(--ink);
+  color: rgba(255,255,255,0.7);
+  font-family: 'Fira Code', monospace;
+  font-size: 10px;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  padding: 14px 16px;
+  text-align: left;
+  font-weight: 400;
+}
+
+.skill-matrix td {
+  padding: 14px 16px;
+  font-size: 13px;
+  color: var(--ink2);
+  border-bottom: 1px solid var(--border);
+  vertical-align: middle;
+}
+
+.skill-matrix tr:last-child td { border-bottom: none; }
+.skill-matrix tr:nth-child(even) td { background: var(--bg2); }
+
+.bar-wrap {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.bar {
+  height: 6px;
+  background: var(--border2);
+  flex: 1;
+  max-width: 100px;
+  position: relative;
+}
+
+.bar-fill {
+  height: 100%;
+  background: var(--ink);
+  position: absolute;
+  left: 0; top: 0;
+}
+
+.bar-fill.low { width: 20%; background: var(--red); }
+.bar-fill.med-low { width: 40%; background: var(--amber); }
+.bar-fill.med { width: 60%; background: var(--ink3); }
+.bar-fill.high { width: 80%; background: var(--blue); }
+.bar-fill.max { width: 100%; background: var(--green); }
+
+.bar-label { font-family: 'Fira Code', monospace; font-size: 10px; color: var(--ink4); width: 50px; }
+
+/* ── CODE SNIPPET ── */
+.code-block {
+  background: var(--ink);
+  padding: 28px 32px;
+  margin: 24px 0;
+  overflow-x: auto;
+  position: relative;
+}
+
+.code-block-label {
+  position: absolute;
+  top: 0; right: 0;
+  background: rgba(255,255,255,0.07);
+  font-family: 'Fira Code', monospace;
+  font-size: 10px;
+  letter-spacing: 1px;
+  color: rgba(255,255,255,0.3);
+  padding: 6px 14px;
+}
+
+.code-block pre {
+  font-family: 'Fira Code', monospace;
+  font-size: 12px;
+  line-height: 1.9;
+  color: rgba(255,255,255,0.75);
+  white-space: pre;
+}
+
+.code-block .kw { color: #f9a03f; }
+.code-block .str { color: #88d44f; }
+.code-block .cm { color: rgba(255,255,255,0.3); font-style: italic; }
+.code-block .fn { color: #7cb9f0; }
+.code-block .var { color: #e06c75; }
+
+/* ── GLOSSARY ── */
+.glossary-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1px;
+  background: var(--border);
+  border: 1px solid var(--border2);
+  margin: 32px 0;
+}
+
+.glossary-item {
+  background: var(--bg);
+  padding: 24px;
+}
+
+.glossary-item dt {
+  font-family: 'Fira Code', monospace;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--ink);
+  margin-bottom: 8px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid var(--border);
+}
+
+.glossary-item dd {
+  font-size: 13px;
+  color: var(--ink2);
+  line-height: 1.6;
+}
+
+/* ── DECISION TREE ── */
+.decision-tree {
+  border: 1px solid var(--border2);
+  padding: 32px;
+  margin: 32px 0;
+  background: var(--bg2);
+}
+
+.decision-tree h4 {
+  font-family: 'Lato', sans-serif;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: var(--ink3);
+  margin-bottom: 24px;
+}
+
+.dt-node {
+  display: flex;
+  gap: 16px;
+  margin-bottom: 16px;
+  align-items: flex-start;
+}
+
+.dt-q {
+  background: var(--ink);
+  color: #fff;
+  font-family: 'Fira Code', monospace;
+  font-size: 11px;
+  padding: 4px 10px;
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+.dt-content { flex: 1; }
+.dt-content p { font-size: 14px; color: var(--ink2); margin: 0; max-width: none; }
+.dt-content .dt-answer {
+  font-size: 12px;
+  color: var(--ink3);
+  margin-top: 4px;
+  font-family: 'Fira Code', monospace;
+}
+.dt-content .dt-answer span {
+  display: inline-block;
+  margin-right: 16px;
+  padding: 2px 8px;
+  border: 1px solid var(--border);
+  background: var(--bg);
+}
+
+/* ── CALLOUT ── */
+.callout {
+  border-left: 4px solid var(--ink);
+  padding: 20px 24px;
+  margin: 28px 0;
+  background: var(--bg2);
+}
+
+.callout.blue { border-color: var(--blue); }
+.callout.red { border-color: var(--red); }
+.callout.green { border-color: var(--green); }
+.callout.amber { border-color: var(--amber); }
+
+.callout-label {
+  font-family: 'Fira Code', monospace;
+  font-size: 10px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: var(--ink3);
+  margin-bottom: 8px;
+}
+
+.callout p { margin: 0; max-width: none; font-size: 14px; }
+
+/* ── COMPONENT ANATOMY ── */
+.anatomy {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 1px;
+  background: var(--border);
+  border: 1px solid var(--border2);
+  margin: 32px 0;
+}
+
+.anatomy-piece {
+  background: var(--bg);
+  padding: 20px 16px;
+  text-align: center;
+}
+
+.anatomy-piece .icon {
+  font-size: 28px;
+  display: block;
+  margin-bottom: 10px;
+}
+
+.anatomy-piece h4 {
+  font-family: 'Fraunces', serif;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--ink);
+  margin-bottom: 8px;
+}
+
+.anatomy-piece p {
+  font-size: 11px;
+  color: var(--ink3);
+  line-height: 1.5;
+  max-width: none;
+  margin: 0;
+}
+
+/* ── FOOTER ── */
+footer {
+  background: var(--ink);
+  padding: 48px 60px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+footer p {
+  font-family: 'Fira Code', monospace;
+  font-size: 11px;
+  color: rgba(255,255,255,0.25);
+  margin: 0;
+  max-width: none;
+}
+
+/* ── ANIMATIONS ── */
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(16px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.cover-left > * {
+  animation: fadeUp 0.7s ease forwards;
+}
+.cover-label { animation-delay: 0.1s; opacity: 0; }
+.cover h1 { animation-delay: 0.25s; opacity: 0; }
+.cover-meta { animation-delay: 0.45s; opacity: 0; }
+
+/* ── RESPONSIVE ── */
+@media (max-width: 860px) {
+  .cover { grid-template-columns: 1fr; min-height: auto; }
+  .cover-right { display: none; }
+  .cover-left { padding: 48px 32px; }
+  .page { padding: 48px 24px; }
+  .family-grid { grid-template-columns: 1fr; }
+  .anatomy { grid-template-columns: 1fr 1fr; }
+  .glossary-grid { grid-template-columns: 1fr; }
+  footer { padding: 32px 24px; flex-direction: column; gap: 8px; }
+}
+</style>
+</head>
+<body>
+
+<!-- ═══════════════════════════════════════════════════
+     COVER
+════════════════════════════════════════════════════ -->
+<div class="cover">
+  <div class="cover-left">
+    <div>
+      <div class="cover-label">Report approfondito · Stack tecnologici · Agenti AI</div>
+      <h1>Come si costruisce<br>un agente AI<em>Tecnologie, architetture e strumenti — dal basso</em></h1>
+    </div>
+    <div class="cover-meta">
+      <div class="cover-meta-item">
+        <div class="label">Famiglie di stack</div>
+        <div class="value">5 categorie analizzate</div>
+      </div>
+      <div class="cover-meta-item">
+        <div class="label">Livello</div>
+        <div class="value">Introduttivo → Intermedio</div>
+      </div>
+      <div class="cover-meta-item">
+        <div class="label">Obiettivo</div>
+        <div class="value">Capire la tecnologia per costruire agenti</div>
+      </div>
+      <div class="cover-meta-item">
+        <div class="label">Aggiornato</div>
+        <div class="value">Febbraio 2026</div>
+      </div>
+    </div>
+  </div>
+  <div class="cover-right">
+    <div class="cover-right-label">Indice dei contenuti</div>
+    <div class="cover-toc">
+      <h3>In questo report</h3>
+      <a href="#fondamenta">
+        <span class="num">00</span>
+        I mattoni fondamentali di ogni agente
+        <span class="dots"></span>
+      </a>
+      <a href="#custom">
+        <span class="num">01</span>
+        Stack custom / vanilla
+        <span class="dots"></span>
+      </a>
+      <a href="#framework">
+        <span class="num">02</span>
+        Framework di orchestrazione
+        <span class="dots"></span>
+      </a>
+      <a href="#multiagent">
+        <span class="num">03</span>
+        Framework multi-agent
+        <span class="dots"></span>
+      </a>
+      <a href="#nocode">
+        <span class="num">04</span>
+        Stack no-code / low-code
+        <span class="dots"></span>
+      </a>
+      <a href="#proprietario">
+        <span class="num">05</span>
+        Stack proprietario / verticale
+        <span class="dots"></span>
+      </a>
+      <a href="#confronto">
+        <span class="num">06</span>
+        Confronto e guida alla scelta
+        <span class="dots"></span>
+      </a>
+      <a href="#glossario">
+        <span class="num">07</span>
+        Glossario tecnico essenziale
+        <span class="dots"></span>
+      </a>
+    </div>
+  </div>
+</div>
+
+
+<!-- ═══════════════════════════════════════════════════
+     00 — FONDAMENTA
+════════════════════════════════════════════════════ -->
+<div class="page" id="fondamenta">
+  <div class="section-eyebrow">
+    <span class="section-num">00</span>
+    <div class="section-line"></div>
+    <span class="section-tag">Prima di tutto</span>
+  </div>
+
+  <h2 class="section-title">I mattoni fondamentali<br><em>di ogni agente AI</em></h2>
+
+  <p class="section-intro">Prima di parlare di stack tecnologici, è essenziale capire di cosa è fatto un agente AI internamente. Qualunque sia lo stack scelto — dal più semplice al più sofisticato — ogni agente è composto dagli stessi 5 componenti di base. Cambia come vengono assemblati, non cosa sono.</p>
+
+  <div class="anatomy">
+    <div class="anatomy-piece">
+      <span class="icon">🧠</span>
+      <h4>Modello</h4>
+      <p>Il "cervello". Un LLM che ragiona, decide e genera risposte. Es. GPT-4, Claude, Llama.</p>
+    </div>
+    <div class="anatomy-piece">
+      <span class="icon">🔄</span>
+      <h4>Orchestratore</h4>
+      <p>Il "direttore". Il codice che gestisce il loop: quando ragionare, quando agire, come iterare.</p>
+    </div>
+    <div class="anatomy-piece">
+      <span class="icon">🔧</span>
+      <h4>Strumenti</h4>
+      <p>Le "mani". Funzioni che l'agente può chiamare: API, ricerca web, codice, file, browser.</p>
+    </div>
+    <div class="anatomy-piece">
+      <span class="icon">💾</span>
+      <h4>Memoria</h4>
+      <p>Il "quaderno". Come l'agente conserva e recupera informazioni nel tempo e tra sessioni.</p>
+    </div>
+    <div class="anatomy-piece">
+      <span class="icon">🌐</span>
+      <h4>Ambiente</h4>
+      <p>Il "mondo". I sistemi esterni con cui l'agente interagisce: CRM, browser, email, database.</p>
+    </div>
+  </div>
+
+  <div class="analogy">
+    <div class="analogy-label">Analogia — Pensa a un agente come a un nuovo collaboratore in azienda</div>
+    <p>Il <strong>modello</strong> è la sua intelligenza e istruzione. L'<strong>orchestratore</strong> è il suo metodo di lavoro (come pianifica le giornate). Gli <strong>strumenti</strong> sono le app che usa (email, Excel, browser). La <strong>memoria</strong> è il suo quaderno con note e contesto. L'<strong>ambiente</strong> sono i sistemi aziendali a cui ha accesso.</p>
+  </div>
+
+  <h3 class="sub">Come funziona il loop di un agente</h3>
+  <p>Un agente non risponde una volta sola. Entra in un <strong>ciclo continuo</strong> fino a completare l'obiettivo:</p>
+
+  <div class="arch-diagram">
+    <div class="arch-diagram-header">Il loop agente — Ciclo di esecuzione base</div>
+    <div class="arch-layers">
+      <div class="arch-layer">
+        <div class="arch-layer-name"><span class="layer-icon">1️⃣</span><span class="layer-label">PERCEPISCE</span></div>
+        <div class="arch-layer-content">
+          <span class="arch-chip">Riceve il task dall'utente</span>
+          <span class="arch-chip">Legge lo stato corrente</span>
+          <span class="arch-chip">Recupera memoria rilevante</span>
+        </div>
+      </div>
+      <div class="arch-layer">
+        <div class="arch-layer-name"><span class="layer-icon">2️⃣</span><span class="layer-label">RAGIONA</span></div>
+        <div class="arch-layer-content">
+          <span class="arch-chip highlight">Il modello LLM elabora</span>
+          <span class="arch-chip">Decide cosa fare</span>
+          <span class="arch-chip">Sceglie quale strumento usare</span>
+        </div>
+      </div>
+      <div class="arch-layer">
+        <div class="arch-layer-name"><span class="layer-icon">3️⃣</span><span class="layer-label">AGISCE</span></div>
+        <div class="arch-layer-content">
+          <span class="arch-chip red">Chiama uno strumento</span>
+          <span class="arch-chip red">Esegue codice</span>
+          <span class="arch-chip red">Naviga il web</span>
+          <span class="arch-chip red">Scrive su un file</span>
+        </div>
+      </div>
+      <div class="arch-layer">
+        <div class="arch-layer-name"><span class="layer-icon">4️⃣</span><span class="layer-label">OSSERVA</span></div>
+        <div class="arch-layer-content">
+          <span class="arch-chip">Legge il risultato dell'azione</span>
+          <span class="arch-chip">Valuta se ha funzionato</span>
+          <span class="arch-chip">Aggiorna la memoria</span>
+        </div>
+      </div>
+      <div class="arch-layer">
+        <div class="arch-layer-name"><span class="layer-icon">🔁</span><span class="layer-label">ITERA</span></div>
+        <div class="arch-layer-content">
+          <span class="arch-chip green">Obiettivo raggiunto? → Risponde all'utente</span>
+          <span class="arch-chip amber">Altrimenti → Torna al passo 2</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <p>Questo loop è implementato in modo diverso a seconda dello stack tecnologico scelto. La scelta dello stack <strong>non cambia cosa fa l'agente in astratto — cambia come viene scritto, controllato, manutenuto e scalato</strong>.</p>
+
+  <div class="callout blue">
+    <div class="callout-label">Cosa imparerai nelle prossime sezioni</div>
+    <p>Per ogni famiglia di stack vedrai: come viene implementato ciascuno dei 5 componenti, che competenze tecniche servono, quando ha senso usarlo, e cosa si guadagna o si perde rispetto alle alternative.</p>
+  </div>
+</div>
+
+
+<!-- ═══════════════════════════════════════════════════
+     01 — CUSTOM / VANILLA
+════════════════════════════════════════════════════ -->
+<div class="page" id="custom">
+  <div class="section-eyebrow">
+    <span class="section-num">01</span>
+    <div class="section-line"></div>
+    <span class="section-tag">Famiglia di stack</span>
+  </div>
+
+  <h2 class="section-title">Stack custom<br><em>costruire da zero, mattone per mattone</em></h2>
+
+  <div class="family-card">
+    <div class="family-card-header custom">
+      <div class="family-num">01</div>
+      <div class="family-title-block">
+        <h3>Custom / Vanilla</h3>
+        <p>L'agente è scritto interamente a mano, senza framework di supporto. Solo API del modello + codice puro.</p>
+      </div>
+      <div class="family-badge">Competenza: Alta · Flessibilità: Massima</div>
+    </div>
+    <div class="family-body">
+
+      <h4 class="mini">Cos'è e come funziona</h4>
+      <p>In questo approccio lo sviluppatore costruisce tutto da zero usando direttamente le <strong>API del modello linguistico</strong> (es. l'API di Anthropic per Claude, o quella di OpenAI per GPT). Non si usa alcuna libreria di orchestrazione preconfezionata. Il loop agente, la gestione degli strumenti, la memoria — tutto è codice scritto a mano, solitamente in Python o JavaScript.</p>
+
+      <p>È l'equivalente di costruire una casa partendo dai mattoni grezzi invece di usare componenti prefabbricati. Richiede più tempo e competenza, ma sai esattamente come è costruita ogni parte.</p>
+
+      <div class="arch-diagram">
+        <div class="arch-diagram-header">Architettura stack custom — Cosa scrive il team</div>
+        <div class="arch-layers">
+          <div class="arch-layer">
+            <div class="arch-layer-name"><span class="layer-label">MODELLO</span></div>
+            <div class="arch-layer-content">
+              <span class="arch-chip blue">Chiamata diretta API Claude / GPT / Gemini</span>
+              <span class="arch-chip">Gestione manuale dei messaggi</span>
+            </div>
+          </div>
+          <div class="arch-layer">
+            <div class="arch-layer-name"><span class="layer-label">LOOP AGENTE</span></div>
+            <div class="arch-layer-content">
+              <span class="arch-chip highlight">Loop while scritto a mano in Python</span>
+              <span class="arch-chip">Parsing manuale delle risposte</span>
+            </div>
+          </div>
+          <div class="arch-layer">
+            <div class="arch-layer-name"><span class="layer-label">STRUMENTI</span></div>
+            <div class="arch-layer-content">
+              <span class="arch-chip red">Funzioni Python definite manualmente</span>
+              <span class="arch-chip red">Chiamate API esterne custom</span>
+            </div>
+          </div>
+          <div class="arch-layer">
+            <div class="arch-layer-name"><span class="layer-label">MEMORIA</span></div>
+            <div class="arch-layer-content">
+              <span class="arch-chip">Lista messaggi nel prompt (in-context)</span>
+              <span class="arch-chip">File JSON o DB custom per persistenza</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="code-block">
+        <div class="code-block-label">esempio semplificato — Python puro</div>
+        <pre><span class="cm"># Agente custom minimale — nessun framework</span>
+<span class="kw">import</span> anthropic
+
+client = anthropic.<span class="fn">Anthropic</span>()
+messages = []
+
+<span class="kw">def</span> <span class="fn">cerca_sul_web</span>(query):          <span class="cm"># uno strumento definito a mano</span>
+    <span class="kw">return</span> <span class="str">f"Risultati per: {query}..."</span>
+
+<span class="kw">while</span> <span class="var">True</span>:                           <span class="cm"># il loop agente scritto a mano</span>
+    risposta = client.messages.<span class="fn">create</span>(
+        model=<span class="str">"claude-sonnet-4-6"</span>,
+        messages=messages,
+        tools=[{ <span class="str">"name"</span>: <span class="str">"cerca_sul_web"</span>, ... }]
+    )
+    <span class="kw">if</span> risposta.stop_reason == <span class="str">"tool_use"</span>:
+        risultato = <span class="fn">cerca_sul_web</span>(risposta.tool_input)
+        messages.<span class="fn">append</span>(risultato)      <span class="cm"># aggiungo al contesto manualmente</span>
+    <span class="kw">else</span>:
+        <span class="kw">break</span>                            <span class="cm"># obiettivo raggiunto</span></pre>
+      </div>
+
+      <div class="family-grid">
+        <div class="family-panel pro">
+          <h4>Vantaggi</h4>
+          <ul>
+            <li>Controllo totale su ogni singolo aspetto del comportamento</li>
+            <li>Nessuna dipendenza da librerie esterne che possono cambiare o diventare obsolete</li>
+            <li>Performance ottimale — nessun overhead aggiunto da framework</li>
+            <li>Ideale per requisiti molto specifici o non standard</li>
+            <li>Ottimo per capire in profondità come funzionano gli agenti</li>
+          </ul>
+        </div>
+        <div class="family-panel con">
+          <h4>Limiti</h4>
+          <ul>
+            <li>Richiede sviluppatori esperti — non adatto a chi inizia</li>
+            <li>Ogni funzionalità (memoria, retry, logging) va scritta da zero</li>
+            <li>Tempi di sviluppo molto più lunghi</li>
+            <li>Più codice = più superfici di errore da gestire</li>
+            <li>Non scala facilmente a sistemi multi-agent complessi</li>
+          </ul>
+        </div>
+      </div>
+
+      <h4 class="mini">Quando si usa</h4>
+      <p>È la scelta giusta quando si ha un caso d'uso molto specifico che i framework non coprono bene, quando il team ha competenze tecniche avanzate e vuole il massimo controllo, oppure nella fase iniziale di ricerca e prototipazione per capire cosa serve davvero prima di scegliere un framework.</p>
+
+      <div class="callout amber">
+        <div class="callout-label">Nota per chi inizia</div>
+        <p>Studiare un agente custom è il modo migliore per capire come funzionano davvero. Ma per costruire prodotti reali, quasi sempre si finisce per usare un framework che risolve i problemi comuni già risolti da altri.</p>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+
+<!-- ═══════════════════════════════════════════════════
+     02 — FRAMEWORK DI ORCHESTRAZIONE
+════════════════════════════════════════════════════ -->
+<div class="page" id="framework">
+  <div class="section-eyebrow">
+    <span class="section-num">02</span>
+    <div class="section-line"></div>
+    <span class="section-tag">Famiglia di stack</span>
+  </div>
+
+  <h2 class="section-title">Framework di<br><em>orchestrazione</em></h2>
+
+  <div class="family-card">
+    <div class="family-card-header framework">
+      <div class="family-num">02</div>
+      <div class="family-title-block">
+        <h3>Framework di orchestrazione</h3>
+        <p>Librerie che astraggono il loop agente e forniscono componenti riutilizzabili per strumenti, memoria, catene di ragionamento.</p>
+      </div>
+      <div class="family-badge">Competenza: Media-Alta · Flessibilità: Alta</div>
+    </div>
+    <div class="family-body">
+
+      <h4 class="mini">Cos'è e come funziona</h4>
+      <p>I framework di orchestrazione sono <strong>librerie software</strong> — raccolte di codice preesistente — che forniscono i "pezzi" più comuni per costruire agenti già pronti all'uso. Invece di scrivere il loop agente da zero, lo sviluppatore lo <strong>configura</strong> usando i componenti del framework.</p>
+
+      <p>È come passare dal costruire mobili con assi grezze all'usare un kit IKEA: i pezzi principali sono già lavorati e stanno insieme in modo prevedibile, ma puoi ancora scegliere come montarli e personalizzarli.</p>
+
+      <div class="arch-diagram">
+        <div class="arch-diagram-header">I principali framework e cosa offrono</div>
+        <div class="arch-layers">
+          <div class="arch-layer">
+            <div class="arch-layer-name"><span class="layer-label">LangChain</span></div>
+            <div class="arch-layer-content">
+              <span class="arch-chip blue">Il più popolare</span>
+              <span class="arch-chip">Catene di elaborazione (chains)</span>
+              <span class="arch-chip">+200 integrazioni prebuilt</span>
+              <span class="arch-chip">Agenti ReAct pronti all'uso</span>
+            </div>
+          </div>
+          <div class="arch-layer">
+            <div class="arch-layer-name"><span class="layer-label">LangGraph</span></div>
+            <div class="arch-layer-content">
+              <span class="arch-chip highlight">Estensione di LangChain</span>
+              <span class="arch-chip">Agenti come grafi con stato</span>
+              <span class="arch-chip">Loop complessi e ramificazioni</span>
+              <span class="arch-chip">Multi-agent nativo</span>
+            </div>
+          </div>
+          <div class="arch-layer">
+            <div class="arch-layer-name"><span class="layer-label">LlamaIndex</span></div>
+            <div class="arch-layer-content">
+              <span class="arch-chip green">Specializzato in RAG</span>
+              <span class="arch-chip">Indicizzazione documenti</span>
+              <span class="arch-chip">Query su knowledge base</span>
+              <span class="arch-chip">Ottimo per agenti "informati"</span>
+            </div>
+          </div>
+          <div class="arch-layer">
+            <div class="arch-layer-name"><span class="layer-label">Haystack</span></div>
+            <div class="arch-layer-content">
+              <span class="arch-chip">Orientato alla ricerca documentale</span>
+              <span class="arch-chip">Pipeline modulari</span>
+              <span class="arch-chip">Forte in NLP enterprise</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <h3 class="sub">Un concetto chiave: RAG</h3>
+      <p>Quasi tutti i framework hanno integrazione nativa con il <strong>RAG (Retrieval-Augmented Generation)</strong> — una tecnica fondamentale per agenti che devono conoscere documenti specifici (manuali aziendali, knowledge base, dati interni).</p>
+
+      <div class="analogy">
+        <div class="analogy-label">Come funziona RAG — in parole semplici</div>
+        <p>Immagina di dare all'agente una <strong>libreria con migliaia di documenti</strong>. Quando riceve una domanda, prima <strong>cerca nella libreria</strong> i paragrafi più rilevanti, poi li porta davanti al modello insieme alla domanda. Il modello risponde basandosi su quei paragrafi specifici — non su quello che ha imparato in fase di training. Questo permette all'agente di "sapere" cose aggiornate e aziendali specifiche.</p>
+      </div>
+
+      <div class="arch-diagram">
+        <div class="arch-diagram-header">Architettura tipica con framework — Stack LangChain + RAG</div>
+        <div class="arch-layers">
+          <div class="arch-layer">
+            <div class="arch-layer-name"><span class="layer-label">MODELLO</span></div>
+            <div class="arch-layer-content">
+              <span class="arch-chip blue">GPT-4 / Claude / Llama (intercambiabili via LangChain)</span>
+            </div>
+          </div>
+          <div class="arch-layer">
+            <div class="arch-layer-name"><span class="layer-label">ORCHESTRATORE</span></div>
+            <div class="arch-layer-content">
+              <span class="arch-chip highlight">AgentExecutor di LangChain (già scritto)</span>
+              <span class="arch-chip">Gestione automatica del loop</span>
+            </div>
+          </div>
+          <div class="arch-layer">
+            <div class="arch-layer-name"><span class="layer-label">STRUMENTI</span></div>
+            <div class="arch-layer-content">
+              <span class="arch-chip red">Tool prebuilt: SerpAPI, Calculator, Python REPL</span>
+              <span class="arch-chip red">Tool custom: API aziendali</span>
+            </div>
+          </div>
+          <div class="arch-layer">
+            <div class="arch-layer-name"><span class="layer-label">MEMORIA</span></div>
+            <div class="arch-layer-content">
+              <span class="arch-chip green">Vector DB: Pinecone / Chroma / pgvector</span>
+              <span class="arch-chip green">ConversationBufferMemory (integrata)</span>
+            </div>
+          </div>
+          <div class="arch-layer">
+            <div class="arch-layer-name"><span class="layer-label">OSSERVABILITÀ</span></div>
+            <div class="arch-layer-content">
+              <span class="arch-chip amber">LangSmith: traccia ogni passo del ragionamento</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <h4 class="mini">Il concetto di "catena" (chain)</h4>
+      <p>LangChain introduce il concetto di <strong>chain</strong> — una sequenza configurabile di operazioni. Ad esempio: <em>prendi il documento → suddividilo in chunk → trasformali in vettori → salvali nel DB → quando arriva una query, recupera i chunk più simili → costruisci il prompt → invia al modello → restituisci la risposta</em>. Ogni passaggio è un componente intercambiabile.</p>
+
+      <div class="family-grid">
+        <div class="family-panel pro">
+          <h4>Vantaggi</h4>
+          <ul>
+            <li>Riduce drasticamente il codice da scrivere rispetto al custom</li>
+            <li>Integrazione prebuilt con decine di LLM, DB, API esterne</li>
+            <li>Community enorme → documentazione, tutorial, esempi</li>
+            <li>Strumenti di debug e osservabilità (LangSmith)</li>
+            <li>Astrae complessità mantenendo flessibilità</li>
+          </ul>
+        </div>
+        <div class="family-panel con">
+          <h4>Limiti</h4>
+          <ul>
+            <li>Astrazione può nascondere cosa succede davvero (difficile debuggare)</li>
+            <li>LangChain è noto per avere molte versioni e API in continuo cambiamento</li>
+            <li>Overhead: più "peso" di una soluzione custom minimale</li>
+            <li>Richiede comunque competenze di programmazione Python</li>
+            <li>Può sembrare "magia" finché non si capisce bene l'internals</li>
+          </ul>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+
+<!-- ═══════════════════════════════════════════════════
+     03 — MULTI-AGENT
+════════════════════════════════════════════════════ -->
+<div class="page" id="multiagent">
+  <div class="section-eyebrow">
+    <span class="section-num">03</span>
+    <div class="section-line"></div>
+    <span class="section-tag">Famiglia di stack</span>
+  </div>
+
+  <h2 class="section-title">Framework<br><em>multi-agent</em></h2>
+
+  <div class="family-card">
+    <div class="family-card-header multiagent">
+      <div class="family-num">03</div>
+      <div class="family-title-block">
+        <h3>Framework multi-agent</h3>
+        <p>Sistemi dove più agenti specializzati collaborano, con ruoli definiti, comunicazione strutturata e coordinamento.</p>
+      </div>
+      <div class="family-badge">Competenza: Alta · Flessibilità: Alta</div>
+    </div>
+    <div class="family-body">
+
+      <h4 class="mini">Il salto concettuale: da un agente a un team di agenti</h4>
+      <p>Fino a qui abbiamo parlato di un singolo agente che fa tutto. I framework multi-agent introducono un'idea diversa: <strong>invece di un agente onnisciente, si crea un team di agenti specializzati</strong>, ognuno bravo in una cosa specifica, che collaborano come farebbero persone in un ufficio.</p>
+
+      <div class="analogy">
+        <div class="analogy-label">Analogia — Un team editoriale</div>
+        <p>Immagina di produrre un articolo. Hai un <strong>editor capo</strong> (orchestratore) che coordina il lavoro. Un <strong>ricercatore</strong> che raccoglie fatti. Un <strong>scrittore</strong> che produce il testo. Un <strong>revisore</strong> che controlla errori. Un <strong>SEO specialist</strong> che ottimizza per la ricerca. Ognuno è un agente separato, con istruzioni diverse, che comunica con gli altri attraverso messaggi strutturati.</p>
+      </div>
+
+      <h3 class="sub">I principali framework multi-agent</h3>
+
+      <div class="arch-diagram">
+        <div class="arch-diagram-header">CrewAI — Agenti con ruoli espliciti</div>
+        <div class="arch-layers">
+          <div class="arch-layer">
+            <div class="arch-layer-name"><span class="layer-label">CONCETTO BASE</span></div>
+            <div class="arch-layer-content">
+              <span class="arch-chip highlight">Ogni agente ha: ruolo, obiettivo, backstory</span>
+              <span class="arch-chip">Un "Crew" definisce il team e il processo</span>
+            </div>
+          </div>
+          <div class="arch-layer">
+            <div class="arch-layer-name"><span class="layer-label">ESEMPIO CREW</span></div>
+            <div class="arch-layer-content">
+              <span class="arch-chip blue">Agente "Ricercatore"</span>
+              <span class="arch-chip green">Agente "Analista"</span>
+              <span class="arch-chip red">Agente "Scrittore"</span>
+              <span class="arch-chip amber">Agente "Revisore"</span>
+            </div>
+          </div>
+          <div class="arch-layer">
+            <div class="arch-layer-name"><span class="layer-label">COORDINAMENTO</span></div>
+            <div class="arch-layer-content">
+              <span class="arch-chip">Sequenziale: A → B → C</span>
+              <span class="arch-chip">Gerarchico: Manager delega ai worker</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="arch-diagram">
+        <div class="arch-diagram-header">AutoGen (Microsoft) — Conversazione tra agenti</div>
+        <div class="arch-layers">
+          <div class="arch-layer">
+            <div class="arch-layer-name"><span class="layer-label">CONCETTO BASE</span></div>
+            <div class="arch-layer-content">
+              <span class="arch-chip highlight">Gli agenti si "parlano" tramite messaggi</span>
+              <span class="arch-chip">Ogni agente decide autonomamente come rispondere</span>
+            </div>
+          </div>
+          <div class="arch-layer">
+            <div class="arch-layer-name"><span class="layer-label">PATTERN TIPICO</span></div>
+            <div class="arch-layer-content">
+              <span class="arch-chip blue">UserProxy (rappresenta l'utente)</span>
+              <span class="arch-chip green">AssistantAgent (il lavoratore AI)</span>
+              <span class="arch-chip amber">Possono eseguire codice automaticamente</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="arch-diagram">
+        <div class="arch-diagram-header">LangGraph — Agenti come grafi con stato</div>
+        <div class="arch-layers">
+          <div class="arch-layer">
+            <div class="arch-layer-name"><span class="layer-label">CONCETTO BASE</span></div>
+            <div class="arch-layer-content">
+              <span class="arch-chip highlight">Il flusso di lavoro è un grafo: nodi = agenti/azioni, archi = transizioni</span>
+            </div>
+          </div>
+          <div class="arch-layer">
+            <div class="arch-layer-name"><span class="layer-label">VANTAGGI CHIAVE</span></div>
+            <div class="arch-layer-content">
+              <span class="arch-chip blue">Stato condiviso tra tutti i nodi</span>
+              <span class="arch-chip green">Cicli e ramificazioni condizionali</span>
+              <span class="arch-chip red">Human-in-the-loop nativo</span>
+            </div>
+          </div>
+          <div class="arch-layer">
+            <div class="arch-layer-name"><span class="layer-label">CASO D'USO IDEALE</span></div>
+            <div class="arch-layer-content">
+              <span class="arch-chip">Workflow complessi con logica condizionale</span>
+              <span class="arch-chip">Agenti che devono tornare a step precedenti</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <h4 class="mini">Un concetto cruciale: stato condiviso</h4>
+      <p>Nei sistemi multi-agent, uno dei problemi principali è: <strong>come fanno gli agenti a condividere informazioni?</strong> LangGraph risolve questo con un <strong>oggetto di stato</strong> — una struttura dati condivisa che tutti gli agenti possono leggere e modificare. Ogni agente vede il lavoro degli altri e può costruire sopra di esso.</p>
+
+      <div class="family-grid">
+        <div class="family-panel pro">
+          <h4>Vantaggi</h4>
+          <ul>
+            <li>Permette task molto complessi suddivisi tra specialisti</li>
+            <li>Ogni agente è più piccolo e facile da controllare</li>
+            <li>Parallelizzazione: più agenti lavorano in contemporanea</li>
+            <li>Modulare: si aggiunge o modifica un agente senza toccare gli altri</li>
+          </ul>
+        </div>
+        <div class="family-panel con">
+          <h4>Limiti</h4>
+          <ul>
+            <li>Complessità molto alta — debugging difficile</li>
+            <li>La comunicazione tra agenti introduce latenza e costi extra</li>
+            <li>Coordinamento mal progettato porta a loop infiniti o blocchi</li>
+            <li>Non necessario per task semplici (over-engineering)</li>
+          </ul>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+
+<!-- ═══════════════════════════════════════════════════
+     04 — NO-CODE / LOW-CODE
+════════════════════════════════════════════════════ -->
+<div class="page" id="nocode">
+  <div class="section-eyebrow">
+    <span class="section-num">04</span>
+    <div class="section-line"></div>
+    <span class="section-tag">Famiglia di stack</span>
+  </div>
+
+  <h2 class="section-title">Stack no-code<br><em>e low-code</em></h2>
+
+  <div class="family-card">
+    <div class="family-card-header nocode">
+      <div class="family-num">04</div>
+      <div class="family-title-block">
+        <h3>No-code / Low-code</h3>
+        <p>Piattaforme visive dove l'agente si costruisce trascinando blocchi grafici, senza scrivere (o scrivendo pochissimo) codice.</p>
+      </div>
+      <div class="family-badge">Competenza: Bassa · Flessibilità: Media-Bassa</div>
+    </div>
+    <div class="family-body">
+
+      <h4 class="mini">Come funziona: interfacce visive al posto del codice</h4>
+      <p>In questi strumenti, <strong>ogni componente dell'agente diventa un blocco visivo</strong> che si trascina su una tela. I blocchi si collegano con frecce che rappresentano il flusso dei dati. Non si scrive Python — si configura un grafo visivo.</p>
+
+      <p>La "logica" dell'agente viene definita attraverso form, menu a tendina e campi di testo, non attraverso codice. Il risultato finale è funzionalmente simile a un agente custom o basato su framework, ma il processo per arrivarci è completamente diverso.</p>
+
+      <div class="arch-diagram">
+        <div class="arch-diagram-header">I principali strumenti no-code/low-code per agenti</div>
+        <div class="arch-layers">
+          <div class="arch-layer">
+            <div class="arch-layer-name"><span class="layer-label">Flowise</span></div>
+            <div class="arch-layer-content">
+              <span class="arch-chip blue">Open source</span>
+              <span class="arch-chip">Interfaccia drag&amp;drop per LangChain</span>
+              <span class="arch-chip">Self-hostabile</span>
+              <span class="arch-chip">Forte in RAG visuale</span>
+            </div>
+          </div>
+          <div class="arch-layer">
+            <div class="arch-layer-name"><span class="layer-label">Dify</span></div>
+            <div class="arch-layer-content">
+              <span class="arch-chip highlight">Open source + cloud</span>
+              <span class="arch-chip">Gestione prompt avanzata</span>
+              <span class="arch-chip">Dataset e knowledge base integrati</span>
+              <span class="arch-chip">API per deployment</span>
+            </div>
+          </div>
+          <div class="arch-layer">
+            <div class="arch-layer-name"><span class="layer-label">n8n con AI</span></div>
+            <div class="arch-layer-content">
+              <span class="arch-chip green">Automation + AI nodes</span>
+              <span class="arch-chip">500+ integrazioni prebuilt</span>
+              <span class="arch-chip">Ideale per workflow aziendali</span>
+            </div>
+          </div>
+          <div class="arch-layer">
+            <div class="arch-layer-name"><span class="layer-label">Zapier AI Agents</span></div>
+            <div class="arch-layer-content">
+              <span class="arch-chip amber">Zero codice necessario</span>
+              <span class="arch-chip">Trigger da 7000+ app</span>
+              <span class="arch-chip">Ideale per automazione business</span>
+            </div>
+          </div>
+          <div class="arch-layer">
+            <div class="arch-layer-name"><span class="layer-label">MS Copilot Studio</span></div>
+            <div class="arch-layer-content">
+              <span class="arch-chip">Integrazione nativa M365</span>
+              <span class="arch-chip">Agenti per Teams, SharePoint, Outlook</span>
+              <span class="arch-chip">Approvazioni aziendali</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <h3 class="sub">La differenza tra no-code e low-code</h3>
+      <p><strong>No-code</strong> (Zapier, Copilot Studio) significa zero programmazione — tutto è configurazione visiva. <strong>Low-code</strong> (Flowise, Dify, n8n) significa che si può fare molto visualmente, ma per casi avanzati si possono aggiungere snippet di codice personalizzato nei nodi. La linea è sfumata e dipende dal prodotto.</p>
+
+      <div class="callout green">
+        <div class="callout-label">Per chi è pensato</div>
+        <p>Questi strumenti sono progettati per <strong>professionisti non tecnici</strong> — responsabili di processo, consulenti, product manager, marketer — che vogliono automatizzare workflow con AI senza dipendere da un team di sviluppo. Abbassano drasticamente la barriera d'ingresso.</p>
+      </div>
+
+      <h4 class="mini">Come viene gestita la memoria in questi strumenti</h4>
+      <p>La memoria è tipicamente gestita automaticamente dalla piattaforma: c'è un nodo "memoria" che si trascina nella canvas e si collega all'agente. Il tipo di memoria (in-context, vector DB, database SQL) si seleziona da un menu. Non serve sapere cosa è Pinecone o come funziona l'indicizzazione vettoriale — il tool lo gestisce per te.</p>
+
+      <div class="family-grid">
+        <div class="family-panel pro">
+          <h4>Vantaggi</h4>
+          <ul>
+            <li>Accessibile senza competenze di programmazione</li>
+            <li>Velocità di prototipazione estrema — un agente base in ore</li>
+            <li>Interfacce visive facilitano la comprensione del flusso</li>
+            <li>Ottimo per casi d'uso comuni ben coperti dalle integrazioni prebuilt</li>
+            <li>Manutenzione più semplice per team non tecnici</li>
+          </ul>
+        </div>
+        <div class="family-panel con">
+          <h4>Limiti</h4>
+          <ul>
+            <li>Flessibilità limitata: se il caso d'uso esce dal catalogo, si è bloccati</li>
+            <li>Spesso cloud-only: i dati passano per server del vendor</li>
+            <li>Costi possono scalare male con l'uso intensivo</li>
+            <li>Difficile ottimizzare performance e comportamenti edge-case</li>
+            <li>Dipendenza forte dal vendor: se chiude o cambia prezzi, problema</li>
+          </ul>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+
+<!-- ═══════════════════════════════════════════════════
+     05 — PROPRIETARIO / VERTICALE
+════════════════════════════════════════════════════ -->
+<div class="page" id="proprietario">
+  <div class="section-eyebrow">
+    <span class="section-num">05</span>
+    <div class="section-line"></div>
+    <span class="section-tag">Famiglia di stack</span>
+  </div>
+
+  <h2 class="section-title">Stack proprietario<br><em>e verticale</em></h2>
+
+  <div class="family-card">
+    <div class="family-card-header proprietary">
+      <div class="family-num">05</div>
+      <div class="family-title-block">
+        <h3>Proprietario / Verticale</h3>
+        <p>Soluzioni chiuse costruite da grandi vendor su infrastruttura propria, integrate nativamente nei loro ecosistemi.</p>
+      </div>
+      <div class="family-badge">Competenza: Bassa · Flessibilità: Minima</div>
+    </div>
+    <div class="family-body">
+
+      <h4 class="mini">Cos'è: la scatola chiusa integrata</h4>
+      <p>In questo caso il cliente <strong>non costruisce un agente — lo acquista o attiva come funzionalità</strong> di un prodotto già esistente. Non c'è accesso allo stack sottostante, non c'è scelta del modello, non c'è codice da scrivere. Il vendor ha già costruito tutto, ottimizzato per il suo ecosistema.</p>
+
+      <p>È come comprare un'auto invece di costruirla: non sai cosa c'è sotto il cofano nei dettagli, ma sai che funziona, che è garantita, e che si integra con le altre auto dello stesso produttore.</p>
+
+      <div class="arch-diagram">
+        <div class="arch-diagram-header">I principali stack proprietari e il loro ecosistema</div>
+        <div class="arch-layers">
+          <div class="arch-layer">
+            <div class="arch-layer-name"><span class="layer-label">Salesforce Agentforce</span></div>
+            <div class="arch-layer-content">
+              <span class="arch-chip blue">Integrato nel CRM Salesforce</span>
+              <span class="arch-chip">Gestisce lead, ticket, email automaticamente</span>
+              <span class="arch-chip">Accede ai dati CRM nativamente</span>
+            </div>
+          </div>
+          <div class="arch-layer">
+            <div class="arch-layer-name"><span class="layer-label">ServiceNow AI Agents</span></div>
+            <div class="arch-layer-content">
+              <span class="arch-chip green">Integrato nella piattaforma ITSM</span>
+              <span class="arch-chip">Gestisce ticket IT, richieste, approvazioni</span>
+              <span class="arch-chip">Accede a CMDB e workflow aziendali</span>
+            </div>
+          </div>
+          <div class="arch-layer">
+            <div class="arch-layer-name"><span class="layer-label">Microsoft 365 Copilot</span></div>
+            <div class="arch-layer-content">
+              <span class="arch-chip highlight">Integrato in Word, Excel, Teams, Outlook</span>
+              <span class="arch-chip">Accede a tutti i dati Microsoft 365</span>
+              <span class="arch-chip">GPT-4 sotto il cofano</span>
+            </div>
+          </div>
+          <div class="arch-layer">
+            <div class="arch-layer-name"><span class="layer-label">Workday AI</span></div>
+            <div class="arch-layer-content">
+              <span class="arch-chip amber">Integrato nell'ERP Workday</span>
+              <span class="arch-chip">HR, Finance, Planning con AI</span>
+              <span class="arch-chip">Dati aziendali già strutturati</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <h3 class="sub">Il concetto di vendor lock-in</h3>
+      <p>Il principale rischio di questi stack è il <strong>vendor lock-in</strong> — la dipendenza totale dal fornitore. Se Salesforce aumenta i prezzi, se ServiceNow cambia funzionalità, se Microsoft decide di eliminare una feature, l'azienda cliente ha pochissimo potere contrattuale e pochissime alternative senza migrare tutto il sistema.</p>
+
+      <p>La contro-argomentazione del vendor è che questa dipendenza è il prezzo da pagare per avere <strong>integrazione perfetta, supporto garantito e nessuna gestione tecnica</strong>.</p>
+
+      <div class="callout red">
+        <div class="callout-label">Attenzione al concetto di "stack nascosto"</div>
+        <p>In questi sistemi non sai quale LLM viene usato, come vengono gestiti i tuoi dati, con quale architettura interna funziona l'agente. Questo può essere un problema di compliance (GDPR, data residency) o semplicemente di controllo qualitativo sul comportamento dell'agente.</p>
+      </div>
+
+      <div class="family-grid">
+        <div class="family-panel pro">
+          <h4>Vantaggi</h4>
+          <ul>
+            <li>Zero infrastruttura da gestire — tutto gestito dal vendor</li>
+            <li>Integrazione nativa con dati e sistemi già in uso</li>
+            <li>Supporto enterprise garantito con SLA</li>
+            <li>Sicurezza e compliance già certificate</li>
+            <li>Accessibile ai team di business senza IT</li>
+          </ul>
+        </div>
+        <div class="family-panel con">
+          <h4>Limiti</h4>
+          <ul>
+            <li>Nessuna flessibilità fuori dal perimetro del vendor</li>
+            <li>Costi spesso molto elevati su licenza annuale</li>
+            <li>Vendor lock-in: difficile o impossibile migrare</li>
+            <li>Nessuna visibilità su come funziona internamente</li>
+            <li>Aggiornamenti e roadmap fuori dal controllo dell'azienda</li>
+          </ul>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+
+<!-- ═══════════════════════════════════════════════════
+     06 — CONFRONTO E GUIDA ALLA SCELTA
+════════════════════════════════════════════════════ -->
+<div class="page" id="confronto">
+  <div class="section-eyebrow">
+    <span class="section-num">06</span>
+    <div class="section-line"></div>
+    <span class="section-tag">Analisi comparativa</span>
+  </div>
+
+  <h2 class="section-title">Confronto tra<br><em>le famiglie di stack</em></h2>
+
+  <p class="section-intro">Nessuno stack è universalmente migliore. La scelta giusta dipende da tre variabili: le competenze del team, la complessità del caso d'uso, e il controllo che si vuole mantenere sul sistema.</p>
+
+  <div class="skill-matrix">
+    <table>
+      <thead>
+        <tr>
+          <th>Stack</th>
+          <th>Competenze richieste</th>
+          <th>Flessibilità</th>
+          <th>Velocità sviluppo</th>
+          <th>Costo (lungo termine)</th>
+          <th>Controllo dati</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><strong>Custom / Vanilla</strong></td>
+          <td>
+            <div class="bar-wrap">
+              <div class="bar"><div class="bar-fill max"></div></div>
+              <span class="bar-label">Molto alta</span>
+            </div>
+          </td>
+          <td>
+            <div class="bar-wrap">
+              <div class="bar"><div class="bar-fill max"></div></div>
+              <span class="bar-label">Massima</span>
+            </div>
+          </td>
+          <td>
+            <div class="bar-wrap">
+              <div class="bar"><div class="bar-fill low"></div></div>
+              <span class="bar-label">Lenta</span>
+            </div>
+          </td>
+          <td>
+            <div class="bar-wrap">
+              <div class="bar"><div class="bar-fill med"></div></div>
+              <span class="bar-label">Medio</span>
+            </div>
+          </td>
+          <td>
+            <div class="bar-wrap">
+              <div class="bar"><div class="bar-fill max"></div></div>
+              <span class="bar-label">Totale</span>
+            </div>
+          </td>
+        </tr>
+        <tr>
+          <td><strong>Framework orchestrazione</strong></td>
+          <td>
+            <div class="bar-wrap">
+              <div class="bar"><div class="bar-fill high"></div></div>
+              <span class="bar-label">Alta</span>
+            </div>
+          </td>
+          <td>
+            <div class="bar-wrap">
+              <div class="bar"><div class="bar-fill high"></div></div>
+              <span class="bar-label">Alta</span>
+            </div>
+          </td>
+          <td>
+            <div class="bar-wrap">
+              <div class="bar"><div class="bar-fill med"></div></div>
+              <span class="bar-label">Media</span>
+            </div>
+          </td>
+          <td>
+            <div class="bar-wrap">
+              <div class="bar"><div class="bar-fill med"></div></div>
+              <span class="bar-label">Medio</span>
+            </div>
+          </td>
+          <td>
+            <div class="bar-wrap">
+              <div class="bar"><div class="bar-fill high"></div></div>
+              <span class="bar-label">Alta</span>
+            </div>
+          </td>
+        </tr>
+        <tr>
+          <td><strong>Multi-agent</strong></td>
+          <td>
+            <div class="bar-wrap">
+              <div class="bar"><div class="bar-fill max"></div></div>
+              <span class="bar-label">Molto alta</span>
+            </div>
+          </td>
+          <td>
+            <div class="bar-wrap">
+              <div class="bar"><div class="bar-fill high"></div></div>
+              <span class="bar-label">Alta</span>
+            </div>
+          </td>
+          <td>
+            <div class="bar-wrap">
+              <div class="bar"><div class="bar-fill low"></div></div>
+              <span class="bar-label">Lenta</span>
+            </div>
+          </td>
+          <td>
+            <div class="bar-wrap">
+              <div class="bar"><div class="bar-fill high"></div></div>
+              <span class="bar-label">Alto</span>
+            </div>
+          </td>
+          <td>
+            <div class="bar-wrap">
+              <div class="bar"><div class="bar-fill high"></div></div>
+              <span class="bar-label">Alta</span>
+            </div>
+          </td>
+        </tr>
+        <tr>
+          <td><strong>No-code / Low-code</strong></td>
+          <td>
+            <div class="bar-wrap">
+              <div class="bar"><div class="bar-fill low"></div></div>
+              <span class="bar-label">Bassa</span>
+            </div>
+          </td>
+          <td>
+            <div class="bar-wrap">
+              <div class="bar"><div class="bar-fill med-low"></div></div>
+              <span class="bar-label">Media-bassa</span>
+            </div>
+          </td>
+          <td>
+            <div class="bar-wrap">
+              <div class="bar"><div class="bar-fill max"></div></div>
+              <span class="bar-label">Rapidissima</span>
+            </div>
+          </td>
+          <td>
+            <div class="bar-wrap">
+              <div class="bar"><div class="bar-fill med-low"></div></div>
+              <span class="bar-label">Variabile</span>
+            </div>
+          </td>
+          <td>
+            <div class="bar-wrap">
+              <div class="bar"><div class="bar-fill med"></div></div>
+              <span class="bar-label">Media</span>
+            </div>
+          </td>
+        </tr>
+        <tr>
+          <td><strong>Proprietario / Verticale</strong></td>
+          <td>
+            <div class="bar-wrap">
+              <div class="bar"><div class="bar-fill low"></div></div>
+              <span class="bar-label">Minima</span>
+            </div>
+          </td>
+          <td>
+            <div class="bar-wrap">
+              <div class="bar"><div class="bar-fill low"></div></div>
+              <span class="bar-label">Minima</span>
+            </div>
+          </td>
+          <td>
+            <div class="bar-wrap">
+              <div class="bar"><div class="bar-fill max"></div></div>
+              <span class="bar-label">Immediata</span>
+            </div>
+          </td>
+          <td>
+            <div class="bar-wrap">
+              <div class="bar"><div class="bar-fill max"></div></div>
+              <span class="bar-label">Molto alto</span>
+            </div>
+          </td>
+          <td>
+            <div class="bar-wrap">
+              <div class="bar"><div class="bar-fill low"></div></div>
+              <span class="bar-label">Bassa</span>
+            </div>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h3 class="sub">Guida alla scelta: le domande giuste</h3>
+
+  <div class="decision-tree">
+    <h4>Albero decisionale — Quale stack scegliere?</h4>
+
+    <div class="dt-node">
+      <div class="dt-q">Q1</div>
+      <div class="dt-content">
+        <p>Hai sviluppatori Python nel team?</p>
+        <div class="dt-answer">
+          <span>Sì → vai a Q2</span>
+          <span>No → No-code o Proprietario</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="dt-node">
+      <div class="dt-q">Q2</div>
+      <div class="dt-content">
+        <p>Il caso d'uso è molto specifico o richiede logica custom che i framework non coprono?</p>
+        <div class="dt-answer">
+          <span>Sì → Custom / Vanilla</span>
+          <span>No → vai a Q3</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="dt-node">
+      <div class="dt-q">Q3</div>
+      <div class="dt-content">
+        <p>Il task richiede più agenti specializzati che collaborano, o un singolo agente è sufficiente?</p>
+        <div class="dt-answer">
+          <span>Singolo agente → Framework orchestrazione (LangChain/LlamaIndex)</span>
+          <span>Multi-agent → CrewAI, AutoGen, LangGraph</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="dt-node">
+      <div class="dt-q">Q4</div>
+      <div class="dt-content">
+        <p>(Se no-code) Sei già nel ecosistema Microsoft / Salesforce / ServiceNow?</p>
+        <div class="dt-answer">
+          <span>Sì → Valuta lo stack proprietario del vendor</span>
+          <span>No → Flowise, Dify, n8n, Zapier</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="callout blue">
+    <div class="callout-label">La realtà sul campo</div>
+    <p>La maggior parte dei team che costruisce agenti seriamente usa <strong>una combinazione di stack</strong>: un framework di orchestrazione (LangChain o LlamaIndex) come base, con componenti custom per le parti più specifiche, e strumenti no-code per prototipare rapidamente nuove idee prima di implementarle in codice. Non è una scelta definitiva — è un equilibrio che evolve con il progetto.</p>
+  </div>
+</div>
+
+
+<!-- ═══════════════════════════════════════════════════
+     07 — GLOSSARIO
+════════════════════════════════════════════════════ -->
+<div class="page" id="glossario">
+  <div class="section-eyebrow">
+    <span class="section-num">07</span>
+    <div class="section-line"></div>
+    <span class="section-tag">Riferimento rapido</span>
+  </div>
+
+  <h2 class="section-title">Glossario tecnico<br><em>essenziale</em></h2>
+
+  <p class="section-intro">I termini tecnici che incontrerai più spesso leggendo di agenti AI, spiegati in modo accessibile.</p>
+
+  <dl class="glossary-grid">
+    <div class="glossary-item">
+      <dt>API (Application Programming Interface)</dt>
+      <dd>Un "sportello" standardizzato che permette a un software di comunicare con un altro. Quando un agente "chiama" ChatGPT, lo fa tramite l'API di OpenAI.</dd>
+    </div>
+    <div class="glossary-item">
+      <dt>LLM (Large Language Model)</dt>
+      <dd>Il modello linguistico di grandi dimensioni che costituisce il "cervello" dell'agente. Esempi: GPT-4, Claude, Llama, Gemini.</dd>
+    </div>
+    <div class="glossary-item">
+      <dt>RAG (Retrieval-Augmented Generation)</dt>
+      <dd>Tecnica che permette all'agente di cercare informazioni in una knowledge base esterna prima di rispondere, invece di affidarsi solo a ciò che ha imparato durante il training.</dd>
+    </div>
+    <div class="glossary-item">
+      <dt>Vector Database</dt>
+      <dd>Database specializzato che conserva i documenti come "vettori numerici" (rappresentazioni matematiche del significato). Permette ricerche per somiglianza semantica. Es: Pinecone, Chroma, Weaviate.</dd>
+    </div>
+    <div class="glossary-item">
+      <dt>Embedding</dt>
+      <dd>Il processo di trasformare testo in vettori numerici che il computer può comparare. Due frasi con significato simile avranno embedding simili, anche se le parole sono diverse.</dd>
+    </div>
+    <div class="glossary-item">
+      <dt>Token</dt>
+      <dd>L'unità di misura del testo per i modelli AI. Approssimativamente 1 token ≈ ¾ di parola in inglese. I costi delle API e i limiti di contesto si misurano in token.</dd>
+    </div>
+    <div class="glossary-item">
+      <dt>Context Window</dt>
+      <dd>La quantità massima di testo (in token) che un LLM può "vedere" in una singola elaborazione. È come la memoria di lavoro dell'agente: tutto ciò che supera questo limite viene "dimenticato".</dd>
+    </div>
+    <div class="glossary-item">
+      <dt>Tool / Function Calling</dt>
+      <dd>Meccanismo che permette al modello di chiamare funzioni esterne durante il ragionamento. Il modello decide quale strumento usare e con quali parametri, il framework lo esegue e restituisce il risultato.</dd>
+    </div>
+    <div class="glossary-item">
+      <dt>ReAct (Reason + Act)</dt>
+      <dd>Pattern architetturale dove il modello alterna esplicitamente fasi di ragionamento ("Thought") e azioni ("Action"). Permette di tracciare il processo decisionale dell'agente passo per passo.</dd>
+    </div>
+    <div class="glossary-item">
+      <dt>Human in the Loop</dt>
+      <dd>Punto nel workflow agente dove l'esecuzione si pausa e attende la conferma o l'input di un umano prima di procedere. Fondamentale per azioni irreversibili o ad alto rischio.</dd>
+    </div>
+    <div class="glossary-item">
+      <dt>Orchestratore</dt>
+      <dd>Il componente (codice o framework) che gestisce il ciclo dell'agente: decide quando il modello deve ragionare, quando deve agire, come gestire gli errori, quando considerare il task completato.</dd>
+    </div>
+    <div class="glossary-item">
+      <dt>Vendor Lock-in</dt>
+      <dd>Situazione in cui un'organizzazione dipende così fortemente da un fornitore tecnologico che cambiarlo diventerebbe eccessivamente costoso o complesso. Rischio principale degli stack proprietari.</dd>
+    </div>
+    <div class="glossary-item">
+      <dt>Fine-tuning</dt>
+      <dd>Processo di ri-addestramento di un modello su dati specifici per specializzarlo in un dominio. Alternativa al RAG: invece di fornire i documenti al momento dell'uso, si "insegnano" al modello durante il training.</dd>
+    </div>
+    <div class="glossary-item">
+      <dt>Prompt Engineering</dt>
+      <dd>L'arte di scrivere le istruzioni (prompt) per il modello in modo da ottenere i comportamenti desiderati. In un agente, il prompt di sistema definisce chi è l'agente, cosa sa fare e come deve comportarsi.</dd>
+    </div>
+    <div class="glossary-item">
+      <dt>Self-hosting</dt>
+      <dd>Eseguire un modello AI o un'applicazione su infrastruttura propria (server propri o cloud privato), invece di usare i servizi del provider. Offre maggior controllo sui dati ma richiede gestione tecnica.</dd>
+    </div>
+    <div class="glossary-item">
+      <dt>Latenza</dt>
+      <dd>Il tempo che intercorre tra l'invio di una richiesta al modello e la ricezione della risposta. In un agente con molti step, la latenza si accumula e può impattare l'esperienza utente.</dd>
+    </div>
+  </dl>
+
+</div>
+
+<footer>
+  <p>Report "Come si costruisce un agente AI — Stack tecnologici" · Generato con Claude · Febbraio 2026</p>
+  <p>agenti-ai-stack-tecnologici.html</p>
+</footer>
+
+</body>
+</html>

@@ -1,0 +1,1427 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Mappa delle Capacità LLM — Dove l'AI funziona davvero</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;0,700;0,900;1,400;1,700&family=Crimson+Pro:ital,wght@0,300;0,400;0,600;1,300;1,400&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --parchment: #f5f0e8;
+    --parchment-dark: #ede6d6;
+    --parchment-darker: #e0d5c0;
+    --ink: #1a1209;
+    --ink-mid: #3d2f1a;
+    --ink-light: #6b5a3e;
+    --ink-faint: rgba(26,18,9,0.12);
+    --ink-faint2: rgba(26,18,9,0.06);
+    --red: #8b2020;
+    --red-mid: #a83232;
+    --red-faint: rgba(139,32,32,0.08);
+    --red-border: rgba(139,32,32,0.25);
+    --green: #2a5c3f;
+    --green-mid: #3a7a52;
+    --green-faint: rgba(42,92,63,0.08);
+    --green-border: rgba(42,92,63,0.25);
+    --amber: #7a5200;
+    --amber-faint: rgba(122,82,0,0.08);
+    --amber-border: rgba(122,82,0,0.25);
+    --blue: #1a3a5c;
+    --blue-faint: rgba(26,58,92,0.07);
+    --border: rgba(26,18,9,0.15);
+    --border-strong: rgba(26,18,9,0.3);
+    --display: 'Playfair Display', serif;
+    --body: 'Crimson Pro', serif;
+    --mono: 'DM Mono', monospace;
+  }
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--parchment);
+    color: var(--ink);
+    font-family: var(--body);
+    min-height: 100vh;
+    overflow-x: hidden;
+    position: relative;
+  }
+
+  /* Noise texture overlay */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E");
+    pointer-events: none;
+    opacity: 0.4;
+    z-index: 0;
+  }
+
+  /* Aged paper vignette */
+  body::after {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background: radial-gradient(ellipse at center, transparent 60%, rgba(160,130,80,0.15) 100%);
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  .page-wrap {
+    position: relative;
+    z-index: 1;
+    max-width: 1080px;
+    margin: 0 auto;
+    padding: 0 36px 100px;
+  }
+
+  /* ── DECORATIVE RULES ── */
+  .rule-double {
+    border: none;
+    height: 3px;
+    background:
+      linear-gradient(var(--ink) 0, var(--ink) 1px, transparent 1px, transparent 2px, var(--ink) 2px, var(--ink) 3px);
+    margin: 0;
+  }
+
+  .rule-single {
+    border: none;
+    border-top: 1px solid var(--border-strong);
+    margin: 36px 0;
+  }
+
+  /* ── HEADER ── */
+  header {
+    padding: 56px 0 0;
+    text-align: center;
+    position: relative;
+  }
+
+  .header-ornament {
+    font-family: var(--display);
+    font-size: 13px;
+    color: var(--ink-light);
+    letter-spacing: 5px;
+    text-transform: uppercase;
+    margin-bottom: 24px;
+    font-style: italic;
+  }
+
+  h1 {
+    font-family: var(--display);
+    font-size: clamp(38px, 5.5vw, 68px);
+    font-weight: 900;
+    color: var(--ink);
+    line-height: 1.0;
+    letter-spacing: -1px;
+    margin-bottom: 4px;
+  }
+
+  .h1-sub {
+    font-family: var(--display);
+    font-size: clamp(18px, 2.5vw, 28px);
+    font-weight: 400;
+    font-style: italic;
+    color: var(--ink-mid);
+    margin-bottom: 24px;
+  }
+
+  .header-desc {
+    font-size: 17px;
+    line-height: 1.7;
+    color: var(--ink-mid);
+    max-width: 640px;
+    margin: 0 auto 32px;
+    font-style: italic;
+  }
+
+  .header-meta {
+    display: flex;
+    justify-content: center;
+    gap: 32px;
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--ink-light);
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    padding: 16px 0;
+    border-top: 1px solid var(--border);
+    border-bottom: 1px solid var(--border);
+    margin-bottom: 0;
+  }
+
+  /* ── NAV ── */
+  .nav-strip {
+    display: flex;
+    justify-content: center;
+    gap: 0;
+    margin: 32px 0 48px;
+    border: 1px solid var(--border-strong);
+    overflow: hidden;
+    border-radius: 2px;
+  }
+
+  .nav-btn {
+    flex: 1;
+    font-family: var(--body);
+    font-size: 14px;
+    font-style: italic;
+    color: var(--ink-mid);
+    padding: 12px 8px;
+    cursor: pointer;
+    border: none;
+    background: transparent;
+    border-right: 1px solid var(--border);
+    transition: all 0.2s;
+    text-align: center;
+    letter-spacing: 0.3px;
+  }
+
+  .nav-btn:last-child { border-right: none; }
+  .nav-btn:hover { background: var(--parchment-dark); }
+
+  .nav-btn.active {
+    background: var(--ink);
+    color: var(--parchment);
+    font-style: normal;
+    font-weight: 600;
+  }
+
+  .section { display: none; }
+  .section.active { display: block; animation: emerge 0.35s ease; }
+  @keyframes emerge { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+
+  /* ── TYPOGRAPHY ── */
+  h2 {
+    font-family: var(--display);
+    font-size: 32px;
+    font-weight: 700;
+    color: var(--ink);
+    margin-bottom: 6px;
+    letter-spacing: -0.5px;
+  }
+
+  h3 {
+    font-family: var(--display);
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--ink-light);
+    text-transform: uppercase;
+    letter-spacing: 3px;
+    margin-bottom: 20px;
+    font-style: normal;
+  }
+
+  h4 {
+    font-family: var(--display);
+    font-size: 19px;
+    font-weight: 700;
+    color: var(--ink);
+    margin-bottom: 10px;
+  }
+
+  p {
+    font-size: 16px;
+    line-height: 1.75;
+    color: var(--ink-mid);
+    margin-bottom: 14px;
+  }
+
+  .section-intro {
+    font-size: 17px;
+    line-height: 1.75;
+    color: var(--ink-mid);
+    max-width: 700px;
+    margin-bottom: 40px;
+    padding-bottom: 32px;
+    border-bottom: 1px solid var(--border);
+    font-style: italic;
+  }
+
+  .section-heading { margin-bottom: 36px; }
+  .section-heading .subtitle {
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--ink-light);
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    margin-top: 4px;
+  }
+
+  /* ── LEGEND ── */
+  .legend {
+    display: flex;
+    gap: 24px;
+    margin-bottom: 36px;
+    flex-wrap: wrap;
+  }
+
+  .legend-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--ink-light);
+    letter-spacing: 1px;
+    text-transform: uppercase;
+  }
+
+  .legend-dot {
+    width: 12px; height: 12px;
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+  .legend-dot.green { background: var(--green); }
+  .legend-dot.amber { background: var(--amber); }
+  .legend-dot.red { background: var(--red); }
+
+  /* ── CAPABILITY CARDS ── */
+  .cap-card {
+    border: 1px solid var(--border);
+    border-radius: 2px;
+    margin-bottom: 20px;
+    overflow: hidden;
+    background: white;
+    background: rgba(255,255,255,0.5);
+  }
+
+  .cap-header {
+    display: flex;
+    align-items: flex-start;
+    gap: 16px;
+    padding: 20px 24px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .cap-icon {
+    font-size: 28px;
+    flex-shrink: 0;
+    margin-top: 2px;
+  }
+
+  .cap-title-wrap { flex: 1; }
+
+  .cap-title {
+    font-family: var(--display);
+    font-size: 20px;
+    font-weight: 700;
+    color: var(--ink);
+    margin-bottom: 3px;
+  }
+
+  .cap-subtitle {
+    font-size: 14px;
+    color: var(--ink-light);
+    font-style: italic;
+  }
+
+  .cap-badge {
+    font-family: var(--mono);
+    font-size: 10px;
+    padding: 4px 12px;
+    border-radius: 2px;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    flex-shrink: 0;
+    margin-top: 4px;
+  }
+
+  .badge-high { background: var(--green-faint); color: var(--green); border: 1px solid var(--green-border); }
+  .badge-mid { background: var(--amber-faint); color: var(--amber); border: 1px solid var(--amber-border); }
+  .badge-low { background: var(--red-faint); color: var(--red); border: 1px solid var(--red-border); }
+
+  .cap-body { padding: 20px 24px; }
+
+  .cap-body p { margin-bottom: 12px; font-size: 15px; }
+  .cap-body p:last-child { margin-bottom: 0; }
+
+  .cap-examples {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-top: 14px;
+  }
+
+  .example-tag {
+    font-family: var(--mono);
+    font-size: 11px;
+    padding: 3px 10px;
+    border-radius: 2px;
+    background: var(--parchment-dark);
+    border: 1px solid var(--border);
+    color: var(--ink-mid);
+  }
+
+  .cap-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 20px; }
+  @media (max-width: 768px) { .cap-grid { grid-template-columns: 1fr; } }
+
+  /* ── WARNING BAND ── */
+  .warn-band {
+    border: 1px solid var(--red-border);
+    border-left: 4px solid var(--red);
+    background: var(--red-faint);
+    border-radius: 2px;
+    padding: 16px 20px;
+    margin: 24px 0;
+  }
+
+  .warn-label {
+    font-family: var(--mono);
+    font-size: 10px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--red);
+    margin-bottom: 6px;
+  }
+
+  .warn-band p { color: var(--ink-mid); margin-bottom: 0; font-size: 15px; }
+
+  .note-band {
+    border: 1px solid var(--amber-border);
+    border-left: 4px solid var(--amber);
+    background: var(--amber-faint);
+    border-radius: 2px;
+    padding: 16px 20px;
+    margin: 24px 0;
+  }
+
+  .note-label {
+    font-family: var(--mono);
+    font-size: 10px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--amber);
+    margin-bottom: 6px;
+  }
+
+  .note-band p { color: var(--ink-mid); margin-bottom: 0; font-size: 15px; }
+
+  .insight-band {
+    border: 1px solid var(--green-border);
+    border-left: 4px solid var(--green);
+    background: var(--green-faint);
+    border-radius: 2px;
+    padding: 16px 20px;
+    margin: 24px 0;
+  }
+
+  .insight-label {
+    font-family: var(--mono);
+    font-size: 10px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--green);
+    margin-bottom: 6px;
+  }
+
+  .insight-band p { color: var(--ink-mid); margin-bottom: 0; font-size: 15px; }
+
+  /* ── SPECTRUM TABLE ── */
+  .spec-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 24px 0;
+    font-size: 14px;
+  }
+
+  .spec-table th {
+    font-family: var(--mono);
+    font-size: 10px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--ink-light);
+    padding: 12px 16px;
+    border-bottom: 2px solid var(--border-strong);
+    text-align: left;
+    background: var(--parchment-dark);
+  }
+
+  .spec-table td {
+    padding: 13px 16px;
+    border-bottom: 1px solid var(--border);
+    vertical-align: top;
+    line-height: 1.6;
+    font-size: 15px;
+    color: var(--ink-mid);
+  }
+
+  .spec-table tr:last-child td { border-bottom: none; }
+  .spec-table tr:hover td { background: var(--parchment-dark); }
+
+  .spec-table td:first-child { font-weight: 600; color: var(--ink); font-family: var(--display); font-size: 16px; }
+
+  .pill {
+    display: inline-block;
+    font-family: var(--mono);
+    font-size: 10px;
+    padding: 2px 8px;
+    border-radius: 2px;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+  }
+
+  .pill-g { background: var(--green-faint); color: var(--green); border: 1px solid var(--green-border); }
+  .pill-a { background: var(--amber-faint); color: var(--amber); border: 1px solid var(--amber-border); }
+  .pill-r { background: var(--red-faint); color: var(--red); border: 1px solid var(--red-border); }
+
+  /* ── HALLUCINATION SECTION ── */
+  .halluc-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 16px;
+    margin: 24px 0;
+  }
+
+  @media (max-width: 768px) { .halluc-grid { grid-template-columns: 1fr; } }
+
+  .halluc-card {
+    padding: 18px;
+    border: 1px solid var(--border);
+    border-radius: 2px;
+    background: rgba(255,255,255,0.4);
+  }
+
+  .halluc-title {
+    font-family: var(--display);
+    font-size: 15px;
+    font-weight: 700;
+    color: var(--ink);
+    margin-bottom: 8px;
+  }
+
+  .halluc-desc {
+    font-size: 14px;
+    color: var(--ink-mid);
+    line-height: 1.65;
+  }
+
+  /* ── COMPOUND TASK SECTION ── */
+  .task-flow {
+    display: flex;
+    gap: 12px;
+    align-items: stretch;
+    flex-wrap: wrap;
+    margin: 20px 0;
+  }
+
+  .task-step {
+    flex: 1;
+    min-width: 140px;
+    padding: 14px 16px;
+    border: 1px solid var(--border);
+    border-radius: 2px;
+    background: rgba(255,255,255,0.4);
+    position: relative;
+  }
+
+  .task-step-label {
+    font-family: var(--mono);
+    font-size: 9px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--ink-light);
+    margin-bottom: 6px;
+  }
+
+  .task-step-name {
+    font-family: var(--display);
+    font-size: 15px;
+    font-weight: 700;
+    color: var(--ink);
+    margin-bottom: 6px;
+  }
+
+  .task-step-score {
+    font-family: var(--mono);
+    font-size: 12px;
+  }
+
+  .score-g { color: var(--green); }
+  .score-a { color: var(--amber); }
+  .score-r { color: var(--red); }
+
+  .task-arrow {
+    display: flex;
+    align-items: center;
+    color: var(--ink-light);
+    font-size: 18px;
+    font-family: var(--display);
+  }
+
+  /* ── MATRIX ── */
+  .matrix-wrap {
+    overflow-x: auto;
+    margin: 24px 0;
+  }
+
+  .matrix {
+    min-width: 600px;
+    border-collapse: collapse;
+    width: 100%;
+  }
+
+  .matrix th {
+    font-family: var(--mono);
+    font-size: 10px;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    padding: 10px 14px;
+    color: var(--ink-light);
+    border: 1px solid var(--border);
+    background: var(--parchment-dark);
+    text-align: center;
+  }
+
+  .matrix td {
+    padding: 10px 14px;
+    border: 1px solid var(--border);
+    font-size: 13px;
+    text-align: center;
+    font-family: var(--mono);
+  }
+
+  .matrix td.row-label {
+    font-family: var(--display);
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--ink);
+    text-align: left;
+    background: var(--parchment-dark);
+  }
+
+  .cell-high { background: rgba(42,92,63,0.12); color: var(--green); }
+  .cell-mid { background: rgba(122,82,0,0.08); color: var(--amber); }
+  .cell-low { background: rgba(139,32,32,0.08); color: var(--red); }
+
+  /* ── HORIZON ── */
+  .horizon-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 16px;
+    margin: 24px 0;
+  }
+
+  @media (max-width: 768px) { .horizon-grid { grid-template-columns: 1fr; } }
+
+  .horizon-card {
+    border: 1px solid var(--border);
+    border-radius: 2px;
+    overflow: hidden;
+  }
+
+  .horizon-header {
+    padding: 12px 16px;
+    border-bottom: 1px solid var(--border);
+    background: var(--parchment-dark);
+  }
+
+  .horizon-period {
+    font-family: var(--mono);
+    font-size: 10px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--ink-light);
+    margin-bottom: 4px;
+  }
+
+  .horizon-title {
+    font-family: var(--display);
+    font-size: 16px;
+    font-weight: 700;
+    color: var(--ink);
+  }
+
+  .horizon-body {
+    padding: 14px 16px;
+    background: rgba(255,255,255,0.3);
+  }
+
+  .horizon-list {
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+    gap: 7px;
+  }
+
+  .horizon-list li {
+    font-size: 13px;
+    color: var(--ink-mid);
+    line-height: 1.5;
+    display: flex;
+    gap: 8px;
+  }
+
+  .horizon-list li::before {
+    content: '—';
+    color: var(--ink-light);
+    flex-shrink: 0;
+  }
+
+  /* ── DECISION CHECKLIST ── */
+  .decision-box {
+    border: 1px solid var(--border-strong);
+    border-radius: 2px;
+    overflow: hidden;
+    margin: 32px 0;
+  }
+
+  .decision-box-header {
+    padding: 16px 24px;
+    background: var(--ink);
+    color: var(--parchment);
+  }
+
+  .decision-box-header h3 {
+    color: var(--parchment);
+    margin-bottom: 0;
+    letter-spacing: 3px;
+  }
+
+  .decision-box-body {
+    padding: 24px;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 24px;
+  }
+
+  @media (max-width: 600px) { .decision-box-body { grid-template-columns: 1fr; } }
+
+  .decision-col-title {
+    font-family: var(--display);
+    font-size: 15px;
+    font-weight: 700;
+    margin-bottom: 12px;
+  }
+
+  .decision-col-title.go { color: var(--green); }
+  .decision-col-title.nogo { color: var(--red); }
+
+  .decision-list {
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .decision-list li {
+    font-size: 14px;
+    color: var(--ink-mid);
+    line-height: 1.55;
+    display: flex;
+    gap: 10px;
+    padding-bottom: 8px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .decision-list li:last-child { border-bottom: none; padding-bottom: 0; }
+
+  .decision-list li .marker {
+    flex-shrink: 0;
+    font-weight: 700;
+    font-family: var(--mono);
+    font-size: 12px;
+  }
+
+  .marker.go { color: var(--green); }
+  .marker.nogo { color: var(--red); }
+</style>
+</head>
+<body>
+<div class="page-wrap">
+
+  <header>
+    <div class="header-ornament">Atlante delle Capacità</div>
+    <div class="rule-double"></div>
+    <div style="height:24px"></div>
+    <h1>Dove l'AI funziona davvero</h1>
+    <div class="h1-sub">e dove ancora non ci siamo</div>
+    <p class="header-desc">Una mappa onesta delle capacità degli attuali modelli LLM — i territori sicuri, le zone grigie, e le aree in cui affidarsi all'AI è prematuro o rischioso.</p>
+    <div class="header-meta">
+      <span>Serie: Agenti AI</span>
+      <span>Documento V</span>
+      <span>Febbraio 2026</span>
+      <span>Stato dell'Arte</span>
+    </div>
+  </header>
+
+  <nav class="nav-strip">
+    <button class="nav-btn active" onclick="showTab('forti')">I — Punti di Forza</button>
+    <button class="nav-btn" onclick="showTab('deboli')">II — Punti Deboli</button>
+    <button class="nav-btn" onclick="showTab('grigi')">III — Zone Grigie</button>
+    <button class="nav-btn" onclick="showTab('matrice')">IV — Matrice per Settore</button>
+    <button class="nav-btn" onclick="showTab('orizzonte')">V — Orizzonte</button>
+  </nav>
+
+  <!-- ═══ TAB I: PUNTI DI FORZA ═══ -->
+  <section id="forti" class="section active">
+
+    <div class="section-heading">
+      <h2>I Territori Sicuri</h2>
+      <div class="subtitle">// Task in cui gli LLM sono effettivamente affidabili ed efficaci</div>
+    </div>
+
+    <p class="section-intro">Questi sono i task in cui i modelli attuali offrono valore reale e misurabile, con performance sufficientemente affidabili da giustificare l'uso in produzione — con i giusti livelli di supervisione.</p>
+
+    <div class="legend">
+      <div class="legend-item"><div class="legend-dot green"></div> Alta affidabilità — uso in produzione giustificato</div>
+      <div class="legend-item"><div class="legend-dot amber"></div> Buona affidabilità — con supervisione umana</div>
+      <div class="legend-item"><div class="legend-dot red"></div> Bassa affidabilità — uso sperimentale o non raccomandato</div>
+    </div>
+
+    <!-- LINGUAGGIO E TESTO -->
+    <div class="cap-card">
+      <div class="cap-header">
+        <div class="cap-icon">📝</div>
+        <div class="cap-title-wrap">
+          <div class="cap-title">Comprensione e Generazione Linguistica</div>
+          <div class="cap-subtitle">Il territorio nativo degli LLM — dove il vantaggio è più consolidato</div>
+        </div>
+        <span class="cap-badge badge-high">Alta affidabilità</span>
+      </div>
+      <div class="cap-body">
+        <p>Gli LLM eccellono in tutto ciò che riguarda la manipolazione del linguaggio naturale. Riassumere documenti lunghi, riformulare testi con tono diverso, tradurre tra lingue, correggere grammatica e stile, estrarre informazioni chiave da testo non strutturato — queste operazioni funzionano in modo affidabile su tutta la gamma di modelli attuali, anche i più piccoli.</p>
+        <p>Il limite non è la qualità dell'output ma la <em>verificabilità</em>: il modello può produrre sintesi plausibili ma leggermente imprecise che richiedono revisione umana. Su testi fattuali con fonti verificabili questo è gestibile; su contenuti dove la precisione è critica (medico, legale) la revisione è obbligatoria.</p>
+        <div class="cap-examples">
+          <span class="example-tag">Sintesi documenti</span>
+          <span class="example-tag">Traduzione</span>
+          <span class="example-tag">Correzione grammaticale</span>
+          <span class="example-tag">Riformulazione</span>
+          <span class="example-tag">Estrazione di entità</span>
+          <span class="example-tag">Classificazione testo</span>
+          <span class="example-tag">Sentiment analysis</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- CODING -->
+    <div class="cap-card">
+      <div class="cap-header">
+        <div class="cap-icon">💻</div>
+        <div class="cap-title-wrap">
+          <div class="cap-title">Generazione e Revisione di Codice</div>
+          <div class="cap-subtitle">Uno dei miglioramenti più rapidi e misurabili degli ultimi 24 mesi</div>
+        </div>
+        <span class="cap-badge badge-high">Alta affidabilità</span>
+      </div>
+      <div class="cap-body">
+        <p>La capacità di generare codice funzionante è migliorata drasticamente. I modelli frontier (Claude Sonnet/Opus, GPT-4o) producono codice corretto su task ben definiti con una frequenza che rende l'assistenza al coding genuinamente produttiva. Su linguaggi comuni (Python, JavaScript, SQL, TypeScript) e task standard (CRUD, API integration, data transformation), il vantaggio è misurabile: studi interni di varie aziende riportano riduzioni del 20–40% nel tempo di sviluppo.</p>
+        <p>Il limite reale emerge su codebase grandi e complesse, dove il modello non vede l'intera architettura, e su bug sottili che richiedono comprensione profonda del contesto di sistema. Il debugging di errori logici non ovvi rimane difficile.</p>
+        <div class="cap-examples">
+          <span class="example-tag">Boilerplate e scaffolding</span>
+          <span class="example-tag">Refactoring</span>
+          <span class="example-tag">Unit test generation</span>
+          <span class="example-tag">SQL queries</span>
+          <span class="example-tag">Regex</span>
+          <span class="example-tag">Documentazione codice</span>
+          <span class="example-tag">Code review</span>
+          <span class="example-tag">Bug spiegazione</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Q&A su documenti -->
+    <div class="cap-card">
+      <div class="cap-header">
+        <div class="cap-icon">🔍</div>
+        <div class="cap-title-wrap">
+          <div class="cap-title">Q&A su Documenti e Knowledge Base (RAG)</div>
+          <div class="cap-subtitle">Il caso d'uso enterprise più maturo e deployato in produzione</div>
+        </div>
+        <span class="cap-badge badge-high">Alta affidabilità</span>
+      </div>
+      <div class="cap-body">
+        <p>Il paradigma RAG — recupera documenti rilevanti, forniscili al modello come contesto, chiedi di rispondere basandosi su di essi — è il caso d'uso enterprise più maturo. Funziona perché riduce drasticamente il rischio di allucinazione: il modello non deve ricordare i fatti dal training, li legge dal contesto che gli viene fornito. Assistenti su manualistica interna, knowledge base di prodotto, policy aziendali, archivi normativi sono in produzione in migliaia di aziende.</p>
+        <p>La qualità dipende criticamente dalla qualità del retrieval (se recuperi i chunk sbagliati, la risposta sarà sbagliata) e dalla chiarezza delle domande. Il modello tende a rispondere anche quando non ha abbastanza informazioni — serve sempre un meccanismo di "non so / non trovato".</p>
+        <div class="cap-examples">
+          <span class="example-tag">Assistente su documenti interni</span>
+          <span class="example-tag">FAQ su knowledge base</span>
+          <span class="example-tag">Ricerca in archivi normativi</span>
+          <span class="example-tag">Supporto su manualistica</span>
+          <span class="example-tag">Sintesi di contratti</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="cap-grid">
+
+      <!-- BRAINSTORMING -->
+      <div class="cap-card">
+        <div class="cap-header">
+          <div class="cap-icon">💡</div>
+          <div class="cap-title-wrap">
+            <div class="cap-title">Brainstorming e Ideazione</div>
+            <div class="cap-subtitle">Generazione di opzioni e varianti</div>
+          </div>
+          <span class="cap-badge badge-high">Alta</span>
+        </div>
+        <div class="cap-body">
+          <p>Gli LLM sono efficaci come partner di ideazione perché generano rapidamente molte opzioni e prospettive diverse. La qualità delle idee varia, ma la quantità e la velocità sono genuinamente utili. L'umano seleziona e raffina — il modello genera il materiale grezzo.</p>
+          <div class="cap-examples">
+            <span class="example-tag">Naming</span>
+            <span class="example-tag">Struttura argomenti</span>
+            <span class="example-tag">Scenari alternativi</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- DATA EXTRACTION -->
+      <div class="cap-card">
+        <div class="cap-header">
+          <div class="cap-icon">📊</div>
+          <div class="cap-title-wrap">
+            <div class="cap-title">Estrazione Dati Strutturati</div>
+            <div class="cap-subtitle">Da testo non strutturato a JSON/tabelle</div>
+          </div>
+          <span class="cap-badge badge-high">Alta</span>
+        </div>
+        <div class="cap-body">
+          <p>Convertire testo libero in dati strutturati (estrarre date, nomi, importi, categorie da email o documenti) funziona bene con schemi di output ben definiti e un buon sistema prompt. È uno dei task con il ROI più alto su processi documentali esistenti.</p>
+          <div class="cap-examples">
+            <span class="example-tag">Parsing fatture</span>
+            <span class="example-tag">Estrazione da email</span>
+            <span class="example-tag">Form filling</span>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+    <div class="cap-grid">
+
+      <!-- CONVERSATIONAL -->
+      <div class="cap-card">
+        <div class="cap-header">
+          <div class="cap-icon">💬</div>
+          <div class="cap-title-wrap">
+            <div class="cap-title">Customer Service e Supporto</div>
+            <div class="cap-subtitle">Con knowledge base ben strutturata</div>
+          </div>
+          <span class="cap-badge badge-mid">Con supervisione</span>
+        </div>
+        <div class="cap-body">
+          <p>Gestire FAQ, triaging di ticket, risposte a richieste standard funziona bene quando il dominio è definito e le risposte hanno una fonte verificabile. Il rischio è nelle domande edge case e nella gestione di situazioni emotive. L'escalation umana deve essere sempre disponibile.</p>
+        </div>
+      </div>
+
+      <!-- CONTENT GENERATION -->
+      <div class="cap-card">
+        <div class="cap-header">
+          <div class="cap-icon">✍️</div>
+          <div class="cap-title-wrap">
+            <div class="cap-title">Generazione Contenuti</div>
+            <div class="cap-subtitle">Marketing, comunicazione, documentazione</div>
+          </div>
+          <span class="cap-badge badge-mid">Con revisione</span>
+        </div>
+        <div class="cap-body">
+          <p>Post, email, descrizioni prodotto, documentazione tecnica — gli LLM producono bozze di buona qualità in modo rapido. Il limite è la voce autentica e la conoscenza contestuale profonda. Funziona meglio come assistente alla scrittura che come scrittore autonomo.</p>
+        </div>
+      </div>
+
+    </div>
+
+  </section>
+
+  <!-- ═══ TAB II: PUNTI DEBOLI ═══ -->
+  <section id="deboli" class="section">
+
+    <div class="section-heading">
+      <h2>I Territori Pericolosi</h2>
+      <div class="subtitle">// Task in cui l'AI non è ancora affidabile o crea rischi reali</div>
+    </div>
+
+    <p class="section-intro">Questi sono i task in cui gli LLM attuali producono risultati inaffidabili, pericolosamente plausibili, o semplicemente inadeguati — spesso nel modo peggiore: con grande sicurezza apparente.</p>
+
+    <div class="warn-band">
+      <div class="warn-label">// Avvertimento</div>
+      <p>Il problema più insidioso non è quando il modello sbaglia palesemente — è quando sbaglia in modo convincente. Un output impreciso ma ben scritto è più pericoloso di un output palesemente errato perché è più difficile da individuare.</p>
+    </div>
+
+    <!-- RAGIONAMENTO MATEMATICO -->
+    <div class="cap-card">
+      <div class="cap-header">
+        <div class="cap-icon">🔢</div>
+        <div class="cap-title-wrap">
+          <div class="cap-title">Ragionamento Matematico Complesso</div>
+          <div class="cap-subtitle">I limiti strutturali dell'architettura transformer sui simboli formali</div>
+        </div>
+        <span class="cap-badge badge-low">Bassa affidabilità</span>
+      </div>
+      <div class="cap-body">
+        <p>Gli LLM non sono calcolatori. Producono i passi di un calcolo nello stesso modo in cui producono testo — per plausibilità statistica, non per verifica formale. Su calcoli semplici funzionano perché hanno visto molti esempi nel training. Su calcoli complessi, multi-step, o che richiedono precisione numerica, l'errore è frequente e spesso silenzioso.</p>
+        <p>La soluzione parziale è il code interpreter: il modello scrive il codice Python che esegue il calcolo, e il risultato è corretto perché è il computer a calcolarlo. Ma questo funziona solo se il modello traduce correttamente il problema in codice — e anche qui gli errori logici esistono.</p>
+        <div class="warn-band" style="margin-top:14px">
+          <div class="warn-label">// Non usare gli LLM per</div>
+          <p>Calcoli finanziari precisi, analisi statistiche complesse, dimostrazioni formali, qualsiasi contesto dove un errore numerico ha conseguenze concrete.</p>
+        </div>
+        <div class="cap-examples">
+          <span class="example-tag" style="border-color:var(--red-border);color:var(--red)">❌ Aritmetica multi-step</span>
+          <span class="example-tag" style="border-color:var(--red-border);color:var(--red)">❌ Calcoli finanziari</span>
+          <span class="example-tag" style="border-color:var(--red-border);color:var(--red)">❌ Dimostrazioni formali</span>
+          <span class="example-tag" style="border-color:var(--green-border);color:var(--green)">✓ Con code interpreter</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- ALLUCINAZIONI -->
+    <div class="cap-card">
+      <div class="cap-header">
+        <div class="cap-icon">👻</div>
+        <div class="cap-title-wrap">
+          <div class="cap-title">Fatti Verificabili e Citazioni</div>
+          <div class="cap-subtitle">Il problema strutturale delle allucinazioni — non risolto, solo mitigato</div>
+        </div>
+        <span class="cap-badge badge-low">Alto rischio</span>
+      </div>
+      <div class="cap-body">
+        <p>Gli LLM allucinano — producono affermazioni false con tono autorevole. Non è un bug da correggere con un patch: è una conseguenza dell'architettura. Il modello genera testo statisticamente plausibile, non testo verificato. I modelli migliori allucinano meno, ma allucinano ancora.</p>
+
+        <div class="halluc-grid">
+          <div class="halluc-card">
+            <div class="halluc-title">Citazioni bibliografiche</div>
+            <div class="halluc-desc">Autori, titoli, DOI inventati ma perfettamente formattati. Il problema più famoso e ancora irrisolto.</div>
+          </div>
+          <div class="halluc-card">
+            <div class="halluc-title">Date e fatti storici</div>
+            <div class="halluc-desc">Date sbagliate, eventi confusi, persone attribuite a ruoli errati — specie su eventi meno documentati nel training.</div>
+          </div>
+          <div class="halluc-card">
+            <div class="halluc-title">Conoscenza del dominio specifico</div>
+            <div class="halluc-desc">Leggi, normative, procedure mediche, policy aziendali — il modello riempie i gap con plausibilità invece che con incertezza.</div>
+          </div>
+        </div>
+
+        <div class="note-band">
+          <div class="note-label">// Mitigazione parziale</div>
+          <p>Il RAG riduce significativamente le allucinazioni su knowledge base propria. Il web search permette al modello di citare fonti verificabili. Ma nessuno dei due elimina completamente il problema — riducono il rischio, non lo azzerano.</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- RAGIONAMENTO SPAZIALE E FISICO -->
+    <div class="cap-grid">
+      <div class="cap-card">
+        <div class="cap-header">
+          <div class="cap-icon">🗺️</div>
+          <div class="cap-title-wrap">
+            <div class="cap-title">Ragionamento Spaziale</div>
+            <div class="cap-subtitle">Geometria, orientamento, relazioni fisiche</div>
+          </div>
+          <span class="cap-badge badge-low">Bassa affidabilità</span>
+        </div>
+        <div class="cap-body">
+          <p>I modelli testuali non hanno una rappresentazione interna dello spazio fisico. Problemi di geometria, orientamento nello spazio, relazioni topologiche tra oggetti fisici — performance molto inferiore rispetto al testo. I modelli multimodali migliorano su immagini, ma restano lontani dal ragionamento spaziale umano.</p>
+        </div>
+      </div>
+
+      <div class="cap-card">
+        <div class="cap-header">
+          <div class="cap-icon">⏰</div>
+          <div class="cap-title-wrap">
+            <div class="cap-title">Pianificazione a Lungo Termine</div>
+            <div class="cap-subtitle">Task che richiedono decine di passi interdipendenti</div>
+          </div>
+          <span class="cap-badge badge-low">Bassa affidabilità</span>
+        </div>
+        <div class="cap-body">
+          <p>I modelli pianificano bene su orizzonti brevi (3-5 passi). Su sequenze lunghe con molte dipendenze, la coerenza del piano degrada. Il modello perde il filo, ripete passi, o produce piani internamente contraddittori. È uno dei limiti principali degli agenti autonomi su task complessi.</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- NOVITÀ E CREATIVITÀ REALE -->
+    <div class="cap-card">
+      <div class="cap-header">
+        <div class="cap-icon">🎨</div>
+        <div class="cap-title-wrap">
+          <div class="cap-title">Creatività Genuinamente Originale</div>
+          <div class="cap-subtitle">La distinzione tra ricombinazione e vera novità</div>
+        </div>
+        <span class="cap-badge badge-mid">Dipende dal contesto</span>
+      </div>
+      <div class="cap-body">
+        <p>Gli LLM sono eccellenti nella <em>ricombinazione creativa</em>: prendono pattern esistenti, li mischiano, li adattano. Questo è genuinamente utile per brainstorming, varianti di concept, scrittura creativa in stili noti. Ma sono strutturalmente deboli nella <em>vera originalità</em> — l'idea che non esiste ancora in nessuna forma nel training data, il salto concettuale che rompe con tutti i pattern precedenti.</p>
+        <p>In pratica: eccellono nel "un po' come X ma con elementi di Y", faticano nel "qualcosa che non è mai stato fatto prima". Per la maggior parte dei task aziendali, la ricombinazione sofisticata è più che sufficiente.</p>
+      </div>
+    </div>
+
+    <!-- DECISIONI AD ALTO IMPATTO -->
+    <div class="cap-card">
+      <div class="cap-header">
+        <div class="cap-icon">⚖️</div>
+        <div class="cap-title-wrap">
+          <div class="cap-title">Decisioni ad Alto Impatto e Responsabilità</div>
+          <div class="cap-subtitle">Dove l'autonomia dell'AI è prematura — per ragioni tecniche ed etiche</div>
+        </div>
+        <span class="cap-badge badge-low">Non raccomandato</span>
+      </div>
+      <div class="cap-body">
+        <p>Diagnosi mediche, decisioni legali vincolanti, valutazioni del credito, assunzioni e licenziamenti, decisioni su infrastrutture critiche — in questi ambiti gli LLM possono supportare l'analisi umana, ma non possono sostituire il giudizio umano. Non per ragioni romantiche, ma per ragioni concrete: i modelli non sono calibrati per esprimere incertezza in modo affidabile, possono ereditare bias dal training data, e non hanno responsabilità legale degli errori.</p>
+        <p>Il ruolo corretto degli LLM in questi contesti è come strumento di supporto all'analisi — presentare opzioni, riassumere evidenze, identificare fattori rilevanti — non come decisore autonomo.</p>
+      </div>
+    </div>
+
+  </section>
+
+  <!-- ═══ TAB III: ZONE GRIGIE ═══ -->
+  <section id="grigi" class="section">
+
+    <div class="section-heading">
+      <h2>Le Zone Grigie</h2>
+      <div class="subtitle">// Task in cui "dipende" è la risposta onesta</div>
+    </div>
+
+    <p class="section-intro">Questi sono i task in cui la risposta non è semplice: funzionano bene in alcuni contesti, male in altri. La variabile determinante è spesso il dominio specifico, la qualità del prompting, e il livello di supervisione umana disponibile.</p>
+
+    <table class="spec-table">
+      <thead>
+        <tr>
+          <th>Task</th>
+          <th>Quando funziona</th>
+          <th>Quando fallisce</th>
+          <th>Affidabilità</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>Analisi di dati</td>
+          <td>Dati forniti nel contesto, domande qualitative, interpretazione di trend chiari</td>
+          <td>Calcoli statistici precisi, dati ambigui o incompleti, conclusioni causali</td>
+          <td><span class="pill pill-a">Media</span></td>
+        </tr>
+        <tr>
+          <td>Ricerca e sintesi</td>
+          <td>Sintesi di fonti fornite (RAG), esplorazione di un dominio noto, panoramiche generali</td>
+          <td>Fatti recenti senza web search, fonti primarie specifiche, letteratura scientifica specialistica</td>
+          <td><span class="pill pill-a">Media</span></td>
+        </tr>
+        <tr>
+          <td>Valutazione di testi</td>
+          <td>Coerenza logica, struttura argomentativa, chiarezza, stile</td>
+          <td>Accuratezza fattuale in domini specialistici, valutazione estetica soggettiva</td>
+          <td><span class="pill pill-a">Media</span></td>
+        </tr>
+        <tr>
+          <td>Automazione email e comunicazioni</td>
+          <td>Template standard, follow-up routinari, tono definito, contesto fornito</td>
+          <td>Situazioni delicate, negoziazioni, comunicazioni che richiedono conoscenza del contesto relazionale</td>
+          <td><span class="pill pill-a">Media</span></td>
+        </tr>
+        <tr>
+          <td>Supporto legale</td>
+          <td>Spiegazione di concetti giuridici generali, struttura di contratti standard, identificazione di clausole rilevanti</td>
+          <td>Pareri legali vincolanti, interpretazione di normative specifiche locali, contenziosi</td>
+          <td><span class="pill pill-r">Bassa — con revisione legale obbligatoria</span></td>
+        </tr>
+        <tr>
+          <td>Supporto medico</td>
+          <td>Spiegazione di condizioni note al paziente, sintesi di letteratura medica, triaging iniziale</td>
+          <td>Diagnosi, prescrizioni, interpretazione di esami, gestione di emergenze</td>
+          <td><span class="pill pill-r">Bassa — solo supporto, mai sostituzione</span></td>
+        </tr>
+        <tr>
+          <td>Analisi sentiment e opinioni</td>
+          <td>Testi espliciti, lingue dominanti nel training, polarità chiara</td>
+          <td>Ironia, sarcasmo, linguaggi settoriali, testi brevi ambigui, culture non anglosassoni</td>
+          <td><span class="pill pill-a">Media</span></td>
+        </tr>
+        <tr>
+          <td>Generazione di dati sintetici</td>
+          <td>Dati testuali, scenari plausibili, variazioni su pattern noti</td>
+          <td>Dati numerici precisi, distribuzioni statistiche corrette, dati con vincoli formali complessi</td>
+          <td><span class="pill pill-a">Media</span></td>
+        </tr>
+        <tr>
+          <td>Testing e QA</td>
+          <td>Generazione di test case, identificazione di edge case ovvi, documentazione di bug</td>
+          <td>Coverage garantita, testing di sicurezza, identificazione di vulnerabilità sottili</td>
+          <td><span class="pill pill-a">Media</span></td>
+        </tr>
+        <tr>
+          <td>Agenti autonomi su task lunghi</td>
+          <td>Task ben definiti con pochi passi, ambienti deterministici, fallback chiari</td>
+          <td>Task open-ended, ambienti imprevedibili, recupero da errori multipli concatenati</td>
+          <td><span class="pill pill-a">In evoluzione rapida</span></td>
+        </tr>
+      </tbody>
+    </table>
+
+    <hr class="rule-single">
+
+    <h3>Il Problema della Fiducia Mal Calibrata</h3>
+
+    <p>Una delle difficoltà più concrete nel lavorare con gli LLM è che il tono dell'output non è un indicatore affidabile della sua correttezza. Il modello produce testo con la stessa sicurezza apparente che si tratti di qualcosa che conosce bene o di qualcosa che sta inventando plausibilmente.</p>
+
+    <div class="note-band">
+      <div class="note-label">// Regola pratica</div>
+      <p>Più il task richiede conoscenza specialistica e verificabile, più la supervisione umana è non negoziabile. La lunghezza, la fluidità e la struttura dell'output non sono proxy della sua correttezza.</p>
+    </div>
+
+    <h3 style="margin-top:32px">Task Composti: Come il Rischio si Accumula</h3>
+    <p style="margin-bottom:20px">Nei workflow agentici, i task si concatenano. Un errore in un passaggio si propaga e si amplifica. Qui un esempio del profilo di rischio di un workflow tipico:</p>
+
+    <div class="task-flow">
+      <div class="task-step">
+        <div class="task-step-label">Passo 1</div>
+        <div class="task-step-name">Retrieval documenti</div>
+        <div class="task-step-score score-g">✓ Alta affidabilità</div>
+      </div>
+      <div class="task-arrow">→</div>
+      <div class="task-step">
+        <div class="task-step-label">Passo 2</div>
+        <div class="task-step-name">Estrazione dati chiave</div>
+        <div class="task-step-score score-g">✓ Buona affidabilità</div>
+      </div>
+      <div class="task-arrow">→</div>
+      <div class="task-step">
+        <div class="task-step-label">Passo 3</div>
+        <div class="task-step-name">Analisi e inferenze</div>
+        <div class="task-step-score score-a">~ Media affidabilità</div>
+      </div>
+      <div class="task-arrow">→</div>
+      <div class="task-step">
+        <div class="task-step-label">Passo 4</div>
+        <div class="task-step-name">Calcoli su dati estratti</div>
+        <div class="task-step-score score-r">✗ Rischio errore</div>
+      </div>
+      <div class="task-arrow">→</div>
+      <div class="task-step">
+        <div class="task-step-label">Passo 5</div>
+        <div class="task-step-name">Decisione automatica</div>
+        <div class="task-step-score score-r">✗ Non raccomandato</div>
+      </div>
+    </div>
+
+    <p>In questo esempio, i primi due passi sono solidi. Il terzo introduce incertezza. Il quarto aggiunge rischio numerico. Il quinto concentra tutti gli errori precedenti in una decisione. Un human-in-the-loop tra il passo 3 e il 4, e tra il 4 e il 5, cambia radicalmente il profilo di rischio complessivo.</p>
+
+  </section>
+
+  <!-- ═══ TAB IV: MATRICE PER SETTORE ═══ -->
+  <section id="matrice" class="section">
+
+    <div class="section-heading">
+      <h2>Matrice per Settore</h2>
+      <div class="subtitle">// Dove l'AI porta valore reale per industria e tipo di task</div>
+    </div>
+
+    <p class="section-intro">La stessa capacità può essere ad alta affidabilità in un settore e ad alto rischio in un altro — dipende dalle conseguenze degli errori, dalla disponibilità di supervisione umana, e dalla maturità delle pratiche di deployment.</p>
+
+    <div class="matrix-wrap">
+      <table class="matrix">
+        <thead>
+          <tr>
+            <th style="text-align:left">Settore</th>
+            <th>Generazione<br>Contenuti</th>
+            <th>Q&A su<br>Documenti</th>
+            <th>Coding &<br>Automazione</th>
+            <th>Analisi<br>Dati</th>
+            <th>Decisioni<br>Operative</th>
+            <th>Customer<br>Service</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td class="row-label">Software / Tech</td>
+            <td class="cell-high">Alta</td>
+            <td class="cell-high">Alta</td>
+            <td class="cell-high">Alta</td>
+            <td class="cell-high">Alta</td>
+            <td class="cell-mid">Media</td>
+            <td class="cell-high">Alta</td>
+          </tr>
+          <tr>
+            <td class="row-label">E-commerce / Retail</td>
+            <td class="cell-high">Alta</td>
+            <td class="cell-high">Alta</td>
+            <td class="cell-mid">Media</td>
+            <td class="cell-mid">Media</td>
+            <td class="cell-mid">Media</td>
+            <td class="cell-high">Alta</td>
+          </tr>
+          <tr>
+            <td class="row-label">Servizi Finanziari</td>
+            <td class="cell-mid">Media</td>
+            <td class="cell-mid">Media</td>
+            <td class="cell-mid">Media</td>
+            <td class="cell-mid">Media</td>
+            <td class="cell-low">Bassa</td>
+            <td class="cell-mid">Media</td>
+          </tr>
+          <tr>
+            <td class="row-label">Healthcare</td>
+            <td class="cell-mid">Media</td>
+            <td class="cell-mid">Media</td>
+            <td class="cell-mid">Media</td>
+            <td class="cell-mid">Media</td>
+            <td class="cell-low">Bassa</td>
+            <td class="cell-low">Solo triaging</td>
+          </tr>
+          <tr>
+            <td class="row-label">Legal</td>
+            <td class="cell-mid">Media</td>
+            <td class="cell-high">Alta — su documenti propri</td>
+            <td class="cell-mid">Media</td>
+            <td class="cell-mid">Media</td>
+            <td class="cell-low">Bassa</td>
+            <td class="cell-low">Bassa</td>
+          </tr>
+          <tr>
+            <td class="row-label">Manifatturiero / OT</td>
+            <td class="cell-mid">Media</td>
+            <td class="cell-high">Alta — su manualistica</td>
+            <td class="cell-mid">Media</td>
+            <td class="cell-mid">Media</td>
+            <td class="cell-low">Bassa</td>
+            <td class="cell-mid">Media</td>
+          </tr>
+          <tr>
+            <td class="row-label">Pubblica Amministrazione</td>
+            <td class="cell-mid">Media</td>
+            <td class="cell-high">Alta — su normativa</td>
+            <td class="cell-mid">Media</td>
+            <td class="cell-mid">Media</td>
+            <td class="cell-low">Bassa</td>
+            <td class="cell-mid">Media</td>
+          </tr>
+          <tr>
+            <td class="row-label">Education</td>
+            <td class="cell-high">Alta</td>
+            <td class="cell-high">Alta</td>
+            <td class="cell-high">Alta</td>
+            <td class="cell-mid">Media</td>
+            <td class="cell-mid">Media</td>
+            <td class="cell-high">Alta</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <hr class="rule-single">
+
+    <div class="decision-box">
+      <div class="decision-box-header">
+        <h3>Criteri di Valutazione — Go / No-Go</h3>
+      </div>
+      <div class="decision-box-body">
+        <div>
+          <div class="decision-col-title go">✓ Segnali positivi</div>
+          <ul class="decision-list">
+            <li><span class="marker go">✓</span>Il task ha input/output ben definiti e verificabili</li>
+            <li><span class="marker go">✓</span>Gli errori sono reversibili o a basso impatto</li>
+            <li><span class="marker go">✓</span>Esiste supervisione umana nel loop</li>
+            <li><span class="marker go">✓</span>Il dominio è ben rappresentato nel training (o si usa RAG)</li>
+            <li><span class="marker go">✓</span>Il volume è abbastanza alto da rendere misurabile il ROI</li>
+            <li><span class="marker go">✓</span>Il task è ripetitivo e standardizzabile</li>
+            <li><span class="marker go">✓</span>Esiste una metrica chiara per misurare la qualità dell'output</li>
+          </ul>
+        </div>
+        <div>
+          <div class="decision-col-title nogo">✗ Segnali di rischio</div>
+          <ul class="decision-list">
+            <li><span class="marker nogo">✗</span>Gli errori hanno conseguenze legali, mediche o finanziarie dirette</li>
+            <li><span class="marker nogo">✗</span>Il task richiede fatti verificabili senza supervisione</li>
+            <li><span class="marker nogo">✗</span>Il dominio è altamente specialistico e raro nel training</li>
+            <li><span class="marker nogo">✗</span>Non esiste un modo per misurare se l'output è corretto</li>
+            <li><span class="marker nogo">✗</span>Il task richiede calcoli numerici precisi</li>
+            <li><span class="marker nogo">✗</span>L'output è irreversibile (es. invio email, scrittura su DB)</li>
+            <li><span class="marker nogo">✗</span>La conoscenza richiesta è più recente del training cutoff</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+  </section>
+
+  <!-- ═══ TAB V: ORIZZONTE ═══ -->
+  <section id="orizzonte" class="section">
+
+    <div class="section-heading">
+      <h2>L'Orizzonte</h2>
+      <div class="subtitle">// Come sta evolvendo il territorio — cosa cambierà e quando</div>
+    </div>
+
+    <p class="section-intro">Il panorama delle capacità LLM evolve rapidamente. Alcune limitazioni attuali sono strutturali e difficili da superare; altre stanno già migliorando a ritmo sostenuto. Pianificare sapendo cosa cambierà e cosa probabilmente no è un vantaggio competitivo.</p>
+
+    <div class="horizon-grid">
+      <div class="horizon-card">
+        <div class="horizon-header">
+          <div class="horizon-period">// Già in miglioramento</div>
+          <div class="horizon-title">Ora → 12 mesi</div>
+        </div>
+        <div class="horizon-body">
+          <ul class="horizon-list">
+            <li>Ragionamento multi-step (modelli "thinking" come o3, Claude 3.7 Sonnet Extended Thinking)</li>
+            <li>Affidabilità degli agenti su task lunghi — context window più grandi, memory più robuste</li>
+            <li>Riduzione delle allucinazioni con grounding e web search integrato</li>
+            <li>Computer use e interazione con interfacce grafiche</li>
+            <li>Function calling e tool use più affidabile su modelli mid-tier</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="horizon-card">
+        <div class="horizon-header">
+          <div class="horizon-period">// In evoluzione significativa</div>
+          <div class="horizon-title">12 → 36 mesi</div>
+        </div>
+        <div class="horizon-body">
+          <ul class="horizon-list">
+            <li>Agenti autonomi su task complessi con recovery degli errori più robusto</li>
+            <li>Ragionamento scientifico e matematico avanzato (AlphaProof, modelli specializzati)</li>
+            <li>Multimodalità profonda — video, audio, interazione con ambienti fisici</li>
+            <li>Personalizzazione continua senza fine-tuning esplicito</li>
+            <li>Costo per token in calo significativo — task che oggi non sono economici lo diventeranno</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="horizon-card">
+        <div class="horizon-header">
+          <div class="horizon-period">// Limiti difficili da superare</div>
+          <div class="horizon-title">Strutturali</div>
+        </div>
+        <div class="horizon-body">
+          <ul class="horizon-list">
+            <li>Conoscenza del mondo fisico senza dati sensoriali diretti (embodiment problem)</li>
+            <li>Ragionamento causale genuino — la correlazione statistica non è causalità</li>
+            <li>Calibrazione perfetta dell'incertezza — "so di non sapere" è ancora un problema aperto</li>
+            <li>Creatività radicalmente originale — output vincolato al training distribution</li>
+            <li>Responsabilità e accountability — problema etico e legale, non solo tecnico</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    <hr class="rule-single">
+
+    <h3>Implicazione Pratica per il Tuo Sviluppo</h3>
+
+    <div class="insight-band">
+      <div class="insight-label">// Principio guida</div>
+      <p>Costruisci i tuoi agenti attorno ai punti di forza attuali — RAG, generazione testo, coding, estrazione dati — con supervisione umana sui punti deboli attuali. Progetta l'architettura in modo da poter aumentare l'autonomia degli agenti man mano che i modelli migliorano, senza dover riscrivere tutto da capo.</p>
+    </div>
+
+    <p>In pratica questo significa: non rimandare a quando l'AI sarà "abbastanza buona" per un task che funziona già bene oggi (perderai vantaggio competitivo), ma non affidarti ad autonomia completa su task dove l'affidabilità non è ancora sufficiente (rischi errori costosi e perdita di fiducia interna).</p>
+
+    <p>Il punto di equilibrio corretto si trova costruendo sistemi con <strong>livelli di autonomia espliciti e graduali</strong>: l'agente propone, l'umano approva, poi — quando i dati di produzione mostrano affidabilità sufficiente — si aumenta l'autonomia un passo alla volta.</p>
+
+    <div class="note-band" style="margin-top:24px">
+      <div class="note-label">// Il rischio peggiore</div>
+      <p>Non è usare l'AI dove non funziona bene — quello si scopre rapidamente. Il rischio peggiore è <em>non usarla dove funziona già benissimo</em>, e perdere il vantaggio di efficienza che i competitor stanno già costruendo.</p>
+    </div>
+
+  </section>
+
+</div>
+
+<script>
+  function showTab(id) {
+    document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+    document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+    document.getElementById(id).classList.add('active');
+    event.target.classList.add('active');
+  }
+</script>
+</body>
+</html>

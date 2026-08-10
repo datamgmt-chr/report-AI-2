@@ -1,0 +1,1560 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Single vs Multi-Agent — Guida Architetturale</title>
+<link href="https://fonts.googleapis.com/css2?family=Space+Mono:ital,wght@0,400;0,700;1,400&family=Syne:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --navy: #0a0f1e;
+    --navy-mid: #0d1529;
+    --navy-light: #112240;
+    --navy-card: #0f1b35;
+    --cyan: #00e5ff;
+    --cyan-dim: #00b4cc;
+    --cyan-faint: rgba(0, 229, 255, 0.08);
+    --cyan-faint2: rgba(0, 229, 255, 0.04);
+    --white: #e8f0fe;
+    --white-dim: rgba(232, 240, 254, 0.6);
+    --white-faint: rgba(232, 240, 254, 0.15);
+    --amber: #ffb700;
+    --amber-faint: rgba(255, 183, 0, 0.1);
+    --green: #00e676;
+    --green-faint: rgba(0, 230, 118, 0.08);
+    --red: #ff5252;
+    --red-faint: rgba(255, 82, 82, 0.08);
+    --line: rgba(0, 229, 255, 0.15);
+    --line-strong: rgba(0, 229, 255, 0.3);
+    --mono: 'Space Mono', monospace;
+    --sans: 'Syne', sans-serif;
+  }
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--navy);
+    color: var(--white);
+    font-family: var(--sans);
+    min-height: 100vh;
+    overflow-x: hidden;
+    position: relative;
+  }
+
+  /* Blueprint grid background */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image:
+      linear-gradient(var(--line) 1px, transparent 1px),
+      linear-gradient(90deg, var(--line) 1px, transparent 1px);
+    background-size: 40px 40px;
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  body::after {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image:
+      linear-gradient(var(--line-strong) 1px, transparent 1px),
+      linear-gradient(90deg, var(--line-strong) 1px, transparent 1px);
+    background-size: 200px 200px;
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  .page-wrap {
+    position: relative;
+    z-index: 1;
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 0 32px 80px;
+  }
+
+  /* ── HEADER ── */
+  header {
+    padding: 64px 0 48px;
+    border-bottom: 1px solid var(--line-strong);
+    margin-bottom: 56px;
+    position: relative;
+  }
+
+  .header-tag {
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--cyan);
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    margin-bottom: 20px;
+    opacity: 0.8;
+  }
+
+  h1 {
+    font-family: var(--sans);
+    font-size: clamp(36px, 5vw, 60px);
+    font-weight: 800;
+    line-height: 1.0;
+    color: var(--white);
+    letter-spacing: -1px;
+  }
+
+  h1 span {
+    color: var(--cyan);
+    display: block;
+  }
+
+  .header-sub {
+    font-family: var(--mono);
+    font-size: 13px;
+    color: var(--white-dim);
+    margin-top: 20px;
+    max-width: 600px;
+    line-height: 1.7;
+  }
+
+  .header-corner {
+    position: absolute;
+    top: 64px;
+    right: 0;
+    font-family: var(--mono);
+    font-size: 10px;
+    color: var(--cyan);
+    opacity: 0.5;
+    text-align: right;
+    line-height: 1.8;
+  }
+
+  /* ── NAV TABS ── */
+  .tabs {
+    display: flex;
+    gap: 2px;
+    margin-bottom: 48px;
+    border-bottom: 1px solid var(--line);
+    overflow-x: auto;
+  }
+
+  .tab {
+    font-family: var(--mono);
+    font-size: 11px;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    color: var(--white-dim);
+    padding: 12px 20px;
+    cursor: pointer;
+    border: none;
+    background: transparent;
+    border-bottom: 2px solid transparent;
+    margin-bottom: -1px;
+    white-space: nowrap;
+    transition: all 0.2s;
+  }
+
+  .tab:hover { color: var(--white); }
+
+  .tab.active {
+    color: var(--cyan);
+    border-bottom-color: var(--cyan);
+  }
+
+  .section { display: none; }
+  .section.active { display: block; animation: fadeIn 0.3s ease; }
+
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
+
+  /* ── TYPOGRAPHY ── */
+  h2 {
+    font-size: 28px;
+    font-weight: 700;
+    color: var(--white);
+    margin-bottom: 8px;
+    letter-spacing: -0.5px;
+  }
+
+  h3 {
+    font-size: 15px;
+    font-weight: 700;
+    color: var(--cyan);
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    margin-bottom: 16px;
+    font-family: var(--mono);
+  }
+
+  h4 {
+    font-size: 16px;
+    font-weight: 700;
+    color: var(--white);
+    margin-bottom: 10px;
+  }
+
+  p {
+    font-size: 15px;
+    line-height: 1.75;
+    color: var(--white-dim);
+    margin-bottom: 16px;
+  }
+
+  .section-intro {
+    font-size: 16px;
+    line-height: 1.75;
+    color: var(--white-dim);
+    margin-bottom: 40px;
+    max-width: 720px;
+    padding-bottom: 32px;
+    border-bottom: 1px solid var(--line);
+  }
+
+  /* ── CARDS ── */
+  .card {
+    background: var(--navy-card);
+    border: 1px solid var(--line);
+    border-radius: 4px;
+    padding: 28px 32px;
+    margin-bottom: 20px;
+    position: relative;
+  }
+
+  .card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0;
+    width: 3px;
+    height: 100%;
+    background: var(--cyan);
+    border-radius: 4px 0 0 4px;
+    opacity: 0.6;
+  }
+
+  .card.amber::before { background: var(--amber); }
+  .card.green::before { background: var(--green); }
+  .card.red::before { background: var(--red); }
+
+  .card-label {
+    font-family: var(--mono);
+    font-size: 9px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--cyan);
+    margin-bottom: 12px;
+    opacity: 0.7;
+  }
+
+  .card.amber .card-label { color: var(--amber); }
+  .card.green .card-label { color: var(--green); }
+  .card.red .card-label { color: var(--red); }
+
+  /* ── GRID ── */
+  .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 20px; }
+  .grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 20px; margin-bottom: 20px; }
+
+  @media (max-width: 768px) {
+    .grid-2, .grid-3 { grid-template-columns: 1fr; }
+  }
+
+  /* ── SIGNAL INDICATORS ── */
+  .signal-list {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    margin-bottom: 20px;
+  }
+
+  .signal-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 14px;
+    padding: 14px 18px;
+    background: var(--cyan-faint2);
+    border: 1px solid var(--line);
+    border-radius: 3px;
+  }
+
+  .signal-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--cyan);
+    flex-shrink: 0;
+    margin-top: 6px;
+    box-shadow: 0 0 8px var(--cyan);
+  }
+
+  .signal-dot.amber { background: var(--amber); box-shadow: 0 0 8px var(--amber); }
+  .signal-dot.red { background: var(--red); box-shadow: 0 0 8px var(--red); }
+
+  .signal-text { flex: 1; }
+  .signal-title { font-size: 14px; font-weight: 700; color: var(--white); margin-bottom: 4px; }
+  .signal-desc { font-family: var(--mono); font-size: 12px; color: var(--white-dim); line-height: 1.6; }
+
+  /* ── DECISION FLOW ── */
+  .decision-flow {
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+    margin: 32px 0;
+  }
+
+  .decision-step {
+    display: flex;
+    align-items: stretch;
+    gap: 20px;
+  }
+
+  .decision-left {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    width: 40px;
+    flex-shrink: 0;
+  }
+
+  .decision-num {
+    width: 36px;
+    height: 36px;
+    border: 2px solid var(--cyan);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: var(--mono);
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--cyan);
+    flex-shrink: 0;
+    background: var(--navy);
+  }
+
+  .decision-line {
+    width: 1px;
+    flex: 1;
+    background: var(--line-strong);
+    margin: 4px 0;
+    min-height: 20px;
+  }
+
+  .decision-content {
+    flex: 1;
+    padding-bottom: 28px;
+  }
+
+  .decision-q {
+    font-size: 15px;
+    font-weight: 700;
+    color: var(--white);
+    margin-bottom: 8px;
+  }
+
+  .decision-a {
+    font-family: var(--mono);
+    font-size: 12px;
+    color: var(--white-dim);
+    line-height: 1.7;
+  }
+
+  .decision-tag {
+    display: inline-block;
+    font-family: var(--mono);
+    font-size: 10px;
+    padding: 3px 10px;
+    border-radius: 2px;
+    margin-top: 8px;
+    letter-spacing: 1px;
+  }
+
+  .tag-single { background: var(--cyan-faint); color: var(--cyan); border: 1px solid rgba(0,229,255,0.3); }
+  .tag-multi { background: var(--amber-faint); color: var(--amber); border: 1px solid rgba(255,183,0,0.3); }
+
+  /* ── PATTERN CARDS ── */
+  .pattern-card {
+    background: var(--navy-card);
+    border: 1px solid var(--line);
+    border-radius: 4px;
+    overflow: hidden;
+    margin-bottom: 20px;
+  }
+
+  .pattern-header {
+    padding: 16px 24px;
+    background: var(--cyan-faint);
+    border-bottom: 1px solid var(--line);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  .pattern-name {
+    font-size: 16px;
+    font-weight: 700;
+    color: var(--white);
+  }
+
+  .pattern-badge {
+    font-family: var(--mono);
+    font-size: 10px;
+    padding: 4px 12px;
+    border-radius: 2px;
+    background: var(--cyan-faint);
+    color: var(--cyan);
+    border: 1px solid rgba(0,229,255,0.3);
+    letter-spacing: 1px;
+  }
+
+  .pattern-body { padding: 20px 24px; }
+
+  .pattern-diagram {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin: 16px 0;
+    flex-wrap: wrap;
+  }
+
+  .agent-box {
+    font-family: var(--mono);
+    font-size: 11px;
+    padding: 8px 14px;
+    border: 1px solid var(--cyan);
+    border-radius: 2px;
+    color: var(--cyan);
+    background: var(--cyan-faint);
+    white-space: nowrap;
+  }
+
+  .agent-box.orchestrator {
+    border-color: var(--amber);
+    color: var(--amber);
+    background: var(--amber-faint);
+  }
+
+  .arrow {
+    font-family: var(--mono);
+    color: var(--white-dim);
+    font-size: 14px;
+  }
+
+  /* ── DOMAIN COMPETENCY TABLE ── */
+  .domain-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+    margin: 32px 0;
+  }
+
+  @media (max-width: 900px) { .domain-grid { grid-template-columns: 1fr; } }
+
+  .domain-card {
+    background: var(--navy-card);
+    border: 1px solid var(--line);
+    border-radius: 4px;
+    overflow: hidden;
+  }
+
+  .domain-header {
+    padding: 16px 20px;
+    border-bottom: 1px solid var(--line);
+    display: flex;
+    gap: 14px;
+    align-items: flex-start;
+  }
+
+  .domain-icon {
+    width: 40px;
+    height: 40px;
+    border-radius: 3px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 20px;
+    flex-shrink: 0;
+  }
+
+  .domain-title { font-size: 15px; font-weight: 700; color: var(--white); margin-bottom: 4px; }
+  .domain-subtitle { font-family: var(--mono); font-size: 11px; color: var(--white-dim); }
+
+  .domain-body { padding: 16px 20px; }
+
+  .domain-tasks {
+    list-style: none;
+    margin-bottom: 14px;
+  }
+
+  .domain-tasks li {
+    font-family: var(--mono);
+    font-size: 12px;
+    color: var(--white-dim);
+    padding: 5px 0;
+    border-bottom: 1px solid var(--line);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .domain-tasks li::before {
+    content: '›';
+    color: var(--cyan);
+    font-size: 14px;
+  }
+
+  .domain-tasks li:last-child { border-bottom: none; }
+
+  .domain-config {
+    margin-top: 12px;
+    padding-top: 12px;
+    border-top: 1px solid var(--line);
+  }
+
+  .domain-config-label {
+    font-family: var(--mono);
+    font-size: 9px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--cyan);
+    opacity: 0.7;
+    margin-bottom: 6px;
+  }
+
+  .config-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+
+  .config-tag {
+    font-family: var(--mono);
+    font-size: 10px;
+    padding: 3px 8px;
+    border-radius: 2px;
+    background: var(--cyan-faint2);
+    border: 1px solid var(--line);
+    color: var(--white-dim);
+  }
+
+  /* Colors per domain */
+  .d1 .domain-icon { background: rgba(0,229,255,0.1); }
+  .d2 .domain-icon { background: rgba(255,183,0,0.1); }
+  .d3 .domain-icon { background: rgba(0,230,118,0.1); }
+  .d4 .domain-icon { background: rgba(255,82,82,0.1); }
+  .d5 .domain-icon { background: rgba(180,0,255,0.1); }
+  .d6 .domain-icon { background: rgba(0,229,255,0.1); }
+  .d7 .domain-icon { background: rgba(255,183,0,0.1); }
+  .d8 .domain-icon { background: rgba(0,230,118,0.1); }
+
+  .d1 .domain-header { border-left: 3px solid var(--cyan); }
+  .d2 .domain-header { border-left: 3px solid var(--amber); }
+  .d3 .domain-header { border-left: 3px solid var(--green); }
+  .d4 .domain-header { border-left: 3px solid var(--red); }
+  .d5 .domain-header { border-left: 3px solid #b400ff; }
+  .d6 .domain-header { border-left: 3px solid #00b4cc; }
+  .d7 .domain-header { border-left: 3px solid #ff9100; }
+  .d8 .domain-header { border-left: 3px solid #69ff47; }
+
+  /* ── BOUNDARY TABLE ── */
+  .boundary-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 24px 0;
+    font-size: 13px;
+  }
+
+  .boundary-table th {
+    font-family: var(--mono);
+    font-size: 10px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--cyan);
+    padding: 12px 16px;
+    border-bottom: 1px solid var(--line-strong);
+    text-align: left;
+    background: var(--cyan-faint2);
+  }
+
+  .boundary-table td {
+    padding: 12px 16px;
+    border-bottom: 1px solid var(--line);
+    color: var(--white-dim);
+    vertical-align: top;
+    line-height: 1.6;
+    font-family: var(--mono);
+    font-size: 12px;
+  }
+
+  .boundary-table tr:hover td { background: var(--cyan-faint2); }
+
+  .boundary-table td:first-child { color: var(--white); font-weight: 700; font-family: var(--sans); font-size: 14px; }
+
+  /* ── RISK MATRIX ── */
+  .risk-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+    margin: 24px 0;
+  }
+
+  .risk-card {
+    padding: 20px;
+    border-radius: 3px;
+    border: 1px solid var(--line);
+  }
+
+  .risk-card.high { background: rgba(255,82,82,0.06); border-color: rgba(255,82,82,0.2); }
+  .risk-card.med { background: rgba(255,183,0,0.06); border-color: rgba(255,183,0,0.2); }
+
+  .risk-header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 12px;
+  }
+
+  .risk-badge {
+    font-family: var(--mono);
+    font-size: 9px;
+    padding: 2px 8px;
+    border-radius: 2px;
+    letter-spacing: 1px;
+  }
+
+  .risk-badge.high { background: var(--red-faint); color: var(--red); }
+  .risk-badge.med { background: var(--amber-faint); color: var(--amber); }
+
+  .risk-title { font-size: 14px; font-weight: 700; color: var(--white); }
+  .risk-desc { font-family: var(--mono); font-size: 12px; color: var(--white-dim); line-height: 1.65; }
+  .risk-mitigation { margin-top: 10px; font-family: var(--mono); font-size: 11px; color: var(--cyan); }
+
+  /* ── CHECKLIST ── */
+  .checklist {
+    list-style: none;
+    margin: 16px 0;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .checklist li {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    font-family: var(--mono);
+    font-size: 13px;
+    color: var(--white-dim);
+    line-height: 1.6;
+  }
+
+  .check-icon {
+    width: 20px;
+    height: 20px;
+    border: 1px solid var(--cyan);
+    border-radius: 2px;
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 12px;
+    color: var(--cyan);
+    margin-top: 1px;
+  }
+
+  /* ── CALLOUT ── */
+  .callout {
+    background: var(--amber-faint);
+    border: 1px solid rgba(255,183,0,0.25);
+    border-left: 3px solid var(--amber);
+    border-radius: 3px;
+    padding: 16px 20px;
+    margin: 24px 0;
+  }
+
+  .callout-label {
+    font-family: var(--mono);
+    font-size: 9px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--amber);
+    margin-bottom: 8px;
+  }
+
+  .callout p { color: var(--white-dim); margin-bottom: 0; font-size: 14px; }
+
+  /* ── SPECTRUM BAR ── */
+  .spectrum-wrap { margin: 32px 0; }
+
+  .spectrum-bar {
+    height: 8px;
+    background: linear-gradient(90deg, var(--cyan) 0%, var(--amber) 50%, var(--red) 100%);
+    border-radius: 4px;
+    margin: 12px 0;
+    position: relative;
+  }
+
+  .spectrum-labels {
+    display: flex;
+    justify-content: space-between;
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--white-dim);
+  }
+
+  .spectrum-points {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr 1fr;
+    gap: 16px;
+    margin-top: 20px;
+  }
+
+  .spectrum-point {
+    padding: 14px;
+    border: 1px solid var(--line);
+    border-radius: 3px;
+    background: var(--navy-card);
+  }
+
+  .sp-label { font-family: var(--mono); font-size: 10px; color: var(--cyan); letter-spacing: 1px; margin-bottom: 6px; }
+  .sp-name { font-size: 14px; font-weight: 700; color: var(--white); margin-bottom: 4px; }
+  .sp-desc { font-family: var(--mono); font-size: 11px; color: var(--white-dim); line-height: 1.5; }
+
+  /* ── SECTION DIVIDER ── */
+  .divider {
+    border: none;
+    border-top: 1px solid var(--line);
+    margin: 40px 0;
+  }
+
+  .section-heading {
+    margin-bottom: 32px;
+  }
+
+  .section-heading h2 { margin-bottom: 6px; }
+  .section-heading .subtitle {
+    font-family: var(--mono);
+    font-size: 12px;
+    color: var(--white-dim);
+  }
+
+  /* ── COMPARE TABLE ── */
+  .compare-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 24px 0;
+  }
+
+  .compare-table th {
+    font-family: var(--mono);
+    font-size: 11px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    padding: 14px 20px;
+    text-align: left;
+  }
+
+  .compare-table th:first-child { color: var(--white-dim); }
+  .compare-table th:nth-child(2) {
+    background: var(--cyan-faint);
+    color: var(--cyan);
+    border-left: 1px solid var(--line);
+    border-right: 1px solid var(--line);
+  }
+  .compare-table th:nth-child(3) {
+    background: var(--amber-faint);
+    color: var(--amber);
+  }
+
+  .compare-table td {
+    padding: 14px 20px;
+    border-bottom: 1px solid var(--line);
+    font-size: 13px;
+    vertical-align: top;
+    line-height: 1.6;
+  }
+
+  .compare-table td:first-child {
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--white-dim);
+    letter-spacing: 1px;
+    text-transform: uppercase;
+  }
+
+  .compare-table td:nth-child(2) {
+    background: var(--cyan-faint2);
+    color: var(--white);
+    border-left: 1px solid var(--line);
+    border-right: 1px solid var(--line);
+  }
+
+  .compare-table td:nth-child(3) {
+    color: var(--white);
+    background: rgba(255,183,0,0.03);
+  }
+
+  .compare-table tr:hover td:nth-child(2) { background: var(--cyan-faint); }
+
+  .pro { color: var(--green) !important; }
+  .con { color: var(--red) !important; }
+  .neutral { color: var(--amber) !important; }
+</style>
+</head>
+<body>
+<div class="page-wrap">
+
+  <header>
+    <div class="header-tag">// SERIE: AGENTI AI — ARCHITETTURA</div>
+    <h1>Single Agent<span>vs Multi-Agent</span></h1>
+    <div class="header-sub">Quando specializzare, quando orchestrare. Una guida architetturale basata su segnali reali, non su preferenze estetiche.</div>
+    <div class="header-corner">
+      REV 1.0 // 2026<br>
+      DOCUMENTO TECNICO<br>
+      CATEGORIA: ARCHITETTURA
+    </div>
+  </header>
+
+  <nav class="tabs">
+    <button class="tab active" onclick="showTab('principio')">I — Principio Base</button>
+    <button class="tab" onclick="showTab('segnali')">II — Segnali di Transizione</button>
+    <button class="tab" onclick="showTab('domini')">III — Domini di Competenza</button>
+    <button class="tab" onclick="showTab('pattern')">IV — Pattern Multi-Agent</button>
+    <button class="tab" onclick="showTab('rischi')">V — Rischi & Decisione</button>
+  </nav>
+
+  <!-- ═══════════════════════════════════════════════════ TAB I ═══ -->
+  <section id="principio" class="section active">
+
+    <div class="section-heading">
+      <h2>Il Principio Fondamentale</h2>
+      <div class="subtitle">// La regola aurea prima di qualsiasi decisione architetturale</div>
+    </div>
+
+    <div class="card amber">
+      <div class="card-label">// REGOLA D'ORO</div>
+      <h4>Un singolo agente ben configurato è sempre preferibile a un sistema multi-agent, a parità di risultato.</h4>
+      <p style="margin-bottom:0">Il multi-agent aggiunge latenza, complessità di debugging, costi di orchestrazione, e punti di failure multipli. La domanda giusta non è <em>"come struttura il mio sistema multi-agent?"</em> ma <em>"ho davvero un problema che il singolo agente non riesce a risolvere?"</em></p>
+    </div>
+
+    <div class="spectrum-wrap">
+      <h3>Lo Spettro di Complessità</h3>
+      <div class="spectrum-bar"></div>
+      <div class="spectrum-labels"><span>Semplice</span><span>Critico</span><span>Complesso</span></div>
+      <div class="spectrum-points">
+        <div class="spectrum-point">
+          <div class="sp-label">LIVELLO 0</div>
+          <div class="sp-name">LLM Base</div>
+          <div class="sp-desc">Input → output. Nessuna autonomia, nessun tool.</div>
+        </div>
+        <div class="spectrum-point">
+          <div class="sp-label">LIVELLO 1</div>
+          <div class="sp-name">Single Agent</div>
+          <div class="sp-desc">Ragiona, usa tool, gestisce errori. Il punto di partenza corretto.</div>
+        </div>
+        <div class="spectrum-point">
+          <div class="sp-label">LIVELLO 2</div>
+          <div class="sp-name">Multi-Agent Pipeline</div>
+          <div class="sp-desc">Sequenza di agenti specializzati. Solo quando serve davvero.</div>
+        </div>
+        <div class="spectrum-point">
+          <div class="sp-label">LIVELLO 3</div>
+          <div class="sp-name">Multi-Agent Orchestrato</div>
+          <div class="sp-desc">Orchestratore + sub-agenti dinamici. Per sistemi complessi e critici.</div>
+        </div>
+      </div>
+    </div>
+
+    <hr class="divider">
+
+    <h3>Confronto Strutturato</h3>
+    <table class="compare-table">
+      <thead>
+        <tr>
+          <th>Dimensione</th>
+          <th>// Single Agent</th>
+          <th>// Multi-Agent</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>COMPLESSITÀ SETUP</td>
+          <td><span class="pro">✓ Bassa — un prompt, un loop</span></td>
+          <td><span class="con">✗ Alta — orchestrazione, routing, state</span></td>
+        </tr>
+        <tr>
+          <td>DEBUGGING</td>
+          <td><span class="pro">✓ Trace lineare e leggibile</span></td>
+          <td><span class="con">✗ Errori si propagano tra agenti</span></td>
+        </tr>
+        <tr>
+          <td>LATENZA</td>
+          <td><span class="pro">✓ Un'unica catena di chiamate</span></td>
+          <td><span class="con">✗ Overhead di orchestrazione + passaggi</span></td>
+        </tr>
+        <tr>
+          <td>COSTO</td>
+          <td><span class="pro">✓ Lineare e prevedibile</span></td>
+          <td><span class="con">✗ Moltiplicato per numero di agenti</span></td>
+        </tr>
+        <tr>
+          <td>CONTEXT WINDOW</td>
+          <td><span class="con">✗ Tutto nel contesto — degrada su task lunghi</span></td>
+          <td><span class="pro">✓ Ogni agente lavora su contesto limitato</span></td>
+        </tr>
+        <tr>
+          <td>PARALLELISMO</td>
+          <td><span class="con">✗ Sequenziale per definizione</span></td>
+          <td><span class="pro">✓ Task indipendenti in parallelo</span></td>
+        </tr>
+        <tr>
+          <td>SPECIALIZZAZIONE</td>
+          <td><span class="neutral">~ Prompt unico per tutto</span></td>
+          <td><span class="pro">✓ Prompt e config ottimizzati per dominio</span></td>
+        </tr>
+        <tr>
+          <td>QUALITY CHECK</td>
+          <td><span class="neutral">~ Auto-critica limitata</span></td>
+          <td><span class="pro">✓ Layer di revisione separato e indipendente</span></td>
+        </tr>
+        <tr>
+          <td>TIME TO DEPLOY</td>
+          <td><span class="pro">✓ Giorni</span></td>
+          <td><span class="con">✗ Settimane / mesi</span></td>
+        </tr>
+      </tbody>
+    </table>
+
+  </section>
+
+  <!-- ═══════════════════════════════════════════════════ TAB II ═══ -->
+  <section id="segnali" class="section">
+
+    <div class="section-heading">
+      <h2>I Segnali di Transizione</h2>
+      <div class="subtitle">// Quando il single agent mostra i propri limiti strutturali</div>
+    </div>
+
+    <p class="section-intro">Non si passa al multi-agent per scelta estetica o per seguire un trend. Si passa quando il single agent incontra un problema strutturale che non può risolvere con più prompt o più tool. Questi sono i segnali diagnostici reali.</p>
+
+    <div class="signal-list">
+      <div class="signal-item">
+        <div class="signal-dot"></div>
+        <div class="signal-text">
+          <div class="signal-title">1. Il contesto esplode e la qualità degrada</div>
+          <div class="signal-desc">Se per svolgere il task devi mandare al modello decine di documenti, l'intera history di un processo e output di tool multipli, e noti che la qualità dell'output peggiora man mano che il contesto cresce — il singolo agente sta lavorando contro i propri limiti fisici. I modelli frontier hanno context window da 200k token, ma la "attention" degrada prima. Spezzare il lavoro tra agenti specializzati risolve questo a livello architetturale.</div>
+        </div>
+      </div>
+
+      <div class="signal-item">
+        <div class="signal-dot amber"></div>
+        <div class="signal-text">
+          <div class="signal-title">2. Esistono sotto-task indipendenti parallelizzabili</div>
+          <div class="signal-desc">Se il task si scompone in parti che non dipendono l'una dall'altra — per esempio analizzare tre mercati diversi o raccogliere dati da tre fonti separate — un singolo agente li esegue in sequenza per necessità. Il multi-agent può farlo davvero in parallelo, riducendo il tempo totale in proporzione al numero di task paralleli. Questo è il guadagno di latenza più misurabile e diretto.</div>
+        </div>
+      </div>
+
+      <div class="signal-item">
+        <div class="signal-dot"></div>
+        <div class="signal-text">
+          <div class="signal-title">3. La specializzazione di competenza richiede configurazioni radicalmente diverse</div>
+          <div class="signal-desc">Quando fasi diverse del workflow richiedono prompt, temperature, tool set e persino modelli diversi, cercare di fare tutto con un unico agente e un unico system prompt produce un generalista mediocre. Un agente che estrae dati da fonti grezze ha esigenze di configurazione radicalmente diverse da uno che produce testi formali o uno che esegue validazione critica. Vedi il Capitolo III per la tassonomia completa dei domini.</div>
+        </div>
+      </div>
+
+      <div class="signal-item">
+        <div class="signal-dot amber"></div>
+        <div class="signal-text">
+          <div class="signal-title">4. Serve un layer di quality check strutturale e indipendente</div>
+          <div class="signal-desc">Un singolo agente può fare auto-critica, ma è strutturalmente limitato — tende a confermare il proprio output. Se vuoi un quality check robusto, sistematico e auditabile, un agente separato dedicato esclusivamente alla revisione è più affidabile. Questo è particolarmente rilevante su task ad alto impatto dove un errore ha conseguenze concrete.</div>
+        </div>
+      </div>
+
+      <div class="signal-item">
+        <div class="signal-dot red"></div>
+        <div class="signal-text">
+          <div class="signal-title">5. Il workflow richiede responsabilità separate e tracciabili</div>
+          <div class="signal-desc">In contesti dove devi dimostrare chi ha fatto cosa — per audit, compliance, o governance interna — la separazione in agenti distinti ti dà un audit trail nativo. Ogni agente ha il proprio trace, ogni handoff è registrato. Con un singolo agente, tutta la responsabilità è in un unico log opaco.</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="callout">
+      <div class="callout-label">// RACCOMANDAZIONE PRATICA</div>
+      <p>Prima di aggiungere un secondo agente, verifica che il problema non sia risolvibile migliorando il prompt, aggiungendo un tool, o usando un modello con context window più grande. Il multi-agent è l'ultima risorsa, non la prima.</p>
+    </div>
+
+    <hr class="divider">
+
+    <h3>Il Framework Decisionale</h3>
+    <div class="decision-flow">
+      <div class="decision-step">
+        <div class="decision-left">
+          <div class="decision-num">1</div>
+          <div class="decision-line"></div>
+        </div>
+        <div class="decision-content">
+          <div class="decision-q">Il task degrada con contesti lunghi?</div>
+          <div class="decision-a">Se sì → il multi-agent risolve il problema dividendo il contesto. Se no → continua.</div>
+          <span class="decision-tag tag-single">NO → rimani single</span>
+        </div>
+      </div>
+      <div class="decision-step">
+        <div class="decision-left">
+          <div class="decision-num">2</div>
+          <div class="decision-line"></div>
+        </div>
+        <div class="decision-content">
+          <div class="decision-q">Esistono sotto-task genuinamente parallelizzabili?</div>
+          <div class="decision-a">Se sì e la latenza conta → il parallelismo multi-agent dà un guadagno reale. Se no → continua.</div>
+          <span class="decision-tag tag-multi">SÌ → valuta multi-agent</span>
+        </div>
+      </div>
+      <div class="decision-step">
+        <div class="decision-left">
+          <div class="decision-num">3</div>
+          <div class="decision-line"></div>
+        </div>
+        <div class="decision-content">
+          <div class="decision-q">Le fasi del workflow richiedono configurazioni radicalmente diverse?</div>
+          <div class="decision-a">Se sì → la specializzazione giustifica agenti separati. Vedi Capitolo III per mappatura dei domini.</div>
+          <span class="decision-tag tag-multi">SÌ → valuta multi-agent</span>
+        </div>
+      </div>
+      <div class="decision-step">
+        <div class="decision-left">
+          <div class="decision-num">4</div>
+          <div class="decision-line"></div>
+        </div>
+        <div class="decision-content">
+          <div class="decision-q">Serve un quality check strutturale e indipendente?</div>
+          <div class="decision-a">Se sì e l'impatto è alto → un agente reviewer separato è giustificato. Se no → auto-critica nel prompt.</div>
+          <span class="decision-tag tag-single">NO → rimani single con auto-critica</span>
+        </div>
+      </div>
+      <div class="decision-step">
+        <div class="decision-left">
+          <div class="decision-num">5</div>
+        </div>
+        <div class="decision-content">
+          <div class="decision-q">Nessuno dei segnali precedenti?</div>
+          <div class="decision-a">Il single agent ben configurato è la scelta corretta. Non aggiungere complessità per ragioni estetiche o teoriche.</div>
+          <span class="decision-tag tag-single">RIMANI SINGLE</span>
+        </div>
+      </div>
+    </div>
+
+  </section>
+
+  <!-- ═══════════════════════════════════════════════════ TAB III ═══ -->
+  <section id="domini" class="section">
+
+    <div class="section-heading">
+      <h2>Domini di Competenza</h2>
+      <div class="subtitle">// Tassonomia degli ambiti omogenei di specializzazione agente</div>
+    </div>
+
+    <p class="section-intro">Questa è la parte meno documentata nella letteratura pratica sugli agenti. L'idea è identificare insiemi di task sufficientemente omogenei — per tipo di ragionamento richiesto, formato dell'input/output, strumenti necessari, e configurazione ottimale del modello — tali per cui ha senso affidarli a un singolo agente specializzato. Task di domini diversi, invece, traggono beneficio dalla separazione in agenti distinti.</p>
+
+    <div class="callout">
+      <div class="callout-label">// CRITERIO DI OMOGENEITÀ</div>
+      <p>Due task appartengono allo stesso dominio se condividono: tipo di ragionamento (estrattivo, generativo, valutativo…), formato dominante dell'input/output, insieme di tool necessari, e parametri ottimali del modello (temperature, prompt style). Se due di questi quattro criteri divergono significativamente, i task appartengono a domini diversi.</p>
+    </div>
+
+    <div class="domain-grid">
+
+      <!-- DOMINIO 1: RETRIEVAL & EXTRACTION -->
+      <div class="domain-card d1">
+        <div class="domain-header">
+          <div class="domain-icon">🔍</div>
+          <div>
+            <div class="domain-title">Retrieval & Extraction</div>
+            <div class="domain-subtitle">Trovare e estrarre informazioni strutturate</div>
+          </div>
+        </div>
+        <div class="domain-body">
+          <ul class="domain-tasks">
+            <li>Ricerca in knowledge base e documenti (RAG)</li>
+            <li>Estrazione di dati strutturati da testo grezzo</li>
+            <li>Parsing di PDF, email, report</li>
+            <li>Ricerca web e aggregazione di fonti</li>
+            <li>Interrogazione di database via linguaggio naturale</li>
+          </ul>
+          <div class="domain-config">
+            <div class="domain-config-label">// Configurazione tipica</div>
+            <div class="config-tags">
+              <span class="config-tag">temp: 0.0–0.2</span>
+              <span class="config-tag">focus: precisione</span>
+              <span class="config-tag">tool: retrieval, search, SQL</span>
+              <span class="config-tag">output: strutturato/JSON</span>
+            </div>
+          </div>
+          <p style="margin-top:12px; font-size:13px">Il ragionamento è <strong>estrattivo</strong>: il modello deve trovare e restituire fedele alle fonti, non interpretare o generare. Temperature basse, nessuna creatività. Il modello giusto può essere più piccolo e veloce — la precisione conta più della profondità.</p>
+        </div>
+      </div>
+
+      <!-- DOMINIO 2: ANALYSIS & REASONING -->
+      <div class="domain-card d2">
+        <div class="domain-header">
+          <div class="domain-icon">🧠</div>
+          <div>
+            <div class="domain-title">Analysis & Reasoning</div>
+            <div class="domain-subtitle">Interpretare, collegare, concludere</div>
+          </div>
+        </div>
+        <div class="domain-body">
+          <ul class="domain-tasks">
+            <li>Analisi di dati e identificazione di pattern</li>
+            <li>Sintesi di informazioni da fonti multiple</li>
+            <li>Ragionamento causale e diagnosi di problemi</li>
+            <li>Classificazione e categorizzazione complessa</li>
+            <li>Valutazione di opzioni e trade-off</li>
+          </ul>
+          <div class="domain-config">
+            <div class="domain-config-label">// Configurazione tipica</div>
+            <div class="config-tags">
+              <span class="config-tag">temp: 0.3–0.5</span>
+              <span class="config-tag">focus: profondità</span>
+              <span class="config-tag">modello: frontier</span>
+              <span class="config-tag">chain-of-thought: sì</span>
+            </div>
+          </div>
+          <p style="margin-top:12px; font-size:13px">Il ragionamento è <strong>inferenziale</strong>: il modello deve collegare informazioni, identificare implicazioni, costruire argomenti. Richiede i modelli più capaci (Opus, GPT-4o). Il chain-of-thought esplicito migliora sistematicamente la qualità dell'output.</p>
+        </div>
+      </div>
+
+      <!-- DOMINIO 3: GENERATION & WRITING -->
+      <div class="domain-card d3">
+        <div class="domain-header">
+          <div class="domain-icon">✍️</div>
+          <div>
+            <div class="domain-title">Generation & Writing</div>
+            <div class="domain-subtitle">Produrre contenuti originali e ben scritti</div>
+          </div>
+        </div>
+        <div class="domain-body">
+          <ul class="domain-tasks">
+            <li>Redazione di report, email, documentazione</li>
+            <li>Generazione di contenuti marketing e comunicazione</li>
+            <li>Riscrittura e adattamento di tono</li>
+            <li>Sintesi narrative di processi o analisi</li>
+            <li>Generazione di template e strutture</li>
+          </ul>
+          <div class="domain-config">
+            <div class="domain-config-label">// Configurazione tipica</div>
+            <div class="config-tags">
+              <span class="config-tag">temp: 0.6–0.8</span>
+              <span class="config-tag">focus: coerenza stilistica</span>
+              <span class="config-tag">few-shot: esempi di stile</span>
+              <span class="config-tag">output: markdown/testo</span>
+            </div>
+          </div>
+          <p style="margin-top:12px; font-size:13px">Il ragionamento è <strong>generativo e stilistico</strong>: il modello deve produrre testo coerente, ben strutturato, adatto al tono richiesto. Temperature più alte per varietà. I few-shot examples di stile sono il lever di configurazione più potente in questo dominio.</p>
+        </div>
+      </div>
+
+      <!-- DOMINIO 4: CODE & TECHNICAL -->
+      <div class="domain-card d4">
+        <div class="domain-header">
+          <div class="domain-icon">⚙️</div>
+          <div>
+            <div class="domain-title">Code & Technical Execution</div>
+            <div class="domain-subtitle">Scrivere, eseguire e debuggare codice</div>
+          </div>
+        </div>
+        <div class="domain-body">
+          <ul class="domain-tasks">
+            <li>Generazione di codice e script</li>
+            <li>Debugging e analisi di errori</li>
+            <li>Refactoring e ottimizzazione</li>
+            <li>Test e validazione automatica</li>
+            <li>Interazione con API e sistemi esterni via codice</li>
+          </ul>
+          <div class="domain-config">
+            <div class="domain-config-label">// Configurazione tipica</div>
+            <div class="config-tags">
+              <span class="config-tag">temp: 0.1–0.3</span>
+              <span class="config-tag">tool: code interpreter</span>
+              <span class="config-tag">modello: Sonnet/GPT-4o</span>
+              <span class="config-tag">output: codice eseguibile</span>
+            </div>
+          </div>
+          <p style="margin-top:12px; font-size:13px">Il ragionamento è <strong>procedurale e deterministico</strong>: il codice è corretto o sbagliato, non c'è spazio per interpretazioni. Temperature molto basse. La capacità di eseguire il codice e osservare l'output (code interpreter) è il tool più critico di questo dominio.</p>
+        </div>
+      </div>
+
+      <!-- DOMINIO 5: PLANNING & ORCHESTRATION -->
+      <div class="domain-card d5">
+        <div class="domain-header">
+          <div class="domain-icon">🗺️</div>
+          <div>
+            <div class="domain-title">Planning & Orchestration</div>
+            <div class="domain-subtitle">Scomporre obiettivi e coordinare esecuzione</div>
+          </div>
+        </div>
+        <div class="domain-body">
+          <ul class="domain-tasks">
+            <li>Scomposizione di obiettivi complessi in sotto-task</li>
+            <li>Pianificazione di sequenze e dipendenze</li>
+            <li>Coordinamento di agenti sub-specializzati</li>
+            <li>Gestione di eccezioni e fallback</li>
+            <li>Monitoraggio del progresso e adattamento del piano</li>
+          </ul>
+          <div class="domain-config">
+            <div class="domain-config-label">// Configurazione tipica</div>
+            <div class="config-tags">
+              <span class="config-tag">temp: 0.4–0.6</span>
+              <span class="config-tag">modello: frontier</span>
+              <span class="config-tag">output: piano strutturato</span>
+              <span class="config-tag">tool: routing, dispatch</span>
+            </div>
+          </div>
+          <p style="margin-top:12px; font-size:13px">Questo è il dominio dell'<strong>orchestratore</strong> nei sistemi multi-agent. Richiede il modello più capace perché gli errori di pianificazione si amplificano su tutta la pipeline. Non deve fare — deve coordinare chi fa.</p>
+        </div>
+      </div>
+
+      <!-- DOMINIO 6: VALIDATION & QUALITY -->
+      <div class="domain-card d6">
+        <div class="domain-header">
+          <div class="domain-icon">✅</div>
+          <div>
+            <div class="domain-title">Validation & Quality Control</div>
+            <div class="domain-subtitle">Verificare, correggere, approvare</div>
+          </div>
+        </div>
+        <div class="domain-body">
+          <ul class="domain-tasks">
+            <li>Verifica di accuratezza fattuale</li>
+            <li>Controllo di coerenza e completezza</li>
+            <li>Grading di output rispetto a criteri definiti</li>
+            <li>Identificazione di errori logici o lacune</li>
+            <li>Approvazione prima di azioni irreversibili</li>
+          </ul>
+          <div class="domain-config">
+            <div class="domain-config-label">// Configurazione tipica</div>
+            <div class="config-tags">
+              <span class="config-tag">temp: 0.0–0.2</span>
+              <span class="config-tag">focus: criticità</span>
+              <span class="config-tag">rubrica: esplicita</span>
+              <span class="config-tag">output: pass/fail + motivazione</span>
+            </div>
+          </div>
+          <p style="margin-top:12px; font-size:13px">Il ragionamento è <strong>valutativo e critico</strong>: il modello deve applicare criteri espliciti all'output di un altro agente. Per essere efficace deve essere <em>indipendente</em> — non deve aver partecipato alla generazione dell'output che valuta.</p>
+        </div>
+      </div>
+
+      <!-- DOMINIO 7: INTERACTION & DIALOGUE -->
+      <div class="domain-card d7">
+        <div class="domain-header">
+          <div class="domain-icon">💬</div>
+          <div>
+            <div class="domain-title">Interaction & Dialogue</div>
+            <div class="domain-subtitle">Conversare, chiarire, raccogliere input</div>
+          </div>
+        </div>
+        <div class="domain-body">
+          <ul class="domain-tasks">
+            <li>Gestione di conversazioni con utenti finali</li>
+            <li>Raccolta di requisiti e chiarimenti</li>
+            <li>Customer support e FAQ</li>
+            <li>Interviste strutturate e intake form</li>
+            <li>Notifiche e aggiornamenti di stato</li>
+          </ul>
+          <div class="domain-config">
+            <div class="domain-config-label">// Configurazione tipica</div>
+            <div class="config-tags">
+              <span class="config-tag">temp: 0.5–0.7</span>
+              <span class="config-tag">focus: tono e chiarezza</span>
+              <span class="config-tag">memoria: conversazionale</span>
+              <span class="config-tag">tool: notifiche, CRM</span>
+            </div>
+          </div>
+          <p style="margin-top:12px; font-size:13px">Il ragionamento è <strong>dialogico e contestuale</strong>: il modello deve mantenere il filo della conversazione, adattarsi al tono dell'interlocutore, e raccogliere informazioni in modo naturale. La memoria conversazionale è il tool più critico.</p>
+        </div>
+      </div>
+
+      <!-- DOMINIO 8: ACTION & INTEGRATION -->
+      <div class="domain-card d8">
+        <div class="domain-header">
+          <div class="domain-icon">🔗</div>
+          <div>
+            <div class="domain-title">Action & System Integration</div>
+            <div class="domain-subtitle">Agire su sistemi esterni e integrare dati</div>
+          </div>
+        </div>
+        <div class="domain-body">
+          <ul class="domain-tasks">
+            <li>Chiamate API e integrazione con sistemi aziendali</li>
+            <li>Scrittura su database, CRM, ERP</li>
+            <li>Invio di email, notifiche, messaggi</li>
+            <li>Aggiornamento di record e stati</li>
+            <li>Automazione di azioni ripetitive su sistemi</li>
+          </ul>
+          <div class="domain-config">
+            <div class="domain-config-label">// Configurazione tipica</div>
+            <div class="config-tags">
+              <span class="config-tag">temp: 0.0–0.1</span>
+              <span class="config-tag">tool: API, webhook, DB</span>
+              <span class="config-tag">human-in-loop: per azioni critiche</span>
+              <span class="config-tag">output: azioni, non testo</span>
+            </div>
+          </div>
+          <p style="margin-top:12px; font-size:13px">Il ragionamento è <strong>esecutivo e deterministico</strong>: il modello deve tradurre istruzioni in azioni precise su sistemi reali. Temperature zero. Le azioni sono spesso irreversibili — l'human-in-the-loop è essenziale su azioni ad alto impatto.</p>
+        </div>
+      </div>
+
+    </div>
+
+    <hr class="divider">
+
+    <h3>Matrice di Confine tra Domini</h3>
+    <p style="margin-bottom:20px">Quando due task sono in domini diversi è generalmente consigliato separarli in agenti distinti. La tabella mostra le coppie di domini con il maggiore divario di configurazione.</p>
+
+    <table class="boundary-table">
+      <thead>
+        <tr>
+          <th>Coppia di Domini</th>
+          <th>Divergenza Critica</th>
+          <th>Separare?</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>Retrieval → Generation</td>
+          <td>Temperature 0.1 vs 0.7 / output strutturato vs narrativo / logica estrattiva vs creativa</td>
+          <td><span class="pro">✓ Sempre separare</span></td>
+        </tr>
+        <tr>
+          <td>Analysis → Action</td>
+          <td>Ragionamento inferenziale vs esecutivo / output: insight vs comandi API</td>
+          <td><span class="pro">✓ Sempre separare</span></td>
+        </tr>
+        <tr>
+          <td>Generation → Validation</td>
+          <td>L'agente che genera non può valutarsi in modo indipendente — bias strutturale</td>
+          <td><span class="pro">✓ Sempre separare</span></td>
+        </tr>
+        <tr>
+          <td>Planning → Execution</td>
+          <td>L'orchestratore non deve eseguire — si perde visibilità sul piano complessivo</td>
+          <td><span class="pro">✓ Sempre separare</span></td>
+        </tr>
+        <tr>
+          <td>Dialogue → Analysis</td>
+          <td>Tono conversazionale vs rigore analitico / memoria breve vs contesto profondo</td>
+          <td><span class="neutral">~ Separare se il task è complesso</span></td>
+        </tr>
+        <tr>
+          <td>Analysis → Generation</td>
+          <td>Output dell'analisi diventa input della scrittura — pipeline naturale</td>
+          <td><span class="neutral">~ Separare se la qualità della scrittura è critica</span></td>
+        </tr>
+        <tr>
+          <td>Code → Validation</td>
+          <td>Il tester non dovrebbe essere chi ha scritto il codice</td>
+          <td><span class="pro">✓ Separare su task critici</span></td>
+        </tr>
+        <tr>
+          <td>Retrieval → Analysis</td>
+          <td>Pipeline naturale — retrieval fornisce contesto all'analisi</td>
+          <td><span class="neutral">~ Separare solo se il volume di retrieval è alto</span></td>
+        </tr>
+      </tbody>
+    </table>
+
+  </section>
+
+  <!-- ═══════════════════════════════════════════════════ TAB IV ═══ -->
+  <section id="pattern" class="section">
+
+    <div class="section-heading">
+      <h2>Pattern Multi-Agent</h2>
+      <div class="subtitle">// Le architetture ricorrenti e quando usarle</div>
+    </div>
+
+    <p class="section-intro">Una volta stabilito che il multi-agent è giustificato, esistono pattern architetturali consolidati. La scelta del pattern dipende dalla struttura del problema, non dalla preferenza tecnologica.</p>
+
+    <div class="pattern-card">
+      <div class="pattern-header">
+        <div class="pattern-name">Pattern 1 — Pipeline Sequenziale</div>
+        <div class="pattern-badge">IL PIÙ COMUNE</div>
+      </div>
+      <div class="pattern-body">
+        <p>Un agente passa il proprio output come input al successivo. Il flusso è lineare e le dipendenze sono esplicite. È il pattern corretto per workflow con fasi distinte e non parallelizzabili.</p>
+        <div class="pattern-diagram">
+          <div class="agent-box">Agente A<br>Retrieval</div>
+          <div class="arrow">→</div>
+          <div class="agent-box">Agente B<br>Analysis</div>
+          <div class="arrow">→</div>
+          <div class="agent-box">Agente C<br>Generation</div>
+          <div class="arrow">→</div>
+          <div class="agent-box">Agente D<br>Validation</div>
+        </div>
+        <p><strong>Casi d'uso tipici:</strong> ricerca → analisi → report; raccolta dati → sintesi → invio email; estrazione → classificazione → aggiornamento CRM.</p>
+        <p><strong>Framework consigliato:</strong> LangGraph (pipeline esplicita con checkpointing), LangChain LCEL per pipeline semplici.</p>
+      </div>
+    </div>
+
+    <div class="pattern-card">
+      <div class="pattern-header">
+        <div class="pattern-name">Pattern 2 — Orchestratore con Sub-Agenti</div>
+        <div class="pattern-badge">PER TASK COMPLESSI</div>
+      </div>
+      <div class="pattern-body">
+        <p>Un agente orchestratore riceve l'obiettivo ad alto livello, lo scompone, delega a specialisti, raccoglie i risultati e li integra. È il pattern di CrewAI e AutoGen. Funziona quando i sotto-task sono abbastanza diversi da giustificare specialisti, ma l'orchestratore deve essere il modello migliore disponibile — gli errori di pianificazione si amplificano su tutta la pipeline.</p>
+        <div class="pattern-diagram">
+          <div class="agent-box orchestrator">Orchestratore<br>Planning</div>
+          <div class="arrow">→</div>
+          <div style="display:flex;flex-direction:column;gap:8px">
+            <div class="agent-box">Specialista 1<br>Research</div>
+            <div class="agent-box">Specialista 2<br>Code</div>
+            <div class="agent-box">Specialista 3<br>Writing</div>
+          </div>
+          <div class="arrow">→</div>
+          <div class="agent-box orchestrator">Orchestratore<br>Synthesis</div>
+        </div>
+        <p><strong>Casi d'uso tipici:</strong> analisi competitiva multi-fonte, generazione di report complessi, ricerca e sviluppo iterativo.</p>
+        <p><strong>Framework consigliato:</strong> CrewAI (setup rapido), AutoGen (Microsoft, per sistemi più complessi), LangGraph (massimo controllo).</p>
+      </div>
+    </div>
+
+    <div class="pattern-card">
+      <div class="pattern-header">
+        <div class="pattern-name">Pattern 3 — Fan-out / Fan-in (Parallelizzazione)</div>
+        <div class="pattern-badge">PER LATENZA</div>
+      </div>
+      <div class="pattern-body">
+        <p>L'orchestratore lancia più agenti in parallelo sullo stesso tipo di task (es. analizza tre mercati contemporaneamente), poi un agente di consolidamento integra i risultati. Riduce la latenza totale in proporzione al numero di task paralleli. Attenzione: i costi si moltiplicano in proporzione.</p>
+        <div class="pattern-diagram">
+          <div class="agent-box orchestrator">Dispatcher</div>
+          <div class="arrow">→</div>
+          <div style="display:flex;flex-direction:column;gap:8px">
+            <div class="agent-box">Worker 1</div>
+            <div class="agent-box">Worker 2</div>
+            <div class="agent-box">Worker N</div>
+          </div>
+          <div class="arrow">→</div>
+          <div class="agent-box orchestrator">Aggregatore</div>
+        </div>
+        <p><strong>Casi d'uso tipici:</strong> analisi di più documenti in parallelo, raccolta dati da fonti multiple, generazione di varianti per A/B testing.</p>
+        <p><strong>Framework consigliato:</strong> LangGraph con nodi paralleli, asyncio + LangChain per implementazioni custom.</p>
+      </div>
+    </div>
+
+    <div class="pattern-card">
+      <div class="pattern-header">
+        <div class="pattern-name">Pattern 4 — Loop di Revisione (Critic-Actor)</div>
+        <div class="pattern-badge">PER QUALITÀ</div>
+      </div>
+      <div class="pattern-body">
+        <p>Un agente "actor" genera l'output, un agente "critic" lo valuta secondo criteri espliciti. Se non supera la soglia, l'output torna all'actor con il feedback. Il loop termina quando il critic approva o si raggiunge il numero massimo di iterazioni. È il pattern Reflexion.</p>
+        <div class="pattern-diagram">
+          <div class="agent-box">Actor<br>Generation</div>
+          <div class="arrow">→</div>
+          <div class="agent-box">Critic<br>Validation</div>
+          <div class="arrow">→ FAIL →</div>
+          <div class="agent-box">Actor<br>Revision</div>
+          <div class="arrow">→ OK →</div>
+          <div class="agent-box">Output</div>
+        </div>
+        <p><strong>Casi d'uso tipici:</strong> generazione di codice con test, redazione di documenti legali o tecnici ad alta precisione, output che devono rispettare requisiti formali stringenti.</p>
+        <p><strong>Attenzione:</strong> senza un max_iterations esplicito, il loop può girare indefinitamente e far esplodere i costi.</p>
+      </div>
+    </div>
+
+  </section>
+
+  <!-- ═══════════════════════════════════════════════════ TAB V ═══ -->
+  <section id="rischi" class="section">
+
+    <div class="section-heading">
+      <h2>Rischi & Decisione Finale</h2>
+      <div class="subtitle">// I rischi da non sottovalutare e la raccomandazione per il tuo profilo</div>
+    </div>
+
+    <h3>Rischi del Multi-Agent</h3>
+    <div class="risk-grid">
+      <div class="risk-card high">
+        <div class="risk-header">
+          <span class="risk-badge high">ALTO</span>
+          <div class="risk-title">Propagazione degli errori</div>
+        </div>
+        <div class="risk-desc">Un errore dell'agente A diventa l'input sbagliato dell'agente B, che produce un output ancora più sbagliato per C. Il debugging è molto più difficile che in un single agent perché devi localizzare dove nella catena è partito il problema.</div>
+        <div class="risk-mitigation">→ Mitigation: observability (LangSmith/Langfuse) fin dall'inizio, validazione dell'output tra ogni handoff</div>
+      </div>
+
+      <div class="risk-card high">
+        <div class="risk-header">
+          <span class="risk-badge high">ALTO</span>
+          <div class="risk-title">Costi che si moltiplicano</div>
+        </div>
+        <div class="risk-desc">Ogni agente fa le proprie chiamate al modello, spesso con contesti che includono l'output degli agenti precedenti. Un workflow con 5 agenti può costare 5–10x rispetto a un singolo agente equivalente. Senza monitoring, i costi esplodono silenziosamente.</div>
+        <div class="risk-mitigation">→ Mitigation: cost tracking per task fin dal giorno 1, cap espliciti sul numero di iterazioni</div>
+      </div>
+
+      <div class="risk-card med">
+        <div class="risk-header">
+          <span class="risk-badge med">MEDIO</span>
+          <div class="risk-title">Latenza di orchestrazione</div>
+        </div>
+        <div class="risk-desc">Ogni handoff tra agenti introduce latenza — il context viene serializzato, passato, e il modello successivo deve "leggere" l'output del precedente. In pipeline sequenziali con molti agenti, la latenza totale può diventare inaccettabile per use case interattivi.</div>
+        <div class="risk-mitigation">→ Mitigation: parallelizzare dove possibile, usare modelli più piccoli/veloci per agenti non critici</div>
+      </div>
+
+      <div class="risk-card med">
+        <div class="risk-header">
+          <span class="risk-badge med">MEDIO</span>
+          <div class="risk-title">Complessità di debugging</div>
+        </div>
+        <div class="risk-desc">Il trace di un sistema multi-agent è molto più lungo e difficile da leggere. Capire perché un output finale è sbagliato richiede di risalire attraverso tutti gli agenti e i loro output intermedi. Senza tool di tracing, è quasi impossibile.</div>
+        <div class="risk-mitigation">→ Mitigation: LangSmith o Langfuse obbligatori, logging strutturato di ogni handoff, ambiente di test isolato</div>
+      </div>
+    </div>
+
+    <hr class="divider">
+
+    <h3>Raccomandazione per il Tuo Profilo</h3>
+    <div class="card green">
+      <div class="card-label">// TEAM PYTHON · VELOCITÀ PRIORITARIA · PRIVACY IMPORTANTE · TASK CRITICI CON CONTROLLO</div>
+      <h4>Inizia sempre con il singolo agente. Porta il singolo agente al suo limite prima di aggiungere il secondo.</h4>
+      <p>Questo non è conservatorismo — è la strategia che massimizza il time-to-value nel tuo contesto. Il multi-agent aggiunge complessità reale che richiede tempo per essere gestita bene.</p>
+    </div>
+
+    <h3 style="margin-top:32px">Sequenza di Adozione Consigliata</h3>
+    <ul class="checklist">
+      <li>
+        <div class="check-icon">1</div>
+        <div><strong style="color:var(--white)">Porta in produzione un singolo agente funzionante</strong> — con tool, memoria, error handling. Misura le performance su task reali.</div>
+      </li>
+      <li>
+        <div class="check-icon">2</div>
+        <div><strong style="color:var(--white)">Identifica il collo di bottiglia reale</strong> — è la qualità dell'output? La latenza? Il context che degrada? La risposta a questa domanda determina se e quale pattern multi-agent serve.</div>
+      </li>
+      <li>
+        <div class="check-icon">3</div>
+        <div><strong style="color:var(--white)">Se serve multi-agent, aggiungi un agente alla volta</strong> — non progettare il sistema completo prima di aver validato il primo handoff. Ogni agente aggiunto deve risolvere un problema misurabile.</div>
+      </li>
+      <li>
+        <div class="check-icon">4</div>
+        <div><strong style="color:var(--white)">Usa LangGraph per task critici con controllo</strong> — il suo modello a grafi rende espliciti i flussi tra agenti e ti dà checkpoint, state management e human-in-the-loop nativi anche in sistemi complessi.</div>
+      </li>
+      <li>
+        <div class="check-icon">5</div>
+        <div><strong style="color:var(--white)">Installa LangSmith o Langfuse prima del terzo agente</strong> — non dopo che il sistema è già complesso. Il tracing retroattivo non esiste.</div>
+      </li>
+    </ul>
+
+    <div class="callout" style="margin-top:32px">
+      <div class="callout-label">// PRINCIPIO FINALE</div>
+      <p>La complessità architetturale deve essere guadagnata, non assunta. Ogni agente aggiuntivo deve dimostrare di risolvere un problema che il sistema precedente non riusciva a risolvere. Se non riesci a misurare il miglioramento, probabilmente non ne avevi bisogno.</p>
+    </div>
+
+  </section>
+
+</div>
+
+<script>
+  function showTab(id) {
+    document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+    document.getElementById(id).classList.add('active');
+    event.target.classList.add('active');
+  }
+</script>
+</body>
+</html>

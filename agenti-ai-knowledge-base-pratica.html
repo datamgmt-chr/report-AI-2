@@ -1,0 +1,572 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Knowledge Base in Pratica — Dove Carico i Documenti e Come Li Collego</title>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,400;0,9..144,600;0,9..144,700;0,9..144,800;0,9..144,900;1,9..144,400&family=Karla:wght@300;400;500;600;700&family=IBM+Plex+Mono:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#f7f5f0;--bg2:#efece5;--bg3:#e5e1d8;--ink:#1e1d1a;--ink2:#2d2b25;--ink3:#65614f;--ink4:#9e9a89;--border:#d6d1c4;--border2:#c5c0b1;--rag:#3a7ca5;--direct:#3d7a45;--hybrid:#b07d24;--accent:#3a7ca5;--alt1:#d44;--alt2:#e88c30;--alt3:#2e9e7a;--alt4:#7b5ea7;--alt5:#3a7ca5}
+*{margin:0;padding:0;box-sizing:border-box}html{scroll-behavior:smooth}
+body{background:var(--bg);color:var(--ink);font-family:'Karla',sans-serif;font-weight:400;font-size:14px;line-height:1.78}
+.masthead{background:var(--ink);color:rgba(255,255,255,0.9);padding:60px 56px 52px;position:relative;overflow:hidden}
+.masthead::before{content:'';position:absolute;inset:0;background:repeating-linear-gradient(90deg,rgba(255,255,255,0.01) 0,rgba(255,255,255,0.01) 1px,transparent 1px,transparent 60px),repeating-linear-gradient(0deg,rgba(255,255,255,0.01) 0,rgba(255,255,255,0.01) 1px,transparent 1px,transparent 60px);pointer-events:none}
+.mh-eye{font-family:'IBM Plex Mono',monospace;font-size:10px;letter-spacing:3px;text-transform:uppercase;color:rgba(255,255,255,0.25);margin-bottom:18px;position:relative}
+.masthead h1{font-family:'Fraunces',serif;font-weight:800;font-size:clamp(28px,4.5vw,50px);line-height:1.08;letter-spacing:-1px;max-width:700px;position:relative}
+.mh-sub{margin-top:20px;font-size:15px;font-weight:300;color:rgba(255,255,255,0.38);max-width:660px;line-height:1.7;position:relative}
+.nav{background:var(--ink2);position:sticky;top:0;z-index:100;display:flex;overflow-x:auto;border-bottom:1px solid rgba(255,255,255,0.06)}
+.nav-btn{flex:1;min-width:85px;padding:12px 8px;border:none;background:transparent;cursor:pointer;font-family:'Karla',sans-serif;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.2px;color:rgba(255,255,255,0.28);border-right:1px solid rgba(255,255,255,0.06);transition:all 0.2s;white-space:nowrap}
+.nav-btn:last-child{border-right:none}.nav-btn:hover{color:rgba(255,255,255,0.55)}.nav-btn.active{color:#fff;background:rgba(255,255,255,0.05)}
+.sect{display:none}.sect.active{display:block;animation:fadeIn 0.3s ease}
+@keyframes fadeIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
+.sect-head{padding:48px 56px 36px;border-bottom:1px solid var(--border)}
+.sect-num{font-family:'IBM Plex Mono',monospace;font-size:10px;letter-spacing:3px;text-transform:uppercase;color:var(--ink4);margin-bottom:10px}
+.sect-head h2{font-family:'Fraunces',serif;font-weight:800;font-size:clamp(24px,3.5vw,38px);line-height:1.12;max-width:620px;margin-bottom:14px}
+.sect-head p{color:var(--ink3);max-width:700px;font-size:14.5px}
+.wrap{padding:0 56px 56px}
+
+/* Reusable components */
+.prose{margin-top:20px;max-width:740px}
+.prose p{font-size:14px;color:var(--ink3);line-height:1.8;margin-bottom:14px}
+.prose p strong{color:var(--ink2);font-weight:600}
+.key-point{margin-top:32px;padding:22px 26px;border-left:4px solid var(--accent);background:var(--bg2)}
+.kp-label{font-family:'IBM Plex Mono',monospace;font-size:9px;letter-spacing:2px;text-transform:uppercase;color:var(--accent);margin-bottom:6px}
+.kp-text{font-family:'Fraunces',serif;font-weight:600;font-size:17px;line-height:1.45;color:var(--ink2)}
+.kp-sub{margin-top:8px;font-size:13px;color:var(--ink3);line-height:1.65}
+.insight{margin:16px 0;padding:16px 20px;border-left:4px solid;background:var(--bg2)}
+.insight-label{font-family:'IBM Plex Mono',monospace;font-size:9px;letter-spacing:2px;text-transform:uppercase;margin-bottom:4px}
+.insight p{font-size:13.5px;line-height:1.65;color:var(--ink2);max-width:700px}
+
+/* Card */
+.card{margin-top:28px;border:1px solid var(--border2)}
+.card-header{display:grid;grid-template-columns:8px 1fr;border-bottom:1px solid var(--border)}
+.card-accent{}
+.card-head-body{padding:20px 24px}
+.card-name{font-family:'Fraunces',serif;font-weight:800;font-size:20px;line-height:1.15;margin-bottom:4px}
+.card-sub{font-size:13px;color:var(--ink4)}
+.card-body{padding:0}
+.cs{padding:20px 24px;border-bottom:1px solid var(--border)}
+.cs:last-child{border-bottom:none}
+.cs-label{font-family:'IBM Plex Mono',monospace;font-size:9px;letter-spacing:2px;text-transform:uppercase;color:var(--ink4);margin-bottom:10px;padding-bottom:5px;border-bottom:1px solid var(--border)}
+.cs p{font-size:14px;color:var(--ink3);line-height:1.8;max-width:740px}
+.cs p strong{color:var(--ink2);font-weight:600}
+
+/* Grid */
+.cg{display:grid;grid-template-columns:1fr 1fr;gap:1px;background:var(--border);margin-top:12px}
+.cg-item{background:var(--bg);padding:14px 16px}
+.cg-title{font-weight:700;font-size:13px;margin-bottom:5px;color:var(--ink2)}
+.cg-text{font-size:12.5px;color:var(--ink3);line-height:1.6}
+.cg-text strong{color:var(--ink2);font-weight:600}
+
+/* Dark box */
+.dark-box{background:var(--ink);color:rgba(255,255,255,0.85);padding:32px 28px;margin-top:24px;position:relative;overflow:hidden}
+.dark-box::before{content:'';position:absolute;inset:0;background:repeating-linear-gradient(90deg,rgba(255,255,255,0.015) 0,rgba(255,255,255,0.015) 1px,transparent 1px,transparent 50px),repeating-linear-gradient(0deg,rgba(255,255,255,0.015) 0,rgba(255,255,255,0.015) 1px,transparent 1px,transparent 50px);pointer-events:none}
+.dark-title{font-family:'Fraunces',serif;font-weight:700;font-size:20px;margin-bottom:6px;position:relative}
+.dark-desc{font-size:13px;color:rgba(255,255,255,0.35);margin-bottom:20px;max-width:600px;position:relative}
+.dark-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px;position:relative}
+.dark-card{background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);padding:18px 16px}
+.dk-label{font-family:'IBM Plex Mono',monospace;font-size:9px;letter-spacing:1.5px;text-transform:uppercase;color:rgba(255,255,255,0.3);margin-bottom:6px}
+.dk-title{font-weight:700;font-size:14px;margin-bottom:6px}
+.dk-text{font-size:12px;color:rgba(255,255,255,0.4);line-height:1.6}
+.dk-text strong{color:rgba(255,255,255,0.7);font-weight:600}
+
+/* Matrix */
+.matrix-scroll{overflow-x:auto;margin-top:20px;border:1px solid var(--border2)}
+.matrix{width:100%;border-collapse:collapse;font-size:11.5px;min-width:750px}
+.matrix th,.matrix td{padding:10px 12px;border:1px solid var(--border);vertical-align:top}
+.matrix thead th{background:var(--ink);color:rgba(255,255,255,0.82);font-weight:700;font-size:10px;text-transform:uppercase;letter-spacing:0.3px;text-align:center;position:sticky;top:42px;z-index:50}
+.matrix thead th:first-child{text-align:left;min-width:130px}
+.matrix .row-head{text-align:left;font-weight:700;background:var(--bg2);white-space:nowrap}
+.matrix td{text-align:center;color:var(--ink3)}
+.matrix td strong{color:var(--ink2);font-weight:600}
+.mx-yes{background:rgba(61,122,69,0.08)!important;color:#2a6232;font-weight:600}
+.mx-part{background:rgba(176,125,36,0.08)!important;color:#8a6d1a;font-weight:500}
+.mx-no{background:rgba(192,86,43,0.08)!important;color:#a0421f;font-weight:500}
+
+/* Step visual */
+.pipeline-steps{display:flex;align-items:stretch;gap:0;margin:20px 0;border:1px solid var(--border2);overflow:hidden}
+.pip-step{flex:1;padding:16px 14px;text-align:center;border-right:1px solid var(--border);background:var(--bg);position:relative}
+.pip-step:last-child{border-right:none}
+.pip-num{font-family:'Fraunces',serif;font-weight:900;font-size:22px;line-height:1;margin-bottom:4px;color:var(--accent)}
+.pip-name{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.3px;margin-bottom:4px}
+.pip-desc{font-size:10.5px;color:var(--ink4);line-height:1.4}
+.pip-arrow{position:absolute;right:-8px;top:50%;transform:translateY(-50%);font-size:14px;color:var(--ink4);z-index:1}
+
+/* Repo card */
+.repo{margin-top:20px;border:1px solid var(--border2)}
+.repo-header{padding:16px 22px;background:var(--bg2);border-bottom:1px solid var(--border);display:flex;align-items:center;gap:14px;cursor:pointer;user-select:none;transition:background 0.15s}
+.repo-header:hover{background:var(--bg3)}
+.repo-icon{width:28px;height:28px;border-radius:4px;display:flex;align-items:center;justify-content:center;font-weight:900;font-size:12px;color:#fff;flex-shrink:0}
+.repo-title{font-weight:700;font-size:14px;flex:1}
+.repo-arrow{font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--ink4);transition:transform 0.2s}
+.repo-body{display:none;padding:20px 22px;border-bottom:1px solid var(--border)}
+.repo-body.open{display:block;animation:fadeIn 0.25s ease}
+.repo-body p{font-size:13.5px;color:var(--ink3);line-height:1.7;max-width:700px;margin-bottom:10px}
+.repo-body p strong{color:var(--ink2);font-weight:600}
+
+.footer{background:var(--ink);color:rgba(255,255,255,0.22);padding:28px 56px;font-family:'IBM Plex Mono',monospace;font-size:10px;letter-spacing:1px;display:flex;justify-content:space-between}
+@media(max-width:860px){.masthead,.sect-head,.wrap,.footer{padding-left:20px;padding-right:20px}.cg,.dark-grid{grid-template-columns:1fr}.pipeline-steps{flex-direction:column}.pip-arrow{display:none}.footer{flex-direction:column;gap:6px}}
+</style>
+</head>
+<body>
+
+<div class="masthead">
+  <div class="mh-eye">Serie Agenti AI — Report 14</div>
+  <h1>Knowledge Base in pratica:<br>dove carico i documenti<br>e come li collego</h1>
+  <p class="mh-sub">Le modalità concrete di utilizzo della knowledge base: dove risiedono fisicamente i documenti, come l'agente vi accede, cosa cambia tra le alternative di costruzione, e come gestire i repository più comuni.</p>
+</div>
+
+<nav class="nav">
+  <button class="nav-btn active" onclick="show(0)">Le 2 modalità</button>
+  <button class="nav-btn" onclick="show(1)">Pipeline RAG</button>
+  <button class="nav-btn" onclick="show(2)">Accesso diretto</button>
+  <button class="nav-btn" onclick="show(3)">Dove vivono i dati</button>
+  <button class="nav-btn" onclick="show(4)">Le 5 alternative</button>
+  <button class="nav-btn" onclick="show(5)">I repository</button>
+  <button class="nav-btn" onclick="show(6)">Problemi pratici</button>
+</nav>
+
+
+<!-- ═══════════════════
+     S0 — LE 2 MODALITÀ
+═══════════════════ -->
+<div class="sect active" id="s0">
+  <div class="sect-head">
+    <div class="sect-num">La distinzione fondamentale</div>
+    <h2>Due modi per dare conoscenza all'agente</h2>
+    <p>La confusione più comune sulla knowledge base è non distinguere tra queste due modalità. Sono complementari ma funzionano in modo radicalmente diverso, con implicazioni pratiche diverse su costi, freschezza e complessità.</p>
+  </div>
+  <div class="wrap">
+
+    <div class="dark-box">
+      <div class="dark-title">Pipeline RAG vs Accesso Diretto</div>
+      <div class="dark-desc">Due filosofie diverse per risolvere lo stesso problema: dare all'agente accesso alla conoscenza aziendale</div>
+      <div class="dark-grid" style="grid-template-columns:1fr 1fr">
+        <div class="dark-card" style="border-top:3px solid var(--rag)">
+          <div class="dk-label" style="color:var(--rag)">Modalità A</div>
+          <div class="dk-title">Pipeline RAG</div>
+          <div class="dk-text">I documenti vengono <strong>copiati, trasformati e indicizzati</strong> in un database ottimizzato per la ricerca. L'agente cerca nell'indice, non nel documento originale. Come fotocopiare un libro e mettere le fotocopie in un archivio con un sistema di catalogazione intelligente.</div>
+        </div>
+        <div class="dark-card" style="border-top:3px solid var(--direct)">
+          <div class="dk-label" style="color:var(--direct)">Modalità B</div>
+          <div class="dk-title">Accesso Diretto</div>
+          <div class="dk-text">L'agente si connette <strong>direttamente al repository</strong> dove i documenti vivono già (SharePoint, Google Drive, Confluence) e li legge in tempo reale. Nessuna copia: l'agente va alla fonte. Come dare al collaboratore le credenziali della biblioteca aziendale.</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="prose" style="margin-top:24px;">
+      <p>Nella pratica, molti sistemi usano un <strong>approccio ibrido</strong>: si connettono alla fonte per scoprire e aggiornare i documenti, ma mantengono un indice locale (vector database) per velocizzare la ricerca. L'agente cerca nell'indice — ma l'indice è sincronizzato con la fonte. È il meglio dei due mondi, ma anche il più complesso da costruire e mantenere.</p>
+      <p>La domanda pratica che determina quale modalità usare è: <strong>quanto spesso cambiano i documenti?</strong> Se cambiano raramente (manuali, policy, FAQ) la pipeline RAG è perfetta — indicizzi una volta, usi a lungo. Se cambiano continuamente (email, ticket, conversazioni, documenti collaborativi) l'accesso diretto o l'ibrido sono necessari, perché l'indice diventa obsoleto troppo velocemente.</p>
+    </div>
+
+    <div class="card" style="margin-top:24px;">
+      <div class="card-header"><div class="card-accent" style="background:var(--accent)"></div><div class="card-head-body"><div class="card-name">Confronto rapido tra le modalità</div></div></div>
+      <div class="card-body">
+        <table class="matrix" style="min-width:600px">
+          <thead><tr><th>Dimensione</th><th style="border-bottom:3px solid var(--rag)">Pipeline RAG</th><th style="border-bottom:3px solid var(--direct)">Accesso Diretto</th><th style="border-bottom:3px solid var(--hybrid)">Ibrido</th></tr></thead>
+          <tbody>
+            <tr><td class="row-head">Freschezza dei dati</td><td>Dipende dalla frequenza di re-indicizzazione</td><td class="mx-yes"><strong>Sempre aggiornato</strong></td><td class="mx-yes"><strong>Aggiornato alla frequenza di sync</strong></td></tr>
+            <tr><td class="row-head">Velocità di ricerca</td><td class="mx-yes"><strong>Velocissimo</strong> — indice ottimizzato</td><td>Più lento — legge dalla fonte</td><td class="mx-yes"><strong>Veloce</strong> — cerca nell'indice</td></tr>
+            <tr><td class="row-head">Qualità del retrieval</td><td class="mx-yes"><strong>Alta</strong> — ricerca semantica</td><td>Dipende dalle API della fonte</td><td class="mx-yes"><strong>Alta</strong> — ricerca semantica</td></tr>
+            <tr><td class="row-head">Setup iniziale</td><td>Pipeline da costruire</td><td class="mx-yes"><strong>Solo credenziali</strong></td><td>Pipeline + connettore</td></tr>
+            <tr><td class="row-head">Manutenzione</td><td>Re-indicizzazione periodica</td><td class="mx-yes"><strong>Minima</strong></td><td>Sync automatico da gestire</td></tr>
+            <tr><td class="row-head">Costi</td><td>Embedding + vector DB storage</td><td class="mx-yes"><strong>Solo API calls</strong></td><td>Embedding + storage + API calls</td></tr>
+            <tr><td class="row-head">Documenti supportati</td><td class="mx-yes"><strong>Qualsiasi formato</strong></td><td>Solo quelli accessibili via API</td><td class="mx-yes"><strong>Qualsiasi formato</strong></td></tr>
+            <tr><td class="row-head">Controllo sul chunking</td><td class="mx-yes"><strong>Pieno controllo</strong></td><td class="mx-no"><strong>Nessuno</strong></td><td class="mx-yes"><strong>Pieno controllo</strong></td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="key-point">
+      <div class="kp-label">La regola pratica</div>
+      <div class="kp-text">Documenti stabili → Pipeline RAG. Documenti che cambiano spesso → Accesso diretto o ibrido. Documenti sparsi su molti sistemi → Ibrido con sync automatico.</div>
+    </div>
+
+  </div>
+</div>
+
+
+<!-- ═══════════════════
+     S1 — PIPELINE RAG
+═══════════════════ -->
+<div class="sect" id="s1">
+  <div class="sect-head">
+    <div class="sect-num">Modalità A — Dettaglio</div>
+    <h2>La pipeline RAG passo per passo</h2>
+    <p>Il percorso completo: dal documento originale alla risposta dell'agente. Ogni passo ha decisioni da prendere e implicazioni pratiche.</p>
+  </div>
+  <div class="wrap">
+
+    <div class="pipeline-steps">
+      <div class="pip-step"><div class="pip-num">1</div><div class="pip-name">Raccolta</div><div class="pip-desc">Prendi i documenti dalla fonte</div><div class="pip-arrow">→</div></div>
+      <div class="pip-step"><div class="pip-num">2</div><div class="pip-name">Parsing</div><div class="pip-desc">Estrai il testo dai vari formati</div><div class="pip-arrow">→</div></div>
+      <div class="pip-step"><div class="pip-num">3</div><div class="pip-name">Chunking</div><div class="pip-desc">Spezza in frammenti</div><div class="pip-arrow">→</div></div>
+      <div class="pip-step"><div class="pip-num">4</div><div class="pip-name">Embedding</div><div class="pip-desc">Trasforma in vettori numerici</div><div class="pip-arrow">→</div></div>
+      <div class="pip-step"><div class="pip-num">5</div><div class="pip-name">Storage</div><div class="pip-desc">Salva nel vector database</div><div class="pip-arrow">→</div></div>
+      <div class="pip-step"><div class="pip-num">6</div><div class="pip-name">Retrieval</div><div class="pip-desc">Cerca i frammenti rilevanti</div><div class="pip-arrow">→</div></div>
+      <div class="pip-step"><div class="pip-num">7</div><div class="pip-name">Generation</div><div class="pip-desc">Il modello risponde</div></div>
+    </div>
+
+    <div class="card">
+      <div class="card-header"><div class="card-accent" style="background:var(--rag)"></div><div class="card-head-body"><div class="card-name">I 7 passi nel dettaglio operativo</div></div></div>
+      <div class="card-body">
+        <div class="cs">
+          <div class="cs-label">1. Raccolta — dove prendi i documenti</div>
+          <p>Il primo passo è portare i documenti nella pipeline. Le opzioni: <strong>upload manuale</strong> (carichi file uno per uno — semplice ma non scalabile), <strong>connettore automatico</strong> (la pipeline si collega a un repository e scarica i documenti — scalabile ma richiede credenziali e configurazione), o <strong>copia da file system</strong> (punti a una cartella locale o di rete). La scelta dipende dal volume e dalla frequenza di aggiornamento. Per 20 documenti che cambiano raramente, l'upload manuale basta. Per 2000 documenti su SharePoint, serve un connettore.</p>
+        </div>
+        <div class="cs">
+          <div class="cs-label">2. Parsing — estrarre testo dai formati</div>
+          <p>I documenti arrivano in formati diversi: PDF, Word (.docx), PowerPoint, Excel, HTML, Markdown, email (.eml). Ogni formato richiede un <strong>parser specifico</strong> che estragga il testo pulito. I parser per Markdown e HTML sono banali. Per Word e PDF la qualità varia: testo semplice viene estratto bene; <strong>tabelle, colonne, header/footer, immagini con testo</strong> sono problematici. PDF scansionati richiedono OCR — un passo aggiuntivo che introduce errori. La qualità del parsing è il primo potenziale collo di bottiglia della pipeline.</p>
+        </div>
+        <div class="cs">
+          <div class="cs-label">3. Chunking — la decisione più impattante</div>
+          <p>Il testo estratto viene spezzato in <strong>frammenti (chunk)</strong>. Questo è il passo con il maggiore impatto sulla qualità del retrieval. Le decisioni chiave:</p>
+          <div class="cg">
+            <div class="cg-item"><div class="cg-title">Dimensione dei chunk</div><div class="cg-text"><strong>Troppo piccoli</strong> (100-200 token): perdono contesto, il frammento può essere incomprensibile da solo. <strong>Troppo grandi</strong> (2000+ token): diluiscono la rilevanza, il frammento contiene informazioni non pertinenti. <strong>Sweet spot tipico: 500-1000 token</strong> con overlap di 50-100 token tra chunk consecutivi. Ma il valore ottimale dipende dal tipo di documento: una FAQ ha chunk naturali (domanda/risposta), un contratto no.</div></div>
+            <div class="cg-item"><div class="cg-title">Strategia di splitting</div><div class="cg-text"><strong>Per caratteri/token</strong>: il più semplice, taglia ogni N caratteri. Rischio: taglia a metà di una frase. <strong>Per separatori</strong>: taglia su paragrafi, sezioni, titoli. Rispetta la struttura del documento. <strong>Per contenuto semantico</strong>: usa un modello per identificare dove il tema cambia. Più sofisticato, più costoso, risultati migliori. La raccomandazione: parti con splitting per separatori, sofistica solo se il retrieval non soddisfa.</div></div>
+          </div>
+        </div>
+        <div class="cs">
+          <div class="cs-label">4. Embedding — trasformare testo in numeri</div>
+          <p>Ogni chunk viene trasformato in un <strong>vettore numerico</strong> (embedding) che ne cattura il significato semantico. Due chunk con significato simile avranno vettori vicini nello spazio, indipendentemente dalle parole usate. Il modello di embedding è diverso dal modello LLM dell'agente — è un modello specializzato più piccolo e veloce. Le opzioni principali: <strong>OpenAI text-embedding-3-small</strong> (cloud, buon rapporto qualità/prezzo), <strong>Cohere embed</strong> (cloud, ottimo per multilingua), <strong>modelli open source</strong> (BGE, E5 — self-hosted, gratuiti, richiedono GPU). Il costo è tipicamente basso: qualche centesimo per migliaia di chunk.</p>
+        </div>
+        <div class="cs">
+          <div class="cs-label">5. Storage — dove vanno i vettori</div>
+          <p>I vettori vengono salvati in un <strong>vector database</strong> — un database ottimizzato per la ricerca per similarità tra vettori. Le opzioni concrete:</p>
+          <div class="cg">
+            <div class="cg-item"><div class="cg-title">Pinecone</div><div class="cg-text"><strong>Cloud managed.</strong> Il più popolare. Setup in minuti, zero manutenzione, scala automaticamente. Costi: piano gratuito fino a 100k vettori, poi $70+/mese. Buona scelta per iniziare e per produzione leggera.</div></div>
+            <div class="cg-item"><div class="cg-title">Chroma</div><div class="cg-text"><strong>Locale / self-hosted.</strong> Open source, gira in-process (come un file SQLite per vettori). Perfetto per <strong>prototipi e sviluppo locale</strong>. Limiti su volumi grandi. Zero costi. Installazione: una riga pip install.</div></div>
+            <div class="cg-item"><div class="cg-title">pgvector</div><div class="cg-text"><strong>Estensione PostgreSQL.</strong> Se hai già un database PostgreSQL, aggiungi il supporto vettoriale senza un sistema separato. <strong>Nessuna infrastruttura aggiuntiva.</strong> Performance buona fino a milioni di vettori. La scelta più pragmatica per chi ha già Postgres.</div></div>
+            <div class="cg-item"><div class="cg-title">Qdrant / Weaviate</div><div class="cg-text"><strong>Vector DB dedicati, cloud o self-hosted.</strong> Più funzionalità avanzate (filtri ibridi, multi-tenancy). Indicati per produzione seria con volumi alti e requisiti complessi. Più potenti ma anche più complessi da gestire.</div></div>
+          </div>
+        </div>
+        <div class="cs">
+          <div class="cs-label">6 e 7. Retrieval e Generation — quando l'utente fa una domanda</div>
+          <p>Quando l'utente fa una domanda: la domanda viene <strong>trasformata nello stesso spazio vettoriale</strong> dei chunk (con lo stesso modello di embedding), poi il vector database trova i <strong>K chunk più simili</strong> (tipicamente K=3-5), e questi chunk vengono inseriti nel prompt del modello LLM come contesto. Il modello genera la risposta <strong>basandosi su ciò che i chunk contengono</strong>. Se i chunk giusti non vengono trovati, il modello non ha le informazioni e rischia di inventare.</p>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+
+<!-- ═══════════════════
+     S2 — ACCESSO DIRETTO
+═══════════════════ -->
+<div class="sect" id="s2">
+  <div class="sect-head">
+    <div class="sect-num">Modalità B — Dettaglio</div>
+    <h2>Accesso diretto ai repository</h2>
+    <p>L'agente non ha una copia dei documenti: si connette direttamente alla fonte e legge in tempo reale. Più semplice da configurare, sempre aggiornato, ma con limiti sulla qualità della ricerca.</p>
+  </div>
+  <div class="wrap">
+
+    <div class="prose">
+      <p>L'accesso diretto funziona così: l'agente ha un <strong>tool</strong> (nel senso del Report 13 — uno strumento con cui può interagire) che gli permette di cercare e leggere documenti da un repository specifico. Quando l'utente fa una domanda, l'agente decide di usare questo tool, formula una query di ricerca, e il tool restituisce i documenti o i frammenti rilevanti direttamente dalla fonte.</p>
+      <p>La differenza chiave con il RAG: nella pipeline RAG la ricerca è <strong>semantica</strong> (per significato — trova documenti concettualmente simili anche se usano parole diverse). Nell'accesso diretto, la ricerca dipende dall'<strong>API del repository</strong>: SharePoint usa ricerca per keyword, Google Drive ha una ricerca abbastanza intelligente, Confluence ha la sua ricerca interna. Nessuna di queste è semantica come un vector database — il che significa che la qualità del retrieval è generalmente inferiore.</p>
+      <p>L'accesso diretto è però <strong>imbattibile sulla freschezza</strong>: un documento modificato 5 minuti fa è immediatamente disponibile all'agente. Con la pipeline RAG, servirebbe una re-indicizzazione.</p>
+    </div>
+
+    <div class="card" style="margin-top:24px;">
+      <div class="card-header"><div class="card-accent" style="background:var(--direct)"></div><div class="card-head-body"><div class="card-name">Come funziona concretamente</div></div></div>
+      <div class="card-body">
+        <div class="cs">
+          <div class="cs-label">Cosa serve per configurarlo</div>
+          <div class="cg">
+            <div class="cg-item"><div class="cg-title">Credenziali di accesso</div><div class="cg-text">L'agente ha bisogno di <strong>credenziali per accedere al repository</strong>: un service account per Google Drive, un token OAuth per SharePoint, un API token per Confluence o GitHub. Queste credenziali determinano cosa l'agente può vedere — e devono avere i permessi minimi necessari.</div></div>
+            <div class="cg-item"><div class="cg-title">Un connettore (tool)</div><div class="cg-text">Un tool che implementa le chiamate API al repository: <strong>cerca documenti, leggi contenuto, elenca file in una cartella</strong>. Per i repository più comuni, esistono connettori precostruiti (MCP server, nodi n8n, wrapper LangChain). Per repository custom, va scritto.</div></div>
+            <div class="cg-item"><div class="cg-title">Descrizione del tool per il modello</div><div class="cg-text">Il modello deve sapere <strong>quando e come usare</strong> il connettore. La descrizione del tool nel prompt è cruciale: "cerca nei documenti SharePoint usando parole chiave, restituisce il testo dei documenti trovati". Se la descrizione è vaga, il modello non saprà quando cercare.</div></div>
+            <div class="cg-item"><div class="cg-title">Gestione dei formati</div><div class="cg-text">Il repository restituisce file in formati diversi. Il connettore deve <strong>estrarre il testo</strong> dai vari formati (PDF, Word, ecc.) prima di passarlo al modello. Alcuni connettori lo fanno automaticamente; altri restituiscono il file grezzo e serve un parser aggiuntivo.</div></div>
+          </div>
+        </div>
+        <div class="cs">
+          <div class="cs-label">Quando preferire l'accesso diretto</div>
+          <p><strong>Documenti che cambiano frequentemente</strong> (email, ticket, documenti collaborativi). <strong>Pochi documenti</strong> (decine, non migliaia — la ricerca per keyword basta). <strong>Repository con buona ricerca nativa</strong> (Google Drive, Notion hanno ricerca full-text decente). <strong>Prototipo rapido</strong> — configurare un connettore è più veloce che costruire una pipeline RAG. <strong>Budget zero</strong> — nessun costo di embedding o vector database.</p>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+
+<!-- ═══════════════════
+     S3 — DOVE VIVONO I DATI
+═══════════════════ -->
+<div class="sect" id="s3">
+  <div class="sect-head">
+    <div class="sect-num">Opzioni concrete</div>
+    <h2>Dove vivono fisicamente i dati</h2>
+    <p>Le opzioni concrete per lo storage della knowledge base, con pro e contro di ciascuna.</p>
+  </div>
+  <div class="wrap">
+
+    <div class="card">
+      <div class="card-header"><div class="card-accent" style="background:var(--rag)"></div><div class="card-head-body"><div class="card-name">Per la pipeline RAG — dove salvare i vettori</div></div></div>
+      <div class="card-body">
+        <div class="cs">
+          <div class="cs-label">Le opzioni principali</div>
+          <div class="cg">
+            <div class="cg-item"><div class="cg-title">Vector DB cloud (Pinecone, Weaviate Cloud)</div><div class="cg-text"><strong>Pro:</strong> setup in minuti, zero manutenzione, scala automaticamente. <strong>Contro:</strong> i dati transitano/risiedono nel cloud del provider; costo mensile che cresce con il volume. <strong>Per chi:</strong> chi vuole semplicità e non ha vincoli di privacy stringenti.</div></div>
+            <div class="cg-item"><div class="cg-title">Vector DB self-hosted (Qdrant, Weaviate, Milvus)</div><div class="cg-text"><strong>Pro:</strong> dati sotto il tuo controllo, nessun costo di licenza (open source), performance ottimizzabili. <strong>Contro:</strong> infrastruttura da gestire (server, backup, aggiornamenti). <strong>Per chi:</strong> chi ha requisiti di privacy o volumi alti che rendono il cloud costoso.</div></div>
+            <div class="cg-item"><div class="cg-title">pgvector (estensione PostgreSQL)</div><div class="cg-text"><strong>Pro:</strong> nessun sistema aggiuntivo se hai già Postgres, dati e vettori nello stesso DB, backup unico. <strong>Contro:</strong> performance inferiore ai DB dedicati su volumi molto alti (milioni di vettori). <strong>Per chi:</strong> la scelta più pragmatica per la maggior parte dei casi.</div></div>
+            <div class="cg-item"><div class="cg-title">Chroma (in-process)</div><div class="cg-text"><strong>Pro:</strong> zero infrastruttura, gira dentro il tuo processo Python, installazione in 1 riga. <strong>Contro:</strong> non pensato per produzione seria; limiti su concorrenza e volumi. <strong>Per chi:</strong> prototipi, sviluppo locale, POC. Migrare a un'altra soluzione in seguito è relativamente semplice.</div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-header"><div class="card-accent" style="background:var(--direct)"></div><div class="card-head-body"><div class="card-name">Per l'accesso diretto — i documenti restano dove sono</div></div></div>
+      <div class="card-body">
+        <div class="cs">
+          <div class="cs-label">La logica</div>
+          <p>Con l'accesso diretto <strong>non sposti nulla</strong>: i documenti restano su SharePoint, Google Drive, Confluence, GitHub — ovunque siano. L'agente si connette tramite le API del repository. L'unico "storage" è quello delle credenziali di accesso e, eventualmente, di una cache per velocizzare le richieste ripetute.</p>
+          <p>Il vantaggio è che <strong>non duplichi i dati</strong>: un unico punto di verità. Lo svantaggio è che dipendi dalla disponibilità e dalla velocità delle API del repository — se SharePoint è lento, l'agente è lento.</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-header"><div class="card-accent" style="background:var(--hybrid)"></div><div class="card-head-body"><div class="card-name">Per l'ibrido — indice locale + connessione alla fonte</div></div></div>
+      <div class="card-body">
+        <div class="cs">
+          <div class="cs-label">Come funziona</div>
+          <p>Un <strong>sync automatico periodico</strong> (ogni ora, ogni giorno) scarica i documenti dal repository, li processa (parsing + chunking + embedding) e aggiorna il vector database. L'agente cerca nel vector database (veloce, semantico) ma i dati sono freschi perché l'indice è aggiornato regolarmente. Molti prodotti maturi (Glean, Guru, Salesforce Agentforce) funzionano così.</p>
+          <p>La complessità sta nel <strong>sync incrementale</strong>: non ri-indicizzare tutto ogni volta, ma solo ciò che è cambiato. Gestire documenti modificati, rinominati, cancellati. Gestire i permessi (se un documento diventa riservato, l'indice deve riflettere il cambio). È la modalità più potente ma anche la più complessa da implementare e mantenere.</p>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+
+<!-- ═══════════════════
+     S4 — LE 5 ALTERNATIVE
+═══════════════════ -->
+<div class="sect" id="s4">
+  <div class="sect-head">
+    <div class="sect-num">Per alternativa di costruzione</div>
+    <h2>Come si collega la knowledge base in ciascuna alternativa</h2>
+    <p>Cosa cambia operativamente a seconda che tu stia usando codice custom, un framework, il no-code, il marketplace o un progetto open source.</p>
+  </div>
+  <div class="wrap">
+
+    <div class="card">
+      <div class="card-header"><div class="card-accent" style="background:var(--alt1)"></div><div class="card-head-body"><div class="card-name">Stack Custom — pieno controllo, tutto da costruire</div></div></div>
+      <div class="card-body"><div class="cs"><div class="cs-label">Come funziona</div>
+        <p>Costruisci l'intera pipeline RAG da zero o configuri l'accesso diretto con connettori custom. <strong>Scegli tu</strong> ogni componente: parser, strategia di chunking, modello di embedding, vector database, logica di retrieval. Massima flessibilità — puoi ottimizzare ogni passo per il tuo dominio specifico. Ma ogni passo è codice da scrivere, testare e mantenere. La pipeline tipica in Python usa: <strong>librerie di parsing</strong> (pypdf, python-docx, unstructured), <strong>un modello di embedding</strong> (via API OpenAI o modello locale), e un <strong>vector store</strong> (Chroma per prototipo, pgvector o Pinecone per produzione).</p>
+      </div></div>
+    </div>
+
+    <div class="card">
+      <div class="card-header"><div class="card-accent" style="background:var(--alt2)"></div><div class="card-head-body"><div class="card-name">Framework — componenti pronti, assembli tu</div></div></div>
+      <div class="card-body"><div class="cs"><div class="cs-label">Come funziona</div>
+        <p>LangChain e LlamaIndex offrono <strong>componenti RAG precostruiti</strong> che assembli come pezzi Lego: document loaders (per PDF, Word, HTML, Google Drive, Notion, Confluence, GitHub), text splitters (diverse strategie di chunking preconfigurate), embedding wrappers (OpenAI, Cohere, modelli locali), vector store integrations (Chroma, Pinecone, pgvector, Qdrant). <strong>Risparmi settimane</strong> di implementazione rispetto al custom. Il lavoro residuo è: scegliere i parametri giusti (dimensione chunk, overlap, modello di embedding), configurare le credenziali, e soprattutto testare la qualità del retrieval. LlamaIndex è particolarmente forte sul RAG — è nato per quello.</p>
+      </div></div>
+    </div>
+
+    <div class="card">
+      <div class="card-header"><div class="card-accent" style="background:var(--alt3)"></div><div class="card-head-body"><div class="card-name">No-code / Low-code — upload o connettore, pipeline nascosta</div></div></div>
+      <div class="card-body"><div class="cs"><div class="cs-label">Come funziona</div>
+        <p>Le piattaforme no-code come <strong>Dify</strong> e <strong>Flowise</strong> offrono una sezione "Knowledge Base" dove puoi <strong>caricare file</strong> (drag-and-drop di PDF, Word, ecc.) o <strong>connettere un repository</strong> (Google Drive, Notion, siti web). La piattaforma gestisce internamente parsing, chunking, embedding e storage — tu non vedi nulla di questo processo. Configuri al massimo la dimensione dei chunk e il numero di risultati da recuperare. <strong>Vantaggi:</strong> operativo in minuti, zero codice. <strong>Limiti:</strong> poco controllo sulla qualità del chunking, scelta ristretta di embedding model, difficile ottimizzare per il tuo dominio specifico. Se il retrieval non funziona bene, le leve per migliorarlo sono limitate.</p>
+      </div></div>
+    </div>
+
+    <div class="card">
+      <div class="card-header"><div class="card-accent" style="background:var(--alt4)"></div><div class="card-head-body"><div class="card-name">Marketplace — upload file, fine</div></div></div>
+      <div class="card-body"><div class="cs"><div class="cs-label">Come funziona</div>
+        <p>Su <strong>GPT Store</strong> o <strong>Claude Projects</strong> carichi file (PDF, testo, immagini) nell'interfaccia. La piattaforma li rende interrogabili dall'agente. <strong>Non puoi scegliere nulla</strong>: il chunking, l'embedding, il retrieval sono interni e non modificabili. Non puoi connettere repository esterni — devi scaricare i file dalla fonte e ricaricarli manualmente. <strong>Vantaggi:</strong> operativo in minuti, zero configurazione. <strong>Limiti:</strong> nessun aggiornamento automatico (se il documento cambia, devi ricaricarlo), nessun controllo sulla qualità del retrieval, limiti sul numero e la dimensione dei file. Funziona bene per knowledge base piccole e stabili.</p>
+      </div></div>
+    </div>
+
+    <div class="card">
+      <div class="card-header"><div class="card-accent" style="background:var(--alt5)"></div><div class="card-head-body"><div class="card-name">Open Source da repository — pipeline già scritta, adatti</div></div></div>
+      <div class="card-body"><div class="cs"><div class="cs-label">Come funziona</div>
+        <p>Molti template GitHub includono una <strong>pipeline RAG già implementata</strong>. Trovi il codice di parsing, chunking, embedding e retrieval già scritto e funzionante. Lo adatti al tuo caso: cambi il document loader per i tuoi formati, aggiusti i parametri di chunking, configuri il vector store. <strong>Vantaggi:</strong> vedi esattamente come funziona (valore formativo), puoi modificare ogni parte. <strong>Limiti:</strong> la qualità varia enormemente da repo a repo; i parametri di default raramente sono ottimali per il tuo dominio; la pipeline potrebbe usare componenti datati.</p>
+      </div></div>
+    </div>
+
+  </div>
+</div>
+
+
+<!-- ═══════════════════
+     S5 — I REPOSITORY
+═══════════════════ -->
+<div class="sect" id="s5">
+  <div class="sect-head">
+    <div class="sect-num">Guida per repository</div>
+    <h2>SharePoint, Google Drive, GitHub, Confluence, Notion</h2>
+    <p>Per i repository documentali più comuni: come l'agente vi accede, con quale modalità, e in quale alternativa di costruzione è più facile o possibile.</p>
+  </div>
+  <div class="wrap">
+
+    <!-- SharePoint -->
+    <div class="repo">
+      <div class="repo-header" onclick="toggleRepo(this)">
+        <div class="repo-icon" style="background:#0078d4">SP</div>
+        <div class="repo-title">Microsoft SharePoint / OneDrive</div>
+        <div class="repo-arrow">▼</div>
+      </div>
+      <div class="repo-body">
+        <p><strong>Accesso diretto possibile?</strong> Sì, tramite Microsoft Graph API. L'agente può cercare file, leggerne il contenuto, navigare le cartelle. Richiede registrazione di un'app in Azure AD e configurazione OAuth2 — <strong>non banale</strong> ma ben documentato.</p>
+        <p><strong>Pipeline RAG?</strong> Sì. LangChain ha un SharePoint document loader. n8n ha un nodo Microsoft OneDrive/SharePoint. Puoi scaricare i file periodicamente e indicizzarli. L'aggiornamento incrementale richiede logica di sync custom.</p>
+        <p><strong>MCP server?</strong> Esistono MCP server community per Microsoft Graph, ma la maturità è ancora variabile. In rapida evoluzione.</p>
+        <p><strong>Nelle alternative:</strong> Framework e custom → pieno accesso via API. No-code → possibile con nodo n8n o Dify connector. Marketplace → devi scaricare i file e ricaricarli manualmente. Enterprise → M365 Copilot ha accesso nativo (se sei nell'ecosistema Microsoft).</p>
+        <p><strong>Attenzione ai permessi:</strong> SharePoint ha un sistema di permessi granulare. Se l'agente usa un service account, vede tutto ciò a cui il service account ha accesso. <strong>Assicurati che i permessi riflettano ciò che gli utenti dell'agente possono vedere</strong> — altrimenti l'agente può esporre documenti riservati.</p>
+      </div>
+    </div>
+
+    <!-- Google Drive -->
+    <div class="repo">
+      <div class="repo-header" onclick="toggleRepo(this)">
+        <div class="repo-icon" style="background:#4285f4">GD</div>
+        <div class="repo-title">Google Drive</div>
+        <div class="repo-arrow">▼</div>
+      </div>
+      <div class="repo-body">
+        <p><strong>Accesso diretto possibile?</strong> Sì, tramite Google Drive API. Ricerca full-text integrata (Google indicizza i contenuti dei file). L'agente può cercare, leggere, e anche scrivere file. Autenticazione OAuth2 standard.</p>
+        <p><strong>Pipeline RAG?</strong> Sì. LangChain ha Google Drive loader. n8n ha un nodo Google Drive. Google Docs e Sheets sono particolarmente facili da leggere perché hanno API strutturate per il contenuto. PDF e Word su Drive richiedono download + parsing.</p>
+        <p><strong>MCP server?</strong> Esistono MCP server per Google Drive abbastanza maturi. Claude.ai supporta direttamente la connessione a Google Drive come strumento integrato.</p>
+        <p><strong>Nelle alternative:</strong> Tutte le alternative tranne il marketplace permettono la connessione. Il marketplace (GPT, Claude Projects) richiede download e re-upload manuale.</p>
+        <p><strong>Vantaggio specifico:</strong> Google Drive ha una <strong>ricerca nativa molto buona</strong> — spesso sufficiente per accesso diretto senza pipeline RAG, specialmente se i documenti sono Google Docs (il contenuto è indicizzato nativamente).</p>
+      </div>
+    </div>
+
+    <!-- GitHub -->
+    <div class="repo">
+      <div class="repo-header" onclick="toggleRepo(this)">
+        <div class="repo-icon" style="background:#24292e">GH</div>
+        <div class="repo-title">GitHub</div>
+        <div class="repo-arrow">▼</div>
+      </div>
+      <div class="repo-body">
+        <p><strong>Accesso diretto possibile?</strong> Sì, tramite GitHub API. L'agente può leggere file, cercare nel codice, leggere issues e PR, navigare la struttura del repository. Autenticazione con Personal Access Token — semplice.</p>
+        <p><strong>Pipeline RAG?</strong> Sì, particolarmente utile per <strong>documentazione tecnica</strong>: README, docs/, wiki. LangChain ha un GitHub loader. Per il codice sorgente, il RAG è meno utile — il codice è meglio passato intero o per file al modello, non chunkato.</p>
+        <p><strong>MCP server?</strong> Il MCP server per GitHub è uno dei più maturi dell'ecosistema. Permette lettura e scrittura (issues, PR, file).</p>
+        <p><strong>Caso d'uso tipico:</strong> Agente di supporto tecnico che risponde basandosi sulla documentazione del repo. Agente di coding che accede al codebase per capire il contesto. Agente che gestisce issues — legge, classifica, risponde.</p>
+      </div>
+    </div>
+
+    <!-- Confluence -->
+    <div class="repo">
+      <div class="repo-header" onclick="toggleRepo(this)">
+        <div class="repo-icon" style="background:#0052cc">CF</div>
+        <div class="repo-title">Atlassian Confluence</div>
+        <div class="repo-arrow">▼</div>
+      </div>
+      <div class="repo-body">
+        <p><strong>Accesso diretto possibile?</strong> Sì, tramite Confluence REST API. L'agente può cercare pagine per keyword, leggere il contenuto (in formato HTML o plain text), navigare gli spazi. Autenticazione API token.</p>
+        <p><strong>Pipeline RAG?</strong> Sì. LangChain ha un Confluence loader. Le pagine Confluence sono in formato strutturato (HTML) — il parsing è relativamente pulito rispetto ai PDF. Il chunking naturale è per pagina o per sezione (heading).</p>
+        <p><strong>Nelle alternative:</strong> Framework → loader pronto. No-code → n8n ha un nodo Confluence. Marketplace → download e re-upload manuale (doloroso per centinaia di pagine).</p>
+        <p><strong>Attenzione:</strong> Confluence può contenere <strong>migliaia di pagine</strong>, molte obsolete. Indicizzare tutto è controproducente — il rumore degrada il retrieval. Filtra per spazio, data di ultimo aggiornamento, o label prima di indicizzare.</p>
+      </div>
+    </div>
+
+    <!-- Notion -->
+    <div class="repo">
+      <div class="repo-header" onclick="toggleRepo(this)">
+        <div class="repo-icon" style="background:#000">N</div>
+        <div class="repo-title">Notion</div>
+        <div class="repo-arrow">▼</div>
+      </div>
+      <div class="repo-body">
+        <p><strong>Accesso diretto possibile?</strong> Sì, tramite Notion API. L'agente può cercare pagine, leggere il contenuto (blocchi strutturati), navigare i database Notion. Autenticazione con Integration token.</p>
+        <p><strong>Pipeline RAG?</strong> Sì. LangChain ha un Notion loader. I contenuti Notion sono strutturati in blocchi — il parsing è pulito. Il chunking naturale è per pagina.</p>
+        <p><strong>Embedded AI?</strong> Notion ha il suo <strong>Notion AI integrato</strong> che accede nativamente a tutto il workspace. Se usi già Notion e il caso d'uso è Q&A sui tuoi documenti Notion, Notion AI potrebbe bastare senza costruire nulla.</p>
+        <p><strong>MCP server?</strong> Esistono MCP server per Notion. La qualità è buona per lettura; la scrittura è più limitata a causa delle specificità dell'API Notion (blocchi, non testo libero).</p>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+
+<!-- ═══════════════════
+     S6 — PROBLEMI PRATICI
+═══════════════════ -->
+<div class="sect" id="s6">
+  <div class="sect-head">
+    <div class="sect-num">Operativo</div>
+    <h2>I problemi pratici e come affrontarli</h2>
+    <p>I problemi che emergono non dalla teoria ma dall'utilizzo reale: aggiornamenti, formati, permessi, costi, qualità.</p>
+  </div>
+  <div class="wrap">
+
+    <div class="card">
+      <div class="card-header"><div class="card-accent" style="background:var(--accent)"></div><div class="card-head-body"><div class="card-name">I 6 problemi più comuni e come risolverli</div></div></div>
+      <div class="card-body">
+
+        <div class="cs">
+          <div class="cs-label">1. I documenti cambiano — come aggiornare l'indice</div>
+          <p>Se usi la pipeline RAG, l'indice è una <strong>fotografia</strong> dei documenti al momento dell'indicizzazione. Un documento modificato dopo l'indicizzazione non è aggiornato nell'indice. Le soluzioni, in ordine di complessità: <strong>re-indicizzazione completa periodica</strong> (semplice ma lenta — rifai tutto ogni notte), <strong>sync incrementale</strong> (controlla cosa è cambiato dall'ultima indicizzazione e aggiorna solo quei documenti — più efficiente, più complesso), <strong>webhook/trigger</strong> (il repository notifica la pipeline quando un documento cambia — tempo reale, richiede supporto dal repository). Per la maggior parte dei casi, la re-indicizzazione notturna è sufficiente — a meno che la freschezza al minuto sia un requisito.</p>
+        </div>
+
+        <div class="cs">
+          <div class="cs-label">2. Documenti in formati diversi — come gestirli</div>
+          <p>Una knowledge base reale contiene PDF, Word, Excel, HTML, Markdown, immagini, email. Ogni formato richiede un parser diverso. La libreria <strong>Unstructured</strong> (Python, open source) è il coltellino svizzero: gestisce la maggior parte dei formati con un'unica interfaccia. Per i framework: LangChain ha document loaders per ogni formato. Per il no-code: le piattaforme gestiscono i formati più comuni internamente. <strong>I formati problematici</strong>: PDF scansionati (servono OCR), Excel con formule e grafici (si perde la struttura), PowerPoint (il testo si estrae bene, le relazioni con le immagini no).</p>
+        </div>
+
+        <div class="cs">
+          <div class="cs-label">3. Permessi — l'agente non deve vedere tutto</div>
+          <p>In un'organizzazione, non tutti possono vedere tutti i documenti. Se l'agente usa un unico service account che ha accesso a tutto, <strong>qualsiasi utente che parla con l'agente può ottenere informazioni da documenti a cui non avrebbe accesso</strong>. Le soluzioni: <strong>filtrare per permessi al momento del retrieval</strong> (ogni chunk ha metadati sui permessi, il retrieval filtra in base all'utente corrente — complesso ma corretto), <strong>knowledge base separate per ruolo/gruppo</strong> (più semplice ma meno flessibile), o <strong>accettare il rischio</strong> se tutti i documenti sono comunque accessibili a tutti. La scelta dipende dalla sensibilità dei contenuti.</p>
+        </div>
+
+        <div class="cs">
+          <div class="cs-label">4. Il retrieval non trova i documenti giusti</div>
+          <p>Il problema più comune e più frustrante: la risposta è sbagliata perché <strong>i chunk restituiti non sono quelli pertinenti</strong>. La diagnosi: per 20 domande tipiche, guarda quali chunk vengono restituiti — sono quelli giusti? Se no, le leve: <strong>ristruttura i documenti</strong> (titoli chiari, domanda/risposta esplicite dove possibile), <strong>cambia la dimensione dei chunk</strong> (prova più piccoli o più grandi), <strong>aggiungi metadata</strong> (categoria, prodotto, data) e filtra al retrieval, <strong>cambia embedding model</strong> (modelli multilingua se i documenti sono in italiano), <strong>usa retrieval ibrido</strong> (ricerca semantica + keyword matching combinati). Testare il retrieval in isolamento — separato dal modello — è il modo più efficace per diagnosticare e risolvere.</p>
+        </div>
+
+        <div class="cs">
+          <div class="cs-label">5. Costi a scala</div>
+          <p>I costi della pipeline RAG: <strong>embedding iniziale</strong> (una tantum, pochi euro per migliaia di documenti con OpenAI embedding), <strong>storage del vector database</strong> (da gratuito con Chroma a $70+/mese con Pinecone), <strong>embedding delle query</strong> (ogni ricerca dell'utente richiede un embedding — centesimi, ma a milioni di query diventa significativo), <strong>token del modello</strong> (i chunk recuperati entrano nel prompt del modello e costano come qualsiasi altro token). Per la maggior parte dei casi aziendali il costo totale è nell'ordine delle <strong>decine di euro/mese</strong> — non centinaia. Diventa significativo solo con milioni di documenti o milioni di query.</p>
+        </div>
+
+        <div class="cs">
+          <div class="cs-label">6. Documenti obsoleti che avvelenano le risposte</div>
+          <p>Una knowledge base con documenti non più validi è <strong>peggio di nessuna knowledge base</strong>: l'agente risponde con sicurezza citando informazioni obsolete. Le soluzioni: <strong>data di scadenza</strong> (ogni documento ha una data entro cui va rivisto o rimosso), <strong>flag di versione</strong> ("documento superseded da X — non usare"), <strong>revisione periodica</strong> (ogni N mesi, un umano rivede la lista dei documenti e rimuove quelli obsoleti). Il principio: qualità > quantità. Meglio 100 documenti aggiornati che 1000 di cui 300 obsoleti.</p>
+        </div>
+
+      </div>
+    </div>
+
+    <div class="key-point">
+      <div class="kp-label">La sintesi operativa</div>
+      <div class="kp-text">Per iniziare: scegli la modalità in base alla frequenza di aggiornamento dei documenti. Per scalare: investi nella qualità dei documenti e nel testing del retrieval. Per mantenere: programma revisioni periodiche e automatizza il sync.</div>
+      <div class="kp-sub">La pipeline RAG non è "configura e dimentica" — è un sistema vivente che richiede manutenzione continua. La knowledge base è tanto un progetto di content management quanto un progetto tecnico. Se chi gestisce i documenti e chi gestisce la pipeline non parlano tra loro, la qualità degraderà nel tempo.</div>
+    </div>
+
+  </div>
+</div>
+
+
+<div class="footer">
+  <span>Serie Agenti AI — Report 14 · Knowledge Base in Pratica</span>
+  <span>Marzo 2026</span>
+</div>
+
+<script>
+function show(n){
+  document.querySelectorAll('.sect').forEach(s=>s.classList.remove('active'));
+  document.querySelectorAll('.nav-btn').forEach(b=>b.classList.remove('active'));
+  document.getElementById('s'+n).classList.add('active');
+  document.querySelectorAll('.nav-btn')[n].classList.add('active');
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+function toggleRepo(header){
+  const body=header.nextElementSibling;
+  const arrow=header.querySelector('.repo-arrow');
+  const isOpen=body.classList.contains('open');
+  document.querySelectorAll('.repo-body').forEach(b=>b.classList.remove('open'));
+  document.querySelectorAll('.repo-arrow').forEach(a=>a.textContent='▼');
+  if(!isOpen){body.classList.add('open');arrow.textContent='▲';}
+}
+</script>
+
+</body>
+</html>

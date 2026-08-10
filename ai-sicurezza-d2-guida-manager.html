@@ -1,0 +1,1063 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AI e Sicurezza dei Dati — Guida per Manager e Responsabili di Funzione</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;700&family=DM+Serif+Display:ital@0;1&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg:       #f7f5f0;
+  --surface:  #ffffff;
+  --surface2: #f0ede6;
+  --border:   #e0dbd0;
+  --ink:      #1a1916;
+  --ink2:     #4a4840;
+  --ink3:     #8a8780;
+  --ink4:     #b8b5ae;
+
+  --green:    #1a7a4a;
+  --green-l:  #e8f5ee;
+  --green-b:  #c8e8d8;
+  --amber:    #b85c00;
+  --amber-l:  #fff3e6;
+  --amber-b:  #ffd8a8;
+  --red:      #c02020;
+  --red-l:    #fdeaea;
+  --red-b:    #f5baba;
+  --blue:     #1a5a9a;
+  --blue-l:   #e8f0fa;
+  --violet:   #6040b0;
+  --violet-l: #f0eaff;
+
+  --f-tec:    #1a5a9a; --f-tec-l: #e8f0fa;
+  --f-com:    #1a7a4a; --f-com-l: #e8f5ee;
+  --f-qua:    #b85c00; --f-qua-l: #fff3e6;
+  --f-pro:    #6040b0; --f-pro-l: #f0eaff;
+  --f-hr:     #c02020; --f-hr-l:  #fdeaea;
+  --f-acq:    #2a7a70; --f-acq-l: #e6f5f3;
+}
+
+* { margin:0; padding:0; box-sizing:border-box; }
+html { scroll-behavior:smooth; }
+
+body {
+  background: var(--bg);
+  color: var(--ink);
+  font-family: 'DM Sans', sans-serif;
+  font-weight: 400;
+  font-size: 16px;
+  line-height: 1.75;
+}
+
+/* ── HEADER ── */
+.header {
+  background: var(--ink);
+  color: #fff;
+  padding: 56px 64px 48px;
+  position: relative;
+  overflow: hidden;
+}
+.header::after {
+  content: '';
+  position: absolute; top:0; left:0; right:0; bottom:0;
+  background: repeating-linear-gradient(-45deg,rgba(255,255,255,0.015) 0px,rgba(255,255,255,0.015) 1px,transparent 1px,transparent 12px);
+  pointer-events: none;
+}
+.header-kicker { font-family:'DM Mono',monospace; font-size:11px; letter-spacing:3px; text-transform:uppercase; color:rgba(255,255,255,0.4); margin-bottom:16px; }
+.header h1 { font-family:'DM Serif Display',serif; font-size:clamp(28px,4vw,48px); font-weight:400; line-height:1.1; letter-spacing:-0.5px; max-width:700px; margin-bottom:20px; }
+.header h1 em { font-style:italic; color:rgba(255,255,255,0.6); }
+.header-sub { font-size:15px; color:rgba(255,255,255,0.5); max-width:580px; line-height:1.7; margin-bottom:36px; }
+.header-meta { display:flex; gap:32px; flex-wrap:wrap; padding-top:28px; border-top:1px solid rgba(255,255,255,0.12); }
+.header-meta-item span { font-family:'DM Mono',monospace; font-size:10px; letter-spacing:2px; text-transform:uppercase; color:rgba(255,255,255,0.3); display:block; }
+.header-meta-item strong { font-size:13px; font-weight:500; color:rgba(255,255,255,0.7); display:block; margin-top:2px; }
+
+/* ── FUNCTION TABS ── */
+.ftab-nav {
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+  padding: 0 64px;
+  display: flex; gap:0; overflow-x:auto; scrollbar-width:none;
+  position: sticky; top:0; z-index:100;
+}
+.ftab-nav::-webkit-scrollbar { display:none; }
+
+.ftab-btn {
+  display: flex; align-items:center; gap:8px;
+  padding: 14px 18px;
+  font-size: 13px; font-weight:500;
+  color: var(--ink3);
+  border: none; background:transparent; cursor:pointer;
+  border-bottom: 2px solid transparent;
+  white-space: nowrap; transition: all 0.2s;
+  position: relative;
+}
+.ftab-btn:hover { color:var(--ink); }
+.ftab-btn.active { color:var(--ink); }
+.ftab-btn.active::after { content:''; position:absolute; bottom:-1px; left:0; right:0; height:2px; }
+
+.ftab-btn[data-f="intro"].active::after { background: var(--ink); }
+.ftab-btn[data-f="tec"].active::after   { background: var(--f-tec); }
+.ftab-btn[data-f="com"].active::after   { background: var(--f-com); }
+.ftab-btn[data-f="qua"].active::after   { background: var(--f-qua); }
+.ftab-btn[data-f="pro"].active::after   { background: var(--f-pro); }
+.ftab-btn[data-f="hr"].active::after    { background: var(--f-hr); }
+.ftab-btn[data-f="acq"].active::after   { background: var(--f-acq); }
+.ftab-btn[data-f="ruolo"].active::after { background: var(--violet); }
+
+.ftab-dot {
+  width:8px; height:8px; border-radius:50%; flex-shrink:0;
+}
+
+/* ── PANELS ── */
+.ftab-panel { display:none; }
+.ftab-panel.active { display:block; animation: fadeIn 0.25s ease; }
+@keyframes fadeIn { from{opacity:0;transform:translateY(4px)} to{opacity:1;transform:translateY(0)} }
+
+.panel-inner { max-width:820px; margin:0 auto; padding:56px 40px 80px; }
+
+/* ── TYPOGRAPHY ── */
+.panel-inner h2 {
+  font-family:'DM Serif Display',serif;
+  font-size:clamp(24px,3.5vw,36px);
+  font-weight:400; letter-spacing:-0.3px;
+  line-height:1.2; margin-bottom:20px; color:var(--ink);
+}
+
+.panel-inner p {
+  font-size:15px; color:var(--ink2);
+  margin-bottom:18px; line-height:1.82;
+}
+.panel-inner p strong { color:var(--ink); font-weight:500; }
+
+.panel-inner h3 {
+  font-size:17px; font-weight:700;
+  color:var(--ink); margin:36px 0 14px;
+  letter-spacing:-0.2px;
+}
+
+/* ── FUNCTION HERO (colorato per funzione) ── */
+.func-hero {
+  padding: 28px 32px;
+  margin-bottom: 36px;
+  border-left: 5px solid;
+}
+
+.func-hero-label {
+  font-family:'DM Mono',monospace; font-size:10px;
+  letter-spacing:2.5px; text-transform:uppercase;
+  margin-bottom:10px; display:block;
+}
+
+.func-hero h2 {
+  font-family:'DM Serif Display',serif;
+  font-size:clamp(22px,3vw,32px);
+  font-weight:400; margin-bottom:12px;
+}
+
+.func-hero p {
+  font-size:15px; line-height:1.75; margin:0;
+}
+
+.func-hero.tec { background:var(--f-tec-l); border-color:var(--f-tec); }
+.func-hero.tec .func-hero-label { color:var(--f-tec); }
+.func-hero.com { background:var(--f-com-l); border-color:var(--f-com); }
+.func-hero.com .func-hero-label { color:var(--f-com); }
+.func-hero.qua { background:var(--f-qua-l); border-color:var(--f-qua); }
+.func-hero.qua .func-hero-label { color:var(--f-qua); }
+.func-hero.pro { background:var(--f-pro-l); border-color:var(--f-pro); }
+.func-hero.pro .func-hero-label { color:var(--f-pro); }
+.func-hero.hr  { background:var(--f-hr-l);  border-color:var(--f-hr); }
+.func-hero.hr  .func-hero-label { color:var(--f-hr); }
+.func-hero.acq { background:var(--f-acq-l); border-color:var(--f-acq); }
+.func-hero.acq .func-hero-label { color:var(--f-acq); }
+
+/* ── DATA TYPE CARDS ── */
+.data-cards {
+  display: grid; grid-template-columns:1fr 1fr; gap:2px; margin:24px 0;
+}
+
+.data-card {
+  background:var(--surface); border:1px solid var(--border);
+  padding:18px 20px;
+}
+
+.data-card-label {
+  font-family:'DM Mono',monospace; font-size:9px;
+  letter-spacing:2px; text-transform:uppercase;
+  color:var(--ink4); margin-bottom:10px; display:block;
+}
+
+.data-card h4 { font-size:13px; font-weight:700; color:var(--ink); margin-bottom:6px; }
+.data-card p  { font-size:13px; color:var(--ink2); line-height:1.6; margin:0; }
+
+.data-tag {
+  display:inline-block; font-size:11px; font-weight:500;
+  padding:3px 10px; border-radius:20px; margin-top:8px;
+}
+.data-tag.red   { background:var(--red-l);   color:var(--red); }
+.data-tag.amber { background:var(--amber-l); color:var(--amber); }
+.data-tag.green { background:var(--green-l); color:var(--green); }
+
+/* ── RISCHI SPECIFICI ── */
+.risk-list { display:flex; flex-direction:column; gap:2px; margin:24px 0; }
+
+.risk-item {
+  display:grid; grid-template-columns:56px 1fr;
+  background:var(--surface); border:1px solid var(--border); overflow:hidden;
+}
+
+.risk-num {
+  background:var(--surface2);
+  display:flex; align-items:center; justify-content:center;
+  font-family:'DM Serif Display',serif; font-size:20px;
+  color:var(--ink3); border-right:1px solid var(--border);
+}
+
+.risk-body { padding:16px 20px; }
+.risk-body h4 { font-size:14px; font-weight:600; color:var(--ink); margin-bottom:4px; }
+.risk-body p  { font-size:14px; color:var(--ink2); line-height:1.65; margin:0; }
+.risk-body p strong { color:var(--ink); font-weight:500; }
+
+/* ── REGOLE OPERATIVE ── */
+.rule-list { display:flex; flex-direction:column; gap:2px; margin:24px 0; }
+
+.rule-item {
+  display:flex; gap:0;
+  background:var(--surface); border:1px solid var(--border); overflow:hidden;
+}
+
+.rule-signal {
+  width:6px; flex-shrink:0;
+}
+.rule-item.ok   .rule-signal { background:var(--green); }
+.rule-item.warn .rule-signal { background:var(--amber); }
+.rule-item.stop .rule-signal { background:var(--red); }
+
+.rule-body { padding:14px 18px; flex:1; }
+.rule-body strong { font-size:14px; font-weight:600; color:var(--ink); display:block; margin-bottom:3px; }
+.rule-body span   { font-size:13px; color:var(--ink2); line-height:1.6; }
+
+/* ── ESEMPIO CONCRETO ── */
+.example-box {
+  background:var(--surface2); border:1px solid var(--border);
+  padding:20px 24px; margin:24px 0;
+}
+
+.example-box-label {
+  font-family:'DM Mono',monospace; font-size:9px;
+  letter-spacing:2px; text-transform:uppercase;
+  color:var(--ink4); margin-bottom:12px; display:block;
+}
+
+.example-scenario {
+  font-size:15px; color:var(--ink2); line-height:1.75;
+  font-style:italic; border-left:3px solid var(--border);
+  padding-left:14px; margin-bottom:14px;
+}
+
+.example-verdict {
+  font-size:14px; color:var(--ink2); line-height:1.7;
+}
+.example-verdict strong { color:var(--ink); font-weight:500; }
+
+/* ── PANNELLO MANAGER ── */
+.manager-steps { display:flex; flex-direction:column; gap:2px; margin:24px 0; }
+
+.manager-step {
+  display:grid; grid-template-columns:52px 1fr;
+  background:var(--surface); border:1px solid var(--border); overflow:hidden;
+}
+
+.ms-num {
+  background:var(--ink); color:#fff;
+  display:flex; align-items:center; justify-content:center;
+  font-family:'DM Serif Display',serif; font-size:20px;
+  border-right:1px solid var(--border);
+}
+
+.ms-body { padding:16px 20px; }
+.ms-body h4 { font-size:14px; font-weight:600; color:var(--ink); margin-bottom:5px; }
+.ms-body p  { font-size:14px; color:var(--ink2); line-height:1.65; margin:0; }
+.ms-body p strong { color:var(--ink); font-weight:500; }
+
+/* ── CHECKLIST ── */
+.checklist { margin:24px 0; display:flex; flex-direction:column; gap:2px; }
+
+.cl-group-label {
+  font-family:'DM Mono',monospace; font-size:9px; letter-spacing:2.5px;
+  text-transform:uppercase; color:var(--ink4);
+  padding:12px 0 6px; border-bottom:1px solid var(--border); margin-bottom:2px;
+}
+
+.cl-item {
+  display:flex; gap:12px; align-items:flex-start;
+  background:var(--surface); border:1px solid var(--border);
+  padding:13px 16px; cursor:pointer; transition:background 0.15s; user-select:none;
+}
+.cl-item:hover { background:var(--surface2); }
+.cl-item.done  { opacity:0.5; }
+
+.cl-box {
+  width:17px; height:17px; border:1.5px solid var(--border);
+  border-radius:3px; flex-shrink:0; margin-top:2px;
+  display:flex; align-items:center; justify-content:center;
+  font-size:10px; color:var(--green); transition:all 0.15s;
+}
+.cl-item.done .cl-box { background:var(--green-l); border-color:var(--green); }
+
+.cl-text { font-size:14px; color:var(--ink2); line-height:1.6; }
+.cl-text strong { color:var(--ink); font-weight:500; }
+
+/* ── DOMANDE CASCADING ── */
+.cascade-list { display:flex; flex-direction:column; gap:2px; margin:24px 0; }
+
+.cascade-item {
+  background:var(--surface); border:1px solid var(--border);
+  padding:14px 18px;
+}
+.cascade-item p { font-size:14px; color:var(--ink2); line-height:1.65; margin:0; }
+.cascade-item p strong { color:var(--ink); font-weight:500; font-style:italic; }
+
+/* ── INFO BOX ── */
+.ibox {
+  background:var(--blue-l); border:1px solid #c0d4f0;
+  border-left:4px solid var(--blue); padding:20px 24px; margin:24px 0;
+  font-size:14px; color:var(--ink2); line-height:1.7;
+}
+.ibox strong { color:var(--ink); font-weight:500; }
+.ibox.amber { background:var(--amber-l); border-color:var(--amber-b); border-left-color:var(--amber); }
+.ibox.green { background:var(--green-l); border-color:var(--green-b); border-left-color:var(--green); }
+.ibox.violet { background:var(--violet-l); border-color:#d0c0f0; border-left-color:var(--violet); }
+
+/* ── RUOLO MANAGER: sezione speciale ── */
+.leader-block {
+  background:var(--ink); color:#fff;
+  padding:32px 36px; margin:32px 0;
+}
+.leader-block-label {
+  font-family:'DM Mono',monospace; font-size:10px;
+  letter-spacing:2.5px; text-transform:uppercase;
+  color:rgba(255,255,255,0.4); margin-bottom:14px; display:block;
+}
+.leader-block p {
+  font-size:16px; color:rgba(255,255,255,0.85);
+  line-height:1.75; font-weight:300;
+}
+.leader-block p strong { color:#fff; font-weight:600; }
+
+/* ── FOOTER ── */
+footer {
+  border-top:1px solid var(--border); background:var(--surface);
+  padding:32px 64px; display:flex; justify-content:space-between;
+  align-items:center; flex-wrap:wrap; gap:8px; margin-top:0;
+}
+footer p { font-family:'DM Mono',monospace; font-size:11px; color:var(--ink4); }
+
+@media (max-width:720px) {
+  .header { padding:40px 24px 36px; }
+  .ftab-nav { padding:0 16px; }
+  .panel-inner { padding:40px 20px 60px; }
+  .data-cards { grid-template-columns:1fr; }
+  footer { padding:24px 24px; }
+}
+</style>
+</head>
+<body>
+
+<header class="header">
+  <div class="header-kicker">Comunicazione interna · AI e sicurezza dei dati</div>
+  <h1>AI e dati aziendali:<br><em>la guida per chi gestisce un team</em></h1>
+  <p class="header-sub">Un approfondimento per manager e responsabili di funzione: i rischi specifici della propria area, come comunicare le regole al team e come gestire i casi dubbi.</p>
+  <div class="header-meta">
+    <div class="header-meta-item"><span>Destinatari</span><strong>Manager, Prime linee, Direttori di funzione</strong></div>
+    <div class="header-meta-item"><span>Prerequisito</span><strong>Documento 1 — Guida per tutti i dipendenti</strong></div>
+    <div class="header-meta-item"><span>Tempo di lettura</span><strong>~15 minuti (sezione propria)</strong></div>
+  </div>
+</header>
+
+<!-- TAB NAV -->
+<nav class="ftab-nav">
+  <button class="ftab-btn active" data-f="intro" onclick="switchTab('intro')">
+    Introduzione
+  </button>
+  <button class="ftab-btn" data-f="tec" onclick="switchTab('tec')">
+    <span class="ftab-dot" style="background:var(--f-tec)"></span>Tecnica / R&D
+  </button>
+  <button class="ftab-btn" data-f="com" onclick="switchTab('com')">
+    <span class="ftab-dot" style="background:var(--f-com)"></span>Commerciale
+  </button>
+  <button class="ftab-btn" data-f="qua" onclick="switchTab('qua')">
+    <span class="ftab-dot" style="background:var(--f-qua)"></span>Qualità
+  </button>
+  <button class="ftab-btn" data-f="pro" onclick="switchTab('pro')">
+    <span class="ftab-dot" style="background:var(--f-pro)"></span>Produzione
+  </button>
+  <button class="ftab-btn" data-f="hr" onclick="switchTab('hr')">
+    <span class="ftab-dot" style="background:var(--f-hr)"></span>HR
+  </button>
+  <button class="ftab-btn" data-f="acq" onclick="switchTab('acq')">
+    <span class="ftab-dot" style="background:var(--f-acq)"></span>Acquisti
+  </button>
+  <button class="ftab-btn" data-f="ruolo" onclick="switchTab('ruolo')">
+    <span class="ftab-dot" style="background:var(--violet)"></span>Il tuo ruolo
+  </button>
+</nav>
+
+
+<!-- ══════════════════════
+     INTRODUZIONE
+══════════════════════ -->
+<div class="ftab-panel active" id="panel-intro">
+<div class="panel-inner">
+
+  <h2>Perché questo documento è per te</h2>
+
+  <p>La guida per tutti i dipendenti spiega le regole generali. Questo documento aggiunge una dimensione che le regole generali non possono dare: <strong>il contesto specifico della tua funzione</strong>.</p>
+
+  <p>I rischi legati all'AI non sono uguali per tutti i reparti. Un responsabile commerciale gestisce dati di clienti e offerte riservate. Un responsabile tecnico custodisce specifiche di prodotto che rappresentano anni di sviluppo. Un HR manager tratta dati personali sensibili. Ognuno di questi profili ha vulnerabilità diverse — e regole operative diverse.</p>
+
+  <div class="leader-block">
+    <span class="leader-block-label">Il punto centrale</span>
+    <p>Come manager, hai un ruolo che va oltre il rispettare le regole tu stesso. Il tuo team ti guarda per capire cosa è accettabile e cosa no. <strong>Il comportamento che modelli ogni giorno diventa la cultura del team.</strong> Se usi l'AI in modo responsabile e lo dici esplicitamente, i tuoi collaboratori faranno lo stesso. Se non ne parli, ognuno improvvisa.</p>
+  </div>
+
+  <h3>Come usare questo documento</h3>
+  <p>Ogni tab nella barra in alto corrisponde a una funzione aziendale. Vai direttamente alla sezione della tua funzione — troverai i dati tipici che gestisci, i rischi specifici, le regole operative con esempi concreti e una checklist per valutare la situazione nel tuo team.</p>
+  <p>L'ultima tab — <strong>"Il tuo ruolo"</strong> — è trasversale a tutte le funzioni: contiene le domande da porre al team, come rispondere ai casi dubbi, e come gestire un incidente se si verifica.</p>
+
+  <div class="ibox">
+    <strong>Non hai ancora letto il Documento 1?</strong> Questa guida parte dal presupposto che tu abbia già letto la guida per tutti i dipendenti. Se non l'hai fatto, leggila prima — dà il contesto e le definizioni di base su cui si appoggia tutto il resto.
+  </div>
+
+  <h3>Perché adesso</h3>
+  <p>L'azienda non ha ancora una policy formale sull'uso degli strumenti AI. Questi documenti sono il primo passo per costruirla. In questo momento di transizione, il tuo ruolo è particolarmente importante: sei tu il primo punto di riferimento per i tuoi collaboratori quando hanno dubbi, e sei tu che puoi notare comportamenti rischiosi prima che diventino un problema.</p>
+
+  <p>Le regole qui descritte non sono definitive — saranno formalizzate in una policy aziendale ufficiale nei prossimi mesi. Nel frattempo, questo documento è la guida operativa di riferimento.</p>
+
+</div>
+</div>
+
+
+<!-- ══════════════════════
+     TECNICA / R&D
+══════════════════════ -->
+<div class="ftab-panel" id="panel-tec">
+<div class="panel-inner">
+
+  <div class="func-hero tec">
+    <span class="func-hero-label">Ufficio Tecnico · R&D · Ingegneria</span>
+    <h2>La funzione con il profilo di rischio più alto</h2>
+    <p>L'ufficio tecnico gestisce le informazioni più preziose dell'azienda: il know-how industriale. Specifiche, disegni, processi produttivi, materiali, tolleranze — sono il risultato di anni di sviluppo e il cuore del vantaggio competitivo. Sono anche esattamente il tipo di dato che un tecnico è tentato di condividere con l'AI per ottenere aiuto su un problema specifico.</p>
+  </div>
+
+  <h3>I dati che gestisci e il loro livello di rischio</h3>
+
+  <div class="data-cards">
+    <div class="data-card">
+      <span class="data-card-label">Categoria A</span>
+      <h4>Specifiche tecniche di prodotto</h4>
+      <p>Disegni CAD, tolleranze, materiali, BOM, cicli di lavorazione. Rappresentano il core IP dell'azienda.</p>
+      <span class="data-tag red">Non condividere mai</span>
+    </div>
+    <div class="data-card">
+      <span class="data-card-label">Categoria B</span>
+      <h4>Processi produttivi e ricette</h4>
+      <p>Parametri di processo, sequenze operative, condizioni di lavorazione specifiche.</p>
+      <span class="data-tag red">Non condividere mai</span>
+    </div>
+    <div class="data-card">
+      <span class="data-card-label">Categoria C</span>
+      <h4>Progetti in sviluppo / R&D</h4>
+      <p>Prototipi, concept non ancora brevettati, roadmap tecnica, risultati di test.</p>
+      <span class="data-tag red">Non condividere mai</span>
+    </div>
+    <div class="data-card">
+      <span class="data-card-label">Categoria D</span>
+      <h4>Documentazione tecnica generica</h4>
+      <p>Manuali d'uso pubblici, normative di settore, schede tecniche di fornitori già disponibili online.</p>
+      <span class="data-tag green">Condivisibile</span>
+    </div>
+    <div class="data-card">
+      <span class="data-card-label">Categoria E</span>
+      <h4>Calcoli e simulazioni</h4>
+      <p>Calcoli strutturali, simulazioni termiche, analisi FEM — dipende dai dati di input: se usano i parametri reali del prodotto, non si possono condividere.</p>
+      <span class="data-tag amber">Dipende dall'input</span>
+    </div>
+    <div class="data-card">
+      <span class="data-card-label">Categoria F</span>
+      <h4>Comunicazioni tecniche con clienti/fornitori</h4>
+      <p>Scambi tecnici che contengono specifiche concordate o dati coperti da NDA.</p>
+      <span class="data-tag red">Non condividere mai</span>
+    </div>
+  </div>
+
+  <h3>I rischi specifici della tua funzione</h3>
+
+  <div class="risk-list">
+    <div class="risk-item">
+      <div class="risk-num">1</div>
+      <div class="risk-body">
+        <h4>Caricare file tecnici per ottenere aiuto su un calcolo</h4>
+        <p>Il caso più frequente: un tecnico carica un PDF con le specifiche del prodotto su ChatGPT per chiedere aiuto su un calcolo o una verifica. <strong>Il calcolo si può fare anche con dati fittizi o anonimizzati</strong> — l'AI non ha bisogno di sapere che il componente è reale per aiutare con la matematica.</p>
+      </div>
+    </div>
+    <div class="risk-item">
+      <div class="risk-num">2</div>
+      <div class="risk-body">
+        <h4>Usare l'AI per scrivere relazioni tecniche con dati reali</h4>
+        <p>Chiedere all'AI di migliorare o completare una relazione tecnica che contiene già i dati di prodotto. <strong>La soluzione: far scrivere prima la struttura all'AI, poi compilarla manualmente con i dati reali</strong> — mai il contrario.</p>
+      </div>
+    </div>
+    <div class="risk-item">
+      <div class="risk-num">3</div>
+      <div class="risk-body">
+        <h4>Condividere disegni CAD o file tecnici come allegati</h4>
+        <p>Alcuni strumenti AI permettono di caricare file. Un disegno CAD o un PDF di specifica caricato su un sistema AI esterno esce definitivamente dal perimetro aziendale. <strong>Non caricare mai file tecnici su strumenti AI non approvati</strong>, indipendentemente da quanto sembri utile.</p>
+      </div>
+    </div>
+  </div>
+
+  <h3>Regole operative per il team tecnico</h3>
+
+  <div class="rule-list">
+    <div class="rule-item ok">
+      <div class="rule-signal"></div>
+      <div class="rule-body">
+        <strong>Usare l'AI per struttura e linguaggio</strong>
+        <span>Chiedere aiuto per scrivere relazioni, presentazioni, email tecniche — senza includere i dati specifici del prodotto. Descrivere il problema in termini generici.</span>
+      </div>
+    </div>
+    <div class="rule-item ok">
+      <div class="rule-signal"></div>
+      <div class="rule-body">
+        <strong>Fare calcoli con dati fittizi</strong>
+        <span>Per ottenere aiuto su una formula o un metodo di calcolo, usare valori numerici inventati. Il metodo funziona ugualmente, i dati reali restano al sicuro.</span>
+      </div>
+    </div>
+    <div class="rule-item warn">
+      <div class="rule-signal"></div>
+      <div class="rule-body">
+        <strong>Ricerche su normative e standard pubblici</strong>
+        <span>Chiedere all'AI informazioni su normative (ISO, EN, UNI) o standard tecnici pubblici è accettabile. Attenzione: non mescolare le domande sulla normativa con i dati specifici del prodotto.</span>
+      </div>
+    </div>
+    <div class="rule-item stop">
+      <div class="rule-signal"></div>
+      <div class="rule-body">
+        <strong>Caricare qualsiasi file tecnico su AI esterne</strong>
+        <span>Specifiche, disegni, BOM, relazioni di test, ricette di processo: nessuno di questi file può essere caricato su strumenti AI non approvati. Se il task lo richiede, usa gli strumenti aziendali o chiedi all'IT alternative.</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="example-box">
+    <span class="example-box-label">Esempio concreto · Come riformulare una richiesta</span>
+    <div class="example-scenario">
+      "Ho bisogno di verificare la resistenza a fatica di un componente in acciaio 42CrMo4 con le seguenti specifiche: spessore 12mm, carico ciclico 850 MPa, temperatura operativa 180°C. Aiutami con i calcoli."
+    </div>
+    <div class="example-verdict">
+      <strong>Come riformularlo in modo sicuro:</strong> "Sto facendo una verifica a fatica su un componente metallico. Puoi spiegarmi quale metodo usare e come impostare i calcoli secondo la norma EN 13001?" — Poi esegui il calcolo con i dati reali nel tuo software aziendale.
+    </div>
+  </div>
+
+  <div class="checklist">
+    <div class="cl-group-label">Checklist per il responsabile tecnico</div>
+    <div class="cl-item" onclick="toggleCl(this)"><div class="cl-box"></div><div class="cl-text">Ho spiegato al team la differenza tra <strong>usare l'AI per struttura/metodo</strong> e condividere i dati tecnici reali</div></div>
+    <div class="cl-item" onclick="toggleCl(this)"><div class="cl-box"></div><div class="cl-text">Ho comunicato esplicitamente che <strong>nessun file tecnico</strong> (CAD, PDF spec, BOM) può essere caricato su strumenti AI esterni</div></div>
+    <div class="cl-item" onclick="toggleCl(this)"><div class="cl-box"></div><div class="cl-text">So quali strumenti AI sta usando il mio team (anche quelli personali) e ne ho parlato con loro</div></div>
+    <div class="cl-item" onclick="toggleCl(this)"><div class="cl-box"></div><div class="cl-text">Ho verificato se esistono NDA con clienti che potrebbero essere impattati dall'uso di AI su dati di commessa</div></div>
+  </div>
+
+</div>
+</div>
+
+
+<!-- ══════════════════════
+     COMMERCIALE
+══════════════════════ -->
+<div class="ftab-panel" id="panel-com">
+<div class="panel-inner">
+
+  <div class="func-hero com">
+    <span class="func-hero-label">Commerciale · Vendite · Customer Service</span>
+    <h2>Dove i rischi contrattuali sono più concreti</h2>
+    <p>La funzione commerciale opera quotidianamente a contatto con dati di clienti, offerte riservate e accordi contrattuali. In molti casi esistono NDA che vietano esplicitamente la condivisione di queste informazioni con terzi — e un sistema AI esterno è, a tutti gli effetti, un terzo.</p>
+  </div>
+
+  <h3>I dati che gestisci e il loro livello di rischio</h3>
+
+  <div class="data-cards">
+    <div class="data-card">
+      <span class="data-card-label">Categoria A</span>
+      <h4>Offerte e listini riservati</h4>
+      <p>Prezzi negoziati, condizioni di pagamento, sconti applicati a clienti specifici.</p>
+      <span class="data-tag red">Non condividere mai</span>
+    </div>
+    <div class="data-card">
+      <span class="data-card-label">Categoria B</span>
+      <h4>Comunicazioni riservate con clienti</h4>
+      <p>Email con contenuti contrattuali, reclami, negoziazioni in corso, accordi verbali trascritti.</p>
+      <span class="data-tag red">Non condividere mai</span>
+    </div>
+    <div class="data-card">
+      <span class="data-card-label">Categoria C</span>
+      <h4>Dati anagrafici e contatti clienti</h4>
+      <p>Nome, email, telefono, ragione sociale — dati personali protetti dal GDPR.</p>
+      <span class="data-tag red">Non condividere mai</span>
+    </div>
+    <div class="data-card">
+      <span class="data-card-label">Categoria D</span>
+      <h4>Specifiche tecniche di commessa</h4>
+      <p>Requisiti tecnici ricevuti dal cliente, spesso coperti da NDA specifici di commessa.</p>
+      <span class="data-tag red">Non condividere mai</span>
+    </div>
+    <div class="data-card">
+      <span class="data-card-label">Categoria E</span>
+      <h4>Comunicazioni standard di marketing</h4>
+      <p>Brochure, presentazioni aziendali pubbliche, contenuti già approvati per la comunicazione esterna.</p>
+      <span class="data-tag green">Condivisibile</span>
+    </div>
+    <div class="data-card">
+      <span class="data-card-label">Categoria F</span>
+      <h4>Pipeline commerciale e forecast</h4>
+      <p>Previsioni di vendita, pipeline CRM, dati aggregati di performance commerciale.</p>
+      <span class="data-tag amber">Con cautela — no dati cliente specifici</span>
+    </div>
+  </div>
+
+  <h3>I rischi specifici della tua funzione</h3>
+
+  <div class="risk-list">
+    <div class="risk-item">
+      <div class="risk-num">1</div>
+      <div class="risk-body">
+        <h4>Incollare email di clienti per farsi aiutare con la risposta</h4>
+        <p>È il comportamento più frequente e il più rischioso. Un'email di un cliente contiene quasi sempre nome, dati aziendali, contenuti riservati. <strong>Descrivere la situazione in astratto è altrettanto efficace e completamente sicuro.</strong></p>
+      </div>
+    </div>
+    <div class="risk-item">
+      <div class="risk-num">2</div>
+      <div class="risk-body">
+        <h4>Caricare offerte o contratti per analisi o correzione</h4>
+        <p>Chiedere all'AI di revisionare un'offerta commerciale che contiene prezzi e condizioni negoziate. Anche qui: <strong>la struttura e il linguaggio dell'offerta si possono migliorare senza caricare i dati economici reali.</strong></p>
+      </div>
+    </div>
+    <div class="risk-item">
+      <div class="risk-num">3</div>
+      <div class="risk-body">
+        <h4>Violazione di NDA senza rendersene conto</h4>
+        <p>Molti contratti con clienti o fornitori contengono clausole di riservatezza che vietano la condivisione con "terze parti". Un sistema AI esterno rientra in questa definizione. <strong>Verificare sempre se su una commessa esiste un NDA prima di usare l'AI per qualsiasi documento correlato.</strong></p>
+      </div>
+    </div>
+  </div>
+
+  <h3>Regole operative per il team commerciale</h3>
+
+  <div class="rule-list">
+    <div class="rule-item ok">
+      <div class="rule-signal"></div>
+      <div class="rule-body">
+        <strong>Usare l'AI per rispondere a situazioni tipo — senza dati reali</strong>
+        <span>"Ho un cliente che chiede uno sconto a fronte di un ritardo nella consegna. Aiutami a strutturare una risposta professionale che mantenga la relazione e spieghi la situazione." — Nessun dato riservato, aiuto concreto.</span>
+      </div>
+    </div>
+    <div class="rule-item ok">
+      <div class="rule-signal"></div>
+      <div class="rule-body">
+        <strong>Migliorare testi di comunicazione generici</strong>
+        <span>Newsletter, presentazioni aziendali standard, testi di marketing non riservati possono essere condivisi e migliorati liberamente.</span>
+      </div>
+    </div>
+    <div class="rule-item warn">
+      <div class="rule-signal"></div>
+      <div class="rule-body">
+        <strong>Preparare presentazioni commerciali</strong>
+        <span>Usare l'AI per la struttura e il linguaggio va bene — ma rimuovere sempre prezzi, nomi di clienti, dati di forecast specifici prima di condividere.</span>
+      </div>
+    </div>
+    <div class="rule-item stop">
+      <div class="rule-signal"></div>
+      <div class="rule-body">
+        <strong>Incollare email o documenti di clienti</strong>
+        <span>Nessun testo ricevuto da un cliente — email, specifiche, lettere, verbali — può essere incollato su strumenti AI esterni. Descrivere la situazione in modo generico è sempre sufficiente.</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="example-box">
+    <span class="example-box-label">Esempio concreto · Come riformulare una richiesta</span>
+    <div class="example-scenario">
+      "Ecco l'email di Rossi SpA che si lamenta del ritardo e chiede il 10% di sconto sull'ordine 2024-087 da 45.000€. Come rispondo?" [email incollata con tutti i dettagli]
+    </div>
+    <div class="example-verdict">
+      <strong>Come riformularlo in modo sicuro:</strong> "Un cliente si lamenta per un ritardo di 3 settimane su una fornitura e chiede uno sconto del 10%. È un cliente importante con cui abbiamo una buona relazione. Come posso rispondere in modo professionale riconoscendo il problema ma limitando la concessione?" — Stesso aiuto, nessun dato riservato condiviso.
+    </div>
+  </div>
+
+  <div class="checklist">
+    <div class="cl-group-label">Checklist per il responsabile commerciale</div>
+    <div class="cl-item" onclick="toggleCl(this)"><div class="cl-box"></div><div class="cl-text">Ho spiegato al team la <strong>tecnica di anonimizzazione</strong>: descrivere la situazione in astratto invece di incollare i testi reali</div></div>
+    <div class="cl-item" onclick="toggleCl(this)"><div class="cl-box"></div><div class="cl-text">Ho verificato su quali commesse esistono <strong>NDA attivi</strong> e ho comunicato che per quei clienti l'uso dell'AI su documenti correlati è vietato</div></div>
+    <div class="cl-item" onclick="toggleCl(this)"><div class="cl-box"></div><div class="cl-text">So se i miei commerciali usano strumenti AI personali per gestire le comunicazioni con i clienti</div></div>
+    <div class="cl-item" onclick="toggleCl(this)"><div class="cl-box"></div><div class="cl-text">Ho ricordato al team che i dati anagrafici dei clienti (nome, email, telefono) sono dati personali e non vanno condivisi con AI esterne</div></div>
+  </div>
+
+</div>
+</div>
+
+
+<!-- ══════════════════════
+     QUALITÀ
+══════════════════════ -->
+<div class="ftab-panel" id="panel-qua">
+<div class="panel-inner">
+
+  <div class="func-hero qua">
+    <span class="func-hero-label">Qualità · Controllo Qualità · Assicurazione Qualità</span>
+    <h2>Dati di processo e conformità: doppia sensibilità</h2>
+    <p>La funzione qualità gestisce due categorie di dati particolarmente sensibili: i dati di processo produttivo (che toccano il cuore del know-how aziendale) e le non conformità (che contengono informazioni sulle debolezze operative che non devono uscire dall'azienda).</p>
+  </div>
+
+  <h3>I rischi specifici della tua funzione</h3>
+
+  <div class="risk-list">
+    <div class="risk-item">
+      <div class="risk-num">1</div>
+      <div class="risk-body">
+        <h4>Analisi di non conformità con dati di prodotto reali</h4>
+        <p>Chiedere all'AI di analizzare una NC che contiene riferimenti al prodotto, al processo e al cliente coinvolto. <strong>Il metodo di analisi (8D, Ishikawa, 5 Perché) si può imparare o applicare senza condividere i dati specifici.</strong></p>
+      </div>
+    </div>
+    <div class="risk-item">
+      <div class="risk-num">2</div>
+      <div class="risk-body">
+        <h4>Caricare dati di audit o ispezione</h4>
+        <p>Report di audit, risultati di ispezioni, dati SPC con parametri di processo — contengono informazioni operative critiche. <strong>Questi documenti non devono mai lasciare il perimetro aziendale.</strong></p>
+      </div>
+    </div>
+    <div class="risk-item">
+      <div class="risk-num">3</div>
+      <div class="risk-body">
+        <h4>Comunicazioni su NC con clienti o enti certificatori</h4>
+        <p>Email e documenti scambiati con clienti su problemi di qualità sono spesso coperti da accordi di riservatezza. Ogni riferimento a una NC specifica va trattato come dato riservato.</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="rule-list">
+    <div class="rule-item ok"><div class="rule-signal"></div><div class="rule-body"><strong>Imparare metodi e strumenti di qualità</strong><span>Chiedere all'AI come si applica un metodo (8D, FMEA, SPC, MSA) è un uso legittimo e utile. Nessun dato aziendale richiesto.</span></div></div>
+    <div class="rule-item ok"><div class="rule-signal"></div><div class="rule-body"><strong>Strutturare procedure e istruzioni operative generiche</strong><span>Il template di una procedura di controllo o di un'istruzione operativa si può costruire con l'AI — senza i parametri reali di processo, che vanno inseriti manualmente.</span></div></div>
+    <div class="rule-item stop"><div class="rule-signal"></div><div class="rule-body"><strong>Caricare rapporti di NC, audit o dati SPC reali</strong><span>Qualsiasi documento che contenga parametri di processo, prodotti specifici, clienti coinvolti o dati di difettosità reali non può essere condiviso con strumenti AI esterni.</span></div></div>
+  </div>
+
+  <div class="checklist">
+    <div class="cl-group-label">Checklist per il responsabile qualità</div>
+    <div class="cl-item" onclick="toggleCl(this)"><div class="cl-box"></div><div class="cl-text">Ho comunicato al team che i <strong>dati di NC, audit e SPC</strong> non possono essere condivisi con AI esterne</div></div>
+    <div class="cl-item" onclick="toggleCl(this)"><div class="cl-box"></div><div class="cl-text">Ho spiegato come usare l'AI per <strong>imparare i metodi</strong> senza condividere i dati di applicazione reali</div></div>
+    <div class="cl-item" onclick="toggleCl(this)"><div class="cl-box"></div><div class="cl-text">Ho verificato se esistono requisiti specifici dei clienti o degli enti certificatori sulla riservatezza dei dati di qualità</div></div>
+  </div>
+
+</div>
+</div>
+
+
+<!-- ══════════════════════
+     PRODUZIONE
+══════════════════════ -->
+<div class="ftab-panel" id="panel-pro">
+<div class="panel-inner">
+
+  <div class="func-hero pro">
+    <span class="func-hero-label">Produzione · Operations · Manutenzione</span>
+    <h2>Dati operativi e know-how di processo</h2>
+    <p>La funzione produzione gestisce i parametri operativi che rendono i processi aziendali unici e competitivi — setpoint, sequenze, condizioni operative. In produzione il rischio principale non viene dai sistemi informatici ma dall'uso quotidiano di strumenti AI da parte degli operatori e dei tecnici di linea.</p>
+  </div>
+
+  <h3>I rischi specifici della tua funzione</h3>
+
+  <div class="risk-list">
+    <div class="risk-item">
+      <div class="risk-num">1</div>
+      <div class="risk-body">
+        <h4>Condividere parametri di macchina per troubleshooting</h4>
+        <p>Un operatore o un tecnico di manutenzione condivide i parametri di setup di una macchina per chiedere aiuto su un problema. <strong>I parametri operativi specifici sono parte del know-how produttivo.</strong> Descrivere il tipo di problema senza i valori specifici è quasi sempre sufficiente per ottenere indicazioni utili.</p>
+      </div>
+    </div>
+    <div class="risk-item">
+      <div class="risk-num">2</div>
+      <div class="risk-body">
+        <h4>Usare l'AI per ricette e procedure di processo</h4>
+        <p>Chiedere all'AI di ottimizzare o completare una ricetta produttiva. <strong>Le ricette di processo sono tra le informazioni più protette in una manifatturiera</strong> — equivalgono a condividere il segreto industriale.</p>
+      </div>
+    </div>
+    <div class="risk-item">
+      <div class="risk-num">3</div>
+      <div class="risk-body">
+        <h4>Fotografie o video di impianti caricati su AI con visione</h4>
+        <p>Alcuni strumenti AI possono analizzare immagini. Fotografie dell'impianto, dei macchinari o delle linee produttive non devono essere condivise con sistemi esterni — contengono informazioni sul layout e sui processi che hanno valore commerciale.</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="rule-list">
+    <div class="rule-item ok"><div class="rule-signal"></div><div class="rule-body"><strong>Informazioni su guasti e manutenzione con dati generici</strong><span>"Il mio tornio CNC produce vibrazione a fine corsa. Cosa può causarlo?" — È un uso legittimo. Il problema è descritto senza dati specifici dell'impianto.</span></div></div>
+    <div class="rule-item warn"><div class="rule-signal"></div><div class="rule-body"><strong>Formazione e apprendimento tecnico</strong><span>Usare l'AI per capire principi tecnici, normative di sicurezza, metodi di manutenzione preventiva è utile e sicuro. Attenzione a non trascinare nella conversazione dati specifici dell'impianto.</span></div></div>
+    <div class="rule-item stop"><div class="rule-signal"></div><div class="rule-body"><strong>Parametri di processo, ricette, setpoint reali</strong><span>Nessun parametro operativo specifico — temperature, pressioni, velocità, sequenze — può essere condiviso con sistemi AI esterni.</span></div></div>
+    <div class="rule-item stop"><div class="rule-signal"></div><div class="rule-body"><strong>Fotografie o immagini dell'impianto</strong><span>Non caricare mai immagini di macchinari, linee di produzione o layout di impianto su strumenti AI con capacità di analisi visiva.</span></div></div>
+  </div>
+
+  <div class="checklist">
+    <div class="cl-group-label">Checklist per il responsabile di produzione</div>
+    <div class="cl-item" onclick="toggleCl(this)"><div class="cl-box"></div><div class="cl-text">Ho comunicato agli operatori e ai tecnici di linea che <strong>i parametri di macchina e le ricette</strong> non possono essere condivisi con AI esterne</div></div>
+    <div class="cl-item" onclick="toggleCl(this)"><div class="cl-box"></div><div class="cl-text">Ho chiarito che anche le <strong>fotografie dell'impianto</strong> non devono essere caricate su strumenti AI</div></div>
+    <div class="cl-item" onclick="toggleCl(this)"><div class="cl-box"></div><div class="cl-text">So se i tecnici di manutenzione usano strumenti AI personali per la risoluzione dei problemi tecnici</div></div>
+  </div>
+
+</div>
+</div>
+
+
+<!-- ══════════════════════
+     HR
+══════════════════════ -->
+<div class="ftab-panel" id="panel-hr">
+<div class="panel-inner">
+
+  <div class="func-hero hr">
+    <span class="func-hero-label">HR · Risorse Umane · People & Organization</span>
+    <h2>Dati personali: il perimetro normativo più stringente</h2>
+    <p>La funzione HR gestisce la categoria di dati con il framework normativo più rigoroso: i dati personali dei dipendenti. Il GDPR è esplicito: qualsiasi trattamento di dati personali — incluso il trasferimento a un sistema AI esterno — richiede una base legale e, nel caso di trasferimenti extra-UE, garanzie specifiche.</p>
+  </div>
+
+  <h3>I rischi specifici della tua funzione</h3>
+
+  <div class="risk-list">
+    <div class="risk-item">
+      <div class="risk-num">1</div>
+      <div class="risk-body">
+        <h4>Condividere dati di dipendenti per comunicazioni HR</h4>
+        <p>Incollare informazioni su un dipendente (nome, situazione contrattuale, valutazione, problematica disciplinare) per farsi aiutare a gestire la comunicazione. <strong>I dati personali dei dipendenti non possono in nessun caso essere condivisi con sistemi AI esterni.</strong> La situazione si descrive in modo completamente anonimo.</p>
+      </div>
+    </div>
+    <div class="risk-item">
+      <div class="risk-num">2</div>
+      <div class="risk-body">
+        <h4>Analisi di dati aggregati su dipendenti</h4>
+        <p>Caricare su AI un file con dati di presenze, retribuzioni, performance o assenteismo — anche se aggregati — può contenere informazioni che permettono di risalire a individui specifici. <strong>Vanno rimossi tutti i riferimenti nominativi e aziendali prima di qualsiasi elaborazione esterna.</strong></p>
+      </div>
+    </div>
+    <div class="risk-item">
+      <div class="risk-num">3</div>
+      <div class="risk-body">
+        <h4>CV e candidature condivisi con AI esterne</h4>
+        <p>Usare l'AI per analizzare CV o lettere di candidatura caricate direttamente. I CV contengono dati personali sensibili (nome, indirizzo, telefono, storico lavorativo). <strong>Prima di usare strumenti AI per la selezione, verificare con il DPO le implicazioni GDPR.</strong></p>
+      </div>
+    </div>
+  </div>
+
+  <div class="rule-list">
+    <div class="rule-item ok"><div class="rule-signal"></div><div class="rule-body"><strong>Strutturare comunicazioni HR in modo generico</strong><span>"Come posso comunicare a un dipendente che non verrà rinnovato il contratto?" — Nessun dato personale, aiuto concreto sulla struttura e il tono della comunicazione.</span></div></div>
+    <div class="rule-item ok"><div class="rule-signal"></div><div class="rule-body"><strong>Imparare normative e procedure HR</strong><span>Domande su normativa lavoristica, contratti collettivi, procedure disciplinari in astratto sono un uso legittimo e utile dell'AI.</span></div></div>
+    <div class="rule-item stop"><div class="rule-signal"></div><div class="rule-body"><strong>Qualsiasi dato personale di dipendenti</strong><span>Nome, codice fiscale, stipendio, valutazione, situazione familiare, assenze per malattia, procedimenti disciplinari — nessuno di questi dati può essere condiviso con sistemi AI esterni.</span></div></div>
+    <div class="rule-item stop"><div class="rule-signal"></div><div class="rule-body"><strong>CV e dati di candidati</strong><span>Prima di qualsiasi uso di AI nel processo di selezione, consultare il DPO aziendale per verificare le implicazioni GDPR e la legittimità del trattamento.</span></div></div>
+  </div>
+
+  <div class="checklist">
+    <div class="cl-group-label">Checklist per il responsabile HR</div>
+    <div class="cl-item" onclick="toggleCl(this)"><div class="cl-box"></div><div class="cl-text">Ho comunicato al team HR che <strong>nessun dato personale di dipendenti o candidati</strong> può essere condiviso con sistemi AI esterni</div></div>
+    <div class="cl-item" onclick="toggleCl(this)"><div class="cl-box"></div><div class="cl-text">Ho coinvolto o avvisato il <strong>DPO aziendale</strong> sull'uso di strumenti AI in ambito HR</div></div>
+    <div class="cl-item" onclick="toggleCl(this)"><div class="cl-box"></div><div class="cl-text">So se nel team HR vengono usati strumenti AI per la selezione del personale e, in caso affermativo, su quale base legale</div></div>
+  </div>
+
+</div>
+</div>
+
+
+<!-- ══════════════════════
+     ACQUISTI
+══════════════════════ -->
+<div class="ftab-panel" id="panel-acq">
+<div class="panel-inner">
+
+  <div class="func-hero acq">
+    <span class="func-hero-label">Acquisti · Supply Chain · Approvvigionamento</span>
+    <h2>Dati di fornitori e condizioni negoziate</h2>
+    <p>La funzione acquisti gestisce informazioni commercialmente sensibili su entrambi i lati della relazione: le condizioni che l'azienda ottiene dai fornitori (spesso riservate) e i dettagli delle proprie esigenze di approvvigionamento. In molti casi esistono clausole di riservatezza anche nei contratti con i fornitori.</p>
+  </div>
+
+  <h3>I rischi specifici della tua funzione</h3>
+
+  <div class="risk-list">
+    <div class="risk-item">
+      <div class="risk-num">1</div>
+      <div class="risk-body">
+        <h4>Condividere condizioni di fornitura e prezzi negoziati</h4>
+        <p>I prezzi e le condizioni negoziate con i fornitori sono spesso riservate per contratto. Condividerli con un sistema AI esterno può configurare una violazione contrattuale. <strong>Per avere aiuto su una negoziazione, descrivere la situazione in termini percentuali o generici</strong>, non con i valori assoluti.</p>
+      </div>
+    </div>
+    <div class="risk-item">
+      <div class="risk-num">2</div>
+      <div class="risk-body">
+        <h4>Analisi di offerte ricevute con dati di fornitore</h4>
+        <p>Caricare un'offerta ricevuta da un fornitore per farla analizzare dall'AI. L'offerta contiene dati del fornitore che potrebbero essere riservati. <strong>L'analisi strutturale di un'offerta si può fare descrivendo i criteri senza condividere il documento originale.</strong></p>
+      </div>
+    </div>
+    <div class="risk-item">
+      <div class="risk-num">3</div>
+      <div class="risk-body">
+        <h4>Piani di approvvigionamento e forecast</h4>
+        <p>I piani di acquisto rivelano indirettamente volumi produttivi, roadmap di prodotto e strategie operative. <strong>Sono informazioni strategiche che non devono uscire dal perimetro aziendale.</strong></p>
+      </div>
+    </div>
+  </div>
+
+  <div class="rule-list">
+    <div class="rule-item ok"><div class="rule-signal"></div><div class="rule-body"><strong>Preparare template di richieste d'offerta generici</strong><span>Usare l'AI per strutturare una RdO standard, senza i dettagli specifici della fornitura, è un uso sicuro e utile.</span></div></div>
+    <div class="rule-item ok"><div class="rule-signal"></div><div class="rule-body"><strong>Imparare tecniche di negoziazione e gestione fornitori</strong><span>Domande su strategie di negoziazione, gestione delle relazioni con fornitori, qualifica dei fornitori — tutte lecite e utili.</span></div></div>
+    <div class="rule-item stop"><div class="rule-signal"></div><div class="rule-body"><strong>Prezzi, sconti e condizioni negoziate</strong><span>Le condizioni economiche concordate con i fornitori non devono mai essere condivise con sistemi AI esterni — spesso sono protette da clausole contrattuali specifiche.</span></div></div>
+  </div>
+
+  <div class="checklist">
+    <div class="cl-group-label">Checklist per il responsabile acquisti</div>
+    <div class="cl-item" onclick="toggleCl(this)"><div class="cl-box"></div><div class="cl-text">Ho verificato se nei contratti con i principali fornitori esistono <strong>clausole di riservatezza</strong> che includono i dati dell'offerta</div></div>
+    <div class="cl-item" onclick="toggleCl(this)"><div class="cl-box"></div><div class="cl-text">Ho comunicato al team che <strong>prezzi e condizioni negoziate</strong> con i fornitori non possono essere condivisi con AI esterne</div></div>
+    <div class="cl-item" onclick="toggleCl(this)"><div class="cl-box"></div><div class="cl-text">So se il team usa strumenti AI per analizzare offerte o gestire comunicazioni con i fornitori</div></div>
+  </div>
+
+</div>
+</div>
+
+
+<!-- ══════════════════════
+     IL TUO RUOLO
+══════════════════════ -->
+<div class="ftab-panel" id="panel-ruolo">
+<div class="panel-inner">
+
+  <h2>Il tuo ruolo come manager</h2>
+
+  <p>Le sezioni precedenti riguardano i rischi della tua funzione specifica. Questa sezione riguarda qualcosa di diverso: <strong>come esercitare il tuo ruolo di riferimento</strong> per il team su questo tema.</p>
+
+  <div class="leader-block">
+    <span class="leader-block-label">Il punto centrale</span>
+    <p>Le regole scritte in un documento valgono nella misura in cui vengono comunicate, discusse e rinforzate. <strong>Non basta che i tuoi collaboratori leggano questa guida.</strong> Serve che tu ne parli con loro, che risponda alle loro domande, e che il tuo comportamento sia coerente con quello che chiedi a loro.</p>
+  </div>
+
+  <h3>Come comunicare le regole al team</h3>
+
+  <p>Non serve una riunione formale o una presentazione. Bastano pochi minuti in un brief di team o in una conversazione individuale. Ecco le domande chiave da cui partire:</p>
+
+  <div class="cascade-list">
+    <div class="cascade-item"><p><strong>"Usate già strumenti AI come ChatGPT o Copilot nel vostro lavoro?"</strong> — Capire cosa sta già succedendo, senza giudicarlo. Molte persone lo usano già e non lo dicono per paura di sbagliare.</p></div>
+    <div class="cascade-item"><p><strong>"Sapete cosa succede ai dati che inviate a questi strumenti?"</strong> — Verificare il livello di consapevolezza reale, non quello che le persone pensano dovreste sentire.</p></div>
+    <div class="cascade-item"><p><strong>"Ci sono situazioni in cui non sapevate se usarlo o no?"</strong> — Fare emergere i casi grigi — sono i più utili per costruire comprensione concreta.</p></div>
+    <div class="cascade-item"><p><strong>"Se aveste un dubbio in futuro, a chi lo chiedereste?"</strong> — Assicurarsi che sappiano che possono — e devono — chiedere.</p></div>
+  </div>
+
+  <h3>Come rispondere alle domande più comuni del team</h3>
+
+  <div class="manager-steps">
+    <div class="manager-step">
+      <div class="ms-num">Q</div>
+      <div class="ms-body">
+        <h4>"Ma io lo uso già da mesi e non è mai successo niente"</h4>
+        <p>Risposta suggerita: <strong>"Capisco, e probabilmente molte cose che hai fatto erano corrette. Il punto non è che qualcosa è già andato storto — è che vogliamo evitare che vada storto in futuro. Ora che abbiamo le regole, usiamole."</strong> Evitare di sminuire o colpevolizzare il comportamento passato.</p>
+      </div>
+    </div>
+    <div class="manager-step">
+      <div class="ms-num">Q</div>
+      <div class="ms-body">
+        <h4>"Ma se non posso usarlo sui dati reali, a cosa mi serve?"</h4>
+        <p>Risposta suggerita: <strong>"Serve moltissimo anche senza i dati reali. Aiuta a strutturare testi, migliorare la scrittura, imparare metodi nuovi, fare ricerche su informazioni pubbliche. Ci sono molti task dove è utilissimo — solo non su documenti riservati."</strong></p>
+      </div>
+    </div>
+    <div class="manager-step">
+      <div class="ms-num">Q</div>
+      <div class="ms-body">
+        <h4>"Questa regola vale anche per Copilot che abbiamo in Microsoft 365?"</h4>
+        <p>Risposta suggerita: <strong>"Dipende da come è configurato. Se è la versione aziendale attivata dall'IT, ha protezioni maggiori — l'IT ti dirà come usarlo. Se è un account personale, valgono le stesse regole degli altri strumenti AI."</strong></p>
+      </div>
+    </div>
+  </div>
+
+  <h3>Come gestire un incidente</h3>
+
+  <p>Se un tuo collaboratore ti segnala di aver condiviso per sbaglio informazioni riservate con uno strumento AI, ecco come procedere:</p>
+
+  <div class="manager-steps">
+    <div class="manager-step">
+      <div class="ms-num">1</div>
+      <div class="ms-body">
+        <h4>Ringrazia per la segnalazione</h4>
+        <p>La persona ha fatto la cosa giusta segnalando l'errore. <strong>Il tuo primo messaggio deve essere di riconoscimento, non di rimprovero.</strong> Chi viene rimproverato per aver segnalato un problema non lo segnalerà più la prossima volta.</p>
+      </div>
+    </div>
+    <div class="manager-step">
+      <div class="ms-num">2</div>
+      <div class="ms-body">
+        <h4>Raccogli i dettagli essenziali</h4>
+        <p>Quali dati sono stati condivisi? Con quale strumento? In quale contesto? Questa informazione serve per valutare la gravità e decidere le azioni necessarie. <strong>Non serve un'indagine approfondita — bastano le informazioni di base.</strong></p>
+      </div>
+    </div>
+    <div class="manager-step">
+      <div class="ms-num">3</div>
+      <div class="ms-body">
+        <h4>Informa l'IT e, se coinvolti dati di clienti o dipendenti, il DPO</h4>
+        <p>Non gestire da solo la valutazione. <strong>Segnala all'IT</strong> per una valutazione tecnica, e coinvolgi il DPO se i dati condivisi includono informazioni personali o dati coperti da NDA con clienti.</p>
+      </div>
+    </div>
+    <div class="manager-step">
+      <div class="ms-num">4</div>
+      <div class="ms-body">
+        <h4>Usa l'episodio per rafforzare la consapevolezza del team</h4>
+        <p>Senza nominare la persona, usa l'episodio come caso concreto per rinforzare le regole con tutto il team. <strong>Un errore segnalato e gestito bene diventa un'opportunità di apprendimento collettivo.</strong></p>
+      </div>
+    </div>
+  </div>
+
+  <h3>Checklist generale per tutti i manager</h3>
+
+  <div class="checklist">
+    <div class="cl-group-label">Comunicazione al team</div>
+    <div class="cl-item" onclick="toggleCl(this)"><div class="cl-box"></div><div class="cl-text">Ho <strong>parlato con il mio team</strong> dell'uso dell'AI e delle regole aziendali — non solo inviato il documento</div></div>
+    <div class="cl-item" onclick="toggleCl(this)"><div class="cl-box"></div><div class="cl-text">So quali strumenti AI sta usando il mio team — <strong>inclusi gli strumenti personali</strong> usati per lavoro</div></div>
+    <div class="cl-item" onclick="toggleCl(this)"><div class="cl-box"></div><div class="cl-text">Il team sa che può chiedermi chiarimenti senza timore di essere giudicato per come ha usato l'AI finora</div></div>
+
+    <div class="cl-group-label">Valutazione della mia funzione</div>
+    <div class="cl-item" onclick="toggleCl(this)"><div class="cl-box"></div><div class="cl-text">Ho identificato i dati più critici della mia funzione e so comunicare chiaramente perché non devono essere condivisi con AI esterne</div></div>
+    <div class="cl-item" onclick="toggleCl(this)"><div class="cl-box"></div><div class="cl-text">Ho verificato se esistono NDA o vincoli contrattuali specifici che impattano l'uso dell'AI sui dati della mia funzione</div></div>
+    <div class="cl-item" onclick="toggleCl(this)"><div class="cl-box"></div><div class="cl-text">Conosco almeno un esempio concreto di uso sicuro dell'AI nella mia funzione da condividere con il team</div></div>
+
+    <div class="cl-group-label">Pronto per gli incidenti</div>
+    <div class="cl-item" onclick="toggleCl(this)"><div class="cl-box"></div><div class="cl-text">So a chi segnalare in caso di condivisione accidentale di dati riservati con uno strumento AI (IT e/o DPO)</div></div>
+    <div class="cl-item" onclick="toggleCl(this)"><div class="cl-box"></div><div class="cl-text">Il mio team sa che deve <strong>segnalare immediatamente</strong> qualsiasi condivisione accidentale di dati riservati — e che non verrà punito per averlo fatto</div></div>
+  </div>
+
+</div>
+</div>
+
+
+<footer>
+  <p>Comunicazione interna · AI e sicurezza dei dati · 2026</p>
+  <p>Guida per manager e responsabili · Documento 2 di 3</p>
+</footer>
+
+<script>
+function switchTab(f) {
+  document.querySelectorAll('.ftab-btn').forEach(b => b.classList.remove('active'));
+  document.querySelectorAll('.ftab-panel').forEach(p => p.classList.remove('active'));
+  document.querySelector(`[data-f="${f}"]`).classList.add('active');
+  document.getElementById(`panel-${f}`).classList.add('active');
+  window.scrollTo({top: 0, behavior:'smooth'});
+}
+
+function toggleCl(item) {
+  item.classList.toggle('done');
+  const box = item.querySelector('.cl-box');
+  box.textContent = item.classList.contains('done') ? '✓' : '';
+}
+</script>
+
+</body>
+</html>

@@ -1,0 +1,763 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AI e Dati — Scheda Tascabile</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;700&family=DM+Serif+Display:ital@0;1&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg:       #f7f5f0;
+  --surface:  #ffffff;
+  --border:   #e0dbd0;
+  --ink:      #1a1916;
+  --ink2:     #4a4840;
+  --ink3:     #8a8780;
+  --ink4:     #c0bdb6;
+
+  --green:    #1a7a4a;
+  --green-l:  #e8f5ee;
+  --green-b:  #b8e0cc;
+  --amber:    #b85c00;
+  --amber-l:  #fff3e6;
+  --amber-b:  #ffc880;
+  --red:      #c02020;
+  --red-l:    #fdeaea;
+  --red-b:    #f0a0a0;
+}
+
+* { margin:0; padding:0; box-sizing:border-box; }
+html { scroll-behavior:smooth; }
+
+body {
+  background: var(--bg);
+  color: var(--ink);
+  font-family: 'DM Sans', sans-serif;
+  font-weight: 400;
+  font-size: 15px;
+  line-height: 1.7;
+}
+
+/* ═══════════════════════════════════
+   VISTA DIGITALE (default)
+═══════════════════════════════════ */
+
+.digital-view { display: block; }
+.print-view   { display: none; }
+
+/* ── HEADER ── */
+.dv-header {
+  background: var(--ink);
+  color: #fff;
+  padding: 48px 56px 40px;
+  position: relative; overflow: hidden;
+}
+
+.dv-header::after {
+  content: '';
+  position: absolute; top:0; left:0; right:0; bottom:0;
+  background: repeating-linear-gradient(-45deg,rgba(255,255,255,0.015) 0px,rgba(255,255,255,0.015) 1px,transparent 1px,transparent 12px);
+  pointer-events: none;
+}
+
+.dv-kicker {
+  font-family: 'DM Mono', monospace;
+  font-size: 10px; letter-spacing: 3px; text-transform: uppercase;
+  color: rgba(255,255,255,0.38); margin-bottom: 14px;
+}
+
+.dv-header h1 {
+  font-family: 'DM Serif Display', serif;
+  font-size: clamp(26px, 4vw, 44px);
+  font-weight: 400; line-height: 1.1; letter-spacing: -0.5px;
+  max-width: 600px; margin-bottom: 16px;
+}
+
+.dv-header h1 em { font-style: italic; color: rgba(255,255,255,0.55); }
+
+.dv-header p {
+  font-size: 14px; color: rgba(255,255,255,0.48);
+  max-width: 500px; line-height: 1.65;
+}
+
+.print-btn {
+  margin-top: 28px;
+  display: inline-flex; align-items: center; gap: 8px;
+  background: rgba(255,255,255,0.1);
+  border: 1px solid rgba(255,255,255,0.2);
+  color: rgba(255,255,255,0.75);
+  padding: 10px 20px; font-size: 13px; font-weight: 500;
+  cursor: pointer; font-family: 'DM Sans', sans-serif;
+  transition: all 0.2s;
+}
+.print-btn:hover { background: rgba(255,255,255,0.18); color: #fff; }
+
+/* ── DIGITAL MAIN CARD ── */
+.dv-main {
+  max-width: 900px;
+  margin: 0 auto;
+  padding: 48px 40px 80px;
+}
+
+.dv-section-label {
+  font-family: 'DM Mono', monospace;
+  font-size: 10px; letter-spacing: 2.5px; text-transform: uppercase;
+  color: var(--ink4); margin-bottom: 16px; display: block;
+}
+
+/* ── TRE COLONNE SEMAFORO ── */
+.traffic-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 3px;
+  margin-bottom: 36px;
+}
+
+.traffic-col {
+  padding: 0;
+  overflow: hidden;
+}
+
+.traffic-header {
+  padding: 18px 18px 14px;
+  display: flex; align-items: center; gap: 10px;
+}
+
+.traffic-dot {
+  width: 14px; height: 14px; border-radius: 50%; flex-shrink: 0;
+}
+
+.traffic-header h3 {
+  font-size: 14px; font-weight: 700; line-height: 1.2;
+}
+
+.traffic-col.col-green .traffic-header { background: var(--green); }
+.traffic-col.col-amber .traffic-header { background: var(--amber); }
+.traffic-col.col-red   .traffic-header { background: var(--red); }
+.traffic-col .traffic-header h3 { color: #fff; }
+.traffic-col .traffic-header .traffic-dot { background: rgba(255,255,255,0.4); }
+
+.traffic-body {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-top: none;
+  padding: 14px 16px;
+  min-height: 280px;
+}
+
+.traffic-item {
+  display: flex; gap: 8px; align-items: flex-start;
+  padding: 8px 0;
+  border-bottom: 1px solid var(--border);
+  font-size: 13px; line-height: 1.45; color: var(--ink2);
+}
+.traffic-item:last-child { border: none; padding-bottom: 0; }
+
+.traffic-bullet {
+  font-size: 11px; flex-shrink: 0; margin-top: 2px; font-weight: 700;
+}
+.col-green .traffic-bullet { color: var(--green); }
+.col-amber .traffic-bullet { color: var(--amber); }
+.col-red   .traffic-bullet { color: var(--red); }
+
+/* ── REGOLA D'ORO ── */
+.golden-rule {
+  background: var(--ink);
+  color: #fff;
+  padding: 28px 32px;
+  margin-bottom: 36px;
+  display: flex; align-items: center; gap: 24px;
+}
+
+.golden-rule-icon {
+  font-size: 32px; flex-shrink: 0;
+}
+
+.golden-rule-body { }
+.golden-rule-label {
+  font-family: 'DM Mono', monospace;
+  font-size: 9px; letter-spacing: 2.5px; text-transform: uppercase;
+  color: rgba(255,255,255,0.38); margin-bottom: 8px; display: block;
+}
+.golden-rule-text {
+  font-size: 16px; font-weight: 300; line-height: 1.65; color: #fff;
+}
+.golden-rule-text strong { font-weight: 600; }
+
+/* ── TEST RAPIDO ── */
+.quick-test {
+  background: var(--surface);
+  border: 2px solid var(--ink);
+  padding: 24px 28px;
+  margin-bottom: 36px;
+}
+
+.qt-label {
+  font-family: 'DM Mono', monospace;
+  font-size: 9px; letter-spacing: 2.5px; text-transform: uppercase;
+  color: var(--ink4); margin-bottom: 14px; display: block;
+}
+
+.qt-flow {
+  display: flex; align-items: stretch; gap: 0;
+}
+
+.qt-node {
+  flex: 1; text-align: center; padding: 14px 10px;
+  font-size: 13px; color: var(--ink2); line-height: 1.45;
+  background: var(--bg); border: 1px solid var(--border);
+  display: flex; align-items: center; justify-content: center;
+}
+
+.qt-node.question {
+  background: var(--ink); color: #fff;
+  font-weight: 500; font-size: 14px;
+}
+
+.qt-arrow {
+  display: flex; align-items: center; justify-content: center;
+  padding: 0 8px; color: var(--ink4); font-size: 18px;
+  flex-shrink: 0;
+}
+
+.qt-answer {
+  display: flex; flex-direction: column; gap: 2px; flex: 1;
+}
+
+.qt-ans-row {
+  display: flex; align-items: center; gap: 8px; flex: 1;
+  padding: 10px 12px;
+  font-size: 13px; font-weight: 500;
+}
+.qt-ans-row.yes { background: var(--green-l); color: var(--green); }
+.qt-ans-row.no  { background: var(--red-l);   color: var(--red); }
+
+.qt-ans-tag {
+  font-family: 'DM Mono', monospace;
+  font-size: 9px; letter-spacing: 1.5px; text-transform: uppercase;
+  font-weight: 400; flex-shrink: 0; width: 24px;
+}
+
+/* ── SE HAI DUBBI ── */
+.doubt-steps {
+  display: grid; grid-template-columns: repeat(3, 1fr);
+  gap: 3px; margin-bottom: 36px;
+}
+
+.doubt-step {
+  background: var(--surface); border: 1px solid var(--border);
+  padding: 20px 18px;
+}
+
+.ds-num {
+  font-family: 'DM Serif Display', serif;
+  font-size: 28px; color: var(--ink4); margin-bottom: 10px; display: block;
+}
+
+.doubt-step h4 { font-size: 13px; font-weight: 700; color: var(--ink); margin-bottom: 6px; }
+.doubt-step p  { font-size: 13px; color: var(--ink2); line-height: 1.6; margin: 0; }
+.doubt-step p strong { color: var(--ink); font-weight: 500; }
+
+/* ── ESEMPI FUNZIONE ── */
+.examples-grid {
+  display: grid; grid-template-columns: 1fr 1fr;
+  gap: 3px; margin-bottom: 36px;
+}
+
+.ex-card {
+  background: var(--surface); border: 1px solid var(--border);
+  overflow: hidden;
+}
+
+.ex-card-header {
+  padding: 12px 16px;
+  display: flex; align-items: center; gap: 10px;
+  border-bottom: 1px solid var(--border);
+}
+
+.ex-role {
+  font-size: 12px; font-weight: 700; color: var(--ink);
+}
+
+.ex-card-body { padding: 14px 16px; }
+
+.ex-row {
+  display: flex; gap: 8px; align-items: flex-start;
+  padding: 6px 0; border-bottom: 1px solid var(--border);
+  font-size: 12px; line-height: 1.5;
+}
+.ex-row:last-child { border: none; padding-bottom: 0; }
+
+.ex-row-signal {
+  width: 4px; border-radius: 2px; flex-shrink: 0; margin-top: 3px;
+  align-self: stretch; min-height: 16px;
+}
+.ex-row.ok   .ex-row-signal { background: var(--green); }
+.ex-row.stop .ex-row-signal { background: var(--red); }
+
+.ex-row-text { color: var(--ink2); }
+.ex-row-text strong { color: var(--ink); font-weight: 500; display: block; }
+
+/* ── INCIDENTE ── */
+.incident-box {
+  background: var(--red-l);
+  border: 1px solid var(--red-b);
+  border-left: 4px solid var(--red);
+  padding: 22px 26px;
+  margin-bottom: 36px;
+}
+
+.incident-label {
+  font-family: 'DM Mono', monospace;
+  font-size: 9px; letter-spacing: 2.5px; text-transform: uppercase;
+  color: var(--red); margin-bottom: 12px; display: block;
+}
+
+.incident-steps {
+  display: flex; gap: 0;
+  counter-reset: inc;
+}
+
+.inc-step {
+  flex: 1; padding: 12px 14px;
+  background: rgba(255,255,255,0.7);
+  border-right: 1px solid var(--red-b);
+  font-size: 13px; color: var(--ink2); line-height: 1.5;
+  counter-increment: inc;
+}
+.inc-step:last-child { border-right: none; }
+
+.inc-step::before {
+  content: counter(inc);
+  display: block; font-family: 'DM Serif Display', serif;
+  font-size: 20px; color: var(--red); margin-bottom: 6px;
+}
+
+.inc-step strong { color: var(--ink); font-weight: 600; display: block; margin-bottom: 2px; }
+
+
+/* ═══════════════════════════════════
+   VISTA STAMPA
+═══════════════════════════════════ */
+
+@media print {
+  body { background: #fff; font-size: 11px; }
+  .digital-view { display: none !important; }
+  .print-view   { display: block !important; }
+}
+
+.print-view {
+  /* Layout a due colonne stile card A5 */
+  width: 210mm;
+  margin: 0 auto;
+  padding: 12mm;
+  font-family: 'DM Sans', sans-serif;
+}
+
+.pv-card {
+  border: 2px solid #1a1916;
+  padding: 10mm;
+  page-break-inside: avoid;
+}
+
+.pv-header {
+  display: flex; align-items: baseline; justify-content: space-between;
+  border-bottom: 2px solid #1a1916; padding-bottom: 6mm; margin-bottom: 7mm;
+}
+
+.pv-title {
+  font-family: 'DM Serif Display', serif;
+  font-size: 18pt; font-weight: 400; letter-spacing: -0.5px;
+}
+
+.pv-subtitle {
+  font-size: 8pt; color: #8a8780;
+  font-family: 'DM Mono', monospace; letter-spacing: 1px; text-transform: uppercase;
+}
+
+.pv-grid {
+  display: grid; grid-template-columns: repeat(3, 1fr);
+  gap: 3mm; margin-bottom: 6mm;
+}
+
+.pv-col { border: 1px solid #e0dbd0; overflow: hidden; }
+
+.pv-col-header {
+  padding: 4mm 4mm 3mm;
+  font-size: 9pt; font-weight: 700; color: #fff;
+}
+.pv-col.green .pv-col-header { background: #1a7a4a; }
+.pv-col.amber .pv-col-header { background: #b85c00; }
+.pv-col.red   .pv-col-header { background: #c02020; }
+
+.pv-col-body { padding: 3mm 4mm; }
+
+.pv-item {
+  font-size: 8.5pt; color: #4a4840;
+  padding: 2mm 0; border-bottom: 0.5pt solid #e0dbd0; line-height: 1.35;
+  display: flex; gap: 3mm; align-items: flex-start;
+}
+.pv-item:last-child { border: none; }
+
+.pv-bullet { font-weight: 700; font-size: 8pt; flex-shrink: 0; margin-top: 1pt; }
+.pv-col.green .pv-bullet { color: #1a7a4a; }
+.pv-col.amber .pv-bullet { color: #b85c00; }
+.pv-col.red   .pv-bullet { color: #c02020; }
+
+.pv-rule {
+  background: #1a1916; color: #fff;
+  padding: 4mm 5mm; margin-bottom: 5mm;
+  font-size: 9.5pt; line-height: 1.55;
+}
+.pv-rule strong { font-weight: 700; }
+
+.pv-bottom {
+  display: grid; grid-template-columns: 1fr 1fr; gap: 3mm;
+}
+
+.pv-doubt { border: 1px solid #e0dbd0; padding: 3mm 4mm; }
+.pv-doubt h4 { font-size: 8pt; font-weight: 700; margin-bottom: 2mm; text-transform: uppercase; letter-spacing: 0.5px; color: #8a8780; }
+
+.pv-doubt-step {
+  font-size: 8pt; color: #4a4840; padding: 1.5mm 0;
+  border-bottom: 0.5pt solid #e0dbd0; line-height: 1.35;
+  display: flex; gap: 2mm;
+}
+.pv-doubt-step:last-child { border: none; }
+.pv-doubt-step-num { font-weight: 700; color: #1a1916; flex-shrink: 0; }
+
+.pv-incident { background: #fdeaea; border: 1pt solid #f0a0a0; border-left: 3pt solid #c02020; padding: 3mm 4mm; }
+.pv-incident h4 { font-size: 8pt; font-weight: 700; color: #c02020; margin-bottom: 2mm; text-transform: uppercase; letter-spacing: 0.5px; }
+.pv-incident p  { font-size: 8pt; color: #4a4840; line-height: 1.45; margin: 0; }
+
+.pv-footer {
+  border-top: 1px solid #e0dbd0; margin-top: 5mm; padding-top: 3mm;
+  font-size: 7.5pt; color: #b8b5ae; font-family: 'DM Mono', monospace;
+  display: flex; justify-content: space-between;
+}
+
+
+/* ── RESPONSIVE ── */
+@media (max-width: 700px) {
+  .dv-header { padding: 36px 24px 32px; }
+  .dv-main { padding: 32px 20px 60px; }
+  .traffic-grid { grid-template-columns: 1fr; }
+  .traffic-body { min-height: auto; }
+  .doubt-steps { grid-template-columns: 1fr; }
+  .examples-grid { grid-template-columns: 1fr; }
+  .qt-flow { flex-direction: column; }
+  .qt-arrow { transform: rotate(90deg); }
+  .incident-steps { flex-direction: column; }
+  .inc-step { border-right: none; border-bottom: 1px solid var(--red-b); }
+  .inc-step:last-child { border-bottom: none; }
+}
+</style>
+</head>
+<body>
+
+<!-- ═══════════════════════════════════
+     VISTA DIGITALE
+═══════════════════════════════════ -->
+<div class="digital-view">
+
+  <header class="dv-header">
+    <div class="dv-kicker">Comunicazione interna · AI e sicurezza dei dati · Scheda tascabile</div>
+    <h1>Le regole essenziali<br><em>in un colpo d'occhio</em></h1>
+    <p>Tienila a portata di mano. Quando hai un dubbio su cosa puoi condividere con uno strumento AI, trovi qui la risposta rapida.</p>
+    <button class="print-btn" onclick="window.print()">
+      ⎙ &nbsp;Stampa la scheda tascabile
+    </button>
+  </header>
+
+  <main class="dv-main">
+
+    <!-- SEMAFORO -->
+    <span class="dv-section-label">La mappa: cosa puoi e non puoi condividere</span>
+
+    <div class="traffic-grid">
+
+      <div class="traffic-col col-green">
+        <div class="traffic-header">
+          <div class="traffic-dot"></div>
+          <h3>Puoi condividere</h3>
+        </div>
+        <div class="traffic-body">
+          <div class="traffic-item"><span class="traffic-bullet">✓</span><span>Testi generici da scrivere o migliorare senza dati aziendali</span></div>
+          <div class="traffic-item"><span class="traffic-bullet">✓</span><span>Domande su concetti, normative e argomenti pubblici</span></div>
+          <div class="traffic-item"><span class="traffic-bullet">✓</span><span>Bozze di documenti senza nomi, cifre o riferimenti specifici</span></div>
+          <div class="traffic-item"><span class="traffic-bullet">✓</span><span>Traduzione di contenuti già pubblici o approvati per l'esterno</span></div>
+          <div class="traffic-item"><span class="traffic-bullet">✓</span><span>Richieste di aiuto su metodi e strutture (es. "come si imposta una relazione tecnica?")</span></div>
+          <div class="traffic-item"><span class="traffic-bullet">✓</span><span>Correzione grammaticale di testi senza dati aziendali</span></div>
+        </div>
+      </div>
+
+      <div class="traffic-col col-amber">
+        <div class="traffic-header">
+          <div class="traffic-dot"></div>
+          <h3>Prima anonimizza, poi usa</h3>
+        </div>
+        <div class="traffic-body">
+          <div class="traffic-item"><span class="traffic-bullet">!</span><span>Email a clienti → rimuovi nome cliente, cifre, riferimenti specifici</span></div>
+          <div class="traffic-item"><span class="traffic-bullet">!</span><span>Relazioni o report → sostituisci dati reali con dati di esempio</span></div>
+          <div class="traffic-item"><span class="traffic-bullet">!</span><span>Situazioni negoziali → descrivi in modo generico, senza nomi né valori</span></div>
+          <div class="traffic-item"><span class="traffic-bullet">!</span><span>Calcoli tecnici → usa parametri fittizi, non i valori reali del prodotto</span></div>
+          <div class="traffic-item"><span class="traffic-bullet">!</span><span>Analisi di problemi → descrivi il tipo di problema, non il caso specifico</span></div>
+          <div class="traffic-item"><span class="traffic-bullet">!</span><span>Dubbi su cosa è anonimizzabile? Chiedi al responsabile prima di procedere</span></div>
+        </div>
+      </div>
+
+      <div class="traffic-col col-red">
+        <div class="traffic-header">
+          <div class="traffic-dot"></div>
+          <h3>Non condividere mai</h3>
+        </div>
+        <div class="traffic-body">
+          <div class="traffic-item"><span class="traffic-bullet">✕</span><span>Specifiche tecniche di prodotto, disegni, BOM, ricette di processo</span></div>
+          <div class="traffic-item"><span class="traffic-bullet">✕</span><span>Offerte commerciali, prezzi negoziati, condizioni contrattuali</span></div>
+          <div class="traffic-item"><span class="traffic-bullet">✕</span><span>Documenti o email coperti da NDA (accordi di riservatezza)</span></div>
+          <div class="traffic-item"><span class="traffic-bullet">✕</span><span>Dati personali di dipendenti, colleghi o clienti</span></div>
+          <div class="traffic-item"><span class="traffic-bullet">✕</span><span>Parametri di processo, setpoint, condizioni operative degli impianti</span></div>
+          <div class="traffic-item"><span class="traffic-bullet">✕</span><span>Piani strategici, forecast, pipeline commerciale</span></div>
+          <div class="traffic-item"><span class="traffic-bullet">✕</span><span>Fotografie o video di impianti, macchinari o linee produttive</span></div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- REGOLA D'ORO -->
+    <div class="golden-rule">
+      <div class="golden-rule-icon">💡</div>
+      <div class="golden-rule-body">
+        <span class="golden-rule-label">La regola da ricordare</span>
+        <div class="golden-rule-text">
+          Se quella informazione <strong>non la diresti a voce a uno sconosciuto</strong>, non metterla in uno strumento AI esterno. <strong>In caso di dubbio, chiedi prima di inviare.</strong>
+        </div>
+      </div>
+    </div>
+
+    <!-- TEST RAPIDO -->
+    <span class="dv-section-label">Il test in tre secondi</span>
+
+    <div class="quick-test">
+      <span class="qt-label">Quando stai per inviare qualcosa a uno strumento AI</span>
+      <div class="qt-flow">
+        <div class="qt-node question">"Lo direi a uno sconosciuto?"</div>
+        <div class="qt-arrow">→</div>
+        <div class="qt-answer">
+          <div class="qt-ans-row yes">
+            <span class="qt-ans-tag">Sì</span>
+            Puoi inviare
+          </div>
+          <div class="qt-ans-row no">
+            <span class="qt-ans-tag">No</span>
+            Non inviare — anonimizza o chiedi
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- COSA FARE SE HAI DUBBI -->
+    <span class="dv-section-label">Se hai un dubbio</span>
+
+    <div class="doubt-steps">
+      <div class="doubt-step">
+        <span class="ds-num">1</span>
+        <h4>Fai il test</h4>
+        <p>"Lo direi a uno sconosciuto?" — Se no, fermati.</p>
+      </div>
+      <div class="doubt-step">
+        <span class="ds-num">2</span>
+        <h4>Anonimizza</h4>
+        <p>Rimuovi nomi, cifre e dettagli specifici. Nella maggior parte dei casi <strong>funziona comunque</strong>.</p>
+      </div>
+      <div class="doubt-step">
+        <span class="ds-num">3</span>
+        <h4>Chiedi</h4>
+        <p>Se non sei sicuro, chiedi al tuo <strong>responsabile o all'IT</strong>. Nessuno viene rimproverato per aver chiesto.</p>
+      </div>
+    </div>
+
+    <!-- ESEMPI PER FUNZIONE -->
+    <span class="dv-section-label">Esempi pratici per ruolo</span>
+
+    <div class="examples-grid">
+
+      <div class="ex-card">
+        <div class="ex-card-header">
+          <div class="ex-role">🔧 Ufficio Tecnico / Ingegneria</div>
+        </div>
+        <div class="ex-card-body">
+          <div class="ex-row ok">
+            <div class="ex-row-signal"></div>
+            <div class="ex-row-text"><strong>OK — Struttura senza dati</strong>"Come si imposta una verifica a fatica secondo EN 13001?" — Nessun dato di prodotto condiviso.</div>
+          </div>
+          <div class="ex-row stop">
+            <div class="ex-row-signal"></div>
+            <div class="ex-row-text"><strong>STOP — Specifica reale</strong>Non caricare il PDF con le specifiche del prodotto per ottenere aiuto su un calcolo. Usa parametri fittizi.</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="ex-card">
+        <div class="ex-card-header">
+          <div class="ex-role">💼 Commerciale / Vendite</div>
+        </div>
+        <div class="ex-card-body">
+          <div class="ex-row ok">
+            <div class="ex-row-signal"></div>
+            <div class="ex-row-text"><strong>OK — Situazione generica</strong>"Un cliente chiede uno sconto per un ritardo. Come rispondo in modo professionale?"</div>
+          </div>
+          <div class="ex-row stop">
+            <div class="ex-row-signal"></div>
+            <div class="ex-row-text"><strong>STOP — Email reale incollata</strong>Non incollare l'email del cliente. Descrivila in modo anonimo e generico.</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="ex-card">
+        <div class="ex-card-header">
+          <div class="ex-role">📋 Qualità</div>
+        </div>
+        <div class="ex-card-body">
+          <div class="ex-row ok">
+            <div class="ex-row-signal"></div>
+            <div class="ex-row-text"><strong>OK — Metodo in astratto</strong>"Come si imposta un'analisi delle cause radice con il metodo 8D?" — Nessun dato aziendale.</div>
+          </div>
+          <div class="ex-row stop">
+            <div class="ex-row-signal"></div>
+            <div class="ex-row-text"><strong>STOP — NC reale caricata</strong>Non caricare il rapporto di non conformità con i dati del prodotto e del cliente.</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="ex-card">
+        <div class="ex-card-header">
+          <div class="ex-role">🏭 Produzione / Manutenzione</div>
+        </div>
+        <div class="ex-card-body">
+          <div class="ex-row ok">
+            <div class="ex-row-signal"></div>
+            <div class="ex-row-text"><strong>OK — Problema generico</strong>"Il mio tornio CNC produce vibrazione a fine corsa. Quali possono essere le cause?" </div>
+          </div>
+          <div class="ex-row stop">
+            <div class="ex-row-signal"></div>
+            <div class="ex-row-text"><strong>STOP — Parametri reali</strong>Non condividere i setpoint, le ricette di processo o le temperature operative reali degli impianti.</div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- SE SBAGLIO -->
+    <span class="dv-section-label">Se hai già condiviso qualcosa di riservato per sbaglio</span>
+
+    <div class="incident-box">
+      <span class="incident-label">⚠ Cosa fare immediatamente</span>
+      <div class="incident-steps">
+        <div class="inc-step">
+          <strong>Non aspettare</strong>
+          Prima agisci, meglio è. Un errore segnalato subito è sempre gestibile.
+        </div>
+        <div class="inc-step">
+          <strong>Avvisa il tuo responsabile</strong>
+          Descrivi cosa hai condiviso, con quale strumento e in quale contesto.
+        </div>
+        <div class="inc-step">
+          <strong>Il responsabile avvisa l'IT</strong>
+          Sarà l'IT a valutare la situazione e decidere le azioni necessarie.
+        </div>
+        <div class="inc-step">
+          <strong>Nessuna punizione per chi segnala</strong>
+          Segnalare subito è la cosa giusta. Chi tace aggrava il problema.
+        </div>
+      </div>
+    </div>
+
+    <p style="font-size:13px;color:var(--ink3);text-align:center;margin-top:8px;">
+      Per approfondire: <strong>Documento 1</strong> — Guida per tutti i dipendenti &nbsp;·&nbsp; <strong>Documento 2</strong> — Guida per manager e responsabili di funzione
+    </p>
+
+  </main>
+
+</div><!-- /digital-view -->
+
+
+<!-- ═══════════════════════════════════
+     VISTA STAMPA (appare solo in print)
+═══════════════════════════════════ -->
+<div class="print-view">
+  <div class="pv-card">
+
+    <div class="pv-header">
+      <div class="pv-title">AI e Dati — Regole Essenziali</div>
+      <div class="pv-subtitle">Comunicazione interna · 2026 · Documento 3 di 3</div>
+    </div>
+
+    <div class="pv-rule">
+      Il test rapido: <strong>"Lo direi a voce a uno sconosciuto?"</strong> — Se no, non condividerlo con l'AI. In caso di dubbio, <strong>chiedi al responsabile prima di inviare.</strong>
+    </div>
+
+    <div class="pv-grid">
+
+      <div class="pv-col green">
+        <div class="pv-col-header">✓ Puoi condividere</div>
+        <div class="pv-col-body">
+          <div class="pv-item"><span class="pv-bullet">✓</span><span>Testi generici senza dati aziendali</span></div>
+          <div class="pv-item"><span class="pv-bullet">✓</span><span>Domande su concetti e normative pubbliche</span></div>
+          <div class="pv-item"><span class="pv-bullet">✓</span><span>Aiuto su struttura e metodo (senza dati)</span></div>
+          <div class="pv-item"><span class="pv-bullet">✓</span><span>Traduzione di contenuti già pubblici</span></div>
+          <div class="pv-item"><span class="pv-bullet">✓</span><span>Correzione grammaticale di testi neutri</span></div>
+        </div>
+      </div>
+
+      <div class="pv-col amber">
+        <div class="pv-col-header">! Prima anonimizza</div>
+        <div class="pv-col-body">
+          <div class="pv-item"><span class="pv-bullet">!</span><span>Email a clienti → rimuovi nome e dati</span></div>
+          <div class="pv-item"><span class="pv-bullet">!</span><span>Calcoli tecnici → usa valori fittizi</span></div>
+          <div class="pv-item"><span class="pv-bullet">!</span><span>Relazioni → sostituisci dati reali</span></div>
+          <div class="pv-item"><span class="pv-bullet">!</span><span>Situazioni → descrivi in modo generico</span></div>
+          <div class="pv-item"><span class="pv-bullet">!</span><span>Dubbi? Chiedi prima di procedere</span></div>
+        </div>
+      </div>
+
+      <div class="pv-col red">
+        <div class="pv-col-header">✕ Non condividere mai</div>
+        <div class="pv-col-body">
+          <div class="pv-item"><span class="pv-bullet">✕</span><span>Specifiche tecniche, disegni, BOM</span></div>
+          <div class="pv-item"><span class="pv-bullet">✕</span><span>Offerte, prezzi, condizioni contrattuali</span></div>
+          <div class="pv-item"><span class="pv-bullet">✕</span><span>Documenti coperti da NDA</span></div>
+          <div class="pv-item"><span class="pv-bullet">✕</span><span>Dati personali di dipendenti o clienti</span></div>
+          <div class="pv-item"><span class="pv-bullet">✕</span><span>Parametri di processo e ricette</span></div>
+          <div class="pv-item"><span class="pv-bullet">✕</span><span>Foto o video di impianti e macchinari</span></div>
+        </div>
+      </div>
+
+    </div>
+
+    <div class="pv-bottom">
+
+      <div class="pv-doubt">
+        <h4>Se hai un dubbio</h4>
+        <div class="pv-doubt-step"><span class="pv-doubt-step-num">1</span><span>Fai il test: "Lo direi a uno sconosciuto?"</span></div>
+        <div class="pv-doubt-step"><span class="pv-doubt-step-num">2</span><span>Anonimizza: rimuovi nomi, cifre, dettagli specifici</span></div>
+        <div class="pv-doubt-step"><span class="pv-doubt-step-num">3</span><span>Chiedi al responsabile o all'IT — nessuno viene rimproverato</span></div>
+      </div>
+
+      <div class="pv-incident">
+        <h4>⚠ Se hai già condiviso qualcosa di riservato</h4>
+        <p>Non aspettare · Avvisa subito il tuo responsabile · Descrivi cosa hai condiviso e con quale strumento · Il responsabile avvisa l'IT · <strong>Chi segnala fa la cosa giusta.</strong></p>
+      </div>
+
+    </div>
+
+    <div class="pv-footer">
+      <span>Comunicazione interna · AI e sicurezza dei dati · 2026</span>
+      <span>Scheda tascabile · Documento 3 di 3</span>
+    </div>
+
+  </div>
+</div><!-- /print-view -->
+
+</body>
+</html>

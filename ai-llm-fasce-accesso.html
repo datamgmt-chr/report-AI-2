@@ -1,0 +1,1426 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Le Quattro Fasce di Accesso agli LLM</title>
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600;700;800&family=Lora:ital,wght@0,400;0,500;0,600;1,400;1,500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #f4f5f7;
+    --bg2: #eceef2;
+    --bg3: #e2e5ea;
+    --white: #ffffff;
+    --ink: #141820;
+    --ink-mid: #363d4a;
+    --ink-light: #6b7280;
+    --ink-faint: rgba(20,24,32,0.06);
+    --border: rgba(20,24,32,0.09);
+    --border2: rgba(20,24,32,0.05);
+
+    /* Fascia 1 — Proprietari — deep slate blue */
+    --f1: #1e3a5f;
+    --f1-mid: #2a5080;
+    --f1-light: #4a7aaa;
+    --f1-faint: rgba(30,58,95,0.07);
+    --f1-faint2: rgba(30,58,95,0.04);
+    --f1-border: rgba(30,58,95,0.2);
+
+    /* Fascia 2 — Open via API — slate teal */
+    --f2: #1a4a4a;
+    --f2-mid: #2a6a6a;
+    --f2-light: #4a9090;
+    --f2-faint: rgba(26,74,74,0.07);
+    --f2-faint2: rgba(26,74,74,0.04);
+    --f2-border: rgba(26,74,74,0.2);
+
+    /* Fascia 3 — Self-hosted — warm sienna */
+    --f3: #7a3a1a;
+    --f3-mid: #a05020;
+    --f3-light: #c87040;
+    --f3-faint: rgba(122,58,26,0.07);
+    --f3-faint2: rgba(122,58,26,0.04);
+    --f3-border: rgba(122,58,26,0.2);
+
+    /* Fascia 4 — Truly open — deep amber */
+    --f4: #6a4a00;
+    --f4-mid: #8a6400;
+    --f4-light: #b08020;
+    --f4-faint: rgba(106,74,0,0.07);
+    --f4-faint2: rgba(106,74,0,0.04);
+    --f4-border: rgba(106,74,0,0.2);
+
+    --green: #1a5a2a;
+    --green-faint: rgba(26,90,42,0.07);
+    --green-border: rgba(26,90,42,0.2);
+    --red: #7a1a1a;
+    --red-faint: rgba(122,26,26,0.07);
+    --red-border: rgba(122,26,26,0.2);
+
+    --serif: 'Lora', serif;
+    --sans: 'Sora', sans-serif;
+  }
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  html { scroll-behavior: smooth; }
+
+  body {
+    background: var(--bg);
+    color: var(--ink);
+    font-family: var(--sans);
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* ── HEADER ── */
+  .header {
+    background: var(--white);
+    border-bottom: 1px solid var(--border);
+    padding: 56px 0 0;
+  }
+
+  .header-inner {
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 0 48px;
+  }
+
+  .header-kicker {
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 4px;
+    text-transform: uppercase;
+    color: var(--f1-light);
+    margin-bottom: 16px;
+  }
+
+  h1 {
+    font-family: var(--serif);
+    font-size: clamp(32px, 4.5vw, 58px);
+    font-weight: 600;
+    color: var(--ink);
+    line-height: 1.1;
+    letter-spacing: -1px;
+    margin-bottom: 10px;
+  }
+
+  h1 em { font-style: italic; font-weight: 400; color: var(--ink-mid); }
+
+  .header-sub {
+    font-size: 16px;
+    font-weight: 300;
+    color: var(--ink-light);
+    max-width: 640px;
+    line-height: 1.7;
+    margin-bottom: 32px;
+  }
+
+  /* Strata preview strip */
+  .strata-strip {
+    display: flex;
+    height: 8px;
+    margin: 0 -48px;
+    overflow: hidden;
+  }
+
+  .strata-seg {
+    flex: 1;
+    transition: flex 0.3s;
+  }
+
+  .ss1 { background: var(--f1); }
+  .ss2 { background: var(--f2); }
+  .ss3 { background: var(--f3); }
+  .ss4 { background: var(--f4); }
+
+  /* ── NAV ── */
+  .nav {
+    position: sticky;
+    top: 0;
+    background: rgba(255,255,255,0.96);
+    backdrop-filter: blur(10px);
+    border-bottom: 1px solid var(--border);
+    z-index: 50;
+  }
+
+  .nav-inner {
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 0 48px;
+    display: flex;
+    gap: 0;
+    overflow-x: auto;
+    align-items: stretch;
+  }
+
+  .nav-btn {
+    font-family: var(--sans);
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 0.3px;
+    color: var(--ink-light);
+    padding: 14px 20px;
+    cursor: pointer;
+    border: none;
+    background: transparent;
+    border-bottom: 2px solid transparent;
+    white-space: nowrap;
+    transition: all 0.2s;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .nav-btn:hover { color: var(--ink); }
+  .nav-btn.active { color: var(--ink); }
+
+  .nav-dot {
+    width: 8px; height: 8px;
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+
+  .nav-btn.active.nf1 { border-bottom-color: var(--f1); }
+  .nav-btn.active.nf2 { border-bottom-color: var(--f2); }
+  .nav-btn.active.nf3 { border-bottom-color: var(--f3); }
+  .nav-btn.active.nf4 { border-bottom-color: var(--f4); }
+  .nav-btn.active.nf0 { border-bottom-color: var(--ink-light); }
+
+  .nd1 { background: var(--f1); }
+  .nd2 { background: var(--f2); }
+  .nd3 { background: var(--f3); }
+  .nd4 { background: var(--f4); }
+
+  /* ── LAYOUT ── */
+  .page {
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 0 48px 100px;
+  }
+
+  .section { display: none; padding-top: 56px; }
+  .section.active { display: block; animation: emerge 0.3s ease; }
+  @keyframes emerge { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
+
+  /* ── OVERVIEW SECTION ── */
+  .overview-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 12px;
+    margin: 32px 0 40px;
+  }
+
+  @media (max-width: 900px) { .overview-grid { grid-template-columns: 1fr 1fr; } }
+  @media (max-width: 500px) { .overview-grid { grid-template-columns: 1fr; } }
+
+  .ov-card {
+    border-radius: 3px;
+    overflow: hidden;
+    border: 1px solid var(--border);
+    background: var(--white);
+    cursor: pointer;
+    transition: transform 0.15s, box-shadow 0.15s;
+  }
+
+  .ov-card:hover { transform: translateY(-2px); box-shadow: 0 4px 20px rgba(0,0,0,0.08); }
+
+  .ov-stripe { height: 4px; }
+  .os1 { background: var(--f1); }
+  .os2 { background: var(--f2); }
+  .os3 { background: var(--f3); }
+  .os4 { background: var(--f4); }
+
+  .ov-body { padding: 18px 20px; }
+
+  .ov-num {
+    font-family: var(--serif);
+    font-size: 36px;
+    font-weight: 600;
+    line-height: 1;
+    margin-bottom: 8px;
+    opacity: 0.15;
+  }
+
+  .ov-name {
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--ink);
+    margin-bottom: 4px;
+    line-height: 1.3;
+  }
+
+  .ov-tagline {
+    font-size: 12px;
+    font-weight: 300;
+    color: var(--ink-light);
+    line-height: 1.5;
+    margin-bottom: 14px;
+  }
+
+  .ov-chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+  }
+
+  .ov-chip {
+    font-size: 10px;
+    font-weight: 600;
+    padding: 2px 8px;
+    border-radius: 20px;
+    letter-spacing: 0.5px;
+  }
+
+  /* ── DIMENSION STRIP ── */
+  .dim-strip {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 1px;
+    background: var(--border);
+    border: 1px solid var(--border);
+    border-radius: 3px;
+    overflow: hidden;
+    margin: 32px 0;
+  }
+
+  @media (max-width: 700px) { .dim-strip { grid-template-columns: 1fr 1fr; } }
+
+  .dim-cell {
+    background: var(--white);
+    padding: 18px 16px;
+    text-align: center;
+  }
+
+  .dim-icon { font-size: 24px; margin-bottom: 8px; }
+
+  .dim-label {
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--ink-light);
+    margin-bottom: 6px;
+  }
+
+  .dim-desc {
+    font-size: 12px;
+    color: var(--ink-mid);
+    line-height: 1.5;
+    font-weight: 300;
+  }
+
+  /* ── FASCIA CARDS ── */
+  .fascia-card {
+    background: var(--white);
+    border: 1px solid var(--border);
+    border-radius: 3px;
+    overflow: hidden;
+    margin-bottom: 0;
+  }
+
+  .fascia-header {
+    display: grid;
+    grid-template-columns: 240px 1fr;
+    border-bottom: 1px solid var(--border);
+  }
+
+  @media (max-width: 768px) { .fascia-header { grid-template-columns: 1fr; } }
+
+  .fascia-left {
+    padding: 36px 32px;
+    position: relative;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    border-right: 1px solid var(--border);
+  }
+
+  .fascia-num {
+    font-family: var(--serif);
+    font-size: 96px;
+    font-weight: 600;
+    position: absolute;
+    right: -8px;
+    bottom: -16px;
+    line-height: 1;
+    opacity: 0.06;
+    color: var(--ink);
+  }
+
+  .fascia-badge {
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    margin-bottom: 12px;
+  }
+
+  .fascia-name {
+    font-family: var(--serif);
+    font-size: 22px;
+    font-weight: 600;
+    color: var(--ink);
+    line-height: 1.2;
+    margin-bottom: 8px;
+    letter-spacing: -0.3px;
+  }
+
+  .fascia-tagline {
+    font-size: 13px;
+    font-weight: 300;
+    color: var(--ink-light);
+    line-height: 1.55;
+    margin-bottom: 20px;
+  }
+
+  /* Privacy meter */
+  .privacy-meter { margin-top: auto; }
+
+  .pm-label {
+    font-size: 9px;
+    font-weight: 700;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--ink-light);
+    margin-bottom: 6px;
+    display: flex;
+    justify-content: space-between;
+  }
+
+  .pm-track {
+    height: 6px;
+    background: var(--bg3);
+    border-radius: 3px;
+    overflow: hidden;
+    margin-bottom: 4px;
+  }
+
+  .pm-fill { height: 100%; border-radius: 3px; }
+
+  .pm-poles {
+    display: flex;
+    justify-content: space-between;
+    font-size: 9px;
+    color: var(--ink-light);
+    font-weight: 500;
+    letter-spacing: 0.5px;
+  }
+
+  .fascia-right { padding: 32px 36px; }
+
+  .fascia-desc {
+    font-size: 15px;
+    line-height: 1.8;
+    color: var(--ink-mid);
+    font-weight: 300;
+    margin-bottom: 16px;
+  }
+
+  /* ── BODY GRID ── */
+  .fascia-body {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 0;
+    border-top: 1px solid var(--border);
+  }
+
+  @media (max-width: 768px) { .fascia-body { grid-template-columns: 1fr; } }
+
+  .fb-col {
+    padding: 28px 28px;
+    border-right: 1px solid var(--border);
+  }
+
+  .fb-col:last-child { border-right: none; }
+
+  .fb-label {
+    font-size: 9px;
+    font-weight: 700;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    color: var(--ink-light);
+    margin-bottom: 16px;
+  }
+
+  /* procon list */
+  .procon { display: flex; flex-direction: column; gap: 9px; }
+
+  .pc-item {
+    display: flex;
+    gap: 10px;
+    align-items: flex-start;
+    font-size: 13px;
+    line-height: 1.6;
+    color: var(--ink-mid);
+    font-weight: 300;
+  }
+
+  .pc-dot {
+    width: 16px; height: 16px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 9px;
+    flex-shrink: 0;
+    margin-top: 2px;
+    font-weight: 700;
+  }
+
+  .pd-g { background: var(--green-faint); color: var(--green); border: 1px solid var(--green-border); }
+  .pd-r { background: var(--red-faint); color: var(--red); border: 1px solid var(--red-border); }
+
+  /* models list */
+  .models-list { display: flex; flex-direction: column; gap: 8px; }
+
+  .model-item {
+    padding: 10px 14px;
+    border-radius: 2px;
+    border: 1px solid var(--border);
+    background: var(--bg);
+  }
+
+  .model-name {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--ink);
+    margin-bottom: 2px;
+  }
+
+  .model-maker {
+    font-size: 11px;
+    color: var(--ink-light);
+    font-weight: 400;
+    margin-bottom: 4px;
+  }
+
+  .model-note {
+    font-size: 11px;
+    color: var(--ink-light);
+    font-weight: 300;
+    line-height: 1.4;
+    font-style: italic;
+  }
+
+  /* impl list */
+  .impl-list { display: flex; flex-direction: column; gap: 8px; }
+
+  .impl-item {
+    font-size: 13px;
+    line-height: 1.6;
+    color: var(--ink-mid);
+    font-weight: 300;
+    padding-left: 14px;
+    border-left: 2px solid var(--border);
+    padding-top: 2px;
+    padding-bottom: 2px;
+  }
+
+  .impl-item strong { color: var(--ink); font-weight: 600; }
+
+  /* ── CALLOUT ── */
+  .callout {
+    border: 1px solid var(--border);
+    border-radius: 2px;
+    padding: 14px 20px;
+    margin-top: 16px;
+    background: var(--bg);
+  }
+
+  .callout-label {
+    font-size: 9px;
+    font-weight: 700;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    margin-bottom: 6px;
+  }
+
+  .callout p {
+    font-size: 13px;
+    color: var(--ink-mid);
+    line-height: 1.65;
+    font-weight: 300;
+    margin: 0;
+  }
+
+  /* ── COMPARISON TABLE (sintesi) ── */
+  .comp-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 24px 0;
+    font-size: 13px;
+  }
+
+  .comp-table th {
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    padding: 12px 16px;
+    text-align: left;
+    background: var(--bg2);
+    border-bottom: 1px solid var(--border);
+    color: var(--ink-light);
+    white-space: nowrap;
+  }
+
+  .comp-table th.th-f1 { background: var(--f1-faint); color: var(--f1); border-bottom: 2px solid var(--f1); }
+  .comp-table th.th-f2 { background: var(--f2-faint); color: var(--f2); border-bottom: 2px solid var(--f2); }
+  .comp-table th.th-f3 { background: var(--f3-faint); color: var(--f3); border-bottom: 2px solid var(--f3); }
+  .comp-table th.th-f4 { background: var(--f4-faint); color: var(--f4); border-bottom: 2px solid var(--f4); }
+
+  .comp-table td {
+    padding: 12px 16px;
+    border-bottom: 1px solid var(--border2);
+    color: var(--ink-mid);
+    font-weight: 300;
+    vertical-align: top;
+    line-height: 1.55;
+  }
+
+  .comp-table tr:hover td { background: var(--bg); }
+
+  .comp-table td:first-child {
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    color: var(--ink-light);
+    background: var(--bg2);
+    white-space: nowrap;
+  }
+
+  .pill {
+    display: inline-block;
+    font-size: 10px;
+    font-weight: 700;
+    padding: 2px 8px;
+    border-radius: 20px;
+    letter-spacing: 0.5px;
+    white-space: nowrap;
+  }
+
+  .pill-g { background: var(--green-faint); color: var(--green); border: 1px solid var(--green-border); }
+  .pill-r { background: var(--red-faint); color: var(--red); border: 1px solid var(--red-border); }
+  .pill-a { background: var(--f4-faint); color: var(--f4); border: 1px solid var(--f4-border); }
+  .pill-n { background: var(--bg3); color: var(--ink-light); border: 1px solid var(--border); }
+
+  /* ── DECISION GUIDE ── */
+  .decision-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+    margin: 24px 0;
+  }
+
+  @media (max-width: 700px) { .decision-grid { grid-template-columns: 1fr; } }
+
+  .decision-card {
+    background: var(--white);
+    border: 1px solid var(--border);
+    border-radius: 3px;
+    overflow: hidden;
+  }
+
+  .dc-header {
+    padding: 14px 20px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .dc-trigger {
+    font-size: 9px;
+    font-weight: 700;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    margin-bottom: 6px;
+  }
+
+  .dc-q {
+    font-family: var(--serif);
+    font-size: 16px;
+    font-weight: 500;
+    color: var(--ink);
+    line-height: 1.3;
+  }
+
+  .dc-body { padding: 16px 20px; }
+
+  .dc-answer {
+    font-size: 13px;
+    color: var(--ink-mid);
+    line-height: 1.65;
+    font-weight: 300;
+    margin-bottom: 10px;
+  }
+
+  .dc-rec {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 12px;
+    border-radius: 2px;
+    border: 1px solid var(--border);
+    background: var(--bg);
+  }
+
+  .dc-rec-label {
+    font-size: 9px;
+    font-weight: 700;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--ink-light);
+    white-space: nowrap;
+  }
+
+  .dc-rec-val {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--ink);
+  }
+
+  /* ── TYPOGRAPHY ── */
+  .eyebrow {
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 4px;
+    text-transform: uppercase;
+    color: var(--ink-light);
+    margin-bottom: 12px;
+  }
+
+  h2 {
+    font-family: var(--serif);
+    font-size: clamp(26px, 3.5vw, 42px);
+    font-weight: 600;
+    color: var(--ink);
+    letter-spacing: -0.8px;
+    line-height: 1.1;
+    margin-bottom: 8px;
+  }
+
+  h2 em { font-style: italic; font-weight: 400; }
+
+  .intro { font-size: 16px; font-weight: 300; color: var(--ink-mid); line-height: 1.8; max-width: 680px; margin: 16px 0 40px; }
+
+  p { font-size: 15px; line-height: 1.8; color: var(--ink-mid); margin-bottom: 14px; font-weight: 300; }
+  strong { font-weight: 600; color: var(--ink); }
+
+  .rule { border: none; border-top: 1px solid var(--border); margin: 48px 0; }
+
+  /* ── FASCIA DIVIDERS ── */
+  .fascia-divider {
+    height: 3px;
+    margin: 32px 0;
+    border-radius: 2px;
+    opacity: 0.3;
+  }
+
+  /* ── NOTA TERMINOLOGICA ── */
+  .term-box {
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    border-radius: 3px;
+    padding: 24px 28px;
+    margin: 32px 0;
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 20px;
+  }
+
+  @media (max-width: 700px) { .term-box { grid-template-columns: 1fr; } }
+
+  .term-item { }
+  .term-word {
+    font-family: var(--serif);
+    font-size: 17px;
+    font-weight: 600;
+    color: var(--ink);
+    margin-bottom: 6px;
+  }
+  .term-def { font-size: 13px; color: var(--ink-mid); line-height: 1.6; font-weight: 300; }
+
+</style>
+</head>
+<body>
+
+<!-- HEADER -->
+<header class="header">
+  <div class="header-inner">
+    <div class="header-kicker">Serie Agenti AI — Modelli LLM</div>
+    <h1>Le quattro fasce di accesso <em>agli LLM</em></h1>
+    <p class="header-sub">Proprietari, open weights, self-hosted, truly open source: non sono solo modi diversi di accedere allo stesso prodotto. Sono scelte con implicazioni radicalmente diverse su privacy, costi, controllo e complessità operativa.</p>
+    <div class="strata-strip">
+      <div class="strata-seg ss1"></div>
+      <div class="strata-seg ss2"></div>
+      <div class="strata-seg ss3"></div>
+      <div class="strata-seg ss4"></div>
+    </div>
+  </div>
+</header>
+
+<!-- NAV -->
+<nav class="nav">
+  <div class="nav-inner">
+    <button class="nav-btn active nf0" onclick="showTab('overview')">Panoramica</button>
+    <button class="nav-btn nf1" onclick="showTab('f1')"><span class="nav-dot nd1"></span>Proprietari</button>
+    <button class="nav-btn nf2" onclick="showTab('f2')"><span class="nav-dot nd2"></span>Open via API</button>
+    <button class="nav-btn nf3" onclick="showTab('f3')"><span class="nav-dot nd3"></span>Self-hosted</button>
+    <button class="nav-btn nf4" onclick="showTab('f4')"><span class="nav-dot nd4"></span>Truly Open</button>
+    <button class="nav-btn nf0" onclick="showTab('confronto')">Confronto</button>
+    <button class="nav-btn nf0" onclick="showTab('guida')">Guida alla scelta</button>
+  </div>
+</nav>
+
+<div class="page">
+
+  <!-- ══════════ PANORAMICA ══════════ -->
+  <section id="overview" class="section active">
+
+    <div class="eyebrow">Punto di partenza</div>
+    <h2>Quattro fasce, <em>quattro profili di rischio e controllo</em></h2>
+    <p class="intro">La domanda "quale LLM uso?" ha quasi sempre una risposta tecnica — capacità, costo, velocità. Ma per molte organizzazioni la domanda più importante viene prima: <strong>chi vede i miei dati? Ho il controllo su quello che succede?</strong> Le quattro fasce rispondono a questa domanda in modo radicalmente diverso.</p>
+
+    <div class="overview-grid">
+      <div class="ov-card" onclick="showTabFromCard('f1')">
+        <div class="ov-stripe os1"></div>
+        <div class="ov-body">
+          <div class="ov-num" style="color:var(--f1)">1</div>
+          <div class="ov-name">Proprietari via API</div>
+          <div class="ov-tagline">Accesso immediato, massima qualità, dati al vendor</div>
+          <div class="ov-chips">
+            <span class="ov-chip" style="background:var(--f1-faint);color:var(--f1);border:1px solid var(--f1-border)">Setup rapido</span>
+            <span class="ov-chip" style="background:var(--red-faint);color:var(--red);border:1px solid var(--red-border)">Dati al vendor</span>
+          </div>
+        </div>
+      </div>
+      <div class="ov-card" onclick="showTabFromCard('f2')">
+        <div class="ov-stripe os2"></div>
+        <div class="ov-body">
+          <div class="ov-num" style="color:var(--f2)">2</div>
+          <div class="ov-name">Open Weights via API Terze Parti</div>
+          <div class="ov-tagline">Pesi pubblici, accesso via intermediario</div>
+          <div class="ov-chips">
+            <span class="ov-chip" style="background:var(--f2-faint);color:var(--f2);border:1px solid var(--f2-border)">Flessibile</span>
+            <span class="ov-chip" style="background:var(--f4-faint);color:var(--f4);border:1px solid var(--f4-border)">Privacy parziale</span>
+          </div>
+        </div>
+      </div>
+      <div class="ov-card" onclick="showTabFromCard('f3')">
+        <div class="ov-stripe os3"></div>
+        <div class="ov-body">
+          <div class="ov-num" style="color:var(--f3)">3</div>
+          <div class="ov-name">Open Weights Self-Hosted</div>
+          <div class="ov-tagline">Privacy totale, complessità operativa alta</div>
+          <div class="ov-chips">
+            <span class="ov-chip" style="background:var(--green-faint);color:var(--green);border:1px solid var(--green-border)">Privacy totale</span>
+            <span class="ov-chip" style="background:var(--red-faint);color:var(--red);border:1px solid var(--red-border)">GPU necessarie</span>
+          </div>
+        </div>
+      </div>
+      <div class="ov-card" onclick="showTabFromCard('f4')">
+        <div class="ov-stripe os4"></div>
+        <div class="ov-body">
+          <div class="ov-num" style="color:var(--f4)">4</div>
+          <div class="ov-name">Truly Open Source</div>
+          <div class="ov-tagline">Pesi + codice + dati: trasparenza totale</div>
+          <div class="ov-chips">
+            <span class="ov-chip" style="background:var(--green-faint);color:var(--green);border:1px solid var(--green-border)">Auditabile</span>
+            <span class="ov-chip" style="background:var(--f4-faint);color:var(--f4);border:1px solid var(--f4-border)">Uso di nicchia</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="term-box">
+      <div class="term-item">
+        <div class="term-word">Pesi del modello</div>
+        <div class="term-def">I miliardi di numeri che definiscono il comportamento di un LLM. Se i pesi sono pubblici ("open weights"), puoi scaricare il modello e farlo girare dove vuoi. Se sono chiusi, accedi solo tramite API del vendor.</div>
+      </div>
+      <div class="term-item">
+        <div class="term-word">API</div>
+        <div class="term-def">Application Programming Interface — l'interfaccia attraverso cui il tuo software comunica con il modello. Con le API proprietarie, i tuoi dati transitano per i server del vendor ogni volta che fai una chiamata.</div>
+      </div>
+      <div class="term-item">
+        <div class="term-word">Self-hosted</div>
+        <div class="term-def">Il modello gira sulla tua infrastruttura — server propri, cloud privato, GPU aziendali. I dati non escono mai dal perimetro della tua organizzazione. Richiede competenze tecniche e hardware adeguato.</div>
+      </div>
+    </div>
+
+    <div class="dim-strip">
+      <div class="dim-cell">
+        <div class="dim-icon">🔒</div>
+        <div class="dim-label">Privacy</div>
+        <div class="dim-desc">Chi vede i tuoi dati quando interroghi il modello?</div>
+      </div>
+      <div class="dim-cell">
+        <div class="dim-icon">⚡</div>
+        <div class="dim-label">Setup</div>
+        <div class="dim-desc">Quanto tempo per iniziare a usarlo in produzione?</div>
+      </div>
+      <div class="dim-cell">
+        <div class="dim-icon">💰</div>
+        <div class="dim-label">Costo</div>
+        <div class="dim-desc">Pay-per-use vs costi fissi infrastruttura?</div>
+      </div>
+      <div class="dim-cell">
+        <div class="dim-icon">🎛️</div>
+        <div class="dim-label">Controllo</div>
+        <div class="dim-desc">Puoi modificare il modello? Fare fine-tuning?</div>
+      </div>
+      <div class="dim-cell">
+        <div class="dim-icon">🏆</div>
+        <div class="dim-label">Qualità</div>
+        <div class="dim-desc">I modelli frontier sono accessibili in questa fascia?</div>
+      </div>
+    </div>
+
+  </section>
+
+  <!-- ══════════ FASCIA 1 ══════════ -->
+  <section id="f1" class="section">
+
+    <div class="fascia-card">
+      <div class="fascia-header">
+        <div class="fascia-left" style="background:var(--f1-faint2)">
+          <div class="fascia-num">1</div>
+          <div>
+            <div class="fascia-badge" style="color:var(--f1)">// Fascia 01</div>
+            <div class="fascia-name">Modelli Proprietari via API</div>
+            <div class="fascia-tagline">Accesso immediato alla massima qualità disponibile. I dati transitano per i server del vendor ad ogni chiamata.</div>
+          </div>
+          <div class="privacy-meter">
+            <div class="pm-label"><span>Privacy dei dati</span></div>
+            <div class="pm-track"><div class="pm-fill" style="width:20%;background:var(--f1)"></div></div>
+            <div class="pm-poles"><span>Bassa</span><span>Alta</span></div>
+          </div>
+        </div>
+        <div class="fascia-right">
+          <p class="fascia-desc">I modelli proprietari sono quelli offerti da grandi aziende tecnologiche — Anthropic, OpenAI, Google — che rendono i loro LLM accessibili esclusivamente tramite API. Non è possibile scaricare il modello, vedere i pesi o modificarne il comportamento in modo profondo. Si paga per ogni chiamata (pay-per-token), senza costi fissi di infrastruttura.</p>
+          <p class="fascia-desc">La grande maggioranza degli esperimenti e dei progetti aziendali inizia qui, per una ragione semplice: è la strada più veloce per ottenere la massima qualità con il minimo sforzo di setup. Una API key e si è operativi in pochi minuti.</p>
+          <p class="fascia-desc" style="margin-bottom:0">Il trade-off fondamentale è la privacy: ogni prompt, ogni documento, ogni dato inviato al modello transita per i server del vendor. I grandi provider offrono contratti enterprise con garanzie di non utilizzo per training, ma i dati fisicamente escono dal perimetro aziendale.</p>
+        </div>
+      </div>
+      <div class="fascia-body">
+        <div class="fb-col">
+          <div class="fb-label">Modelli principali</div>
+          <div class="models-list">
+            <div class="model-item">
+              <div class="model-name">Claude Sonnet 4.5 / Opus 4</div>
+              <div class="model-maker">Anthropic</div>
+              <div class="model-note">Eccellente su ragionamento, coding, analisi. Tool use affidabile. No fine-tuning pubblico.</div>
+            </div>
+            <div class="model-item">
+              <div class="model-name">GPT-4o / o3</div>
+              <div class="model-maker">OpenAI</div>
+              <div class="model-note">Multimodalità avanzata (testo, immagini, audio). Fine-tuning disponibile su modelli selezionati.</div>
+            </div>
+            <div class="model-item">
+              <div class="model-name">Gemini 2.0 Pro / Flash</div>
+              <div class="model-maker">Google</div>
+              <div class="model-note">Context window da 1M token. Integrazione nativa con ecosistema Google Workspace.</div>
+            </div>
+            <div class="model-item">
+              <div class="model-name">Command R+</div>
+              <div class="model-maker">Cohere</div>
+              <div class="model-note">Orientato all'enterprise, ottimizzato per RAG e retrieval su documenti aziendali.</div>
+            </div>
+          </div>
+        </div>
+        <div class="fb-col">
+          <div class="fb-label">Vantaggi</div>
+          <div class="procon" style="margin-bottom:20px">
+            <div class="pc-item"><div class="pc-dot pd-g">✓</div>Setup in minuti — API key e si è operativi. Zero infrastruttura da gestire</div>
+            <div class="pc-item"><div class="pc-dot pd-g">✓</div>Accesso ai modelli frontier — la qualità più alta disponibile, aggiornata automaticamente</div>
+            <div class="pc-item"><div class="pc-dot pd-g">✓</div>Pay-per-use — nessun costo fisso, conveniente a bassi volumi e in fase sperimentale</div>
+            <div class="pc-item"><div class="pc-dot pd-g">✓</div>SLA garantiti, supporto enterprise, certificazioni di compliance (SOC2, HIPAA per alcuni)</div>
+            <div class="pc-item"><div class="pc-dot pd-g">✓</div>Nessuna competenza di ML engineering richiesta — si usa come qualsiasi API</div>
+          </div>
+          <div class="fb-label">Limiti</div>
+          <div class="procon">
+            <div class="pc-item"><div class="pc-dot pd-r">✗</div>Dati al vendor — ogni prompt transita per server esterni. Critico per dati sensibili o riservati</div>
+            <div class="pc-item"><div class="pc-dot pd-r">✗</div>Costo scala linearmente con il volume — su milioni di token/giorno diventa rilevante</div>
+            <div class="pc-item"><div class="pc-dot pd-r">✗</div>Dipendenza dal vendor — pricing, policy e disponibilità possono cambiare unilateralmente</div>
+            <div class="pc-item"><div class="pc-dot pd-r">✗</div>Fine-tuning limitato o assente — impossibile personalizzare in profondità il comportamento</div>
+          </div>
+        </div>
+        <div class="fb-col">
+          <div class="fb-label">Implicazioni pratiche</div>
+          <div class="impl-list">
+            <div class="impl-item"><strong>Per chi inizia:</strong> è la fascia naturale di partenza per qualsiasi progetto. Permette di validare l'idea e misurare il valore prima di qualsiasi investimento infrastrutturale.</div>
+            <div class="impl-item"><strong>Per dati sensibili:</strong> verificare attentamente i termini contrattuali del vendor. I contratti enterprise di solito garantiscono non-training sui dati, ma i dati fisicamente escono dall'azienda.</div>
+            <div class="impl-item"><strong>Per volumi alti:</strong> monitorare il costo per token fin dal primo giorno. Oltre una certa soglia (indicativamente 2-3k€/mese di API) vale la pena valutare alternative.</div>
+            <div class="impl-item"><strong>Per settori regolati:</strong> verificare la disponibilità di data processing agreement (DPA) e la conformità al GDPR. Non tutti i vendor offrono data residency in Europa.</div>
+          </div>
+          <div class="callout" style="border-left:2px solid var(--f1)">
+            <div class="callout-label" style="color:var(--f1)">// In sintesi</div>
+            <p>La scelta giusta per la maggior parte delle organizzazioni nelle fasi iniziali. Diventa un vincolo quando la privacy dei dati è non negoziabile o i volumi rendono il costo insostenibile.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </section>
+
+  <!-- ══════════ FASCIA 2 ══════════ -->
+  <section id="f2" class="section">
+
+    <div class="fascia-card">
+      <div class="fascia-header">
+        <div class="fascia-left" style="background:var(--f2-faint2)">
+          <div class="fascia-num">2</div>
+          <div>
+            <div class="fascia-badge" style="color:var(--f2)">// Fascia 02</div>
+            <div class="fascia-name">Open Weights via API di Terze Parti</div>
+            <div class="fascia-tagline">Modelli con pesi pubblici, accessibili tramite provider di hosting. Interfaccia simile ai proprietari, privacy parziale.</div>
+          </div>
+          <div class="privacy-meter">
+            <div class="pm-label"><span>Privacy dei dati</span></div>
+            <div class="pm-track"><div class="pm-fill" style="width:45%;background:var(--f2)"></div></div>
+            <div class="pm-poles"><span>Bassa</span><span>Alta</span></div>
+          </div>
+        </div>
+        <div class="fascia-right">
+          <p class="fascia-desc">I modelli open weights hanno i pesi pubblicamente scaricabili — Meta con Llama, Alibaba con Qwen, Mistral AI con Mistral/Mixtral li distribuiscono liberamente. Ma gestire l'infrastruttura per farli girare richiede competenze e hardware significativi.</p>
+          <p class="fascia-desc">I provider di terze parti — Groq, Together AI, Fireworks AI, AWS Bedrock — risolvono questo: hostano questi modelli open su propria infrastruttura e li espongono via API, con la stessa semplicità di uso dei modelli proprietari. Si paga per utilizzo, nessun setup.</p>
+          <p class="fascia-desc" style="margin-bottom:0">La differenza rispetto alla fascia 1 è sottile ma importante: i dati non vanno al creatore del modello (Meta, Alibaba) ma al provider di hosting (Groq, AWS). È un livello in più di separazione, con implicazioni diverse su governance e compliance. Su alcuni provider è possibile negoziare data isolation completa.</p>
+        </div>
+      </div>
+      <div class="fascia-body">
+        <div class="fb-col">
+          <div class="fb-label">Modelli e provider principali</div>
+          <div class="models-list">
+            <div class="model-item">
+              <div class="model-name">Llama 3.1 70B / 3.3 70B</div>
+              <div class="model-maker">Meta — su Groq, Together AI, AWS Bedrock</div>
+              <div class="model-note">Ottimo general purpose, tool use affidabile su 70B+. Licenza commerciale Meta.</div>
+            </div>
+            <div class="model-item">
+              <div class="model-name">Qwen 2.5 72B</div>
+              <div class="model-maker">Alibaba — su Together AI, Fireworks</div>
+              <div class="model-note">Eccellente su coding e task multilingua. Licenza Apache 2.0. Vendor cinese: valutare implicazioni geopolitiche.</div>
+            </div>
+            <div class="model-item">
+              <div class="model-name">Mistral Large 2 / Mixtral 8x22B</div>
+              <div class="model-maker">Mistral AI — su Mistral API, Together, Azure</div>
+              <div class="model-note">Vendor europeo (Francia). MoE efficiente. Buona opzione per compliance EU.</div>
+            </div>
+            <div class="model-item">
+              <div class="model-name">DeepSeek R1</div>
+              <div class="model-maker">DeepSeek — su Together, Fireworks, altri</div>
+              <div class="model-note">Modello "thinking" open. Vendor cinese: usare via provider occidentale per mitigare rischi privacy.</div>
+            </div>
+          </div>
+        </div>
+        <div class="fb-col">
+          <div class="fb-label">Vantaggi</div>
+          <div class="procon" style="margin-bottom:20px">
+            <div class="pc-item"><div class="pc-dot pd-g">✓</div>Stesso paradigma di uso dei proprietari — API standard, no infrastruttura da gestire</div>
+            <div class="pc-item"><div class="pc-dot pd-g">✓</div>Costi spesso inferiori ai proprietari su volumi medi — i modelli open hanno pricing più aggressivo</div>
+            <div class="pc-item"><div class="pc-dot pd-g">✓</div>Portabilità — se un provider aumenta i prezzi, stesso modello disponibile altrove</div>
+            <div class="pc-item"><div class="pc-dot pd-g">✓</div>Groq offre velocità di inference eccezionale (token/s molto superiori a provider standard)</div>
+            <div class="pc-item"><div class="pc-dot pd-g">✓</div>Fine-tuning possibile in locale sugli stessi pesi, anche se non via API del provider</div>
+          </div>
+          <div class="fb-label">Limiti</div>
+          <div class="procon">
+            <div class="pc-item"><div class="pc-dot pd-r">✗</div>Dati al provider hosting — diverso dal vendor del modello, ma comunque fuori dall'azienda</div>
+            <div class="pc-item"><div class="pc-dot pd-r">✗</div>Gap di qualità vs frontier — i modelli open migliori si avvicinano ma non raggiungono sistematicamente GPT-4o o Claude Opus</div>
+            <div class="pc-item"><div class="pc-dot pd-r">✗</div>Provider più piccoli — SLA e garanzie di continuità meno solide rispetto a Anthropic/OpenAI/Google</div>
+            <div class="pc-item"><div class="pc-dot pd-r">✗</div>Attenzione ai vendor cinesi (Qwen, DeepSeek) — valutare le implicazioni geopolitiche prima dell'adozione</div>
+          </div>
+        </div>
+        <div class="fb-col">
+          <div class="fb-label">Implicazioni pratiche</div>
+          <div class="impl-list">
+            <div class="impl-item"><strong>Per ridurre i costi:</strong> su task ben definiti e ripetitivi ad alto volume, modelli come Llama 3.3 70B via Groq possono offrire performance simili ai balanced tier proprietari a costo significativamente inferiore.</div>
+            <div class="impl-item"><strong>Per la compliance EU:</strong> Mistral AI è un vendor francese, i suoi modelli sono accessibili via API propria con data residency europea. Buona opzione per organizzazioni con requisiti GDPR stringenti.</div>
+            <div class="impl-item"><strong>Per la velocità:</strong> Groq usa hardware proprietario (LPU) che produce velocità di inference di 5-10x rispetto ai provider standard. Utile per applicazioni interattive ad alta frequenza.</div>
+            <div class="impl-item"><strong>Per la portabilità:</strong> usare provider che espongono API compatibili con lo standard OpenAI (quasi tutti) semplifica enormemente il passaggio tra modelli e provider.</div>
+          </div>
+          <div class="callout" style="border-left:2px solid var(--f2)">
+            <div class="callout-label" style="color:var(--f2)">// In sintesi</div>
+            <p>La fascia di mezzo più interessante per chi vuole ridurre la dipendenza dai grandi vendor proprietari senza investire in infrastruttura propria. Il salto di qualità rispetto alla fascia 1 non è garantito — dipende dal task.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </section>
+
+  <!-- ══════════ FASCIA 3 ══════════ -->
+  <section id="f3" class="section">
+
+    <div class="fascia-card">
+      <div class="fascia-header">
+        <div class="fascia-left" style="background:var(--f3-faint2)">
+          <div class="fascia-num">3</div>
+          <div>
+            <div class="fascia-badge" style="color:var(--f3)">// Fascia 03</div>
+            <div class="fascia-name">Open Weights Self-Hosted</div>
+            <div class="fascia-tagline">Stessi modelli della fascia 2, ma sulla tua infrastruttura. Privacy totale, complessità operativa alta.</div>
+          </div>
+          <div class="privacy-meter">
+            <div class="pm-label"><span>Privacy dei dati</span></div>
+            <div class="pm-track"><div class="pm-fill" style="width:90%;background:var(--f3)"></div></div>
+            <div class="pm-poles"><span>Bassa</span><span>Alta</span></div>
+          </div>
+        </div>
+        <div class="fascia-right">
+          <p class="fascia-desc">La distinzione tra fascia 2 e fascia 3 non riguarda i modelli — sono gli stessi. Riguarda dove girano. In questa fascia, il modello è installato su infrastruttura propria: server aziendali fisici, cloud privato (VPC dedicato su AWS/Azure/GCP), o GPU noleggiate ma isolate logicamente.</p>
+          <p class="fascia-desc">Il vantaggio fondamentale è la privacy assoluta: nessun dato esce dal perimetro dell'organizzazione. Nessun vendor vede i prompt, nessun contratto da negoziare sulla data retention. Per settori con dati altamente sensibili — sanità, difesa, finance con dati riservati, PA — questo non è un nice-to-have ma un requisito non negoziabile.</p>
+          <p class="fascia-desc" style="margin-bottom:0">Il prezzo è la complessità: serve hardware adeguato, competenze di ML engineering per il deployment e la manutenzione, e una struttura di costi molto diversa dal pay-per-use. Un modello 70B serio richiede almeno una GPU con 80GB di VRAM (es. NVIDIA A100), al costo di 2-4€/ora su cloud o decine di migliaia di euro per hardware fisico.</p>
+        </div>
+      </div>
+      <div class="fascia-body">
+        <div class="fb-col">
+          <div class="fb-label">Stack tecnologico tipico</div>
+          <div class="models-list">
+            <div class="model-item">
+              <div class="model-name">vLLM</div>
+              <div class="model-maker">Serving framework — produzione</div>
+              <div class="model-note">Lo standard de facto per serving LLM in produzione. Alta throughput, API compatibile OpenAI.</div>
+            </div>
+            <div class="model-item">
+              <div class="model-name">Ollama</div>
+              <div class="model-maker">Serving locale — sviluppo</div>
+              <div class="model-note">Semplicissimo da usare. Ideale per sviluppo locale su MacBook o workstation. Non per produzione ad alto volume.</div>
+            </div>
+            <div class="model-item">
+              <div class="model-name">llama.cpp</div>
+              <div class="model-maker">Inference CPU/GPU — edge</div>
+              <div class="model-note">Permette di girare modelli quantizzati anche su hardware consumer. Più lento di vLLM ma molto flessibile.</div>
+            </div>
+            <div class="model-item">
+              <div class="model-name">Hugging Face TGI</div>
+              <div class="model-maker">Text Generation Inference</div>
+              <div class="model-note">Alternativa a vLLM, ben integrata con l'ecosistema Hugging Face. Buona per deployment su Kubernetes.</div>
+            </div>
+          </div>
+        </div>
+        <div class="fb-col">
+          <div class="fb-label">Vantaggi</div>
+          <div class="procon" style="margin-bottom:20px">
+            <div class="pc-item"><div class="pc-dot pd-g">✓</div><strong>Privacy assoluta</strong> — nessun dato esce dall'infrastruttura. Unica opzione per dati classificati o altamente sensibili</div>
+            <div class="pc-item"><div class="pc-dot pd-g">✓</div>Costo marginale quasi zero ad alto volume — l'infrastruttura costa a prescindere dall'uso</div>
+            <div class="pc-item"><div class="pc-dot pd-g">✓</div>Fine-tuning completo — possibilità di addestrare ulteriormente il modello su dati propri</div>
+            <div class="pc-item"><div class="pc-dot pd-g">✓</div>Nessuna dipendenza da vendor esterni — zero rischio di interruzioni di servizio o cambi di pricing</div>
+            <div class="pc-item"><div class="pc-dot pd-g">✓</div>Latenza di rete eliminata — il modello è nella stessa rete dei sistemi che lo usano</div>
+          </div>
+          <div class="fb-label">Limiti</div>
+          <div class="procon">
+            <div class="pc-item"><div class="pc-dot pd-r">✗</div>Infrastruttura GPU costosa — hardware fisico (decine di k€) o GPU cloud dedicate (2-4€/ora per A100)</div>
+            <div class="pc-item"><div class="pc-dot pd-r">✗</div>ML engineering richiesto — deployment, monitoring, aggiornamenti non sono banali</div>
+            <div class="pc-item"><div class="pc-dot pd-r">✗</div>Gap di qualità vs frontier proprietari — Llama 70B è ottimo ma non equivale a Claude Opus o GPT-4o</div>
+            <div class="pc-item"><div class="pc-dot pd-r">✗</div>Gestione aggiornamenti — il vendor non aggiorna il modello automaticamente; ogni nuova versione va deployata manualmente</div>
+          </div>
+        </div>
+        <div class="fb-col">
+          <div class="fb-label">Implicazioni pratiche</div>
+          <div class="impl-list">
+            <div class="impl-item"><strong>Quando è obbligatorio:</strong> settori con normative sulla data residency (sanità, difesa, PA in alcuni paesi), dati coperti da segreto industriale o legale, organizzazioni con policy interne di zero data egress.</div>
+            <div class="impl-item"><strong>Hardware minimo:</strong> Llama 3.1 8B gira su MacBook Pro M2 con 16GB RAM (per sviluppo). Llama 3.1 70B richiede almeno 80GB VRAM (A100 o 2×A40). Il 405B richiede cluster multi-GPU.</div>
+            <div class="impl-item"><strong>Percorso consigliato:</strong> iniziare con Ollama per sviluppo locale → validare il task → passare a vLLM su GPU cloud per produzione → valutare hardware fisico solo se i volumi lo giustificano economicamente.</div>
+            <div class="impl-item"><strong>Economicamente conveniente quando:</strong> il costo mensile delle API supera il costo ammortizzato dell'infrastruttura GPU. Indicativamente sopra i 3-5k€/mese di API spend.</div>
+          </div>
+          <div class="callout" style="border-left:2px solid var(--f3)">
+            <div class="callout-label" style="color:var(--f3)">// In sintesi</div>
+            <p>La scelta obbligata per chi non può mandare dati fuori dall'organizzazione. Richiede investimento serio in infrastruttura e competenze. Non sostituisce i modelli frontier proprietari su task che richiedono il massimo della qualità.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </section>
+
+  <!-- ══════════ FASCIA 4 ══════════ -->
+  <section id="f4" class="section">
+
+    <div class="fascia-card">
+      <div class="fascia-header">
+        <div class="fascia-left" style="background:var(--f4-faint2)">
+          <div class="fascia-num">4</div>
+          <div>
+            <div class="fascia-badge" style="color:var(--f4)">// Fascia 04</div>
+            <div class="fascia-name">Truly Open Source</div>
+            <div class="fascia-tagline">Pesi + codice di training + dati pubblici. Trasparenza totale e auditabilità completa.</div>
+          </div>
+          <div class="privacy-meter">
+            <div class="pm-label"><span>Privacy dei dati</span></div>
+            <div class="pm-track"><div class="pm-fill" style="width:95%;background:var(--f4)"></div></div>
+            <div class="pm-poles"><span>Bassa</span><span>Alta</span></div>
+          </div>
+        </div>
+        <div class="fascia-right">
+          <p class="fascia-desc">Questa fascia è rarissima e spesso fraintesa. Nel mondo AI il termine "open source" viene usato impropriamente per modelli che rilasciano solo i pesi — come Llama o Mistral. I modelli <em>truly open source</em> rilasciano anche il codice completo di training e i dati usati per addestrare il modello.</p>
+          <p class="fascia-desc">La differenza non è solo tecnica: con i dati di training pubblici è possibile verificare cosa ha imparato il modello, da dove provengono i suoi bias, se ci sono problemi di copyright nei dati. Questo livello di trasparenza è fondamentale per <strong>audit di compliance</strong> in settori altamente regolati, per ricerca accademica, e per organizzazioni che devono dimostrare a regolatori o clienti la provenienza e la natura del modello AI che usano.</p>
+          <p class="fascia-desc" style="margin-bottom:0">L'uso diretto in produzione aziendale è raro — i modelli truly open sono generalmente meno capaci dei modelli frontier — ma la loro importanza cresce man mano che la regolamentazione AI richiede maggiore trasparenza e spiegabilità dei sistemi usati.</p>
+        </div>
+      </div>
+      <div class="fascia-body">
+        <div class="fb-col">
+          <div class="fb-label">Modelli principali</div>
+          <div class="models-list">
+            <div class="model-item">
+              <div class="model-name">OLMo 2 (7B, 13B)</div>
+              <div class="model-maker">Allen Institute for AI (AllenAI)</div>
+              <div class="model-note">Il più rigoroso: pesi + codice training + dataset completi pubblici. Usato come reference in ricerca accademica.</div>
+            </div>
+            <div class="model-item">
+              <div class="model-name">BLOOM (176B)</div>
+              <div class="model-maker">BigScience (consorzio internazionale)</div>
+              <div class="model-note">Primo grande modello multilingua truly open. Dataset documentato pubblicamente. Oggi superato in qualità ma ancora rilevante per ricerca.</div>
+            </div>
+            <div class="model-item">
+              <div class="model-name">Pythia (suite)</div>
+              <div class="model-maker">EleutherAI</div>
+              <div class="model-note">Suite di modelli da 70M a 12B parametri con checkpoint intermedi del training pubblici. Ideale per ricerca sul processo di apprendimento.</div>
+            </div>
+            <div class="model-item">
+              <div class="model-name">Falcon (versioni dataset-open)</div>
+              <div class="model-maker">Technology Innovation Institute (UAE)</div>
+              <div class="model-note">Alcune versioni rilasciano i dati di training (RefinedWeb). Licenza Apache 2.0 per i pesi.</div>
+            </div>
+          </div>
+        </div>
+        <div class="fb-col">
+          <div class="fb-label">Vantaggi</div>
+          <div class="procon" style="margin-bottom:20px">
+            <div class="pc-item"><div class="pc-dot pd-g">✓</div><strong>Auditabilità completa</strong> — è possibile verificare esattamente cosa ha imparato il modello e da quali dati</div>
+            <div class="pc-item"><div class="pc-dot pd-g">✓</div>Nessun rischio di copyright nascosto nei dati — i dataset sono documentati e verificabili</div>
+            <div class="pc-item"><div class="pc-dot pd-g">✓</div>Ricerca e personalizzazione profonda — è possibile riprodurre il training e modificarlo</div>
+            <div class="pc-item"><div class="pc-dot pd-g">✓</div>Preparazione alla regolamentazione AI — l'AI Act europeo richiederà crescente trasparenza sui modelli usati</div>
+            <div class="pc-item"><div class="pc-dot pd-g">✓</div>Zero dipendenza da qualsiasi vendor — controllo totale della filiera tecnologica</div>
+          </div>
+          <div class="fb-label">Limiti</div>
+          <div class="procon">
+            <div class="pc-item"><div class="pc-dot pd-r">✗</div>Qualità inferiore — i modelli truly open sono generalmente meno capaci dei frontier proprietari o dei migliori open weights</div>
+            <div class="pc-item"><div class="pc-dot pd-r">✗</div>Stessi requisiti infrastrutturali della fascia 3 — serve hardware GPU e competenze tecniche</div>
+            <div class="pc-item"><div class="pc-dot pd-r">✗</div>Ecosistema più piccolo — meno tool, meno integrazione con framework agentici, meno community</div>
+            <div class="pc-item"><div class="pc-dot pd-r">✗</div>Principalmente rilevante per ricerca — l'uso aziendale diretto in produzione è raro</div>
+          </div>
+        </div>
+        <div class="fb-col">
+          <div class="fb-label">Implicazioni pratiche</div>
+          <div class="impl-list">
+            <div class="impl-item"><strong>Per la ricerca accademica:</strong> OLMo e Pythia sono strumenti fondamentali per chi studia il comportamento dei modelli linguistici e i meccanismi di apprendimento.</div>
+            <div class="impl-item"><strong>Per la compliance avanzata:</strong> settori come difesa, istituzioni finanziarie sistemiche, o PA in certi paesi possono richiedere la capacità di auditare il modello AI end-to-end. Questa è l'unica fascia che lo permette.</div>
+            <div class="impl-item"><strong>Per anticipare la regolamentazione:</strong> l'AI Act europeo richiede documentazione dei dati di training per modelli ad alto rischio. I modelli truly open sono già conformi; gli altri richiedono documentazione aggiuntiva dai vendor.</div>
+            <div class="impl-item"><strong>Per uso pratico oggi:</strong> considerare di usare un modello truly open per le fasi di validazione/audit, e modelli open weights self-hosted o API per la produzione effettiva.</div>
+          </div>
+          <div class="callout" style="border-left:2px solid var(--f4)">
+            <div class="callout-label" style="color:var(--f4)">// In sintesi</div>
+            <p>Non è la scelta per chi vuole il massimo delle performance oggi. È la scelta per chi deve dimostrare trasparenza totale sul proprio sistema AI — e diventerà sempre più rilevante con l'avanzare della regolamentazione.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </section>
+
+  <!-- ══════════ CONFRONTO ══════════ -->
+  <section id="confronto" class="section">
+
+    <div class="eyebrow">Sintesi comparativa</div>
+    <h2>Le quattro fasce <em>a confronto</em></h2>
+    <p class="intro">Una vista sinottica per confrontare le fasce sulle dimensioni che contano di più nelle decisioni aziendali.</p>
+
+    <div style="overflow-x:auto">
+    <table class="comp-table">
+      <thead>
+        <tr>
+          <th>Dimensione</th>
+          <th class="th-f1">Proprietari API</th>
+          <th class="th-f2">Open via API Terze Parti</th>
+          <th class="th-f3">Self-Hosted</th>
+          <th class="th-f4">Truly Open Source</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>Privacy dati</td>
+          <td>Dati al vendor — contratti enterprise disponibili</td>
+          <td>Dati al provider hosting — diverso dal creatore del modello</td>
+          <td><span class="pill pill-g">Totale</span> — nessun dato esce</td>
+          <td><span class="pill pill-g">Totale</span> — self-hosted per forza</td>
+        </tr>
+        <tr>
+          <td>Setup iniziale</td>
+          <td><span class="pill pill-g">Minuti</span> — API key e si è operativi</td>
+          <td><span class="pill pill-g">Ore</span> — account provider + API key</td>
+          <td><span class="pill pill-r">Giorni/settimane</span> — infrastruttura GPU</td>
+          <td><span class="pill pill-r">Settimane</span> — infrastruttura + ricerca</td>
+        </tr>
+        <tr>
+          <td>Costo basso volume</td>
+          <td><span class="pill pill-g">Ottimo</span> — pay per use, zero fisso</td>
+          <td><span class="pill pill-g">Buono</span> — spesso più economico del proprietario</td>
+          <td><span class="pill pill-r">Alto</span> — GPU costa anche senza uso</td>
+          <td><span class="pill pill-r">Alto</span> — stessa infrastruttura</td>
+        </tr>
+        <tr>
+          <td>Costo alto volume</td>
+          <td><span class="pill pill-r">Cresce linearmente</span> — può diventare rilevante</td>
+          <td><span class="pill pill-a">Medio</span> — dipende dal provider</td>
+          <td><span class="pill pill-g">Ottimo</span> — costo marginale quasi zero</td>
+          <td><span class="pill pill-g">Ottimo</span> — stesso modello</td>
+        </tr>
+        <tr>
+          <td>Qualità modelli top</td>
+          <td><span class="pill pill-g">Massima</span> — frontier inaccessibili altrove</td>
+          <td><span class="pill pill-a">Buona</span> — gap vs frontier su task complessi</td>
+          <td><span class="pill pill-a">Buona</span> — stessi modelli open</td>
+          <td><span class="pill pill-r">Limitata</span> — inferiore ai frontier</td>
+        </tr>
+        <tr>
+          <td>Fine-tuning</td>
+          <td>Limitato (OpenAI sì, Anthropic no)</td>
+          <td>Sui pesi scaricati — non via API provider</td>
+          <td><span class="pill pill-g">Completo</span> — qualsiasi tecnica</td>
+          <td><span class="pill pill-g">Completo</span> — incluso re-training</td>
+        </tr>
+        <tr>
+          <td>Dipendenza vendor</td>
+          <td><span class="pill pill-r">Alta</span> — pricing e policy possono cambiare</td>
+          <td><span class="pill pill-a">Media</span> — portabilità tra provider</td>
+          <td><span class="pill pill-g">Nulla</span> — portabilità totale</td>
+          <td><span class="pill pill-g">Nulla</span></td>
+        </tr>
+        <tr>
+          <td>Auditabilità modello</td>
+          <td><span class="pill pill-r">Nessuna</span> — black box</td>
+          <td>Pesi pubblici — architettura nota</td>
+          <td>Pesi pubblici — architettura nota</td>
+          <td><span class="pill pill-g">Completa</span> — dati + codice + pesi</td>
+        </tr>
+        <tr>
+          <td>Competenze richieste</td>
+          <td>Developer standard — nessun ML engineering</td>
+          <td>Developer standard — nessun ML engineering</td>
+          <td><span class="pill pill-r">ML engineering</span> — GPU, serving, monitoring</td>
+          <td><span class="pill pill-r">ML research</span> — training, dataset management</td>
+        </tr>
+        <tr>
+          <td>Adatto a settori regolati</td>
+          <td>Con contratti enterprise — verifica DPA e data residency</td>
+          <td>Con provider EU (Mistral) — verificare contratti</td>
+          <td><span class="pill pill-g">Sì</span> — massimo controllo</td>
+          <td><span class="pill pill-g">Sì</span> — massima trasparenza</td>
+        </tr>
+      </tbody>
+    </table>
+    </div>
+
+  </section>
+
+  <!-- ══════════ GUIDA ══════════ -->
+  <section id="guida" class="section">
+
+    <div class="eyebrow">Orientamento pratico</div>
+    <h2>Come scegliere <em>la fascia giusta</em></h2>
+    <p class="intro">Cinque domande che, nell'ordine giusto, guidano la scelta. La sequenza è importante: le prime due domande possono eliminare intere fasce indipendentemente da qualsiasi valutazione tecnica.</p>
+
+    <div class="decision-grid">
+
+      <div class="decision-card">
+        <div class="dc-header">
+          <div class="dc-trigger" style="color:var(--f1)">// Domanda 1 — Non negoziabile</div>
+          <div class="dc-q">I tuoi dati possono fisicamente uscire dall'organizzazione?</div>
+        </div>
+        <div class="dc-body">
+          <p class="dc-answer">Se la risposta è no — per policy interna, normativa di settore, o requisiti contrattuali con i clienti — le fasce 1 e 2 sono escluse a priori, indipendentemente dalla qualità dei modelli. Non è una questione tecnica: è una questione di perimetro dei dati.</p>
+          <div class="dc-rec">
+            <span class="dc-rec-label">→ Se NO:</span>
+            <span class="dc-rec-val">Fascia 3 o 4 obbligatorie</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="decision-card">
+        <div class="dc-header">
+          <div class="dc-trigger" style="color:var(--f4)">// Domanda 2 — Compliance avanzata</div>
+          <div class="dc-q">Devi poter auditare il modello AI end-to-end, inclusi i dati di training?</div>
+        </div>
+        <div class="dc-body">
+          <p class="dc-answer">Richiesto in settori specifici (difesa, alcune PA, ricerca accademica) o per anticipare la regolamentazione AI. Se la risposta è sì, solo la fascia 4 soddisfa questo requisito — le fasce 1, 2 e 3 non possono garantire trasparenza sui dati di training.</p>
+          <div class="dc-rec">
+            <span class="dc-rec-label">→ Se SÌ:</span>
+            <span class="dc-rec-val">Fascia 4 — Truly Open</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="decision-card">
+        <div class="dc-header">
+          <div class="dc-trigger" style="color:var(--f1)">// Domanda 3 — Fase del progetto</div>
+          <div class="dc-q">Stai sperimentando/prototipando o hai già un caso d'uso validato in produzione?</div>
+        </div>
+        <div class="dc-body">
+          <p class="dc-answer">In fase di prototipazione, la velocità di setup è più importante del costo. La fascia 1 permette di validare l'idea in ore. In produzione, il calcolo cambia: volume, costi e requisiti di privacy diventano le variabili critiche.</p>
+          <div class="dc-rec">
+            <span class="dc-rec-label">→ Prototipo:</span>
+            <span class="dc-rec-val">Fascia 1 — inizia qui</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="decision-card">
+        <div class="dc-header">
+          <div class="dc-trigger" style="color:var(--f3)">// Domanda 4 — Economia</div>
+          <div class="dc-q">Il volume di utilizzo previsto rende il costo delle API rilevante nel budget?</div>
+        </div>
+        <div class="dc-body">
+          <p class="dc-answer">Oltre i 2-3k€/mese di API spend vale la pena valutare la fascia 2 (modelli open via provider più economici) o la fascia 3 (self-hosted se la privacy lo richiede). Al di sotto di questa soglia, il risparmio non giustifica la complessità aggiuntiva.</p>
+          <div class="dc-rec">
+            <span class="dc-rec-label">→ Se SÌ:</span>
+            <span class="dc-rec-val">Fascia 2 o 3 — calcola il break-even</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="decision-card">
+        <div class="dc-header">
+          <div class="dc-trigger" style="color:var(--f1)">// Domanda 5 — Qualità</div>
+          <div class="dc-q">Il task richiede le capacità dei modelli frontier, o un modello "buono" è sufficiente?</div>
+        </div>
+        <div class="dc-body">
+          <p class="dc-answer">Su task complessi (ragionamento avanzato, coding difficile, analisi sfumata) i modelli frontier proprietari hanno ancora un vantaggio misurabile. Su task ben definiti e ripetitivi (classificazione, estrazione, Q&A su documenti), i modelli open equivalgono spesso i proprietari al costo inferiore.</p>
+          <div class="dc-rec">
+            <span class="dc-rec-label">→ Frontier richiesto:</span>
+            <span class="dc-rec-val">Fascia 1 — non fare economia</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="decision-card" style="background: var(--ink); border-color: transparent;">
+        <div class="dc-header" style="border-color:rgba(255,255,255,0.1)">
+          <div class="dc-trigger" style="color:rgba(255,255,255,0.4)">// Regola generale</div>
+          <div class="dc-q" style="color:white;font-family:var(--serif);font-size:18px">Il percorso più comune nelle aziende</div>
+        </div>
+        <div class="dc-body">
+          <p style="color:rgba(255,255,255,0.65);font-size:14px;margin-bottom:12px">Inizia con la <strong style="color:white">Fascia 1</strong> per validare rapidamente. Quando il progetto matura, valuta lo spostamento verso <strong style="color:white">Fascia 2</strong> per ridurre i costi. Se la privacy è un requisito, pianifica il passaggio a <strong style="color:white">Fascia 3</strong> con anticipo — richiede investimento in infrastruttura e competenze che non si improvvisano.</p>
+          <p style="color:rgba(255,255,255,0.5);font-size:13px;margin:0;font-style:italic">Non è necessario scegliere una sola fascia: molte organizzazioni usano Fascia 1 per i task che richiedono qualità frontier e Fascia 3 per i task con dati sensibili.</p>
+        </div>
+      </div>
+
+    </div>
+
+  </section>
+
+</div>
+
+<script>
+  function showTab(id) {
+    document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+    document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+    document.getElementById(id).classList.add('active');
+    const map = { overview: 0, f1: 1, f2: 2, f3: 3, f4: 4, confronto: 5, guida: 6 };
+    document.querySelectorAll('.nav-btn')[map[id]].classList.add('active');
+    window.scrollTo({ top: document.querySelector('.nav').offsetTop - 10, behavior: 'smooth' });
+  }
+
+  function showTabFromCard(id) {
+    showTab(id);
+  }
+</script>
+</body>
+</html>

@@ -1,0 +1,407 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Sintesi — La Mappa degli Strati e le Lezioni per i Tuoi Agenti</title>
+<link href="https://fonts.googleapis.com/css2?family=Spectral:ital,wght@0,300;0,400;0,500;0,600;1,400&family=Sora:wght@200;300;400;500;600;700;800&family=IBM+Plex+Mono:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg:     #f6f4ee;
+  --bg2:    #eeebe2;
+  --bg3:    #e3ddd2;
+  --ink:    #1a1815;
+  --ink2:   #2c2922;
+  --ink3:   #66614f;
+  --ink4:   #9d9886;
+  --border: #d7d2c5;
+  --border2:#c6c0b1;
+
+  --core:   #b3402a;
+  --core2:  #8c2f1e;
+  --good:   #3d7a45;
+  --bad:    #b3402a;
+
+  --l1: #2e7d9c; --l2: #7b5ea7; --l3: #b8860b; --l4: #4a8c3f;
+  --l5: #3a7ca5; --l6: #c47a00; --l7: #c0392b; --l8: #8b7355;
+}
+
+* { margin:0; padding:0; box-sizing:border-box; }
+html { scroll-behavior:smooth; }
+
+body { background: var(--bg); color: var(--ink); font-family: 'Sora', sans-serif; font-weight: 300; font-size: 14px; line-height: 1.78; }
+
+.masthead { background: var(--ink); color: rgba(255,255,255,0.9); padding: 64px 56px 54px; position: relative; overflow: hidden; }
+.masthead::before { content: ''; position: absolute; inset: 0; background: radial-gradient(circle at 78% 30%, rgba(179,64,42,0.24) 0, transparent 42%), repeating-linear-gradient(0deg, rgba(255,255,255,0.012) 0, rgba(255,255,255,0.012) 1px, transparent 1px, transparent 58px); pointer-events: none; }
+.mh-eye { font-family: 'IBM Plex Mono', monospace; font-size: 10px; letter-spacing: 3px; text-transform: uppercase; color: rgba(255,255,255,0.28); margin-bottom: 20px; position: relative; }
+.masthead h1 { font-family: 'Spectral', serif; font-weight: 400; font-size: clamp(33px, 5.2vw, 60px); line-height: 1.06; letter-spacing: -1px; max-width: 720px; position: relative; }
+.masthead h1 em { font-style: italic; color: #e8a48c; }
+.mh-sub { margin-top: 22px; font-size: 15px; font-weight: 300; color: rgba(255,255,255,0.4); max-width: 690px; line-height: 1.72; position: relative; }
+
+.nav { background: var(--ink2); position: sticky; top: 0; z-index: 100; display: flex; overflow-x: auto; border-bottom: 1px solid rgba(255,255,255,0.06); }
+.nav-btn { flex: 1; min-width: 116px; padding: 13px 14px; border: none; background: transparent; cursor: pointer; font-family: 'Sora', sans-serif; font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.4px; color: rgba(255,255,255,0.3); border-right: 1px solid rgba(255,255,255,0.06); transition: all 0.2s; white-space: nowrap; }
+.nav-btn:last-child { border-right: none; }
+.nav-btn:hover { color: rgba(255,255,255,0.62); }
+.nav-btn.active { color: #fff; background: rgba(255,255,255,0.05); }
+.nav-btn.active::after { content: ''; display: block; height: 2px; background: var(--core); margin-top: 6px; border-radius: 1px; }
+
+.sect { display: none; }
+.sect.active { display: block; animation: fadeIn 0.3s ease; }
+@keyframes fadeIn { from { opacity:0; transform:translateY(6px); } to { opacity:1; transform:translateY(0); } }
+.sect-head { padding: 50px 56px 36px; border-bottom: 1px solid var(--border); }
+.sect-num { font-family: 'IBM Plex Mono', monospace; font-size: 10px; letter-spacing: 3px; text-transform: uppercase; color: var(--ink4); margin-bottom: 12px; }
+.sect-head h2 { font-family: 'Spectral', serif; font-weight: 400; font-size: clamp(27px, 3.6vw, 43px); line-height: 1.1; letter-spacing: -0.5px; max-width: 680px; margin-bottom: 14px; }
+.sect-head h2 em { font-style: italic; }
+.sect-head p { color: var(--ink3); max-width: 700px; font-size: 14.5px; }
+.wrap { padding: 36px 56px 60px; }
+
+.prose { max-width: 760px; }
+.prose p { color: var(--ink3); margin-bottom: 18px; font-size: 14.5px; }
+.prose p strong { color: var(--ink2); font-weight: 500; }
+.prose p em { font-style: italic; color: var(--ink2); }
+.lead { font-size: 16px !important; color: var(--ink2) !important; }
+.prose ul { max-width: 760px; margin: 0 0 18px; padding-left: 0; list-style: none; }
+.prose ul li { color: var(--ink3); font-size: 14px; line-height: 1.7; padding: 4px 0 4px 22px; position: relative; }
+.prose ul li::before { content: '—'; position: absolute; left: 0; color: var(--core); font-weight: 500; }
+.prose ul li strong { color: var(--ink2); font-weight: 500; }
+
+.h3 { font-family: 'IBM Plex Mono', monospace; font-size: 10px; letter-spacing: 2px; text-transform: uppercase; color: var(--ink4); margin: 40px 0 16px; padding-bottom: 8px; border-bottom: 1px solid var(--border); max-width: 760px; }
+.h3:first-child { margin-top: 0; }
+
+.diagram-wrap { margin: 10px 0; padding: 36px 24px; background: var(--ink); border: 1px solid var(--border2); overflow-x: auto; }
+.diagram-wrap svg { display: block; margin: 0 auto; }
+.diagram-cap { font-family: 'IBM Plex Mono', monospace; font-size: 11px; color: var(--ink4); text-align: center; margin-top: 14px; letter-spacing: 0.5px; }
+
+/* recap layer list */
+.recap { margin: 18px 0; max-width: 840px; }
+.rc { display: grid; grid-template-columns: 5px 38px 1fr; border: 1px solid var(--border); border-bottom: none; background: var(--bg); }
+.rc:last-child { border-bottom: 1px solid var(--border); }
+.rc-n { font-family: 'IBM Plex Mono', monospace; font-size: 12px; color: var(--ink4); display: flex; align-items: center; justify-content: center; background: var(--bg2); }
+.rc-body { padding: 12px 18px; }
+.rc-name { font-weight: 600; font-size: 13.5px; color: var(--ink2); }
+.rc-lesson { font-size: 12.5px; color: var(--ink3); line-height: 1.55; margin-top: 2px; }
+.rc-lesson strong { color: var(--ink2); font-weight: 500; }
+
+/* cross-cutting principles */
+.principle { margin: 20px 0; padding: 22px 26px; border-left: 4px solid var(--core); background: var(--bg2); max-width: 840px; }
+.principle-n { font-family: 'IBM Plex Mono', monospace; font-size: 10px; letter-spacing: 1px; color: var(--core2); margin-bottom: 8px; text-transform: uppercase; }
+.principle-t { font-family: 'Spectral', serif; font-size: 21px; line-height: 1.3; color: var(--ink2); margin-bottom: 10px; font-style: italic; }
+.principle-d { font-size: 13.5px; color: var(--ink3); line-height: 1.7; }
+.principle-d strong { color: var(--ink2); font-weight: 500; }
+
+.insight { margin: 24px 0; padding: 18px 22px; border-left: 4px solid var(--l1); background: var(--bg2); max-width: 820px; }
+.insight-label { font-family: 'IBM Plex Mono', monospace; font-size: 9px; letter-spacing: 2px; text-transform: uppercase; margin-bottom: 6px; color: var(--l1); }
+.insight p { font-size: 13.5px; line-height: 1.7; color: var(--ink2); margin: 0; }
+
+.key-point { margin: 36px 0 8px; padding: 26px 30px; border-left: 4px solid var(--core); background: var(--bg2); max-width: 840px; }
+.kp-label { font-family: 'IBM Plex Mono', monospace; font-size: 9px; letter-spacing: 2px; text-transform: uppercase; color: var(--core2); margin-bottom: 8px; }
+.kp-text { font-family: 'Spectral', serif; font-size: 21px; line-height: 1.4; color: var(--ink2); font-style: italic; }
+.kp-sub { margin-top: 12px; font-size: 13px; color: var(--ink3); line-height: 1.65; }
+
+/* big decision table */
+.dec-table { width: 100%; max-width: 920px; border-collapse: collapse; font-size: 12px; margin: 20px 0; border: 1px solid var(--border2); }
+.dec-table th, .dec-table td { padding: 10px 12px; border: 1px solid var(--border); text-align: left; vertical-align: top; }
+.dec-table thead th { background: var(--ink); color: rgba(255,255,255,0.82); font-weight: 600; font-size: 9.5px; text-transform: uppercase; letter-spacing: 0.3px; }
+.dec-table tbody tr:nth-child(even) { background: var(--bg2); }
+.dec-table td { color: var(--ink3); line-height: 1.5; }
+.dec-table .layer-cell { font-weight: 600; color: var(--ink2); white-space: nowrap; }
+.dec-table .rep { color: var(--good); }
+.dec-table .simp { color: var(--l3); }
+.dec-table .avoid { color: var(--bad); }
+
+.sum-table { width: 100%; max-width: 880px; border-collapse: collapse; font-size: 12.5px; margin: 20px 0; border: 1px solid var(--border2); }
+.sum-table th, .sum-table td { padding: 11px 14px; border: 1px solid var(--border); text-align: left; vertical-align: top; }
+.sum-table thead th { background: var(--ink); color: rgba(255,255,255,0.82); font-weight: 600; font-size: 10px; text-transform: uppercase; letter-spacing: 0.3px; }
+.sum-table tbody tr:nth-child(even) { background: var(--bg2); }
+.sum-table td { color: var(--ink3); }
+.sum-table .p-cell { font-weight: 600; color: var(--ink2); white-space: nowrap; }
+.sum-table td strong { color: var(--ink2); font-weight: 500; }
+
+/* best practice block */
+.bp { margin: 28px 0 8px; border: 1px solid var(--good); background: var(--bg); max-width: 880px; }
+.bp-head { background: var(--good); color: #fff; padding: 12px 22px; font-family: 'IBM Plex Mono', monospace; font-size: 11px; letter-spacing: 2px; text-transform: uppercase; display: flex; align-items: center; gap: 10px; }
+.bp-head::before { content: '\25C6'; font-size: 11px; }
+.bp-single { padding: 14px 20px; border-bottom: 1px solid var(--border); font-size: 13px; color: var(--ink3); line-height: 1.65; }
+.bp-single:last-child { border-bottom: none; }
+.bp-single strong { color: var(--ink2); font-weight: 600; }
+
+.srcnote { margin: 22px 0; padding: 14px 20px; background: var(--bg2); border: 1px dashed var(--border2); max-width: 840px; font-size: 12px; color: var(--ink3); line-height: 1.6; }
+.srcnote b { font-family: 'IBM Plex Mono', monospace; font-size: 9px; letter-spacing: 1.5px; text-transform: uppercase; color: var(--ink4); display: block; margin-bottom: 4px; }
+
+.footer { background: var(--ink); color: rgba(255,255,255,0.22); padding: 30px 56px; font-family: 'IBM Plex Mono', monospace; font-size: 10px; letter-spacing: 1px; display: flex; justify-content: space-between; }
+
+@media (max-width: 860px) {
+  .masthead, .sect-head, .wrap, .footer { padding-left: 20px; padding-right: 20px; }
+  .footer { flex-direction: column; gap: 6px; }
+  .dec-table { font-size: 11px; }
+}
+</style>
+</head>
+<body>
+
+<div class="masthead">
+  <div class="mh-eye">Serie Agenti AI &middot; Parte II &mdash; Report 09 &middot; Sintesi</div>
+  <h1>La mappa degli strati<br>e le lezioni per i tuoi <em>agenti</em></h1>
+  <p class="mh-sub">La cipolla &egrave; completa. Otto strati smontati, dal nucleo all'orchestrazione. Questo report finale ricompone il quadro, distilla i principi che attraversano tutti gli strati, e consegna la tabella decisiva: per ciascuno, cosa replicare, cosa semplificare e cosa evitare quando costruisci i tuoi agenti.</p>
+</div>
+
+<nav class="nav">
+  <button class="nav-btn active" onclick="show(0)">Il viaggio</button>
+  <button class="nav-btn" onclick="show(1)">I principi</button>
+  <button class="nav-btn" onclick="show(2)">La tabella</button>
+  <button class="nav-btn" onclick="show(3)">Errori comuni</button>
+  <button class="nav-btn" onclick="show(4)">Da dove partire</button>
+</nav>
+
+
+<!-- S0 -->
+<div class="sect active" id="s0">
+  <div class="sect-head">
+    <div class="sect-num">Sezione 00 &middot; Dove siamo arrivati</div>
+    <h2>Il viaggio attraverso la <em>cipolla</em></h2>
+    <p>Siamo partiti da un'intuizione &mdash; lo stesso modello risponde diversamente via API o via chatbot &mdash; e l'abbiamo trasformata in una mappa completa. Ricomponiamola, prima di estrarne le lezioni.</p>
+  </div>
+  <div class="wrap">
+    <div class="prose">
+      <p class="lead">All'inizio della serie ci siamo posti una domanda: perch&eacute; un chatbot come Claude si comporta diversamente dallo stesso LLM interrogato &laquo;nudo&raquo; via API? La risposta, sviluppata strato per strato, &egrave; che <strong>un chatbot &egrave; un modello avvolto da otto strati di configurazione, contesto e controllo</strong>. Ogni strato colma un limite o aggiunge una capacit&agrave;; insieme, trasformano un predittore di testo in un assistente.</p>
+
+      <p>Ecco la cipolla completa, dal centro verso l'esterno, con la lezione essenziale di ciascuno strato.</p>
+    </div>
+
+    <div class="recap">
+      <div class="rc"><div style="background:var(--l1)"></div><div class="rc-n">01</div><div class="rc-body"><div class="rc-name">Il nucleo: modello e parametri</div><div class="rc-lesson">Il modello predice testo ed &egrave; congelato, senza memoria, passivo. <strong>Tutti gli altri strati esistono per compensare questi limiti.</strong></div></div></div>
+      <div class="rc"><div style="background:var(--l2)"></div><div class="rc-n">02</div><div class="rc-body"><div class="rc-name">Il system prompt</div><div class="rc-lesson">Il modello non &laquo;&egrave;&raquo; Claude: lo diventa perch&eacute; un testo anteposto glielo dice. <strong>L'identit&agrave; vive nella configurazione, non nei pesi.</strong></div></div></div>
+      <div class="rc"><div style="background:var(--l3)"></div><div class="rc-n">03</div><div class="rc-body"><div class="rc-name">Contesto e memoria</div><div class="rc-lesson">Il modello non ricorda: gli viene ricordato. <strong>La memoria &egrave; una politica di selezione, non un archivio infinito.</strong></div></div></div>
+      <div class="rc"><div style="background:var(--l4)"></div><div class="rc-n">04</div><div class="rc-body"><div class="rc-name">Gli strumenti</div><div class="rc-lesson">Il modello propone, il codice dispone. <strong>&Egrave; il confine esatto tra chatbot e agente: un LLM con strumenti, dentro un ciclo.</strong></div></div></div>
+      <div class="rc"><div style="background:var(--l5)"></div><div class="rc-n">05</div><div class="rc-body"><div class="rc-name">RAG e conoscenza</div><div class="rc-lesson">Non si chiede al modello di ricordare: gli si d&agrave; da leggere la fonte giusta. <strong>La differenza tra sapere del mondo e sapere del tuo mondo.</strong></div></div></div>
+      <div class="rc"><div style="background:var(--l6)"></div><div class="rc-n">06</div><div class="rc-body"><div class="rc-name">Skills e configurazione</div><div class="rc-lesson">Non si riaddestra per specializzare: si forniscono competenze al momento giusto. <strong>Caricare solo ci&ograve; che serve, quando serve.</strong></div></div></div>
+      <div class="rc"><div style="background:var(--l7)"></div><div class="rc-n">07</div><div class="rc-body"><div class="rc-name">Guardrail e sicurezza</div><div class="rc-lesson">La sicurezza non vive nel modello ma in una difesa stratificata. <strong>Nessun singolo controllo &egrave; sufficiente; i guardrail sono probabilistici.</strong></div></div></div>
+      <div class="rc"><div style="background:var(--l8)"></div><div class="rc-n">08</div><div class="rc-body"><div class="rc-name">L'orchestrazione</div><div class="rc-lesson">Un chatbot non &egrave; la somma dei suoi strati: &egrave; il modo in cui li mette in fila a ogni turno. <strong>La qualit&agrave; si gioca nelle cuciture.</strong></div></div></div>
+    </div>
+
+    <div class="key-point">
+      <div class="kp-label">Il filo che lega tutto</div>
+      <div class="kp-text">Ogni strato &egrave; la risposta a una domanda: &laquo;cosa manca al modello nudo per essere utile in questo modo?&raquo; Progettare un agente &egrave; rispondere a quella domanda per il tuo caso d'uso, strato per strato.</div>
+      <div class="kp-sub">Non aggiungere componenti perch&eacute; esistono, ma perch&eacute; colmano una mancanza precisa. &Egrave; la promessa fatta nel Report 00, ora mantenuta.</div>
+    </div>
+  </div>
+</div>
+
+
+<!-- S1 -->
+<div class="sect" id="s1">
+  <div class="sect-head">
+    <div class="sect-num">Sezione 01 &middot; Ci&ograve; che attraversa ogni strato</div>
+    <h2>I <em>principi</em> trasversali</h2>
+    <p>Alcune verit&agrave; sono comparse in pi&ugrave; report, sotto forme diverse. Non appartengono a un singolo strato: sono le leggi che governano l'intera cipolla. Sono le lezioni pi&ugrave; preziose da portare nei tuoi progetti.</p>
+  </div>
+  <div class="wrap">
+
+    <div class="principle">
+      <div class="principle-n">Principio 1</div>
+      <div class="principle-t">Il contesto &egrave; un budget, non una risorsa infinita</div>
+      <div class="principle-d">&Egrave; ricomparso in ogni report. System prompt, memoria, skills, strumenti, risultati RAG: tutto consuma la stessa finestra, e tutto si paga. Pi&ugrave; in l&agrave; del costo c'&egrave; il <strong>context rot</strong>: riempire la finestra pu&ograve; <em>peggiorare</em> la qualit&agrave;. La disciplina trasversale &egrave; sempre la stessa: <strong>includi il rilevante, non il disponibile.</strong> Un contesto piccolo e curato batte quasi sempre uno enorme e indistinto.</div>
+    </div>
+
+    <div class="principle">
+      <div class="principle-n">Principio 2</div>
+      <div class="principle-t">Delega al codice ci&ograve; che &egrave; deterministico</div>
+      <div class="principle-d">Dal system prompt (Report 02) agli strumenti (04) agli script delle skills (06): la stessa regola torna ovunque. Ci&ograve; che &egrave; meccanico, calcolabile, validabile va fatto <strong>fuori dall'LLM</strong>, in codice che gira. Il modello deve fare ci&ograve; che solo il modello pu&ograve; fare &mdash; giudizio, linguaggio, decisione &mdash; non ci&ograve; che una funzione farebbe con precisione ed economia. &Egrave; la linea che separa gli agenti fragili da quelli robusti.</div>
+    </div>
+
+    <div class="principle">
+      <div class="principle-n">Principio 3</div>
+      <div class="principle-t">La capacit&agrave; sta negli strati, non nei pesi</div>
+      <div class="principle-d">Identit&agrave; (02), conoscenza fresca (05), competenze specifiche (06): nessuna di queste vive nel modello addestrato. Vivono in configurazioni che <strong>scrivi, versioni e cambi in un istante</strong>. La buona notizia per i tuoi agenti: specializzare e aggiornare non significa riaddestrare, ma curare gli strati. Il fine-tuning &egrave; l'eccezione costosa, non la regola.</div>
+    </div>
+
+    <div class="principle">
+      <div class="principle-n">Principio 4</div>
+      <div class="principle-t">Pi&ugrave; non &egrave; meglio &mdash; il giusto &egrave; meglio</div>
+      <div class="principle-d">Pi&ugrave; strumenti confondono la scelta (04); pi&ugrave; frammenti RAG diluiscono la rilevanza (05); pi&ugrave; istruzioni sempre-attive gonfiano il contesto (06); pi&ugrave; guardrail al massimo bloccano gli utenti legittimi (07). In ogni strato, <strong>l'eccesso si ritorce contro</strong>. La maestria non &egrave; aggiungere il pi&ugrave; possibile, ma scegliere il minimo che basta.</div>
+    </div>
+
+    <div class="principle">
+      <div class="principle-n">Principio 5</div>
+      <div class="principle-t">Tratta come ostile tutto ci&ograve; che viene da fuori</div>
+      <div class="principle-d">La memoria pu&ograve; persistere istruzioni malevole (03), il RAG pu&ograve; ingerire contenuti ostili (05), la prompt injection si nasconde nei dati letti (07). Il filo di sicurezza che attraversa la serie: <strong>ci&ograve; che l'agente legge dall'esterno non &egrave; un'istruzione fidata.</strong> Pi&ugrave; un agente &egrave; connesso e autonomo, pi&ugrave; questa regola conta.</div>
+    </div>
+
+    <div class="principle">
+      <div class="principle-n">Principio 6</div>
+      <div class="principle-t">Studia dall'esterno, costruisci dall'interno</div>
+      <div class="principle-d">Abbiamo decostruito Claude dall'esterno verso l'interno per <em>capirlo</em>. Ma quando <strong>costruisci</strong>, parti dal nucleo e aggiungi uno strato alla volta, verificando a ogni passo cosa cambia. &Egrave; il metodo del Report 00: dall'API nuda, uno strato per volta. Cos&igrave; saprai sempre quale strato &egrave; responsabile di ogni comportamento &mdash; la base di ogni debug.</div>
+    </div>
+
+  </div>
+</div>
+
+
+<!-- S2 -->
+<div class="sect" id="s2">
+  <div class="sect-head">
+    <div class="sect-num">Sezione 02 &middot; Il cuore di questo report</div>
+    <h2>Cosa <em>replico</em>, semplifico, evito</h2>
+    <p>La tabella che la serie prometteva fin dall'inizio. Per ogni strato: cosa vale la pena replicare da un chatbot maturo, cosa si pu&ograve; semplificare, e cosa &egrave; meglio evitare. La guida operativa da tenere accanto quando progetti.</p>
+  </div>
+  <div class="wrap">
+    <div class="prose">
+      <p>Claude cura ogni strato perch&eacute; &egrave; un prodotto generalista per milioni di utenti. Il <em>tuo</em> agente quasi sempre ne ha bisogno di meno. La domanda giusta non &egrave; &laquo;come faccio tutto quello che fa Claude?&raquo;, ma <strong>&laquo;quanto di ogni strato serve al mio caso d'uso?&raquo;</strong>. Ecco una guida.</p>
+    </div>
+
+    <table class="dec-table">
+      <thead>
+        <tr>
+          <th style="width:14%">Strato</th>
+          <th style="width:29%" class="rep">&check; Replica</th>
+          <th style="width:29%" class="simp">&sim; Semplifica</th>
+          <th style="width:28%" class="avoid">&times; Evita</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td class="layer-cell">01 &middot; Nucleo</td>
+          <td>Scegliere il modello in base al compito; gestire max_tokens e troncamento</td>
+          <td>I parametri di sampling: spesso bastano i default (o non esistono pi&ugrave;)</td>
+          <td>Usare il modello pi&ugrave; costoso per tutto; saturare la finestra</td>
+        </tr>
+        <tr>
+          <td class="layer-cell">02 &middot; System prompt</td>
+          <td>Ruolo chiaro, tag XML, esempi, iniezione della data e del contesto</td>
+          <td>La lunghezza: solo ci&ograve; che vale il suo costo permanente</td>
+          <td>Muri di testo indistinti; regole permanenti nei messaggi utente</td>
+        </tr>
+        <tr>
+          <td class="layer-cell">03 &middot; Memoria</td>
+          <td>Continuit&agrave; di sessione; compattazione per le sessioni lunghe</td>
+          <td>La memoria persistente: molti agenti funzionano senza</td>
+          <td>Reinserire tutta la cronologia; salvare ciecamente dati sensibili</td>
+        </tr>
+        <tr>
+          <td class="layer-cell">04 &middot; Strumenti</td>
+          <td>Il ciclo robusto; descrizioni curate; validazione e permessi minimi</td>
+          <td>Il numero: pochi strumenti ben distinti</td>
+          <td>Decine di strumenti sovrapposti; eseguire azioni gravi senza freni</td>
+        </tr>
+        <tr>
+          <td class="layer-cell">05 &middot; RAG</td>
+          <td>Citazioni; istruzione a dire &laquo;non lo so&raquo;; cura del chunking</td>
+          <td>Se i dati sono pochi e stabili, il contesto pieno basta</td>
+          <td>Costruire una pipeline dove non serve; recuperare troppo</td>
+        </tr>
+        <tr>
+          <td class="layer-cell">06 &middot; Skills/config</td>
+          <td>Istruzioni leggere sempre-attive; progressive disclosure; script</td>
+          <td>Poche skills mirate invece di molte sovrapposte</td>
+          <td>Il fine-tuning dove una skill basta; tutto sempre-attivo</td>
+        </tr>
+        <tr>
+          <td class="layer-cell">07 &middot; Guardrail</td>
+          <td>Difesa in profondit&agrave;; filtro input+output; regole del tuo dominio</td>
+          <td>Su domini a basso rischio, un controllo leggero pu&ograve; bastare</td>
+          <td>Affidarsi solo ai guardrail del fornitore; filtri al massimo</td>
+        </tr>
+        <tr>
+          <td class="layer-cell">08 &middot; Orchestrazione</td>
+          <td>Ordine di assemblaggio esplicito; loop robusto; osservabilit&agrave;</td>
+          <td>Un singolo agente ben orchestrato copre quasi tutto</td>
+          <td>Il multi-agente per moda; il flusso come scatola nera</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <div class="insight">
+      <div class="insight-label">Come leggere questa tabella</div>
+      <p>La colonna <strong>Replica</strong> &egrave; ci&ograve; che quasi ogni agente serio dovrebbe avere, perch&eacute; sono pratiche a basso costo e alto valore. La colonna <strong>Semplifica</strong> &egrave; dove un chatbot generalista fa pi&ugrave; di quanto tu probabilmente debba fare: parti leggero e aggiungi se serve. La colonna <strong>Evita</strong> raccoglie gli errori che la serie ha incontrato pi&ugrave; volte: sono trappole comuni, non rischi esotici. Usala come checklist prima di mettere in produzione.</p>
+    </div>
+  </div>
+</div>
+
+
+<!-- S3 -->
+<div class="sect" id="s3">
+  <div class="sect-head">
+    <div class="sect-num">Sezione 03 &middot; Le trappole ricorrenti</div>
+    <h2>Gli <em>errori</em> che tornano sempre</h2>
+    <p>Distillati da tutti i &laquo;non fare cos&igrave;&raquo; della serie, ecco gli sbagli che ricorrono pi&ugrave; spesso. Riconoscerli in anticipo &egrave; met&agrave; del lavoro.</p>
+  </div>
+  <div class="wrap">
+    <div class="bp">
+      <div class="bp-head">Le sette trappole pi&ugrave; comuni</div>
+      <div>
+        <div class="bp-single"><strong>1 &middot; Attribuire al modello ciò che dipende dalla configurazione.</strong> Quando un comportamento sorprende, nove volte su dieci la causa &egrave; il prompt o il contesto, non i pesi. Cambiare modello per risolvere un problema di prompt &egrave; costoso e inutile.</div>
+        <div class="bp-single"><strong>2 &middot; Saturare il contesto &laquo;per sicurezza&raquo;.</strong> Reinserire tutta la cronologia, recuperare troppi frammenti, caricare tutte le skills: gonfia i costi e innesca il context rot. Il rilevante batte il disponibile.</div>
+        <div class="bp-single"><strong>3 &middot; Chiedere al modello ci&ograve; che il codice farebbe meglio.</strong> Calcoli, validazioni, formattazioni deterministiche affidate al ragionamento del modello sono meno affidabili e pi&ugrave; care di poche righe di programma.</div>
+        <div class="bp-single"><strong>4 &middot; Trascurare le descrizioni.</strong> Strumenti (04) e skills (06) si attivano in base alle loro descrizioni. Una description vaga produce comportamenti incoerenti che sembrano inspiegabili ma hanno una causa precisa.</div>
+        <div class="bp-single"><strong>5 &middot; Implementare solo il &laquo;caso felice&raquo;.</strong> In produzione gli strumenti falliscono, i modelli si incartano, i loop non terminano. La robustezza vive nella gestione di ci&ograve; che va storto, non nel percorso ideale.</div>
+        <div class="bp-single"><strong>6 &middot; Fidarsi dei contenuti esterni.</strong> Dati recuperati, memoria, input: trattarli come istruzioni fidate &egrave; la porta della prompt injection. Ci&ograve; che viene da fuori va trattato con sospetto.</div>
+        <div class="bp-single"><strong>7 &middot; Trattare la sicurezza come una casella da spuntare.</strong> I guardrail sono probabilistici e aggirabili. Vanno stratificati, monitorati, e progettati assumendo che, prima o poi, uno fallisca.</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+<!-- S4 -->
+<div class="sect" id="s4">
+  <div class="sect-head">
+    <div class="sect-num">Sezione 04 &middot; In pratica</div>
+    <h2>Da dove <em>partire</em></h2>
+    <p>La teoria &egrave; completa. L'ultima cosa che la serie pu&ograve; darti &egrave; un ordine di marcia: come usare questa mappa per costruire, senza paralizzarti davanti a otto strati tutti insieme.</p>
+  </div>
+  <div class="wrap">
+    <div class="prose">
+      <p>Il rischio, dopo nove report, &egrave; sentirsi dire che &laquo;servono otto strati&raquo; e non sapere da dove cominciare. Il messaggio &egrave; l'opposto: <strong>quasi nessun agente ha bisogno di tutti gli strati al massimo</strong>, e il modo giusto di costruire &egrave; incrementale. Ecco un percorso.</p>
+    </div>
+
+    <table class="sum-table">
+      <thead>
+        <tr><th>Passo</th><th>Cosa fai</th><th>Strato</th></tr>
+      </thead>
+      <tbody>
+        <tr><td class="p-cell">1 &middot; Parti dal nucleo</td><td>Scegli il modello giusto per il compito e fissa max_tokens. Provalo &laquo;nudo&raquo;.</td><td>01</td></tr>
+        <tr><td class="p-cell">2 &middot; Dai un'identit&agrave;</td><td>Scrivi un system prompt con ruolo, regole, stile ed esempi. &Egrave; la leva pi&ugrave; potente col minimo sforzo.</td><td>02</td></tr>
+        <tr><td class="p-cell">3 &middot; Aggiungi continuit&agrave;</td><td>Gestisci la cronologia di sessione. Memoria persistente solo se serve davvero.</td><td>03</td></tr>
+        <tr><td class="p-cell">4 &middot; Dai le mani</td><td>Aggiungi pochi strumenti ben descritti e costruisci un ciclo robusto. Qui diventa un agente.</td><td>04</td></tr>
+        <tr><td class="p-cell">5 &middot; Dai conoscenza</td><td>Aggiungi il RAG solo se ti servono dati freschi, privati o citazioni. Altrimenti, salta.</td><td>05</td></tr>
+        <tr><td class="p-cell">6 &middot; Specializza</td><td>Codifica preferenze e competenze ricorrenti in skills, invece di gonfiare il prompt.</td><td>06</td></tr>
+        <tr><td class="p-cell">7 &middot; Metti in sicurezza</td><td>Prima di andare in produzione: filtri input/output e regole del tuo dominio.</td><td>07</td></tr>
+        <tr><td class="p-cell">8 &middot; Cuci con cura</td><td>Definisci l'ordine di assemblaggio, rendi il loop e il flusso osservabili.</td><td>08</td></tr>
+      </tbody>
+    </table>
+
+    <div class="key-point">
+      <div class="kp-label">L'ultima lezione</div>
+      <div class="kp-text">Hai studiato Claude per imparare a costruire. Ma il tuo agente non deve essere Claude: deve essere la versione pi&ugrave; semplice che risolve il tuo problema. La maestria &egrave; sapere quali strati omettere.</div>
+      <div class="kp-sub">La cipolla di un chatbot generalista &egrave; ricca perch&eacute; deve servire tutti. Il tuo agente serve un caso d'uso: la sua eleganza sta nel fare bene poche cose, non tutte. Usa questa mappa per scegliere con consapevolezza, non per replicare per imitazione.</div>
+    </div>
+
+    <div class="srcnote">
+      <b>Nota di chiusura sulle fonti</b>
+      Questo report di sintesi non introduce fatti nuovi: consolida ci&ograve; che gli otto report precedenti hanno stabilito, ciascuno con il proprio riquadro sull'affidabilit&agrave; delle fonti. I principi trasversali e le tabelle decisionali sono <strong>elaborazioni</strong> a fini pratici, costruite combinando ci&ograve; che &egrave; documentato da Anthropic con i pattern consolidati dello sviluppo di agenti. Come per tutta la serie: l'architettura interna esatta di Claude non &egrave; pubblica, e abbiamo usato un chatbot di frontiera come <em>esempio illustrativo</em> dell'architettura tipica, non come oggetto di reverse-engineering.
+    </div>
+
+    <div class="prose" style="margin-top:30px;">
+      <p style="font-family:'Spectral',serif; font-style:italic; font-size:17px; color:var(--ink2); text-align:center; max-width:680px; margin:0 auto;">Dalla domanda iniziale &mdash; perch&eacute; lo stesso modello risponde diversamente? &mdash; alla mappa completa degli strati che fanno la differenza. La serie &egrave; chiusa; il lavoro di costruire, adesso, comincia.</p>
+    </div>
+  </div>
+</div>
+
+
+<div class="footer">
+  <span>Serie Agenti AI &middot; Parte II &mdash; Report 09 &middot; Sintesi e Manuale Operativo</span>
+  <span>Maggio 2026</span>
+</div>
+
+<script>
+function show(n) {
+  document.querySelectorAll('.sect').forEach(s => s.classList.remove('active'));
+  document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('s'+n).classList.add('active');
+  document.querySelectorAll('.nav-btn')[n].classList.add('active');
+  window.scrollTo({top:0, behavior:'smooth'});
+}
+</script>
+
+</body>
+</html>

@@ -1,0 +1,1441 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Intelligenza Artificiale — Una Mappa per Manager</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;0,700;1,300;1,400;1,600&family=Jost:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --ivory: #faf8f4;
+    --ivory2: #f3f0ea;
+    --ivory3: #e8e3d8;
+    --teal: #1a3a4a;
+    --teal-mid: #254d63;
+    --teal-light: #3a6b82;
+    --teal-faint: rgba(26,58,74,0.06);
+    --teal-faint2: rgba(26,58,74,0.03);
+    --teal-border: rgba(26,58,74,0.15);
+    --teal-border2: rgba(26,58,74,0.08);
+    --gold: #b8860b;
+    --gold-light: #d4a017;
+    --gold-faint: rgba(184,134,11,0.08);
+    --gold-border: rgba(184,134,11,0.25);
+    --ink: #1a1614;
+    --ink-mid: #3d3530;
+    --ink-light: #6b5f58;
+    --ink-faint: rgba(26,22,20,0.07);
+    --red: #8b2a2a;
+    --red-faint: rgba(139,42,42,0.06);
+    --red-border: rgba(139,42,42,0.2);
+    --green: #2a5a3a;
+    --green-faint: rgba(42,90,58,0.06);
+    --green-border: rgba(42,90,58,0.2);
+    --c1: #1a3a4a; /* ML Classico — teal */
+    --c1f: rgba(26,58,74,0.07);
+    --c1b: rgba(26,58,74,0.2);
+    --c2: #4a2a6a; /* Deep Learning — viola */
+    --c2f: rgba(74,42,106,0.07);
+    --c2b: rgba(74,42,106,0.2);
+    --c3: #2a4a1a; /* AI Generativa — verde */
+    --c3f: rgba(42,74,26,0.07);
+    --c3b: rgba(42,74,26,0.2);
+    --c4: #6a3a1a; /* Simbolico — bronzo */
+    --c4f: rgba(106,58,26,0.07);
+    --c4b: rgba(106,58,26,0.2);
+    --border: rgba(26,22,20,0.1);
+    --serif: 'Cormorant Garamond', serif;
+    --sans: 'Jost', sans-serif;
+  }
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  html { scroll-behavior: smooth; }
+
+  body {
+    background: var(--ivory);
+    color: var(--ink);
+    font-family: var(--sans);
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* ── COVER ── */
+  .cover {
+    background: var(--teal);
+    color: var(--ivory);
+    padding: 80px 64px 64px;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .cover::before {
+    content: '';
+    position: absolute;
+    top: -100px; right: -100px;
+    width: 500px; height: 500px;
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(184,134,11,0.15) 0%, transparent 70%);
+    pointer-events: none;
+  }
+
+  .cover::after {
+    content: '';
+    position: absolute;
+    bottom: 0; left: 0; right: 0;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, var(--gold-light), transparent);
+  }
+
+  .cover-inner {
+    max-width: 1080px;
+    margin: 0 auto;
+    position: relative;
+    z-index: 1;
+  }
+
+  .cover-series {
+    font-family: var(--sans);
+    font-size: 11px;
+    letter-spacing: 4px;
+    text-transform: uppercase;
+    color: var(--gold-light);
+    margin-bottom: 32px;
+    opacity: 0.9;
+  }
+
+  .cover-eyebrow {
+    font-family: var(--serif);
+    font-size: 18px;
+    font-style: italic;
+    color: rgba(250,248,244,0.6);
+    margin-bottom: 12px;
+    font-weight: 300;
+  }
+
+  .cover-title {
+    font-family: var(--serif);
+    font-size: clamp(44px, 6vw, 80px);
+    font-weight: 300;
+    line-height: 1.0;
+    color: var(--ivory);
+    letter-spacing: -1px;
+    margin-bottom: 8px;
+  }
+
+  .cover-title strong {
+    font-weight: 600;
+    display: block;
+    color: white;
+  }
+
+  .cover-subtitle {
+    font-family: var(--sans);
+    font-size: 15px;
+    font-weight: 300;
+    color: rgba(250,248,244,0.65);
+    margin-top: 24px;
+    max-width: 540px;
+    line-height: 1.7;
+    letter-spacing: 0.3px;
+  }
+
+  .cover-meta {
+    display: flex;
+    gap: 40px;
+    margin-top: 48px;
+    padding-top: 24px;
+    border-top: 1px solid rgba(250,248,244,0.15);
+  }
+
+  .cover-meta-item {
+    font-family: var(--sans);
+    font-size: 11px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: rgba(250,248,244,0.45);
+  }
+
+  .cover-meta-item span {
+    display: block;
+    color: rgba(250,248,244,0.75);
+    margin-top: 4px;
+    font-weight: 500;
+  }
+
+  /* ── LAYOUT ── */
+  .page {
+    max-width: 1080px;
+    margin: 0 auto;
+    padding: 0 48px 100px;
+  }
+
+  /* ── NAV ── */
+  .sticky-nav {
+    position: sticky;
+    top: 0;
+    background: rgba(250,248,244,0.95);
+    backdrop-filter: blur(8px);
+    border-bottom: 1px solid var(--border);
+    z-index: 50;
+    padding: 0 48px;
+  }
+
+  .nav-inner {
+    max-width: 1080px;
+    margin: 0 auto;
+    display: flex;
+    gap: 0;
+    overflow-x: auto;
+  }
+
+  .nav-item {
+    font-family: var(--sans);
+    font-size: 12px;
+    font-weight: 500;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    color: var(--ink-light);
+    padding: 16px 20px;
+    cursor: pointer;
+    border: none;
+    background: transparent;
+    border-bottom: 2px solid transparent;
+    white-space: nowrap;
+    transition: all 0.2s;
+    text-decoration: none;
+    display: block;
+  }
+
+  .nav-item:hover { color: var(--teal); }
+  .nav-item.active { color: var(--teal); border-bottom-color: var(--gold); }
+
+  /* ── SECTIONS ── */
+  .section { display: none; padding-top: 64px; }
+  .section.active { display: block; animation: fadeUp 0.3s ease; }
+  @keyframes fadeUp { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+  /* ── TYPOGRAPHY ── */
+  .section-label {
+    font-family: var(--sans);
+    font-size: 10px;
+    letter-spacing: 4px;
+    text-transform: uppercase;
+    color: var(--gold);
+    margin-bottom: 12px;
+    font-weight: 600;
+  }
+
+  h2 {
+    font-family: var(--serif);
+    font-size: clamp(32px, 4vw, 52px);
+    font-weight: 400;
+    color: var(--teal);
+    line-height: 1.1;
+    margin-bottom: 8px;
+    letter-spacing: -0.5px;
+  }
+
+  h2 em { font-style: italic; font-weight: 300; }
+
+  .section-intro {
+    font-size: 17px;
+    line-height: 1.8;
+    color: var(--ink-mid);
+    max-width: 680px;
+    margin: 20px 0 48px;
+    font-weight: 300;
+  }
+
+  h3 {
+    font-family: var(--sans);
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    color: var(--ink-light);
+    margin-bottom: 16px;
+  }
+
+  h4 {
+    font-family: var(--serif);
+    font-size: 22px;
+    font-weight: 500;
+    color: var(--teal);
+    margin-bottom: 8px;
+    letter-spacing: -0.3px;
+  }
+
+  p {
+    font-size: 15px;
+    line-height: 1.8;
+    color: var(--ink-mid);
+    margin-bottom: 14px;
+    font-weight: 300;
+  }
+
+  strong { font-weight: 600; color: var(--ink); }
+
+  .rule { border: none; border-top: 1px solid var(--border); margin: 48px 0; }
+  .rule-gold { border: none; border-top: 1px solid var(--gold-border); margin: 32px 0; }
+
+  /* ── DEFINIZIONE SECTION ── */
+  .def-pullquote {
+    border-left: 3px solid var(--gold);
+    padding: 4px 0 4px 32px;
+    margin: 32px 0 40px;
+  }
+
+  .def-pullquote p {
+    font-family: var(--serif);
+    font-size: 24px;
+    font-weight: 400;
+    font-style: italic;
+    line-height: 1.5;
+    color: var(--teal);
+    margin-bottom: 0;
+  }
+
+  .def-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 1px;
+    background: var(--border);
+    border: 1px solid var(--border);
+    border-radius: 2px;
+    overflow: hidden;
+    margin: 32px 0;
+  }
+
+  @media (max-width: 768px) { .def-grid { grid-template-columns: 1fr; } }
+
+  .def-cell {
+    background: var(--ivory);
+    padding: 28px 24px;
+  }
+
+  .def-cell-num {
+    font-family: var(--serif);
+    font-size: 48px;
+    font-weight: 300;
+    color: var(--ivory3);
+    line-height: 1;
+    margin-bottom: 12px;
+  }
+
+  .def-cell-title {
+    font-family: var(--sans);
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--teal);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin-bottom: 10px;
+  }
+
+  .def-cell p { font-size: 14px; margin-bottom: 0; }
+
+  /* ── CLASS CARDS ── */
+  .class-card {
+    border: 1px solid var(--border);
+    border-radius: 3px;
+    overflow: hidden;
+    margin-bottom: 48px;
+  }
+
+  .class-header {
+    padding: 32px 40px;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .class-header::after {
+    content: '';
+    position: absolute;
+    bottom: 0; left: 0; right: 0;
+    height: 1px;
+    background: var(--border);
+  }
+
+  .class-num {
+    font-family: var(--serif);
+    font-size: 80px;
+    font-weight: 300;
+    position: absolute;
+    right: 32px;
+    top: 8px;
+    line-height: 1;
+    opacity: 0.07;
+    color: var(--ink);
+  }
+
+  .class-tag {
+    font-family: var(--sans);
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    margin-bottom: 12px;
+  }
+
+  .class-name {
+    font-family: var(--serif);
+    font-size: clamp(28px, 3.5vw, 44px);
+    font-weight: 500;
+    line-height: 1.1;
+    letter-spacing: -0.5px;
+    margin-bottom: 12px;
+  }
+
+  .class-tagline {
+    font-family: var(--sans);
+    font-size: 14px;
+    font-weight: 300;
+    opacity: 0.7;
+    letter-spacing: 0.3px;
+  }
+
+  /* Color themes per class */
+  .c1 .class-header { background: linear-gradient(135deg, rgba(26,58,74,0.05) 0%, rgba(26,58,74,0.02) 100%); }
+  .c1 .class-tag { color: var(--c1); }
+  .c1 .class-name { color: var(--c1); }
+
+  .c2 .class-header { background: linear-gradient(135deg, rgba(74,42,106,0.05) 0%, rgba(74,42,106,0.02) 100%); }
+  .c2 .class-tag { color: var(--c2); }
+  .c2 .class-name { color: var(--c2); }
+
+  .c3 .class-header { background: linear-gradient(135deg, rgba(42,74,26,0.05) 0%, rgba(42,74,26,0.02) 100%); }
+  .c3 .class-tag { color: var(--c3); }
+  .c3 .class-name { color: var(--c3); }
+
+  .c4 .class-header { background: linear-gradient(135deg, rgba(106,58,26,0.05) 0%, rgba(106,58,26,0.02) 100%); }
+  .c4 .class-tag { color: var(--c4); }
+  .c4 .class-name { color: var(--c4); }
+
+  .class-body {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0;
+  }
+
+  @media (max-width: 768px) { .class-body { grid-template-columns: 1fr; } }
+
+  .class-col {
+    padding: 32px 40px;
+    border-right: 1px solid var(--border);
+  }
+
+  .class-col:last-child { border-right: none; }
+  .class-col:nth-child(3), .class-col:nth-child(4) { border-top: 1px solid var(--border); }
+
+  .class-col-full {
+    padding: 28px 40px;
+    border-top: 1px solid var(--border);
+    grid-column: 1 / -1;
+  }
+
+  /* ── ANALOGIA BOX ── */
+  .analogy-box {
+    background: var(--ivory2);
+    border-radius: 2px;
+    padding: 24px 28px;
+    margin: 16px 0;
+    position: relative;
+  }
+
+  .analogy-label {
+    font-family: var(--sans);
+    font-size: 9px;
+    font-weight: 700;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    color: var(--gold);
+    margin-bottom: 10px;
+  }
+
+  .analogy-box p {
+    font-family: var(--serif);
+    font-size: 17px;
+    font-style: italic;
+    line-height: 1.65;
+    color: var(--teal);
+    margin-bottom: 0;
+    font-weight: 400;
+  }
+
+  /* ── PRO/CON ── */
+  .procon {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin-top: 8px;
+  }
+
+  .procon-item {
+    display: flex;
+    gap: 12px;
+    align-items: flex-start;
+    font-size: 14px;
+    line-height: 1.6;
+    color: var(--ink-mid);
+    font-weight: 300;
+  }
+
+  .procon-icon {
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 10px;
+    flex-shrink: 0;
+    margin-top: 2px;
+    font-weight: 700;
+  }
+
+  .icon-pro { background: var(--green-faint); color: var(--green); border: 1px solid var(--green-border); }
+  .icon-con { background: var(--red-faint); color: var(--red); border: 1px solid var(--red-border); }
+
+  /* ── APP EXAMPLES ── */
+  .app-list {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin-top: 8px;
+  }
+
+  .app-item {
+    display: flex;
+    gap: 14px;
+    align-items: flex-start;
+    padding: 10px 14px;
+    background: var(--teal-faint2);
+    border: 1px solid var(--teal-border2);
+    border-radius: 2px;
+  }
+
+  .app-icon {
+    font-size: 20px;
+    flex-shrink: 0;
+    margin-top: 1px;
+  }
+
+  .app-text { flex: 1; }
+  .app-name { font-size: 13px; font-weight: 600; color: var(--teal); margin-bottom: 2px; }
+  .app-desc { font-size: 13px; color: var(--ink-light); line-height: 1.5; font-weight: 300; }
+
+  /* ── ANALOGIA SEZIONE DEDICATA ── */
+  .loan-section {
+    background: var(--teal);
+    color: var(--ivory);
+    border-radius: 3px;
+    overflow: hidden;
+    margin: 48px 0;
+  }
+
+  .loan-header {
+    padding: 36px 48px;
+    border-bottom: 1px solid rgba(250,248,244,0.1);
+    position: relative;
+  }
+
+  .loan-header::after {
+    content: '';
+    position: absolute;
+    bottom: 0; left: 48px; right: 48px;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, var(--gold-light), transparent);
+  }
+
+  .loan-eyebrow {
+    font-family: var(--sans);
+    font-size: 10px;
+    letter-spacing: 4px;
+    text-transform: uppercase;
+    color: var(--gold-light);
+    margin-bottom: 12px;
+    font-weight: 600;
+  }
+
+  .loan-title {
+    font-family: var(--serif);
+    font-size: clamp(24px, 3vw, 38px);
+    font-weight: 400;
+    color: white;
+    margin-bottom: 12px;
+  }
+
+  .loan-subtitle {
+    font-size: 15px;
+    color: rgba(250,248,244,0.6);
+    font-weight: 300;
+    max-width: 560px;
+    line-height: 1.7;
+  }
+
+  .loan-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0;
+  }
+
+  @media (max-width: 768px) { .loan-grid { grid-template-columns: 1fr; } }
+
+  .loan-cell {
+    padding: 32px 40px;
+    border-right: 1px solid rgba(250,248,244,0.08);
+    border-bottom: 1px solid rgba(250,248,244,0.08);
+    position: relative;
+  }
+
+  .loan-cell:nth-child(2) { border-right: none; }
+  .loan-cell:nth-child(3), .loan-cell:nth-child(4) { border-bottom: none; }
+  .loan-cell:nth-child(4) { border-right: none; }
+
+  .loan-cell-label {
+    font-family: var(--sans);
+    font-size: 9px;
+    font-weight: 700;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    margin-bottom: 10px;
+  }
+
+  .loan-cell-name {
+    font-family: var(--serif);
+    font-size: 20px;
+    font-weight: 500;
+    color: white;
+    margin-bottom: 14px;
+  }
+
+  .loan-cell p {
+    font-size: 14px;
+    color: rgba(250,248,244,0.65);
+    font-weight: 300;
+    line-height: 1.7;
+    margin-bottom: 12px;
+  }
+
+  .loan-verdict {
+    font-family: var(--serif);
+    font-size: 15px;
+    font-style: italic;
+    padding: 10px 16px;
+    border-radius: 2px;
+    margin-top: 8px;
+    line-height: 1.5;
+  }
+
+  .lv-c1 { background: rgba(26,58,74,0.4); color: rgba(250,248,244,0.85); border-left: 2px solid rgba(26,200,220,0.5); }
+  .lv-c2 { background: rgba(74,42,106,0.4); color: rgba(250,248,244,0.85); border-left: 2px solid rgba(180,120,255,0.5); }
+  .lv-c3 { background: rgba(42,74,26,0.4); color: rgba(250,248,244,0.85); border-left: 2px solid rgba(100,200,80,0.5); }
+  .lv-c4 { background: rgba(106,58,26,0.4); color: rgba(250,248,244,0.85); border-left: 2px solid rgba(220,160,80,0.5); }
+
+  .loan-cell-label.l1 { color: rgba(26,200,220,0.8); }
+  .loan-cell-label.l2 { color: rgba(180,120,255,0.8); }
+  .loan-cell-label.l3 { color: rgba(100,200,80,0.8); }
+  .loan-cell-label.l4 { color: rgba(220,160,80,0.8); }
+
+  /* ── SINTESI TABLE ── */
+  .synth-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 24px 0;
+    font-size: 14px;
+  }
+
+  .synth-table th {
+    font-family: var(--sans);
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--ink-light);
+    padding: 14px 18px;
+    border-bottom: 2px solid var(--border);
+    text-align: left;
+    background: var(--ivory2);
+  }
+
+  .synth-table td {
+    padding: 14px 18px;
+    border-bottom: 1px solid var(--border);
+    vertical-align: top;
+    line-height: 1.6;
+    color: var(--ink-mid);
+    font-weight: 300;
+  }
+
+  .synth-table tr:last-child td { border-bottom: none; }
+  .synth-table tr:hover td { background: var(--teal-faint2); }
+
+  .synth-table td:first-child {
+    font-family: var(--serif);
+    font-size: 17px;
+    font-weight: 500;
+    color: var(--teal);
+    white-space: nowrap;
+  }
+
+  .badge {
+    display: inline-block;
+    font-family: var(--sans);
+    font-size: 10px;
+    font-weight: 600;
+    padding: 2px 10px;
+    border-radius: 2px;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+  }
+
+  .badge-c1 { background: var(--c1f); color: var(--c1); border: 1px solid var(--c1b); }
+  .badge-c2 { background: var(--c2f); color: var(--c2); border: 1px solid var(--c2b); }
+  .badge-c3 { background: var(--c3f); color: var(--c3); border: 1px solid var(--c3b); }
+  .badge-c4 { background: var(--c4f); color: var(--c4); border: 1px solid var(--c4b); }
+
+  /* ── CALLOUT ── */
+  .callout {
+    background: var(--gold-faint);
+    border: 1px solid var(--gold-border);
+    border-left: 3px solid var(--gold);
+    border-radius: 2px;
+    padding: 18px 24px;
+    margin: 28px 0;
+  }
+
+  .callout-label {
+    font-family: var(--sans);
+    font-size: 9px;
+    font-weight: 700;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    color: var(--gold);
+    margin-bottom: 8px;
+  }
+
+  .callout p { color: var(--ink-mid); margin-bottom: 0; font-size: 15px; }
+
+  /* ── WHERE DO AGENTS FIT ── */
+  .agents-box {
+    border: 1px solid var(--teal-border);
+    border-radius: 3px;
+    overflow: hidden;
+    margin: 32px 0;
+  }
+
+  .agents-header {
+    background: var(--teal-faint);
+    padding: 20px 28px;
+    border-bottom: 1px solid var(--teal-border);
+  }
+
+  .agents-header h4 { color: var(--teal); margin-bottom: 4px; }
+  .agents-header p { margin-bottom: 0; font-size: 14px; }
+
+  .agents-body {
+    padding: 24px 28px;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+  }
+
+  @media (max-width: 600px) { .agents-body { grid-template-columns: 1fr; } }
+
+  .agents-item { }
+  .agents-item-label {
+    font-family: var(--sans);
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--ink-light);
+    margin-bottom: 6px;
+  }
+  .agents-item p { font-size: 14px; margin-bottom: 0; }
+
+</style>
+</head>
+<body>
+
+<!-- COVER -->
+<div class="cover">
+  <div class="cover-inner">
+    <div class="cover-series">Serie Agenti AI — Documento Introduttivo</div>
+    <div class="cover-eyebrow">Una mappa per chi decide</div>
+    <h1 class="cover-title">
+      Intelligenza
+      <strong>Artificiale</strong>
+    </h1>
+    <p class="cover-subtitle">L'AI non è un'unica tecnologia. È una famiglia di approcci radicalmente diversi, con capacità, limiti e applicazioni distinte. Questo documento è una mappa orientativa per chi deve capire il territorio — senza diventare un tecnico.</p>
+    <div class="cover-meta">
+      <div class="cover-meta-item">Target<span>Manager & Decision Maker</span></div>
+      <div class="cover-meta-item">Livello<span>Introduttivo</span></div>
+      <div class="cover-meta-item">Serie<span>Agenti AI</span></div>
+      <div class="cover-meta-item">Data<span>Febbraio 2026</span></div>
+    </div>
+  </div>
+</div>
+
+<!-- NAV -->
+<nav class="sticky-nav">
+  <div class="nav-inner">
+    <a class="nav-item active" onclick="showTab('definizione')">Cos'è l'AI</a>
+    <a class="nav-item" onclick="showTab('ml')">ML Classico</a>
+    <a class="nav-item" onclick="showTab('dl')">Deep Learning</a>
+    <a class="nav-item" onclick="showTab('gen')">AI Generativa</a>
+    <a class="nav-item" onclick="showTab('sym')">Sistemi Simbolici</a>
+    <a class="nav-item" onclick="showTab('analogia')">L'Analogia</a>
+    <a class="nav-item" onclick="showTab('sintesi')">Sintesi</a>
+  </div>
+</nav>
+
+<div class="page">
+
+  <!-- ═══════════ DEFINIZIONE ═══════════ -->
+  <section id="definizione" class="section active">
+    <div class="section-label">Punto di partenza</div>
+    <h2>Cos'è l'<em>Intelligenza Artificiale</em></h2>
+
+    <div class="def-pullquote">
+      <p>"L'intelligenza artificiale è la capacità di un sistema informatico di svolgere compiti che, se eseguiti da un essere umano, richiederebbero intelligenza."</p>
+    </div>
+
+    <p class="section-intro">Questa definizione, volutamente ampia, cattura qualcosa di importante: l'AI non è una tecnologia singola, ma un campo che raggruppa approcci molto diversi tra loro. Confondere "AI" con "ChatGPT" è come confondere "trasporto" con "aereo": tecnicamente corretto in un caso specifico, ma fuorviante per capire il quadro complessivo.</p>
+
+    <h3>Tre cose che l'AI non è (o non solo)</h3>
+
+    <div class="def-grid">
+      <div class="def-cell">
+        <div class="def-cell-num">01</div>
+        <div class="def-cell-title">Non è solo AI generativa</div>
+        <p>ChatGPT, Claude, Gemini — i modelli che generano testo — sono la forma di AI più visibile oggi, ma rappresentano una minoranza degli impieghi reali. La maggior parte dell'AI in produzione nelle aziende è silenziosa: rileva frodi, ottimizza scorte, classifica documenti.</p>
+      </div>
+      <div class="def-cell">
+        <div class="def-cell-num">02</div>
+        <div class="def-cell-title">Non è nuova</div>
+        <p>Le radici teoriche dell'AI risalgono agli anni '50. Il machine learning è in uso industriale da oltre vent'anni. Quello che è cambiato radicalmente dal 2022 è la capacità dei modelli linguistici — non l'esistenza dell'AI in sé.</p>
+      </div>
+      <div class="def-cell">
+        <div class="def-cell-num">03</div>
+        <div class="def-cell-title">Non è intelligenza come la nostra</div>
+        <p>I sistemi AI attuali sono potenti in domini specifici e fragili fuori da essi. Non "capiscono" nel senso umano — trovano pattern statistici in grandi quantità di dati. La differenza tra eccellere in un benchmark e avere giudizio è ancora enorme.</p>
+      </div>
+    </div>
+
+    <hr class="rule">
+
+    <h3>Come si orienta questo documento</h3>
+    <p>Organizziamo il panorama dell'AI in <strong>quattro classi principali</strong>, scelte per rilevanza pratica — non per completezza accademica. Ogni classe risponde a problemi diversi, con strumenti diversi, e ha un profilo di forza e limite distinto.</p>
+
+    <div class="callout">
+      <div class="callout-label">// Nota metodologica</div>
+      <p>Le quattro classi presentate non sono mutuamente esclusive nella realtà: molti sistemi AI moderni combinano approcci diversi. La classificazione serve a orientarsi, non a creare compartimenti stagni.</p>
+    </div>
+
+  </section>
+
+  <!-- ═══════════ ML CLASSICO ═══════════ -->
+  <section id="ml" class="section">
+
+    <div class="class-card c1">
+      <div class="class-header">
+        <div class="class-num">1</div>
+        <div class="class-tag">Prima classe</div>
+        <div class="class-name">Machine Learning Classico</div>
+        <div class="class-tagline">Impara dai dati storici per predire, classificare, rilevare anomalie</div>
+      </div>
+
+      <div class="class-body">
+        <!-- DESCRIZIONE -->
+        <div class="class-col">
+          <h3>Descrizione</h3>
+          <p>Il machine learning classico è la forma di AI più diffusa nelle aziende — spesso invisibile proprio perché funziona bene da anni. L'idea di base è semplice: si fornisce al sistema una grande quantità di dati storici con i risultati noti, e il sistema impara a riconoscere i pattern che distinguono un risultato dall'altro.</p>
+          <p>Non "ragiona" come un umano. Trova correlazioni statistiche nei dati e le usa per fare previsioni su nuovi casi. Se negli ultimi 10 anni i clienti con queste caratteristiche hanno pagato puntualmente, e quelli con quelle altre caratteristiche no, il sistema impara a distinguerli.</p>
+          <p>Gli algoritmi principali — regressione logistica, alberi decisionali, foreste casuali, gradient boosting — sono noti, ben compresi, e interpretabili: è possibile spiegare perché il modello ha preso una certa decisione.</p>
+
+          <div class="analogy-box">
+            <div class="analogy-label">// Analogia</div>
+            <p>Un analista del credito con vent'anni di esperienza che ha visto migliaia di pratiche: non segue regole rigide, ma ha sviluppato un'intuizione affinata sui pattern che distinguono i buoni pagatori dai cattivi. Il ML classico fa esattamente questo — in modo sistematico, su milioni di casi.</p>
+          </div>
+        </div>
+
+        <!-- APPLICAZIONI -->
+        <div class="class-col">
+          <h3>Applicazioni concrete</h3>
+          <div class="app-list">
+            <div class="app-item">
+              <div class="app-icon">🏦</div>
+              <div class="app-text">
+                <div class="app-name">Scoring del credito</div>
+                <div class="app-desc">Previsione della probabilità di insolvenza basata su storico comportamentale e dati anagrafici</div>
+              </div>
+            </div>
+            <div class="app-item">
+              <div class="app-icon">🛡️</div>
+              <div class="app-text">
+                <div class="app-name">Rilevamento frodi</div>
+                <div class="app-desc">Identificazione in tempo reale di transazioni anomale rispetto al comportamento storico del cliente</div>
+              </div>
+            </div>
+            <div class="app-item">
+              <div class="app-icon">🏭</div>
+              <div class="app-text">
+                <div class="app-name">Manutenzione predittiva</div>
+                <div class="app-desc">Previsione dei guasti di macchinari industriali prima che avvengano, basata su sensori e storico</div>
+              </div>
+            </div>
+            <div class="app-item">
+              <div class="app-icon">📦</div>
+              <div class="app-text">
+                <div class="app-name">Previsione della domanda</div>
+                <div class="app-desc">Ottimizzazione delle scorte e della produzione basata su pattern stagionali e storici di vendita</div>
+              </div>
+            </div>
+            <div class="app-item">
+              <div class="app-icon">🎯</div>
+              <div class="app-text">
+                <div class="app-name">Churn prediction</div>
+                <div class="app-desc">Identificazione anticipata dei clienti a rischio di abbandono per interventi proattivi di retention</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- FORZE -->
+        <div class="class-col">
+          <h3>Punti di forza distintivi</h3>
+          <div class="procon">
+            <div class="procon-item">
+              <div class="procon-icon icon-pro">✓</div>
+              <div><strong>Interpretabilità</strong> — è possibile spiegare perché il modello ha prodotto un certo output. Fondamentale in contesti regolati (credito, assicurazioni, HR)</div>
+            </div>
+            <div class="procon-item">
+              <div class="procon-icon icon-pro">✓</div>
+              <div><strong>Efficienza computazionale</strong> — gira su hardware standard, non richiede GPU costose. Adatto ad alto volume con costi contenuti</div>
+            </div>
+            <div class="procon-item">
+              <div class="procon-icon icon-pro">✓</div>
+              <div><strong>Robustezza</strong> — comportamento prevedibile e stabile nel tempo su domini ben definiti</div>
+            </div>
+            <div class="procon-item">
+              <div class="procon-icon icon-pro">✓</div>
+              <div><strong>Maturità</strong> — vent'anni di pratiche consolidate, tooling maturo, competenze diffuse</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- LIMITI -->
+        <div class="class-col">
+          <h3>Limiti principali</h3>
+          <div class="procon">
+            <div class="procon-item">
+              <div class="procon-icon icon-con">✗</div>
+              <div><strong>Dati strutturati obbligatori</strong> — funziona su tabelle e numeri. Non gestisce testo libero, immagini, audio senza trasformazione preventiva</div>
+            </div>
+            <div class="procon-item">
+              <div class="procon-icon icon-con">✗</div>
+              <div><strong>Feature engineering manuale</strong> — richiede che gli esperti di dominio identifichino e costruiscano le variabili rilevanti. Costoso in termini di tempo</div>
+            </div>
+            <div class="procon-item">
+              <div class="procon-icon icon-con">✗</div>
+              <div><strong>Fragile fuori distribuzione</strong> — se il mondo cambia rispetto ai dati di training (es. pandemia, crisi), le previsioni degradano e il modello va riaddestrato</div>
+            </div>
+            <div class="procon-item">
+              <div class="procon-icon icon-con">✗</div>
+              <div><strong>Nessuna comprensione del contesto</strong> — non capisce il significato di quello che elabora. Due clienti con gli stessi numeri ricevono lo stesso trattamento, anche se il contesto è diverso</div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+  </section>
+
+  <!-- ═══════════ DEEP LEARNING ═══════════ -->
+  <section id="dl" class="section">
+
+    <div class="class-card c2">
+      <div class="class-header">
+        <div class="class-num">2</div>
+        <div class="class-tag">Seconda classe</div>
+        <div class="class-name">Deep Learning & Reti Neurali</div>
+        <div class="class-tagline">Comprende dati complessi e non strutturati: immagini, suoni, linguaggio</div>
+      </div>
+
+      <div class="class-body">
+        <div class="class-col">
+          <h3>Descrizione</h3>
+          <p>Il deep learning è il salto qualitativo degli anni 2010 che ha reso possibile tutto ciò che è venuto dopo — inclusi gli LLM. Si basa su reti neurali artificiali con molti strati ("deep"), ispirate vagamente al funzionamento del cervello umano.</p>
+          <p>La differenza fondamentale rispetto al ML classico è che il deep learning <strong>impara da solo le feature rilevanti</strong> dai dati grezzi. Non serve un esperto che costruisca le variabili: la rete impara a vedere bordi in un'immagine, poi forme, poi oggetti. Impara a riconoscere fonemi nell'audio, poi parole, poi frasi.</p>
+          <p>Questo lo rende potente su tutto ciò che è non strutturato: immagini, audio, video, testo. È la tecnologia dietro al riconoscimento facciale, alla traduzione automatica, ai sistemi di raccomandazione di Netflix e Spotify, e — con l'architettura transformer — agli LLM.</p>
+
+          <div class="analogy-box">
+            <div class="analogy-label">// Analogia</div>
+            <p>Un analista molto giovane, senza esperienza nel credito, ma con accesso a ogni documento, email, estratto conto e nota del dossier del cliente. Non ha regole preimpostate: impara da zero a riconoscere i pattern rilevanti leggendo migliaia di pratiche passate con i loro esiti.</p>
+          </div>
+        </div>
+
+        <div class="class-col">
+          <h3>Applicazioni concrete</h3>
+          <div class="app-list">
+            <div class="app-item">
+              <div class="app-icon">👁️</div>
+              <div class="app-text">
+                <div class="app-name">Computer vision industriale</div>
+                <div class="app-desc">Rilevamento difetti di produzione da immagini, ispezione qualità automatica, lettura di documenti scansionati</div>
+              </div>
+            </div>
+            <div class="app-item">
+              <div class="app-icon">🎙️</div>
+              <div class="app-text">
+                <div class="app-name">Riconoscimento vocale</div>
+                <div class="app-desc">Trascrizione automatica di call center, assistenti vocali, analisi del sentiment nelle conversazioni</div>
+              </div>
+            </div>
+            <div class="app-item">
+              <div class="app-icon">🌐</div>
+              <div class="app-text">
+                <div class="app-name">Traduzione automatica</div>
+                <div class="app-desc">Sistemi come DeepL e Google Translate — basati su architetture transformer, antenate degli LLM</div>
+              </div>
+            </div>
+            <div class="app-item">
+              <div class="app-icon">🏥</div>
+              <div class="app-text">
+                <div class="app-name">Diagnostica medica per immagini</div>
+                <div class="app-desc">Analisi di radiografie, TAC, risonanze per supporto alla diagnosi clinica</div>
+              </div>
+            </div>
+            <div class="app-item">
+              <div class="app-icon">🚗</div>
+              <div class="app-text">
+                <div class="app-name">Guida autonoma</div>
+                <div class="app-desc">Percezione dell'ambiente stradale in tempo reale tramite fusione di sensori visivi e LIDAR</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="class-col">
+          <h3>Punti di forza distintivi</h3>
+          <div class="procon">
+            <div class="procon-item">
+              <div class="procon-icon icon-pro">✓</div>
+              <div><strong>Dati non strutturati</strong> — l'unica classe che gestisce nativamente immagini, audio, video, testo grezzo a livelli di qualità elevati</div>
+            </div>
+            <div class="procon-item">
+              <div class="procon-icon icon-pro">✓</div>
+              <div><strong>Apprendimento automatico delle feature</strong> — nessun feature engineering manuale. Il modello trova da solo le variabili rilevanti</div>
+            </div>
+            <div class="procon-item">
+              <div class="procon-icon icon-pro">✓</div>
+              <div><strong>Performance su scala</strong> — su task come classificazione di immagini o traduzione, supera gli esperti umani in termini di velocità e volume</div>
+            </div>
+            <div class="procon-item">
+              <div class="procon-icon icon-pro">✓</div>
+              <div><strong>Base per gli LLM</strong> — l'architettura transformer del deep learning è il fondamento tecnico di tutti i modelli linguistici moderni</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="class-col">
+          <h3>Limiti principali</h3>
+          <div class="procon">
+            <div class="procon-item">
+              <div class="procon-icon icon-con">✗</div>
+              <div><strong>Scatola nera</strong> — difficile o impossibile spiegare perché il modello ha dato un certo output. Problema serio in contesti regolati</div>
+            </div>
+            <div class="procon-item">
+              <div class="procon-icon icon-con">✗</div>
+              <div><strong>Fame di dati</strong> — richiede grandi quantità di dati etichettati per il training. Su dataset piccoli, il ML classico spesso performa meglio</div>
+            </div>
+            <div class="procon-item">
+              <div class="procon-icon icon-con">✗</div>
+              <div><strong>Costo computazionale</strong> — training e inference richiedono GPU costose. Non sempre economicamente giustificato rispetto ad alternative più semplici</div>
+            </div>
+            <div class="procon-item">
+              <div class="procon-icon icon-con">✗</div>
+              <div><strong>Brittleness</strong> — può fallire su input leggermente diversi da quelli di training ("adversarial examples"). Meno robusto del ML classico su distribuzioni inattese</div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+  </section>
+
+  <!-- ═══════════ AI GENERATIVA ═══════════ -->
+  <section id="gen" class="section">
+
+    <div class="class-card c3">
+      <div class="class-header">
+        <div class="class-num">3</div>
+        <div class="class-tag">Terza classe</div>
+        <div class="class-name">Intelligenza Artificiale Generativa</div>
+        <div class="class-tagline">Produce contenuto nuovo: testo, immagini, codice, audio — e ragiona in linguaggio naturale</div>
+      </div>
+
+      <div class="class-body">
+        <div class="class-col">
+          <h3>Descrizione</h3>
+          <p>L'AI generativa è la classe che ha catturato l'attenzione pubblica dal 2022. La distinzione fondamentale rispetto alle classi precedenti è nel tipo di output: invece di classificare, prevedere o riconoscere, questi modelli <strong>producono contenuto nuovo</strong> — testo, immagini, codice, audio, video.</p>
+          <p>I Large Language Model (LLM) come Claude, GPT-4o, Gemini sono la forma più diffusa: modelli addestrati su quantità enormi di testo che hanno sviluppato la capacità di comprendere e generare linguaggio naturale con qualità sorprendente. Ma l'AI generativa include anche i modelli di immagini (DALL-E, Midjourney, Stable Diffusion), audio (ElevenLabs, Suno), e video (Sora, Runway).</p>
+          <p>Gli LLM, in particolare, hanno una caratteristica unica rispetto a tutte le altre classi: l'interfaccia è il linguaggio naturale. Non serve saper programmare — basta descrivere quello che si vuole. Questo abbassa drasticamente la barriera di accesso.</p>
+          <p>Gli <strong>agenti AI</strong> — il tema centrale di questa serie — sono sistemi costruiti attorno a un LLM a cui vengono aggiunti strumenti, memoria e capacità di pianificazione e azione autonoma.</p>
+
+          <div class="analogy-box">
+            <div class="analogy-label">// Analogia</div>
+            <p>Un consulente esperto che non solo valuta la pratica di credito, ma scrive la lettera di risposta al cliente, spiega in modo personalizzato le motivazioni, suggerisce prodotti alternativi, e può agire direttamente sul sistema informatico per completare le operazioni.</p>
+          </div>
+        </div>
+
+        <div class="class-col">
+          <h3>Applicazioni concrete</h3>
+          <div class="app-list">
+            <div class="app-item">
+              <div class="app-icon">💬</div>
+              <div class="app-text">
+                <div class="app-name">Assistenti e chatbot avanzati</div>
+                <div class="app-desc">Customer service, supporto interno, Q&A su knowledge base aziendale con comprensione del contesto</div>
+              </div>
+            </div>
+            <div class="app-item">
+              <div class="app-icon">📄</div>
+              <div class="app-text">
+                <div class="app-name">Automazione documentale</div>
+                <div class="app-desc">Redazione di report, email, contratti, sintesi di documenti lunghi, estrazione di informazioni strutturate</div>
+              </div>
+            </div>
+            <div class="app-item">
+              <div class="app-icon">💻</div>
+              <div class="app-text">
+                <div class="app-name">Assistenza al coding</div>
+                <div class="app-desc">Generazione, revisione e debugging di codice — con impatti documentati di 20–40% sulla produttività dei team tecnici</div>
+              </div>
+            </div>
+            <div class="app-item">
+              <div class="app-icon">🔍</div>
+              <div class="app-text">
+                <div class="app-name">Research e analisi</div>
+                <div class="app-desc">Sintesi di fonti multiple, ricerca su documenti interni, supporto all'analisi di scenari complessi</div>
+              </div>
+            </div>
+            <div class="app-item">
+              <div class="app-icon">🤖</div>
+              <div class="app-text">
+                <div class="app-name">Agenti AI autonomi</div>
+                <div class="app-desc">Sistemi che pianificano ed eseguono sequenze di azioni per raggiungere obiettivi complessi in modo semi-autonomo</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="class-col">
+          <h3>Punti di forza distintivi</h3>
+          <div class="procon">
+            <div class="procon-item">
+              <div class="procon-icon icon-pro">✓</div>
+              <div><strong>Interfaccia in linguaggio naturale</strong> — accessibile senza competenze tecniche. La barriera di accesso più bassa di qualsiasi tecnologia AI precedente</div>
+            </div>
+            <div class="procon-item">
+              <div class="procon-icon icon-pro">✓</div>
+              <div><strong>Versatilità</strong> — un singolo modello gestisce task radicalmente diversi: riassumere, tradurre, scrivere, analizzare, rispondere a domande</div>
+            </div>
+            <div class="procon-item">
+              <div class="procon-icon icon-pro">✓</div>
+              <div><strong>Comprensione del contesto</strong> — capisce sfumature, ambiguità, tono. Produce output adattati al contesto specifico, non risposte standardizzate</div>
+            </div>
+            <div class="procon-item">
+              <div class="procon-icon icon-pro">✓</div>
+              <div><strong>Generazione di contenuto nuovo</strong> — può creare, non solo classificare. Redige, propone, spiega, argomenta</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="class-col">
+          <h3>Limiti principali</h3>
+          <div class="procon">
+            <div class="procon-item">
+              <div class="procon-icon icon-con">✗</div>
+              <div><strong>Allucinazioni</strong> — può produrre informazioni false con tono autorevole. Non è un bug correggibile: è una caratteristica strutturale. Richiede supervisione umana su output fattuali</div>
+            </div>
+            <div class="procon-item">
+              <div class="procon-icon icon-con">✗</div>
+              <div><strong>Costo elevato</strong> — le API dei modelli frontier hanno un costo per token significativo. Su volumi molto alti, l'economia non regge senza ottimizzazione</div>
+            </div>
+            <div class="procon-item">
+              <div class="procon-icon icon-con">✗</div>
+              <div><strong>Non interpretabile</strong> — impossibile spiegare in modo auditabile perché ha prodotto un certo output. Problema serio in contesti regolati</div>
+            </div>
+            <div class="procon-item">
+              <div class="procon-icon icon-con">✗</div>
+              <div><strong>Privacy dei dati</strong> — i modelli cloud richiedono che i dati transitino per server di terze parti. Vincolo rilevante per informazioni sensibili o riservate</div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+  </section>
+
+  <!-- ═══════════ SIMBOLICO ═══════════ -->
+  <section id="sym" class="section">
+
+    <div class="class-card c4">
+      <div class="class-header">
+        <div class="class-num">4</div>
+        <div class="class-tag">Quarta classe — Nota</div>
+        <div class="class-name">Sistemi Simbolici e Basati su Regole</div>
+        <div class="class-tagline">Ragiona con regole esplicite e logica formale — prevedibile, auditabile, non adattivo</div>
+      </div>
+
+      <div class="class-body">
+        <div class="class-col">
+          <h3>Descrizione</h3>
+          <p>Prima dell'era del machine learning, l'AI era quasi esclusivamente simbolica: sistemi esperti con regole esplicite scritte da esperti umani. "Se il reddito è inferiore a X <em>e</em> non ci sono garanzie, allora rifiuta." Niente statistica, niente apprendimento dai dati — solo logica formale e regole codificate.</p>
+          <p>Questi sistemi non imparano dai dati. Applicano regole fisse in modo deterministico. Questo li rende <strong>completamente prevedibili e auditabili</strong> — una proprietà molto preziosa in certi contesti — ma anche rigidi: se la realtà cambia, qualcuno deve aggiornare le regole manualmente.</p>
+          <p>Oggi vivono in una zona ibrida: raramente usati da soli su problemi complessi, ma ancora presenti come strato di governance sopra i sistemi ML (per applicare vincoli normativi obbligatori) o come componenti in sistemi misti.</p>
+
+          <div class="analogy-box">
+            <div class="analogy-label">// Analogia</div>
+            <p>Il manuale di policy del credito scritto dall'ufficio legale: "Se il richiedente è stato insolvente negli ultimi 5 anni, la risposta è automaticamente no — indipendentemente da qualsiasi altro fattore." Una regola esplicita, non negoziabile, che nessun modello statistico può sovrascrivere.</p>
+          </div>
+        </div>
+
+        <div class="class-col">
+          <h3>Applicazioni concrete</h3>
+          <div class="app-list">
+            <div class="app-item">
+              <div class="app-icon">⚖️</div>
+              <div class="app-text">
+                <div class="app-name">Compliance e normativa</div>
+                <div class="app-desc">Applicazione automatica di regole regolatorie obbligatorie (antiriciclaggio, solvibilità, requisiti legali di ruolo)</div>
+              </div>
+            </div>
+            <div class="app-item">
+              <div class="app-icon">🔀</div>
+              <div class="app-text">
+                <div class="app-name">Motori di regole aziendali</div>
+                <div class="app-desc">Automazione di processi decisionali strutturati: eligibilità a prodotti, routing di pratiche, approvazioni condizionali</div>
+              </div>
+            </div>
+            <div class="app-item">
+              <div class="app-icon">🧬</div>
+              <div class="app-text">
+                <div class="app-name">Sistemi esperti in medicina</div>
+                <div class="app-desc">Supporto alla diagnosi in domini ristretti con protocolli clinici rigidi, dove la spiegabilità è obbligatoria</div>
+              </div>
+            </div>
+            <div class="app-item">
+              <div class="app-icon">🤝</div>
+              <div class="app-text">
+                <div class="app-name">Strato di governance su ML</div>
+                <div class="app-desc">Vincoli espliciti che sovrascrivono i modelli statistici quando le regole normative o etiche lo richiedono</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="class-col">
+          <h3>Punti di forza distintivi</h3>
+          <div class="procon">
+            <div class="procon-item">
+              <div class="procon-icon icon-pro">✓</div>
+              <div><strong>Auditabilità totale</strong> — ogni decisione è spiegabile con precisione. Obbligatorio in contesti regolati (banca, assicurazioni, PA)</div>
+            </div>
+            <div class="procon-item">
+              <div class="procon-icon icon-pro">✓</div>
+              <div><strong>Determinismo assoluto</strong> — dati gli stessi input, produce sempre lo stesso output. Zero variabilità, zero sorprese</div>
+            </div>
+            <div class="procon-item">
+              <div class="procon-icon icon-pro">✓</div>
+              <div><strong>Nessun dato di training</strong> — funziona senza esempi storici. Utile in domini nuovi o con dati scarsi</div>
+            </div>
+            <div class="procon-item">
+              <div class="procon-icon icon-pro">✓</div>
+              <div><strong>Complementarità con ML</strong> — come strato di governance sopra modelli statistici, garantisce il rispetto di vincoli non negoziabili</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="class-col">
+          <h3>Limiti principali</h3>
+          <div class="procon">
+            <div class="procon-item">
+              <div class="procon-icon icon-con">✗</div>
+              <div><strong>Non si adatta</strong> — se il mondo cambia, le regole devono essere aggiornate manualmente da esperti. Non impara dai nuovi dati</div>
+            </div>
+            <div class="procon-item">
+              <div class="procon-icon icon-con">✗</div>
+              <div><strong>Esplosione della complessità</strong> — su problemi reali, il numero di regole necessarie diventa ingestibile. I sistemi esperti degli anni '80 si sono scontrati con questo muro</div>
+            </div>
+            <div class="procon-item">
+              <div class="procon-icon icon-con">✗</div>
+              <div><strong>Nessuna sfumatura</strong> — non gestisce eccezioni, contesti particolari, casi borderline. La realtà è sempre più complessa delle regole che la descrivono</div>
+            </div>
+            <div class="procon-item">
+              <div class="procon-icon icon-con">✗</div>
+              <div><strong>Performance limitata su problemi complessi</strong> — su task che richiedono comprensione di pattern sottili, è largamente inferiore a ML e deep learning</div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+  </section>
+
+  <!-- ═══════════ ANALOGIA ═══════════ -->
+  <section id="analogia" class="section">
+
+    <div class="section-label">L'analogia del prestito</div>
+    <h2>Le quattro classi <em>di fronte allo stesso problema</em></h2>
+    <p class="section-intro">La domanda è sempre la stessa: <strong>"Questo cliente pagherà il suo prestito?"</strong> Le quattro classi di AI la affrontano in modo radicalmente diverso — con strumenti, logiche e output diversi. Ecco come.</p>
+
+    <div class="loan-section">
+      <div class="loan-header">
+        <div class="loan-eyebrow">// Il problema comune</div>
+        <div class="loan-title">Valutazione del rischio di credito</div>
+        <p class="loan-subtitle">Una banca deve decidere se concedere un prestito a un cliente. Ha a disposizione dati storici, documenti, conversazioni e normative. Come usa l'AI per rispondere?</p>
+      </div>
+
+      <div class="loan-grid">
+        <div class="loan-cell">
+          <div class="loan-cell-label l1">// Classe 01 — ML Classico</div>
+          <div class="loan-cell-name">Machine Learning Classico</div>
+          <p>Analizza il dataset storico di migliaia di pratiche passate — reddito, storico creditizio, rapporto debito/reddito, anzianità lavorativa — e identifica i pattern statistici che distinguono i buoni pagatori dai cattivi.</p>
+          <p>Produce un punteggio numerico (es. 720/1000) con un livello di confidenza. Sa dire: "clienti con questo profilo hanno rimborsato nel 94% dei casi negli ultimi 10 anni."</p>
+          <div class="loan-verdict lv-c1">Output: uno score numerico con spiegazione statistica. Affidabile, veloce, interpretabile. Non capisce il contesto individuale.</div>
+        </div>
+
+        <div class="loan-cell">
+          <div class="loan-cell-label l2">// Classe 02 — Deep Learning</div>
+          <div class="loan-cell-name">Deep Learning</div>
+          <p>Va oltre i dati strutturati. Analizza il testo delle email di comunicazione con la banca, i PDF dei documenti caricati, il comportamento sull'app mobile, i pattern di utilizzo del conto corrente.</p>
+          <p>Trova correlazioni non ovvie che un analista umano non vedrebbe: certi pattern di piccoli prelievi ricorrenti, la frequenza delle comunicazioni, la qualità della documentazione fornita.</p>
+          <div class="loan-verdict lv-c2">Output: uno score arricchito da segnali non strutturati. Più preciso su profili atipici. Difficile da spiegare al cliente o al regolatore.</div>
+        </div>
+
+        <div class="loan-cell">
+          <div class="loan-cell-label l3">// Classe 03 — AI Generativa</div>
+          <div class="loan-cell-name">AI Generativa (LLM)</div>
+          <p>Legge l'intera pratica, comprende il contesto individuale, e produce una valutazione narrativa: "Il cliente ha un reddito variabile tipico dei liberi professionisti. Il calo del 2023 è spiegato dalla congiuntura del settore, non da difficoltà strutturali."</p>
+          <p>Scrive la lettera al cliente, suggerisce condizioni alternative, risponde alle sue domande in linguaggio naturale. Se è un agente, può aggiornare il sistema direttamente.</p>
+          <div class="loan-verdict lv-c3">Output: analisi qualitativa contestuale + comunicazione personalizzata. Potente ma non auditabile per legge come motivazione formale del rifiuto.</div>
+        </div>
+
+        <div class="loan-cell">
+          <div class="loan-cell-label l4">// Classe 04 — Simbolico</div>
+          <div class="loan-cell-name">Sistemi Simbolici</div>
+          <p>Applica le regole normative obbligatorie prima di qualsiasi valutazione statistica: "Il cliente ha avuto un'insolvenza dichiarata negli ultimi 5 anni. Per normativa interna e requisiti EBA, la pratica è automaticamente esclusa."</p>
+          <p>Questa decisione non può essere sovrascritta da nessun modello ML, per quanto positivo sia lo score. Le regole di compliance non sono negoziabili.</p>
+          <div class="loan-verdict lv-c4">Output: blocco o via libera normativo. Deterministico, auditabile, non adattivo. Funziona come guardrail obbligatorio prima di qualsiasi AI statistica.</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="callout">
+      <div class="callout-label">// Il punto chiave</div>
+      <p>Nella pratica, un sistema bancario moderno usa tutte e quattro le classi in sequenza: il simbolico applica i vincoli normativi, il ML classico produce lo score base, il deep learning arricchisce con segnali non strutturati, l'AI generativa produce la comunicazione personalizzata e supporta l'analista. Non si sceglie <em>una</em> classe — si sceglie quale usare per ogni strato del problema.</p>
+    </div>
+
+  </section>
+
+  <!-- ═══════════ SINTESI ═══════════ -->
+  <section id="sintesi" class="section">
+
+    <div class="section-label">Orientamento rapido</div>
+    <h2>Dove si collocano <em>LLM e Agenti</em></h2>
+    <p class="section-intro">Prima di leggere la tabella di sintesi, un posizionamento esplicito: gli LLM appartengono alla terza classe (AI generativa), e gli agenti AI non sono una nuova tecnologia ma un'architettura di sistema costruita attorno a un LLM.</p>
+
+    <div class="agents-box">
+      <div class="agents-header">
+        <h4>Gli Agenti AI — dove si collocano nel quadro</h4>
+        <p>Un agente AI è un LLM a cui sono stati aggiunti strumenti, memoria e un loop di ragionamento-azione. Non è una classe AI separata: è un'applicazione architetturale dell'AI generativa.</p>
+      </div>
+      <div class="agents-body">
+        <div class="agents-item">
+          <div class="agents-item-label">Il motore</div>
+          <p>Un LLM (AI generativa) che pianifica, ragiona e genera le azioni da intraprendere in linguaggio naturale</p>
+        </div>
+        <div class="agents-item">
+          <div class="agents-item-label">Gli strumenti</div>
+          <p>Possono includere modelli ML classici (per scoring), sistemi di deep learning (per leggere immagini), e motori di regole simbolici (per compliance)</p>
+        </div>
+        <div class="agents-item">
+          <div class="agents-item-label">La novità</div>
+          <p>L'autonomia: l'agente non aspetta istruzioni per ogni passo, ma pianifica ed esegue sequenze di azioni per raggiungere un obiettivo</p>
+        </div>
+        <div class="agents-item">
+          <div class="agents-item-label">La dipendenza</div>
+          <p>Un agente è tanto buono quanto il modello LLM che lo alimenta — ed eredita tutti i suoi limiti, incluse le allucinazioni</p>
+        </div>
+      </div>
+    </div>
+
+    <hr class="rule">
+
+    <h3>Tabella di sintesi delle quattro classi</h3>
+
+    <table class="synth-table">
+      <thead>
+        <tr>
+          <th>Classe</th>
+          <th>Cosa fa</th>
+          <th>Quando usarla</th>
+          <th>Quando non usarla</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><span class="badge badge-c1">ML Classico</span></td>
+          <td>Predice, classifica, rileva anomalie su dati strutturati storici</td>
+          <td>Processi ripetitivi su dati tabulari, alto volume, contesti regolati che richiedono spiegabilità</td>
+          <td>Input non strutturati (testo, immagini), problemi che richiedono comprensione del contesto</td>
+        </tr>
+        <tr>
+          <td><span class="badge badge-c2">Deep Learning</span></td>
+          <td>Comprende e classifica dati non strutturati: immagini, audio, testo grezzo</td>
+          <td>Computer vision, riconoscimento vocale, traduzione, analisi di segnali complessi</td>
+          <td>Dataset piccoli, contesti dove la spiegabilità è obbligatoria, task su dati strutturati semplici</td>
+        </tr>
+        <tr>
+          <td><span class="badge badge-c3">AI Generativa</span></td>
+          <td>Genera testo, codice, immagini; ragiona in linguaggio naturale; abilita agenti autonomi</td>
+          <td>Comunicazione, automazione documentale, assistenza, task che richiedono comprensione contestuale</td>
+          <td>Output fattuali senza supervisione, contesti con requisiti di auditabilità formale, calcoli precisi</td>
+        </tr>
+        <tr>
+          <td><span class="badge badge-c4">Simbolico</span></td>
+          <td>Applica regole esplicite in modo deterministico e auditabile</td>
+          <td>Compliance normativa, governance su sistemi ML, processi con regole non negoziabili</td>
+          <td>Problemi complessi con molte variabili, contesti che richiedono adattamento ai nuovi dati</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <div class="callout">
+      <div class="callout-label">// Il messaggio da portare via</div>
+      <p>L'AI non è una tecnologia — è un campo. Scegliere la classe giusta per il problema giusto è la decisione più importante prima di qualsiasi investimento tecnologico. Usare AI generativa dove serve ML classico è costoso e inutile. Non usare AI generativa dove potrebbe creare valore reale è un'opportunità persa.</p>
+    </div>
+
+  </section>
+
+</div>
+
+<script>
+  function showTab(id) {
+    document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+    document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+    document.getElementById(id).classList.add('active');
+    event.target.classList.add('active');
+    window.scrollTo({ top: document.querySelector('.sticky-nav').offsetTop - 10, behavior: 'smooth' });
+  }
+</script>
+</body>
+</html>

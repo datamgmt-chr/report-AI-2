@@ -1,0 +1,1204 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Combinare gli Stack — Agenti AI</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Mono:wght@300;400;500&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg:       #f0ede6;
+  --bg2:      #e6e2d8;
+  --ink:      #1c1a15;
+  --ink2:     #3a3830;
+  --ink3:     #7a7668;
+  --ink4:     #b8b4a4;
+  --border:   #ccc8b8;
+  --border2:  #b8b4a0;
+
+  /* Stack colors */
+  --c1: #c8a800;   /* custom — oro */
+  --c2: #0070c8;   /* framework — blu */
+  --c3: #00a854;   /* multi-agent — verde */
+  --c4: #e05a00;   /* no-code — arancio */
+  --c5: #8800c8;   /* proprietario — viola */
+
+  --c1-bg: #fffadc;
+  --c2-bg: #dceeff;
+  --c3-bg: #dcfff0;
+  --c4-bg: #fff0dc;
+  --c5-bg: #f4dcff;
+
+  /* Modo combinazione */
+  --modo-a: #b00020;
+  --modo-b: #005080;
+  --modo-c: #006040;
+}
+
+* { margin:0; padding:0; box-sizing:border-box; }
+html { scroll-behavior: smooth; }
+
+body {
+  background: var(--bg);
+  color: var(--ink);
+  font-family: 'DM Sans', sans-serif;
+  font-weight: 300;
+  font-size: 14px;
+  line-height: 1.7;
+}
+
+/* ────────────────────────────────
+   HEADER
+──────────────────────────────── */
+header {
+  padding: 64px 56px 48px;
+  border-bottom: 2px solid var(--ink);
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 48px;
+  align-items: end;
+}
+
+.header-eyebrow {
+  font-family: 'DM Mono', monospace;
+  font-size: 10px;
+  letter-spacing: 3px;
+  text-transform: uppercase;
+  color: var(--ink3);
+  margin-bottom: 14px;
+}
+
+header h1 {
+  font-family: 'DM Serif Display', serif;
+  font-size: clamp(32px, 4.5vw, 60px);
+  font-weight: 400;
+  line-height: 1.05;
+  letter-spacing: -1px;
+}
+
+header h1 em {
+  font-style: italic;
+  color: var(--ink3);
+}
+
+.header-right {
+  text-align: right;
+  flex-shrink: 0;
+}
+
+.header-stat {
+  font-family: 'DM Mono', monospace;
+  font-size: 11px;
+  color: var(--ink4);
+  margin-bottom: 6px;
+}
+
+.header-stat strong {
+  display: block;
+  font-family: 'DM Serif Display', serif;
+  font-size: 28px;
+  color: var(--ink);
+  font-weight: 400;
+  line-height: 1;
+}
+
+/* ────────────────────────────────
+   LEGEND BAR
+──────────────────────────────── */
+.legend-bar {
+  display: flex;
+  align-items: center;
+  gap: 0;
+  border-bottom: 1px solid var(--border);
+  overflow-x: auto;
+}
+
+.legend-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 14px 24px;
+  border-right: 1px solid var(--border);
+  white-space: nowrap;
+  font-family: 'DM Mono', monospace;
+  font-size: 11px;
+  color: var(--ink3);
+}
+
+.legend-pill {
+  display: inline-block;
+  width: 28px;
+  height: 8px;
+  border-radius: 2px;
+}
+
+/* ────────────────────────────────
+   BODY
+──────────────────────────────── */
+.body {
+  padding: 0 56px 80px;
+}
+
+/* ────────────────────────────────
+   SECTION HEADERS
+──────────────────────────────── */
+.section {
+  margin-top: 72px;
+}
+
+.section-header {
+  display: grid;
+  grid-template-columns: 48px 1fr auto;
+  align-items: baseline;
+  gap: 16px;
+  margin-bottom: 32px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid var(--border2);
+}
+
+.section-num {
+  font-family: 'DM Mono', monospace;
+  font-size: 11px;
+  color: var(--ink4);
+}
+
+.section-header h2 {
+  font-family: 'DM Serif Display', serif;
+  font-size: clamp(22px, 2.8vw, 34px);
+  font-weight: 400;
+  letter-spacing: -0.3px;
+}
+
+.section-header h2 em { font-style: italic; color: var(--ink3); }
+
+.section-mode-badge {
+  font-family: 'DM Mono', monospace;
+  font-size: 10px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  padding: 4px 12px;
+  border: 1px solid;
+  white-space: nowrap;
+}
+
+.badge-a { border-color: var(--modo-a); color: var(--modo-a); }
+.badge-b { border-color: var(--modo-b); color: var(--modo-b); }
+.badge-c { border-color: var(--modo-c); color: var(--modo-c); }
+
+.section-intro {
+  font-size: 15px;
+  color: var(--ink2);
+  max-width: 680px;
+  margin-bottom: 40px;
+  line-height: 1.75;
+}
+
+.section-intro strong { color: var(--ink); font-weight: 500; }
+
+/* ────────────────────────────────
+   ARCH DIAGRAM — BASE STYLES
+──────────────────────────────── */
+.diagram-wrap {
+  border: 1.5px solid var(--ink);
+  margin-bottom: 32px;
+  overflow: hidden;
+}
+
+.diagram-header {
+  background: var(--ink);
+  color: rgba(255,255,255,0.75);
+  font-family: 'DM Mono', monospace;
+  font-size: 10px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  padding: 10px 20px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.diagram-header span {
+  font-size: 9px;
+  color: rgba(255,255,255,0.3);
+}
+
+.diagram-body {
+  padding: 28px;
+  background: var(--bg2);
+}
+
+/* ────────────────────────────────
+   ARCH DIAGRAM — MODO A
+   Timeline verticale
+──────────────────────────────── */
+.timeline {
+  position: relative;
+  padding-left: 40px;
+}
+
+.timeline::before {
+  content: '';
+  position: absolute;
+  left: 12px;
+  top: 24px;
+  bottom: 24px;
+  width: 2px;
+  background: repeating-linear-gradient(
+    to bottom,
+    var(--border2) 0, var(--border2) 6px,
+    transparent 6px, transparent 12px
+  );
+}
+
+.timeline-step {
+  position: relative;
+  margin-bottom: 28px;
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 20px;
+  align-items: start;
+}
+
+.timeline-step:last-child { margin-bottom: 0; }
+
+.timeline-dot {
+  position: absolute;
+  left: -34px;
+  top: 14px;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  border: 2px solid var(--ink);
+  background: var(--bg);
+}
+
+.timeline-content {
+  background: var(--bg);
+  border: 1px solid var(--border);
+  padding: 20px 24px;
+}
+
+.timeline-phase {
+  font-family: 'DM Mono', monospace;
+  font-size: 10px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: var(--ink4);
+  margin-bottom: 6px;
+}
+
+.timeline-title {
+  font-family: 'DM Serif Display', serif;
+  font-size: 18px;
+  font-weight: 400;
+  margin-bottom: 8px;
+}
+
+.timeline-text {
+  font-size: 13px;
+  color: var(--ink2);
+  line-height: 1.6;
+}
+
+.timeline-stack-tag {
+  display: self-start;
+  font-family: 'DM Mono', monospace;
+  font-size: 11px;
+  padding: 6px 14px;
+  border: 1.5px solid;
+  white-space: nowrap;
+  align-self: start;
+  margin-top: 14px;
+}
+
+.arrow-down {
+  text-align: center;
+  font-size: 18px;
+  color: var(--ink4);
+  margin: -14px 0;
+  position: relative;
+  z-index: 1;
+  padding-left: 0;
+}
+
+/* ────────────────────────────────
+   ARCH DIAGRAM — MODO B
+   Flow orizzontale con layers
+──────────────────────────────── */
+.arch-layers-h {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  background: var(--border);
+}
+
+.arch-row {
+  display: grid;
+  background: var(--bg);
+}
+
+.arch-row-2 { grid-template-columns: 200px 1fr; }
+.arch-row-3 { grid-template-columns: 200px 1fr 1fr; }
+.arch-row-4 { grid-template-columns: 200px 1fr 1fr 1fr; }
+
+.arch-cell {
+  padding: 18px 20px;
+  border-right: 1px solid var(--border);
+  position: relative;
+}
+
+.arch-cell:last-child { border-right: none; }
+
+.arch-cell-label {
+  font-family: 'DM Mono', monospace;
+  font-size: 10px;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  color: var(--ink4);
+  margin-bottom: 8px;
+}
+
+.arch-cell-name {
+  font-family: 'DM Serif Display', serif;
+  font-size: 16px;
+  font-weight: 400;
+  margin-bottom: 6px;
+}
+
+.arch-cell-desc {
+  font-size: 12px;
+  color: var(--ink3);
+  line-height: 1.5;
+}
+
+/* Stack color accent on left */
+.accent-c1 { border-left: 4px solid var(--c1); padding-left: 16px; }
+.accent-c2 { border-left: 4px solid var(--c2); padding-left: 16px; }
+.accent-c3 { border-left: 4px solid var(--c3); padding-left: 16px; }
+.accent-c4 { border-left: 4px solid var(--c4); padding-left: 16px; }
+.accent-c5 { border-left: 4px solid var(--c5); padding-left: 16px; }
+
+/* Row label cell */
+.row-label-cell {
+  background: var(--bg2);
+  border-right: 1.5px solid var(--border2) !important;
+  display: flex;
+  align-items: center;
+}
+
+.row-label-cell span {
+  font-family: 'DM Mono', monospace;
+  font-size: 10px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: var(--ink4);
+  writing-mode: horizontal-tb;
+}
+
+/* Stack badge inline */
+.stack-badge {
+  display: inline-block;
+  font-family: 'DM Mono', monospace;
+  font-size: 10px;
+  padding: 2px 8px;
+  border: 1px solid;
+  margin-right: 4px;
+  margin-top: 4px;
+  white-space: nowrap;
+}
+
+.sb-c1 { border-color: var(--c1); color: var(--c1); background: var(--c1-bg); }
+.sb-c2 { border-color: var(--c2); color: var(--c2); background: var(--c2-bg); }
+.sb-c3 { border-color: var(--c3); color: var(--c3); background: var(--c3-bg); }
+.sb-c4 { border-color: var(--c4); color: var(--c4); background: var(--c4-bg); }
+.sb-c5 { border-color: var(--c5); color: var(--c5); background: var(--c5-bg); }
+
+/* ────────────────────────────────
+   ARCH DIAGRAM — MODO C
+   Org chart / struttura ad albero
+──────────────────────────────── */
+.org-tree {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0;
+}
+
+.org-level {
+  display: flex;
+  gap: 16px;
+  justify-content: center;
+  width: 100%;
+  position: relative;
+}
+
+.org-connector-v {
+  width: 2px;
+  height: 28px;
+  background: var(--border2);
+  margin: 0 auto;
+}
+
+.org-connector-h-wrap {
+  position: relative;
+  display: flex;
+  justify-content: center;
+  width: 100%;
+  height: 28px;
+}
+
+.org-connector-h {
+  position: absolute;
+  top: 0;
+  height: 2px;
+  background: var(--border2);
+}
+
+.org-connector-h-dots {
+  position: absolute;
+  display: flex;
+  justify-content: space-around;
+  width: 100%;
+  top: 0;
+}
+
+.org-connector-drop {
+  width: 2px;
+  height: 28px;
+  background: var(--border2);
+  margin: 0 auto;
+}
+
+.org-node {
+  border: 1.5px solid var(--border2);
+  background: var(--bg);
+  padding: 16px 20px;
+  min-width: 180px;
+  max-width: 220px;
+  text-align: center;
+  flex-shrink: 0;
+}
+
+.org-node.primary {
+  border-width: 2px;
+  border-color: var(--ink);
+  background: var(--ink);
+  color: rgba(255,255,255,0.85);
+}
+
+.org-node-label {
+  font-family: 'DM Mono', monospace;
+  font-size: 9px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: var(--ink4);
+  margin-bottom: 5px;
+}
+
+.org-node.primary .org-node-label { color: rgba(255,255,255,0.35); }
+
+.org-node-name {
+  font-family: 'DM Serif Display', serif;
+  font-size: 15px;
+  font-weight: 400;
+  margin-bottom: 4px;
+}
+
+.org-node.primary .org-node-name { color: #fff; }
+
+.org-node-stack {
+  font-size: 11px;
+  color: var(--ink3);
+  margin-top: 6px;
+}
+
+.org-node.primary .org-node-stack { color: rgba(255,255,255,0.5); }
+
+/* ────────────────────────────────
+   INSIGHT BOX
+──────────────────────────────── */
+.insight-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 1px;
+  background: var(--border);
+  border: 1.5px solid var(--ink);
+  margin-bottom: 32px;
+}
+
+.insight {
+  background: var(--bg);
+  padding: 24px;
+}
+
+.insight-icon {
+  font-size: 24px;
+  margin-bottom: 10px;
+  display: block;
+}
+
+.insight-title {
+  font-family: 'DM Serif Display', serif;
+  font-size: 16px;
+  font-weight: 400;
+  margin-bottom: 8px;
+}
+
+.insight-text {
+  font-size: 12px;
+  color: var(--ink3);
+  line-height: 1.6;
+}
+
+/* ────────────────────────────────
+   WHEN SECTION
+──────────────────────────────── */
+.when-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1px;
+  background: var(--border);
+  border: 1.5px solid var(--border2);
+}
+
+.when-block {
+  background: var(--bg);
+  padding: 24px;
+}
+
+.when-block-title {
+  font-family: 'DM Mono', monospace;
+  font-size: 10px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: var(--ink4);
+  margin-bottom: 16px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid var(--border);
+}
+
+.when-block-title.yes { color: #00803a; }
+.when-block-title.no  { color: #b00020; }
+
+.when-list {
+  list-style: none;
+}
+
+.when-list li {
+  font-size: 13px;
+  color: var(--ink2);
+  padding: 7px 0;
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  gap: 10px;
+  line-height: 1.5;
+}
+
+.when-list li:last-child { border-bottom: none; }
+.when-list.yes li::before { content: '✓'; color: #00803a; font-weight: 700; flex-shrink: 0; }
+.when-list.no  li::before { content: '✗'; color: #b00020; font-weight: 700; flex-shrink: 0; }
+
+/* ────────────────────────────────
+   REGOLA D'ORO
+──────────────────────────────── */
+.golden-rule {
+  background: var(--ink);
+  color: rgba(255,255,255,0.85);
+  padding: 40px 48px;
+  margin-top: 64px;
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 40px;
+  align-items: center;
+}
+
+.golden-rule-label {
+  font-family: 'DM Mono', monospace;
+  font-size: 10px;
+  letter-spacing: 3px;
+  text-transform: uppercase;
+  color: rgba(255,255,255,0.3);
+  writing-mode: vertical-rl;
+  transform: rotate(180deg);
+}
+
+.golden-rule-content h3 {
+  font-family: 'DM Serif Display', serif;
+  font-size: clamp(20px, 2.5vw, 30px);
+  font-weight: 400;
+  font-style: italic;
+  line-height: 1.3;
+  margin-bottom: 16px;
+}
+
+.golden-rule-content p {
+  font-size: 13px;
+  color: rgba(255,255,255,0.45);
+  max-width: 640px;
+  line-height: 1.7;
+}
+
+/* ────────────────────────────────
+   FOOTER
+──────────────────────────────── */
+footer {
+  border-top: 1px solid var(--border);
+  padding: 24px 56px;
+  display: flex;
+  justify-content: space-between;
+  font-family: 'DM Mono', monospace;
+  font-size: 10px;
+  color: var(--ink4);
+}
+
+/* ────────────────────────────────
+   RESPONSIVE
+──────────────────────────────── */
+@media (max-width: 860px) {
+  header { padding: 40px 20px 32px; grid-template-columns: 1fr; }
+  .header-right { text-align: left; }
+  .body { padding: 0 20px 60px; }
+  .insight-grid { grid-template-columns: 1fr; }
+  .when-grid { grid-template-columns: 1fr; }
+  .golden-rule { padding: 32px 24px; grid-template-columns: 1fr; }
+  .golden-rule-label { writing-mode: horizontal-tb; transform: none; }
+  footer { padding: 20px; flex-direction: column; gap: 6px; }
+  .arch-row-3, .arch-row-4 { grid-template-columns: 1fr; }
+  .org-level { flex-wrap: wrap; }
+}
+</style>
+</head>
+<body>
+
+<!-- HEADER -->
+<header>
+  <div>
+    <div class="header-eyebrow">Architetture combinate · Agenti AI · Stack tecnologici</div>
+    <h1>Come si combinano<br>gli stack <em>nella realtà</em></h1>
+  </div>
+  <div class="header-right">
+    <div class="header-stat">
+      <strong>3</strong>
+      Modi di combinare
+    </div>
+  </div>
+</header>
+
+<!-- LEGEND -->
+<div class="legend-bar">
+  <div class="legend-item"><div class="legend-pill" style="background:var(--c1)"></div> Custom / Vanilla</div>
+  <div class="legend-item"><div class="legend-pill" style="background:var(--c2)"></div> Framework</div>
+  <div class="legend-item"><div class="legend-pill" style="background:var(--c3)"></div> Multi-Agent</div>
+  <div class="legend-item"><div class="legend-pill" style="background:var(--c4)"></div> No-code</div>
+  <div class="legend-item"><div class="legend-pill" style="background:var(--c5)"></div> Proprietario</div>
+</div>
+
+<div class="body">
+
+<!-- ══════════════════════════════
+     MODO A — TEMPORALE
+══════════════════════════════ -->
+<div class="section">
+  <div class="section-header">
+    <span class="section-num">A</span>
+    <h2>Combinazione <em>temporale</em></h2>
+    <div class="section-mode-badge badge-a">Per fase</div>
+  </div>
+
+  <p class="section-intro">
+    Stack diversi in momenti diversi del ciclo di vita del progetto. Si usa lo stack più leggero per <strong>imparare velocemente</strong>, poi si migra verso uno stack più controllato quando i requisiti sono chiari. Il codice non si porta — si porta la conoscenza del problema.
+  </p>
+
+  <!-- ESEMPIO A1 -->
+  <div class="diagram-wrap">
+    <div class="diagram-header">
+      Esempio A1 — Agente RAG su knowledge base aziendale
+      <span>No-code → Framework</span>
+    </div>
+    <div class="diagram-body">
+      <div class="timeline">
+
+        <div class="timeline-step">
+          <div class="timeline-dot" style="background:var(--c4); border-color:var(--c4)"></div>
+          <div class="timeline-content">
+            <div class="timeline-phase">Settimana 1–2 · Prototipo</div>
+            <div class="timeline-title">Flowise — costruzione visiva</div>
+            <div class="timeline-text">
+              Il team di business carica i documenti aziendali, collega un nodo RAG, 
+              sceglie Claude come modello. L'agente risponde a domande sui documenti. 
+              Nessun codice scritto. Obiettivo: capire se il caso d'uso funziona e 
+              cosa gli utenti chiedono davvero.
+            </div>
+          </div>
+          <div class="timeline-stack-tag" style="border-color:var(--c4); color:var(--c4)">
+            No-code<br>Flowise
+          </div>
+        </div>
+
+        <div class="arrow-down">↓ validato il concetto</div>
+
+        <div class="timeline-step">
+          <div class="timeline-dot" style="background:var(--bg2); border-color:var(--ink3)"></div>
+          <div class="timeline-content">
+            <div class="timeline-phase">Settimana 3–4 · Analisi</div>
+            <div class="timeline-title">Si identificano i problemi reali</div>
+            <div class="timeline-text">
+              Il chunking automatico di Flowise taglia i paragrafi nel posto sbagliato. 
+              Il retrieval non distingue tra documenti di versioni diverse. 
+              Serve logging per capire perché alcune risposte sono sbagliate.
+              Flowise non permette di intervenire su questi aspetti.
+            </div>
+          </div>
+          <div class="timeline-stack-tag" style="border-color:var(--ink4); color:var(--ink4)">
+            Limite<br>piattaforma
+          </div>
+        </div>
+
+        <div class="arrow-down">↓ decisione di migrare</div>
+
+        <div class="timeline-step">
+          <div class="timeline-dot" style="background:var(--c2); border-color:var(--c2)"></div>
+          <div class="timeline-content">
+            <div class="timeline-phase">Mese 2 · Produzione</div>
+            <div class="timeline-title">LlamaIndex — controllo completo</div>
+            <div class="timeline-text">
+              Il team tecnico riscrive l'agente con LlamaIndex. Chunking personalizzato 
+              per tipo di documento. Retrieval con metadati per filtrare per versione. 
+              LangSmith per tracciare ogni step del ragionamento. 
+              Il comportamento è ora controllabile e debuggabile.
+            </div>
+          </div>
+          <div class="timeline-stack-tag" style="border-color:var(--c2); color:var(--c2)">
+            Framework<br>LlamaIndex
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <!-- ESEMPIO A2 -->
+  <div class="diagram-wrap">
+    <div class="diagram-header">
+      Esempio A2 — Agente di customer service
+      <span>Proprietario → Framework → Custom</span>
+    </div>
+    <div class="diagram-body">
+      <div class="timeline">
+
+        <div class="timeline-step">
+          <div class="timeline-dot" style="background:var(--c5); border-color:var(--c5)"></div>
+          <div class="timeline-content">
+            <div class="timeline-phase">Anno 1 · Adozione iniziale</div>
+            <div class="timeline-title">Salesforce Agentforce attivato</div>
+            <div class="timeline-text">
+              L'azienda usa già Salesforce. Attiva Agentforce per gestire le FAQ 
+              e i ticket standard. Funziona bene per l'80% dei casi. 
+              Zero sviluppo necessario.
+            </div>
+          </div>
+          <div class="timeline-stack-tag" style="border-color:var(--c5); color:var(--c5)">
+            Proprietario<br>Agentforce
+          </div>
+        </div>
+
+        <div class="arrow-down">↓ cresce la complessità</div>
+
+        <div class="timeline-step">
+          <div class="timeline-dot" style="background:var(--c2); border-color:var(--c2)"></div>
+          <div class="timeline-content">
+            <div class="timeline-phase">Anno 2 · Casi complessi</div>
+            <div class="timeline-title">LangChain per casi d'uso avanzati</div>
+            <div class="timeline-text">
+              Il 20% restante dei ticket richiede: accesso al gestionale interno, 
+              ragionamenti su più documenti, logica di escalation custom. 
+              Si costruisce un secondo agente con LangChain che gestisce questi casi. 
+              Agentforce smista: ticket semplici a sé, complessi al nuovo agente.
+            </div>
+          </div>
+          <div class="timeline-stack-tag" style="border-color:var(--c2); color:var(--c2)">
+            Framework<br>LangChain
+          </div>
+        </div>
+
+        <div class="arrow-down">↓ requisiti ultra-specifici</div>
+
+        <div class="timeline-step">
+          <div class="timeline-dot" style="background:var(--c1); border-color:var(--c1)"></div>
+          <div class="timeline-content">
+            <div class="timeline-phase">Anno 3 · Ottimizzazione</div>
+            <div class="timeline-title">Modulo custom per il routing</div>
+            <div class="timeline-text">
+              Il routing tra i due agenti diventa sofisticato: dipende dalla categoria 
+              del cliente, dalla lingua, dall'ora. Si scrive un modulo custom in Python 
+              che fa solo questo — ottimizzato, testato, veloce. 
+              Il resto rimane sul framework.
+            </div>
+          </div>
+          <div class="timeline-stack-tag" style="border-color:var(--c1); color:var(--c1)">
+            Custom<br>Python
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <div class="insight-grid">
+    <div class="insight">
+      <span class="insight-icon">💡</span>
+      <div class="insight-title">Il prototipo no-code non è sprecato</div>
+      <div class="insight-text">Le settimane passate su Flowise producono conoscenza del problema — che è il vero input per scrivere bene il sistema con il framework.</div>
+    </div>
+    <div class="insight">
+      <span class="insight-icon">⚠️</span>
+      <div class="insight-title">Il codice non migra, il sapere sì</div>
+      <div class="insight-text">Non si "porta" il progetto Flowise in LangChain. Si riscrive da zero, ma sapendo esattamente cosa serve. La riscrittura è più veloce del prototipo.</div>
+    </div>
+    <div class="insight">
+      <span class="insight-icon">📐</span>
+      <div class="insight-title">La migrazione ha un trigger preciso</div>
+      <div class="insight-text">Non si migra "perché il no-code è limitante in generale". Si migra quando si tocca un limite specifico e documentato che blocca un requisito reale.</div>
+    </div>
+  </div>
+</div>
+
+
+<!-- ══════════════════════════════
+     MODO B — ARCHITETTURALE
+══════════════════════════════ -->
+<div class="section">
+  <div class="section-header">
+    <span class="section-num">B</span>
+    <h2>Combinazione <em>per livello architetturale</em></h2>
+    <div class="section-mode-badge badge-b">Per componente</div>
+  </div>
+
+  <p class="section-intro">
+    Stack diversi <strong>nello stesso momento</strong>, per parti diverse della stessa architettura. Ogni componente usa lo stack ottimale per i suoi requisiti specifici. Non si sceglie uno stack — si assegna lo stack giusto a ogni responsabilità.
+  </p>
+
+  <!-- ESEMPIO B1 -->
+  <div class="diagram-wrap">
+    <div class="diagram-header">
+      Esempio B1 — Sistema ibrido Proprietario + Framework
+      <span>Agentforce + LangChain in parallelo</span>
+    </div>
+    <div class="diagram-body">
+      <div class="arch-layers-h">
+
+        <div class="arch-row arch-row-2">
+          <div class="arch-cell row-label-cell"><span>Input</span></div>
+          <div class="arch-cell">
+            <div class="arch-cell-label">Punto di ingresso</div>
+            <div class="arch-cell-name">Ticket cliente in arrivo</div>
+            <div class="arch-cell-desc">Email, chat, form web. Il sistema riceve la richiesta e deve decidere dove mandarla.</div>
+          </div>
+        </div>
+
+        <div class="arch-row arch-row-2">
+          <div class="arch-cell row-label-cell"><span>Routing</span></div>
+          <div class="arch-cell accent-c1">
+            <div class="arch-cell-label">Classificatore</div>
+            <div class="arch-cell-name">Modulo custom Python</div>
+            <div class="arch-cell-desc">Classifica il ticket per categoria, lingua e complessità. Decide dove mandarlo. 
+              <div style="margin-top:8px"><span class="stack-badge sb-c1">Custom</span></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="arch-row arch-row-3">
+          <div class="arch-cell row-label-cell"><span>Esecuzione</span></div>
+          <div class="arch-cell accent-c5">
+            <div class="arch-cell-label">Casi standard (80%)</div>
+            <div class="arch-cell-name">Agentforce</div>
+            <div class="arch-cell-desc">FAQ, rimborsi standard, tracking ordini. Integrato nel CRM Salesforce. Zero sviluppo.
+              <div style="margin-top:8px"><span class="stack-badge sb-c5">Proprietario</span></div>
+            </div>
+          </div>
+          <div class="arch-cell accent-c2">
+            <div class="arch-cell-label">Casi complessi (20%)</div>
+            <div class="arch-cell-name">LangChain Agent</div>
+            <div class="arch-cell-desc">Accesso gestionale interno, logica custom, documenti multipli. Controllato e debuggabile.
+              <div style="margin-top:8px"><span class="stack-badge sb-c2">Framework</span></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="arch-row arch-row-2">
+          <div class="arch-cell row-label-cell"><span>Output</span></div>
+          <div class="arch-cell">
+            <div class="arch-cell-label">Risposta unificata</div>
+            <div class="arch-cell-name">Indipendente dall'agente che ha risposto</div>
+            <div class="arch-cell-desc">Il cliente riceve una risposta coerente. Non sa quale sistema ha gestito la richiesta.</div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <!-- ESEMPIO B2 -->
+  <div class="diagram-wrap">
+    <div class="diagram-header">
+      Esempio B2 — Agente multi-layer per analisi di mercato
+      <span>Custom orchestratore + Framework workers + No-code interfaccia</span>
+    </div>
+    <div class="diagram-body">
+      <div class="arch-layers-h">
+
+        <div class="arch-row arch-row-2">
+          <div class="arch-cell row-label-cell"><span>Interfaccia utente</span></div>
+          <div class="arch-cell accent-c4">
+            <div class="arch-cell-label">Chi usa il sistema</div>
+            <div class="arch-cell-name">Dify — interfaccia per il team marketing</div>
+            <div class="arch-cell-desc">Il marketing configura prompt, aggiorna fonti, lancia analisi. Senza toccare codice. 
+              <div style="margin-top:8px"><span class="stack-badge sb-c4">No-code · Dify</span></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="arch-row arch-row-2">
+          <div class="arch-cell row-label-cell"><span>Orchestrazione</span></div>
+          <div class="arch-cell accent-c1">
+            <div class="arch-cell-label">Logica di coordinamento</div>
+            <div class="arch-cell-name">Orchestratore custom Python</div>
+            <div class="arch-cell-desc">Riceve il task dal Dify, lo scompone in sotto-task, assegna ai worker, raccoglie i risultati. Logica troppo specifica per un framework.
+              <div style="margin-top:8px"><span class="stack-badge sb-c1">Custom · Python</span></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="arch-row arch-row-4">
+          <div class="arch-cell row-label-cell"><span>Worker agents</span></div>
+          <div class="arch-cell accent-c2">
+            <div class="arch-cell-label">Worker 1</div>
+            <div class="arch-cell-name">Ricerca web</div>
+            <div class="arch-cell-desc">LangChain + SerpAPI. Cerca notizie, prezzi, comunicati.
+              <div style="margin-top:8px"><span class="stack-badge sb-c2">Framework</span></div>
+            </div>
+          </div>
+          <div class="arch-cell accent-c2">
+            <div class="arch-cell-label">Worker 2</div>
+            <div class="arch-cell-name">Analisi documenti</div>
+            <div class="arch-cell-desc">LlamaIndex + RAG su report PDF e bilanci.
+              <div style="margin-top:8px"><span class="stack-badge sb-c2">Framework</span></div>
+            </div>
+          </div>
+          <div class="arch-cell accent-c2">
+            <div class="arch-cell-label">Worker 3</div>
+            <div class="arch-cell-name">Sintesi finale</div>
+            <div class="arch-cell-desc">LangChain. Produce il report strutturato dai risultati degli altri.
+              <div style="margin-top:8px"><span class="stack-badge sb-c2">Framework</span></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="arch-row arch-row-2">
+          <div class="arch-cell row-label-cell"><span>Output</span></div>
+          <div class="arch-cell">
+            <div class="arch-cell-label">Risultato</div>
+            <div class="arch-cell-name">Report di analisi competitiva</div>
+            <div class="arch-cell-desc">Torna su Dify dove il team marketing può leggerlo, commentarlo ed esportarlo.</div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <div class="insight-grid">
+    <div class="insight">
+      <span class="insight-icon">🧩</span>
+      <div class="insight-title">Ogni layer ha i suoi requisiti</div>
+      <div class="insight-text">L'interfaccia deve essere usabile dai non tecnici → no-code. L'orchestrazione è logica custom → codice. I worker sono RAG standard → framework.</div>
+    </div>
+    <div class="insight">
+      <span class="insight-icon">🔌</span>
+      <div class="insight-title">I layer comunicano via API</div>
+      <div class="insight-text">Ogni componente espone un'API semplice. Il fatto che internamente usi LangChain o codice custom è invisibile agli altri layer.</div>
+    </div>
+    <div class="insight">
+      <span class="insight-icon">🔧</span>
+      <div class="insight-title">Si sostituisce un layer senza toccare gli altri</div>
+      <div class="insight-text">Se Dify diventa troppo limitante, si sostituisce con un'altra interfaccia. I worker non cambiano. L'architettura modulare riduce il rischio di lock-in totale.</div>
+    </div>
+  </div>
+</div>
+
+
+<!-- ══════════════════════════════
+     MODO C — PER UTENTE
+══════════════════════════════ -->
+<div class="section">
+  <div class="section-header">
+    <span class="section-num">C</span>
+    <h2>Combinazione <em>per tipo di utente</em></h2>
+    <div class="section-mode-badge badge-c">Per audience</div>
+  </div>
+
+  <p class="section-intro">
+    Stack diversi per <strong>chi interagisce con il sistema</strong>. Il team tecnico costruisce e mantiene il motore con un framework. Il team di business gestisce e configura attraverso un'interfaccia no-code. Stessa architettura, porte di accesso diverse.
+  </p>
+
+  <!-- ESEMPIO C1 -->
+  <div class="diagram-wrap">
+    <div class="diagram-header">
+      Esempio C1 — Agente per la produzione di contenuti
+      <span>LangChain (tecnico) + Dify (business)</span>
+    </div>
+    <div class="diagram-body">
+      <div class="org-tree">
+
+        <!-- Livello 1: input -->
+        <div class="org-level">
+          <div class="org-node" style="border-color:var(--c4); min-width:320px">
+            <div class="org-node-label" style="color:var(--c4)">Interfaccia · No-code</div>
+            <div class="org-node-name">Dify — usato dal team marketing</div>
+            <div class="org-node-stack">Configura prompt · Aggiorna knowledge base · Lancia job · Legge output</div>
+          </div>
+        </div>
+
+        <div class="org-connector-v"></div>
+
+        <!-- Livello 2: motore -->
+        <div class="org-level">
+          <div class="org-node primary" style="min-width:320px">
+            <div class="org-node-label">Motore · Framework</div>
+            <div class="org-node-name">LangChain Agent</div>
+            <div class="org-node-stack">Costruito e mantenuto dal team tecnico · Espone API a Dify</div>
+          </div>
+        </div>
+
+        <div class="org-connector-h-wrap">
+          <div class="org-connector-h" style="left:20%;right:20%;top:0"></div>
+        </div>
+
+        <!-- Livello 3: componenti -->
+        <div class="org-level" style="gap:12px">
+          <div class="org-node" style="border-color:var(--c2); min-width:160px">
+            <div class="org-node-label" style="color:var(--c2)">Componente</div>
+            <div class="org-node-name">Retrieval</div>
+            <div class="org-node-stack">pgvector · RAG su brand guidelines</div>
+          </div>
+          <div class="org-node" style="border-color:var(--c2); min-width:160px">
+            <div class="org-node-label" style="color:var(--c2)">Componente</div>
+            <div class="org-node-name">Generazione</div>
+            <div class="org-node-stack">Claude · Tono e formato configurabile</div>
+          </div>
+          <div class="org-node" style="border-color:var(--c2); min-width:160px">
+            <div class="org-node-label" style="color:var(--c2)">Componente</div>
+            <div class="org-node-name">Revisione</div>
+            <div class="org-node-stack">Guardrail · SEO check · Brand compliance</div>
+          </div>
+          <div class="org-node" style="border-color:var(--c2); min-width:160px">
+            <div class="org-node-label" style="color:var(--c2)">Componente</div>
+            <div class="org-node-name">Logging</div>
+            <div class="org-node-stack">LangSmith · Traccia ogni generazione</div>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Spiegazione ruoli -->
+      <div style="display:grid; grid-template-columns:1fr 1fr; gap:1px; background:var(--border); border:1px solid var(--border); margin-top:28px">
+        <div style="background:var(--bg); padding:20px">
+          <div style="font-family:'DM Mono',monospace; font-size:10px; letter-spacing:2px; text-transform:uppercase; color:var(--c4); margin-bottom:10px">Team marketing — cosa può fare</div>
+          <ul style="list-style:none; font-size:12px; color:var(--ink2); line-height:1.8">
+            <li>✓ Cambiare il tono del brand nelle istruzioni</li>
+            <li>✓ Aggiungere nuovi documenti alla knowledge base</li>
+            <li>✓ Testare varianti di prompt senza toccare codice</li>
+            <li>✓ Avviare job di produzione contenuti</li>
+            <li>✗ Non vede il codice LangChain sottostante</li>
+            <li>✗ Non può cambiare la logica di retrieval o i guardrail</li>
+          </ul>
+        </div>
+        <div style="background:var(--bg); padding:20px">
+          <div style="font-family:'DM Mono',monospace; font-size:10px; letter-spacing:2px; text-transform:uppercase; color:var(--c2); margin-bottom:10px">Team tecnico — cosa controlla</div>
+          <ul style="list-style:none; font-size:12px; color:var(--ink2); line-height:1.8">
+            <li>✓ Architettura del retrieval e chunking strategy</li>
+            <li>✓ Guardrail e logica di brand compliance</li>
+            <li>✓ Costi API e performance del sistema</li>
+            <li>✓ Debug tramite LangSmith</li>
+            <li>✓ Upgrade del modello LLM</li>
+            <li>✗ Non deve rispondere a ogni richiesta di cambio prompt del marketing</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="insight-grid">
+    <div class="insight">
+      <span class="insight-icon">🤝</span>
+      <div class="insight-title">Riduce la dipendenza dall'IT</div>
+      <div class="insight-text">Il marketing può iterare su prompt e contenuti in autonomia, senza ticket al team tecnico per ogni piccola modifica.</div>
+    </div>
+    <div class="insight">
+      <span class="insight-icon">🔒</span>
+      <div class="insight-title">Il tecnico mantiene il controllo su ciò che conta</div>
+      <div class="insight-text">Guardrail, sicurezza, costi e architettura restano fuori dalla portata dell'utente business. Solo i parametri sicuri sono esposti.</div>
+    </div>
+    <div class="insight">
+      <span class="insight-icon">📈</span>
+      <div class="insight-title">Il sistema migliora più velocemente</div>
+      <div class="insight-text">Il marketing testa varianti in autonomia → scopre cosa funziona → il tecnico implementa le modifiche architetturali richieste. Loop più corto.</div>
+    </div>
+  </div>
+</div>
+
+
+<!-- ══════════════════════════════
+     QUANDO COMBINARE / NON COMBINARE
+══════════════════════════════ -->
+<div class="section">
+  <div class="section-header">
+    <span class="section-num">—</span>
+    <h2>Quando ha senso <em>combinare</em></h2>
+  </div>
+
+  <div class="when-grid">
+    <div class="when-block">
+      <div class="when-block-title yes">Ha senso combinare quando…</div>
+      <ul class="when-list yes">
+        <li>Hai già identificato un limite specifico dello stack attuale che blocca un requisito reale</li>
+        <li>Parti diverse del sistema hanno requisiti radicalmente diversi (flessibilità vs velocità di deploy)</li>
+        <li>Utenti diversi devono interagire con lo stesso sistema in modi diversi</li>
+        <li>Vuoi validare un'idea rapidamente prima di investire in sviluppo custom</li>
+        <li>Il sistema è abbastanza maturo da avere componenti stabili separabili da quelli in evoluzione</li>
+        <li>Il team ha le competenze per gestire più stack contemporaneamente</li>
+      </ul>
+    </div>
+    <div class="when-block">
+      <div class="when-block-title no">Non combinare quando…</div>
+      <ul class="when-list no">
+        <li>Il caso d'uso è ancora poco chiaro — scegli prima uno stack e capisce il problema</li>
+        <li>Il team è piccolo e non ha capacità di gestire più sistemi</li>
+        <li>Stai aggiungendo complessità "per anticipare problemi futuri" — non farlo</li>
+        <li>I componenti sono così dipendenti tra loro che separarli non semplifica nulla</li>
+        <li>Un singolo stack copre già bene tutti i requisiti attuali</li>
+        <li>Non hai ancora capito dove sono i veri colli di bottiglia del sistema</li>
+      </ul>
+    </div>
+  </div>
+</div>
+
+
+<!-- REGOLA D'ORO -->
+<div class="golden-rule">
+  <div class="golden-rule-label">Principio guida</div>
+  <div class="golden-rule-content">
+    <h3>Si combina per risolvere un problema reale già identificato, non per anticipare problemi futuri ipotetici.</h3>
+    <p>Ogni stack aggiunto è complessità aggiunta. La complessità ha un costo reale: più componenti da monitorare, più superfici di errore, più skill diverse nel team. Aggiungere uno stack perché "potrebbe servire" è quasi sempre la scelta sbagliata. Aggiungere uno stack perché hai raggiunto un limite documentato e specifico è quasi sempre quella giusta.</p>
+  </div>
+</div>
+
+</div><!-- /body -->
+
+<footer>
+  <span>Agenti AI · Architetture combinate · Febbraio 2026</span>
+  <span>agenti-ai-combinare-stack.html</span>
+</footer>
+
+</body>
+</html>

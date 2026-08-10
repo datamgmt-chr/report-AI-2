@@ -1,0 +1,1408 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Come funzionano gli LLM — Guida per non tecnici</title>
+<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@200;300;400;500;600;700;800&family=Lora:ital,wght@0,400;0,500;1,400;1,500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #f7f8fc;
+    --bg2: #eef0f7;
+    --bg3: #e4e7f2;
+    --white: #ffffff;
+    --indigo: #1e2a5e;
+    --indigo-mid: #2d3f8a;
+    --indigo-light: #4a5fb5;
+    --indigo-faint: rgba(30,42,94,0.06);
+    --indigo-faint2: rgba(30,42,94,0.03);
+    --indigo-border: rgba(30,42,94,0.12);
+    --orange: #c94a1a;
+    --orange-mid: #e05a22;
+    --orange-light: #f07040;
+    --orange-faint: rgba(201,74,26,0.07);
+    --orange-border: rgba(201,74,26,0.2);
+    --teal: #0d7a6e;
+    --teal-faint: rgba(13,122,110,0.07);
+    --teal-border: rgba(13,122,110,0.2);
+    --amber: #a06010;
+    --amber-faint: rgba(160,96,16,0.07);
+    --amber-border: rgba(160,96,16,0.2);
+    --red: #9a2020;
+    --red-faint: rgba(154,32,32,0.07);
+    --red-border: rgba(154,32,32,0.2);
+    --ink: #111827;
+    --ink-mid: #374151;
+    --ink-light: #6b7280;
+    --border: rgba(17,24,39,0.08);
+    --border2: rgba(17,24,39,0.05);
+    --serif: 'Lora', serif;
+    --sans: 'Outfit', sans-serif;
+
+    /* autonomy level colors */
+    --l1: #4a5fb5;
+    --l2: #0d7a6e;
+    --l3: #a06010;
+    --l4: #c94a1a;
+    --l5: #7a1e7a;
+  }
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  html { scroll-behavior: smooth; }
+
+  body {
+    background: var(--bg);
+    color: var(--ink);
+    font-family: var(--sans);
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* ── HERO ── */
+  .hero {
+    background: var(--indigo);
+    padding: 72px 48px 0;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .hero-bg-shape {
+    position: absolute;
+    top: -80px; right: -80px;
+    width: 480px; height: 480px;
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(201,74,26,0.18) 0%, transparent 65%);
+    pointer-events: none;
+  }
+
+  .hero-bg-shape2 {
+    position: absolute;
+    bottom: 0; left: 10%;
+    width: 300px; height: 300px;
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(74,95,181,0.25) 0%, transparent 70%);
+    pointer-events: none;
+  }
+
+  .hero-inner {
+    max-width: 1080px;
+    margin: 0 auto;
+    position: relative;
+    z-index: 1;
+  }
+
+  .hero-label {
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 4px;
+    text-transform: uppercase;
+    color: var(--orange-light);
+    margin-bottom: 20px;
+  }
+
+  .hero-title {
+    font-family: var(--sans);
+    font-size: clamp(36px, 5.5vw, 72px);
+    font-weight: 800;
+    line-height: 1.0;
+    color: white;
+    letter-spacing: -2px;
+    margin-bottom: 6px;
+  }
+
+  .hero-title span {
+    color: var(--orange-light);
+  }
+
+  .hero-sub {
+    font-family: var(--serif);
+    font-size: clamp(16px, 2vw, 22px);
+    font-style: italic;
+    font-weight: 400;
+    color: rgba(255,255,255,0.55);
+    margin-bottom: 28px;
+  }
+
+  .hero-desc {
+    font-size: 16px;
+    font-weight: 300;
+    color: rgba(255,255,255,0.65);
+    max-width: 580px;
+    line-height: 1.75;
+    margin-bottom: 40px;
+  }
+
+  .hero-chips {
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap;
+    padding-bottom: 32px;
+    border-bottom: 1px solid rgba(255,255,255,0.08);
+    margin-bottom: 0;
+  }
+
+  .hero-chip {
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    padding: 6px 16px;
+    border-radius: 100px;
+    border: 1px solid rgba(255,255,255,0.15);
+    color: rgba(255,255,255,0.6);
+    background: rgba(255,255,255,0.06);
+  }
+
+  /* ── NAV ── */
+  .sticky-nav {
+    position: sticky;
+    top: 0;
+    background: rgba(247,248,252,0.97);
+    backdrop-filter: blur(10px);
+    border-bottom: 1px solid var(--border);
+    z-index: 50;
+    padding: 0 48px;
+  }
+
+  .nav-inner {
+    max-width: 1080px;
+    margin: 0 auto;
+    display: flex;
+    gap: 0;
+    overflow-x: auto;
+    scrollbar-width: none;
+  }
+
+  .nav-inner::-webkit-scrollbar { display: none; }
+
+  .nav-btn {
+    font-family: var(--sans);
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--ink-light);
+    padding: 16px 22px;
+    cursor: pointer;
+    border: none;
+    background: transparent;
+    border-bottom: 2px solid transparent;
+    white-space: nowrap;
+    transition: all 0.2s;
+  }
+
+  .nav-btn:hover { color: var(--indigo); }
+  .nav-btn.active { color: var(--orange); border-bottom-color: var(--orange); font-weight: 600; }
+
+  .section { display: none; }
+  .section.active { display: block; animation: rise 0.3s ease; }
+  @keyframes rise { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+
+  /* ── PAGE LAYOUT ── */
+  .page {
+    max-width: 1080px;
+    margin: 0 auto;
+    padding: 0 48px 100px;
+  }
+
+  /* ── TYPOGRAPHY ── */
+  .sec-label {
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 4px;
+    text-transform: uppercase;
+    color: var(--orange);
+    margin-bottom: 10px;
+    margin-top: 64px;
+  }
+
+  h2 {
+    font-family: var(--sans);
+    font-size: clamp(28px, 4vw, 46px);
+    font-weight: 700;
+    color: var(--indigo);
+    line-height: 1.1;
+    letter-spacing: -1px;
+    margin-bottom: 8px;
+  }
+
+  .sec-intro {
+    font-size: 17px;
+    font-weight: 300;
+    line-height: 1.8;
+    color: var(--ink-mid);
+    max-width: 680px;
+    margin: 16px 0 48px;
+  }
+
+  h3 {
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    color: var(--ink-light);
+    margin-bottom: 16px;
+  }
+
+  h4 {
+    font-family: var(--sans);
+    font-size: 20px;
+    font-weight: 700;
+    color: var(--indigo);
+    margin-bottom: 8px;
+    letter-spacing: -0.3px;
+  }
+
+  p {
+    font-size: 15px;
+    line-height: 1.8;
+    color: var(--ink-mid);
+    margin-bottom: 14px;
+    font-weight: 300;
+  }
+
+  strong { font-weight: 600; color: var(--ink); }
+
+  .rule { border: none; border-top: 1px solid var(--border); margin: 48px 0; }
+
+  /* ── PHASE STEPS (come funzionano) ── */
+  .phase {
+    display: grid;
+    grid-template-columns: 72px 1fr;
+    gap: 0 28px;
+    margin-bottom: 8px;
+    position: relative;
+  }
+
+  .phase::after {
+    content: '';
+    position: absolute;
+    left: 35px;
+    top: 72px;
+    bottom: -8px;
+    width: 2px;
+    background: var(--border);
+  }
+
+  .phase:last-child::after { display: none; }
+
+  .phase-num {
+    width: 72px;
+    height: 72px;
+    border-radius: 50%;
+    background: var(--indigo);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 24px;
+    font-weight: 800;
+    color: white;
+    flex-shrink: 0;
+    position: relative;
+    z-index: 1;
+    box-shadow: 0 4px 20px rgba(30,42,94,0.25);
+  }
+
+  .phase-num.orange { background: var(--orange); box-shadow: 0 4px 20px rgba(201,74,26,0.25); }
+  .phase-num.teal { background: var(--teal); box-shadow: 0 4px 20px rgba(13,122,110,0.25); }
+
+  .phase-content {
+    padding: 12px 0 40px;
+  }
+
+  .phase-title {
+    font-size: 22px;
+    font-weight: 700;
+    color: var(--indigo);
+    margin-bottom: 6px;
+    letter-spacing: -0.3px;
+  }
+
+  .phase-subtitle {
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--orange);
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    margin-bottom: 16px;
+  }
+
+  /* ── ANALOGY PULL ── */
+  .analogy {
+    background: var(--indigo);
+    border-radius: 12px;
+    padding: 28px 32px;
+    margin: 20px 0;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .analogy::before {
+    content: '"';
+    position: absolute;
+    top: -20px; left: 20px;
+    font-family: var(--serif);
+    font-size: 160px;
+    color: rgba(255,255,255,0.05);
+    line-height: 1;
+    pointer-events: none;
+  }
+
+  .analogy-label {
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    color: var(--orange-light);
+    margin-bottom: 10px;
+  }
+
+  .analogy p {
+    font-family: var(--serif);
+    font-size: 18px;
+    font-style: italic;
+    color: rgba(255,255,255,0.85);
+    line-height: 1.65;
+    margin-bottom: 0;
+    position: relative;
+    z-index: 1;
+  }
+
+  /* ── INSIGHT BOX ── */
+  .insight {
+    background: var(--orange-faint);
+    border: 1px solid var(--orange-border);
+    border-left: 3px solid var(--orange);
+    border-radius: 2px;
+    padding: 16px 22px;
+    margin: 20px 0;
+  }
+
+  .insight-label {
+    font-size: 9px;
+    font-weight: 700;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    color: var(--orange);
+    margin-bottom: 6px;
+  }
+
+  .insight p { color: var(--ink-mid); margin-bottom: 0; font-size: 15px; }
+
+  .insight.indigo {
+    background: var(--indigo-faint);
+    border-color: var(--indigo-border);
+    border-left-color: var(--indigo-mid);
+  }
+  .insight.indigo .insight-label { color: var(--indigo-mid); }
+
+  .insight.teal {
+    background: var(--teal-faint);
+    border-color: var(--teal-border);
+    border-left-color: var(--teal);
+  }
+  .insight.teal .insight-label { color: var(--teal); }
+
+  /* ── TRAINING PHASES ── */
+  .training-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 16px;
+    margin: 28px 0;
+  }
+  @media (max-width: 768px) { .training-grid { grid-template-columns: 1fr; } }
+
+  .training-card {
+    background: var(--white);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    overflow: hidden;
+  }
+
+  .training-card-top {
+    padding: 20px 22px 16px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .training-phase-label {
+    font-size: 9px;
+    font-weight: 700;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    color: var(--ink-light);
+    margin-bottom: 8px;
+  }
+
+  .training-phase-num {
+    font-size: 42px;
+    font-weight: 800;
+    color: var(--bg3);
+    line-height: 1;
+    margin-bottom: 4px;
+  }
+
+  .training-phase-name {
+    font-size: 17px;
+    font-weight: 700;
+    color: var(--indigo);
+    margin-bottom: 4px;
+  }
+
+  .training-phase-en {
+    font-size: 11px;
+    font-weight: 500;
+    color: var(--ink-light);
+    letter-spacing: 1px;
+    text-transform: uppercase;
+  }
+
+  .training-card-body {
+    padding: 16px 22px;
+  }
+
+  .training-card-body p { font-size: 14px; margin-bottom: 10px; }
+  .training-card-body p:last-child { margin-bottom: 0; }
+
+  .training-meta {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    margin-top: 12px;
+    padding-top: 12px;
+    border-top: 1px solid var(--border2);
+  }
+
+  .training-meta-row {
+    display: flex;
+    gap: 8px;
+    font-size: 12px;
+  }
+
+  .training-meta-key { color: var(--ink-light); font-weight: 500; min-width: 60px; }
+  .training-meta-val { color: var(--ink-mid); font-weight: 300; }
+
+  /* ── LIMIT CARDS ── */
+  .limit-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+    margin: 24px 0;
+  }
+  @media (max-width: 768px) { .limit-grid { grid-template-columns: 1fr; } }
+
+  .limit-card {
+    background: var(--white);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 24px 26px;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .limit-card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 3px;
+  }
+
+  .lc-structural::before { background: var(--red); }
+  .lc-practical::before { background: var(--amber); }
+
+  .limit-type {
+    font-size: 9px;
+    font-weight: 700;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    margin-bottom: 10px;
+  }
+
+  .lc-structural .limit-type { color: var(--red); }
+  .lc-practical .limit-type { color: var(--amber); }
+
+  .limit-title {
+    font-size: 18px;
+    font-weight: 700;
+    color: var(--indigo);
+    margin-bottom: 10px;
+    letter-spacing: -0.3px;
+  }
+
+  .limit-card p { font-size: 14px; margin-bottom: 10px; }
+
+  .limit-why {
+    font-size: 13px;
+    font-weight: 500;
+    padding: 8px 14px;
+    border-radius: 4px;
+    margin-top: 10px;
+    line-height: 1.55;
+  }
+
+  .lc-structural .limit-why { background: var(--red-faint); color: var(--red); border: 1px solid var(--red-border); }
+  .lc-practical .limit-why { background: var(--amber-faint); color: var(--amber); border: 1px solid var(--amber-border); }
+
+  /* ── AUTONOMY SPECTRUM ── */
+  .spectrum-bar {
+    display: flex;
+    align-items: stretch;
+    gap: 3px;
+    height: 10px;
+    margin: 20px 0 8px;
+    border-radius: 100px;
+    overflow: hidden;
+  }
+
+  .sb-seg {
+    flex: 1;
+    border-radius: 2px;
+  }
+
+  .sb-1 { background: var(--l1); }
+  .sb-2 { background: var(--l2); }
+  .sb-3 { background: var(--l3); }
+  .sb-4 { background: var(--l4); }
+  .sb-5 { background: var(--l5); }
+
+  .spectrum-labels {
+    display: flex;
+    justify-content: space-between;
+    font-size: 10px;
+    font-weight: 600;
+    color: var(--ink-light);
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    margin-bottom: 32px;
+  }
+
+  /* ── TYPE CARDS ── */
+  .type-card {
+    background: var(--white);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    overflow: hidden;
+    margin-bottom: 20px;
+  }
+
+  .type-header {
+    display: flex;
+    align-items: flex-start;
+    gap: 20px;
+    padding: 28px 32px;
+    border-bottom: 1px solid var(--border);
+    position: relative;
+  }
+
+  .type-level-bar {
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 3px;
+  }
+
+  .tl-1 { background: var(--l1); }
+  .tl-2 { background: var(--l2); }
+  .tl-3 { background: var(--l3); }
+  .tl-4 { background: var(--l4); }
+  .tl-5 { background: var(--l5); }
+
+  .type-icon {
+    font-size: 36px;
+    flex-shrink: 0;
+    margin-top: 4px;
+    line-height: 1;
+  }
+
+  .type-header-text { flex: 1; }
+
+  .type-level {
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    margin-bottom: 6px;
+  }
+
+  .t1 .type-level { color: var(--l1); }
+  .t2 .type-level { color: var(--l2); }
+  .t3 .type-level { color: var(--l3); }
+  .t4 .type-level { color: var(--l4); }
+  .t5 .type-level { color: var(--l5); }
+
+  .type-name {
+    font-size: 26px;
+    font-weight: 700;
+    color: var(--indigo);
+    letter-spacing: -0.5px;
+    margin-bottom: 6px;
+  }
+
+  .type-tagline {
+    font-size: 14px;
+    font-weight: 400;
+    color: var(--ink-light);
+  }
+
+  .type-autonomy {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 6px;
+    flex-shrink: 0;
+  }
+
+  .autonomy-label {
+    font-size: 9px;
+    font-weight: 700;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--ink-light);
+  }
+
+  .autonomy-dots {
+    display: flex;
+    gap: 4px;
+  }
+
+  .dot {
+    width: 10px; height: 10px;
+    border-radius: 50%;
+    background: var(--bg3);
+  }
+
+  .dot.on-1 { background: var(--l1); }
+  .dot.on-2 { background: var(--l2); }
+  .dot.on-3 { background: var(--l3); }
+  .dot.on-4 { background: var(--l4); }
+  .dot.on-5 { background: var(--l5); }
+
+  .type-body {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 0;
+  }
+  @media (max-width: 900px) { .type-body { grid-template-columns: 1fr; } }
+
+  .type-col {
+    padding: 24px 32px;
+    border-right: 1px solid var(--border);
+  }
+
+  .type-col:last-child { border-right: none; }
+
+  .type-col p { font-size: 14px; margin-bottom: 10px; }
+
+  .ex-list {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    margin-top: 8px;
+  }
+
+  .ex-item {
+    display: flex;
+    gap: 10px;
+    align-items: flex-start;
+    font-size: 13px;
+    color: var(--ink-mid);
+    font-weight: 300;
+    line-height: 1.5;
+  }
+
+  .ex-dot {
+    width: 6px; height: 6px;
+    border-radius: 50%;
+    flex-shrink: 0;
+    margin-top: 5px;
+  }
+
+  .ed-1 { background: var(--l1); }
+  .ed-2 { background: var(--l2); }
+  .ed-3 { background: var(--l3); }
+  .ed-4 { background: var(--l4); }
+  .ed-5 { background: var(--l5); }
+
+  .type-note {
+    padding: 16px 32px;
+    border-top: 1px solid var(--border);
+    background: var(--bg);
+    font-size: 13px;
+    color: var(--ink-light);
+    font-style: italic;
+    display: flex;
+    gap: 10px;
+    align-items: flex-start;
+  }
+
+  .note-arrow {
+    font-size: 16px;
+    flex-shrink: 0;
+    margin-top: -1px;
+  }
+
+  /* ── SUMMARY TABLE ── */
+  .sum-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 24px 0;
+    font-size: 14px;
+  }
+
+  .sum-table th {
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--ink-light);
+    padding: 14px 18px;
+    border-bottom: 2px solid var(--border);
+    text-align: left;
+    background: var(--bg2);
+  }
+
+  .sum-table td {
+    padding: 14px 18px;
+    border-bottom: 1px solid var(--border2);
+    vertical-align: top;
+    line-height: 1.6;
+    color: var(--ink-mid);
+    font-weight: 300;
+  }
+
+  .sum-table tr:hover td { background: var(--indigo-faint2); }
+  .sum-table td:first-child { font-weight: 600; color: var(--indigo); }
+
+  /* ── VISUAL: COME FUNZIONA (diagramma testo) ── */
+  .flow-visual {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+    margin: 24px 0;
+    padding: 24px;
+    background: var(--white);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+  }
+
+  .flow-box {
+    padding: 10px 16px;
+    border-radius: 6px;
+    font-size: 13px;
+    font-weight: 600;
+    text-align: center;
+    flex: 1;
+    min-width: 100px;
+  }
+
+  .fb-input { background: var(--indigo-faint); color: var(--indigo); border: 1px solid var(--indigo-border); }
+  .fb-token { background: var(--orange-faint); color: var(--orange); border: 1px solid var(--orange-border); }
+  .fb-num { background: var(--teal-faint); color: var(--teal); border: 1px solid var(--teal-border); }
+  .fb-attn { background: var(--amber-faint); color: var(--amber); border: 1px solid var(--amber-border); }
+  .fb-out { background: var(--indigo); color: white; }
+
+  .flow-arrow { color: var(--ink-light); font-size: 18px; flex-shrink: 0; }
+
+  /* ── CHIP TAGS ── */
+  .chip {
+    display: inline-block;
+    font-size: 11px;
+    font-weight: 600;
+    padding: 3px 12px;
+    border-radius: 100px;
+    letter-spacing: 0.5px;
+  }
+
+  .chip-ind { background: var(--indigo-faint); color: var(--indigo); border: 1px solid var(--indigo-border); }
+  .chip-org { background: var(--orange-faint); color: var(--orange); border: 1px solid var(--orange-border); }
+</style>
+</head>
+<body>
+
+<!-- HERO -->
+<div class="hero">
+  <div class="hero-bg-shape"></div>
+  <div class="hero-bg-shape2"></div>
+  <div class="hero-inner">
+    <div class="hero-label">Serie Agenti AI — Documento III</div>
+    <h1 class="hero-title">Come funzionano<br><span>gli LLM</span></h1>
+    <div class="hero-sub">Una guida per chi decide, senza formule</div>
+    <p class="hero-desc">I Large Language Model sono la tecnologia più trasformativa del decennio. Capire come funzionano — anche senza essere tecnici — è oggi una competenza manageriale essenziale.</p>
+    <div class="hero-chips">
+      <div class="hero-chip">Target: Manager</div>
+      <div class="hero-chip">Livello: Divulgativo</div>
+      <div class="hero-chip">Serie: Agenti AI</div>
+      <div class="hero-chip">Febbraio 2026</div>
+    </div>
+  </div>
+</div>
+
+<!-- NAV -->
+<nav class="sticky-nav">
+  <div class="nav-inner">
+    <button class="nav-btn active" onclick="showTab('funzionano')">Come funzionano</button>
+    <button class="nav-btn" onclick="showTab('training')">Il Training</button>
+    <button class="nav-btn" onclick="showTab('limiti')">I Limiti</button>
+    <button class="nav-btn" onclick="showTab('tipologie')">Tipologie & Applicazioni</button>
+  </div>
+</nav>
+
+<div class="page">
+
+  <!-- ═══════════ COME FUNZIONANO ═══════════ -->
+  <section id="funzionano" class="section active">
+
+    <div class="sec-label">Sezione I</div>
+    <h2>Come funziona un Large Language Model</h2>
+    <p class="sec-intro">Senza entrare nella matematica, esistono tre trasformazioni fondamentali che spiegano perché questi modelli funzionano — e perché si comportano come si comportano. Capirle aiuta a usarli meglio e a non aspettarsi da loro cose che non sanno fare.</p>
+
+    <!-- FASE 1 -->
+    <div class="phase">
+      <div class="phase-num">1</div>
+      <div class="phase-content">
+        <div class="phase-subtitle">Prima trasformazione</div>
+        <div class="phase-title">Il linguaggio diventa matematica</div>
+        <p>Un computer non può elaborare parole — solo numeri. Il primo passaggio è quindi convertire il testo in numeri. Ma non in modo banale: non è una semplice codifica come A=1, B=2. Il modello trasforma ogni parola — o meglio, ogni frammento di parola chiamato <strong>token</strong> — in un punto in uno spazio matematico con centinaia di dimensioni.</p>
+        <p>La cosa straordinaria è che in questo spazio, <strong>la vicinanza tra i numeri riflette la vicinanza di significato</strong>. "Re" e "Regina" sono vicini. "Banca" (istituto di credito) e "Banca" (riva del fiume) sono in punti diversi perché il modello ha imparato dal contesto che sono parole diverse. "Milano" è vicino a "Roma" e a "Parigi" — tutte capitali o grandi città europee.</p>
+        <p>Questo significa che il modello non lavora con etichette, ma con <em>significati rappresentati numericamente</em>. È la ragione per cui capisce sinonimi, metafore e sfumature.</p>
+
+        <div class="analogy">
+          <div class="analogy-label">// L'analogia</div>
+          <p>Immaginate una mappa dove invece di città ci sono parole. Le parole con significati simili si trovano vicine geograficamente. "Medico", "chirurgo", "ospedale" sono nello stesso quartiere. "Banca", "mutuo", "interesse" in un altro. Il modello, quando elabora un testo, naviga questa mappa per capire di cosa si parla.</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- FASE 2 -->
+    <div class="phase">
+      <div class="phase-num orange">2</div>
+      <div class="phase-content">
+        <div class="phase-subtitle">Seconda trasformazione</div>
+        <div class="phase-title">Ogni parola "guarda" tutte le altre</div>
+        <p>Il salto qualitativo dell'architettura transformer — inventata da Google nel 2017 e alla base di tutti i modelli moderni — è il meccanismo chiamato <strong>attenzione</strong>. L'intuizione è semplice: per capire una parola, bisogna considerarla in relazione a tutte le altre parole nel contesto, non solo a quelle vicine.</p>
+        <p>Prendiamo la frase: <em>"Il direttore ha firmato il contratto dopo che il suo avvocato lo ha revisionato."</em> Quando il modello elabora "lo", deve capire che si riferisce a "contratto" e non a "direttore" o "avvocato". Per farlo, il meccanismo di attenzione fa "guardare" a ogni parola tutte le altre e pesa le relazioni tra loro.</p>
+        <p>Questo è ciò che permette agli LLM di mantenere la coerenza su testi lunghi, di capire riferimenti a distanza, di distinguere il significato di parole ambigue in base al contesto. È il cuore della loro comprensione linguistica.</p>
+
+        <div class="flow-visual">
+          <div class="flow-box fb-input">Testo in input</div>
+          <div class="flow-arrow">→</div>
+          <div class="flow-box fb-token">Tokenizzazione</div>
+          <div class="flow-arrow">→</div>
+          <div class="flow-box fb-num">Spazio numerico</div>
+          <div class="flow-arrow">→</div>
+          <div class="flow-box fb-attn">Meccanismo di attenzione</div>
+          <div class="flow-arrow">→</div>
+          <div class="flow-box fb-out">Output generato</div>
+        </div>
+
+        <div class="analogy">
+          <div class="analogy-label">// L'analogia</div>
+          <p>Un lettore esperto che, leggendo un contratto di 50 pagine, riesce a tenere a mente simultaneamente tutti i riferimenti incrociati — "il termine 'Fornitore' definito all'articolo 1 si applica anche qui" — senza dover rileggere dall'inizio ogni volta. Il meccanismo di attenzione è questa capacità di tenere tutto il testo "in mente" contemporaneamente.</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- FASE 3 -->
+    <div class="phase">
+      <div class="phase-num teal">3</div>
+      <div class="phase-content">
+        <div class="phase-subtitle">Terza trasformazione</div>
+        <div class="phase-title">Genera completando il pattern più probabile</div>
+        <p>Una volta compresi i significati e le relazioni nel testo, il modello genera l'output un token alla volta. Ad ogni passo, calcola la probabilità di tutti i possibili token successivi e sceglie — con un elemento di casualità controllata — quello più appropriato nel contesto.</p>
+        <p>Non sta "cercando" la risposta in un database. Non sta "ragionando" come farebbe un umano. Sta applicando in modo sofisticatissimo un principio semplice: <strong>dato tutto il testo che ho visto, qual è il completamento più probabile e appropriato?</strong></p>
+        <p>Questo spiega sia i punti di forza (capacità di produrre testo fluido, coerente, contestualizzato) sia i limiti strutturali (può "completare" con informazioni plausibili ma false, perché la plausibilità statistica non equivale alla verità).</p>
+
+        <div class="insight">
+          <div class="insight-label">// Il punto chiave da ricordare</div>
+          <p>Un LLM non "sa" cose nel modo in cui le sa un essere umano. Ha interiorizzato i pattern del linguaggio umano in modo così profondo da sembrare che sappia — e in molti contesti questo è abbastanza. Ma non è la stessa cosa della conoscenza verificata.</p>
+        </div>
+      </div>
+    </div>
+
+    <hr class="rule">
+
+    <h3>Lo studente onnivoro — l'analogia complessiva</h3>
+
+    <div class="analogy">
+      <div class="analogy-label">// L'analogia del funzionamento completo</div>
+      <p>Immaginate uno studente che ha letto, in modo sistematico e completo, ogni libro, articolo, forum, manuale, romanzo, codice sorgente e conversazione mai pubblicati su internet. Non ha memorizzato ogni frase — ha interiorizzato i pattern: come si costruisce un argomento, come funziona la logica giuridica, come si scrive codice Python, come si struttura una diagnosi medica. Quando gli fate una domanda, non va a "cercare" la risposta: la ricostruisce dai pattern che ha assorbito. Questo lo rende straordinariamente versatile — e allo stesso tempo incline a "ricordare male" dettagli specifici che non ha visto abbastanza volte da fissarli con precisione.</p>
+    </div>
+
+  </section>
+
+  <!-- ═══════════ IL TRAINING ═══════════ -->
+  <section id="training" class="section">
+
+    <div class="sec-label">Sezione II</div>
+    <h2>Il Training: come nasce un LLM</h2>
+    <p class="sec-intro">Un modello non nasce già capace. Diventa quello che è attraverso un processo di apprendimento in tre fasi distinte, ognuna con un obiettivo diverso. Capire queste fasi spiega perché i modelli moderni sono diversi dai loro predecessori — e perché si comportano come si comportano.</p>
+
+    <div class="training-grid">
+
+      <div class="training-card">
+        <div class="training-card-top">
+          <div class="training-phase-label">Fase 1</div>
+          <div class="training-phase-num">01</div>
+          <div class="training-phase-name">Pre-training</div>
+          <div class="training-phase-en">Pre-training</div>
+        </div>
+        <div class="training-card-body">
+          <p>Il modello viene esposto a quantità enormi di testo — miliardi di pagine da internet, libri, articoli scientifici, codice sorgente, conversazioni. Il compito è semplice: <strong>predire il token successivo</strong> in ogni sequenza.</p>
+          <p>Ripetendo questo esercizio miliardi di volte, il modello impara la struttura del linguaggio, i fatti sul mondo, le relazioni tra concetti, i pattern del ragionamento umano. Non gli viene insegnato nulla esplicitamente — emerge tutto dall'esposizione ai dati.</p>
+          <div class="training-meta">
+            <div class="training-meta-row"><span class="training-meta-key">Durata</span><span class="training-meta-val">Settimane / mesi</span></div>
+            <div class="training-meta-row"><span class="training-meta-key">Costo</span><span class="training-meta-val">Decine-centinaia M$</span></div>
+            <div class="training-meta-row"><span class="training-meta-key">Risultato</span><span class="training-meta-val">Modello base — capace ma non "utile"</span></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="training-card">
+        <div class="training-card-top">
+          <div class="training-phase-label">Fase 2</div>
+          <div class="training-phase-num">02</div>
+          <div class="training-phase-name">Fine-tuning supervisionato</div>
+          <div class="training-phase-en">Supervised Fine-Tuning</div>
+        </div>
+        <div class="training-card-body">
+          <p>Il modello base sa moltissimo, ma si comporta come qualcuno che completa automaticamente frasi senza capire di essere in una conversazione. Il fine-tuning gli insegna a essere un <strong>assistente utile</strong>.</p>
+          <p>Si usano esempi di conversazioni di alta qualità — domanda + risposta ideale, scritti da umani — per insegnare al modello il formato e il tono giusto. Impara che quando gli viene posta una domanda, deve rispondere in modo diretto e utile, non semplicemente completare il testo.</p>
+          <div class="training-meta">
+            <div class="training-meta-row"><span class="training-meta-key">Durata</span><span class="training-meta-val">Giorni</span></div>
+            <div class="training-meta-row"><span class="training-meta-key">Costo</span><span class="training-meta-val">Molto inferiore al pre-training</span></div>
+            <div class="training-meta-row"><span class="training-meta-key">Risultato</span><span class="training-meta-val">Modello che sa rispondere</span></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="training-card">
+        <div class="training-card-top">
+          <div class="training-phase-label">Fase 3</div>
+          <div class="training-phase-num">03</div>
+          <div class="training-phase-name">Apprendimento da feedback umano</div>
+          <div class="training-phase-en">RLHF</div>
+        </div>
+        <div class="training-card-body">
+          <p>La fase più sofisticata. Valutatori umani confrontano coppie di risposte del modello e scelgono quella migliore. Da questi giudizi si addestra un <strong>modello di ricompensa</strong> che impara a predire le preferenze umane.</p>
+          <p>Poi si usa questo modello di ricompensa per affinare ulteriormente il modello principale: rispondere in modo utile, onesto, appropriato. È questa fase che insegna al modello a rifiutare richieste dannose, a essere trasparente sui propri limiti, a preferire risposte accurate a risposte solo plausibili.</p>
+          <div class="training-meta">
+            <div class="training-meta-row"><span class="training-meta-key">Tecnica</span><span class="training-meta-val">Reinforcement Learning from Human Feedback</span></div>
+            <div class="training-meta-row"><span class="training-meta-key">Risultato</span><span class="training-meta-val">Modello allineato ai valori umani</span></div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+    <div class="insight indigo">
+      <div class="insight-label">// Perché questo conta per chi usa gli LLM</div>
+      <p>Il modello base dopo il pre-training sa molto ma si comporta in modo imprevedibile. È il fine-tuning e l'RLHF che lo rendono utile, sicuro e allineato alle aspettative. Questo spiega anche perché modelli con pre-training simile possono avere comportamenti molto diversi: le scelte fatte nelle fasi 2 e 3 sono decisive.</p>
+    </div>
+
+    <hr class="rule">
+
+    <h3>Due conseguenze importanti del training</h3>
+
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:16px">
+      <div style="background:var(--white);border:1px solid var(--border);border-radius:8px;padding:24px">
+        <h4 style="margin-bottom:10px">Il knowledge cutoff</h4>
+        <p style="font-size:14px">Il pre-training avviene su dati fino a una certa data. Dopo quella data, il modello non "sa" più nulla di nuovo — a meno che non venga aggiornato o gli vengano fornite le informazioni nel contesto della conversazione. I modelli migliori oggi compensano con la ricerca web in tempo reale.</p>
+      </div>
+      <div style="background:var(--white);border:1px solid var(--border);border-radius:8px;padding:24px">
+        <h4 style="margin-bottom:10px">Il bias dai dati</h4>
+        <p style="font-size:14px">Il modello impara dai dati su cui è stato addestrato — inclusi i loro bias, errori e distorsioni. Se certi punti di vista sono sovrarappresentati in internet rispetto ad altri, il modello li rifletterà. È un problema noto e attivamente lavorato, ma non ancora risolto.</p>
+      </div>
+    </div>
+
+  </section>
+
+  <!-- ═══════════ I LIMITI ═══════════ -->
+  <section id="limiti" class="section">
+
+    <div class="sec-label">Sezione III</div>
+    <h2>I Limiti degli LLM</h2>
+    <p class="sec-intro">Conoscere i limiti degli LLM non è pessimismo — è competenza. La distinzione cruciale è tra <strong>limiti strutturali</strong> (conseguenze dirette di come funzionano, difficili o impossibili da eliminare) e <strong>limiti pratici</strong> (problemi attuali su cui si sta lavorando e che migliorano rapidamente).</p>
+
+    <div class="limit-grid">
+
+      <div class="limit-card lc-structural">
+        <div class="limit-type">Limite strutturale</div>
+        <div class="limit-title">Allucinazioni</div>
+        <p>Il modello può produrre informazioni false con tono completamente autorevole — citazioni inesistenti, fatti errati, calcoli sbagliati — senza alcun segnale di incertezza.</p>
+        <p>Non è un bug da correggere. È una conseguenza diretta del meccanismo di generazione: il modello produce il completamento statisticamente più plausibile, non quello verificato come vero. La plausibilità e la verità non sono la stessa cosa.</p>
+        <div class="limit-why">⚠ Perché è strutturale: un sistema che genera per plausibilità statistica non può garantire la verità fattuale — sono obiettivi diversi. I modelli migliori allucinano meno, ma allucinano sempre.</div>
+      </div>
+
+      <div class="limit-card lc-structural">
+        <div class="limit-type">Limite strutturale</div>
+        <div class="limit-title">Assenza di vera comprensione causale</div>
+        <p>Gli LLM sono straordinariamente bravi a descrivere correlazioni e pattern — "quando X succede, tipicamente segue Y" — ma non ragionano sulla causalità nel senso profondo: perché X causa Y, cosa succederebbe se X non ci fosse, come si comporterebbe il sistema in condizioni mai viste prima.</p>
+        <p>Questo li rende affidabili in contesti noti e potenzialmente inaffidabili in scenari genuinamente nuovi o controfattuali.</p>
+        <div class="limit-why">⚠ Perché è strutturale: la correlazione statistica è l'unico strumento di questi modelli. La comprensione causale richiederebbe un diverso tipo di architettura o di grounding nel mondo reale.</div>
+      </div>
+
+      <div class="limit-card lc-structural">
+        <div class="limit-type">Limite strutturale</div>
+        <div class="limit-title">Sensibilità al prompt</div>
+        <p>La qualità e il tipo dell'output dipendono in modo sensibile da come viene formulata la richiesta. Due domande semanticamente equivalenti possono produrre risposte molto diverse. Una parola diversa, un cambio di ordine, un contesto aggiuntivo possono cambiare significativamente il risultato.</p>
+        <p>Questo rende il comportamento del modello meno prevedibile di quanto appaia, e spiega perché il "prompt engineering" è diventata una competenza rilevante.</p>
+        <div class="limit-why">⚠ Perché è strutturale: il modello non ha un'intenzione fissa — "legge" la richiesta ogni volta e risponde al pattern che riconosce. Piccole variazioni cambiano il pattern riconosciuto.</div>
+      </div>
+
+      <div class="limit-card lc-structural">
+        <div class="limit-type">Limite strutturale</div>
+        <div class="limit-title">Nessuna memoria persistente</div>
+        <p>Ogni conversazione parte da zero. Il modello non ricorda le interazioni precedenti, non accumula conoscenza nel tempo, non "impara" dai vostri feedback. Quello che sa è quello che aveva dopo il training — la conversazione corrente non modifica il modello.</p>
+        <p>I sistemi agentici moderni compensano con memorie esterne (database, file), ma questo è un layer aggiuntivo, non una capacità nativa del modello.</p>
+        <div class="limit-why">⚠ Perché è strutturale: i pesi del modello — la sua "memoria" — vengono fissati dopo il training. L'inferenza (l'uso del modello) non li modifica.</div>
+      </div>
+
+      <div class="limit-card lc-practical">
+        <div class="limit-type">Limite pratico — in miglioramento</div>
+        <div class="limit-title">Knowledge cutoff</div>
+        <p>Il modello non conosce eventi dopo la data di chiusura del suo training. Una domanda su notizie recenti, nuove normative, o sviluppi di mercato degli ultimi mesi riceverà una risposta basata su informazioni obsolete.</p>
+        <p>La mitigazione principale — ricerca web integrata — è già disponibile nei modelli migliori e riduce significativamente il problema, ma non lo elimina del tutto.</p>
+        <div class="limit-why">→ In miglioramento: la ricerca web in tempo reale è ora standard nei modelli frontier. Il grounding su fonti verificabili sta diventando la norma.</div>
+      </div>
+
+      <div class="limit-card lc-practical">
+        <div class="limit-type">Limite pratico — in miglioramento</div>
+        <div class="limit-title">Ragionamento matematico e logica formale</div>
+        <p>I calcoli multi-step, la logica formale, le dimostrazioni matematiche sono storicamente un punto debole. Il modello genera passi di calcolo plausibili — non necessariamente corretti. Su aritmetica semplice funziona; su problemi complessi l'errore è frequente.</p>
+        <p>I modelli "thinking" (che producono ragionamento esplicito prima della risposta) hanno ridotto significativamente questo gap. Su benchmark matematici avanzati, i modelli migliori del 2025 superano il livello di un matematico esperto.</p>
+        <div class="limit-why">→ In miglioramento rapido: i modelli reasoning (o3, Claude Extended Thinking, DeepSeek R1) stanno cambiando questo scenario in modo sostanziale.</div>
+      </div>
+
+    </div>
+
+    <div class="insight teal">
+      <div class="insight-label">// La regola pratica per manager</div>
+      <p>Prima di affidarsi all'output di un LLM su una decisione importante, chiedetevi: questo output richiede verifica fattuale? Coinvolge calcoli precisi? Si basa su informazioni recenti? È in un dominio altamente specialistico? Se la risposta è sì a una o più di queste domande, il modello può essere un ottimo punto di partenza — ma non l'ultimo passaggio.</p>
+    </div>
+
+  </section>
+
+  <!-- ═══════════ TIPOLOGIE ═══════════ -->
+  <section id="tipologie" class="section">
+
+    <div class="sec-label">Sezione IV</div>
+    <h2>Tipologie di applicazioni LLM</h2>
+    <p class="sec-intro">Le applicazioni basate su LLM non sono tutte uguali. La variabile più importante per orientarsi è il <strong>livello di autonomia</strong> — quanto il sistema agisce in modo indipendente rispetto all'umano. Dal chatbot reattivo all'agente complesso, c'è uno spettro continuo con caratteristiche e rischi molto diversi.</p>
+
+    <div class="spectrum-bar">
+      <div class="sb-seg sb-1"></div>
+      <div class="sb-seg sb-2"></div>
+      <div class="sb-seg sb-3"></div>
+      <div class="sb-seg sb-4"></div>
+      <div class="sb-seg sb-5"></div>
+    </div>
+    <div class="spectrum-labels">
+      <span>Nessuna autonomia</span>
+      <span>Autonomia crescente →</span>
+      <span>Piena autonomia</span>
+    </div>
+
+    <!-- TIPO 1: CHATBOT -->
+    <div class="type-card t1">
+      <div class="type-header">
+        <div class="type-level-bar tl-1"></div>
+        <div class="type-icon">💬</div>
+        <div class="type-header-text">
+          <div class="type-level">Livello 1 — Nessuna autonomia</div>
+          <div class="type-name">Chatbot & Assistenti Conversazionali</div>
+          <div class="type-tagline">Risponde a domande, non prende iniziative</div>
+        </div>
+        <div class="type-autonomy">
+          <div class="autonomy-label">Autonomia</div>
+          <div class="autonomy-dots">
+            <div class="dot on-1"></div>
+            <div class="dot"></div>
+            <div class="dot"></div>
+            <div class="dot"></div>
+            <div class="dot"></div>
+          </div>
+        </div>
+      </div>
+      <div class="type-body">
+        <div class="type-col">
+          <h3>Come funziona</h3>
+          <p>L'utente scrive, il modello risponde. Zero iniziativa propria, zero azioni nel mondo esterno. Il modello riceve un messaggio e produce un testo di risposta. La conversazione è guidata interamente dall'umano.</p>
+          <p>È la forma più semplice e più diffusa. Ogni interfaccia tipo "chat" — Claude.ai, ChatGPT, Gemini — nella sua forma base è un chatbot.</p>
+        </div>
+        <div class="type-col">
+          <h3>Applicazioni concrete</h3>
+          <div class="ex-list">
+            <div class="ex-item"><div class="ex-dot ed-1"></div>FAQ su prodotti e servizi aziendali</div>
+            <div class="ex-item"><div class="ex-dot ed-1"></div>Supporto clienti di primo livello</div>
+            <div class="ex-item"><div class="ex-dot ed-1"></div>Assistente interno per HR, IT, legal</div>
+            <div class="ex-item"><div class="ex-dot ed-1"></div>Interfaccia in linguaggio naturale su knowledge base</div>
+          </div>
+        </div>
+        <div class="type-col">
+          <h3>Profilo rischio/valore</h3>
+          <p>Rischio basso — l'umano controlla ogni interazione. Valore misurabile su riduzione di ticket ripetitivi e accesso rapido a informazioni interne.</p>
+          <p>È il punto di partenza ideale per chi inizia: bassa complessità, risultati rapidi, feedback immediato sulla qualità.</p>
+        </div>
+      </div>
+      <div class="type-note">
+        <div class="note-arrow">→</div>
+        Limite principale: l'utente deve sempre fare le domande giuste. Se non sa cosa chiedere, non ottiene aiuto. L'assistente non prende mai l'iniziativa.
+      </div>
+    </div>
+
+    <!-- TIPO 2: COPILOT -->
+    <div class="type-card t2">
+      <div class="type-header">
+        <div class="type-level-bar tl-2"></div>
+        <div class="type-icon">🧑‍✈️</div>
+        <div class="type-header-text">
+          <div class="type-level">Livello 2 — Autonomia minima</div>
+          <div class="type-name">Copilot & Strumenti Aumentativi</div>
+          <div class="type-tagline">Integrato nel flusso di lavoro, l'umano decide sempre</div>
+        </div>
+        <div class="type-autonomy">
+          <div class="autonomy-label">Autonomia</div>
+          <div class="autonomy-dots">
+            <div class="dot on-2"></div>
+            <div class="dot on-2"></div>
+            <div class="dot"></div>
+            <div class="dot"></div>
+            <div class="dot"></div>
+          </div>
+        </div>
+      </div>
+      <div class="type-body">
+        <div class="type-col">
+          <h3>Come funziona</h3>
+          <p>L'LLM è integrato direttamente in uno strumento esistente — editor di codice, suite Office, CRM, piattaforma di scrittura. Suggerisce, completa, propone. L'umano accetta, modifica o rifiuta ogni suggerimento.</p>
+          <p>Il modello vede il contesto del lavoro in corso (il documento, il codice, la email) e offre assistenza proattiva senza essere esplicitamente interrogato ogni volta.</p>
+        </div>
+        <div class="type-col">
+          <h3>Applicazioni concrete</h3>
+          <div class="ex-list">
+            <div class="ex-item"><div class="ex-dot ed-2"></div>GitHub Copilot — completamento codice in tempo reale</div>
+            <div class="ex-item"><div class="ex-dot ed-2"></div>Microsoft 365 Copilot — assistenza in Word, Excel, PowerPoint</div>
+            <div class="ex-item"><div class="ex-dot ed-2"></div>Assistente alla redazione di email e documenti</div>
+            <div class="ex-item"><div class="ex-dot ed-2"></div>Suggerimenti in tempo reale nel CRM durante le chiamate</div>
+          </div>
+        </div>
+        <div class="type-col">
+          <h3>Profilo rischio/valore</h3>
+          <p>Rischio basso — ogni suggerimento richiede approvazione umana esplicita. Il valore è nella velocità e nel ridurre il tempo su attività ripetitive.</p>
+          <p>Studi interni di diverse aziende riportano aumenti di produttività del 20–40% su task specifici come coding e redazione documenti.</p>
+        </div>
+      </div>
+      <div class="type-note">
+        <div class="note-arrow">→</div>
+        La differenza rispetto al chatbot: il contesto è fornito automaticamente dal tool, non dall'utente. L'assistenza è continua e contestuale, non su richiesta.
+      </div>
+    </div>
+
+    <!-- TIPO 3: RAG -->
+    <div class="type-card t3">
+      <div class="type-header">
+        <div class="type-level-bar tl-3"></div>
+        <div class="type-icon">📚</div>
+        <div class="type-header-text">
+          <div class="type-level">Livello 2.5 — Autonomia limitata</div>
+          <div class="type-name">Knowledge Assistant (RAG)</div>
+          <div class="type-tagline">Risponde basandosi su documenti specifici, non sul training generico</div>
+        </div>
+        <div class="type-autonomy">
+          <div class="autonomy-label">Autonomia</div>
+          <div class="autonomy-dots">
+            <div class="dot on-3"></div>
+            <div class="dot on-3"></div>
+            <div class="dot on-3"></div>
+            <div class="dot"></div>
+            <div class="dot"></div>
+          </div>
+        </div>
+      </div>
+      <div class="type-body">
+        <div class="type-col">
+          <h3>Come funziona</h3>
+          <p>RAG — Retrieval Augmented Generation. Quando l'utente fa una domanda, il sistema cerca nei documenti aziendali i passaggi più rilevanti, li fornisce al modello come contesto, e il modello risponde basandosi su quel contenuto specifico.</p>
+          <p>Drasticamente riduce le allucinazioni perché il modello non deve ricordare dal training — legge le fonti fornite. Come un consulente che risponde con il contratto aperto davanti.</p>
+        </div>
+        <div class="type-col">
+          <h3>Applicazioni concrete</h3>
+          <div class="ex-list">
+            <div class="ex-item"><div class="ex-dot ed-3"></div>Assistente su manualistica tecnica interna</div>
+            <div class="ex-item"><div class="ex-dot ed-3"></div>Q&A su contratti, policy, normativa aziendale</div>
+            <div class="ex-item"><div class="ex-dot ed-3"></div>Knowledge base di supporto clienti con fonti citate</div>
+            <div class="ex-item"><div class="ex-dot ed-3"></div>Ricerca in archivi legali e normativi</div>
+          </div>
+        </div>
+        <div class="type-col">
+          <h3>Profilo rischio/valore</h3>
+          <p>Il caso d'uso enterprise più maturo oggi. Affidabilità alta quando il retrieval funziona bene. Il rischio principale è il retrieval sbagliato — se vengono recuperati documenti non pertinenti, la risposta sarà errata.</p>
+          <p>È il punto di partenza corretto per qualsiasi use case su knowledge base proprietaria.</p>
+        </div>
+      </div>
+      <div class="type-note">
+        <div class="note-arrow">→</div>
+        La differenza rispetto al chatbot puro: le risposte sono ancorate a fonti verificabili e citate. L'utente può risalire al documento originale per verificare.
+      </div>
+    </div>
+
+    <!-- TIPO 4: AGENTE SEMPLICE -->
+    <div class="type-card t4">
+      <div class="type-header">
+        <div class="type-level-bar tl-4"></div>
+        <div class="type-icon">🤖</div>
+        <div class="type-header-text">
+          <div class="type-level">Livello 3 — Autonomia media</div>
+          <div class="type-name">Agente Semplice</div>
+          <div class="type-tagline">Pianifica e agisce su sistemi reali, con supervisione umana</div>
+        </div>
+        <div class="type-autonomy">
+          <div class="autonomy-label">Autonomia</div>
+          <div class="autonomy-dots">
+            <div class="dot on-4"></div>
+            <div class="dot on-4"></div>
+            <div class="dot on-4"></div>
+            <div class="dot on-4"></div>
+            <div class="dot"></div>
+          </div>
+        </div>
+      </div>
+      <div class="type-body">
+        <div class="type-col">
+          <h3>Come funziona</h3>
+          <p>Il modello riceve un obiettivo, non solo una domanda. Decide da solo la sequenza di passi, usa strumenti (cerca su web, legge file, chiama API, scrive dati), valuta i risultati intermedi e si adatta. Il ciclo è: <em>ragiona → agisce → osserva → ragiona di nuovo.</em></p>
+          <p>L'umano definisce l'obiettivo e i vincoli. L'agente pianifica ed esegue. Su azioni ad alto impatto, l'umano approva prima dell'esecuzione.</p>
+        </div>
+        <div class="type-col">
+          <h3>Applicazioni concrete</h3>
+          <div class="ex-list">
+            <div class="ex-item"><div class="ex-dot ed-4"></div>Automazione di workflow email e CRM</div>
+            <div class="ex-item"><div class="ex-dot ed-4"></div>Ricerca e sintesi da fonti multiple con report finale</div>
+            <div class="ex-item"><div class="ex-dot ed-4"></div>Agente di coding che scrive, testa e corregge codice</div>
+            <div class="ex-item"><div class="ex-dot ed-4"></div>Monitoraggio e segnalazione automatica su dati aziendali</div>
+          </div>
+        </div>
+        <div class="type-col">
+          <h3>Profilo rischio/valore</h3>
+          <p>Rischio medio — le azioni nel mondo reale possono avere conseguenze. Il controllo umano su azioni irreversibili (invio email, scrittura su database) è non negoziabile nella fase iniziale.</p>
+          <p>Il valore è nell'automazione di processi multi-step che oggi richiedono intervento umano continuo. L'ROI è misurabile in ore risparmiate per settimana.</p>
+        </div>
+      </div>
+      <div class="type-note">
+        <div class="note-arrow">→</div>
+        Il salto rispetto alle tipologie precedenti: l'agente non aspetta la prossima domanda — prende iniziativa, usa strumenti, agisce sul mondo. È qui che inizia la vera automazione.
+      </div>
+    </div>
+
+    <!-- TIPO 5: MULTI-AGENT -->
+    <div class="type-card t5">
+      <div class="type-header">
+        <div class="type-level-bar tl-5"></div>
+        <div class="type-icon">🌐</div>
+        <div class="type-header-text">
+          <div class="type-level">Livello 4 — Alta autonomia</div>
+          <div class="type-name">Sistemi Multi-Agent</div>
+          <div class="type-tagline">Più agenti specializzati collaborano per obiettivi complessi</div>
+        </div>
+        <div class="type-autonomy">
+          <div class="autonomy-label">Autonomia</div>
+          <div class="autonomy-dots">
+            <div class="dot on-5"></div>
+            <div class="dot on-5"></div>
+            <div class="dot on-5"></div>
+            <div class="dot on-5"></div>
+            <div class="dot on-5"></div>
+          </div>
+        </div>
+      </div>
+      <div class="type-body">
+        <div class="type-col">
+          <h3>Come funziona</h3>
+          <p>Più agenti LLM lavorano in parallelo o in sequenza, ognuno specializzato in un dominio. Un orchestratore coordina: assegna task, raccoglie risultati, gestisce eccezioni. Gli agenti si passano output come input, costruendo risultati che nessuno di loro potrebbe produrre da solo.</p>
+          <p>È l'architettura più potente e più complessa — e quella con il maggiore potenziale di errore a cascata se non progettata bene.</p>
+        </div>
+        <div class="type-col">
+          <h3>Applicazioni concrete</h3>
+          <div class="ex-list">
+            <div class="ex-item"><div class="ex-dot ed-5"></div>Analisi competitiva automatizzata su più mercati in parallelo</div>
+            <div class="ex-item"><div class="ex-dot ed-5"></div>Pipeline di sviluppo software semi-autonoma</div>
+            <div class="ex-item"><div class="ex-dot ed-5"></div>Gestione autonoma di campagne marketing end-to-end</div>
+            <div class="ex-item"><div class="ex-dot ed-5"></div>Due diligence automatizzata su documenti di acquisizione</div>
+          </div>
+        </div>
+        <div class="type-col">
+          <h3>Profilo rischio/valore</h3>
+          <p>Rischio alto se non gestito — gli errori si propagano tra agenti. Richiede governance robusta, supervisione umana su decisioni chiave, sistemi di monitoring avanzati.</p>
+          <p>Valore potenziale molto elevato su processi complessi oggi interamente manuali. È il territorio di frontiera del 2025–2026.</p>
+        </div>
+      </div>
+      <div class="type-note">
+        <div class="note-arrow">→</div>
+        Questo è il territorio della serie "Agenti AI". La complessità è reale — ma anche il valore potenziale. La chiave è iniziare semplice e aggiungere autonomia gradualmente, man mano che la fiducia nel sistema cresce.
+      </div>
+    </div>
+
+    <hr class="rule">
+
+    <h3>Tabella di orientamento rapido</h3>
+    <table class="sum-table">
+      <thead>
+        <tr>
+          <th>Tipologia</th>
+          <th>L'umano fa</th>
+          <th>Il sistema fa</th>
+          <th>Maturità</th>
+          <th>Da dove iniziare</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>Chatbot</td>
+          <td>Fa le domande, legge le risposte</td>
+          <td>Risponde in linguaggio naturale</td>
+          <td>Matura — in produzione ovunque</td>
+          <td>Subito — bassa complessità</td>
+        </tr>
+        <tr>
+          <td>Copilot</td>
+          <td>Approva/rifiuta ogni suggerimento</td>
+          <td>Suggerisce nel flusso di lavoro</td>
+          <td>Matura — prodotti enterprise disponibili</td>
+          <td>Adottando tool esistenti (M365, GitHub)</td>
+        </tr>
+        <tr>
+          <td>RAG / Knowledge</td>
+          <td>Fa domande, verifica le fonti citate</td>
+          <td>Recupera e sintetizza da documenti propri</td>
+          <td>Matura — il caso d'uso enterprise più diffuso</td>
+          <td>Primo progetto AI consigliato in azienda</td>
+        </tr>
+        <tr>
+          <td>Agente semplice</td>
+          <td>Definisce obiettivo, approva azioni critiche</td>
+          <td>Pianifica ed esegue task multi-step</td>
+          <td>In maturazione — ROI misurabile su use case definiti</td>
+          <td>Su un processo ripetitivo ben definito</td>
+        </tr>
+        <tr>
+          <td>Multi-Agent</td>
+          <td>Definisce obiettivi, supervisiona il sistema</td>
+          <td>Coordina agenti specializzati autonomamente</td>
+          <td>Emergente — alta complessità, alto potenziale</td>
+          <td>Solo dopo aver validato agenti singoli</td>
+        </tr>
+      </tbody>
+    </table>
+
+  </section>
+
+</div>
+
+<script>
+  function showTab(id) {
+    document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+    document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+    document.getElementById(id).classList.add('active');
+    event.target.classList.add('active');
+    window.scrollTo({ top: document.querySelector('.sticky-nav').offsetTop, behavior: 'smooth' });
+  }
+</script>
+</body>
+</html>

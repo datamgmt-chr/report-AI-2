@@ -1,0 +1,493 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Guardrail e Sicurezza — Cosa Vigila su Input e Output</title>
+<link href="https://fonts.googleapis.com/css2?family=Spectral:ital,wght@0,300;0,400;0,500;0,600;1,400&family=Sora:wght@200;300;400;500;600;700;800&family=IBM+Plex+Mono:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg:     #f7f2f1;
+  --bg2:    #f0e8e6;
+  --bg3:    #e8dbd8;
+  --ink:    #1a1211;
+  --ink2:   #2b1f1d;
+  --ink3:   #64544f;
+  --ink4:   #9e8b86;
+  --border: #dccfcc;
+  --border2:#ccbbb6;
+
+  --core:   #c0392b;
+  --core2:  #94271c;
+  --warm:   #b3402a;
+  --good:   #3d7a45;
+  --bad:    #b3402a;
+  --teal:   #2e7d9c;
+  --violet: #7b5ea7;
+  --gold:   #b8860b;
+  --blue:   #3a7ca5;
+  --green:  #4a8c3f;
+}
+
+* { margin:0; padding:0; box-sizing:border-box; }
+html { scroll-behavior:smooth; }
+
+body { background: var(--bg); color: var(--ink); font-family: 'Sora', sans-serif; font-weight: 300; font-size: 14px; line-height: 1.78; }
+
+.masthead { background: var(--ink); color: rgba(255,255,255,0.9); padding: 64px 56px 54px; position: relative; overflow: hidden; }
+.masthead::before { content: ''; position: absolute; inset: 0; background: radial-gradient(circle at 80% 35%, rgba(192,57,43,0.30) 0, transparent 45%), repeating-linear-gradient(0deg, rgba(255,255,255,0.012) 0, rgba(255,255,255,0.012) 1px, transparent 1px, transparent 58px); pointer-events: none; }
+.mh-eye { font-family: 'IBM Plex Mono', monospace; font-size: 10px; letter-spacing: 3px; text-transform: uppercase; color: rgba(255,255,255,0.28); margin-bottom: 20px; position: relative; }
+.masthead h1 { font-family: 'Spectral', serif; font-weight: 400; font-size: clamp(33px, 5.2vw, 60px); line-height: 1.06; letter-spacing: -1px; max-width: 720px; position: relative; }
+.masthead h1 em { font-style: italic; color: #e8897e; }
+.mh-sub { margin-top: 22px; font-size: 15px; font-weight: 300; color: rgba(255,255,255,0.4); max-width: 690px; line-height: 1.72; position: relative; }
+
+.nav { background: var(--ink2); position: sticky; top: 0; z-index: 100; display: flex; overflow-x: auto; border-bottom: 1px solid rgba(255,255,255,0.06); }
+.nav-btn { flex: 1; min-width: 116px; padding: 13px 14px; border: none; background: transparent; cursor: pointer; font-family: 'Sora', sans-serif; font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.4px; color: rgba(255,255,255,0.3); border-right: 1px solid rgba(255,255,255,0.06); transition: all 0.2s; white-space: nowrap; }
+.nav-btn:last-child { border-right: none; }
+.nav-btn:hover { color: rgba(255,255,255,0.62); }
+.nav-btn.active { color: #fff; background: rgba(255,255,255,0.05); }
+.nav-btn.active::after { content: ''; display: block; height: 2px; background: var(--core); margin-top: 6px; border-radius: 1px; }
+
+.sect { display: none; }
+.sect.active { display: block; animation: fadeIn 0.3s ease; }
+@keyframes fadeIn { from { opacity:0; transform:translateY(6px); } to { opacity:1; transform:translateY(0); } }
+.sect-head { padding: 50px 56px 36px; border-bottom: 1px solid var(--border); }
+.sect-num { font-family: 'IBM Plex Mono', monospace; font-size: 10px; letter-spacing: 3px; text-transform: uppercase; color: var(--ink4); margin-bottom: 12px; }
+.sect-head h2 { font-family: 'Spectral', serif; font-weight: 400; font-size: clamp(27px, 3.6vw, 43px); line-height: 1.1; letter-spacing: -0.5px; max-width: 660px; margin-bottom: 14px; }
+.sect-head h2 em { font-style: italic; }
+.sect-head p { color: var(--ink3); max-width: 700px; font-size: 14.5px; }
+.wrap { padding: 36px 56px 60px; }
+
+.prose { max-width: 760px; }
+.prose p { color: var(--ink3); margin-bottom: 18px; font-size: 14.5px; }
+.prose p strong { color: var(--ink2); font-weight: 500; }
+.prose p em { font-style: italic; color: var(--ink2); }
+.lead { font-size: 16px !important; color: var(--ink2) !important; }
+.prose ul { max-width: 760px; margin: 0 0 18px; padding-left: 0; list-style: none; }
+.prose ul li { color: var(--ink3); font-size: 14px; line-height: 1.7; padding: 4px 0 4px 22px; position: relative; }
+.prose ul li::before { content: '—'; position: absolute; left: 0; color: var(--core); font-weight: 500; }
+.prose ul li strong { color: var(--ink2); font-weight: 500; }
+
+.h3 { font-family: 'IBM Plex Mono', monospace; font-size: 10px; letter-spacing: 2px; text-transform: uppercase; color: var(--ink4); margin: 40px 0 16px; padding-bottom: 8px; border-bottom: 1px solid var(--border); max-width: 760px; }
+.h3:first-child { margin-top: 0; }
+
+.diagram-wrap { margin: 10px 0; padding: 36px 24px; background: var(--ink); border: 1px solid var(--border2); overflow-x: auto; }
+.diagram-wrap svg { display: block; margin: 0 auto; }
+.diagram-cap { font-family: 'IBM Plex Mono', monospace; font-size: 11px; color: var(--ink4); text-align: center; margin-top: 14px; letter-spacing: 0.5px; }
+
+.stack { margin: 18px 0; max-width: 820px; }
+.sl { display: grid; grid-template-columns: 32px 1fr; border: 1px solid var(--border); border-bottom: none; background: var(--bg); }
+.sl:last-child { border-bottom: 1px solid var(--border); }
+.sl-n { background: var(--core); color: #fff; font-family: 'IBM Plex Mono', monospace; font-size: 11px; font-weight: 500; display: flex; align-items: center; justify-content: center; }
+.sl-body { padding: 13px 18px; }
+.sl-name { font-weight: 600; font-size: 13.5px; color: var(--ink2); margin-bottom: 2px; }
+.sl-when { font-family: 'IBM Plex Mono', monospace; font-size: 9px; color: var(--ink4); letter-spacing: 0.5px; text-transform: uppercase; margin-bottom: 5px; }
+.sl-desc { font-size: 12.5px; color: var(--ink3); line-height: 1.6; }
+.sl-desc strong { color: var(--ink2); font-weight: 500; }
+
+.types { display: grid; grid-template-columns: 1fr 1fr; gap: 1px; background: var(--border2); border: 1px solid var(--border2); margin: 20px 0; max-width: 880px; }
+.type-col { background: var(--bg); padding: 20px 22px; }
+.type-name { font-weight: 600; font-size: 15px; color: var(--ink2); margin-bottom: 4px; }
+.type-where { font-family: 'IBM Plex Mono', monospace; font-size: 9px; letter-spacing: 1px; text-transform: uppercase; color: var(--core2); margin-bottom: 12px; }
+.type-desc { font-size: 12.5px; color: var(--ink3); line-height: 1.62; }
+.type-desc strong { color: var(--ink2); font-weight: 500; }
+.type-desc em { font-style: italic; color: var(--ink2); }
+
+.insight { margin: 24px 0; padding: 18px 22px; border-left: 4px solid var(--teal); background: var(--bg2); max-width: 820px; }
+.insight-label { font-family: 'IBM Plex Mono', monospace; font-size: 9px; letter-spacing: 2px; text-transform: uppercase; margin-bottom: 6px; color: var(--teal); }
+.insight p { font-size: 13.5px; line-height: 1.7; color: var(--ink2); margin: 0; }
+.insight.w { border-left-color: var(--warm); }
+.insight.w .insight-label { color: var(--warm); }
+.insight.g { border-left-color: var(--gold); }
+.insight.g .insight-label { color: var(--gold); }
+.insight.v { border-left-color: var(--violet); }
+.insight.v .insight-label { color: var(--violet); }
+
+.key-point { margin: 36px 0 8px; padding: 26px 30px; border-left: 4px solid var(--core); background: var(--bg2); max-width: 820px; }
+.kp-label { font-family: 'IBM Plex Mono', monospace; font-size: 9px; letter-spacing: 2px; text-transform: uppercase; color: var(--core2); margin-bottom: 8px; }
+.kp-text { font-family: 'Spectral', serif; font-size: 20px; line-height: 1.42; color: var(--ink2); font-style: italic; }
+.kp-sub { margin-top: 12px; font-size: 13px; color: var(--ink3); line-height: 1.65; }
+
+.sum-table { width: 100%; max-width: 880px; border-collapse: collapse; font-size: 12.5px; margin: 20px 0; border: 1px solid var(--border2); }
+.sum-table th, .sum-table td { padding: 11px 14px; border: 1px solid var(--border); text-align: left; vertical-align: top; }
+.sum-table thead th { background: var(--ink); color: rgba(255,255,255,0.82); font-weight: 600; font-size: 10px; text-transform: uppercase; letter-spacing: 0.3px; }
+.sum-table tbody tr:nth-child(even) { background: var(--bg2); }
+.sum-table td { color: var(--ink3); }
+.sum-table .p-cell { font-weight: 600; color: var(--ink2); white-space: nowrap; }
+.sum-table td strong { color: var(--ink2); font-weight: 500; }
+
+.bp { margin: 28px 0 8px; border: 1px solid var(--good); background: var(--bg); max-width: 880px; }
+.bp-head { background: var(--good); color: #fff; padding: 12px 22px; font-family: 'IBM Plex Mono', monospace; font-size: 11px; letter-spacing: 2px; text-transform: uppercase; display: flex; align-items: center; gap: 10px; }
+.bp-head::before { content: '\25C6'; font-size: 11px; }
+.bp-body { padding: 0; }
+.bp-row { display: grid; grid-template-columns: 1fr 1fr; gap: 1px; background: var(--border); border-bottom: 1px solid var(--border); }
+.bp-row:last-child { border-bottom: none; }
+.bp-do, .bp-dont { padding: 14px 20px; background: var(--bg); }
+.bp-tag { font-family: 'IBM Plex Mono', monospace; font-size: 9px; letter-spacing: 1.5px; text-transform: uppercase; margin-bottom: 7px; display: flex; align-items: center; gap: 6px; }
+.bp-do .bp-tag { color: var(--good); }
+.bp-dont .bp-tag { color: var(--bad); }
+.bp-do .bp-tag::before { content: '\2713'; font-weight: 700; }
+.bp-dont .bp-tag::before { content: '\2717'; font-weight: 700; }
+.bp-text { font-size: 12.5px; color: var(--ink3); line-height: 1.6; }
+.bp-text strong { color: var(--ink2); font-weight: 500; }
+.bp-single { padding: 14px 20px; border-bottom: 1px solid var(--border); font-size: 13px; color: var(--ink3); line-height: 1.65; }
+.bp-single:last-child { border-bottom: none; }
+.bp-single strong { color: var(--ink2); font-weight: 600; }
+
+.srcnote { margin: 22px 0; padding: 14px 20px; background: var(--bg2); border: 1px dashed var(--border2); max-width: 820px; font-size: 12px; color: var(--ink3); line-height: 1.6; }
+.srcnote b { font-family: 'IBM Plex Mono', monospace; font-size: 9px; letter-spacing: 1.5px; text-transform: uppercase; color: var(--ink4); display: block; margin-bottom: 4px; }
+
+.footer { background: var(--ink); color: rgba(255,255,255,0.22); padding: 30px 56px; font-family: 'IBM Plex Mono', monospace; font-size: 10px; letter-spacing: 1px; display: flex; justify-content: space-between; }
+
+@media (max-width: 860px) {
+  .masthead, .sect-head, .wrap, .footer { padding-left: 20px; padding-right: 20px; }
+  .types, .bp-row { grid-template-columns: 1fr; }
+  .footer { flex-direction: column; gap: 6px; }
+}
+</style>
+</head>
+<body>
+
+<div class="masthead">
+  <div class="mh-eye">Serie Agenti AI &middot; Parte II &mdash; Report 07</div>
+  <h1>Guardrail e sicurezza:<br>cosa vigila su <em>input e output</em></h1>
+  <p class="mh-sub">Tutti gli strati precedenti rendono l'agente capace. Questo lo rende sicuro. I guardrail sono i controlli che intercettano ci&ograve; che entra e ci&ograve; che esce dal modello &mdash; lo strato che un agente in produzione non pu&ograve; permettersi di saltare, e quello dove "il modello &egrave; bravo" non basta.</p>
+</div>
+
+<nav class="nav">
+  <button class="nav-btn active" onclick="show(0)">Il problema</button>
+  <button class="nav-btn" onclick="show(1)">Lo stack</button>
+  <button class="nav-btn" onclick="show(2)">Input e output</button>
+  <button class="nav-btn" onclick="show(3)">Le minacce</button>
+  <button class="nav-btn" onclick="show(4)">Il limite</button>
+  <button class="nav-btn" onclick="show(5)">Trade-off</button>
+  <button class="nav-btn" onclick="show(6)">Best practice</button>
+</nav>
+
+
+<!-- S0 -->
+<div class="sect active" id="s0">
+  <div class="sect-head">
+    <div class="sect-num">Sezione 00 &middot; Il problema da risolvere</div>
+    <h2>Un modello capace &egrave; anche <em>capace di sbagliare</em></h2>
+    <p>Ogni strato finora ha aggiunto potere all'agente: sapere, ricordare, agire, specializzarsi. Ma il potere senza controllo &egrave; un rischio. Questo strato esiste per contenere ci&ograve; che gli altri hanno reso possibile.</p>
+  </div>
+  <div class="wrap">
+    <div class="prose">
+      <p class="lead">Pi&ugrave; un agente &egrave; capace, pi&ugrave; conta vigilare su come usa quella capacit&agrave;. Un modello che pu&ograve; cercare sul web, eseguire codice e agire tramite strumenti pu&ograve; anche, se mal indirizzato, divulgare informazioni che non dovrebbe, produrre contenuti dannosi, o essere manipolato per fare ci&ograve; che il suo creatore non voleva. I guardrail sono lo strato che si frappone tra questa possibilit&agrave; e il danno.</p>
+
+      <p>La definizione operativa &egrave; semplice: i guardrail sono <strong>controlli che esaminano ci&ograve; che entra nel modello (gli input) e ci&ograve; che ne esce (gli output)</strong>, intervenendo quando qualcosa viola le regole &mdash; bloccando, filtrando, o modificando. Stanno ai due lati del modello come due posti di controllo: uno sulla strada d'ingresso, uno su quella d'uscita.</p>
+
+      <p>C'&egrave; una sfumatura che distingue questo strato da quasi tutti gli altri della serie. Finora abbiamo parlato di come <em>migliorare</em> ci&ograve; che l'agente fa. I guardrail riguardano invece ci&ograve; che l'agente <strong>non deve fare</strong>, e questo cambia la logica di progettazione: non basta che funzionino la maggior parte delle volte, perch&eacute; in sicurezza &egrave; il caso raro che fa il danno. &Egrave; lo strato dove "il modello &egrave; bravo e di solito si comporta bene" non &egrave; una garanzia sufficiente.</p>
+
+      <div class="key-point">
+        <div class="kp-label">Il principio di questo strato</div>
+        <div class="kp-text">La sicurezza di un agente non vive nel modello, ma in una difesa stratificata che lo circonda. Nessun singolo controllo &egrave; sufficiente: la robustezza nasce dalla sovrapposizione.</div>
+        <div class="kp-sub">&Egrave; il principio della "difesa in profondit&agrave;": pi&ugrave; livelli indipendenti, ognuno dei quali cattura ci&ograve; che gli altri lasciano passare. Per i tuoi agenti significa non affidare mai la sicurezza a un solo meccanismo, per quanto buono.</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+<!-- S1 -->
+<div class="sect" id="s1">
+  <div class="sect-head">
+    <div class="sect-num">Sezione 01 &middot; La difesa stratificata</div>
+    <h2>Lo <em>stack</em> di sicurezza</h2>
+    <p>Anthropic non affida la sicurezza a un unico filtro, ma a una pila di livelli che agiscono in momenti diversi del ciclo di vita del modello. Conoscerli mostra dove ciascuno interviene &mdash; e quali puoi replicare nei tuoi agenti.</p>
+  </div>
+  <div class="wrap">
+    <div class="prose">
+      <p>La documentazione e le analisi pubbliche descrivono attorno a Claude uno <strong>stack di salvaguardie stratificato</strong>. I livelli, dal pi&ugrave; "a monte" (prima ancora che il modello esista nella sua forma finale) al pi&ugrave; "a valle" (in tempo reale, a ogni richiesta), sono questi.</p>
+    </div>
+
+    <div class="stack">
+      <div class="sl">
+        <div class="sl-n">1</div>
+        <div class="sl-body">
+          <div class="sl-name">Usage policy e quadro dei danni</div>
+          <div class="sl-when">prima di tutto &middot; le regole</div>
+          <div class="sl-desc">Le politiche d'uso e un quadro unificato di ci&ograve; che conta come danno. Sono le <strong>regole scritte</strong> che definiscono cosa &egrave; permesso e cosa no &mdash; il fondamento su cui poggia tutto il resto.</div>
+        </div>
+      </div>
+      <div class="sl">
+        <div class="sl-n">2</div>
+        <div class="sl-body">
+          <div class="sl-name">Addestramento orientato alla sicurezza</div>
+          <div class="sl-when">nei pesi &middot; Constitutional AI</div>
+          <div class="sl-desc">Il modello &egrave; addestrato a essere "innocuo" tramite tecniche come la <strong>Constitutional AI</strong>: un insieme di principi in linguaggio naturale (una "costituzione") guida il comportamento del modello, riducendo il bisogno di esempi umani caso per caso. La prima difesa &egrave; il modello stesso.</div>
+        </div>
+      </div>
+      <div class="sl">
+        <div class="sl-n">3</div>
+        <div class="sl-body">
+          <div class="sl-name">Valutazioni pre-rilascio</div>
+          <div class="sl-when">prima del deploy &middot; red-teaming</div>
+          <div class="sl-desc">Prima di rilasciare un modello, lo si <strong>mette alla prova</strong> con valutazioni e attacchi simulati (red-teaming) per scoprirne le vulnerabilit&agrave;. &Egrave; il collaudo che precede la messa in strada.</div>
+        </div>
+      </div>
+      <div class="sl">
+        <div class="sl-n">4</div>
+        <div class="sl-body">
+          <div class="sl-name">Classificatori in tempo reale su input e output</div>
+          <div class="sl-when">a ogni richiesta &middot; il cuore operativo</div>
+          <div class="sl-desc">Modelli-guardia che <strong>monitorano in tempo reale</strong> ci&ograve; che entra e ci&ograve; che esce, bloccando contenuti potenzialmente dannosi. &Egrave; il livello pi&ugrave; vicino alla "definizione operativa" di guardrail, e quello pi&ugrave; direttamente replicabile.</div>
+        </div>
+      </div>
+      <div class="sl">
+        <div class="sl-n">5</div>
+        <div class="sl-body">
+          <div class="sl-name">Classificatori per domini ad alto rischio</div>
+          <div class="sl-when">su temi critici &middot; specializzati</div>
+          <div class="sl-desc">Controlli <strong>specializzati</strong> per aree particolarmente sensibili (per esempio i rischi CBRN: chimici, biologici, radiologici, nucleari). Dove il danno potenziale &egrave; estremo, si aggiunge un presidio dedicato.</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="insight g">
+      <div class="insight-label">Cosa portano a casa i tuoi agenti</div>
+      <p>Non tutti questi livelli sono replicabili da chi costruisce sopra l'API &mdash; l'addestramento e la costituzione del modello sono di Anthropic. Ma <strong>il livello 4 &egrave; interamente tuo da costruire</strong>: classificatori e filtri su input e output sono esattamente ci&ograve; che puoi e devi aggiungere attorno al tuo agente. E il principio del livello 1 &mdash; scrivere prima le regole &mdash; vale per qualsiasi progetto: non puoi far rispettare confini che non hai mai definito.</p>
+    </div>
+  </div>
+</div>
+
+
+<!-- S2 -->
+<div class="sect" id="s2">
+  <div class="sect-head">
+    <div class="sect-num">Sezione 02 &middot; I due posti di controllo</div>
+    <h2>Guardrail in <em>ingresso</em> e in <em>uscita</em></h2>
+    <p>Il livello operativo &mdash; i classificatori in tempo reale &mdash; agisce in due punti distinti, con scopi diversi. Capire la differenza &egrave; ci&ograve; che ti permette di progettare entrambi.</p>
+  </div>
+  <div class="wrap">
+    <div class="types">
+      <div class="type-col">
+        <div class="type-name">Guardrail in ingresso</div>
+        <div class="type-where">prima del modello &middot; preflight</div>
+        <div class="type-desc">Esaminano la richiesta dell'utente <strong>prima</strong> che arrivi al modello. Cercano tentativi di manipolazione, richieste vietate, dati sensibili in ingresso, pattern di jailbreak. Se scatta l'allarme, la richiesta viene bloccata o ripulita <em>prima</em> di consumare una chiamata al modello. &Egrave; la guardia all'ingresso.</div>
+      </div>
+      <div class="type-col">
+        <div class="type-name">Guardrail in uscita</div>
+        <div class="type-where">dopo il modello &middot; output</div>
+        <div class="type-desc">Esaminano la risposta del modello <strong>prima</strong> che raggiunga l'utente. Cercano contenuti dannosi, fughe di dati, informazioni riservate, deviazioni dal tema. Aggiungono un ulteriore strato di difesa contro la generazione accidentale di contenuti tossici o fuori luogo. &Egrave; la guardia all'uscita.</div>
+      </div>
+    </div>
+
+    <div class="prose">
+      <p>I due controlli servono scopi complementari. Il guardrail in <strong>ingresso</strong> ferma il problema all'origine: &egrave; pi&ugrave; economico (non spreca una chiamata al modello) e blocca la manipolazione prima che agisca. Il guardrail in <strong>uscita</strong> &egrave; la rete di sicurezza finale: cattura ci&ograve; che &egrave; passato dall'ingresso e ha indotto il modello a produrre qualcosa di problematico. Servono entrambi, perch&eacute; coprono falle diverse.</p>
+
+      <p>Un aspetto importante &egrave; <em>come</em> si implementano questi controlli. La documentazione di Anthropic offre indicazioni concrete e replicabili. Per il filtro in ingresso suggerisce di usare un <strong>modello leggero e veloce</strong> (per esempio un modello della famiglia Haiku) come "schermo di innocuità" che pre-classifica gli input, vincolando la sua risposta a una classificazione semplice (sicuro / non sicuro) tramite output strutturato. In pratica: un piccolo modello fa da buttafuori per il modello grande. &Egrave; veloce, economico, ed efficace.</p>
+
+      <div class="insight v">
+        <div class="insight-label">Una svolta tecnica: i Constitutional Classifiers</div>
+        <p>Anthropic ha sviluppato un approccio chiamato <strong>Constitutional Classifiers</strong> proprio per il livello operativo. Invece di filtri statici a parole-chiave, usa classificatori &mdash; addestrati su una "costituzione" in linguaggio naturale e su dati sintetici &mdash; che monitorano input e output con una comprensione pi&ugrave; sofisticata dei confini. Il risultato dichiarato &egrave; notevole: in oltre 3.000 ore di tentativi di violazione da parte di esperti, il sistema cos&igrave; protetto non ha subito jailbreak universali nel dominio bersaglio. Un grande vantaggio dichiarato di questo approccio &egrave; che le regole si esprimono in linguaggio naturale e si possono rigenerare in fretta per coprire nuove minacce, senza ripartire da dati di esempio.</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+<!-- S3 -->
+<div class="sect" id="s3">
+  <div class="sect-head">
+    <div class="sect-num">Sezione 03 &middot; Da cosa si difende</div>
+    <h2>Jailbreak, <em>prompt injection</em> e fughe di dati</h2>
+    <p>Per progettare guardrail efficaci bisogna conoscere le minacce. Due in particolare ricorrono, e vengono spesso confuse, anche se hanno meccaniche e difese diverse.</p>
+  </div>
+  <div class="wrap">
+    <div class="prose">
+      <p><strong>Jailbreak.</strong> Sono prompt costruiti per <em>aggirare le regole di sicurezza</em> del modello, inducendolo a generare contenuti che normalmente rifiuterebbe. Le tecniche classiche includono chiedere al modello di "interpretare" un'AI senza regole, o di rispondere in codice (per esempio in Morse) per eludere i filtri. I <strong>jailbreak universali</strong> sono i pi&ugrave; pericolosi: strategie che funzionano su molte richieste dannose diverse, come una chiave maestra che apre molte porte invece di un grimaldello per una sola serratura.</p>
+
+      <p><strong>Prompt injection.</strong> &Egrave; pi&ugrave; subdola e specifica degli agenti. Avviene quando <em>istruzioni malevole vengono nascoste in contenuti che il modello legge</em> &mdash; una pagina web, un documento, un'email &mdash; e il modello le esegue come se venissero dall'utente legittimo. &Egrave; il rischio nascosto degli strati che abbiamo visto: un agente che fa RAG su una pagina web (Report 05) o che legge la memoria (Report 03) potrebbe ingerire istruzioni ostili insieme ai dati. Pi&ugrave; l'agente &egrave; autonomo e connesso, pi&ugrave; questa superficie d'attacco si allarga.</p>
+
+      <p>La distinzione pratica conta. Il jailbreak &egrave; <strong>l'utente che attacca direttamente</strong> il modello con i suoi prompt; la prompt injection &egrave; <strong>un terzo che attacca attraverso i dati</strong> che l'agente consuma. Le difese si sovrappongono ma non coincidono: contro i jailbreak servono classificatori robusti sull'input dell'utente; contro la prompt injection serve trattare con sospetto <em>tutto ci&ograve; che l'agente legge dall'esterno</em>, non solo ci&ograve; che l'utente digita.</p>
+
+      <p>C'&egrave; poi una terza categoria trasversale: le <strong>fughe di dati</strong>. Informazioni personali (PII), segreti, contenuti riservati che non devono comparire in output. Qui il guardrail in uscita &egrave; in prima linea: filtra la risposta per intercettare ci&ograve; che non deve uscire, indipendentemente da come ci sia finito.</p>
+
+      <div class="insight w">
+        <div class="insight-label">Il filo che attraversa tutta la serie</div>
+        <p>Nota come ogni strato precedente abbia introdotto una sua superficie di rischio, che ora questo strato deve presidiare: il system prompt pu&ograve; essere "dirottato" (Report 02), la memoria pu&ograve; persistere istruzioni malevole (Report 03), gli strumenti possono compiere azioni irreversibili (Report 04), il RAG pu&ograve; ingerire contenuti ostili (Report 05). I guardrail non sono uno strato isolato: sono <strong>la risposta difensiva a rischi che gli altri strati hanno creato</strong>. &Egrave; per questo che vengono quasi alla fine della cipolla.</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+<!-- S4 -->
+<div class="sect" id="s4">
+  <div class="sect-head">
+    <div class="sect-num">Sezione 04 &middot; L'onest&agrave; necessaria</div>
+    <h2>Nessun guardrail &egrave; <em>infallibile</em></h2>
+    <p>La lezione pi&ugrave; importante di questo strato &egrave; anche la pi&ugrave; scomoda: i guardrail sono probabilistici, non garantiti. Progettare come se lo fossero &egrave; l'errore pi&ugrave; pericoloso.</p>
+  </div>
+  <div class="wrap">
+    <div class="prose">
+      <p>Anche i sistemi di sicurezza migliori sono, per loro natura, <strong>probabilistici e aggirabili</strong>. La ricerca indipendente e gli stessi fornitori lo riconoscono: i ricercatori hanno gi&agrave; dimostrato modi per sconfiggere i rilevatori di jailbreak. Nessun classificatore cattura il 100% degli attacchi, e ogni nuova difesa innesca nuovi tentativi di elusione &mdash; una corsa agli armamenti silenziosa che non ha un punto d'arrivo definitivo.</p>
+
+      <p>Da qui nasce un'assunzione pericolosa, che la documentazione di settore segnala esplicitamente: <em>"se il fornitore ha i guardrail, il nostro prodotto &egrave; abbastanza sicuro"</em>. &Egrave; falso. I guardrail del fornitore proteggono da una classe di abusi, ma non conoscono il <strong>tuo</strong> dominio, le tue regole di business, i tuoi dati sensibili. Un agente bancario, uno medico e uno scolastico hanno confini diversi che nessun guardrail generico pu&ograve; presidiare al posto tuo.</p>
+
+      <div class="key-point">
+        <div class="kp-label">La conseguenza pratica</div>
+        <div class="kp-text">I guardrail riducono il rischio, non lo azzerano. Vanno progettati come strati che si rinforzano a vicenda, accettando che ciascuno, da solo, possa fallire.</div>
+        <div class="kp-sub">Questo cambia il modo di costruire: invece di cercare il filtro perfetto, si costruiscono pi&ugrave; difese indipendenti, si monitora ci&ograve; che passa, e si predispone cosa fare <em>quando</em> &mdash; non se &mdash; qualcosa sfugge. La sicurezza &egrave; un processo continuo, non una casella da spuntare.</p></div>
+      </div>
+
+      <p>Vale anche la pena ricordare una raccomandazione pratica della documentazione: oltre ai filtri tecnici, conviene <strong>gestire gli abusi a livello di comportamento</strong> &mdash; per esempio limitare la frequenza (throttling) o sospendere gli utenti che tentano ripetutamente di aggirare le protezioni. La sicurezza non &egrave; solo filtrare il singolo messaggio: &egrave; anche riconoscere e fermare i pattern di abuso nel tempo.</p>
+    </div>
+  </div>
+</div>
+
+
+<!-- S5 -->
+<div class="sect" id="s5">
+  <div class="sect-head">
+    <div class="sect-num">Sezione 05 &middot; Le scelte</div>
+    <h2>I <em>trade-off</em> della sicurezza</h2>
+    <p>Decisioni con pro e contro, da soppesare in base al tuo caso d'uso. In sicurezza, ogni protezione ha un costo &mdash; e l'assenza di protezione anche.</p>
+  </div>
+  <div class="wrap">
+    <div class="bp" style="border-color:var(--ink3);">
+      <div class="bp-head" style="background:var(--ink3);">Trade-off &middot; da soppesare nel tuo contesto</div>
+      <div class="bp-body">
+        <div class="bp-single"><strong>Sicurezza vs utilit&agrave;.</strong> Guardrail troppo aggressivi bloccano richieste legittime (falsi positivi) e frustrano gli utenti; guardrail troppo permissivi lasciano passare abusi (falsi negativi). Ogni soglia &egrave; un compromesso tra il fastidio di bloccare l'innocente e il danno di lasciar passare il colpevole. Il punto giusto dipende da quanto &egrave; alto il costo dell'errore nel tuo dominio.</div>
+        <div class="bp-single"><strong>Latenza e costo vs copertura.</strong> Ogni controllo aggiunto &mdash; uno schermo in ingresso, un classificatore in uscita &mdash; aggiunge tempo e costo a ogni richiesta. Pi&ugrave; difese significano pi&ugrave; sicurezza ma anche risposte pi&ugrave; lente e care. Su un dominio a basso rischio, un solo controllo leggero pu&ograve; bastare; su uno critico, la ridondanza ripaga il costo.</div>
+        <div class="bp-single"><strong>Filtri statici vs classificatori.</strong> I filtri a parole-chiave sono semplici, veloci e trasparenti, ma rozzi e facili da aggirare; i classificatori basati su modelli capiscono l'intento ma costano di pi&ugrave; e sono meno prevedibili. Per minacce semplici bastano i primi; per attacchi sofisticati servono i secondi.</div>
+        <div class="bp-single"><strong>Bloccare vs degradare.</strong> Di fronte a un dubbio, l'agente pu&ograve; rifiutare seccamente, oppure rispondere in modo pi&ugrave; cauto e limitato. Il blocco netto &egrave; pi&ugrave; sicuro ma pi&ugrave; brusco; la risposta degradata &egrave; pi&ugrave; gentile ma rischia di concedere troppo. La scelta dipende da quanto &egrave; grave ci&ograve; che stai prevenendo.</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+<!-- S6 -->
+<div class="sect" id="s6">
+  <div class="sect-head">
+    <div class="sect-num">Sezione 06 &middot; Cosa porto a casa</div>
+    <h2>Best practice della <em>sicurezza</em></h2>
+    <p>Indicazioni azionabili per proteggere i tuoi agenti, nel formato fai-cos&igrave; / non-fare-cos&igrave; della serie.</p>
+  </div>
+  <div class="wrap">
+
+    <div class="bp">
+      <div class="bp-head">Best practice &middot; guardrail e sicurezza</div>
+      <div class="bp-body">
+        <div class="bp-row">
+          <div class="bp-do">
+            <div class="bp-tag">Fai cos&igrave;</div>
+            <div class="bp-text">Adotta la <strong>difesa in profondit&agrave;</strong>: pi&ugrave; livelli indipendenti (regole, filtro in ingresso, filtro in uscita, monitoraggio) che si coprono a vicenda.</div>
+          </div>
+          <div class="bp-dont">
+            <div class="bp-tag">Non fare cos&igrave;</div>
+            <div class="bp-text">Non affidare la sicurezza a un solo meccanismo, per quanto buono: il caso che sfugge a quell'unico filtro &egrave; esattamente quello che ti far&agrave; danno.</div>
+          </div>
+        </div>
+        <div class="bp-row">
+          <div class="bp-do">
+            <div class="bp-tag">Fai cos&igrave;</div>
+            <div class="bp-text">Filtra <strong>sia l'input sia l'output</strong>: uno schermo leggero in ingresso (anche un modello piccolo e veloce) e un controllo sulla risposta prima che raggiunga l'utente.</div>
+          </div>
+          <div class="bp-dont">
+            <div class="bp-tag">Non fare cos&igrave;</div>
+            <div class="bp-text">Non controllare solo l'ingresso pensando che basti: il modello pu&ograve; produrre contenuti problematici anche da input apparentemente innocui.</div>
+          </div>
+        </div>
+        <div class="bp-row">
+          <div class="bp-do">
+            <div class="bp-tag">Fai cos&igrave;</div>
+            <div class="bp-text"><strong>Definisci le regole prima</strong>: scrivi cosa &egrave; permesso e cosa no nel tuo dominio. I confini che non hai definito non puoi farli rispettare.</div>
+          </div>
+          <div class="bp-dont">
+            <div class="bp-tag">Non fare cos&igrave;</div>
+            <div class="bp-text">Non dare per scontato che i guardrail del fornitore coprano il tuo caso: non conoscono le tue regole di business n&eacute; i tuoi dati sensibili.</div>
+          </div>
+        </div>
+        <div class="bp-row">
+          <div class="bp-do">
+            <div class="bp-tag">Fai cos&igrave;</div>
+            <div class="bp-text">Tratta <strong>tutto ci&ograve; che l'agente legge dall'esterno</strong> (web, documenti, memoria) come potenzialmente ostile: &egrave; la difesa contro la prompt injection.</div>
+          </div>
+          <div class="bp-dont">
+            <div class="bp-tag">Non fare cos&igrave;</div>
+            <div class="bp-text">Non fidarti dei contenuti recuperati come se fossero istruzioni legittime: una pagina web o un documento possono contenere comandi nascosti per il tuo agente.</div>
+          </div>
+        </div>
+        <div class="bp-row">
+          <div class="bp-do">
+            <div class="bp-tag">Fai cos&igrave;</div>
+            <div class="bp-text">Progetta <strong>assumendo che un guardrail fallisca</strong>: monitora ci&ograve; che passa, registra gli eventi sospetti, predisponi cosa fare quando qualcosa sfugge.</div>
+          </div>
+          <div class="bp-dont">
+            <div class="bp-tag">Non fare cos&igrave;</div>
+            <div class="bp-text">Non trattare la sicurezza come una casella da spuntare una volta: &egrave; un processo continuo in una corsa agli armamenti che non finisce.</div>
+          </div>
+        </div>
+        <div class="bp-row">
+          <div class="bp-do">
+            <div class="bp-tag">Fai cos&igrave;</div>
+            <div class="bp-text">Gestisci l'abuso <strong>anche a livello di comportamento</strong>: limita la frequenza o sospendi chi tenta ripetutamente di aggirare le protezioni.</div>
+          </div>
+          <div class="bp-dont">
+            <div class="bp-tag">Non fare cos&igrave;</div>
+            <div class="bp-text">Non limitarti a filtrare il singolo messaggio ignorando i pattern: un attaccante che riprova mille volte va fermato come utente, non solo messaggio per messaggio.</div>
+          </div>
+        </div>
+        <div class="bp-row">
+          <div class="bp-do">
+            <div class="bp-tag">Fai cos&igrave;</div>
+            <div class="bp-text">Calibra le soglie <strong>misurando falsi positivi e negativi</strong> sul tuo traffico reale, bilanciando sicurezza e utilit&agrave; in base al costo dell'errore.</div>
+          </div>
+          <div class="bp-dont">
+            <div class="bp-tag">Non fare cos&igrave;</div>
+            <div class="bp-text">Non impostare i filtri al massimo "per sicurezza": bloccherai tanti utenti legittimi da rendere l'agente inutile, e gli utenti troveranno il modo di evitarlo.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="h3">Le minacce e le loro difese</div>
+    <table class="sum-table">
+      <thead>
+        <tr><th>Minaccia</th><th>Cos'&egrave;</th><th>Difesa principale</th></tr>
+      </thead>
+      <tbody>
+        <tr><td class="p-cell">Jailbreak</td><td>L'utente aggira le regole con prompt costruiti</td><td>Classificatori robusti sull'input utente</td></tr>
+        <tr><td class="p-cell">Jailbreak universale</td><td>Una strategia che funziona su molti attacchi</td><td>Classificatori "costituzionali", red-teaming</td></tr>
+        <tr><td class="p-cell">Prompt injection</td><td>Istruzioni ostili nascoste nei dati letti</td><td>Diffidare di tutto l'input esterno</td></tr>
+        <tr><td class="p-cell">Fuga di dati</td><td>PII o segreti che compaiono in output</td><td>Guardrail in uscita, filtro della risposta</td></tr>
+        <tr><td class="p-cell">Azione dannosa</td><td>Uno strumento usato male (Report 04)</td><td>Validazione, conferme, permessi minimi</td></tr>
+      </tbody>
+    </table>
+
+    <div class="srcnote">
+      <b>Affidabilit&agrave; di queste indicazioni</b>
+      Lo stack di salvaguardie stratificato di Anthropic (usage policy, addestramento con Constitutional AI, valutazioni pre-rilascio, classificatori in tempo reale su input/output, classificatori per domini ad alto rischio), i Constitutional Classifiers e i risultati del red-teaming, le definizioni di jailbreak e prompt injection, e le raccomandazioni pratiche (schermo di innocuit&agrave; con modello leggero, validazione input, prompt engineering, throttling) sono <strong>documentati</strong> da Anthropic e dalla letteratura di sicurezza. La distinzione "ingresso/uscita" e lo schema delle minacce sono <strong>inquadramenti</strong> didattici basati su pratiche standard del settore. La natura probabilistica e aggirabile dei guardrail &egrave; ampiamente riconosciuta. Quest'area evolve rapidamente: verifica le risorse di sicurezza correnti prima di un deploy in produzione.
+    </div>
+
+    <div class="key-point">
+      <div class="kp-label">Verso il Report 08</div>
+      <div class="kp-text">Abbiamo descritto otto strati, uno per uno. Resta la domanda che li lega: come fanno a funzionare tutti insieme, nell'ordine giusto, a ogni singolo messaggio?</div>
+      <div class="kp-sub">Il prossimo strato &mdash; l'orchestrazione invisibile &mdash; &egrave; ci&ograve; che cuce insieme system prompt, memoria, strumenti, RAG, configurazione e guardrail in un unico flusso coerente. &Egrave; lo strato che rende il sistema un sistema.</div>
+    </div>
+
+  </div>
+</div>
+
+
+<div class="footer">
+  <span>Serie Agenti AI &middot; Parte II &mdash; Report 07 &middot; Guardrail e Sicurezza</span>
+  <span>Maggio 2026</span>
+</div>
+
+<script>
+function show(n) {
+  document.querySelectorAll('.sect').forEach(s => s.classList.remove('active'));
+  document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('s'+n).classList.add('active');
+  document.querySelectorAll('.nav-btn')[n].classList.add('active');
+  window.scrollTo({top:0, behavior:'smooth'});
+}
+</script>
+
+</body>
+</html>

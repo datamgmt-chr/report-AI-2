@@ -1,0 +1,1561 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Roadmap — Costruire un Agente AI</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=Syne+Mono&family=Literata:ital,wght@0,300;0,400;0,500;1,300;1,400&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg:    #f8f6f0;
+  --bg2:   #eeebe2;
+  --bg3:   #e4e0d4;
+  --ink:   #16140c;
+  --ink2:  #2c2a20;
+  --ink3:  #605e50;
+  --ink4:  #a09e90;
+  --line:  #ccc9bc;
+  --line2: #b8b4a4;
+
+  /* Fasi */
+  --f1: #1a3a6e;   /* Comprensione — blu notte */
+  --f2: #7a3200;   /* Progettazione — terracotta */
+  --f3: #1a5c2e;   /* Costruzione — verde bosco */
+  --f4: #5c1a5c;   /* Validazione — viola */
+  --f5: #1a4a5c;   /* Deploy — petrolio */
+  --f6: #3a3a1a;   /* Evoluzione — oliva */
+
+  --f1l: #e8edf8;
+  --f2l: #fdf0e8;
+  --f3l: #e8f8ee;
+  --f4l: #f8e8f8;
+  --f5l: #e8f4f8;
+  --f6l: #f4f4e8;
+}
+
+* { margin:0; padding:0; box-sizing:border-box; }
+html { scroll-behavior:smooth; }
+
+body {
+  background: var(--bg);
+  color: var(--ink);
+  font-family: 'Syne', sans-serif;
+  font-weight: 400;
+  font-size: 14px;
+  line-height: 1.65;
+}
+
+/* ── MASTHEAD ── */
+.masthead {
+  padding: 60px 60px 52px;
+  border-bottom: 2px solid var(--ink);
+  display: grid;
+  grid-template-columns: 1fr 280px;
+  gap: 48px;
+  align-items: end;
+  position: relative;
+}
+
+.masthead-label {
+  font-family: 'Syne Mono', monospace;
+  font-size: 10px;
+  letter-spacing: 3px;
+  text-transform: uppercase;
+  color: var(--ink4);
+  margin-bottom: 16px;
+}
+
+.masthead h1 {
+  font-size: clamp(36px, 5.5vw, 72px);
+  font-weight: 800;
+  line-height: 0.95;
+  letter-spacing: -2px;
+}
+
+.masthead h1 .sub {
+  display: block;
+  font-weight: 400;
+  font-style: normal;
+  font-family: 'Literata', serif;
+  font-size: clamp(18px, 2.5vw, 30px);
+  letter-spacing: -0.5px;
+  color: var(--ink3);
+  margin-top: 8px;
+  line-height: 1.3;
+}
+
+.masthead-meta {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.meta-item {
+  border-top: 1px solid var(--line2);
+  padding-top: 12px;
+}
+
+.meta-item .n {
+  font-size: 40px;
+  font-weight: 800;
+  line-height: 1;
+  letter-spacing: -2px;
+}
+
+.meta-item .l {
+  font-family: 'Syne Mono', monospace;
+  font-size: 10px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: var(--ink4);
+  margin-top: 2px;
+}
+
+/* ── ROADMAP STRIP ── */
+.roadmap-strip {
+  border-bottom: 2px solid var(--ink);
+  overflow-x: auto;
+  background: var(--ink);
+  position: sticky;
+  top: 0;
+  z-index: 100;
+}
+
+.roadmap-phases {
+  display: flex;
+  min-width: 900px;
+}
+
+.phase-tab {
+  flex: 1;
+  padding: 14px 16px;
+  border-right: 1px solid rgba(255,255,255,0.08);
+  cursor: pointer;
+  transition: background 0.15s;
+  text-decoration: none;
+}
+
+.phase-tab:last-child { border-right: none; }
+.phase-tab:hover { background: rgba(255,255,255,0.05); }
+
+.pt-num {
+  font-family: 'Syne Mono', monospace;
+  font-size: 9px;
+  letter-spacing: 2px;
+  color: rgba(255,255,255,0.25);
+  margin-bottom: 4px;
+}
+
+.pt-name {
+  font-size: 12px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: rgba(255,255,255,0.55);
+  line-height: 1.2;
+}
+
+.phase-tab.f1 { border-bottom: 3px solid var(--f1); }
+.phase-tab.f2 { border-bottom: 3px solid var(--f2); }
+.phase-tab.f3 { border-bottom: 3px solid var(--f3); }
+.phase-tab.f4 { border-bottom: 3px solid var(--f4); }
+.phase-tab.f5 { border-bottom: 3px solid var(--f5); }
+.phase-tab.f6 { border-bottom: 3px solid var(--f6); }
+
+/* ── OVERVIEW MAP ── */
+.overview {
+  padding: 52px 60px;
+  border-bottom: 1px solid var(--line);
+}
+
+.overview-label {
+  font-family: 'Syne Mono', monospace;
+  font-size: 10px;
+  letter-spacing: 3px;
+  text-transform: uppercase;
+  color: var(--ink4);
+  margin-bottom: 32px;
+}
+
+.roadmap-visual {
+  display: grid;
+  grid-template-columns: repeat(6, 1fr);
+  gap: 2px;
+  border: 1.5px solid var(--ink);
+  overflow: hidden;
+  margin-bottom: 40px;
+}
+
+.rv-phase {
+  padding: 20px 16px;
+  border-right: 1px solid rgba(0,0,0,0.08);
+  position: relative;
+}
+
+.rv-phase:last-child { border-right: none; }
+
+.rv-phase-bar {
+  height: 4px;
+  width: 100%;
+  margin-bottom: 14px;
+  border-radius: 1px;
+}
+
+.rv-phase-num {
+  font-family: 'Syne Mono', monospace;
+  font-size: 9px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  margin-bottom: 6px;
+  opacity: 0.45;
+}
+
+.rv-phase-name {
+  font-size: 14px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+  margin-bottom: 8px;
+  line-height: 1.15;
+}
+
+.rv-phase-q {
+  font-family: 'Literata', serif;
+  font-style: italic;
+  font-size: 12px;
+  color: var(--ink3);
+  line-height: 1.5;
+  margin-bottom: 12px;
+}
+
+.rv-phase-dur {
+  font-family: 'Syne Mono', monospace;
+  font-size: 10px;
+  color: var(--ink4);
+  letter-spacing: 1px;
+}
+
+/* Colori fasi */
+.f1bg { background: var(--f1l); }
+.f2bg { background: var(--f2l); }
+.f3bg { background: var(--f3l); }
+.f4bg { background: var(--f4l); }
+.f5bg { background: var(--f5l); }
+.f6bg { background: var(--f6l); }
+
+/* ── PHASE DETAIL SECTIONS ── */
+.phase-section {
+  padding: 56px 60px;
+  border-bottom: 1px solid var(--line);
+}
+
+.ps-header {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  gap: 20px;
+  align-items: start;
+  margin-bottom: 40px;
+  padding-bottom: 20px;
+  border-bottom: 1px solid var(--line2);
+}
+
+.ps-badge {
+  width: 56px;
+  height: 56px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 22px;
+  font-weight: 800;
+  flex-shrink: 0;
+  color: white;
+}
+
+.ps-title-block {}
+
+.ps-phase-label {
+  font-family: 'Syne Mono', monospace;
+  font-size: 10px;
+  letter-spacing: 3px;
+  text-transform: uppercase;
+  color: var(--ink4);
+  margin-bottom: 6px;
+}
+
+.ps-title {
+  font-size: clamp(24px, 3.5vw, 42px);
+  font-weight: 800;
+  letter-spacing: -1px;
+  line-height: 1.0;
+  margin-bottom: 8px;
+}
+
+.ps-subtitle {
+  font-family: 'Literata', serif;
+  font-style: italic;
+  font-size: 15px;
+  color: var(--ink3);
+  max-width: 560px;
+}
+
+.ps-meta {
+  text-align: right;
+  flex-shrink: 0;
+}
+
+.ps-dur {
+  font-family: 'Syne Mono', monospace;
+  font-size: 10px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: var(--ink4);
+  margin-bottom: 6px;
+}
+
+.ps-dur strong {
+  display: block;
+  font-family: 'Syne', sans-serif;
+  font-size: 24px;
+  font-weight: 800;
+  color: var(--ink);
+  letter-spacing: -1px;
+}
+
+/* ── STEP CARDS ── */
+.steps-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1px;
+  background: var(--line);
+  border: 1px solid var(--line2);
+  margin-bottom: 32px;
+}
+
+.step-card {
+  background: var(--bg);
+  padding: 22px 20px;
+  position: relative;
+}
+
+.step-num {
+  font-family: 'Syne Mono', monospace;
+  font-size: 10px;
+  letter-spacing: 2px;
+  color: var(--ink4);
+  margin-bottom: 8px;
+}
+
+.step-title {
+  font-size: 14px;
+  font-weight: 700;
+  margin-bottom: 8px;
+  line-height: 1.2;
+}
+
+.step-body {
+  font-size: 12px;
+  color: var(--ink3);
+  line-height: 1.6;
+}
+
+.step-body strong { color: var(--ink2); font-weight: 600; }
+
+/* ── DECISION BOX ── */
+.decision-section {
+  background: var(--ink);
+  color: rgba(255,255,255,0.85);
+  padding: 32px;
+  margin-bottom: 32px;
+}
+
+.ds-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 20px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid rgba(255,255,255,0.08);
+}
+
+.ds-icon { font-size: 20px; }
+
+.ds-title {
+  font-size: 16px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.ds-subtitle {
+  font-family: 'Syne Mono', monospace;
+  font-size: 10px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: rgba(255,255,255,0.3);
+  margin-left: auto;
+}
+
+.decisions-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 1px;
+  background: rgba(255,255,255,0.06);
+}
+
+.decision-card {
+  background: rgba(255,255,255,0.03);
+  padding: 20px;
+}
+
+.dec-q {
+  font-size: 13px;
+  font-weight: 600;
+  margin-bottom: 8px;
+  line-height: 1.3;
+}
+
+.dec-opts {
+  list-style: none;
+  margin-bottom: 10px;
+}
+
+.dec-opts li {
+  font-family: 'Syne Mono', monospace;
+  font-size: 11px;
+  color: rgba(255,255,255,0.45);
+  padding: 3px 0;
+  display: flex;
+  gap: 8px;
+}
+
+.dec-opts li::before { content: '→'; color: rgba(255,255,255,0.2); }
+
+.dec-impact {
+  font-size: 11px;
+  color: rgba(255,255,255,0.3);
+  font-style: italic;
+  font-family: 'Literata', serif;
+  border-top: 1px solid rgba(255,255,255,0.06);
+  padding-top: 8px;
+  margin-top: 4px;
+}
+
+/* ── OUTPUT / DELIVERABLE BAR ── */
+.deliverable-bar {
+  display: flex;
+  gap: 1px;
+  background: var(--line);
+  border: 1px solid var(--line2);
+  margin-bottom: 32px;
+  overflow-x: auto;
+}
+
+.del-item {
+  flex: 1;
+  min-width: 140px;
+  background: var(--bg2);
+  padding: 14px 16px;
+  border-right: 1px solid var(--line);
+}
+
+.del-item:last-child { border-right: none; }
+
+.del-label {
+  font-family: 'Syne Mono', monospace;
+  font-size: 9px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: var(--ink4);
+  margin-bottom: 6px;
+}
+
+.del-name {
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 1.3;
+}
+
+/* ── RED FLAGS ── */
+.redflags {
+  background: #fff5f5;
+  border: 1px solid #e0a0a0;
+  border-left: 4px solid #c03030;
+  padding: 20px 24px;
+  margin-bottom: 20px;
+}
+
+.rf-title {
+  font-size: 12px;
+  font-weight: 700;
+  color: #c03030;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  margin-bottom: 12px;
+  font-family: 'Syne Mono', monospace;
+}
+
+.rf-list {
+  list-style: none;
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 6px;
+}
+
+.rf-list li {
+  font-size: 12px;
+  color: var(--ink3);
+  display: flex;
+  gap: 8px;
+  line-height: 1.4;
+}
+
+.rf-list li::before { content: '⚑'; color: #c03030; flex-shrink: 0; }
+
+/* ── PILLAR ROW ── */
+.pillar-row {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 1px;
+  background: var(--line);
+  border: 1px solid var(--line2);
+  margin-bottom: 32px;
+}
+
+.pillar {
+  background: var(--bg);
+  padding: 20px;
+}
+
+.pillar-icon { font-size: 24px; margin-bottom: 10px; display: block; }
+
+.pillar-title {
+  font-size: 13px;
+  font-weight: 700;
+  margin-bottom: 8px;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+}
+
+.pillar-text {
+  font-size: 12px;
+  color: var(--ink3);
+  line-height: 1.6;
+}
+
+.pillar-text strong { color: var(--ink2); font-weight: 600; }
+
+/* ── PRINCIPLES STRIP ── */
+.principle-strip {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1px;
+  background: var(--line);
+  border: 1px solid var(--line2);
+  margin-bottom: 32px;
+}
+
+.principle {
+  background: var(--bg);
+  padding: 22px 20px;
+  display: grid;
+  grid-template-columns: 36px 1fr;
+  gap: 12px;
+  align-items: start;
+}
+
+.pr-num {
+  font-size: 28px;
+  font-weight: 800;
+  color: var(--bg3);
+  line-height: 1;
+  margin-top: 2px;
+}
+
+.pr-title {
+  font-size: 13px;
+  font-weight: 700;
+  margin-bottom: 6px;
+  line-height: 1.2;
+}
+
+.pr-text {
+  font-size: 12px;
+  color: var(--ink3);
+  line-height: 1.55;
+}
+
+/* ── TIMELINE HORIZONTAL ── */
+.timeline-h {
+  position: relative;
+  padding: 0 0 0 28px;
+  margin-bottom: 32px;
+}
+
+.timeline-h::before {
+  content: '';
+  position: absolute;
+  left: 8px;
+  top: 16px;
+  bottom: 16px;
+  width: 1.5px;
+  background: var(--line2);
+}
+
+.tl-item {
+  position: relative;
+  margin-bottom: 20px;
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 16px;
+  align-items: start;
+}
+
+.tl-item:last-child { margin-bottom: 0; }
+
+.tl-item::before {
+  content: '';
+  position: absolute;
+  left: -24px;
+  top: 10px;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  border: 2px solid var(--ink);
+  background: var(--bg);
+}
+
+.tl-content {
+  background: var(--bg2);
+  border: 1px solid var(--line);
+  padding: 14px 18px;
+}
+
+.tl-step {
+  font-family: 'Syne Mono', monospace;
+  font-size: 9px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: var(--ink4);
+  margin-bottom: 4px;
+}
+
+.tl-title {
+  font-size: 14px;
+  font-weight: 700;
+  margin-bottom: 6px;
+}
+
+.tl-desc {
+  font-size: 12px;
+  color: var(--ink3);
+  line-height: 1.5;
+}
+
+.tl-desc strong { color: var(--ink2); font-weight: 600; }
+
+.tl-badge {
+  font-family: 'Syne Mono', monospace;
+  font-size: 10px;
+  padding: 4px 10px;
+  border: 1px solid;
+  white-space: nowrap;
+  align-self: start;
+  margin-top: 14px;
+}
+
+/* ── METRIC CARDS ── */
+.metric-row {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 1px;
+  background: var(--line);
+  border: 1px solid var(--line2);
+  margin-bottom: 32px;
+}
+
+.metric-card {
+  background: var(--bg);
+  padding: 18px 16px;
+}
+
+.mc-label {
+  font-family: 'Syne Mono', monospace;
+  font-size: 9px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: var(--ink4);
+  margin-bottom: 8px;
+}
+
+.mc-name {
+  font-size: 13px;
+  font-weight: 700;
+  margin-bottom: 6px;
+  line-height: 1.2;
+}
+
+.mc-desc {
+  font-size: 11px;
+  color: var(--ink3);
+  line-height: 1.5;
+}
+
+.mc-formula {
+  font-family: 'Syne Mono', monospace;
+  font-size: 10px;
+  color: var(--ink4);
+  margin-top: 8px;
+  padding: 5px 8px;
+  background: var(--bg2);
+  border: 1px solid var(--line);
+}
+
+/* ── GOLDEN RULES ── */
+.golden-section {
+  background: var(--ink);
+  padding: 52px 60px;
+  border-top: 2px solid var(--ink);
+}
+
+.gs-label {
+  font-family: 'Syne Mono', monospace;
+  font-size: 10px;
+  letter-spacing: 3px;
+  text-transform: uppercase;
+  color: rgba(255,255,255,0.25);
+  margin-bottom: 28px;
+}
+
+.gs-title {
+  font-size: clamp(22px, 3vw, 38px);
+  font-weight: 800;
+  color: #fff;
+  letter-spacing: -1px;
+  margin-bottom: 36px;
+  line-height: 1.1;
+}
+
+.rules-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1px;
+  background: rgba(255,255,255,0.06);
+}
+
+.rule {
+  background: rgba(255,255,255,0.03);
+  padding: 24px 20px;
+}
+
+.rule-n {
+  font-size: 44px;
+  font-weight: 800;
+  color: rgba(255,255,255,0.06);
+  line-height: 1;
+  margin-bottom: 10px;
+}
+
+.rule-title {
+  font-size: 14px;
+  font-weight: 700;
+  color: rgba(255,255,255,0.8);
+  margin-bottom: 8px;
+}
+
+.rule-text {
+  font-family: 'Literata', serif;
+  font-size: 13px;
+  color: rgba(255,255,255,0.4);
+  line-height: 1.65;
+}
+
+/* ── FOOTER ── */
+footer {
+  border-top: 1px solid var(--line);
+  padding: 24px 60px;
+  display: flex;
+  justify-content: space-between;
+  font-family: 'Syne Mono', monospace;
+  font-size: 10px;
+  color: var(--ink4);
+  letter-spacing: 1px;
+}
+
+/* ── RESPONSIVE ── */
+@media (max-width: 960px) {
+  .masthead, .overview, .phase-section, .golden-section { padding-left: 20px; padding-right: 20px; }
+  .masthead { grid-template-columns: 1fr; }
+  .roadmap-visual { grid-template-columns: 1fr 1fr; }
+  .steps-grid { grid-template-columns: 1fr 1fr; }
+  .decisions-grid { grid-template-columns: 1fr; }
+  .pillar-row { grid-template-columns: 1fr 1fr; }
+  .principle-strip { grid-template-columns: 1fr; }
+  .metric-row { grid-template-columns: 1fr 1fr; }
+  .rules-grid { grid-template-columns: 1fr; }
+  .rf-list { grid-template-columns: 1fr; }
+  footer { padding: 20px; flex-direction: column; gap: 6px; }
+}
+</style>
+</head>
+<body>
+
+<!-- ══════════════
+     MASTHEAD
+══════════════ -->
+<div class="masthead">
+  <div>
+    <div class="masthead-label">Roadmap · Costruzione Agente AI · Da zero a produzione</div>
+    <h1>
+      Come si costruisce<br>un agente
+      <span class="sub">Una roadmap in 6 fasi con le decisioni<br>critiche in ogni step</span>
+    </h1>
+  </div>
+  <div class="masthead-meta">
+    <div class="meta-item">
+      <div class="n">6</div>
+      <div class="l">Fasi principali</div>
+    </div>
+    <div class="meta-item">
+      <div class="n">18</div>
+      <div class="l">Decisioni critiche</div>
+    </div>
+    <div class="meta-item">
+      <div class="n">∞</div>
+      <div class="l">Iterazioni attese</div>
+    </div>
+  </div>
+</div>
+
+<!-- NAV STRIP -->
+<div class="roadmap-strip">
+  <div class="roadmap-phases">
+    <a class="phase-tab f1" href="#fase1"><div class="pt-num">01</div><div class="pt-name">Comprensione<br>del problema</div></a>
+    <a class="phase-tab f2" href="#fase2"><div class="pt-num">02</div><div class="pt-name">Progettazione<br>dell'architettura</div></a>
+    <a class="phase-tab f3" href="#fase3"><div class="pt-num">03</div><div class="pt-name">Costruzione<br>del prototipo</div></a>
+    <a class="phase-tab f4" href="#fase4"><div class="pt-num">04</div><div class="pt-name">Valutazione<br>e testing</div></a>
+    <a class="phase-tab f5" href="#fase5"><div class="pt-num">05</div><div class="pt-name">Deploy in<br>produzione</div></a>
+    <a class="phase-tab f6" href="#fase6"><div class="pt-num">06</div><div class="pt-name">Evoluzione<br>continua</div></a>
+  </div>
+</div>
+
+<!-- ══════════════
+     OVERVIEW
+══════════════ -->
+<div class="overview">
+  <div class="overview-label">Mappa generale · Sequenza delle fasi</div>
+
+  <div class="roadmap-visual">
+    <div class="rv-phase f1bg">
+      <div class="rv-phase-bar" style="background:var(--f1)"></div>
+      <div class="rv-phase-num" style="color:var(--f1)">Fase 01</div>
+      <div class="rv-phase-name" style="color:var(--f1)">Comprensione</div>
+      <div class="rv-phase-q">Cosa deve fare esattamente l'agente? Vale la pena costruirlo?</div>
+      <div class="rv-phase-dur">1–2 settimane</div>
+    </div>
+    <div class="rv-phase f2bg">
+      <div class="rv-phase-bar" style="background:var(--f2)"></div>
+      <div class="rv-phase-num" style="color:var(--f2)">Fase 02</div>
+      <div class="rv-phase-name" style="color:var(--f2)">Progettazione</div>
+      <div class="rv-phase-q">Quale stack, quale modello, quali strumenti, quale memoria?</div>
+      <div class="rv-phase-dur">1–2 settimane</div>
+    </div>
+    <div class="rv-phase f3bg">
+      <div class="rv-phase-bar" style="background:var(--f3)"></div>
+      <div class="rv-phase-num" style="color:var(--f3)">Fase 03</div>
+      <div class="rv-phase-name" style="color:var(--f3)">Costruzione</div>
+      <div class="rv-phase-q">Build iterativo: prima funziona, poi funziona bene.</div>
+      <div class="rv-phase-dur">2–6 settimane</div>
+    </div>
+    <div class="rv-phase f4bg">
+      <div class="rv-phase-bar" style="background:var(--f4)"></div>
+      <div class="rv-phase-num" style="color:var(--f4)">Fase 04</div>
+      <div class="rv-phase-name" style="color:var(--f4)">Valutazione</div>
+      <div class="rv-phase-q">Come misuro se l'agente funziona abbastanza bene?</div>
+      <div class="rv-phase-dur">Continua</div>
+    </div>
+    <div class="rv-phase f5bg">
+      <div class="rv-phase-bar" style="background:var(--f5)"></div>
+      <div class="rv-phase-num" style="color:var(--f5)">Fase 05</div>
+      <div class="rv-phase-name" style="color:var(--f5)">Deploy</div>
+      <div class="rv-phase-q">Come lo metto in produzione in modo sicuro e osservabile?</div>
+      <div class="rv-phase-dur">1–3 settimane</div>
+    </div>
+    <div class="rv-phase f6bg">
+      <div class="rv-phase-bar" style="background:var(--f6)"></div>
+      <div class="rv-phase-num" style="color:var(--f6)">Fase 06</div>
+      <div class="rv-phase-name" style="color:var(--f6)">Evoluzione</div>
+      <div class="rv-phase-q">Come miglioro il sistema nel tempo senza romperlo?</div>
+      <div class="rv-phase-dur">Permanente</div>
+    </div>
+  </div>
+
+  <!-- PREMESSA IMPORTANTE -->
+  <div class="principle-strip">
+    <div class="principle">
+      <div class="pr-num">①</div>
+      <div>
+        <div class="pr-title">Non è lineare</div>
+        <div class="pr-text">Le fasi si sovrappongono e si ripetono. Durante la costruzione scoprirai che la progettazione era sbagliata. Durante il testing tornerai alla comprensione del problema. Tratta la roadmap come una mappa, non come una sequenza rigida.</div>
+      </div>
+    </div>
+    <div class="principle">
+      <div class="pr-num">②</div>
+      <div>
+        <div class="pr-title">La fase 1 vale metà del lavoro</div>
+        <div class="pr-text">Il 70% degli agenti che falliscono fallisce perché il problema non era abbastanza chiaro prima di iniziare a costruire. Investire una settimana in più nella comprensione del problema risparmia un mese di refactoring.</div>
+      </div>
+    </div>
+    <div class="principle">
+      <div class="pr-num">③</div>
+      <div>
+        <div class="pr-title">Prima funziona, poi scala</div>
+        <div class="pr-text">La sequenza corretta è: fai funzionare l'agente su 10 casi → poi ottimizza le performance → poi aggiungi robustezza → poi aggiungi funzionalità. Non fare il contrario.</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+<!-- ══════════════════════
+     FASE 1 — COMPRENSIONE
+══════════════════════ -->
+<div class="phase-section" id="fase1">
+  <div class="ps-header">
+    <div class="ps-badge" style="background:var(--f1)">01</div>
+    <div class="ps-title-block">
+      <div class="ps-phase-label">Fase 01 · Prima di scrivere codice</div>
+      <div class="ps-title" style="color:var(--f1)">Comprensione del problema</div>
+      <div class="ps-subtitle">Il momento più importante di tutta la roadmap. Non iniziare a costruire finché non hai risposto a queste domande.</div>
+    </div>
+    <div class="ps-meta">
+      <div class="ps-dur"><strong>1–2</strong>settimane</div>
+    </div>
+  </div>
+
+  <div class="steps-grid">
+    <div class="step-card">
+      <div class="step-num" style="color:var(--f1)">Step 1.1</div>
+      <div class="step-title">Definisci il task con precisione chirurgica</div>
+      <div class="step-body">Non "un agente per il customer service". Ma: <strong>l'agente riceve un'email di supporto, cerca nella knowledge base, e redige una bozza di risposta per l'approvazione dell'operatore</strong>. Ogni ambiguità qui si moltiplica in problemi tecnici dopo.</div>
+    </div>
+    <div class="step-card">
+      <div class="step-num" style="color:var(--f1)">Step 1.2</div>
+      <div class="step-title">Mappare il processo umano attuale</div>
+      <div class="step-body">Come viene svolto questo task oggi, senza AI? Quanti step ha? Quali decisioni prende un umano? Quali informazioni usa? <strong>L'agente dovrà replicare questa logica</strong> — se non la capisci, non puoi codificarla.</div>
+    </div>
+    <div class="step-card">
+      <div class="step-num" style="color:var(--f1)">Step 1.3</div>
+      <div class="step-title">Raccogliere esempi concreti di input/output</div>
+      <div class="step-body">Raccogli 20–50 esempi reali: <strong>questo è l'input, questo è l'output corretto atteso</strong>. Questi esempi diventano il tuo dataset di valutazione. Se non riesci a trovare 20 esempi, il task non è ancora abbastanza definito.</div>
+    </div>
+    <div class="step-card">
+      <div class="step-num" style="color:var(--f1)">Step 1.4</div>
+      <div class="step-title">Identificare i dati disponibili</div>
+      <div class="step-body">Quali dati ha accesso l'agente? Dove vivono? In che formato? Quanto sono puliti? <strong>La qualità dei dati è il fattore che determina più di qualsiasi altro la qualità dell'agente</strong>. Dati sporchi = agente che sbaglia.</div>
+    </div>
+    <div class="step-card">
+      <div class="step-num" style="color:var(--f1)">Step 1.5</div>
+      <div class="step-title">Definire cosa significa "funziona"</div>
+      <div class="step-body">Quale metrica misura il successo? Tasso di risoluzione autonoma? Accuracy dell'output? Tempo risparmiato? <strong>Senza una definizione operativa di successo, non puoi sapere se stai andando nella direzione giusta.</strong></div>
+    </div>
+    <div class="step-card">
+      <div class="step-num" style="color:var(--f1)">Step 1.6</div>
+      <div class="step-title">Valutare se serve davvero un agente</div>
+      <div class="step-body">Un agente è giustificato quando il task richiede pianificazione multi-step e decisioni dinamiche. <strong>Se è un task lineare con step fissi, un workflow tradizionale è più affidabile e meno costoso.</strong> Chiedi: davvero serve autonomia decisionale?</div>
+    </div>
+  </div>
+
+  <!-- DECISIONI CRITICHE FASE 1 -->
+  <div class="decision-section">
+    <div class="ds-header">
+      <span class="ds-icon">◈</span>
+      <span class="ds-title">Decisioni critiche — Fase 01</span>
+      <span class="ds-subtitle">Comprensione</span>
+    </div>
+    <div class="decisions-grid">
+      <div class="decision-card">
+        <div class="dec-q">Agente autonomo o workflow assistito?</div>
+        <ul class="dec-opts">
+          <li>Agente autonomo — decide e agisce da solo</li>
+          <li>Human-in-the-loop — propone, umano approva</li>
+          <li>Workflow AI-assisted — step fissi con LLM in alcuni nodi</li>
+        </ul>
+        <div class="dec-impact">Impatto: determina l'architettura, il rischio operativo, i costi. Inizia sempre con human-in-the-loop.</div>
+      </div>
+      <div class="decision-card">
+        <div class="dec-q">Qual è il confine del task?</div>
+        <ul class="dec-opts">
+          <li>Single task — fa una cosa sola molto bene</li>
+          <li>Task cluster — gestisce una famiglia di task correlati</li>
+          <li>General assistant — risponde a qualsiasi richiesta</li>
+        </ul>
+        <div class="dec-impact">Impatto: meno il task è delimitato, meno l'agente è controllabile e prevedibile.</div>
+      </div>
+      <div class="decision-card">
+        <div class="dec-q">Quali azioni può compiere l'agente?</div>
+        <ul class="dec-opts">
+          <li>Solo leggere — recupera informazioni, non modifica nulla</li>
+          <li>Leggere + scrivere — può creare/modificare record</li>
+          <li>Leggere + scrivere + eseguire — può triggerare processi</li>
+        </ul>
+        <div class="dec-impact">Impatto: ogni azione di scrittura richiede gestione degli errori e capacità di rollback.</div>
+      </div>
+      <div class="decision-card">
+        <div class="dec-q">Chi valida l'output e come?</div>
+        <ul class="dec-opts">
+          <li>Umano approva ogni output prima dell'uso</li>
+          <li>Umano campiona e controlla un % degli output</li>
+          <li>Sistema automatico di validazione</li>
+        </ul>
+        <div class="dec-impact">Impatto: definisce il livello di fiducia richiesto e la struttura del loop di feedback.</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="redflags">
+    <div class="rf-title">⚑ Red flag — fermati se</div>
+    <ul class="rf-list">
+      <li>Non riesci a descrivere il task in una frase precisa</li>
+      <li>Non hai esempi reali di input/output atteso</li>
+      <li>Non sai come misurerai il successo</li>
+      <li>I dati necessari non esistono o sono inaccessibili</li>
+      <li>Non hai un owner umano responsabile dell'output dell'agente</li>
+      <li>Il caso d'uso richiederebbe che l'agente "capisca il contesto" in modo vago</li>
+    </ul>
+  </div>
+</div>
+
+
+<!-- ══════════════════════
+     FASE 2 — PROGETTAZIONE
+══════════════════════ -->
+<div class="phase-section" id="fase2">
+  <div class="ps-header">
+    <div class="ps-badge" style="background:var(--f2)">02</div>
+    <div class="ps-title-block">
+      <div class="ps-phase-label">Fase 02 · Prima di scrivere codice</div>
+      <div class="ps-title" style="color:var(--f2)">Progettazione dell'architettura</div>
+      <div class="ps-subtitle">Le decisioni architetturali. Cambiarle dopo è costoso — vale la pena ragionarci bene prima.</div>
+    </div>
+    <div class="ps-meta">
+      <div class="ps-dur"><strong>1–2</strong>settimane</div>
+    </div>
+  </div>
+
+  <div class="steps-grid">
+    <div class="step-card">
+      <div class="step-num" style="color:var(--f2)">Step 2.1</div>
+      <div class="step-title">Scegliere il modello LLM</div>
+      <div class="step-body">Non è solo una scelta tecnica — è una scelta di costo/qualità/latenza. <strong>Inizia con il modello migliore disponibile</strong> (Claude Sonnet, GPT-4o) per stabilire un baseline di qualità. Ottimizza verso modelli più leggeri solo dopo aver validato il comportamento.</div>
+    </div>
+    <div class="step-card">
+      <div class="step-num" style="color:var(--f2)">Step 2.2</div>
+      <div class="step-title">Progettare il system prompt</div>
+      <div class="step-body">Il system prompt è il "manuale del dipendente" dell'agente. Deve definire: ruolo, obiettivo, vincoli, formato output, esempi di comportamento atteso. <strong>Un buon system prompt risolve il 40% dei problemi di comportamento senza toccare il codice.</strong></div>
+    </div>
+    <div class="step-card">
+      <div class="step-num" style="color:var(--f2)">Step 2.3</div>
+      <div class="step-title">Definire gli strumenti</div>
+      <div class="step-body">Lista esatta degli strumenti che l'agente può usare: nome, descrizione precisa, schema input/output. <strong>La descrizione degli strumenti è critica</strong> — il modello decide se usarli basandosi solo su quella. Ambiguità nella descrizione = tool usato nel momento sbagliato.</div>
+    </div>
+    <div class="step-card">
+      <div class="step-num" style="color:var(--f2)">Step 2.4</div>
+      <div class="step-title">Progettare la memoria</div>
+      <div class="step-body">Cosa l'agente deve ricordare? Per quanto tempo? <strong>Quattro tipi:</strong> memoria in-context (entro la conversazione), memoria episodica (storico conversazioni), memoria semantica (knowledge base RAG), memoria procedurale (istruzioni persistenti).</div>
+    </div>
+    <div class="step-card">
+      <div class="step-num" style="color:var(--f2)">Step 2.5</div>
+      <div class="step-title">Scegliere lo stack tecnologico</div>
+      <div class="step-body">Framework (LangChain, LlamaIndex), no-code (Flowise, Dify), o custom Python? <strong>La regola è iniziare con lo stack più semplice che copre i requisiti attuali</strong>, non quello che potrebbe coprire i requisiti futuri ipotetici.</div>
+    </div>
+    <div class="step-card">
+      <div class="step-num" style="color:var(--f2)">Step 2.6</div>
+      <div class="step-title">Disegnare il loop agente</div>
+      <div class="step-body">Come funziona il ciclo percepisce-ragiona-agisce-osserva? Quante iterazioni al massimo? Quando si ferma? <strong>Definire i confini del loop è fondamentale per la sicurezza</strong> — un agente senza stop condition può girare indefinitamente.</div>
+    </div>
+  </div>
+
+  <div class="decision-section">
+    <div class="ds-header">
+      <span class="ds-icon">◈</span>
+      <span class="ds-title">Decisioni critiche — Fase 02</span>
+      <span class="ds-subtitle">Progettazione</span>
+    </div>
+    <div class="decisions-grid">
+      <div class="decision-card">
+        <div class="dec-q">Quale modello LLM — e come gestire il cambiamento?</div>
+        <ul class="dec-opts">
+          <li>Modello cloud proprietario (Claude, GPT-4, Gemini)</li>
+          <li>Modello open source self-hosted (Llama, Mistral)</li>
+          <li>Modello fine-tuned sul dominio specifico</li>
+        </ul>
+        <div class="dec-impact">Impatto: costo, privacy, qualità, latenza, dipendenza vendor. Astrai il modello dal codice per poterlo sostituire.</div>
+      </div>
+      <div class="decision-card">
+        <div class="dec-q">Single agent o multi-agent?</div>
+        <ul class="dec-opts">
+          <li>Un agente che fa tutto — più semplice, meno robusto</li>
+          <li>Agente + sub-agenti specializzati — più complesso, più potente</li>
+          <li>Pipeline di agenti sequenziali — buon compromesso</li>
+        </ul>
+        <div class="dec-impact">Impatto: complessità di debugging, costi di latenza e API, facilità di manutenzione. Inizia sempre single agent.</div>
+      </div>
+      <div class="decision-card">
+        <div class="dec-q">RAG o fine-tuning per la knowledge base?</div>
+        <ul class="dec-opts">
+          <li>RAG — recupera documenti rilevanti a runtime</li>
+          <li>Fine-tuning — bake knowledge nel modello stesso</li>
+          <li>Entrambi — knowledge base via RAG + comportamenti via fine-tuning</li>
+        </ul>
+        <div class="dec-impact">Impatto: RAG è aggiornabile facilmente, fine-tuning è più veloce ma costoso da mantenere. Inizia sempre con RAG.</div>
+      </div>
+      <div class="decision-card">
+        <div class="dec-q">Come gestire gli errori e i casi limite?</div>
+        <ul class="dec-opts">
+          <li>Fail-fast — errore immediato, nessun retry</li>
+          <li>Retry con backoff — riprova N volte prima di arrendersi</li>
+          <li>Graceful degradation — fallback a risposta parziale</li>
+        </ul>
+        <div class="dec-impact">Impatto: robustezza in produzione. Gli agenti devono gestire errori degli strumenti, timeout, risposte malformate.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- DELIVERABLE FASE 2 -->
+  <div class="deliverable-bar">
+    <div class="del-item"><div class="del-label">Output atteso</div><div class="del-name">Architecture Decision Record (ADR)</div></div>
+    <div class="del-item"><div class="del-label">Output atteso</div><div class="del-name">System prompt v1 scritto e revisionato</div></div>
+    <div class="del-item"><div class="del-label">Output atteso</div><div class="del-name">Lista strumenti con schema input/output</div></div>
+    <div class="del-item"><div class="del-label">Output atteso</div><div class="del-name">Diagramma del loop agente</div></div>
+    <div class="del-item"><div class="del-label">Output atteso</div><div class="del-name">Stack tecnologico scelto e motivato</div></div>
+  </div>
+</div>
+
+
+<!-- ══════════════════════
+     FASE 3 — COSTRUZIONE
+══════════════════════ -->
+<div class="phase-section" id="fase3">
+  <div class="ps-header">
+    <div class="ps-badge" style="background:var(--f3)">03</div>
+    <div class="ps-title-block">
+      <div class="ps-phase-label">Fase 03 · Sviluppo iterativo</div>
+      <div class="ps-title" style="color:var(--f3)">Costruzione del prototipo</div>
+      <div class="ps-subtitle">Build incrementale: ogni layer aggiunge complessità solo quando quello precedente è stabile.</div>
+    </div>
+    <div class="ps-meta">
+      <div class="ps-dur"><strong>2–6</strong>settimane</div>
+    </div>
+  </div>
+
+  <!-- SEQUENZA BUILD -->
+  <div style="margin-bottom:32px">
+    <div style="font-family:'Syne Mono',monospace;font-size:10px;letter-spacing:2px;text-transform:uppercase;color:var(--ink4);margin-bottom:16px;">Sequenza di build raccomandata — non saltare step</div>
+
+    <div class="timeline-h">
+
+      <div class="tl-item">
+        <div class="tl-content" style="border-left:3px solid var(--f3)">
+          <div class="tl-step">Sprint 1</div>
+          <div class="tl-title">LLM + System Prompt — nessuno strumento</div>
+          <div class="tl-desc">Testa il comportamento del modello con solo il system prompt. Nessun tool, nessuna memoria, nessun RAG. <strong>Obiettivo: validare che il LLM capisce il task e produce output nel formato giusto</strong> con input manuale. Se non funziona qui, il problema è nel prompt o nel modello, non nell'architettura.</div>
+        </div>
+        <div class="tl-badge" style="border-color:var(--f3);color:var(--f3)">2–3 giorni</div>
+      </div>
+
+      <div class="tl-item">
+        <div class="tl-content" style="border-left:3px solid var(--f3)">
+          <div class="tl-step">Sprint 2</div>
+          <div class="tl-title">Aggiungere un tool alla volta</div>
+          <div class="tl-desc">Connetti il primo strumento. Testa che il modello lo usa correttamente — quando sì, quando no, con quali input. <strong>Aggiungi il secondo strumento solo quando il primo funziona bene.</strong> Ogni nuovo tool può far regredire il comportamento su quelli precedenti.</div>
+        </div>
+        <div class="tl-badge" style="border-color:var(--f3);color:var(--f3)">3–5 giorni</div>
+      </div>
+
+      <div class="tl-item">
+        <div class="tl-content" style="border-left:3px solid var(--f3)">
+          <div class="tl-step">Sprint 3</div>
+          <div class="tl-title">Memoria e RAG</div>
+          <div class="tl-desc">Aggiungi la knowledge base. Testa la qualità del retrieval separatamente dall'agente — prima assicurati che il RAG recuperi i documenti giusti, poi integra nell'agente. <strong>Un RAG che recupera il documento sbagliato produce risposte plausibili ma errate</strong> — è il tipo di errore più pericoloso.</div>
+        </div>
+        <div class="tl-badge" style="border-color:var(--f3);color:var(--f3)">4–7 giorni</div>
+      </div>
+
+      <div class="tl-item">
+        <div class="tl-content" style="border-left:3px solid var(--f3)">
+          <div class="tl-step">Sprint 4</div>
+          <div class="tl-title">Gestione errori e robustezza</div>
+          <div class="tl-desc">Cosa succede quando un tool fallisce? Quando il LLM produce JSON malformato? Quando la knowledge base non trova nulla? <strong>Test espliciti di ogni scenario di errore.</strong> La robustezza in produzione dipende quasi interamente da quanto bene sono gestiti i fallimenti.</div>
+        </div>
+        <div class="tl-badge" style="border-color:var(--f3);color:var(--f3)">3–5 giorni</div>
+      </div>
+
+      <div class="tl-item">
+        <div class="tl-content" style="border-left:3px solid var(--f3)">
+          <div class="tl-step">Sprint 5</div>
+          <div class="tl-title">Observability e logging</div>
+          <div class="tl-desc">Aggiungi tracciamento di ogni step del ragionamento: quale tool è stato chiamato, con quali argomenti, con quale output. <strong>Senza logging strutturato non puoi debuggare né migliorare l'agente.</strong> LangSmith, Langfuse, o logging custom — non importa quale, ma deve esserci.</div>
+        </div>
+        <div class="tl-badge" style="border-color:var(--f3);color:var(--f3)">2–3 giorni</div>
+      </div>
+
+    </div>
+  </div>
+
+  <div class="decision-section">
+    <div class="ds-header">
+      <span class="ds-icon">◈</span>
+      <span class="ds-title">Decisioni critiche — Fase 03</span>
+      <span class="ds-subtitle">Costruzione</span>
+    </div>
+    <div class="decisions-grid">
+      <div class="decision-card">
+        <div class="dec-q">Come strutturare il system prompt?</div>
+        <ul class="dec-opts">
+          <li>Ruolo + obiettivo + vincoli + formato output + esempi</li>
+          <li>Istruzioni concise e dirette senza esempi</li>
+          <li>Prompt generato dinamicamente con contesto runtime</li>
+        </ul>
+        <div class="dec-impact">La struttura ottimale dipende dal modello. Claude risponde bene a istruzioni esplicite e strutturate con tag XML.</div>
+      </div>
+      <div class="decision-card">
+        <div class="dec-q">Come gestire il contesto lungo?</div>
+        <ul class="dec-opts">
+          <li>Truncation — taglia la storia più vecchia</li>
+          <li>Summarization — riassumi periodicamente la conversazione</li>
+          <li>Selective retention — mantieni solo i passi rilevanti</li>
+        </ul>
+        <div class="dec-impact">Il context window ha un costo per ogni token. Con conversazioni lunghe i costi esplodono se non gestiti.</div>
+      </div>
+      <div class="decision-card">
+        <div class="dec-q">Output strutturato o testo libero?</div>
+        <ul class="dec-opts">
+          <li>JSON strutturato — parsabile, integrabile in sistemi</li>
+          <li>Markdown formattato — leggibile da umani</li>
+          <li>Testo libero — massima naturalezza, difficile da processare</li>
+        </ul>
+        <div class="dec-impact">Se l'output dell'agente alimenta un sistema downstream, usa output strutturato. Usa schema validation per garantire il formato.</div>
+      </div>
+      <div class="decision-card">
+        <div class="dec-q">Quante iterazioni del loop per task?</div>
+        <ul class="dec-opts">
+          <li>Massimo fisso (es. 5 step) — prevedibile, meno flessibile</li>
+          <li>Stop condition semantica — si ferma quando "è sicuro"</li>
+          <li>Human checkpoint ogni N step</li>
+        </ul>
+        <div class="dec-impact">Senza un limite esplicito, un agente può girare in loop infiniti consumando token e denaro. Definisci sempre un hard limit.</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="pillar-row">
+    <div class="pillar">
+      <span class="pillar-icon">📝</span>
+      <div class="pillar-title">Prompt Engineering</div>
+      <div class="pillar-text">Il lavoro più impattante nella costruzione. <strong>Iterare sul system prompt produce miglioramenti più veloci che cambiare l'architettura.</strong> Testa varianti sistematicamente — non a intuito.</div>
+    </div>
+    <div class="pillar">
+      <span class="pillar-icon">🔧</span>
+      <div class="pillar-title">Tool Design</div>
+      <div class="pillar-text">Ogni tool deve avere una responsabilità singola e chiara. <strong>La descrizione del tool è parte del prompt.</strong> Se il modello usa il tool sbagliato, il problema è quasi sempre nella descrizione, non nella logica.</div>
+    </div>
+    <div class="pillar">
+      <span class="pillar-icon">📚</span>
+      <div class="pillar-title">RAG Quality</div>
+      <div class="pillar-text">Chunking strategy, embedding model, retrieval top-k, re-ranking. <strong>La qualità del RAG dipende dalla qualità dei documenti sorgente</strong> prima ancora che dalla tecnica. Pulisci i dati prima di indicizzarli.</div>
+    </div>
+    <div class="pillar">
+      <span class="pillar-icon">🛡️</span>
+      <div class="pillar-title">Guardrail</div>
+      <div class="pillar-text">Regole che l'agente non può violare. <strong>Implementali come layer separato</strong>, non dentro il system prompt. Validano input e output indipendentemente dal comportamento del modello.</div>
+    </div>
+  </div>
+</div>
+
+
+<!-- ══════════════════════
+     FASE 4 — VALUTAZIONE
+══════════════════════ -->
+<div class="phase-section" id="fase4">
+  <div class="ps-header">
+    <div class="ps-badge" style="background:var(--f4)">04</div>
+    <div class="ps-title-block">
+      <div class="ps-phase-label">Fase 04 · Continua dal giorno 1</div>
+      <div class="ps-title" style="color:var(--f4)">Valutazione e testing</div>
+      <div class="ps-subtitle">Come sai se l'agente funziona? Come misuri i miglioramenti? Come eviti le regressioni?</div>
+    </div>
+    <div class="ps-meta">
+      <div class="ps-dur"><strong>∞</strong>continua</div>
+    </div>
+  </div>
+
+  <div class="steps-grid">
+    <div class="step-card">
+      <div class="step-num" style="color:var(--f4)">Step 4.1</div>
+      <div class="step-title">Costruire un eval dataset</div>
+      <div class="step-body">I 20–50 esempi di input/output raccolti nella fase 1 diventano il tuo <strong>evaluation set</strong>. Esegui l'agente su tutti gli esempi, confronta l'output con l'atteso, calcola le metriche. Questo è il tuo benchmark. Ogni modifica deve essere valutata contro questo set.</div>
+    </div>
+    <div class="step-card">
+      <div class="step-num" style="color:var(--f4)">Step 4.2</div>
+      <div class="step-title">Scegliere le metriche giuste</div>
+      <div class="step-body">Le metriche dipendono dal task. <strong>Non usare metriche generiche.</strong> Se l'agente genera testo: qualità valutata da umano o da LLM-as-judge. Se fa retrieval: precision@k. Se completa task: task success rate. Se classifica: accuracy, F1.</div>
+    </div>
+    <div class="step-card">
+      <div class="step-num" style="color:var(--f4)">Step 4.3</div>
+      <div class="step-title">LLM-as-judge per valutazione automatica</div>
+      <div class="step-body">Usare un secondo LLM per valutare l'output del primo. Permette di scalare la valutazione senza reviewer umani per ogni test. <strong>Funziona bene per: rispette il tono? Ha risposto alla domanda? È coerente con la KB?</strong> Non funziona per: è factualmente corretto?</div>
+    </div>
+    <div class="step-card">
+      <div class="step-num" style="color:var(--f4)">Step 4.4</div>
+      <div class="step-title">Test di regressione automatici</div>
+      <div class="step-body">Ad ogni modifica (prompt, tool, modello, RAG), riesegui l'eval set completo. <strong>Se le metriche peggiorano rispetto alla versione precedente, la modifica non va in produzione.</strong> Senza questo, ogni miglioramento rischia di rompere qualcosa che già funzionava.</div>
+    </div>
+    <div class="step-card">
+      <div class="step-num" style="color:var(--f4)">Step 4.5</div>
+      <div class="step-title">A/B testing di varianti</div>
+      <div class="step-body">Quando hai due versioni candidate (es. due system prompt diversi), eseguile entrambe sullo stesso eval set e confronta. <strong>Non fidarti dell'intuizione</strong> su quale prompt sia migliore — i risultati sorprendono spesso.</div>
+    </div>
+    <div class="step-card">
+      <div class="step-num" style="color:var(--f4)">Step 4.6</div>
+      <div class="step-title">Review umana degli errori</div>
+      <div class="step-body">Ogni errore dell'agente va analizzato manualmente: perché ha sbagliato? Era un problema di prompt, di retrieval, di tool, del modello? <strong>Categorizzare gli errori è il modo più efficiente per decidere dove investire il prossimo ciclo di miglioramento.</strong></div>
+    </div>
+  </div>
+
+  <!-- METRICHE COMUNI -->
+  <div style="font-family:'Syne Mono',monospace;font-size:10px;letter-spacing:2px;text-transform:uppercase;color:var(--ink4);margin-bottom:16px;">Metriche per categoria di agente</div>
+  <div class="metric-row">
+    <div class="metric-card">
+      <div class="mc-label">Agenti di supporto / Q&A</div>
+      <div class="mc-name">Task Resolution Rate</div>
+      <div class="mc-desc">% di conversazioni risolte senza escalation a umano</div>
+      <div class="mc-formula">risoluzioni / tot conversazioni</div>
+    </div>
+    <div class="metric-card">
+      <div class="mc-label">Agenti RAG / Ricerca</div>
+      <div class="mc-name">Answer Faithfulness</div>
+      <div class="mc-desc">La risposta è supportata dai documenti recuperati? (no allucinazioni)</div>
+      <div class="mc-formula">LLM-as-judge su campione</div>
+    </div>
+    <div class="metric-card">
+      <div class="mc-label">Agenti operativi</div>
+      <div class="mc-name">Task Completion Rate</div>
+      <div class="mc-desc">% di task multi-step completati correttamente end-to-end</div>
+      <div class="mc-formula">task OK / tot task lanciati</div>
+    </div>
+    <div class="metric-card">
+      <div class="mc-label">Tutti gli agenti</div>
+      <div class="mc-name">Cost per Task</div>
+      <div class="mc-desc">Costo medio in token (e €) per completare un task. Monitora le derive nel tempo.</div>
+      <div class="mc-formula">token usati × prezzo / tot task</div>
+    </div>
+  </div>
+
+  <div class="decision-section">
+    <div class="ds-header">
+      <span class="ds-icon">◈</span>
+      <span class="ds-title">Decisioni critiche — Fase 04</span>
+      <span class="ds-subtitle">Valutazione</span>
+    </div>
+    <div class="decisions-grid">
+      <div class="decision-card">
+        <div class="dec-q">Chi valuta gli output — umano o LLM?</div>
+        <ul class="dec-opts">
+          <li>Human eval — lenta, costosa, alta qualità, obbligatoria per casi critici</li>
+          <li>LLM-as-judge — scalabile, buona per qualità soggettiva</li>
+          <li>Metriche automatiche — rapide, solo per output strutturati</li>
+        </ul>
+        <div class="dec-impact">La risposta giusta è "tutti e tre in proporzioni diverse". Non rinunciare alla human eval sul 5% del campione anche in produzione.</div>
+      </div>
+      <div class="decision-card">
+        <div class="dec-q">Quanto è grande l'eval set?</div>
+        <ul class="dec-opts">
+          <li>20–50 casi — sufficiente per segnali iniziali, non per produzione</li>
+          <li>100–500 casi — buon compromesso qualità/costo</li>
+          <li>500+ casi — per agenti critici o ad alto volume</li>
+        </ul>
+        <div class="dec-impact">Un eval set troppo piccolo da falsi positivi — un miglioramento può sembrare buono su 20 casi e peggiorare su 500.</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+<!-- ══════════════════════
+     FASE 5 — DEPLOY
+══════════════════════ -->
+<div class="phase-section" id="fase5">
+  <div class="ps-header">
+    <div class="ps-badge" style="background:var(--f5)">05</div>
+    <div class="ps-title-block">
+      <div class="ps-phase-label">Fase 05 · Messa in produzione</div>
+      <div class="ps-title" style="color:var(--f5)">Deploy in produzione</div>
+      <div class="ps-subtitle">Come portare l'agente in produzione in modo sicuro, osservabile e reversibile.</div>
+    </div>
+    <div class="ps-meta">
+      <div class="ps-dur"><strong>1–3</strong>settimane</div>
+    </div>
+  </div>
+
+  <div class="steps-grid">
+    <div class="step-card">
+      <div class="step-num" style="color:var(--f5)">Step 5.1</div>
+      <div class="step-title">Rollout graduale — non big bang</div>
+      <div class="step-body">Non mandare l'agente in produzione al 100% immediatamente. <strong>Inizia con il 5–10% del traffico reale</strong>, monitora per una settimana, poi aumenta progressivamente. Se qualcosa va storto, puoi tornare indietro con impatto minimo.</div>
+    </div>
+    <div class="step-card">
+      <div class="step-num" style="color:var(--f5)">Step 5.2</div>
+      <div class="step-title">Monitoring in tempo reale</div>
+      <div class="step-body">Dashboard con: volume di richieste, latenza media e p95, costo per ora, tasso di errori, tasso di escalation. <strong>Alert automatici se una metrica esce dal range atteso.</strong> Senza monitoring, non sai che il sistema è degradato fino alle segnalazioni degli utenti.</div>
+    </div>
+    <div class="step-card">
+      <div class="step-num" style="color:var(--f5)">Step 5.3</div>
+      <div class="step-title">Circuit breaker e fallback</div>
+      <div class="step-body">Se il modello LLM è irraggiungibile o troppo lento, cosa fa il sistema? <strong>Definisci un fallback esplicito</strong>: risposta di default, escalation a umano, messaggio di errore informativo. Un agente senza fallback diventa un punto di failure critico.</div>
+    </div>
+    <div class="step-card">
+      <div class="step-num" style="color:var(--f5)">Step 5.4</div>
+      <div class="step-title">Gestione dei segreti e credenziali</div>
+      <div class="step-body">API key del LLM, credenziali dei tool, connessioni al database. <strong>Mai in chiaro nel codice o nei log.</strong> Usa secret manager (AWS Secrets Manager, Vault, env vars cifrate). I log non devono mai contenere dati sensibili dell'utente o credenziali.</div>
+    </div>
+    <div class="step-card">
+      <div class="step-num" style="color:var(--f5)">Step 5.5</div>
+      <div class="step-title">Rate limiting e cost control</div>
+      <div class="step-body">Limita le chiamate al modello per utente/sessione/ora. Imposta <strong>hard limit di spesa giornaliera</strong> sull'account API. Un loop infinito o un attacco di tipo prompt injection può generare costi enormi in pochi minuti senza questi controlli.</div>
+    </div>
+    <div class="step-card">
+      <div class="step-num" style="color:var(--f5)">Step 5.6</div>
+      <div class="step-title">Piano di rollback</div>
+      <div class="step-body">Come torni alla versione precedente se la nuova ha problemi? <strong>Versioning dei prompt, dei modelli, della knowledge base.</strong> Il rollback deve essere eseguibile in minuti, non ore. Testa il processo di rollback prima di mandare in produzione.</div>
+    </div>
+  </div>
+
+  <div class="decision-section">
+    <div class="ds-header">
+      <span class="ds-icon">◈</span>
+      <span class="ds-title">Decisioni critiche — Fase 05</span>
+      <span class="ds-subtitle">Deploy</span>
+    </div>
+    <div class="decisions-grid">
+      <div class="decision-card">
+        <div class="dec-q">Sync o async?</div>
+        <ul class="dec-opts">
+          <li>Sincrono — l'utente aspetta la risposta in tempo reale</li>
+          <li>Asincrono — il task gira in background, notifica al termine</li>
+          <li>Streaming — la risposta arriva token per token</li>
+        </ul>
+        <div class="dec-impact">Task lunghi (>5 sec) devono essere asincroni. L'utente non aspetta 2 minuti davanti a uno spinner.</div>
+      </div>
+      <div class="decision-card">
+        <div class="dec-q">Come versionare prompt e KB?</div>
+        <ul class="dec-opts">
+          <li>Git — versioning semplice dei file di prompt</li>
+          <li>Prompt management platform (LangSmith, Langfuse)</li>
+          <li>Database versionato con tag di release</li>
+        </ul>
+        <div class="dec-impact">Senza versioning, ogni modifica al prompt è irreversibile. Devi poter confrontare "come funzionava ieri" con "come funziona oggi".</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+<!-- ══════════════════════
+     FASE 6 — EVOLUZIONE
+══════════════════════ -->
+<div class="phase-section" id="fase6">
+  <div class="ps-header">
+    <div class="ps-badge" style="background:var(--f6)">06</div>
+    <div class="ps-title-block">
+      <div class="ps-phase-label">Fase 06 · Permanente</div>
+      <div class="ps-title" style="color:var(--f6)">Evoluzione continua</div>
+      <div class="ps-subtitle">Un agente in produzione non è mai finito. Come migliorarlo nel tempo senza romperlo.</div>
+    </div>
+    <div class="ps-meta">
+      <div class="ps-dur"><strong>∞</strong>permanente</div>
+    </div>
+  </div>
+
+  <div class="steps-grid">
+    <div class="step-card">
+      <div class="step-num" style="color:var(--f6)">Step 6.1</div>
+      <div class="step-title">Loop di feedback strutturato</div>
+      <div class="step-body">Raccogli feedback dagli utenti in modo sistematico: thumbs up/down, correzioni esplicite, escalation. <strong>Ogni errore segnalato è un potenziale caso da aggiungere all'eval set.</strong> Il sistema migliora nella misura in cui cattura e usa il feedback.</div>
+    </div>
+    <div class="step-card">
+      <div class="step-num" style="color:var(--f6)">Step 6.2</div>
+      <div class="step-title">Espansione controllata del perimetro</div>
+      <div class="step-body">Aggiungi nuovi task o strumenti solo quando quelli esistenti sono stabili. <strong>Ogni espansione è una nuova fase di costruzione + valutazione.</strong> Non aggiungere funzionalità "perché ci siamo" — aggiungi solo se c'è un bisogno documentato e misurabile.</div>
+    </div>
+    <div class="step-card">
+      <div class="step-num" style="color:var(--f6)">Step 6.3</div>
+      <div class="step-title">Aggiornamento della knowledge base</div>
+      <div class="step-body">I documenti diventano obsoleti. <strong>Definisci un processo di review e aggiornamento periodico</strong> della KB: chi è responsabile, con quale frequenza, come verificare che l'agente usi le informazioni aggiornate dopo un update.</div>
+    </div>
+    <div class="step-card">
+      <div class="step-num" style="color:var(--f6)">Step 6.4</div>
+      <div class="step-title">Migrazione di modelli LLM</div>
+      <div class="step-body">I modelli evolvono — escono versioni nuove, vengono deprecate versioni vecchie. <strong>Hai bisogno di un processo per valutare una nuova versione modello</strong> sull'eval set prima di migrarla in produzione. Non assumere che "nuovo = migliore" per il tuo caso d'uso specifico.</div>
+    </div>
+    <div class="step-card">
+      <div class="step-num" style="color:var(--f6)">Step 6.5</div>
+      <div class="step-title">Monitoraggio dei costi nel tempo</div>
+      <div class="step-body">Il costo per task tende a crescere con le funzionalità. <strong>Monitora la deriva nel tempo</strong> e ottimizza periodicamente: prompt più corti, modelli più leggeri per sotto-task semplici, caching delle risposte frequenti.</div>
+    </div>
+    <div class="step-card">
+      <div class="step-num" style="color:var(--f6)">Step 6.6</div>
+      <div class="step-title">Governance e responsabilità</div>
+      <div class="step-body">Chi decide se un output errato dell'agente è accettabile? Chi approva le modifiche al comportamento? <strong>Questi ruoli devono essere espliciti</strong>, non impliciti. Un agente in produzione è un sistema che produce effetti reali — serve una governance chiara.</div>
+    </div>
+  </div>
+</div>
+
+
+<!-- ══════════════
+     REGOLE D'ORO
+══════════════ -->
+<div class="golden-section">
+  <div class="gs-label">Principi fondamentali · Validi in ogni fase</div>
+  <div class="gs-title">Le 6 regole che separano<br>gli agenti che funzionano da quelli che no</div>
+
+  <div class="rules-grid">
+    <div class="rule">
+      <div class="rule-n">01</div>
+      <div class="rule-title">Inizia dal task più semplice che genera valore reale</div>
+      <div class="rule-text">Non costruire il sistema completo dall'inizio. Trova il sotto-task più piccolo che porta valore misurabile, costruiscilo bene, poi espandi. Il 90% del valore spesso sta nel 20% del perimetro.</div>
+    </div>
+    <div class="rule">
+      <div class="rule-n">02</div>
+      <div class="rule-title">Human-in-the-loop finché non hai fiducia misurata</div>
+      <div class="rule-text">L'autonomia si conquista gradualmente con dati di performance reali. Non dare a un agente accesso a azioni irreversibili finché non puoi dimostrare con numeri che sbaglia meno di un umano in quel task specifico.</div>
+    </div>
+    <div class="rule">
+      <div class="rule-n">03</div>
+      <div class="rule-title">I tuoi dati sono più importanti del tuo codice</div>
+      <div class="rule-text">La qualità dell'agente è determinata principalmente dalla qualità dei dati: documenti della knowledge base, esempi nel prompt, eval set. Investire nella qualità dei dati produce ritorni più alti che ottimizzare l'architettura.</div>
+    </div>
+    <div class="rule">
+      <div class="rule-n">04</div>
+      <div class="rule-title">Misura prima di ottimizzare</div>
+      <div class="rule-text">Non cambiare il prompt "perché sembra meglio". Non cambiare il modello "perché è più nuovo". Ogni modifica deve essere valutata su dati — prima e dopo. L'intuizione inganna sistematicamente con i sistemi LLM.</div>
+    </div>
+    <div class="rule">
+      <div class="rule-n">05</div>
+      <div class="rule-title">Progetta per il fallimento, non per il caso nominale</div>
+      <div class="rule-text">In produzione, gli agenti incontrano input anomali, servizi down, documenti corrotti, utenti che fanno cose inaspettate. Un agente che funziona bene nel caso nominale ma non gestisce i fallimenti non è pronto per la produzione.</div>
+    </div>
+    <div class="rule">
+      <div class="rule-n">06</div>
+      <div class="rule-title">Un agente non è mai finito</div>
+      <div class="rule-text">Il deploy è una fase, non un traguardo. Il mondo cambia: i dati invecchiano, i modelli evolvono, i bisogni degli utenti si trasformano. La capacità di migliorare l'agente in produzione in modo sicuro e misurabile è parte integrante del sistema.</div>
+    </div>
+  </div>
+</div>
+
+<footer>
+  <span>Agenti AI · Roadmap di sviluppo · Febbraio 2026</span>
+  <span>agenti-ai-roadmap-sviluppo.html</span>
+</footer>
+
+</body>
+</html>

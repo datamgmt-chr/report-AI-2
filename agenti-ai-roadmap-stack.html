@@ -1,0 +1,2291 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Roadmap Operative per Stack — Agenti AI</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:ital,wght@0,300;0,400;0,500;1,300&family=DM+Sans:wght@300;400;500;600;700&family=DM+Serif+Display:ital@0;1&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg:   #f2f0eb;
+  --bg2:  #e8e5de;
+  --bg3:  #dedad0;
+  --ink:  #111008;
+  --ink2: #252318;
+  --ink3: #5a5748;
+  --ink4: #9a9588;
+  --line: #ccc8bc;
+  --line2:#b8b4a6;
+
+  /* Stack colors */
+  --s1:  #0a2a6e;  --s1l: #e6ecf8;  /* Custom — blu profondo */
+  --s2:  #1a5c1a;  --s2l: #e6f5e6;  /* Framework — verde foresta */
+  --s3:  #6e1a0a;  --s3l: #f8ece6;  /* Multi-agent — rosso mattone */
+  --s4:  #3a1a6e;  --s4l: #ede6f8;  /* No-code — viola */
+}
+
+* { margin:0; padding:0; box-sizing:border-box; }
+html { scroll-behavior:smooth; }
+
+body {
+  background: var(--bg);
+  color: var(--ink);
+  font-family: 'DM Sans', sans-serif;
+  font-weight: 300;
+  font-size: 14px;
+  line-height: 1.7;
+}
+
+/* ── MASTHEAD ── */
+.masthead {
+  background: var(--ink);
+  padding: 54px 56px 48px;
+  color: #fff;
+  position: relative;
+  overflow: hidden;
+}
+
+.masthead::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: repeating-linear-gradient(
+    90deg,
+    transparent,
+    transparent 80px,
+    rgba(255,255,255,0.012) 80px,
+    rgba(255,255,255,0.012) 81px
+  );
+  pointer-events: none;
+}
+
+.masthead-eye {
+  font-family: 'DM Mono', monospace;
+  font-size: 10px;
+  letter-spacing: 3px;
+  text-transform: uppercase;
+  color: rgba(255,255,255,0.28);
+  margin-bottom: 18px;
+}
+
+.masthead h1 {
+  font-family: 'DM Serif Display', serif;
+  font-size: clamp(32px, 5vw, 64px);
+  font-weight: 400;
+  line-height: 1.05;
+  letter-spacing: -1px;
+  max-width: 800px;
+  margin-bottom: 16px;
+}
+
+.masthead h1 em {
+  font-style: italic;
+  color: rgba(255,255,255,0.45);
+}
+
+.masthead-desc {
+  font-size: 14px;
+  color: rgba(255,255,255,0.38);
+  max-width: 600px;
+  line-height: 1.75;
+}
+
+.stack-badges {
+  display: flex;
+  gap: 8px;
+  margin-top: 28px;
+  flex-wrap: wrap;
+}
+
+.stack-badge {
+  font-family: 'DM Mono', monospace;
+  font-size: 10px;
+  padding: 5px 14px;
+  border: 1px solid;
+  letter-spacing: 1px;
+  cursor: pointer;
+  transition: all 0.15s;
+  text-transform: uppercase;
+}
+
+.stack-badge:hover { opacity: 0.7; }
+
+/* ── STACK NAV ── */
+.stack-nav {
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  background: var(--ink2);
+}
+
+.sn-tab {
+  padding: 0;
+  border: none;
+  cursor: pointer;
+  background: transparent;
+  border-right: 1px solid rgba(255,255,255,0.06);
+  transition: background 0.15s;
+  text-align: left;
+}
+
+.sn-tab:last-child { border-right: none; }
+.sn-tab:hover { background: rgba(255,255,255,0.04); }
+
+.sn-tab-inner {
+  display: block;
+  padding: 16px 20px 14px;
+}
+
+.sn-num {
+  font-family: 'DM Mono', monospace;
+  font-size: 9px;
+  letter-spacing: 2px;
+  color: rgba(255,255,255,0.2);
+  margin-bottom: 3px;
+}
+
+.sn-name {
+  font-size: 13px;
+  font-weight: 600;
+  color: rgba(255,255,255,0.4);
+  transition: color 0.15s;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+}
+
+.sn-sub {
+  font-family: 'DM Mono', monospace;
+  font-size: 9px;
+  color: rgba(255,255,255,0.18);
+  margin-top: 2px;
+}
+
+.sn-tab.active .sn-name { color: #fff; }
+.sn-tab.active { border-bottom: 3px solid; }
+.sn-tab[data-s="1"].active { border-bottom-color: var(--s1); }
+.sn-tab[data-s="2"].active { border-bottom-color: var(--s2); }
+.sn-tab[data-s="3"].active { border-bottom-color: var(--s3); }
+.sn-tab[data-s="4"].active { border-bottom-color: var(--s4); }
+
+/* ── PANELS ── */
+.stack-panel { display: none; }
+.stack-panel.active {
+  display: block;
+  animation: fadeUp 0.25s ease;
+}
+
+@keyframes fadeUp {
+  from { opacity:0; transform: translateY(6px); }
+  to   { opacity:1; transform: translateY(0); }
+}
+
+/* ── PANEL HERO ── */
+.panel-hero {
+  padding: 48px 56px 40px;
+  border-bottom: 1px solid var(--line2);
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 32px;
+  align-items: start;
+}
+
+.ph-label {
+  font-family: 'DM Mono', monospace;
+  font-size: 10px;
+  letter-spacing: 3px;
+  text-transform: uppercase;
+  margin-bottom: 12px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.ph-dot {
+  width: 10px; height: 10px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.ph-h2 {
+  font-family: 'DM Serif Display', serif;
+  font-size: clamp(28px, 4vw, 50px);
+  font-weight: 400;
+  line-height: 1.05;
+  letter-spacing: -0.5px;
+  margin-bottom: 12px;
+}
+
+.ph-essence {
+  font-size: 14px;
+  color: var(--ink3);
+  max-width: 620px;
+  line-height: 1.75;
+}
+
+.ph-essence strong { color: var(--ink); font-weight: 500; }
+
+.ph-right {
+  min-width: 200px;
+}
+
+.ph-stat {
+  border-top: 1px solid var(--line2);
+  padding-top: 12px;
+  margin-bottom: 16px;
+  text-align: right;
+}
+
+.ph-stat-n {
+  font-family: 'DM Serif Display', serif;
+  font-size: 36px;
+  line-height: 1;
+  display: block;
+}
+
+.ph-stat-l {
+  font-family: 'DM Mono', monospace;
+  font-size: 9px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: var(--ink4);
+  margin-top: 3px;
+}
+
+/* ── PREREQUISITI STRIP ── */
+.prereq-strip {
+  border-bottom: 1px solid var(--line);
+  background: var(--ink);
+  padding: 20px 56px;
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 28px;
+  align-items: center;
+}
+
+.prereq-label {
+  font-family: 'DM Mono', monospace;
+  font-size: 10px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: rgba(255,255,255,0.25);
+  white-space: nowrap;
+}
+
+.prereq-items {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.prereq-tag {
+  font-family: 'DM Mono', monospace;
+  font-size: 11px;
+  padding: 4px 12px;
+  border: 1px solid rgba(255,255,255,0.15);
+  color: rgba(255,255,255,0.5);
+}
+
+.prereq-tag.must {
+  border-color: rgba(255,120,60,0.4);
+  color: rgba(255,160,100,0.8);
+}
+
+/* ── BODY ── */
+.panel-body { padding: 0 56px 72px; }
+
+/* ── SECTION ── */
+.section { margin-top: 52px; }
+
+.sec-head {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 22px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid var(--line2);
+}
+
+.sec-num {
+  font-family: 'DM Mono', monospace;
+  font-size: 10px;
+  letter-spacing: 2px;
+  color: var(--ink4);
+}
+
+.sec-title {
+  font-size: 18px;
+  font-weight: 600;
+  letter-spacing: -0.3px;
+  flex: 1;
+}
+
+.sec-tag {
+  font-family: 'DM Mono', monospace;
+  font-size: 10px;
+  color: var(--ink4);
+}
+
+/* ── ROADMAP LANES ── */
+.roadmap-lanes {
+  border: 1px solid var(--line2);
+  overflow: hidden;
+  margin-bottom: 28px;
+}
+
+.rl-phase {
+  display: grid;
+  grid-template-columns: 180px 1fr;
+  border-bottom: 1px solid var(--line);
+  min-height: 80px;
+}
+
+.rl-phase:last-child { border-bottom: none; }
+
+.rl-label {
+  background: var(--bg2);
+  padding: 16px 18px;
+  border-right: 1px solid var(--line2);
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.rl-phase-num {
+  font-family: 'DM Mono', monospace;
+  font-size: 9px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: var(--ink4);
+  margin-bottom: 4px;
+}
+
+.rl-phase-name {
+  font-size: 13px;
+  font-weight: 600;
+  line-height: 1.2;
+}
+
+.rl-phase-dur {
+  font-family: 'DM Mono', monospace;
+  font-size: 9px;
+  color: var(--ink4);
+  margin-top: 4px;
+}
+
+.rl-content {
+  padding: 16px 20px;
+  background: var(--bg);
+}
+
+.rl-steps {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.rl-step {
+  font-size: 12px;
+  padding: 5px 12px;
+  background: var(--bg2);
+  border: 1px solid var(--line);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.rl-step .sicon { font-size: 13px; }
+
+.rl-step.key-step {
+  border-width: 1.5px;
+  font-weight: 500;
+}
+
+/* ── STEP DEEP-DIVE ── */
+.steps-deep {
+  display: grid;
+  gap: 1px;
+  background: var(--line);
+  border: 1px solid var(--line2);
+  margin-bottom: 28px;
+}
+
+.step-row {
+  background: var(--bg);
+  display: grid;
+  grid-template-columns: 48px 220px 1fr;
+  min-height: 100px;
+}
+
+.step-row:hover { background: var(--bg2); }
+
+.step-n {
+  background: var(--bg2);
+  border-right: 1px solid var(--line);
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  padding-top: 18px;
+  font-family: 'DM Mono', monospace;
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--ink4);
+}
+
+.step-left {
+  padding: 16px 16px;
+  border-right: 1px solid var(--line);
+  background: var(--bg2);
+}
+
+.step-what {
+  font-size: 13px;
+  font-weight: 600;
+  margin-bottom: 4px;
+  line-height: 1.2;
+}
+
+.step-tool {
+  font-family: 'DM Mono', monospace;
+  font-size: 10px;
+  color: var(--ink4);
+  letter-spacing: 1px;
+}
+
+.step-right {
+  padding: 16px 20px;
+}
+
+.step-desc {
+  font-size: 13px;
+  color: var(--ink3);
+  line-height: 1.6;
+  margin-bottom: 10px;
+}
+
+.step-desc strong { color: var(--ink); font-weight: 500; }
+
+.step-code {
+  background: var(--ink);
+  font-family: 'DM Mono', monospace;
+  font-size: 11px;
+  padding: 10px 14px;
+  line-height: 1.7;
+  overflow-x: auto;
+  margin-top: 8px;
+}
+
+.step-code .cm { color: rgba(255,255,255,0.22); }
+.step-code .kw { color: #7ab4ff; }
+.step-code .fn { color: #f5c84a; }
+.step-code .st { color: #98e06a; }
+.step-code .pl { color: rgba(255,255,255,0.72); }
+.step-code .nu { color: #f5a04a; }
+
+/* ── PITFALLS ── */
+.pitfalls {
+  border: 1px solid var(--line2);
+  background: var(--bg);
+  overflow: hidden;
+  margin-bottom: 28px;
+}
+
+.pitfalls-header {
+  background: #2a0a0a;
+  padding: 10px 18px;
+  font-family: 'DM Mono', monospace;
+  font-size: 10px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: rgba(255,160,100,0.6);
+}
+
+.pitfall-row {
+  display: grid;
+  grid-template-columns: 28px 1fr 1fr;
+  border-bottom: 1px solid var(--line);
+  min-height: 56px;
+}
+
+.pitfall-row:last-child { border-bottom: none; }
+.pitfall-row.header { background: var(--bg2); }
+
+.pitfall-row.header .pc { 
+  font-family: 'DM Mono', monospace;
+  font-size: 9px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: var(--ink4);
+  padding: 10px 14px;
+  border-right: 1px solid var(--line);
+  display: flex;
+  align-items: center;
+}
+
+.pf-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #c04040;
+  font-size: 14px;
+  border-right: 1px solid var(--line);
+  background: rgba(192,64,64,0.04);
+}
+
+.pc {
+  padding: 12px 14px;
+  font-size: 12px;
+  color: var(--ink3);
+  line-height: 1.5;
+  border-right: 1px solid var(--line);
+}
+
+.pc strong { color: var(--ink); font-weight: 500; }
+
+.pc.fix { border-right: none; background: rgba(26,92,26,0.04); }
+
+/* ── CHECKLIST ── */
+.checklist-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1px;
+  background: var(--line);
+  border: 1px solid var(--line2);
+  margin-bottom: 28px;
+}
+
+.cl-section {
+  background: var(--bg);
+  padding: 20px;
+}
+
+.cl-section-title {
+  font-family: 'DM Mono', monospace;
+  font-size: 10px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: var(--ink4);
+  margin-bottom: 12px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid var(--line);
+}
+
+.cl-item {
+  display: flex;
+  gap: 10px;
+  padding: 7px 0;
+  border-bottom: 1px solid var(--line);
+  font-size: 12px;
+  color: var(--ink3);
+  line-height: 1.45;
+  align-items: flex-start;
+}
+
+.cl-item:last-child { border-bottom: none; }
+
+.cl-item::before {
+  content: '□';
+  color: var(--ink4);
+  flex-shrink: 0;
+  font-size: 14px;
+  line-height: 1.1;
+}
+
+.cl-item strong { color: var(--ink2); font-weight: 500; }
+
+/* ── TOOL MAP ── */
+.tool-map {
+  border: 1px solid var(--line2);
+  overflow: hidden;
+  margin-bottom: 28px;
+}
+
+.tool-map-header {
+  background: var(--ink2);
+  padding: 10px 18px;
+  font-family: 'DM Mono', monospace;
+  font-size: 10px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: rgba(255,255,255,0.3);
+}
+
+.tool-row {
+  display: grid;
+  grid-template-columns: 150px 120px 1fr 100px;
+  border-bottom: 1px solid var(--line);
+  background: var(--bg);
+}
+
+.tool-row:last-child { border-bottom: none; }
+.tool-row:nth-child(even) { background: var(--bg2); }
+
+.tool-row.head { background: var(--bg3); }
+.tool-row.head .tc {
+  font-family: 'DM Mono', monospace;
+  font-size: 9px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: var(--ink4);
+  padding: 10px 14px;
+  border-right: 1px solid var(--line);
+  font-weight: 400;
+}
+
+.tc {
+  padding: 11px 14px;
+  font-size: 12px;
+  color: var(--ink3);
+  border-right: 1px solid var(--line);
+  line-height: 1.4;
+}
+
+.tc:last-child { border-right: none; }
+.tc .name { font-weight: 600; font-size: 13px; color: var(--ink); }
+.tc .sub { font-family: 'DM Mono', monospace; font-size: 9px; color: var(--ink4); margin-top: 2px; letter-spacing: 1px; }
+
+.tc-badge {
+  font-family: 'DM Mono', monospace;
+  font-size: 10px;
+  padding: 3px 8px;
+  border: 1px solid;
+  display: inline-block;
+}
+
+.b-core   { border-color: #1a5c1a; color: #1a5c1a; }
+.b-opt    { border-color: #8a4e00; color: #8a4e00; }
+.b-alt    { border-color: var(--ink4); color: var(--ink4); }
+
+/* ── COMPARISON FOOTER ── */
+.stack-footer {
+  background: var(--bg2);
+  border-top: 2px solid var(--line2);
+  padding: 28px 56px;
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 1px;
+  background: var(--line);
+}
+
+.sf-cell {
+  background: var(--bg2);
+  padding: 20px 24px;
+}
+
+.sf-label {
+  font-family: 'DM Mono', monospace;
+  font-size: 9px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: var(--ink4);
+  margin-bottom: 8px;
+}
+
+.sf-title {
+  font-size: 13px;
+  font-weight: 600;
+  margin-bottom: 8px;
+}
+
+.sf-text {
+  font-size: 12px;
+  color: var(--ink3);
+  line-height: 1.6;
+}
+
+/* ── FINAL COMPARISON ── */
+.final-comparison {
+  background: var(--ink);
+  padding: 56px 56px 60px;
+}
+
+.fc-label {
+  font-family: 'DM Mono', monospace;
+  font-size: 10px;
+  letter-spacing: 3px;
+  text-transform: uppercase;
+  color: rgba(255,255,255,0.2);
+  margin-bottom: 28px;
+}
+
+.fc-title {
+  font-family: 'DM Serif Display', serif;
+  font-size: clamp(24px, 3.5vw, 42px);
+  color: #fff;
+  font-weight: 400;
+  letter-spacing: -0.5px;
+  margin-bottom: 36px;
+  line-height: 1.1;
+}
+
+.comp-matrix {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 12px;
+}
+
+.comp-matrix th {
+  padding: 12px 16px;
+  text-align: left;
+  background: rgba(255,255,255,0.05);
+  font-family: 'DM Mono', monospace;
+  font-size: 10px;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  color: rgba(255,255,255,0.3);
+  border-right: 1px solid rgba(255,255,255,0.06);
+  border-bottom: 1px solid rgba(255,255,255,0.08);
+  font-weight: 400;
+}
+
+.comp-matrix th:last-child { border-right: none; }
+
+.comp-matrix td {
+  padding: 12px 16px;
+  border-bottom: 1px solid rgba(255,255,255,0.05);
+  border-right: 1px solid rgba(255,255,255,0.05);
+  vertical-align: top;
+  color: rgba(255,255,255,0.55);
+  line-height: 1.5;
+}
+
+.comp-matrix td:last-child { border-right: none; }
+.comp-matrix tr:last-child td { border-bottom: none; }
+
+.comp-matrix .row-h {
+  font-weight: 500;
+  color: rgba(255,255,255,0.75);
+  font-size: 12px;
+  background: rgba(255,255,255,0.02);
+}
+
+.comp-matrix td.good   { color: #7ade94; }
+.comp-matrix td.bad    { color: #de7a7a; }
+.comp-matrix td.mid    { color: #deba7a; }
+
+/* ── FOOTER ── */
+footer {
+  border-top: 1px solid var(--line);
+  padding: 24px 56px;
+  display: flex;
+  justify-content: space-between;
+  font-family: 'DM Mono', monospace;
+  font-size: 10px;
+  color: var(--ink4);
+  letter-spacing: 1px;
+  background: var(--bg);
+}
+
+/* ── RESPONSIVE ── */
+@media (max-width: 900px) {
+  .masthead, .panel-hero, .panel-body, .prereq-strip, .final-comparison, footer { padding-left: 20px; padding-right: 20px; }
+  .stack-nav { grid-template-columns: 1fr 1fr; }
+  .panel-hero { grid-template-columns: 1fr; }
+  .step-row { grid-template-columns: 40px 1fr; }
+  .step-left { grid-column: 2; border-right: none; }
+  .step-right { grid-column: 2; }
+  .checklist-grid { grid-template-columns: 1fr; }
+  .tool-row { grid-template-columns: 1fr 1fr; }
+  .pitfall-row { grid-template-columns: 28px 1fr; }
+  .stack-footer { grid-template-columns: 1fr; }
+  footer { flex-direction: column; gap: 6px; }
+}
+</style>
+</head>
+<body>
+
+<!-- ══ MASTHEAD ══ -->
+<div class="masthead">
+  <div class="masthead-eye">Roadmap operative · 4 famiglie di stack · Febbraio 2026</div>
+  <h1>Da zero a produzione<br><em>per ogni famiglia di stack</em></h1>
+  <p class="masthead-desc">Le roadmap generali declinate in step concreti, strumenti specifici, comandi reali e trappole da evitare — per chi costruisce con Python puro, framework di orchestrazione, sistemi multi-agent, o piattaforme no-code.</p>
+  <div class="stack-badges">
+    <span class="stack-badge" style="border-color:var(--s1);color:#7ab4ff" onclick="showStack(1)">01 · Custom / Python</span>
+    <span class="stack-badge" style="border-color:var(--s2);color:#7ade94" onclick="showStack(2)">02 · Framework</span>
+    <span class="stack-badge" style="border-color:var(--s3);color:#f5a04a" onclick="showStack(3)">03 · Multi-agent</span>
+    <span class="stack-badge" style="border-color:var(--s4);color:#c07af5" onclick="showStack(4)">04 · No-code</span>
+  </div>
+</div>
+
+<!-- ══ NAV ══ -->
+<nav class="stack-nav">
+  <button class="sn-tab active" data-s="1" onclick="showStack(1)">
+    <span class="sn-tab-inner"><span class="sn-num">01</span><span class="sn-name">Custom / Python</span><span class="sn-sub">Vanilla · API diretta</span></span>
+  </button>
+  <button class="sn-tab" data-s="2" onclick="showStack(2)">
+    <span class="sn-tab-inner"><span class="sn-num">02</span><span class="sn-name">Framework</span><span class="sn-sub">LangChain · LlamaIndex</span></span>
+  </button>
+  <button class="sn-tab" data-s="3" onclick="showStack(3)">
+    <span class="sn-tab-inner"><span class="sn-num">03</span><span class="sn-name">Multi-agent</span><span class="sn-sub">CrewAI · AutoGen · LangGraph</span></span>
+  </button>
+  <button class="sn-tab" data-s="4" onclick="showStack(4)">
+    <span class="sn-tab-inner"><span class="sn-num">04</span><span class="sn-name">No-code</span><span class="sn-sub">Flowise · n8n · Dify</span></span>
+  </button>
+</nav>
+
+
+<!-- ════════════════════════════════════
+     STACK 1 — CUSTOM / PYTHON PURO
+════════════════════════════════════ -->
+<div class="stack-panel active" id="panel-1">
+
+  <div class="panel-hero">
+    <div>
+      <div class="ph-label" style="color:var(--s1)"><div class="ph-dot" style="background:var(--s1)"></div>Stack 01</div>
+      <div class="ph-h2" style="color:var(--s1)">Custom / Python puro</div>
+      <p class="ph-essence">
+        Costruisci tutto da zero con la <strong>Anthropic SDK o OpenAI SDK</strong>, senza framework di orchestrazione. Massimo controllo su ogni aspetto del loop agente, zero magia nascosta. La strada più lunga ma quella che produce la comprensione più profonda e la flessibilità assoluta. <strong>Scelta giusta quando i requisiti non si adattano a nessun framework esistente</strong>, o quando hai un team che vuole capire davvero cosa succede.
+      </p>
+    </div>
+    <div class="ph-right">
+      <div class="ph-stat"><span class="ph-stat-n" style="color:var(--s1)">6–12</span><span class="ph-stat-l">settimane MVP</span></div>
+      <div class="ph-stat"><span class="ph-stat-n" style="color:var(--s1)">Senior</span><span class="ph-stat-l">Dev richiesto</span></div>
+      <div class="ph-stat"><span class="ph-stat-n" style="color:var(--s1)">∞</span><span class="ph-stat-l">Flessibilità</span></div>
+    </div>
+  </div>
+
+  <div class="prereq-strip">
+    <div class="prereq-label">Prerequisiti</div>
+    <div class="prereq-items">
+      <span class="prereq-tag must">Python avanzato (async/await, type hints)</span>
+      <span class="prereq-tag must">REST API e JSON</span>
+      <span class="prereq-tag must">Gestione ambienti virtuali e dipendenze</span>
+      <span class="prereq-tag">Docker per il deploy</span>
+      <span class="prereq-tag">Git e version control</span>
+      <span class="prereq-tag">Nozioni di database (SQL o vector DB)</span>
+    </div>
+  </div>
+
+  <div class="panel-body">
+
+    <!-- ROADMAP VISIVA -->
+    <div class="section">
+      <div class="sec-head">
+        <span class="sec-num">01</span>
+        <span class="sec-title">Roadmap a colpo d'occhio</span>
+        <span class="sec-tag">6 fasi · sequenza operativa</span>
+      </div>
+      <div class="roadmap-lanes">
+        <div class="rl-phase">
+          <div class="rl-label">
+            <div class="rl-phase-num" style="color:var(--s1)">Fase 1</div>
+            <div class="rl-phase-name">Setup ambiente</div>
+            <div class="rl-phase-dur">Giorno 1–2</div>
+          </div>
+          <div class="rl-content">
+            <div class="rl-steps">
+              <div class="rl-step key-step" style="border-color:var(--s1)"><span class="sicon">🐍</span>venv + pip install</div>
+              <div class="rl-step"><span class="sicon">🔑</span>API key setup</div>
+              <div class="rl-step"><span class="sicon">📁</span>Struttura progetto</div>
+              <div class="rl-step"><span class="sicon">✅</span>Hello World API call</div>
+            </div>
+          </div>
+        </div>
+        <div class="rl-phase">
+          <div class="rl-label">
+            <div class="rl-phase-num" style="color:var(--s1)">Fase 2</div>
+            <div class="rl-phase-name">Loop agente base</div>
+            <div class="rl-phase-dur">Giorno 3–7</div>
+          </div>
+          <div class="rl-content">
+            <div class="rl-steps">
+              <div class="rl-step key-step" style="border-color:var(--s1)"><span class="sicon">🔄</span>ReAct loop manuale</div>
+              <div class="rl-step"><span class="sicon">🛠️</span>Tool dispatcher</div>
+              <div class="rl-step"><span class="sicon">💾</span>Conversation state</div>
+              <div class="rl-step"><span class="sicon">🛑</span>Stop conditions</div>
+            </div>
+          </div>
+        </div>
+        <div class="rl-phase">
+          <div class="rl-label">
+            <div class="rl-phase-num" style="color:var(--s1)">Fase 3</div>
+            <div class="rl-phase-name">Tool integration</div>
+            <div class="rl-phase-dur">Settimana 2–3</div>
+          </div>
+          <div class="rl-content">
+            <div class="rl-steps">
+              <div class="rl-step key-step" style="border-color:var(--s1)"><span class="sicon">📦</span>Tool registry pattern</div>
+              <div class="rl-step"><span class="sicon">🌐</span>API esterne</div>
+              <div class="rl-step"><span class="sicon">💽</span>DB queries</div>
+              <div class="rl-step"><span class="sicon">⚡</span>MCP servers</div>
+              <div class="rl-step"><span class="sicon">🚦</span>Error handling</div>
+            </div>
+          </div>
+        </div>
+        <div class="rl-phase">
+          <div class="rl-label">
+            <div class="rl-phase-num" style="color:var(--s1)">Fase 4</div>
+            <div class="rl-phase-name">Memoria e RAG</div>
+            <div class="rl-phase-dur">Settimana 3–4</div>
+          </div>
+          <div class="rl-content">
+            <div class="rl-steps">
+              <div class="rl-step key-step" style="border-color:var(--s1)"><span class="sicon">🧠</span>Vector store setup</div>
+              <div class="rl-step"><span class="sicon">✂️</span>Chunking strategy</div>
+              <div class="rl-step"><span class="sicon">🔍</span>Retrieval + reranking</div>
+              <div class="rl-step"><span class="sicon">📝</span>Context injection</div>
+            </div>
+          </div>
+        </div>
+        <div class="rl-phase">
+          <div class="rl-label">
+            <div class="rl-phase-num" style="color:var(--s1)">Fase 5</div>
+            <div class="rl-phase-name">Eval + Hardening</div>
+            <div class="rl-phase-dur">Settimana 4–6</div>
+          </div>
+          <div class="rl-content">
+            <div class="rl-steps">
+              <div class="rl-step key-step" style="border-color:var(--s1)"><span class="sicon">📊</span>Eval harness custom</div>
+              <div class="rl-step"><span class="sicon">🛡️</span>Guardrail layer</div>
+              <div class="rl-step"><span class="sicon">📋</span>Logging strutturato</div>
+              <div class="rl-step"><span class="sicon">💰</span>Cost tracking</div>
+            </div>
+          </div>
+        </div>
+        <div class="rl-phase">
+          <div class="rl-label">
+            <div class="rl-phase-num" style="color:var(--s1)">Fase 6</div>
+            <div class="rl-phase-name">Deploy</div>
+            <div class="rl-phase-dur">Settimana 6–8</div>
+          </div>
+          <div class="rl-content">
+            <div class="rl-steps">
+              <div class="rl-step key-step" style="border-color:var(--s1)"><span class="sicon">🐳</span>Dockerize</div>
+              <div class="rl-step"><span class="sicon">🔒</span>Secrets manager</div>
+              <div class="rl-step"><span class="sicon">⚙️</span>FastAPI wrapper</div>
+              <div class="rl-step"><span class="sicon">📡</span>Monitoring</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- STEP DETTAGLIO -->
+    <div class="section">
+      <div class="sec-head">
+        <span class="sec-num">02</span>
+        <span class="sec-title">Step operativi dettagliati</span>
+        <span class="sec-tag">Con codice reale</span>
+      </div>
+
+      <div class="steps-deep">
+
+        <div class="step-row">
+          <div class="step-n">1.1</div>
+          <div class="step-left">
+            <div class="step-what">Setup ambiente isolato</div>
+            <div class="step-tool">pip · python-dotenv · pre-commit</div>
+          </div>
+          <div class="step-right">
+            <div class="step-desc">Crea un ambiente virtuale pulito, installa le dipendenze minime, configura il file <strong>.env</strong> per le API key. Non hardcodare mai credenziali nel codice.</div>
+            <div class="step-code">
+<span class="cm"># Setup iniziale — esegui nel terminale</span><br>
+<span class="pl">python -m venv .venv && source .venv/bin/activate</span><br>
+<span class="pl">pip install anthropic python-dotenv</span><br>
+<br>
+<span class="cm"># .env (mai in git — aggiungi a .gitignore)</span><br>
+<span class="pl">ANTHROPIC_API_KEY=sk-ant-...</span><br>
+<span class="pl">MODEL=claude-sonnet-4-5</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="step-row">
+          <div class="step-n">1.2</div>
+          <div class="step-left">
+            <div class="step-what">Client base + prima chiamata</div>
+            <div class="step-tool">anthropic SDK · async</div>
+          </div>
+          <div class="step-right">
+            <div class="step-desc">Verifica che l'SDK funzioni e il modello risponde correttamente. <strong>Non saltare questo step</strong> — problemi di rete, API key errate o versioni incompatibili si scoprono qui.</div>
+            <div class="step-code">
+<span class="kw">import</span> <span class="pl">anthropic, os</span><br>
+<span class="kw">from</span> <span class="pl">dotenv</span> <span class="kw">import</span> <span class="pl">load_dotenv</span><br>
+<span class="pl">load_dotenv()</span><br>
+<br>
+<span class="pl">client</span> = <span class="fn">anthropic.Anthropic</span>()<br>
+<br>
+<span class="pl">response</span> = <span class="pl">client.messages.create(</span><br>
+&nbsp;&nbsp;<span class="pl">model</span>=<span class="st">"claude-sonnet-4-5"</span>,<br>
+&nbsp;&nbsp;<span class="pl">max_tokens</span>=<span class="nu">1024</span>,<br>
+&nbsp;&nbsp;<span class="pl">system</span>=<span class="st">"Sei un assistente utile."</span>,<br>
+&nbsp;&nbsp;<span class="pl">messages</span>=[{<span class="st">"role"</span>: <span class="st">"user"</span>, <span class="st">"content"</span>: <span class="st">"Ciao!"</span>}]<br>
+<span class="pl">)</span><br>
+<span class="fn">print</span>(<span class="pl">response.content[</span><span class="nu">0</span><span class="pl">].text)</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="step-row">
+          <div class="step-n">2.1</div>
+          <div class="step-left">
+            <div class="step-what">Implementare il loop ReAct</div>
+            <div class="step-tool">Loop while · tool_use blocks</div>
+          </div>
+          <div class="step-right">
+            <div class="step-desc">Il cuore dell'agente: il loop che continua finché il modello smette di chiamare tool. <strong>Il modello gestisce autonomamente la sequenza</strong> — tu gestisci l'esecuzione dei tool e il feed del risultato.</div>
+            <div class="step-code">
+<span class="kw">def</span> <span class="fn">run_agent</span>(<span class="pl">user_message: str, tools: list, max_iter</span>=<span class="nu">10</span>):<br>
+&nbsp;&nbsp;<span class="pl">messages</span> = [{<span class="st">"role"</span>: <span class="st">"user"</span>, <span class="st">"content"</span>: <span class="pl">user_message}]</span><br>
+&nbsp;&nbsp;<span class="kw">for</span> <span class="pl">_ in range(max_iter):</span><br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="pl">response</span> = <span class="pl">client.messages.create(</span><br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="pl">model</span>=<span class="pl">MODEL, tools</span>=<span class="pl">tools, messages</span>=<span class="pl">messages</span><br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="pl">)</span><br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="cm"># Stop: il modello non chiama più tool</span><br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="kw">if</span> <span class="pl">response.stop_reason</span> == <span class="st">"end_turn"</span>:<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="kw">return</span> <span class="fn">extract_text</span>(<span class="pl">response)</span><br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="cm"># Esegui i tool richiesti</span><br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="pl">tool_results</span> = <span class="fn">execute_tools</span>(<span class="pl">response.content)</span><br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="cm"># Aggiorna la conversazione con i risultati</span><br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="pl">messages</span> += [<span class="fn">assistant_msg</span>(<span class="pl">response)</span>, <span class="fn">tool_result_msg</span>(<span class="pl">tool_results)]</span><br>
+&nbsp;&nbsp;<span class="kw">raise</span> <span class="fn">RuntimeError</span>(<span class="st">"Max iterations reached"</span>)
+            </div>
+          </div>
+        </div>
+
+        <div class="step-row">
+          <div class="step-n">3.1</div>
+          <div class="step-left">
+            <div class="step-what">Tool registry pattern</div>
+            <div class="step-tool">Dict dispatcher · type annotations</div>
+          </div>
+          <div class="step-right">
+            <div class="step-desc">Non usare un if/elif gigante per decidere quale tool eseguire. Usa un <strong>registry dizionario</strong> — ogni tool è una funzione registrata con un decoratore. Aggiungere nuovi tool diventa triviale.</div>
+            <div class="step-code">
+<span class="pl">TOOL_REGISTRY</span> = {}<br>
+<br>
+<span class="kw">def</span> <span class="fn">tool</span>(<span class="pl">name: str</span>):<br>
+&nbsp;&nbsp;<span class="cm"># Decoratore per registrare tool</span><br>
+&nbsp;&nbsp;<span class="kw">def</span> <span class="fn">decorator</span>(<span class="pl">fn</span>):<br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="pl">TOOL_REGISTRY[name]</span> = <span class="pl">fn</span><br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="kw">return</span> <span class="pl">fn</span><br>
+&nbsp;&nbsp;<span class="kw">return</span> <span class="pl">decorator</span><br>
+<br>
+<span class="pl">@</span><span class="fn">tool</span>(<span class="st">"search_kb"</span>)<br>
+<span class="kw">def</span> <span class="fn">search_knowledge_base</span>(<span class="pl">query: str</span>) -> <span class="pl">str:</span><br>
+&nbsp;&nbsp;<span class="kw">return</span> <span class="fn">vector_db.search</span>(<span class="pl">query)</span><br>
+<br>
+<span class="kw">def</span> <span class="fn">execute_tools</span>(<span class="pl">content_blocks: list</span>):<br>
+&nbsp;&nbsp;<span class="kw">return</span> [<br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="pl">TOOL_REGISTRY[b.name](**b.input)</span><br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="kw">for</span> <span class="pl">b in content_blocks</span><br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="kw">if</span> <span class="pl">b.type</span> == <span class="st">"tool_use"</span><br>
+&nbsp;&nbsp;<span class="pl">]</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="step-row">
+          <div class="step-n">5.1</div>
+          <div class="step-left">
+            <div class="step-what">Guardrail come layer separato</div>
+            <div class="step-tool">Decorator pattern · Pydantic</div>
+          </div>
+          <div class="step-right">
+            <div class="step-desc">I guardrail non devono stare nel system prompt. Implementali come <strong>funzioni di validazione separate</strong> che wrappano input e output. Se un guardrail fallisce, puoi vederlo nel log senza dover analizzare il comportamento del modello.</div>
+            <div class="step-code">
+<span class="kw">def</span> <span class="fn">validate_output</span>(<span class="pl">output: str, rules: list</span>) -> <span class="pl">str:</span><br>
+&nbsp;&nbsp;<span class="kw">for</span> <span class="pl">rule in rules:</span><br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="kw">if not</span> <span class="fn">rule.check</span>(<span class="pl">output</span>):<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="fn">logger.warning</span>(<span class="st">f"Guardrail {rule.name} triggered"</span>)<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="kw">return</span> <span class="pl">rule.fallback</span><br>
+&nbsp;&nbsp;<span class="kw">return</span> <span class="pl">output</span><br>
+<br>
+<span class="cm"># Esempio di regola</span><br>
+<span class="pl">NoPersonalDataRule</span> = <span class="fn">Rule</span>(<br>
+&nbsp;&nbsp;<span class="pl">name</span>=<span class="st">"no_pii"</span>,<br>
+&nbsp;&nbsp;<span class="pl">check</span>=<span class="kw">lambda</span> <span class="pl">t: not</span> <span class="fn">contains_pii</span>(<span class="pl">t</span>),<br>
+&nbsp;&nbsp;<span class="pl">fallback</span>=<span class="st">"Non posso condividere dati personali."</span><br>
+<span class="pl">)</span>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- TOOL MAP -->
+    <div class="section">
+      <div class="sec-head">
+        <span class="sec-num">03</span>
+        <span class="sec-title">Librerie e strumenti per ogni fase</span>
+      </div>
+      <div class="tool-map">
+        <div class="tool-map-header">Stack Custom — Librerie raccomandate</div>
+        <div class="tool-row head">
+          <div class="tc">Libreria</div>
+          <div class="tc">Fase</div>
+          <div class="tc">Scopo</div>
+          <div class="tc">Tipo</div>
+        </div>
+        <div class="tool-row">
+          <div class="tc"><div class="name">anthropic</div><div class="sub">pip install anthropic</div></div>
+          <div class="tc">Fase 1–6</div>
+          <div class="tc">SDK ufficiale Anthropic. Tool use, streaming, vision, batch nativo.</div>
+          <div class="tc"><span class="tc-badge b-core">Core</span></div>
+        </div>
+        <div class="tool-row">
+          <div class="tc"><div class="name">pydantic</div><div class="sub">pip install pydantic</div></div>
+          <div class="tc">Fase 2–5</div>
+          <div class="tc">Validazione e serializzazione degli schema input/output dei tool. Elimina bug da dati malformati.</div>
+          <div class="tc"><span class="tc-badge b-core">Core</span></div>
+        </div>
+        <div class="tool-row">
+          <div class="tc"><div class="name">chromadb</div><div class="sub">pip install chromadb</div></div>
+          <div class="tc">Fase 4</div>
+          <div class="tc">Vector database locale per RAG. Zero infrastruttura, ideale per sviluppo e MVP.</div>
+          <div class="tc"><span class="tc-badge b-core">Core RAG</span></div>
+        </div>
+        <div class="tool-row">
+          <div class="tc"><div class="name">tenacity</div><div class="sub">pip install tenacity</div></div>
+          <div class="tc">Fase 3</div>
+          <div class="tc">Retry con backoff esponenziale per chiamate API instabili. Gestisce rate limit automaticamente.</div>
+          <div class="tc"><span class="tc-badge b-opt">Consigliato</span></div>
+        </div>
+        <div class="tool-row">
+          <div class="tc"><div class="name">structlog</div><div class="sub">pip install structlog</div></div>
+          <div class="tc">Fase 5</div>
+          <div class="tc">Logging strutturato in JSON. Ogni tool call, ogni iterazione del loop, ogni errore — tracciabile e parsabile.</div>
+          <div class="tc"><span class="tc-badge b-opt">Consigliato</span></div>
+        </div>
+        <div class="tool-row">
+          <div class="tc"><div class="name">fastapi</div><div class="sub">pip install fastapi uvicorn</div></div>
+          <div class="tc">Fase 6</div>
+          <div class="tc">Esporre l'agente come API REST per integrazioni esterne. Auto-genera documentazione OpenAPI.</div>
+          <div class="tc"><span class="tc-badge b-opt">Deploy</span></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- PITFALLS -->
+    <div class="section">
+      <div class="sec-head"><span class="sec-num">04</span><span class="sec-title">Trappole tipiche e come evitarle</span></div>
+      <div class="pitfalls">
+        <div class="pitfalls-header">⚑ Errori frequenti nello stack Custom</div>
+        <div class="pitfall-row header">
+          <div class="pc"></div>
+          <div class="pc">Trappola</div>
+          <div class="pc">Come evitarla</div>
+        </div>
+        <div class="pitfall-row">
+          <div class="pf-icon">✕</div>
+          <div class="pc"><strong>Loop infinito senza hard limit</strong> — il modello continua a chiamare tool senza convergere verso una risposta finale.</div>
+          <div class="pc fix">Imposta sempre <code>max_iterations</code> come parametro esplicito. Logga ogni iterazione. Se raggiungi il limite, solleva un'eccezione specifica, non silenziosa.</div>
+        </div>
+        <div class="pitfall-row">
+          <div class="pf-icon">✕</div>
+          <div class="pc"><strong>Schema tool non abbastanza precisi</strong> — tool descritti vagamente vengono usati nel momento sbagliato o con argomenti errati.</div>
+          <div class="pc fix">Usa Pydantic per definire schema rigorosi. Aggiungi esempi nella description del tool. Testa ogni tool in isolamento prima di integrarlo nel loop.</div>
+        </div>
+        <div class="pitfall-row">
+          <div class="pf-icon">✕</div>
+          <div class="pc"><strong>Stato della conversazione in memoria</strong> — la lista messages cresce a ogni iterazione e non viene mai troncata.</div>
+          <div class="pc fix">Implementa una strategia di context management: mantieni solo gli ultimi N messaggi, o usa summarization periodica per comprimere la storia.</div>
+        </div>
+        <div class="pitfall-row">
+          <div class="pf-icon">✕</div>
+          <div class="pc"><strong>Eccezioni dei tool inghiottite silenziosamente</strong> — un tool fallisce, l'agente riceve un risultato vuoto e continua come se nulla fosse.</div>
+          <div class="pc fix">Ogni tool deve restituire un errore strutturato al modello quando fallisce. Il modello deve "vedere" l'errore per poter reagire correttamente.</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- CHECKLIST -->
+    <div class="section">
+      <div class="sec-head"><span class="sec-num">05</span><span class="sec-title">Checklist prima del deploy</span></div>
+      <div class="checklist-grid">
+        <div class="cl-section">
+          <div class="cl-section-title">Codice e architettura</div>
+          <div class="cl-item"><strong>Loop agente</strong> ha un hard limit di iterazioni</div>
+          <div class="cl-item"><strong>Tool registry</strong> separato dalla logica del loop</div>
+          <div class="cl-item"><strong>Ogni tool</strong> gestisce errori e restituisce messaggio strutturato</div>
+          <div class="cl-item"><strong>Guardrail layer</strong> validano input E output separatamente</div>
+          <div class="cl-item"><strong>Context management</strong> — conversazione non cresce senza limite</div>
+          <div class="cl-item"><strong>API key</strong> da variabili d'ambiente, mai hardcoded</div>
+        </div>
+        <div class="cl-section">
+          <div class="cl-section-title">Testing e osservabilità</div>
+          <div class="cl-item"><strong>Eval set</strong> di almeno 30 casi con output atteso</div>
+          <div class="cl-item"><strong>Ogni tool</strong> testato in isolamento con unit test</div>
+          <div class="cl-item"><strong>Logging strutturato</strong> attivo su ogni tool call e iterazione</div>
+          <div class="cl-item"><strong>Cost tracking</strong> — token usati per sessione monitorati</div>
+          <div class="cl-item"><strong>Rate limiting</strong> sull'API endpoint esposto</div>
+          <div class="cl-item"><strong>Processo di rollback</strong> documentato e testato</div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <div class="stack-footer">
+    <div class="sf-cell">
+      <div class="sf-label">Quando scegliere questo stack</div>
+      <div class="sf-title">Requisiti non coperti da nessun framework</div>
+      <div class="sf-text">Loop agente completamente custom, integrazioni con sistemi legacy proprietari, requisiti di latenza estremi, o team che vuole piena comprensione di ogni layer dell'architettura.</div>
+    </div>
+    <div class="sf-cell">
+      <div class="sf-label">Principale vantaggio</div>
+      <div class="sf-title">Zero magia nascosta</div>
+      <div class="sf-text">Sai esattamente cosa succede a ogni step. Non hai dipendenze da astrazioni che potrebbero cambiare comportamento tra versioni. Il debug è diretto perché il codice è tuo.</div>
+    </div>
+    <div class="sf-cell">
+      <div class="sf-label">Principale rischio</div>
+      <div class="sf-title">Reinventare ruote già esistenti</div>
+      <div class="sf-text">Passi settimane a costruire cose che LangChain ha già risolto. Valuta sempre se un framework esistente copre l'80% dei tuoi requisiti prima di partire da zero.</div>
+    </div>
+  </div>
+</div>
+
+
+<!-- ════════════════════════════════════
+     STACK 2 — FRAMEWORK ORCHESTRAZIONE
+════════════════════════════════════ -->
+<div class="stack-panel" id="panel-2">
+
+  <div class="panel-hero">
+    <div>
+      <div class="ph-label" style="color:var(--s2)"><div class="ph-dot" style="background:var(--s2)"></div>Stack 02</div>
+      <div class="ph-h2" style="color:var(--s2)">Framework di orchestrazione</div>
+      <p class="ph-essence">
+        <strong>LangChain, LlamaIndex, LangGraph</strong> forniscono le astrazioni per costruire agenti senza dover implementare da zero il loop, la gestione degli strumenti, la memoria e il RAG. Il trade-off è la curva di apprendimento delle astrazioni e una dipendenza dai loro aggiornamenti. <strong>La scelta giusta per il 70% dei casi: bilanciamento tra velocità di sviluppo e flessibilità</strong> sufficiente per la maggior parte dei requisiti aziendali.
+      </p>
+    </div>
+    <div class="ph-right">
+      <div class="ph-stat"><span class="ph-stat-n" style="color:var(--s2)">3–6</span><span class="ph-stat-l">settimane MVP</span></div>
+      <div class="ph-stat"><span class="ph-stat-n" style="color:var(--s2)">Mid</span><span class="ph-stat-l">Dev richiesto</span></div>
+      <div class="ph-stat"><span class="ph-stat-n" style="color:var(--s2)">Alta</span><span class="ph-stat-l">Ecosystem support</span></div>
+    </div>
+  </div>
+
+  <div class="prereq-strip">
+    <div class="prereq-label">Prerequisiti</div>
+    <div class="prereq-items">
+      <span class="prereq-tag must">Python intermedio</span>
+      <span class="prereq-tag must">Concetto di chain/pipeline</span>
+      <span class="prereq-tag must">API REST base</span>
+      <span class="prereq-tag">Nozioni di OOP</span>
+      <span class="prereq-tag">Async Python (per LangGraph)</span>
+    </div>
+  </div>
+
+  <div class="panel-body">
+
+    <div class="section">
+      <div class="sec-head"><span class="sec-num">01</span><span class="sec-title">Roadmap a colpo d'occhio</span><span class="sec-tag">LangChain / LangGraph · percorso consigliato</span></div>
+      <div class="roadmap-lanes">
+        <div class="rl-phase">
+          <div class="rl-label">
+            <div class="rl-phase-num" style="color:var(--s2)">Fase 1</div>
+            <div class="rl-phase-name">Setup e primitivi</div>
+            <div class="rl-phase-dur">Giorno 1–3</div>
+          </div>
+          <div class="rl-content">
+            <div class="rl-steps">
+              <div class="rl-step key-step" style="border-color:var(--s2)">🐍 pip install langchain</div>
+              <div class="rl-step">🔗 Prima chain</div>
+              <div class="rl-step">📝 PromptTemplate</div>
+              <div class="rl-step">🔑 LLM wrapper</div>
+            </div>
+          </div>
+        </div>
+        <div class="rl-phase">
+          <div class="rl-label">
+            <div class="rl-phase-num" style="color:var(--s2)">Fase 2</div>
+            <div class="rl-phase-name">Tool + Agent base</div>
+            <div class="rl-phase-dur">Giorno 4–10</div>
+          </div>
+          <div class="rl-content">
+            <div class="rl-steps">
+              <div class="rl-step key-step" style="border-color:var(--s2)">🛠️ @tool decorator</div>
+              <div class="rl-step">🤖 create_react_agent</div>
+              <div class="rl-step">💾 ConversationMemory</div>
+              <div class="rl-step">⚡ MCP adapter</div>
+            </div>
+          </div>
+        </div>
+        <div class="rl-phase">
+          <div class="rl-label">
+            <div class="rl-phase-num" style="color:var(--s2)">Fase 3</div>
+            <div class="rl-phase-name">RAG pipeline</div>
+            <div class="rl-phase-dur">Settimana 2</div>
+          </div>
+          <div class="rl-content">
+            <div class="rl-steps">
+              <div class="rl-step key-step" style="border-color:var(--s2)">📚 DocumentLoader</div>
+              <div class="rl-step">✂️ TextSplitter</div>
+              <div class="rl-step">🧮 Embeddings</div>
+              <div class="rl-step">🔍 VectorStore retriever</div>
+            </div>
+          </div>
+        </div>
+        <div class="rl-phase">
+          <div class="rl-label">
+            <div class="rl-phase-num" style="color:var(--s2)">Fase 4</div>
+            <div class="rl-phase-name">LangGraph (stateful)</div>
+            <div class="rl-phase-dur">Settimana 3</div>
+          </div>
+          <div class="rl-content">
+            <div class="rl-steps">
+              <div class="rl-step key-step" style="border-color:var(--s2)">📊 StateGraph</div>
+              <div class="rl-step">🔀 Conditional edges</div>
+              <div class="rl-step">⏸️ Human breakpoints</div>
+              <div class="rl-step">💿 Checkpointing</div>
+            </div>
+          </div>
+        </div>
+        <div class="rl-phase">
+          <div class="rl-label">
+            <div class="rl-phase-num" style="color:var(--s2)">Fase 5</div>
+            <div class="rl-phase-name">Eval + Tracing</div>
+            <div class="rl-phase-dur">Settimana 4</div>
+          </div>
+          <div class="rl-content">
+            <div class="rl-steps">
+              <div class="rl-step key-step" style="border-color:var(--s2)">📊 LangSmith setup</div>
+              <div class="rl-step">🧪 LangSmith Evals</div>
+              <div class="rl-step">🔁 CI eval pipeline</div>
+            </div>
+          </div>
+        </div>
+        <div class="rl-phase">
+          <div class="rl-label">
+            <div class="rl-phase-num" style="color:var(--s2)">Fase 6</div>
+            <div class="rl-phase-name">Deploy</div>
+            <div class="rl-phase-dur">Settimana 5–6</div>
+          </div>
+          <div class="rl-content">
+            <div class="rl-steps">
+              <div class="rl-step key-step" style="border-color:var(--s2)">☁️ LangGraph Cloud</div>
+              <div class="rl-step">🐳 Self-hosted Docker</div>
+              <div class="rl-step">📡 LangServe API</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="sec-head"><span class="sec-num">02</span><span class="sec-title">Step operativi dettagliati</span><span class="sec-tag">LangChain + LangGraph</span></div>
+
+      <div class="steps-deep">
+
+        <div class="step-row">
+          <div class="step-n">1.1</div>
+          <div class="step-left">
+            <div class="step-what">Installazione e config base</div>
+            <div class="step-tool">langchain · langchain-anthropic</div>
+          </div>
+          <div class="step-right">
+            <div class="step-desc">LangChain è un meta-package — installa solo i sotto-pacchetti che usi. <strong>Evita di installare tutto</strong>: crea dipendenze inutili e rallenta il cold start.</div>
+            <div class="step-code">
+<span class="cm"># Installa solo ciò che serve</span><br>
+<span class="pl">pip install langchain langchain-anthropic langchain-community</span><br>
+<span class="pl">pip install langchain-chroma  </span><span class="cm"># solo se usi RAG con Chroma</span><br>
+<span class="pl">pip install langgraph          </span><span class="cm"># solo se usi grafo stateful</span><br>
+<span class="pl">pip install langsmith           </span><span class="cm"># solo per tracing e eval</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="step-row">
+          <div class="step-n">2.1</div>
+          <div class="step-left">
+            <div class="step-what">Creare tool con @tool decorator</div>
+            <div class="step-tool">langchain.tools · @tool</div>
+          </div>
+          <div class="step-right">
+            <div class="step-desc">Il decoratore <code>@tool</code> converte automaticamente una funzione Python in un tool LangChain, usando la docstring come description. <strong>La docstring è parte del prompt — scrivila pensando a come il modello deve capire il tool.</strong></div>
+            <div class="step-code">
+<span class="kw">from</span> <span class="pl">langchain_core.tools</span> <span class="kw">import</span> <span class="pl">tool</span><br>
+<br>
+<span class="pl">@</span><span class="fn">tool</span><br>
+<span class="kw">def</span> <span class="fn">cerca_prodotto</span>(<span class="pl">nome: str, categoria: str</span> = <span class="st">""</span>) -> <span class="pl">str:</span><br>
+&nbsp;&nbsp;<span class="st">"""Cerca un prodotto nel catalogo aziendale.</span><br>
+&nbsp;&nbsp;<span class="st">Args:</span><br>
+&nbsp;&nbsp;<span class="st">&nbsp;&nbsp;nome: Nome o descrizione del prodotto da cercare</span><br>
+&nbsp;&nbsp;<span class="st">&nbsp;&nbsp;categoria: Categoria opzionale per filtrare</span><br>
+&nbsp;&nbsp;<span class="st">Returns: Lista prodotti trovati in formato JSON"""</span><br>
+&nbsp;&nbsp;<span class="kw">return</span> <span class="fn">db.query_products</span>(<span class="pl">nome, categoria</span>)
+            </div>
+          </div>
+        </div>
+
+        <div class="step-row">
+          <div class="step-n">2.2</div>
+          <div class="step-left">
+            <div class="step-what">Agente ReAct con LangChain</div>
+            <div class="step-tool">create_react_agent · AgentExecutor</div>
+          </div>
+          <div class="step-right">
+            <div class="step-desc">Crei l'agente in poche righe — LangChain gestisce il loop, la chiamata ai tool, il feed dei risultati. <strong>AgentExecutor ha già max_iterations e gestione degli errori builtin.</strong></div>
+            <div class="step-code">
+<span class="kw">from</span> <span class="pl">langchain.agents</span> <span class="kw">import</span> <span class="pl">create_react_agent, AgentExecutor</span><br>
+<span class="kw">from</span> <span class="pl">langchain_anthropic</span> <span class="kw">import</span> <span class="pl">ChatAnthropic</span><br>
+<br>
+<span class="pl">llm</span> = <span class="fn">ChatAnthropic</span>(<span class="pl">model</span>=<span class="st">"claude-sonnet-4-5"</span>)<br>
+<span class="pl">tools</span> = [<span class="pl">cerca_prodotto, aggiorna_ordine, invia_email</span>]<br>
+<br>
+<span class="pl">agent</span> = <span class="fn">create_react_agent</span>(<span class="pl">llm, tools, prompt</span>)<br>
+<span class="pl">executor</span> = <span class="fn">AgentExecutor</span>(<br>
+&nbsp;&nbsp;<span class="pl">agent</span>=<span class="pl">agent, tools</span>=<span class="pl">tools</span>,<br>
+&nbsp;&nbsp;<span class="pl">max_iterations</span>=<span class="nu">8</span>,<br>
+&nbsp;&nbsp;<span class="pl">handle_parsing_errors</span>=<span class="kw">True</span>,<br>
+&nbsp;&nbsp;<span class="pl">verbose</span>=<span class="kw">True</span>  <span class="cm"># mostra il ragionamento</span><br>
+<span class="pl">)</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="step-row">
+          <div class="step-n">4.1</div>
+          <div class="step-left">
+            <div class="step-what">LangGraph: agente stateful</div>
+            <div class="step-tool">StateGraph · Annotated state</div>
+          </div>
+          <div class="step-right">
+            <div class="step-desc">Usa LangGraph quando hai bisogno di <strong>flussi condizionali, human-in-the-loop, o stato persistente tra sessioni</strong>. È più verboso di AgentExecutor ma ti dà controllo completo sul flusso.</div>
+            <div class="step-code">
+<span class="kw">from</span> <span class="pl">langgraph.graph</span> <span class="kw">import</span> <span class="pl">StateGraph, END</span><br>
+<span class="kw">from</span> <span class="pl">typing</span> <span class="kw">import</span> <span class="pl">TypedDict, Annotated</span><br>
+<br>
+<span class="kw">class</span> <span class="fn">AgentState</span>(<span class="pl">TypedDict</span>):<br>
+&nbsp;&nbsp;<span class="pl">messages: Annotated[list, </span><span class="fn">add_messages</span><span class="pl">]</span><br>
+&nbsp;&nbsp;<span class="pl">context: str</span><br>
+<br>
+<span class="pl">graph</span> = <span class="fn">StateGraph</span>(<span class="pl">AgentState</span>)<br>
+<span class="pl">graph.add_node(</span><span class="st">"agent"</span><span class="pl">, agent_node)</span><br>
+<span class="pl">graph.add_node(</span><span class="st">"tools"</span><span class="pl">, tool_node)</span><br>
+<span class="cm"># Edge condizionale: tools o END</span><br>
+<span class="pl">graph.add_conditional_edges(</span><span class="st">"agent"</span><span class="pl">, should_continue)</span><br>
+<span class="pl">app</span> = <span class="pl">graph.compile(checkpointer</span>=<span class="fn">MemorySaver</span>())<span class="pl">)</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="step-row">
+          <div class="step-n">5.1</div>
+          <div class="step-left">
+            <div class="step-what">LangSmith per tracing</div>
+            <div class="step-tool">LANGCHAIN_TRACING_V2=true</div>
+          </div>
+          <div class="step-right">
+            <div class="step-desc">LangSmith si attiva con 2 variabili d'ambiente — tutto il tracing è automatico. <strong>Ogni run mostra input/output di ogni nodo, latenze, token usati, costi.</strong> È il modo più rapido per debuggare agenti complessi.</div>
+            <div class="step-code">
+<span class="cm"># Nel .env — tracing attivo automaticamente</span><br>
+<span class="pl">LANGCHAIN_TRACING_V2=true</span><br>
+<span class="pl">LANGCHAIN_API_KEY=ls__...</span><br>
+<span class="pl">LANGCHAIN_PROJECT=mio-agente-prod</span><br>
+<br>
+<span class="cm"># Aggiungere tag per filtrare in LangSmith</span><br>
+<span class="pl">executor.invoke(</span><br>
+&nbsp;&nbsp;{<span class="st">"input"</span>: <span class="pl">user_msg},</span><br>
+&nbsp;&nbsp;<span class="pl">config={</span><span class="st">"tags"</span>: [<span class="st">"production"</span>, <span class="st">"v2.1"</span>]}<br>
+<span class="pl">)</span>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="sec-head"><span class="sec-num">03</span><span class="sec-title">Librerie e strumenti</span></div>
+      <div class="tool-map">
+        <div class="tool-map-header">Stack Framework — Ecosistema LangChain</div>
+        <div class="tool-row head">
+          <div class="tc">Libreria</div><div class="tc">Ruolo</div><div class="tc">Dettaglio</div><div class="tc">Tipo</div>
+        </div>
+        <div class="tool-row">
+          <div class="tc"><div class="name">langchain-anthropic</div><div class="sub">LLM wrapper</div></div>
+          <div class="tc">LLM layer</div>
+          <div class="tc">ChatAnthropic — interfaccia standard per Claude con tool use, streaming, vision.</div>
+          <div class="tc"><span class="tc-badge b-core">Core</span></div>
+        </div>
+        <div class="tool-row">
+          <div class="tc"><div class="name">langgraph</div><div class="sub">Stateful agents</div></div>
+          <div class="tc">Orchestrazione</div>
+          <div class="tc">Grafi di agenti con stato persistente, checkpointing, human-in-the-loop. Il futuro di LangChain.</div>
+          <div class="tc"><span class="tc-badge b-core">Core</span></div>
+        </div>
+        <div class="tool-row">
+          <div class="tc"><div class="name">langchain-chroma</div><div class="sub">Vector store</div></div>
+          <div class="tc">RAG</div>
+          <div class="tc">Integrazione Chroma per RAG. Alternativa: langchain-pinecone per produzione scalabile.</div>
+          <div class="tc"><span class="tc-badge b-core">Core RAG</span></div>
+        </div>
+        <div class="tool-row">
+          <div class="tc"><div class="name">langsmith</div><div class="sub">Observability</div></div>
+          <div class="tc">Eval + Tracing</div>
+          <div class="tc">Tracing automatico, dataset eval, test run comparativi. Piano gratuito sufficiente per sviluppo.</div>
+          <div class="tc"><span class="tc-badge b-opt">Consigliato</span></div>
+        </div>
+        <div class="tool-row">
+          <div class="tc"><div class="name">langchain-mcp-adapters</div><div class="sub">MCP support</div></div>
+          <div class="tc">Tool expansion</div>
+          <div class="tc">Converte server MCP in LangChain tools. Permette di usare qualsiasi server MCP con create_react_agent.</div>
+          <div class="tc"><span class="tc-badge b-opt">Consigliato</span></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="sec-head"><span class="sec-num">04</span><span class="sec-title">Trappole tipiche</span></div>
+      <div class="pitfalls">
+        <div class="pitfalls-header">⚑ Errori frequenti nello stack Framework</div>
+        <div class="pitfall-row header">
+          <div class="pc"></div><div class="pc">Trappola</div><div class="pc">Come evitarla</div>
+        </div>
+        <div class="pitfall-row">
+          <div class="pf-icon">✕</div>
+          <div class="pc"><strong>Installare langchain senza capire le astrazioni</strong> — usi Chain, Runnable, Agent, AgentExecutor in modo confuso perché non capisci la differenza tra le API legacy e LCEL.</div>
+          <div class="pc fix">Studia prima LCEL (LangChain Expression Language) — è l'API moderna. Ignora i tutorial che usano vecchie classi come LLMChain. La documentazione ufficiale distingue chiaramente legacy vs nuova API.</div>
+        </div>
+        <div class="pitfall-row">
+          <div class="pf-icon">✕</div>
+          <div class="pc"><strong>Breaking changes frequenti</strong> — aggiornare langchain rompe il codice senza preavviso. I sotto-pacchetti hanno versioning indipendente.</div>
+          <div class="pc fix">Pinna le versioni nel requirements.txt. Aggiorna in ambiente di test, poi riesegui l'eval set completo prima di portare in produzione.</div>
+        </div>
+        <div class="pitfall-row">
+          <div class="pf-icon">✕</div>
+          <div class="pc"><strong>Troppa astrazione nasconde il problema</strong> — l'agente sbaglia e non capisci perché perché l'output del tool è wrapped in oggetti LangChain opachi.</div>
+          <div class="pc fix">Attiva verbose=True in AgentExecutor durante lo sviluppo. Usa LangSmith — il trace mostra input/output di ogni nodo nel formato nativo, non wrappato.</div>
+        </div>
+        <div class="pitfall-row">
+          <div class="pf-icon">✕</div>
+          <div class="pc"><strong>Usare AgentExecutor quando serve LangGraph</strong> — task con flussi condizionali complessi diventano impossibili da gestire con il semplice loop di AgentExecutor.</div>
+          <div class="pc fix">Se il tuo agente deve fare decision branching, human approval, o recuperare stato tra sessioni diverse — passa a LangGraph. È più verboso ma il controllo vale la complessità aggiunta.</div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <div class="stack-footer">
+    <div class="sf-cell">
+      <div class="sf-label">Quando scegliere</div>
+      <div class="sf-title">Task aziendali standard con RAG</div>
+      <div class="sf-text">Customer service agent, agente su documenti, ricerca e risposta su knowledge base interna, automazione workflow. Il bilanciamento ottimale tra velocità di sviluppo e flessibilità.</div>
+    </div>
+    <div class="sf-cell">
+      <div class="sf-label">Principale vantaggio</div>
+      <div class="sf-title">Ecosistema e integrazioni pronte</div>
+      <div class="sf-text">200+ integrazioni con DB, API, modelli. LangSmith per tracing e eval già integrato. Community enorme con soluzioni a problemi comuni già documentate.</div>
+    </div>
+    <div class="sf-cell">
+      <div class="sf-label">Principale rischio</div>
+      <div class="sf-title">Dipendenza da astrazioni instabili</div>
+      <div class="sf-text">LangChain cambia API frequentemente. Il codice può diventare obsoleto tra versioni. Mitigazione: separare la business logic dalle astrazioni LangChain con un layer di adattatori.</div>
+    </div>
+  </div>
+</div>
+
+
+<!-- ════════════════════════════════════
+     STACK 3 — MULTI-AGENT
+════════════════════════════════════ -->
+<div class="stack-panel" id="panel-3">
+
+  <div class="panel-hero">
+    <div>
+      <div class="ph-label" style="color:var(--s3)"><div class="ph-dot" style="background:var(--s3)"></div>Stack 03</div>
+      <div class="ph-h2" style="color:var(--s3)">Sistemi Multi-agent</div>
+      <p class="ph-essence">
+        <strong>CrewAI, AutoGen, LangGraph multi-agent</strong>: più agenti che collaborano, ognuno con un ruolo specifico. Il pattern giusto quando un task è troppo complesso per un singolo agente, o quando vuoi agenti specializzati che si controllano a vicenda. <strong>Attenzione: la complessità operativa cresce esponenzialmente</strong> con il numero di agenti. Inizia sempre single-agent, passa a multi-agent solo quando hai un caso specifico e misurato che lo giustifica.
+      </p>
+    </div>
+    <div class="ph-right">
+      <div class="ph-stat"><span class="ph-stat-n" style="color:var(--s3)">6–14</span><span class="ph-stat-l">settimane MVP</span></div>
+      <div class="ph-stat"><span class="ph-stat-n" style="color:var(--s3)">Senior</span><span class="ph-stat-l">Dev richiesto</span></div>
+      <div class="ph-stat"><span class="ph-stat-n" style="color:var(--s3)">Alta</span><span class="ph-stat-l">Complessità debug</span></div>
+    </div>
+  </div>
+
+  <div class="prereq-strip">
+    <div class="prereq-label">Prerequisiti</div>
+    <div class="prereq-items">
+      <span class="prereq-tag must">Agente single funzionante già costruito</span>
+      <span class="prereq-tag must">Python avanzato + async</span>
+      <span class="prereq-tag must">Comprensione del problema che giustifica multi-agent</span>
+      <span class="prereq-tag">LangGraph (per approccio graph-based)</span>
+      <span class="prereq-tag">Message queues (per sistemi asincroni)</span>
+    </div>
+  </div>
+
+  <div class="panel-body">
+
+    <div class="section">
+      <div class="sec-head"><span class="sec-num">01</span><span class="sec-title">Roadmap a colpo d'occhio</span><span class="sec-tag">CrewAI · approccio ruoli e crew</span></div>
+      <div class="roadmap-lanes">
+        <div class="rl-phase">
+          <div class="rl-label">
+            <div class="rl-phase-num" style="color:var(--s3)">Fase 1</div>
+            <div class="rl-phase-name">Progettazione crew</div>
+            <div class="rl-phase-dur">Settimana 1</div>
+          </div>
+          <div class="rl-content">
+            <div class="rl-steps">
+              <div class="rl-step key-step" style="border-color:var(--s3)">🗺️ Task decomposition</div>
+              <div class="rl-step">👥 Definire ruoli</div>
+              <div class="rl-step">🔀 Flusso collaborazione</div>
+              <div class="rl-step">⚠️ Validare necessità</div>
+            </div>
+          </div>
+        </div>
+        <div class="rl-phase">
+          <div class="rl-label">
+            <div class="rl-phase-num" style="color:var(--s3)">Fase 2</div>
+            <div class="rl-phase-name">Agenti singoli</div>
+            <div class="rl-phase-dur">Settimana 2–3</div>
+          </div>
+          <div class="rl-content">
+            <div class="rl-steps">
+              <div class="rl-step key-step" style="border-color:var(--s3)">🤖 Agent + tools per ruolo</div>
+              <div class="rl-step">📝 Backstory ottimizzati</div>
+              <div class="rl-step">✅ Test ogni agente solo</div>
+            </div>
+          </div>
+        </div>
+        <div class="rl-phase">
+          <div class="rl-label">
+            <div class="rl-phase-num" style="color:var(--s3)">Fase 3</div>
+            <div class="rl-phase-name">Crew assembly</div>
+            <div class="rl-phase-dur">Settimana 3–4</div>
+          </div>
+          <div class="rl-content">
+            <div class="rl-steps">
+              <div class="rl-step key-step" style="border-color:var(--s3)">⚙️ Crew process</div>
+              <div class="rl-step">🔗 Task dependencies</div>
+              <div class="rl-step">📤 Output chaining</div>
+            </div>
+          </div>
+        </div>
+        <div class="rl-phase">
+          <div class="rl-label">
+            <div class="rl-phase-num" style="color:var(--s3)">Fase 4</div>
+            <div class="rl-phase-name">Guardrail + QA</div>
+            <div class="rl-phase-dur">Settimana 5–6</div>
+          </div>
+          <div class="rl-content">
+            <div class="rl-steps">
+              <div class="rl-step key-step" style="border-color:var(--s3)">🛡️ Output validation</div>
+              <div class="rl-step">🔍 Critic agent</div>
+              <div class="rl-step">💰 Token budget per agent</div>
+            </div>
+          </div>
+        </div>
+        <div class="rl-phase">
+          <div class="rl-label">
+            <div class="rl-phase-num" style="color:var(--s3)">Fase 5</div>
+            <div class="rl-phase-name">Tracing e Eval</div>
+            <div class="rl-phase-dur">Settimana 6–8</div>
+          </div>
+          <div class="rl-content">
+            <div class="rl-steps">
+              <div class="rl-step key-step" style="border-color:var(--s3)">📊 Trace per-agent</div>
+              <div class="rl-step">🧪 Eval end-to-end</div>
+              <div class="rl-step">⏱️ Latency budget</div>
+            </div>
+          </div>
+        </div>
+        <div class="rl-phase">
+          <div class="rl-label">
+            <div class="rl-phase-num" style="color:var(--s3)">Fase 6</div>
+            <div class="rl-phase-name">Deploy</div>
+            <div class="rl-phase-dur">Settimana 8–10</div>
+          </div>
+          <div class="rl-content">
+            <div class="rl-steps">
+              <div class="rl-step key-step" style="border-color:var(--s3)">🚀 Async execution</div>
+              <div class="rl-step">💸 Cost cap per crew run</div>
+              <div class="rl-step">📋 Run history store</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="sec-head"><span class="sec-num">02</span><span class="sec-title">Step operativi dettagliati</span><span class="sec-tag">CrewAI</span></div>
+
+      <div class="steps-deep">
+
+        <div class="step-row">
+          <div class="step-n">1.1</div>
+          <div class="step-left">
+            <div class="step-what">Validare la necessità di multi-agent</div>
+            <div class="step-tool">Prima di scrivere codice</div>
+          </div>
+          <div class="step-right">
+            <div class="step-desc">Rispondi a queste domande prima di iniziare: il task supera la finestra di contesto di un agente? Ci sono sotto-task che richiedono competenze genuinamente diverse? <strong>Se no a entrambe, resta single-agent.</strong></div>
+            <div class="step-code">
+<span class="cm"># Indicatori che giustificano multi-agent:</span><br>
+<span class="cm"># ✓ Task richiede >50 iterazioni di ragionamento</span><br>
+<span class="cm"># ✓ Sous-task richiedono tool sets incompatibili</span><br>
+<span class="cm"># ✓ Hai bisogno di un "critic" che validi output</span><br>
+<span class="cm"># ✓ Lavoro parallelizzabile riduce latenza critica</span><br>
+<br>
+<span class="cm"># NON giustifica multi-agent:</span><br>
+<span class="cm"># ✗ "Sembra più elegante avere agenti separati"</span><br>
+<span class="cm"># ✗ Hai visto un demo online con 5 agenti</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="step-row">
+          <div class="step-n">2.1</div>
+          <div class="step-left">
+            <div class="step-what">Definire Agent con ruolo preciso</div>
+            <div class="step-tool">crewai.Agent</div>
+          </div>
+          <div class="step-right">
+            <div class="step-desc">Ogni agente ha ruolo, goal, backstory. Il backstory contestualizza il ruolo per il LLM. <strong>Testa ogni agente in isolamento prima di assemblarli nel crew</strong> — se singolo agente non funziona bene, il crew funzionerà peggio.</div>
+            <div class="step-code">
+<span class="kw">from</span> <span class="pl">crewai</span> <span class="kw">import</span> <span class="pl">Agent</span><br>
+<br>
+<span class="pl">ricercatore</span> = <span class="fn">Agent</span>(<br>
+&nbsp;&nbsp;<span class="pl">role</span>=<span class="st">"Ricercatore di mercato senior"</span>,<br>
+&nbsp;&nbsp;<span class="pl">goal</span>=<span class="st">"Raccogliere dati accurati sul mercato target"</span>,<br>
+&nbsp;&nbsp;<span class="pl">backstory</span>=<span class="st">"""Esperto con 10 anni in market research.</span><br>
+&nbsp;&nbsp;<span class="st">&nbsp;&nbsp;Metodico, citi sempre le fonti, segnali</span><br>
+&nbsp;&nbsp;<span class="st">&nbsp;&nbsp;esplicitamente quando i dati sono incerti."""</span>,<br>
+&nbsp;&nbsp;<span class="pl">tools</span>=[<span class="pl">web_search, scrape_tool</span>],<br>
+&nbsp;&nbsp;<span class="pl">llm</span>=<span class="st">"claude-sonnet-4-5"</span>,<br>
+&nbsp;&nbsp;<span class="pl">max_iter</span>=<span class="nu">5</span>  <span class="cm"># Hard limit per agente</span><br>
+<span class="pl">)</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="step-row">
+          <div class="step-n">3.1</div>
+          <div class="step-left">
+            <div class="step-what">Assembla crew con process</div>
+            <div class="step-tool">crewai.Crew · Process.sequential</div>
+          </div>
+          <div class="step-right">
+            <div class="step-desc">Il process definisce come gli agenti si coordinano. Sequential: A → B → C in ordine. Hierarchical: un manager agente coordina i worker. <strong>Inizia sempre con Sequential</strong> — è debuggabile. Hierarchical aggiunge un layer di complessità significativo.</div>
+            <div class="step-code">
+<span class="kw">from</span> <span class="pl">crewai</span> <span class="kw">import</span> <span class="pl">Crew, Task, Process</span><br>
+<br>
+<span class="pl">task_ricerca</span> = <span class="fn">Task</span>(<br>
+&nbsp;&nbsp;<span class="pl">description</span>=<span class="st">"Analizza mercato per {prodotto}"</span>,<br>
+&nbsp;&nbsp;<span class="pl">agent</span>=<span class="pl">ricercatore</span>,<br>
+&nbsp;&nbsp;<span class="pl">expected_output</span>=<span class="st">"Report strutturato con dati e fonti"</span><br>
+<span class="pl">)</span><br>
+<br>
+<span class="pl">crew</span> = <span class="fn">Crew</span>(<br>
+&nbsp;&nbsp;<span class="pl">agents</span>=[<span class="pl">ricercatore, analista, redattore</span>],<br>
+&nbsp;&nbsp;<span class="pl">tasks</span>=[<span class="pl">task_ricerca, task_analisi, task_report</span>],<br>
+&nbsp;&nbsp;<span class="pl">process</span>=<span class="pl">Process.sequential</span>,<br>
+&nbsp;&nbsp;<span class="pl">verbose</span>=<span class="kw">True</span><br>
+<span class="pl">)</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="step-row">
+          <div class="step-n">4.1</div>
+          <div class="step-left">
+            <div class="step-what">Critic agent per QA</div>
+            <div class="step-tool">Agente validatore dedicato</div>
+          </div>
+          <div class="step-right">
+            <div class="step-desc">Un agente critico che valuta l'output degli altri è uno dei pattern più potenti del multi-agent. <strong>Non è un layer di validazione nel codice — è un agente che ragiona sull'output e può chiedere revisioni.</strong></div>
+            <div class="step-code">
+<span class="pl">critic</span> = <span class="fn">Agent</span>(<br>
+&nbsp;&nbsp;<span class="pl">role</span>=<span class="st">"Quality Reviewer"</span>,<br>
+&nbsp;&nbsp;<span class="pl">goal</span>=<span class="st">"Identificare errori, imprecisioni e gap"</span>,<br>
+&nbsp;&nbsp;<span class="pl">backstory</span>=<span class="st">"Revisore critico e rigoroso. Non approva</span><br>
+&nbsp;&nbsp;<span class="st">&nbsp;&nbsp;output che contengono affermazioni non verificate."</span>,<br>
+&nbsp;&nbsp;<span class="pl">tools</span>=[],  <span class="cm"># Il critic NON ha tool — solo ragiona</span><br>
+&nbsp;&nbsp;<span class="pl">llm</span>=<span class="st">"claude-opus-4-6"</span>  <span class="cm"># Usa il modello migliore qui</span><br>
+<span class="pl">)</span>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="sec-head"><span class="sec-num">03</span><span class="sec-title">Trappole tipiche — Multi-agent</span></div>
+      <div class="pitfalls">
+        <div class="pitfalls-header">⚑ Errori frequenti nei sistemi Multi-agent</div>
+        <div class="pitfall-row header">
+          <div class="pc"></div><div class="pc">Trappola</div><div class="pc">Come evitarla</div>
+        </div>
+        <div class="pitfall-row">
+          <div class="pf-icon">✕</div>
+          <div class="pc"><strong>Aggiungere agenti senza misurare il beneficio</strong> — ogni agente aggiunto moltiplica latenza e costi senza necessariamente migliorare la qualità.</div>
+          <div class="pc fix">Misura la qualità dell'output single-agent sul tuo eval set. Aggiungi un agente solo se il delta di qualità giustifica il delta di costo e latenza. Documenta la decisione.</div>
+        </div>
+        <div class="pitfall-row">
+          <div class="pf-icon">✕</div>
+          <div class="pc"><strong>Errori che si propagano silenziosamente</strong> — agente A produce output errato, agente B lo usa come input, agente C produce output plausibile ma sbagliato.</div>
+          <div class="pc fix">Valida gli output tra un agente e l'altro. Usa output strutturati (Pydantic) con schema rigidi che falliscono esplicitamente se l'agente precedente ha prodotto dati malformati.</div>
+        </div>
+        <div class="pitfall-row">
+          <div class="pf-icon">✕</div>
+          <div class="pc"><strong>Costi incontrollati</strong> — 3 agenti con 5 tool calls ciascuno a 8 iterazioni = 120 chiamate LLM per task. A $0.01/chiamata: $1.20 per task. A 1000 task/giorno: $1200/giorno.</div>
+          <div class="pc fix">Imposta token budget espliciti per ogni agente (max_iter, max_tokens). Monitora il costo per run fin dall'inizio. Usa modelli più leggeri per agenti di reasoning semplice.</div>
+        </div>
+        <div class="pitfall-row">
+          <div class="pf-icon">✕</div>
+          <div class="pc"><strong>Loop tra agenti</strong> — agente A chiede a B di fare X, B chiede ad A di fare Y, loop infinito.</div>
+          <div class="pc fix">In sistemi con comunicazione bidirezionale tra agenti, implementa sempre un hard limit di messaggi totali nel crew, non solo per singolo agente.</div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <div class="stack-footer">
+    <div class="sf-cell">
+      <div class="sf-label">Quando scegliere</div>
+      <div class="sf-title">Task genuinamente complessi con specializzazioni diverse</div>
+      <div class="sf-text">Research + analisi + redazione. Pipeline di content con fact-checking. Sistemi dove serve un "critic" che validi l'output di altri agenti. Workflow paralleli che devono convergere.</div>
+    </div>
+    <div class="sf-cell">
+      <div class="sf-label">Principale vantaggio</div>
+      <div class="sf-title">Specializzazione e validazione incrociata</div>
+      <div class="sf-text">Ogni agente può avere prompt, tool e anche modello diversi ottimizzati per il suo ruolo. Un agente critico che rivede l'output degli altri produce qualità sistematicamente migliore.</div>
+    </div>
+    <div class="sf-cell">
+      <div class="sf-label">Principale rischio</div>
+      <div class="sf-title">Complessità che si moltiplica</div>
+      <div class="sf-text">Debug molto più difficile. Costi più alti. Latenza più alta. Errori che si propagano tra agenti. Richiede strumenti di tracing sofisticati per capire cosa è andato storto e dove.</div>
+    </div>
+  </div>
+</div>
+
+
+<!-- ════════════════════════════════════
+     STACK 4 — NO-CODE / LOW-CODE
+════════════════════════════════════ -->
+<div class="stack-panel" id="panel-4">
+
+  <div class="panel-hero">
+    <div>
+      <div class="ph-label" style="color:var(--s4)"><div class="ph-dot" style="background:var(--s4)"></div>Stack 04</div>
+      <div class="ph-h2" style="color:var(--s4)">No-code / Low-code</div>
+      <p class="ph-essence">
+        <strong>Flowise, n8n, Dify, Zapier AI</strong>: costruisci agenti collegando blocchi grafici, senza scrivere codice. Il punto di forza non è solo la velocità — è la <strong>democratizzazione</strong>: team business, marketing, operations possono costruire e gestire agenti in autonomia senza dipendere dall'IT. Il limite è il tetto della piattaforma: quando le tue esigenze superano i blocchi disponibili, sei bloccato.
+      </p>
+    </div>
+    <div class="ph-right">
+      <div class="ph-stat"><span class="ph-stat-n" style="color:var(--s4)">1–5</span><span class="ph-stat-l">giorni MVP</span></div>
+      <div class="ph-stat"><span class="ph-stat-n" style="color:var(--s4)">Zero</span><span class="ph-stat-l">Codice base</span></div>
+      <div class="ph-stat"><span class="ph-stat-n" style="color:var(--s4)">Media</span><span class="ph-stat-l">Flessibilità</span></div>
+    </div>
+  </div>
+
+  <div class="prereq-strip">
+    <div class="prereq-label">Prerequisiti</div>
+    <div class="prereq-items">
+      <span class="prereq-tag must">Comprensione concetto di prompt e LLM</span>
+      <span class="prereq-tag must">API key del modello LLM scelto</span>
+      <span class="prereq-tag">Logica di base (if/then)</span>
+      <span class="prereq-tag">Credenziali dei tool da connettere</span>
+      <span class="prereq-tag">Docker (solo per self-hosting)</span>
+    </div>
+  </div>
+
+  <div class="panel-body">
+
+    <div class="section">
+      <div class="sec-head"><span class="sec-num">01</span><span class="sec-title">Roadmap a colpo d'occhio</span><span class="sec-tag">Flowise · percorso raccomandato</span></div>
+      <div class="roadmap-lanes">
+        <div class="rl-phase">
+          <div class="rl-label">
+            <div class="rl-phase-num" style="color:var(--s4)">Fase 1</div>
+            <div class="rl-phase-name">Piattaforma up</div>
+            <div class="rl-phase-dur">Giorno 1 — ore</div>
+          </div>
+          <div class="rl-content">
+            <div class="rl-steps">
+              <div class="rl-step key-step" style="border-color:var(--s4)">☁️ Flowise cloud / Docker</div>
+              <div class="rl-step">🔑 API key LLM</div>
+              <div class="rl-step">🧪 Test nodo chat</div>
+            </div>
+          </div>
+        </div>
+        <div class="rl-phase">
+          <div class="rl-label">
+            <div class="rl-phase-num" style="color:var(--s4)">Fase 2</div>
+            <div class="rl-phase-name">Template import</div>
+            <div class="rl-phase-dur">Giorno 1–2</div>
+          </div>
+          <div class="rl-content">
+            <div class="rl-steps">
+              <div class="rl-step key-step" style="border-color:var(--s4)">📦 Template marketplace</div>
+              <div class="rl-step">🔧 Adatta ai tuoi dati</div>
+              <div class="rl-step">💬 Test conversazione</div>
+            </div>
+          </div>
+        </div>
+        <div class="rl-phase">
+          <div class="rl-label">
+            <div class="rl-phase-num" style="color:var(--s4)">Fase 3</div>
+            <div class="rl-phase-name">Knowledge base</div>
+            <div class="rl-phase-dur">Giorno 2–3</div>
+          </div>
+          <div class="rl-content">
+            <div class="rl-steps">
+              <div class="rl-step key-step" style="border-color:var(--s4)">📄 Upload documenti</div>
+              <div class="rl-step">✂️ Chunk settings</div>
+              <div class="rl-step">🔍 Test retrieval</div>
+              <div class="rl-step">🔗 Connetti a chat</div>
+            </div>
+          </div>
+        </div>
+        <div class="rl-phase">
+          <div class="rl-label">
+            <div class="rl-phase-num" style="color:var(--s4)">Fase 4</div>
+            <div class="rl-phase-name">Tool e integrazioni</div>
+            <div class="rl-phase-dur">Giorno 3–5</div>
+          </div>
+          <div class="rl-content">
+            <div class="rl-steps">
+              <div class="rl-step key-step" style="border-color:var(--s4)">🔌 Connetti CRM/tool</div>
+              <div class="rl-step">⚡ MCP node (se disponibile)</div>
+              <div class="rl-step">🌐 HTTP request node</div>
+            </div>
+          </div>
+        </div>
+        <div class="rl-phase">
+          <div class="rl-label">
+            <div class="rl-phase-num" style="color:var(--s4)">Fase 5</div>
+            <div class="rl-phase-name">Test iterativo</div>
+            <div class="rl-phase-dur">Settimana 2</div>
+          </div>
+          <div class="rl-content">
+            <div class="rl-steps">
+              <div class="rl-step key-step" style="border-color:var(--s4)">🧪 Test con utenti reali</div>
+              <div class="rl-step">📝 Affina system prompt</div>
+              <div class="rl-step">📋 Review log chat</div>
+            </div>
+          </div>
+        </div>
+        <div class="rl-phase">
+          <div class="rl-label">
+            <div class="rl-phase-num" style="color:var(--s4)">Fase 6</div>
+            <div class="rl-phase-name">Deploy e share</div>
+            <div class="rl-phase-dur">Giorno 5–7</div>
+          </div>
+          <div class="rl-content">
+            <div class="rl-steps">
+              <div class="rl-step key-step" style="border-color:var(--s4)">🌐 Embed widget su sito</div>
+              <div class="rl-step">🔗 API endpoint</div>
+              <div class="rl-step">👥 Condividi con team</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="sec-head"><span class="sec-num">02</span><span class="sec-title">Step operativi dettagliati</span><span class="sec-tag">Flowise + n8n</span></div>
+
+      <div class="steps-deep">
+
+        <div class="step-row">
+          <div class="step-n">1.1</div>
+          <div class="step-left">
+            <div class="step-what">Scegliere la piattaforma giusta</div>
+            <div class="step-tool">Flowise vs n8n vs Dify</div>
+          </div>
+          <div class="step-right">
+            <div class="step-desc">La scelta dipende dal caso d'uso. <strong>Flowise</strong>: chatbot e agenti RAG — interfaccia chat nativa. <strong>n8n</strong>: automazioni con AI nodes — ottimo per workflow event-driven. <strong>Dify</strong>: app AI complete con UI — più opinionato ma più completo.</div>
+            <div class="step-code">
+<span class="cm"># Flowise — self-hosted via Docker</span><br>
+<span class="pl">docker run -d -p 3000:3000 flowiseai/flowise</span><br>
+<span class="cm"># → UI su http://localhost:3000</span><br>
+<br>
+<span class="cm"># n8n — self-hosted via Docker</span><br>
+<span class="pl">docker run -it --rm -p 5678:5678 n8nio/n8n</span><br>
+<span class="cm"># → UI su http://localhost:5678</span><br>
+<br>
+<span class="cm"># Dify — self-hosted via Docker Compose</span><br>
+<span class="pl">git clone https://github.com/langgenius/dify</span><br>
+<span class="pl">cd dify/docker && docker compose up -d</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="step-row">
+          <div class="step-n">2.1</div>
+          <div class="step-left">
+            <div class="step-what">Importare e adattare template</div>
+            <div class="step-tool">Flowise Template Hub</div>
+          </div>
+          <div class="step-right">
+            <div class="step-desc">Non partire da canvas vuoto — cerca nel marketplace il template più simile al tuo caso d'uso. <strong>Un template RAG base funziona per il 60% degli use case</strong>. Modifica solo i nodi specifici del tuo contesto.</div>
+            <div class="step-code">
+<span class="cm"># Nodi chiave in un agente RAG Flowise:</span><br>
+<span class="pl">ChatAnthropic (o ChatOpenAI)</span><br>
+<span class="pl">  └─ Tool: Retriever Tool</span><br>
+<span class="pl">        └─ Chroma Vector Store</span><br>
+<span class="pl">              └─ Anthropic Embeddings</span><br>
+<span class="pl">              └─ PDF File Loader</span><br>
+<span class="pl">                    └─ Text Splitter (1000 chars / 200 overlap)</span><br>
+<br>
+<span class="cm"># → Carica i tuoi PDF e il chatbot risponde su quelli</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="step-row">
+          <div class="step-n">3.1</div>
+          <div class="step-left">
+            <div class="step-what">Configurare il system prompt</div>
+            <div class="step-tool">System Message node</div>
+          </div>
+          <div class="step-right">
+            <div class="step-desc">Il nodo System Message è il tuo system prompt. <strong>Specifica sempre: ruolo, cosa l'agente sa, cosa non deve fare, formato output atteso.</strong> La maggior parte dei problemi di comportamento si risolve qui, non cambiando l'architettura del flusso.</div>
+            <div class="step-code">
+<span class="cm"># Template system prompt per Flowise</span><br>
+<span class="st">Sei l'assistente virtuale di [Nome Azienda].</span><br>
+<span class="st">Rispondi SOLO alle domande sui nostri prodotti e servizi.</span><br>
+<span class="st">Usa SEMPRE le informazioni dal contesto fornito.</span><br>
+<span class="st">Se non trovi la risposta nel contesto, dì esplicitamente</span><br>
+<span class="st">"Non ho questa informazione disponibile".</span><br>
+<span class="st">Non inventare mai informazioni non presenti nel contesto.</span><br>
+<span class="st">Rispondi sempre in italiano, in modo professionale.</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="step-row">
+          <div class="step-n">4.1</div>
+          <div class="step-left">
+            <div class="step-what">Connettere tool via HTTP</div>
+            <div class="step-tool">HTTP Request tool / Webhook</div>
+          </div>
+          <div class="step-right">
+            <div class="step-desc">Quando non esiste un nodo nativo per il tool che ti serve, usa il nodo <strong>Custom Tool</strong> (Flowise) o <strong>HTTP Request</strong> (n8n). Qualsiasi API REST diventa un tool dell'agente.</div>
+            <div class="step-code">
+<span class="cm"># Custom Tool in Flowise — configurazione JSON</span><br>
+<span class="pl">{</span><br>
+&nbsp;&nbsp;<span class="st">"name"</span>: <span class="st">"controlla_ordine"</span>,<br>
+&nbsp;&nbsp;<span class="st">"description"</span>: <span class="st">"Controlla lo stato di un ordine. </span><br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="st">Input: numero_ordine (string)"</span>,<br>
+&nbsp;&nbsp;<span class="st">"method"</span>: <span class="st">"GET"</span>,<br>
+&nbsp;&nbsp;<span class="st">"url"</span>: <span class="st">"https://api.miogestionale.it/orders/{numero_ordine}"</span>,<br>
+&nbsp;&nbsp;<span class="st">"headers"</span>: { <span class="st">"Authorization"</span>: <span class="st">"Bearer $API_KEY"</span> }<br>
+<span class="pl">}</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="step-row">
+          <div class="step-n">6.1</div>
+          <div class="step-left">
+            <div class="step-what">Esporre come API e embeddare</div>
+            <div class="step-tool">Flowise API · Widget embed</div>
+          </div>
+          <div class="step-right">
+            <div class="step-desc">Flowise genera automaticamente un endpoint REST per ogni chatflow. Puoi anche embeddare un widget chat nel tuo sito con un tag script. <strong>Nessun backend da costruire.</strong></div>
+            <div class="step-code">
+<span class="cm">&lt;!-- Embed widget sul sito — copia da Flowise Dashboard --&gt;</span><br>
+<span class="pl">&lt;script</span> <span class="kw">type</span>=<span class="st">"module"</span><span class="pl">&gt;</span><br>
+&nbsp;&nbsp;<span class="kw">import</span> <span class="fn">Chatbot</span> <span class="kw">from</span> <span class="st">'flowise-embed'</span><br>
+&nbsp;&nbsp;<span class="fn">Chatbot.init</span>({<br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="pl">chatflowid</span>: <span class="st">"il-tuo-chatflow-id"</span>,<br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="pl">apiHost</span>: <span class="st">"https://tua-istanza.flowise.io"</span><br>
+&nbsp;&nbsp;})<br>
+<span class="pl">&lt;/script&gt;</span>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="sec-head"><span class="sec-num">03</span><span class="sec-title">Confronto piattaforme no-code</span></div>
+      <div class="tool-map">
+        <div class="tool-map-header">Flowise · n8n · Dify · Zapier AI — quando usare quale</div>
+        <div class="tool-row head">
+          <div class="tc">Piattaforma</div><div class="tc">Punto di forza</div><div class="tc">Caso d'uso ideale</div><div class="tc">Self-host</div>
+        </div>
+        <div class="tool-row">
+          <div class="tc"><div class="name">Flowise</div><div class="sub">Agenti e RAG visivi</div></div>
+          <div class="tc">Agenti LLM con RAG</div>
+          <div class="tc">Chatbot su documenti, agente con tool, RAG su knowledge base aziendale.</div>
+          <div class="tc"><span class="tc-badge b-core">Sì (Docker)</span></div>
+        </div>
+        <div class="tool-row">
+          <div class="tc"><div class="name">n8n</div><div class="sub">Automazioni + AI</div></div>
+          <div class="tc">Workflow event-driven</div>
+          <div class="tc">Automazioni con nodi AI, trigger su email/webhook, orchestrazione multi-app con AI nel mezzo.</div>
+          <div class="tc"><span class="tc-badge b-core">Sì (Docker)</span></div>
+        </div>
+        <div class="tool-row">
+          <div class="tc"><div class="name">Dify</div><div class="sub">App AI complete</div></div>
+          <div class="tc">App AI end-to-end</div>
+          <div class="tc">Applicazioni AI con UI completa, gestione utenti, versioning. Più opinionato ma più completo.</div>
+          <div class="tc"><span class="tc-badge b-core">Sì (Compose)</span></div>
+        </div>
+        <div class="tool-row">
+          <div class="tc"><div class="name">Zapier AI Agents</div><div class="sub">7000+ integrazioni</div></div>
+          <div class="tc">Connettività massima</div>
+          <div class="tc">Collegare AI a tool aziendali già usati (CRM, email, calendar) senza API custom.</div>
+          <div class="tc"><span class="tc-badge b-alt">Solo cloud</span></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="sec-head"><span class="sec-num">04</span><span class="sec-title">Trappole tipiche — No-code</span></div>
+      <div class="pitfalls">
+        <div class="pitfalls-header">⚑ Errori frequenti nello stack No-code</div>
+        <div class="pitfall-row header">
+          <div class="pc"></div><div class="pc">Trappola</div><div class="pc">Come evitarla</div>
+        </div>
+        <div class="pitfall-row">
+          <div class="pf-icon">✕</div>
+          <div class="pc"><strong>Raggiungere il tetto della piattaforma a metà progetto</strong> — scopri che hai bisogno di logica che il visual builder non supporta dopo settimane di lavoro.</div>
+          <div class="pc fix">Prima di iniziare, mappa tutti i requisiti e verifica che i nodi disponibili li coprano. Se hai dubbi su un requisito specifico, testalo con un prototipo minimo prima di costruire tutto il resto.</div>
+        </div>
+        <div class="pitfall-row">
+          <div class="pf-icon">✕</div>
+          <div class="pc"><strong>Dati che escono dall'azienda</strong> — con piattaforme cloud, le conversazioni transitano sui server del vendor. Problema per dati sensibili o GDPR.</div>
+          <div class="pc fix">Per dati sensibili, usa versioni self-hosted (Flowise, n8n, Dify sono tutti self-hostabili su Docker) con modelli locali (Ollama + Llama) o con data processing agreement con il vendor cloud.</div>
+        </div>
+        <div class="pitfall-row">
+          <div class="pf-icon">✕</div>
+          <div class="pc"><strong>System prompt sottostimato</strong> — si spende tempo su nodi e connessioni ma il system prompt è lasciato generico. Il comportamento dell'agente delude.</div>
+          <div class="pc fix">Dedica almeno il 30% del tempo di setup al system prompt. Testalo con 20+ domande reali prima di connettere tutti i tool. Un prompt forte con architettura semplice batte sempre un'architettura complessa con prompt debole.</div>
+        </div>
+        <div class="pitfall-row">
+          <div class="pf-icon">✕</div>
+          <div class="pc"><strong>Chunk size sbagliato nel RAG</strong> — chunk troppo grandi perdono precisione, chunk troppo piccoli perdono contesto. L'agente dà risposte parziali o fuori contesto.</div>
+          <div class="pc fix">Standard di partenza: chunk size 1000 caratteri, overlap 200. Poi testa con le domande reali degli utenti e osserva se il retrieval recupera il documento giusto. Aggiusta in base ai risultati, non a intuito.</div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <div class="stack-footer">
+    <div class="sf-cell">
+      <div class="sf-label">Quando scegliere</div>
+      <div class="sf-title">Prototipazione rapida e team non tecnici</div>
+      <div class="sf-text">Validare un'idea in ore invece di settimane. Dare autonomia a team business per costruire e gestire agenti. RAG su documenti aziendali senza coinvolgere l'IT per ogni modifica.</div>
+    </div>
+    <div class="sf-cell">
+      <div class="sf-label">Principale vantaggio</div>
+      <div class="sf-title">Velocità e accessibilità</div>
+      <div class="sf-text">Da zero a agente funzionante in ore. Modifiche al comportamento (prompt, documenti) in minuti. Team business indipendente dall'IT. Self-hosting disponibile per privacy.</div>
+    </div>
+    <div class="sf-cell">
+      <div class="sf-label">Principale rischio</div>
+      <div class="sf-title">Tetto di flessibilità invalicabile</div>
+      <div class="sf-text">Quando le esigenze crescono oltre i nodi disponibili, la migrazione a un framework o soluzione custom è costosa perché il flusso visivo non si "traduce" in codice in modo pulito.</div>
+    </div>
+  </div>
+</div>
+
+
+<!-- ════════════════════════════════════
+     CONFRONTO FINALE
+════════════════════════════════════ -->
+<div class="final-comparison">
+  <div class="fc-label">Tabella comparativa finale · Tutte e 4 le famiglie</div>
+  <div class="fc-title">Scegliere lo stack giusto<br>per il tuo contesto</div>
+
+  <table class="comp-matrix">
+    <thead>
+      <tr>
+        <th>Dimensione</th>
+        <th>Custom / Python</th>
+        <th>Framework</th>
+        <th>Multi-agent</th>
+        <th>No-code</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td class="row-h">Time to MVP</td>
+        <td class="bad">6–12 settimane</td>
+        <td class="mid">3–6 settimane</td>
+        <td class="bad">6–14 settimane</td>
+        <td class="good">1–5 giorni</td>
+      </tr>
+      <tr>
+        <td class="row-h">Competenza richiesta</td>
+        <td class="bad">Python senior</td>
+        <td class="mid">Python intermedio</td>
+        <td class="bad">Python senior + arch.</td>
+        <td class="good">Zero coding</td>
+      </tr>
+      <tr>
+        <td class="row-h">Flessibilità tecnica</td>
+        <td class="good">Assoluta</td>
+        <td class="good">Alta</td>
+        <td class="good">Alta</td>
+        <td class="bad">Limitata ai nodi</td>
+      </tr>
+      <tr>
+        <td class="row-h">Debug e osservabilità</td>
+        <td class="mid">Manuale (logging)</td>
+        <td class="good">LangSmith integrato</td>
+        <td class="bad">Molto complesso</td>
+        <td class="mid">Log UI piattaforma</td>
+      </tr>
+      <tr>
+        <td class="row-h">Scalabilità produzione</td>
+        <td class="good">Massima</td>
+        <td class="good">Alta</td>
+        <td class="mid">Media (costi alti)</td>
+        <td class="mid">Dipende da piattaforma</td>
+      </tr>
+      <tr>
+        <td class="row-h">Costo di manutenzione</td>
+        <td class="bad">Alto (tutto custom)</td>
+        <td class="mid">Medio</td>
+        <td class="bad">Molto alto</td>
+        <td class="good">Basso</td>
+      </tr>
+      <tr>
+        <td class="row-h">Privacy / self-hosting</td>
+        <td class="good">Completo</td>
+        <td class="good">Completo</td>
+        <td class="good">Completo</td>
+        <td class="mid">Self-host disponibile</td>
+      </tr>
+      <tr>
+        <td class="row-h">Ideale per</td>
+        <td>Requisiti unici, team esperto</td>
+        <td>Maggior parte dei casi aziendali</td>
+        <td>Task complessi con specializzazione</td>
+        <td>Prototipazione, team business</td>
+      </tr>
+      <tr>
+        <td class="row-h">Non usare quando</td>
+        <td>Hai fretta o team junior</td>
+        <td>Hai vincoli non coperti dal framework</td>
+        <td>Puoi fare lo stesso con un agente solo</td>
+        <td>Hai requisiti oltre i nodi disponibili</td>
+      </tr>
+    </tbody>
+  </table>
+</div>
+
+<footer>
+  <span>Agenti AI · Roadmap operative per stack · Febbraio 2026</span>
+  <span>agenti-ai-roadmap-stack.html</span>
+</footer>
+
+<script>
+function showStack(n) {
+  document.querySelectorAll('.stack-panel').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.sn-tab').forEach(t => t.classList.remove('active'));
+  document.getElementById('panel-' + n).classList.add('active');
+  document.querySelector('.sn-tab[data-s="' + n + '"]').classList.add('active');
+  window.scrollTo({ top: document.querySelector('.stack-nav').offsetTop - 10, behavior: 'smooth' });
+}
+</script>
+</body>
+</html>

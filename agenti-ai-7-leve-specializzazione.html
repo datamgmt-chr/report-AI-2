@@ -1,0 +1,1039 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Come Specializzare un Agente AI — Le 7 Leve</title>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,400;0,9..144,600;0,9..144,700;0,9..144,800;0,9..144,900;1,9..144,400&family=Karla:wght@300;400;500;600;700&family=IBM+Plex+Mono:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg:     #f7f5f0;
+  --bg2:    #efece5;
+  --bg3:    #e5e1d8;
+  --ink:    #1e1d1a;
+  --ink2:   #2d2b25;
+  --ink3:   #65614f;
+  --ink4:   #9e9a89;
+  --border: #d6d1c4;
+  --border2:#c5c0b1;
+
+  /* Leva colors */
+  --lv1: #3d7a45;   /* prompt — verde bosco */
+  --lv2: #2e7d9c;   /* modello — teal */
+  --lv3: #b07d24;   /* strumenti — oro scuro */
+  --lv4: #7b5ea7;   /* knowledge — viola */
+  --lv5: #c0562b;   /* orchestrazione — terracotta */
+  --lv6: #3a6b8c;   /* testing — blu acciaio */
+  --lv7: #8b5c3a;   /* fine-tuning — marrone */
+
+  /* Alternatives */
+  --alt1: #d44;
+  --alt2: #e88c30;
+  --alt3: #2e9e7a;
+  --alt4: #7b5ea7;
+  --alt5: #3a7ca5;
+
+  --accent: #3d7a45;
+}
+
+* { margin:0; padding:0; box-sizing:border-box; }
+html { scroll-behavior:smooth; }
+
+body {
+  background: var(--bg);
+  color: var(--ink);
+  font-family: 'Karla', sans-serif;
+  font-weight: 400;
+  font-size: 14px;
+  line-height: 1.78;
+}
+
+/* ── HEADER ── */
+.masthead {
+  background: var(--ink);
+  color: rgba(255,255,255,0.9);
+  padding: 60px 56px 52px;
+  position: relative;
+  overflow: hidden;
+}
+
+.masthead::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background:
+    repeating-linear-gradient(90deg, rgba(255,255,255,0.01) 0, rgba(255,255,255,0.01) 1px, transparent 1px, transparent 60px),
+    repeating-linear-gradient(0deg, rgba(255,255,255,0.01) 0, rgba(255,255,255,0.01) 1px, transparent 1px, transparent 60px);
+  pointer-events: none;
+}
+
+.masthead::after {
+  content: '7';
+  position: absolute;
+  right: 48px; bottom: -24px;
+  font-family: 'Fraunces', serif;
+  font-weight: 900;
+  font-size: 240px;
+  line-height: 1;
+  color: rgba(255,255,255,0.02);
+  pointer-events: none;
+}
+
+.mh-eye {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 10px;
+  letter-spacing: 3px;
+  text-transform: uppercase;
+  color: rgba(255,255,255,0.25);
+  margin-bottom: 18px;
+  position: relative;
+}
+
+.masthead h1 {
+  font-family: 'Fraunces', serif;
+  font-weight: 800;
+  font-size: clamp(30px, 4.5vw, 52px);
+  line-height: 1.08;
+  letter-spacing: -1px;
+  max-width: 680px;
+  position: relative;
+}
+
+.mh-sub {
+  margin-top: 20px;
+  font-size: 15px;
+  font-weight: 300;
+  color: rgba(255,255,255,0.38);
+  max-width: 660px;
+  line-height: 1.7;
+  position: relative;
+}
+
+/* ── NAV ── */
+.nav {
+  background: var(--ink2);
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  display: flex;
+  overflow-x: auto;
+  border-bottom: 1px solid rgba(255,255,255,0.06);
+}
+
+.nav-btn {
+  flex: 1;
+  min-width: 90px;
+  padding: 12px 10px;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  font-family: 'Karla', sans-serif;
+  font-size: 10.5px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+  color: rgba(255,255,255,0.3);
+  border-right: 1px solid rgba(255,255,255,0.06);
+  transition: all 0.2s;
+  white-space: nowrap;
+}
+
+.nav-btn:last-child { border-right: none; }
+.nav-btn:hover { color: rgba(255,255,255,0.6); }
+.nav-btn.active { color: #fff; background: rgba(255,255,255,0.05); }
+
+/* ── SECTIONS ── */
+.sect { display: none; }
+.sect.active { display: block; animation: fadeIn 0.3s ease; }
+@keyframes fadeIn { from { opacity:0; transform:translateY(6px); } to { opacity:1; transform:translateY(0); } }
+
+.sect-head {
+  padding: 48px 56px 36px;
+  border-bottom: 1px solid var(--border);
+}
+
+.sect-num {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 10px;
+  letter-spacing: 3px;
+  text-transform: uppercase;
+  color: var(--ink4);
+  margin-bottom: 10px;
+}
+
+.sect-head h2 {
+  font-family: 'Fraunces', serif;
+  font-weight: 800;
+  font-size: clamp(24px, 3.5vw, 38px);
+  line-height: 1.12;
+  max-width: 600px;
+  margin-bottom: 14px;
+}
+
+.sect-head p { color: var(--ink3); max-width: 700px; font-size: 14.5px; }
+
+.wrap { padding: 0 56px 56px; }
+
+/* ── LEVER CARD ── */
+.lever {
+  margin-top: 36px;
+  border: 1px solid var(--border2);
+}
+
+.lv-header {
+  display: grid;
+  grid-template-columns: 8px 48px 1fr auto;
+  align-items: center;
+  border-bottom: 1px solid var(--border);
+}
+
+.lv-accent { height: 100%; }
+
+.lv-num {
+  font-family: 'Fraunces', serif;
+  font-weight: 900;
+  font-size: 22px;
+  color: var(--bg3);
+  text-align: center;
+  padding: 14px 0;
+}
+
+.lv-title-wrap { padding: 14px 18px; }
+
+.lv-name {
+  font-family: 'Fraunces', serif;
+  font-weight: 700;
+  font-size: 22px;
+  line-height: 1.15;
+}
+
+.lv-sub {
+  font-size: 12px;
+  color: var(--ink4);
+  margin-top: 2px;
+}
+
+.lv-impact {
+  margin-right: 18px;
+  text-align: center;
+}
+
+.lv-impact-val {
+  font-family: 'Fraunces', serif;
+  font-weight: 900;
+  font-size: 24px;
+  line-height: 1;
+}
+
+.lv-impact-label {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 8px;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  color: var(--ink4);
+  margin-top: 2px;
+}
+
+.lv-body { padding: 0; }
+
+.ls {
+  padding: 22px 26px;
+  border-bottom: 1px solid var(--border);
+}
+
+.ls:last-child { border-bottom: none; }
+
+.ls-label {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 9px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: var(--ink4);
+  margin-bottom: 8px;
+  padding-bottom: 5px;
+  border-bottom: 1px solid var(--border);
+}
+
+.ls p {
+  font-size: 14px;
+  color: var(--ink3);
+  line-height: 1.8;
+  max-width: 740px;
+}
+
+.ls p strong { color: var(--ink2); font-weight: 600; }
+
+/* Decision grid */
+.dc-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1px;
+  background: var(--border);
+  margin-top: 12px;
+}
+
+.dc-item {
+  background: var(--bg);
+  padding: 14px 16px;
+}
+
+.dc-title {
+  font-weight: 700;
+  font-size: 13px;
+  margin-bottom: 5px;
+  color: var(--ink2);
+}
+
+.dc-text {
+  font-size: 12.5px;
+  color: var(--ink3);
+  line-height: 1.6;
+}
+
+.dc-text strong { color: var(--ink2); font-weight: 600; }
+
+/* Insight */
+.insight {
+  margin: 14px 0;
+  padding: 16px 20px;
+  border-left: 4px solid;
+  background: var(--bg2);
+}
+
+.insight-label {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 9px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  margin-bottom: 4px;
+}
+
+.insight p {
+  font-size: 13.5px;
+  line-height: 1.65;
+  color: var(--ink2);
+  max-width: 700px;
+}
+
+/* ── KEY POINT ── */
+.key-point {
+  margin-top: 32px;
+  padding: 22px 26px;
+  border-left: 4px solid var(--accent);
+  background: var(--bg2);
+}
+
+.kp-label {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 9px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: var(--accent);
+  margin-bottom: 6px;
+}
+
+.kp-text {
+  font-family: 'Fraunces', serif;
+  font-weight: 600;
+  font-size: 17px;
+  line-height: 1.45;
+  color: var(--ink2);
+}
+
+.kp-sub {
+  margin-top: 8px;
+  font-size: 13px;
+  color: var(--ink3);
+  line-height: 1.65;
+}
+
+/* ── PRIORITY VISUAL ── */
+.priority-bar {
+  display: flex;
+  align-items: stretch;
+  border: 1px solid var(--border2);
+  margin-top: 24px;
+  overflow: hidden;
+}
+
+.pb-item {
+  flex: 1;
+  padding: 18px 14px;
+  text-align: center;
+  border-right: 1px solid var(--border);
+  position: relative;
+}
+
+.pb-item:last-child { border-right: none; }
+
+.pb-num {
+  font-family: 'Fraunces', serif;
+  font-weight: 900;
+  font-size: 28px;
+  line-height: 1;
+  margin-bottom: 4px;
+}
+
+.pb-name {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+  margin-bottom: 4px;
+}
+
+.pb-cost {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 9px;
+  color: var(--ink4);
+}
+
+.pb-arrow {
+  position: absolute;
+  right: -8px;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 14px;
+  color: var(--ink4);
+  z-index: 1;
+}
+
+/* ── MATRIX ── */
+.matrix-scroll {
+  overflow-x: auto;
+  margin-top: 20px;
+  border: 1px solid var(--border2);
+}
+
+.matrix {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 11.5px;
+  min-width: 900px;
+}
+
+.matrix th, .matrix td {
+  padding: 10px 12px;
+  border: 1px solid var(--border);
+  vertical-align: top;
+}
+
+.matrix thead th {
+  background: var(--ink);
+  color: rgba(255,255,255,0.82);
+  font-weight: 700;
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+  text-align: center;
+  position: sticky;
+  top: 42px;
+  z-index: 50;
+}
+
+.matrix thead th:first-child { text-align: left; min-width: 130px; }
+.matrix .row-head { text-align: left; font-weight: 700; background: var(--bg2); white-space: nowrap; }
+.matrix tbody tr:nth-child(even) td { background: var(--bg2); }
+.matrix tbody tr:nth-child(even) .row-head { background: var(--bg3); }
+.matrix td { text-align: center; color: var(--ink3); }
+.matrix td strong { color: var(--ink2); font-weight: 600; }
+
+.mx-full { background: rgba(61,122,69,0.08) !important; color: var(--lv1); font-weight: 600; }
+.mx-part { background: rgba(176,125,36,0.08) !important; color: var(--lv3); font-weight: 500; }
+.mx-min  { background: rgba(150,150,150,0.06) !important; color: #999; }
+
+/* ── PROSE ── */
+.prose { margin-top: 20px; max-width: 740px; }
+.prose p { font-size: 14px; color: var(--ink3); line-height: 1.8; margin-bottom: 14px; }
+.prose p strong { color: var(--ink2); font-weight: 600; }
+
+/* ── FOOTER ── */
+.footer {
+  background: var(--ink);
+  color: rgba(255,255,255,0.22);
+  padding: 28px 56px;
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 10px;
+  letter-spacing: 1px;
+  display: flex;
+  justify-content: space-between;
+}
+
+@media (max-width: 860px) {
+  .masthead, .sect-head, .wrap, .footer { padding-left: 20px; padding-right: 20px; }
+  .dc-grid { grid-template-columns: 1fr; }
+  .priority-bar { flex-direction: column; }
+  .pb-arrow { display: none; }
+  .lv-header { grid-template-columns: 8px 36px 1fr; }
+  .lv-impact { display: none; }
+  .footer { flex-direction: column; gap: 6px; }
+}
+</style>
+</head>
+<body>
+
+<!-- HEADER -->
+<div class="masthead">
+  <div class="mh-eye">Serie Agenti AI — Report 09</div>
+  <h1>Come specializzare<br>un agente AI</h1>
+  <p class="mh-sub">Le 7 leve per rendere un agente bravo nel suo task specifico: cosa sono, come funzionano, quanto impattano, in quale ordine usarle — e come si declinano sulle 5 alternative di costruzione.</p>
+</div>
+
+<!-- NAV -->
+<nav class="nav">
+  <button class="nav-btn active" onclick="show(0)">Le 7 leve</button>
+  <button class="nav-btn" onclick="show(1)">Prompt</button>
+  <button class="nav-btn" onclick="show(2)">Modello</button>
+  <button class="nav-btn" onclick="show(3)">Strumenti</button>
+  <button class="nav-btn" onclick="show(4)">Knowledge</button>
+  <button class="nav-btn" onclick="show(5)">Orchestrazione</button>
+  <button class="nav-btn" onclick="show(6)">Testing</button>
+  <button class="nav-btn" onclick="show(7)">Fine-tuning</button>
+  <button class="nav-btn" onclick="show(8)">Le 5 alternative</button>
+</nav>
+
+
+<!-- ═══════════════════════════
+     S0 — LE 7 LEVE
+═══════════════════════════ -->
+<div class="sect active" id="s0">
+  <div class="sect-head">
+    <div class="sect-num">Vista d'insieme</div>
+    <h2>Le 7 leve di specializzazione</h2>
+    <p>Un agente diventa bravo nel suo task attraverso 7 leve distinte, ordinate per priorità pratica: da dove investire prima a dove investire solo se necessario. L'ordine non è casuale — riflette il rapporto impatto/costo di ciascuna leva.</p>
+  </div>
+  <div class="wrap">
+
+    <div class="priority-bar">
+      <div class="pb-item">
+        <div class="pb-num" style="color:var(--lv1)">1</div>
+        <div class="pb-name">Prompt</div>
+        <div class="pb-cost">Costo: ore</div>
+        <div class="pb-arrow">→</div>
+      </div>
+      <div class="pb-item">
+        <div class="pb-num" style="color:var(--lv2)">2</div>
+        <div class="pb-name">Modello</div>
+        <div class="pb-cost">Costo: giorni</div>
+        <div class="pb-arrow">→</div>
+      </div>
+      <div class="pb-item">
+        <div class="pb-num" style="color:var(--lv3)">3</div>
+        <div class="pb-name">Strumenti</div>
+        <div class="pb-cost">Costo: giorni-settimane</div>
+        <div class="pb-arrow">→</div>
+      </div>
+      <div class="pb-item">
+        <div class="pb-num" style="color:var(--lv4)">4</div>
+        <div class="pb-name">Knowledge</div>
+        <div class="pb-cost">Costo: giorni-settimane</div>
+        <div class="pb-arrow">→</div>
+      </div>
+      <div class="pb-item">
+        <div class="pb-num" style="color:var(--lv5)">5</div>
+        <div class="pb-name">Orchestrazione</div>
+        <div class="pb-cost">Costo: settimane</div>
+        <div class="pb-arrow">→</div>
+      </div>
+      <div class="pb-item">
+        <div class="pb-num" style="color:var(--lv6)">6</div>
+        <div class="pb-name">Testing</div>
+        <div class="pb-cost">Costo: continuo</div>
+        <div class="pb-arrow">→</div>
+      </div>
+      <div class="pb-item">
+        <div class="pb-num" style="color:var(--lv7)">7</div>
+        <div class="pb-name">Fine-tuning</div>
+        <div class="pb-cost">Costo: settimane-mesi</div>
+      </div>
+    </div>
+
+    <div class="key-point" style="margin-top:28px;">
+      <div class="kp-label">Il principio di priorità</div>
+      <div class="kp-text">Inizia dalla leva 1 e scendi solo quando la precedente non basta. Il prompt da solo risolve il 60-70% dei problemi di qualità. Aggiungere leve senza aver esaurito le precedenti è spreco.</div>
+      <div class="kp-sub">Un errore molto comune è saltare direttamente all'orchestrazione complessa o al fine-tuning quando un prompt migliore avrebbe risolto il problema. Ogni leva successiva costa un ordine di grandezza in più della precedente — in tempo, competenze e complessità. La disciplina è: esaurisci il potenziale della leva corrente prima di passare alla successiva.</div>
+    </div>
+
+    <div class="prose">
+      <p>Le 7 leve non sono indipendenti: <strong>si influenzano a vicenda</strong>. Un prompt eccellente compensa parzialmente un modello medio. Un modello potente compensa parzialmente un prompt debole. Strumenti ben descritti migliorano il tool use anche con prompt generici. Un'orchestrazione sofisticata (self-reflection, plan-and-execute) può ottenere risultati da modello frontier usando un modello più economico.</p>
+      <p>Ma c'è un'asimmetria: le prime leve (prompt, modello, strumenti) migliorano la qualità della singola interazione. Le leve intermedie (knowledge, orchestrazione) migliorano la qualità del sistema complessivo. L'ultima leva (testing) non migliora nulla direttamente — <strong>ti dice dove migliorare</strong>, il che la rende paradossalmente la più importante nel lungo periodo.</p>
+    </div>
+
+  </div>
+</div>
+
+
+<!-- ═══════════════════════════
+     S1 — PROMPT
+═══════════════════════════ -->
+<div class="sect" id="s1">
+  <div class="sect-head">
+    <div class="sect-num">Leva 01</div>
+    <h2>Il Prompt</h2>
+    <p>La leva più diretta, più economica e con il miglior rapporto impatto/costo. Come formuli le istruzioni determina il 60-70% della qualità dell'agente.</p>
+  </div>
+  <div class="wrap">
+    <div class="lever">
+      <div class="lv-header">
+        <div class="lv-accent" style="background:var(--lv1)"></div>
+        <div class="lv-num">01</div>
+        <div class="lv-title-wrap"><div class="lv-name">Prompt e Istruzioni</div><div class="lv-sub">Il miglior rapporto impatto / costo</div></div>
+        <div class="lv-impact"><div class="lv-impact-val" style="color:var(--lv1)">★★★</div><div class="lv-impact-label">Impatto</div></div>
+      </div>
+      <div class="lv-body">
+        <div class="ls">
+          <div class="ls-label">Come funziona la specializzazione tramite prompt</div>
+          <p>Il prompt è il modo più diretto per "programmare" il comportamento dell'agente. Non stai insegnando al modello cose nuove — stai <strong>attivando selettivamente le capacità che già possiede</strong> orientandole verso il tuo caso d'uso. Un modello generico che riceve un prompt specifico per il customer service risponderà in modo radicalmente diverso da quando riceve un prompt per l'analisi legale — pur essendo lo stesso modello.</p>
+          <p>La specializzazione tramite prompt opera su più livelli simultanei: il <strong>ruolo</strong> (chi è l'agente, qual è il suo dominio), lo <strong>stile</strong> (tono, livello di dettaglio, formato delle risposte), i <strong>vincoli</strong> (cosa non fare, limiti di azione, argomenti da evitare), la <strong>struttura del ragionamento</strong> (come affrontare il problema, in quale ordine), e i <strong>few-shot examples</strong> (esempi concreti di input/output ideali che mostrano al modello esattamente cosa ti aspetti).</p>
+        </div>
+
+        <div class="ls">
+          <div class="ls-label">Tecniche chiave</div>
+          <div class="dc-grid">
+            <div class="dc-item">
+              <div class="dc-title">Few-shot examples</div>
+              <div class="dc-text">Includi nel prompt 3-5 esempi di interazioni ideali. È il modo più efficace per far capire al modello <strong>esattamente</strong> cosa vuoi: formato, livello di dettaglio, tono, ragionamento. Più potente di qualsiasi istruzione verbale. Costo: solo spazio nella context window.</div>
+            </div>
+            <div class="dc-item">
+              <div class="dc-title">Chain-of-Thought strutturato</div>
+              <div class="dc-text">Chiedi al modello di ragionare per passi espliciti: "prima analizza X, poi valuta Y, poi decidi Z". Migliora significativamente la qualità su task complessi. <strong>Il testo intermedio funge da memoria di lavoro</strong> — come scrivere appunti durante un ragionamento.</div>
+            </div>
+            <div class="dc-item">
+              <div class="dc-title">Vincoli negativi</div>
+              <div class="dc-text">Dire al modello cosa <strong>non</strong> fare è spesso più efficace di dire cosa fare. "Non inventare informazioni che non trovi nei documenti", "Non fare supposizioni sul budget del cliente", "Se non sei sicuro, dillo esplicitamente". I vincoli negativi prevengono gli errori più comuni.</div>
+            </div>
+            <div class="dc-item">
+              <div class="dc-title">Tool descriptions precise</div>
+              <div class="dc-text">Le descrizioni dei tool nel prompt determinano quanto bene il modello li usa. Una descrizione vaga ("cerca informazioni") produce tool use vago. Una descrizione precisa ("cerca nel database CRM il contatto con nome o email corrispondente, restituisce JSON con campi id, nome, email, ultimo_contatto") produce tool use preciso.</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="ls">
+          <div class="ls-label">Impatto pratico e limiti</div>
+          <div class="insight" style="border-color:var(--lv1)">
+            <div class="insight-label" style="color:var(--lv1)">Quanto si ottiene solo con il prompt</div>
+            <p>Per un agente di customer service su knowledge base, un prompt ben scritto con 5 few-shot examples, vincoli chiari e struttura di ragionamento può portarti all'80-90% della qualità desiderata senza toccare nient'altro. Il restante 10-20% richiede le leve successive. Per task molto specifici (formattazione rigida, logica numerica, compliance rigorosa) il prompt da solo potrebbe non bastare — ma è sempre dove iniziare.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+<!-- ═══════════════════════════
+     S2 — MODELLO
+═══════════════════════════ -->
+<div class="sect" id="s2">
+  <div class="sect-head">
+    <div class="sect-num">Leva 02</div>
+    <h2>La Scelta del Modello</h2>
+    <p>Non tutti i modelli sono ugualmente bravi su tutti i task. Scegliere il modello giusto — o la combinazione giusta — è una leva potente e spesso sottovalutata.</p>
+  </div>
+  <div class="wrap">
+    <div class="lever">
+      <div class="lv-header">
+        <div class="lv-accent" style="background:var(--lv2)"></div>
+        <div class="lv-num">02</div>
+        <div class="lv-title-wrap"><div class="lv-name">Scelta e Combinazione dei Modelli</div><div class="lv-sub">Il modello giusto per il task giusto</div></div>
+        <div class="lv-impact"><div class="lv-impact-val" style="color:var(--lv2)">★★★</div><div class="lv-impact-label">Impatto</div></div>
+      </div>
+      <div class="lv-body">
+        <div class="ls">
+          <div class="ls-label">Come funziona la specializzazione tramite scelta del modello</div>
+          <p>Come abbiamo approfondito nel report sulla mappa dei modelli LLM, ogni modello ha <strong>specializzazioni diverse</strong>: Claude Opus eccelle nel coding e nel ragionamento qualitativo, GPT-5 nella velocità e nel ragionamento matematico, Gemini nella multimodalità. Scegliere il modello allineato al task predominante del tuo agente è una leva a costo quasi zero — cambiare una riga di configurazione — con impatto potenzialmente enorme.</p>
+          <p>La tecnica più sofisticata è il <strong>model routing</strong>: usare modelli diversi per step diversi dell'agente. Un modello veloce ed economico per il routing iniziale ("questa domanda è di supporto o di vendite?"), un modello potente per il ragionamento complesso ("analizza questo contratto e identifica le clausole critiche"), un modello bilanciato per la generazione di testo. Questo ottimizza contemporaneamente qualità, velocità e costo.</p>
+        </div>
+
+        <div class="ls">
+          <div class="ls-label">Decisioni chiave</div>
+          <div class="dc-grid">
+            <div class="dc-item">
+              <div class="dc-title">Testare, non assumere</div>
+              <div class="dc-text">I benchmark pubblici sono indicativi ma non predittivi per il tuo caso specifico. L'unico modo per sapere quale modello funziona meglio è <strong>testarlo sui tuoi dati</strong>: 20-30 esempi reali del tuo task, valutati sistematicamente. Un modello che eccelle su benchmark generici può essere mediocre sul tuo dominio — e viceversa.</div>
+            </div>
+            <div class="dc-item">
+              <div class="dc-title">Costo vs qualità: il punto di equilibrio</div>
+              <div class="dc-text">In un loop agentico con 10-20 chiamate per task, la differenza di costo tra un modello frontier e uno bilanciato si moltiplica. <strong>Se il modello bilanciato produce risultati accettabili per uno step, usarlo lì e riservare il frontier per gli step critici</strong> può dimezzare i costi senza impattare la qualità percepita.</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+<!-- ═══════════════════════════
+     S3 — STRUMENTI
+═══════════════════════════ -->
+<div class="sect" id="s3">
+  <div class="sect-head">
+    <div class="sect-num">Leva 03</div>
+    <h2>Gli Strumenti</h2>
+    <p>Un agente è bravo quanto i suoi strumenti glielo permettono. La selezione, la qualità delle descrizioni e la gestione degli errori dei tool determinano cosa l'agente può fare concretamente.</p>
+  </div>
+  <div class="wrap">
+    <div class="lever">
+      <div class="lv-header">
+        <div class="lv-accent" style="background:var(--lv3)"></div>
+        <div class="lv-num">03</div>
+        <div class="lv-title-wrap"><div class="lv-name">Selezione e Qualità degli Strumenti</div><div class="lv-sub">Le mani dell'agente determinano cosa può fare</div></div>
+        <div class="lv-impact"><div class="lv-impact-val" style="color:var(--lv3)">★★☆</div><div class="lv-impact-label">Impatto</div></div>
+      </div>
+      <div class="lv-body">
+        <div class="ls">
+          <div class="ls-label">Come funziona la specializzazione tramite strumenti</div>
+          <p>Un agente di analisi dati con accesso a un connettore SQL ben fatto è <strong>strutturalmente</strong> più bravo di uno senza, indipendentemente dal prompt. La specializzazione tramite strumenti opera su tre livelli: <strong>quali</strong> strumenti dai all'agente (un set curato batte un set ampio), <strong>come li descrivi</strong> (la descrizione è prompt engineering applicato ai tool — il modello sceglie basandosi sulla descrizione), e <strong>come gestisci i loro errori</strong> (un tool che fallisce silenziosamente è peggio di un tool che restituisce un messaggio d'errore comprensibile).</p>
+        </div>
+
+        <div class="ls">
+          <div class="ls-label">Tecniche chiave</div>
+          <div class="dc-grid">
+            <div class="dc-item">
+              <div class="dc-title">Meno è meglio</div>
+              <div class="dc-text"><strong>3 strumenti ben fatti > 20 strumenti generici.</strong> Ogni tool aggiunto è un'opzione in più che il modello deve valutare. Con troppi tool, il modello sceglie quello sbagliato più spesso. Regola: se un tool non viene usato nel 10%+ delle interazioni, probabilmente non serve.</div>
+            </div>
+            <div class="dc-item">
+              <div class="dc-title">Messaggi d'errore per il modello</div>
+              <div class="dc-text">Quando un tool fallisce, il messaggio d'errore viene passato al modello. Se è un traceback Python, il modello non capisce cosa fare. Se è <strong>"La ricerca non ha trovato risultati per il criterio X. Prova con un termine più generico"</strong>, il modello può adattare la strategia. Progetta gli errori per il consumo del modello, non dell'umano.</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+<!-- ═══════════════════════════
+     S4 — KNOWLEDGE
+═══════════════════════════ -->
+<div class="sect" id="s4">
+  <div class="sect-head">
+    <div class="sect-num">Leva 04</div>
+    <h2>La Knowledge Base</h2>
+    <p>La qualità e la pertinenza dei documenti nel RAG determinano la qualità delle risposte su contenuti specifici. "Garbage in, garbage out" vale qui più che altrove.</p>
+  </div>
+  <div class="wrap">
+    <div class="lever">
+      <div class="lv-header">
+        <div class="lv-accent" style="background:var(--lv4)"></div>
+        <div class="lv-num">04</div>
+        <div class="lv-title-wrap"><div class="lv-name">Knowledge Base / RAG</div><div class="lv-sub">La qualità dei documenti determina la qualità delle risposte</div></div>
+        <div class="lv-impact"><div class="lv-impact-val" style="color:var(--lv4)">★★☆</div><div class="lv-impact-label">Impatto</div></div>
+      </div>
+      <div class="lv-body">
+        <div class="ls">
+          <div class="ls-label">Come funziona la specializzazione tramite knowledge base</div>
+          <p>Il RAG dà all'agente accesso a conoscenza che il modello non ha nel suo training: documenti aziendali, policy, manuali, FAQ, cataloghi. La specializzazione non è nella pipeline tecnica — è nella <strong>cura dei contenuti</strong>. Un agente con una knowledge base curata, aggiornata e ben organizzata è strutturalmente superiore a uno con gli stessi documenti caricati alla rinfusa.</p>
+        </div>
+
+        <div class="ls">
+          <div class="ls-label">Tecniche chiave</div>
+          <div class="dc-grid">
+            <div class="dc-item">
+              <div class="dc-title">Qualità > quantità</div>
+              <div class="dc-text">100 documenti curati, aggiornati e pertinenti battono 10.000 documenti generici. Ogni documento irrilevante nella knowledge base è <strong>rumore</strong> che può finire nel contesto e degradare la risposta. Meglio partire con poco e aggiungere gradualmente.</div>
+            </div>
+            <div class="dc-item">
+              <div class="dc-title">Struttura dei documenti</div>
+              <div class="dc-text">Documenti con titoli chiari, sezioni ben delimitate e linguaggio consistente producono chunk di qualità migliore. Un documento FAQ con domanda/risposta esplicite funziona molto meglio di un PDF generico. <strong>Ristrutturare i documenti per il RAG</strong> è un investimento che ripaga enormemente.</div>
+            </div>
+            <div class="dc-item">
+              <div class="dc-title">Metadata e tagging</div>
+              <div class="dc-text">Arricchire i chunk con metadati (categoria, data, fonte, prodotto) permette di fare <strong>retrieval filtrato</strong>: "cerca solo nei documenti della categoria X aggiornati nell'ultimo anno". Migliora drasticamente la precisione rispetto al retrieval puramente semantico.</div>
+            </div>
+            <div class="dc-item">
+              <div class="dc-title">Testare il retrieval separatamente</div>
+              <div class="dc-text">Prima di testare l'agente intero, <strong>testa solo il retrieval</strong>: per 20 domande tipiche, i chunk restituiti sono quelli giusti? Se il retrieval non trova i documenti corretti, nessun miglioramento del prompt aiuterà. È il collo di bottiglia nascosto del RAG.</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+<!-- ═══════════════════════════
+     S5 — ORCHESTRAZIONE
+═══════════════════════════ -->
+<div class="sect" id="s5">
+  <div class="sect-head">
+    <div class="sect-num">Leva 05</div>
+    <h2>L'Orchestrazione</h2>
+    <p>Come strutturi il flusso di ragionamento dell'agente: quanti step, quale pattern, dove metti checkpoint di qualità, se usi self-reflection. La leva più costosa da implementare ma che sblocca un livello di qualità altrimenti irraggiungibile.</p>
+  </div>
+  <div class="wrap">
+    <div class="lever">
+      <div class="lv-header">
+        <div class="lv-accent" style="background:var(--lv5)"></div>
+        <div class="lv-num">05</div>
+        <div class="lv-title-wrap"><div class="lv-name">Orchestrazione del Flusso</div><div class="lv-sub">Come l'agente struttura il suo ragionamento</div></div>
+        <div class="lv-impact"><div class="lv-impact-val" style="color:var(--lv5)">★★☆</div><div class="lv-impact-label">Impatto</div></div>
+      </div>
+      <div class="lv-body">
+        <div class="ls">
+          <div class="ls-label">Come funziona la specializzazione tramite orchestrazione</div>
+          <p>L'orchestrazione specializza l'agente non sul *cosa* fa, ma sul *come* lo fa. Due agenti con lo stesso prompt, modello e strumenti possono produrre risultati radicalmente diversi se uno usa un loop ReAct semplice e l'altro un pattern Plan-and-Execute con self-reflection. La differenza è nel <strong>numero di "occasioni per pensare meglio"</strong> che l'architettura offre al modello.</p>
+        </div>
+
+        <div class="ls">
+          <div class="ls-label">Pattern di orchestrazione come leva di qualità</div>
+          <div class="dc-grid">
+            <div class="dc-item">
+              <div class="dc-title">Self-reflection</div>
+              <div class="dc-text">L'agente genera una risposta, poi la <strong>valuta criticamente</strong> ("questa risposta è completa? Ho usato le fonti corrette? Manca qualcosa?") e la migliora se necessario. Costa 2x in chiamate LLM ma può migliorare significativamente la qualità, specialmente su task dove la prima risposta tende ad essere superficiale.</div>
+            </div>
+            <div class="dc-item">
+              <div class="dc-title">Plan-and-Execute</div>
+              <div class="dc-text">Invece di agire step-by-step, l'agente <strong>crea prima un piano completo</strong>, poi lo esegue passo per passo. Migliora la coerenza su task complessi con molti sotto-task. Il piano può essere rivisto e adattato se uno step produce risultati inattesi.</div>
+            </div>
+            <div class="dc-item">
+              <div class="dc-title">Multi-agent con specialisti</div>
+              <div class="dc-text">Dividere il task tra agenti specializzati — ognuno con il proprio prompt, modello e strumenti ottimizzati per il suo sotto-task. Un "agente ricercatore" + un "agente scrittore" + un "agente revisore" producono risultati migliori di un agente unico che fa tutto, perché <strong>ogni specialista è ottimizzato per il suo dominio</strong>.</div>
+            </div>
+            <div class="dc-item">
+              <div class="dc-title">Quality gates</div>
+              <div class="dc-text">Inserire checkpoint nel flusso che verificano la qualità prima di procedere: "il dato estratto è un numero valido?", "la risposta contiene almeno una citazione dalle fonti?", "la lunghezza è entro i limiti?". <strong>Regole deterministiche</strong> che catturano errori che il modello non catturerebbe da solo.</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+<!-- ═══════════════════════════
+     S6 — TESTING
+═══════════════════════════ -->
+<div class="sect" id="s6">
+  <div class="sect-head">
+    <div class="sect-num">Leva 06</div>
+    <h2>Testing e Iterazione</h2>
+    <p>La leva che non migliora nulla direttamente — ma ti dice dove migliorare. Senza eval sistematiche, migliori alla cieca. Con le eval, ogni iterazione è mirata ed efficace.</p>
+  </div>
+  <div class="wrap">
+    <div class="lever">
+      <div class="lv-header">
+        <div class="lv-accent" style="background:var(--lv6)"></div>
+        <div class="lv-num">06</div>
+        <div class="lv-title-wrap"><div class="lv-name">Testing e Iterazione Sistematica</div><div class="lv-sub">La bussola che guida tutte le altre leve</div></div>
+        <div class="lv-impact"><div class="lv-impact-val" style="color:var(--lv6)">★★★</div><div class="lv-impact-label">Impatto</div></div>
+      </div>
+      <div class="lv-body">
+        <div class="ls">
+          <div class="ls-label">Perché il testing è una leva di specializzazione</div>
+          <p>Il testing sembra un'attività "di supporto", non una leva di specializzazione. In realtà è la <strong>leva più importante nel lungo periodo</strong>, perché è ciò che rende efficaci tutte le altre. Senza eval sistematiche, quando modifichi il prompt non sai se hai migliorato o peggiorato. Quando cambi modello non sai se la qualità è cambiata. Quando aggiungi uno strumento non sai se l'agente lo usa correttamente.</p>
+          <p>Il ciclo virtuoso è: <strong>testa → identifica dove fallisce → correggi la leva appropriata → testa di nuovo</strong>. Ogni iterazione di questo ciclo specializza l'agente un po' di più. Senza il primo passo (testa), i successivi sono alla cieca.</p>
+        </div>
+
+        <div class="ls">
+          <div class="ls-label">Come costruire un sistema di eval</div>
+          <div class="dc-grid">
+            <div class="dc-item">
+              <div class="dc-title">Dataset di test (20-50 casi)</div>
+              <div class="dc-text">Raccogli 20-50 domande/task rappresentativi del tuo caso d'uso reale, con la <strong>risposta ideale</strong> per ciascuno. Non devono essere perfetti al giorno uno — li arricchirai nel tempo. Questo dataset è il tuo benchmark interno: ogni modifica viene valutata su questi casi prima di andare in produzione.</div>
+            </div>
+            <div class="dc-item">
+              <div class="dc-title">Criteri di valutazione</div>
+              <div class="dc-text">Definisci cosa significa "risposta buona" per il tuo caso: accuratezza fattuale, completezza, tono appropriato, formato corretto, assenza di allucinazioni. <strong>Criteri diversi per task diversi</strong>: un agente di customer service viene valutato su empatia e risoluzione; un agente di analisi dati su accuratezza e citazione delle fonti.</div>
+            </div>
+            <div class="dc-item">
+              <div class="dc-title">LLM-as-judge</div>
+              <div class="dc-text">Usa un modello potente per valutare automaticamente le risposte dell'agente: "data questa domanda e questa risposta, valuta da 1 a 5 su accuratezza, completezza e tono". <strong>Non sostituisce la valutazione umana ma la scala</strong>: puoi valutare 500 risposte in minuti invece che in giorni. Calibra il giudice con valutazioni umane iniziali.</div>
+            </div>
+            <div class="dc-item">
+              <div class="dc-title">Regression testing</div>
+              <div class="dc-text">Ogni modifica al sistema (prompt, modello, strumenti) viene testata <strong>sull'intero dataset</strong> prima del deploy. Questo previene il problema più insidioso: migliorare la qualità su un set di casi degradandola su un altro. Senza regression, ogni miglioramento è una scommessa.</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="ls">
+          <div class="ls-label">Impatto pratico</div>
+          <div class="insight" style="border-color:var(--lv6)">
+            <div class="insight-label" style="color:var(--lv6)">La differenza tra agenti che migliorano e agenti che stagnano</div>
+            <p>I team che hanno un sistema di eval strutturato migliorano la qualità del loro agente continuamente e in modo misurabile. I team senza eval dipendono da feedback aneddotici e intuizioni — e spesso non sanno se l'agente sta migliorando o peggiorando nel tempo. Il testing è l'investimento con il miglior rendimento a lungo termine tra tutte le 7 leve.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+<!-- ═══════════════════════════
+     S7 — FINE-TUNING
+═══════════════════════════ -->
+<div class="sect" id="s7">
+  <div class="sect-head">
+    <div class="sect-num">Leva 07</div>
+    <h2>Il Fine-tuning</h2>
+    <p>L'ultima leva, la più costosa e la meno frequente. Modifica il modello dall'interno — non con istruzioni, ma con ri-addestramento su dati specifici. Ha senso solo quando tutte le altre leve non bastano.</p>
+  </div>
+  <div class="wrap">
+    <div class="lever">
+      <div class="lv-header">
+        <div class="lv-accent" style="background:var(--lv7)"></div>
+        <div class="lv-num">07</div>
+        <div class="lv-title-wrap"><div class="lv-name">Fine-tuning del Modello</div><div class="lv-sub">Quando le istruzioni non bastano, modifichi il modello</div></div>
+        <div class="lv-impact"><div class="lv-impact-val" style="color:var(--lv7)">★☆☆</div><div class="lv-impact-label">Impatto (raro)</div></div>
+      </div>
+      <div class="lv-body">
+        <div class="ls">
+          <div class="ls-label">Cos'è e come funziona</div>
+          <p>Il fine-tuning prende un modello generico e lo ri-addestra su un dataset ristretto di esempi specifici, modificando leggermente i pesi interni del modello. Il risultato è un modello che produce <strong>comportamenti specifici come comportamento "nativo"</strong> — senza bisogno di spiegarlo nel prompt ogni volta.</p>
+          <p>L'analogia: il pre-training è l'università (formazione ampia e generalista), il fine-tuning è il corso di specializzazione (alleni qualcuno che ha già le basi su un dominio specifico). La differenza con il prompt: il prompt è un'istruzione esterna che il modello riceve a ogni chiamata; il fine-tuning modifica il modello dall'interno, rendendo il comportamento intrinseco.</p>
+        </div>
+
+        <div class="ls">
+          <div class="ls-label">Quando ha senso (e quando no)</div>
+          <div class="dc-grid">
+            <div class="dc-item">
+              <div class="dc-title">Quando SÌ</div>
+              <div class="dc-text"><strong>Formato output molto rigido</strong> che il prompt non ottiene al 100%. <strong>Modello piccolo da specializzare</strong> per risparmiare su volumi alti (fine-tuni un modello 7B invece di pagare API per un modello frontier). <strong>Stile/tono molto specifico</strong> e consistente che richiede centinaia di esempi per essere catturato. <strong>Task ripetitivo ad alto volume</strong> dove il costo del prompt engineering per ogni variante è proibitivo.</div>
+            </div>
+            <div class="dc-item">
+              <div class="dc-title">Quando NO</div>
+              <div class="dc-text"><strong>Non hai ancora ottimizzato il prompt</strong> — il fine-tuning amplifica, non sostituisce. <strong>Non hai un dataset di qualità</strong> (servono centinaia di esempi curati). <strong>Non hai una pipeline di eval</strong> (senza eval non sai se il fine-tuning migliora davvero le cose). <strong>Il problema è nella conoscenza</strong> — il RAG è quasi sempre più efficace e più economico del fine-tuning per aggiungere conoscenza di dominio.</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="ls">
+          <div class="ls-label">Costi e requisiti</div>
+          <p>Il fine-tuning richiede: un <strong>dataset di 500-5000 esempi</strong> curati e validati (crearli è il costo maggiore), <strong>competenze di ML engineering</strong> (non basta Python generico), <strong>infrastruttura GPU</strong> (o servizi come OpenAI fine-tuning API che la astraggono), e una <strong>pipeline di eval robusta</strong> per misurare se effettivamente migliora. Il costo totale è un ordine di grandezza superiore alle leve precedenti — ed è per questo che è l'ultima della lista.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+<!-- ═══════════════════════════
+     S8 — LE 5 ALTERNATIVE
+═══════════════════════════ -->
+<div class="sect" id="s8">
+  <div class="sect-head">
+    <div class="sect-num">Parte 2</div>
+    <h2>Le leve nelle 5 alternative di costruzione</h2>
+    <p>Quanto controllo hai su ciascuna leva di specializzazione a seconda dell'alternativa scelta per costruire l'agente? Gli agenti "pronti" ti aiutano anche a specializzare, o solo a costruire?</p>
+  </div>
+  <div class="wrap">
+
+    <div class="matrix-scroll">
+      <table class="matrix">
+        <thead>
+          <tr>
+            <th style="text-align:left">Leva</th>
+            <th style="border-bottom:3px solid var(--alt1)">Custom</th>
+            <th style="border-bottom:3px solid var(--alt2)">Framework</th>
+            <th style="border-bottom:3px solid var(--alt3)">No-code</th>
+            <th style="border-bottom:3px solid var(--alt4)">Marketplace</th>
+            <th style="border-bottom:3px solid var(--alt5)">Open Source</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td class="row-head" style="color:var(--lv1)">01 · Prompt</td>
+            <td class="mx-full"><strong>Pieno controllo</strong><br>Scrivi da zero, libertà totale</td>
+            <td class="mx-full"><strong>Pieno controllo</strong><br>Pattern disponibili come guida</td>
+            <td class="mx-part"><strong>Buon controllo</strong><br>Editor guidato, meno flessibile</td>
+            <td class="mx-part"><strong>Parziale</strong><br>Campo testo, unica leva reale</td>
+            <td class="mx-full"><strong>Pieno controllo</strong><br>Prompt già scritto da studiare e adattare</td>
+          </tr>
+          <tr>
+            <td class="row-head" style="color:var(--lv2)">02 · Modello</td>
+            <td class="mx-full"><strong>Pieno controllo</strong><br>Qualsiasi modello, model routing libero</td>
+            <td class="mx-full"><strong>Pieno controllo</strong><br>Switch facile, multi-model supportato</td>
+            <td class="mx-part"><strong>Parziale</strong><br>Scegli da menu dei supportati</td>
+            <td class="mx-min"><strong>Nessuno</strong><br>Fisso, deciso dal vendor</td>
+            <td class="mx-full"><strong>Pieno controllo</strong><br>Cambi nel codice</td>
+          </tr>
+          <tr>
+            <td class="row-head" style="color:var(--lv3)">03 · Strumenti</td>
+            <td class="mx-full"><strong>Pieno controllo</strong><br>Ogni tool è custom</td>
+            <td class="mx-full"><strong>Pieno controllo</strong><br>Wrapper pronti + custom</td>
+            <td class="mx-part"><strong>Buono sui coperti</strong><br>400+ nodi, ma niente custom complesso</td>
+            <td class="mx-min"><strong>Minimo</strong><br>Solo quelli previsti dalla piattaforma</td>
+            <td class="mx-part"><strong>Buono</strong><br>Quelli del repo + aggiungi i tuoi</td>
+          </tr>
+          <tr>
+            <td class="row-head" style="color:var(--lv4)">04 · Knowledge</td>
+            <td class="mx-full"><strong>Pieno controllo</strong><br>Pipeline RAG custom</td>
+            <td class="mx-full"><strong>Pieno controllo</strong><br>Componenti RAG componibili</td>
+            <td class="mx-part"><strong>Parziale</strong><br>Upload documenti, pipeline fissa</td>
+            <td class="mx-part"><strong>Solo upload</strong><br>Carichi file, pipeline nascosta</td>
+            <td class="mx-full"><strong>Pieno controllo</strong><br>Pipeline nel codice, modificabile</td>
+          </tr>
+          <tr>
+            <td class="row-head" style="color:var(--lv5)">05 · Orchestrazione</td>
+            <td class="mx-full"><strong>Pieno controllo</strong><br>Qualsiasi pattern, da zero</td>
+            <td class="mx-full"><strong>Pieno controllo</strong><br>Pattern pronti, personalizzabili</td>
+            <td class="mx-part"><strong>Limitato</strong><br>Flussi lineari OK, loop complessi no</td>
+            <td class="mx-min"><strong>Nessuno</strong><br>Non accessibile</td>
+            <td class="mx-part"><strong>Buono</strong><br>Pattern del repo, modificabile</td>
+          </tr>
+          <tr>
+            <td class="row-head" style="color:var(--lv6)">06 · Testing</td>
+            <td class="mx-full"><strong>Pieno controllo</strong><br>Devi costruire tutto da zero</td>
+            <td class="mx-full"><strong>Pieno + tool</strong><br>LangSmith/Langfuse integrati</td>
+            <td class="mx-min"><strong>Limitato</strong><br>Preview, non eval strutturate</td>
+            <td class="mx-min"><strong>Minimo</strong><br>Solo test manuale nella chat</td>
+            <td class="mx-part"><strong>Variabile</strong><br>Se il repo ha eval, le adatti</td>
+          </tr>
+          <tr>
+            <td class="row-head" style="color:var(--lv7)">07 · Fine-tuning</td>
+            <td class="mx-full"><strong>Pieno controllo</strong><br>Qualsiasi provider o self-hosted</td>
+            <td class="mx-full"><strong>Pieno controllo</strong><br>Indipendente dal framework</td>
+            <td class="mx-min"><strong>Non supportato</strong><br>Le piattaforme non lo offrono</td>
+            <td class="mx-min"><strong>Non possibile</strong><br>Il modello non è tuo</td>
+            <td class="mx-full"><strong>Pieno controllo</strong><br>Specialmente su modelli open</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="prose" style="margin-top:28px;">
+      <p>Dalla matrice emergono tre insight importanti.</p>
+
+      <p>Il primo: <strong>il prompt è l'unica leva accessibile in tutte le 5 alternative</strong> — ed è anche la più impattante. Questo spiega perché il prompt engineering è la competenza trasversale più importante per chiunque lavori con agenti AI, indipendentemente dall'approccio di costruzione scelto. Anche nel marketplace, dove non controlli quasi nulla, un prompt eccellente fa la differenza tra un agente utile e uno inutile.</p>
+
+      <p>Il secondo: <strong>il marketplace ti dà solo 2 leve su 7</strong> (prompt e upload documenti). Questo non significa che sia inutile — per i casi d'uso dove quelle due leve bastano (chatbot FAQ, assistente di scrittura, analisi base di documenti), il marketplace è la scelta più efficiente. Ma se il tuo task richiede orchestrazione sofisticata, strumenti custom o testing strutturato, il marketplace non ha le leve necessarie.</p>
+
+      <p>Il terzo: <strong>il framework è l'alternativa con il profilo più completo</strong> — pieno controllo su tutte e 7 le leve, con in più strumenti integrati per il testing (LangSmith). L'open source da repository è altrettanto flessibile ma meno strutturato sul testing. Il no-code è buono sulle prime 4 leve ma limitato sulle ultime 3 — il che definisce il suo confine naturale di applicabilità.</p>
+    </div>
+
+    <div class="key-point" style="margin-top:28px;">
+      <div class="kp-label">Il principio guida</div>
+      <div class="kp-text">Non scegliere l'alternativa di costruzione in base a quanto è facile creare l'agente. Sceglila in base a quante leve di specializzazione ti servono per renderlo bravo nel suo task.</div>
+      <div class="kp-sub">Se ti bastano prompt e knowledge base → il marketplace può funzionare. Se ti servono anche strumenti custom e un minimo di orchestrazione → il no-code regge. Se ti servono self-reflection, quality gates, eval strutturate e model routing → servono framework o codice custom. La domanda non è "quanto costa costruirlo?" ma "quanto costa <em>renderlo bravo</em>?".</div>
+    </div>
+
+  </div>
+</div>
+
+
+<!-- FOOTER -->
+<div class="footer">
+  <span>Serie Agenti AI — Report 09 · Le 7 Leve di Specializzazione</span>
+  <span>Marzo 2026</span>
+</div>
+
+
+<script>
+function show(n) {
+  document.querySelectorAll('.sect').forEach(s => s.classList.remove('active'));
+  document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('s'+n).classList.add('active');
+  document.querySelectorAll('.nav-btn')[n].classList.add('active');
+  window.scrollTo({top:0, behavior:'smooth'});
+}
+</script>
+
+</body>
+</html>

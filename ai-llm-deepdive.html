@@ -1,0 +1,1308 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Large Language Model — Come Funzionano, Limiti, Applicazioni</title>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,400;0,9..144,600;0,9..144,700;0,9..144,900;1,9..144,300;1,9..144,400;1,9..144,600&family=DM+Sans:ital,wght@0,300;0,400;0,500;0,600;1,300;1,400&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #f7f3ee;
+    --bg2: #efe9e0;
+    --bg3: #e5ddd1;
+    --white: #fdfaf6;
+    --ink: #1c1510;
+    --ink-mid: #3d3028;
+    --ink-light: #7a6a5a;
+    --ink-faint: rgba(28,21,16,0.06);
+    --border: rgba(28,21,16,0.1);
+    --border2: rgba(28,21,16,0.06);
+    --rust: #b84c1a;
+    --rust-faint: rgba(184,76,26,0.07);
+    --rust-border: rgba(184,76,26,0.2);
+    --rust-mid: #d4682e;
+    --teal: #1a5a5a;
+    --teal-faint: rgba(26,90,90,0.07);
+    --teal-border: rgba(26,90,90,0.2);
+    --indigo: #2a2a6e;
+    --indigo-faint: rgba(42,42,110,0.06);
+    --indigo-border: rgba(42,42,110,0.18);
+    --amber: #8a5a00;
+    --amber-faint: rgba(138,90,0,0.07);
+    --amber-border: rgba(138,90,0,0.2);
+    --green: #2a5c35;
+    --green-faint: rgba(42,92,53,0.07);
+    --green-border: rgba(42,92,53,0.2);
+    --red: #8b2020;
+    --red-faint: rgba(139,32,32,0.06);
+    --red-border: rgba(139,32,32,0.18);
+    --serif: 'Fraunces', serif;
+    --sans: 'DM Sans', sans-serif;
+
+    /* autonomy level colors */
+    --l1: #3a6b82;
+    --l2: #2a5c6e;
+    --l3: #1a4a5c;
+    --l4: #2a4a2a;
+    --l5: #1a3a1a;
+  }
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  html { scroll-behavior: smooth; }
+
+  body {
+    background: var(--bg);
+    color: var(--ink);
+    font-family: var(--sans);
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* ── COVER ── */
+  .cover {
+    background: var(--ink);
+    color: var(--bg);
+    padding: 0;
+    position: relative;
+    overflow: hidden;
+    min-height: 420px;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .cover-texture {
+    position: absolute;
+    inset: 0;
+    background:
+      radial-gradient(ellipse at 80% 20%, rgba(184,76,26,0.18) 0%, transparent 50%),
+      radial-gradient(ellipse at 20% 80%, rgba(26,90,90,0.15) 0%, transparent 50%);
+  }
+
+  .cover-grid {
+    position: absolute;
+    inset: 0;
+    background-image:
+      linear-gradient(rgba(255,255,255,0.03) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(255,255,255,0.03) 1px, transparent 1px);
+    background-size: 60px 60px;
+  }
+
+  .cover-inner {
+    position: relative;
+    z-index: 1;
+    max-width: 1080px;
+    margin: 0 auto;
+    padding: 64px 48px 56px;
+    width: 100%;
+  }
+
+  .cover-kicker {
+    font-family: var(--sans);
+    font-size: 11px;
+    letter-spacing: 4px;
+    text-transform: uppercase;
+    color: var(--rust-mid);
+    margin-bottom: 28px;
+    font-weight: 500;
+  }
+
+  .cover-title {
+    font-family: var(--serif);
+    font-size: clamp(42px, 6vw, 76px);
+    font-weight: 900;
+    line-height: 0.95;
+    letter-spacing: -2px;
+    color: var(--white);
+    margin-bottom: 6px;
+  }
+
+  .cover-title-alt {
+    font-family: var(--serif);
+    font-size: clamp(22px, 3vw, 36px);
+    font-weight: 300;
+    font-style: italic;
+    color: rgba(247,243,238,0.55);
+    letter-spacing: -0.5px;
+    margin-bottom: 28px;
+    line-height: 1.3;
+  }
+
+  .cover-desc {
+    font-size: 16px;
+    line-height: 1.7;
+    color: rgba(247,243,238,0.65);
+    max-width: 560px;
+    font-weight: 300;
+    margin-bottom: 40px;
+  }
+
+  .cover-bottom {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    padding-top: 24px;
+    border-top: 1px solid rgba(247,243,238,0.1);
+  }
+
+  .cover-tags {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+  }
+
+  .cover-tag {
+    font-family: var(--sans);
+    font-size: 11px;
+    font-weight: 500;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    padding: 5px 14px;
+    border: 1px solid rgba(247,243,238,0.2);
+    border-radius: 20px;
+    color: rgba(247,243,238,0.55);
+  }
+
+  .cover-series {
+    font-family: var(--sans);
+    font-size: 11px;
+    color: rgba(247,243,238,0.35);
+    letter-spacing: 1px;
+    text-align: right;
+  }
+
+  /* ── NAV ── */
+  .sticky-nav {
+    position: sticky;
+    top: 0;
+    background: rgba(247,243,238,0.96);
+    backdrop-filter: blur(10px);
+    border-bottom: 1px solid var(--border);
+    z-index: 50;
+  }
+
+  .nav-inner {
+    max-width: 1080px;
+    margin: 0 auto;
+    padding: 0 48px;
+    display: flex;
+    gap: 0;
+    overflow-x: auto;
+  }
+
+  .nav-btn {
+    font-family: var(--sans);
+    font-size: 12px;
+    font-weight: 500;
+    letter-spacing: 0.5px;
+    color: var(--ink-light);
+    padding: 15px 18px;
+    cursor: pointer;
+    border: none;
+    background: transparent;
+    border-bottom: 2px solid transparent;
+    white-space: nowrap;
+    transition: all 0.2s;
+  }
+
+  .nav-btn:hover { color: var(--ink); }
+  .nav-btn.active { color: var(--rust); border-bottom-color: var(--rust); }
+
+  /* ── LAYOUT ── */
+  .page {
+    max-width: 1080px;
+    margin: 0 auto;
+    padding: 0 48px 100px;
+  }
+
+  .section { display: none; padding-top: 64px; }
+  .section.active { display: block; animation: rise 0.3s ease; }
+  @keyframes rise { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+
+  /* ── TYPOGRAPHY ── */
+  .eyebrow {
+    font-family: var(--sans);
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 4px;
+    text-transform: uppercase;
+    color: var(--rust);
+    margin-bottom: 12px;
+  }
+
+  h2 {
+    font-family: var(--serif);
+    font-size: clamp(30px, 4vw, 50px);
+    font-weight: 700;
+    color: var(--ink);
+    line-height: 1.05;
+    letter-spacing: -1px;
+    margin-bottom: 6px;
+  }
+
+  h2 em { font-weight: 300; font-style: italic; }
+
+  .intro-text {
+    font-size: 17px;
+    line-height: 1.8;
+    color: var(--ink-mid);
+    max-width: 680px;
+    margin: 20px 0 48px;
+    font-weight: 300;
+  }
+
+  h3 {
+    font-family: var(--sans);
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    color: var(--ink-light);
+    margin-bottom: 16px;
+  }
+
+  h4 {
+    font-family: var(--serif);
+    font-size: 21px;
+    font-weight: 600;
+    color: var(--ink);
+    margin-bottom: 8px;
+    letter-spacing: -0.3px;
+  }
+
+  p {
+    font-size: 15px;
+    line-height: 1.8;
+    color: var(--ink-mid);
+    margin-bottom: 14px;
+    font-weight: 300;
+  }
+
+  strong { font-weight: 600; color: var(--ink); }
+  em { font-style: italic; }
+
+  .rule { border: none; border-top: 1px solid var(--border); margin: 48px 0; }
+
+  /* ── STEP BLOCKS (come funzionano) ── */
+  .steps {
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+    margin: 32px 0;
+    border: 1px solid var(--border);
+    border-radius: 3px;
+    overflow: hidden;
+  }
+
+  .step {
+    display: grid;
+    grid-template-columns: 72px 1fr;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .step:last-child { border-bottom: none; }
+
+  .step-num {
+    display: flex;
+    align-items: flex-start;
+    justify-content: center;
+    padding: 28px 0 28px;
+    font-family: var(--serif);
+    font-size: 44px;
+    font-weight: 900;
+    color: var(--bg3);
+    line-height: 1;
+    background: var(--white);
+    border-right: 1px solid var(--border);
+  }
+
+  .step-body {
+    padding: 28px 32px;
+    background: var(--white);
+  }
+
+  .step-label {
+    font-family: var(--sans);
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    color: var(--rust);
+    margin-bottom: 8px;
+  }
+
+  .step-title {
+    font-family: var(--serif);
+    font-size: 22px;
+    font-weight: 600;
+    color: var(--ink);
+    margin-bottom: 10px;
+    letter-spacing: -0.3px;
+  }
+
+  .step-body p { margin-bottom: 10px; }
+  .step-body p:last-child { margin-bottom: 0; }
+
+  /* ── ANALOGIA BOX ── */
+  .big-analogy {
+    background: var(--ink);
+    color: var(--bg);
+    border-radius: 3px;
+    padding: 48px;
+    margin: 40px 0;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .big-analogy::before {
+    content: '"';
+    font-family: var(--serif);
+    font-size: 240px;
+    font-weight: 900;
+    color: rgba(247,243,238,0.04);
+    position: absolute;
+    top: -40px;
+    left: 24px;
+    line-height: 1;
+  }
+
+  .big-analogy-label {
+    font-family: var(--sans);
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 4px;
+    text-transform: uppercase;
+    color: var(--rust-mid);
+    margin-bottom: 20px;
+  }
+
+  .big-analogy-text {
+    font-family: var(--serif);
+    font-size: clamp(18px, 2.5vw, 26px);
+    font-weight: 400;
+    font-style: italic;
+    line-height: 1.55;
+    color: rgba(247,243,238,0.9);
+    max-width: 720px;
+    position: relative;
+    z-index: 1;
+    margin-bottom: 20px;
+  }
+
+  .big-analogy-expand {
+    font-family: var(--sans);
+    font-size: 14px;
+    color: rgba(247,243,238,0.55);
+    line-height: 1.7;
+    max-width: 680px;
+    position: relative;
+    z-index: 1;
+    font-weight: 300;
+  }
+
+  /* ── TRAINING PHASES ── */
+  .phases {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 16px;
+    margin: 24px 0;
+  }
+
+  @media (max-width: 768px) { .phases { grid-template-columns: 1fr; } }
+
+  .phase {
+    background: var(--white);
+    border: 1px solid var(--border);
+    border-radius: 2px;
+    overflow: hidden;
+  }
+
+  .phase-header {
+    padding: 14px 20px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .phase-step {
+    font-family: var(--sans);
+    font-size: 9px;
+    font-weight: 700;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    margin-bottom: 6px;
+  }
+
+  .phase-name {
+    font-family: var(--serif);
+    font-size: 18px;
+    font-weight: 600;
+    color: var(--ink);
+    letter-spacing: -0.3px;
+  }
+
+  .phase-body {
+    padding: 16px 20px;
+  }
+
+  .phase-body p { font-size: 14px; margin-bottom: 0; }
+
+  .ph1 .phase-step { color: var(--indigo); }
+  .ph1 .phase-header { background: var(--indigo-faint); }
+  .ph2 .phase-step { color: var(--teal); }
+  .ph2 .phase-header { background: var(--teal-faint); }
+  .ph3 .phase-step { color: var(--rust); }
+  .ph3 .phase-header { background: var(--rust-faint); }
+
+  /* ── INSIGHT PULL ── */
+  .pull {
+    border-left: 3px solid var(--rust);
+    padding: 2px 0 2px 28px;
+    margin: 28px 0;
+  }
+
+  .pull p {
+    font-family: var(--serif);
+    font-size: 20px;
+    font-weight: 400;
+    font-style: italic;
+    color: var(--ink);
+    line-height: 1.5;
+    margin-bottom: 0;
+  }
+
+  /* ── LIMITS ── */
+  .limit-cards {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    margin: 24px 0;
+  }
+
+  .limit-card {
+    background: var(--white);
+    border: 1px solid var(--border);
+    border-radius: 3px;
+    overflow: hidden;
+    display: grid;
+    grid-template-columns: 220px 1fr;
+  }
+
+  @media (max-width: 700px) { .limit-card { grid-template-columns: 1fr; } }
+
+  .limit-left {
+    padding: 24px 24px;
+    border-right: 1px solid var(--border);
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start;
+    background: var(--bg);
+  }
+
+  .limit-icon { font-size: 32px; margin-bottom: 12px; }
+
+  .limit-name {
+    font-family: var(--serif);
+    font-size: 19px;
+    font-weight: 600;
+    color: var(--ink);
+    margin-bottom: 6px;
+    letter-spacing: -0.3px;
+    line-height: 1.2;
+  }
+
+  .limit-severity {
+    font-family: var(--sans);
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    margin-top: 8px;
+  }
+
+  .sev-struct { color: var(--red); }
+  .sev-practical { color: var(--amber); }
+  .sev-manage { color: var(--teal); }
+
+  .limit-right { padding: 24px 28px; }
+
+  .limit-right p { font-size: 15px; margin-bottom: 10px; }
+  .limit-right p:last-child { margin-bottom: 0; }
+
+  .limit-why {
+    background: var(--bg2);
+    border-radius: 2px;
+    padding: 12px 16px;
+    margin-top: 10px;
+  }
+
+  .limit-why-label {
+    font-family: var(--sans);
+    font-size: 9px;
+    font-weight: 700;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    color: var(--ink-light);
+    margin-bottom: 6px;
+  }
+
+  .limit-why p { font-size: 13px; color: var(--ink-light); margin-bottom: 0; font-style: italic; }
+
+  /* ── AUTONOMY SPECTRUM ── */
+  .spectrum-intro {
+    display: flex;
+    align-items: center;
+    gap: 0;
+    margin: 32px 0 24px;
+    position: relative;
+  }
+
+  .spec-pole {
+    font-family: var(--sans);
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    color: var(--ink-light);
+    white-space: nowrap;
+  }
+
+  .spec-line {
+    flex: 1;
+    height: 2px;
+    background: linear-gradient(90deg, var(--bg3), var(--ink));
+    margin: 0 16px;
+  }
+
+  /* ── APPLICATION CARDS ── */
+  .app-cards {
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+    border: 1px solid var(--border);
+    border-radius: 3px;
+    overflow: hidden;
+  }
+
+  .app-card {
+    display: grid;
+    grid-template-columns: 260px 1fr;
+    border-bottom: 1px solid var(--border);
+    transition: background 0.15s;
+  }
+
+  .app-card:last-child { border-bottom: none; }
+
+  @media (max-width: 768px) { .app-card { grid-template-columns: 1fr; } }
+
+  .app-left {
+    padding: 28px 28px;
+    border-right: 1px solid var(--border);
+    display: flex;
+    flex-direction: column;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .app-level-bar {
+    position: absolute;
+    top: 0; left: 0;
+    width: 3px;
+    height: 100%;
+  }
+
+  .app-level-label {
+    font-family: var(--sans);
+    font-size: 9px;
+    font-weight: 700;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    margin-bottom: 10px;
+  }
+
+  .app-name {
+    font-family: var(--serif);
+    font-size: 22px;
+    font-weight: 700;
+    color: var(--ink);
+    letter-spacing: -0.5px;
+    margin-bottom: 6px;
+    line-height: 1.15;
+  }
+
+  .app-tagline {
+    font-size: 13px;
+    color: var(--ink-light);
+    font-weight: 300;
+    line-height: 1.5;
+    flex: 1;
+  }
+
+  .autonomy-meter {
+    margin-top: 16px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .meter-label {
+    font-family: var(--sans);
+    font-size: 9px;
+    font-weight: 600;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    color: var(--ink-light);
+    white-space: nowrap;
+  }
+
+  .meter-track {
+    flex: 1;
+    height: 4px;
+    background: var(--bg3);
+    border-radius: 2px;
+    overflow: hidden;
+  }
+
+  .meter-fill {
+    height: 100%;
+    border-radius: 2px;
+    transition: width 0.6s ease;
+  }
+
+  .app-right {
+    padding: 28px 32px;
+    background: var(--white);
+  }
+
+  .app-right p { font-size: 15px; margin-bottom: 12px; }
+  .app-right p:last-child { margin-bottom: 0; }
+
+  .app-examples {
+    margin-top: 14px;
+    padding-top: 14px;
+    border-top: 1px solid var(--border);
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+
+  .app-ex-label {
+    font-family: var(--sans);
+    font-size: 9px;
+    font-weight: 700;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    color: var(--ink-light);
+    margin-bottom: 8px;
+  }
+
+  .app-ex-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+
+  .app-tag {
+    font-family: var(--sans);
+    font-size: 12px;
+    font-weight: 500;
+    padding: 4px 12px;
+    border-radius: 20px;
+    background: var(--bg);
+    border: 1px solid var(--border);
+    color: var(--ink-mid);
+  }
+
+  .app-highlight {
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    border-radius: 2px;
+    padding: 12px 16px;
+    margin-top: 12px;
+    font-size: 14px;
+    color: var(--ink-mid);
+    font-style: italic;
+    font-family: var(--serif);
+    line-height: 1.55;
+  }
+
+  /* Level colors */
+  .lv1 { color: #5a8a9a; } .lv1-bar { background: #5a8a9a; }
+  .lv2 { color: #3a7a8a; } .lv2-bar { background: #3a7a8a; }
+  .lv3 { color: #2a6a7a; } .lv3-bar { background: #2a6a7a; }
+  .lv4 { color: #1a5a4a; } .lv4-bar { background: #1a5a4a; }
+  .lv5 { color: #0a4a2a; } .lv5-bar { background: #0a4a2a; }
+
+  /* ── CALLOUT ── */
+  .callout {
+    border: 1px solid var(--border);
+    border-left: 3px solid var(--rust);
+    background: var(--rust-faint);
+    border-radius: 2px;
+    padding: 16px 22px;
+    margin: 24px 0;
+  }
+
+  .callout-label {
+    font-family: var(--sans);
+    font-size: 9px;
+    font-weight: 700;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    color: var(--rust);
+    margin-bottom: 8px;
+  }
+
+  .callout p { font-size: 15px; color: var(--ink-mid); margin-bottom: 0; }
+
+  .callout.teal { border-left-color: var(--teal); background: var(--teal-faint); }
+  .callout.teal .callout-label { color: var(--teal); }
+
+  .callout.amber { border-left-color: var(--amber); background: var(--amber-faint); }
+  .callout.amber .callout-label { color: var(--amber); }
+
+  /* ── CLOSING BRIDGE ── */
+  .bridge {
+    background: var(--ink);
+    border-radius: 3px;
+    padding: 48px;
+    margin: 48px 0 0;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 40px;
+  }
+
+  @media (max-width: 700px) { .bridge { grid-template-columns: 1fr; } }
+
+  .bridge-left { }
+
+  .bridge-eyebrow {
+    font-family: var(--sans);
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 4px;
+    text-transform: uppercase;
+    color: var(--rust-mid);
+    margin-bottom: 16px;
+  }
+
+  .bridge-title {
+    font-family: var(--serif);
+    font-size: 28px;
+    font-weight: 700;
+    color: var(--white);
+    letter-spacing: -0.5px;
+    line-height: 1.15;
+    margin-bottom: 16px;
+  }
+
+  .bridge-text {
+    font-size: 15px;
+    color: rgba(247,243,238,0.6);
+    line-height: 1.75;
+    font-weight: 300;
+  }
+
+  .bridge-right {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    justify-content: center;
+  }
+
+  .bridge-point {
+    display: flex;
+    gap: 14px;
+    align-items: flex-start;
+    padding: 14px 16px;
+    background: rgba(247,243,238,0.05);
+    border: 1px solid rgba(247,243,238,0.08);
+    border-radius: 2px;
+  }
+
+  .bridge-point-icon {
+    font-size: 20px;
+    flex-shrink: 0;
+  }
+
+  .bridge-point-text {
+    font-size: 14px;
+    color: rgba(247,243,238,0.65);
+    line-height: 1.6;
+    font-weight: 300;
+  }
+
+  .bridge-point-text strong {
+    color: rgba(247,243,238,0.9);
+    font-weight: 600;
+    display: block;
+    margin-bottom: 2px;
+    font-family: var(--sans);
+    font-size: 13px;
+    letter-spacing: 0.3px;
+  }
+
+</style>
+</head>
+<body>
+
+<!-- COVER -->
+<div class="cover">
+  <div class="cover-texture"></div>
+  <div class="cover-grid"></div>
+  <div class="cover-inner">
+    <div class="cover-kicker">Serie Agenti AI — Documento III</div>
+    <div class="cover-title">LLM</div>
+    <div class="cover-title-alt">Come funzionano, dove falliscono,<br>e cosa ci costruiamo sopra</div>
+    <p class="cover-desc">Un approfondimento sui Large Language Model per chi deve capirli senza diventare un ingegnere. Dal funzionamento interno alle applicazioni concrete, passando per i limiti strutturali che nessun aggiornamento potrà eliminare.</p>
+    <div class="cover-bottom">
+      <div class="cover-tags">
+        <span class="cover-tag">Come funzionano</span>
+        <span class="cover-tag">Limiti strutturali</span>
+        <span class="cover-tag">Tipologie & Applicazioni</span>
+        <span class="cover-tag">Verso gli Agenti</span>
+      </div>
+      <div class="cover-series">Serie Agenti AI<br>Febbraio 2026</div>
+    </div>
+  </div>
+</div>
+
+<!-- NAV -->
+<nav class="sticky-nav">
+  <div class="nav-inner">
+    <button class="nav-btn active" onclick="showTab('funzionano')">Come funzionano</button>
+    <button class="nav-btn" onclick="showTab('limiti')">Limiti strutturali</button>
+    <button class="nav-btn" onclick="showTab('applicazioni')">Tipologie & Applicazioni</button>
+    <button class="nav-btn" onclick="showTab('bridge')">Verso gli Agenti</button>
+  </div>
+</nav>
+
+<div class="page">
+
+  <!-- ═══════════ COME FUNZIONANO ═══════════ -->
+  <section id="funzionano" class="section active">
+
+    <div class="eyebrow">Parte Prima</div>
+    <h2>Come funziona <em>un LLM</em></h2>
+    <p class="intro-text">Senza formule e senza gergo tecnico: tre trasformazioni fondamentali spiegano come un modello linguistico passa dall'essere un file di miliardi di numeri all'essere un interlocutore capace di ragionare, scrivere e rispondere.</p>
+
+    <div class="big-analogy">
+      <div class="big-analogy-label">// L'analogia di base</div>
+      <div class="big-analogy-text">Un LLM è come uno studente che ha letto miliardi di pagine su tutto ciò che gli esseri umani hanno mai scritto — e ha assorbito non solo i fatti, ma i pattern del ragionamento, della narrazione, dell'argomentazione.</div>
+      <div class="big-analogy-expand">Non ha "capito" tutto nel senso umano. Ma ha sviluppato una capacità straordinaria di riconoscere come le idee si collegano, come le risposte tendono a seguire le domande, come il contesto cambia il significato delle parole. E poi è stato affiancato da tutor umani che lo hanno guidato a essere utile, preciso e appropriato — non solo a completare frasi in modo statisticamente plausibile.</div>
+    </div>
+
+    <h3>Le tre trasformazioni fondamentali</h3>
+
+    <div class="steps">
+      <div class="step">
+        <div class="step-num">1</div>
+        <div class="step-body">
+          <div class="step-label">Prima trasformazione</div>
+          <div class="step-title">Il significato diventa geometria</div>
+          <p>Il modello non legge le parole come le leggiamo noi. Prima le scompone in frammenti chiamati <em>token</em> — approssimativamente sillabe o parti di parole. Poi trasforma ogni token in un punto nello spazio matematico ad altissima dimensione.</p>
+          <p>La cosa notevole è che questo spazio ha una geometria del significato: parole con significato simile finiscono vicine. "Re" e "regina" sono vicini. "Banca" e "istituto di credito" sono vicini. "Cane" e "felino" sono più vicini tra loro che a "automobile".</p>
+          <p>Questo significa che il modello non sta lavorando con simboli arbitrari, ma con una rappresentazione numerica del <strong>significato</strong>. È una differenza fondamentale rispetto a come funzionano i computer tradizionali.</p>
+        </div>
+      </div>
+
+      <div class="step">
+        <div class="step-num">2</div>
+        <div class="step-body">
+          <div class="step-label">Seconda trasformazione</div>
+          <div class="step-title">Ogni parola guarda tutte le altre</div>
+          <p>Quando il modello elabora una frase, non la legge in modo lineare come facciamo noi. Il meccanismo centrale — chiamato <em>attenzione</em> — permette ad ogni parola di "guardare" tutte le altre simultaneamente e capire come si relazionano.</p>
+          <p>Prendi la frase: <em>"Versai il vino nella bottiglia finché fu piena."</em> Noi capiamo immediatamente che "piena" si riferisce alla bottiglia, non al vino. Il meccanismo di attenzione fa esattamente questo: quando elabora "piena", il modello assegna un peso altissimo alla parola "bottiglia" e basso a "vino", basandosi su tutto il contesto precedente.</p>
+          <p>Questo è il salto qualitativo che ha reso i transformer — l'architettura su cui sono costruiti tutti i moderni LLM — superiori a tutto ciò che esisteva prima. <strong>La comprensione del contesto non è più locale ma globale.</strong></p>
+        </div>
+      </div>
+
+      <div class="step">
+        <div class="step-num">3</div>
+        <div class="step-body">
+          <div class="step-label">Terza trasformazione — Il training</div>
+          <div class="step-title">Da modello a collaboratore: le tre fasi di addestramento</div>
+          <p>Un modello non nasce "assistente". Viene costruito in tre fasi successive, ognuna con uno scopo diverso.</p>
+
+          <div class="phases">
+            <div class="phase ph1">
+              <div class="phase-header">
+                <div class="phase-step">Fase 1 — Pre-training</div>
+                <div class="phase-name">Imparare il mondo</div>
+              </div>
+              <div class="phase-body">
+                <p>Il modello legge quantità enormi di testo — articoli, libri, codice, conversazioni, Wikipedia — e impara a predire la parola successiva. Da questo compito apparentemente semplice emergono, quasi per magia, capacità di ragionamento, traduzione, sintesi, coding. Il costo: mesi di calcolo su migliaia di processori specializzati.</p>
+              </div>
+            </div>
+            <div class="phase ph2">
+              <div class="phase-header">
+                <div class="phase-step">Fase 2 — Fine-tuning</div>
+                <div class="phase-name">Imparare a essere utile</div>
+              </div>
+              <div class="phase-body">
+                <p>Il modello base sa molto ma risponde in modo imprevedibile. In questa fase viene addestrato su migliaia di esempi di conversazioni: domanda → risposta ideale. Impara a seguire istruzioni, a rispondere in modo strutturato, a mantenere un tono appropriato. Trasforma il "modello" in "assistente".</p>
+              </div>
+            </div>
+            <div class="phase ph3">
+              <div class="phase-header">
+                <div class="phase-step">Fase 3 — RLHF</div>
+                <div class="phase-name">Imparare a comportarsi bene</div>
+              </div>
+              <div class="phase-body">
+                <p>Valutatori umani confrontano coppie di risposte e indicano quale è migliore. Questo feedback viene usato per affinare il modello verso risposte più utili, accurate e sicure. È la fase che spiega perché i modelli moderni sono molto più affidabili e allineati dei loro predecessori.</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="pull">
+      <p>Il risultato di queste tre trasformazioni non è un database di risposte preconfezionate. È un sistema che ha interiorizzato i pattern del linguaggio e del ragionamento umano, e li usa per generare risposte adatte al contesto specifico — ogni volta, da zero.</p>
+    </div>
+
+    <div class="callout teal">
+      <div class="callout-label">// Una cosa da ricordare</div>
+      <p>Un LLM non "recupera" risposte da un archivio. <strong>Le genera</strong> ogni volta, token per token, calcolando la continuazione più probabile e appropriata dato tutto il contesto precedente. È più simile a un esperto che ragiona che a un motore di ricerca che trova.</p>
+    </div>
+
+  </section>
+
+  <!-- ═══════════ LIMITI ═══════════ -->
+  <section id="limiti" class="section">
+
+    <div class="eyebrow">Parte Seconda</div>
+    <h2>I limiti <em>che non spariscono</em></h2>
+    <p class="intro-text">Alcuni limiti degli LLM sono tecnici e migliorano con ogni generazione di modelli. Altri sono <strong>strutturali</strong> — conseguenze dirette di come funzionano — e nessun aggiornamento li eliminerà completamente. Capire la differenza è essenziale per usare gli LLM bene.</p>
+
+    <div class="callout">
+      <div class="callout-label">// Perché è importante saperlo</div>
+      <p>Un manager che non conosce i limiti strutturali degli LLM tenderà a fidarsi troppo degli output — o a scartare la tecnologia dopo il primo errore clamoroso. Conoscere i limiti permette di progettare sistemi che li gestiscono, non di ignorarli.</p>
+    </div>
+
+    <div class="limit-cards">
+
+      <div class="limit-card">
+        <div class="limit-left">
+          <div class="limit-icon">👻</div>
+          <div class="limit-name">Allucinazioni</div>
+          <div class="limit-severity sev-struct">⬤ Strutturale</div>
+        </div>
+        <div class="limit-right">
+          <p>Il limite più noto e più insidioso. Gli LLM possono produrre affermazioni false — nomi, date, citazioni, fatti — con lo stesso tono autorevole con cui producono affermazioni corrette. Non sanno quando stanno inventando, perché non verificano: generano.</p>
+          <p>Il caso classico: chiedi a un LLM di citare tre articoli accademici su un tema. Produrrà tre citazioni perfettamente formattate — autori, rivista, anno, titolo — di articoli che spesso non esistono. Non è malafede: è il meccanismo di generazione che produce "la continuazione più plausibile".</p>
+          <div class="limit-why">
+            <div class="limit-why-label">// Perché è strutturale</div>
+            <p>Il modello genera per plausibilità statistica, non per verifica. Non ha accesso a un archivio di fatti certi da consultare — ha parametri che codificano pattern. Ridurre le allucinazioni è possibile (e i modelli migliorano), ma eliminarle completamente no.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="limit-card">
+        <div class="limit-left">
+          <div class="limit-icon">📅</div>
+          <div class="limit-name">Conoscenza ferma nel tempo</div>
+          <div class="limit-severity sev-practical">⬤ Pratico</div>
+        </div>
+        <div class="limit-right">
+          <p>Un LLM sa solo quello che c'era in internet fino alla data di fine del suo training — il cosiddetto <em>knowledge cutoff</em>. Dopo quella data, il modello non sa nulla di quello che è successo nel mondo, a meno che non gli venga fornito esplicitamente nel contesto della conversazione.</p>
+          <p>Chiedi a un modello con cutoff a giugno 2024 chi è l'attuale CEO di un'azienda che ha cambiato guida a luglio 2024: risponderà con sicurezza il nome sbagliato.</p>
+          <div class="limit-why">
+            <div class="limit-why-label">// Mitigazione disponibile</div>
+            <p>Il web search integrato e i sistemi RAG risolvono questo in buona parte: il modello cerca le informazioni aggiornate e le usa come contesto. Ma non è automatico — richiede un'architettura pensata per questo.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="limit-card">
+        <div class="limit-left">
+          <div class="limit-icon">🧮</div>
+          <div class="limit-name">Calcoli e ragionamento formale</div>
+          <div class="limit-severity sev-struct">⬤ Strutturale</div>
+        </div>
+        <div class="limit-right">
+          <p>Gli LLM non sono calcolatori. Producono i passi di un calcolo nello stesso modo in cui producono testo: per plausibilità, non per esecuzione reale. Su operazioni semplici funzionano perché le hanno viste migliaia di volte nel training. Su calcoli complessi o inusuali, l'errore è frequente — e spesso silenzioso.</p>
+          <p>Lo stesso vale per la logica formale: il modello può sembrare che ragioni, ma in realtà sta generando testo che <em>assomiglia</em> a ragionamento. Su problemi di logica complessi, fallisce in modi che un calcolatore o un programmatore non farebbero mai.</p>
+          <div class="limit-why">
+            <div class="limit-why-label">// Mitigazione disponibile</div>
+            <p>Il code interpreter risolve il problema dei calcoli: il modello scrive codice Python che esegue il calcolo correttamente. Ma richiede che il modello traduca correttamente il problema in codice — e anche qui gli errori logici esistono.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="limit-card">
+        <div class="limit-left">
+          <div class="limit-icon">🎭</div>
+          <div class="limit-name">Sensibilità al prompt</div>
+          <div class="limit-severity sev-practical">⬤ Pratico</div>
+        </div>
+        <div class="limit-right">
+          <p>Il modo in cui viene formulata una domanda influenza significativamente la qualità della risposta. Due domande semanticamente identiche ma formulate in modo diverso possono produrre output molto diversi. Un'istruzione leggermente ambigua può portare a risposte completamente fuori bersaglio.</p>
+          <p>Questo crea un problema di riproducibilità: lo stesso sistema può funzionare benissimo in test e male in produzione perché gli utenti reali formulano le domande in modo diverso dai tester.</p>
+          <div class="limit-why">
+            <div class="limit-why-label">// Implicazione pratica</div>
+            <p>Il <em>prompt engineering</em> — la progettazione sistematica delle istruzioni — non è un'attività opzionale ma un requisito di ingegneria. Un sistema ben progettato guida l'utente e standardizza l'input.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="limit-card">
+        <div class="limit-left">
+          <div class="limit-icon">🔗</div>
+          <div class="limit-name">Nessuna memoria persistente</div>
+          <div class="limit-severity sev-practical">⬤ Pratico</div>
+        </div>
+        <div class="limit-right">
+          <p>Per impostazione predefinita, un LLM non ricorda conversazioni passate. Ogni nuova sessione riparte da zero. Il modello "vede" solo il testo presente nella finestra di contesto attuale — di solito qualche decina di migliaia di parole — e dimentica tutto il resto.</p>
+          <p>Questo è un problema significativo per applicazioni che richiedono continuità: un assistente che non ricorda la conversazione di ieri, un agente che perde il filo dopo cento scambi, un sistema che non impara dall'esperienza accumulata.</p>
+          <div class="limit-why">
+            <div class="limit-why-label">// Mitigazione disponibile</div>
+            <p>Sistemi di memoria esterna — database vettoriali, riassunti persistenti, log strutturati — permettono di dare al modello "ricordi" artificiali. È una soluzione funzionante ma che aggiunge complessità all'architettura.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="limit-card">
+        <div class="limit-left">
+          <div class="limit-icon">⚖️</div>
+          <div class="limit-name">Bias e valori ereditati</div>
+          <div class="limit-severity sev-struct">⬤ Strutturale</div>
+        </div>
+        <div class="limit-right">
+          <p>I modelli imparano dai dati prodotti dagli esseri umani — e gli esseri umani hanno bias. Pregiudizi culturali, rappresentazioni distorte, punti di vista sovra-rappresentati (tipicamente anglofoni, occidentali, di ceto medio-alto) finiscono nel modello in modo non trasparente.</p>
+          <p>Il modello non sa di avere questi bias. Li riproduce inconsapevolmente, con la stessa sicurezza con cui produce risposte corrette. In contesti dove l'equità è rilevante — selezione del personale, valutazione del credito, decisioni mediche — questo è un rischio concreto che richiede monitoraggio attivo.</p>
+          <div class="limit-why">
+            <div class="limit-why-label">// Perché è strutturale</div>
+            <p>Finché il training si basa su dati umani, i bias umani saranno presenti in forma latente. Il RLHF riduce i casi più evidenti, ma non è una soluzione completa. La mitigazione richiede monitoraggio continuo degli output in produzione.</p>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+  </section>
+
+  <!-- ═══════════ APPLICAZIONI ═══════════ -->
+  <section id="applicazioni" class="section">
+
+    <div class="eyebrow">Parte Terza</div>
+    <h2>Tipologie e <em>Applicazioni</em></h2>
+    <p class="intro-text">Gli LLM non si usano tutti allo stesso modo. La classificazione più utile non è per tecnologia, ma per <strong>livello di autonomia</strong> del sistema: da strumenti puramente reattivi che aspettano ogni istruzione, ad agenti che pianificano ed eseguono sequenze di azioni in modo indipendente.</p>
+
+    <div class="spectrum-intro">
+      <span class="spec-pole">Reattivo — zero autonomia</span>
+      <div class="spec-line"></div>
+      <span class="spec-pole">Autonomo — agisce in modo indipendente</span>
+    </div>
+
+    <div class="app-cards">
+
+      <!-- CHATBOT -->
+      <div class="app-card">
+        <div class="app-left">
+          <div class="app-level-bar lv1-bar"></div>
+          <div class="app-level-label lv1">// Livello 1 — Reattivo</div>
+          <div class="app-name">Chatbot & Assistenti Conversazionali</div>
+          <div class="app-tagline">Risponde a domande e gestisce conversazioni in linguaggio naturale</div>
+          <div class="autonomy-meter">
+            <span class="meter-label">Autonomia</span>
+            <div class="meter-track"><div class="meter-fill lv1-bar" style="width:10%"></div></div>
+          </div>
+        </div>
+        <div class="app-right">
+          <p>La forma più semplice e diffusa. L'LLM riceve un messaggio e risponde. Non fa nulla di più: non accede a sistemi esterni, non esegue azioni, non ricorda conversazioni precedenti. Ogni scambio è indipendente.</p>
+          <p>Nonostante la semplicità, il valore è reale: la qualità delle risposte in linguaggio naturale su un dominio ben definito è genuinamente superiore ai chatbot basati su regole della generazione precedente. L'utente può porre la domanda in qualsiasi modo — il sistema capisce l'intento, non solo le parole esatte.</p>
+          <div class="app-highlight">Il limite principale è la mancanza di connessione con il mondo reale: non sa cosa è successo ieri, non può consultare il sistema CRM, non può eseguire nessuna azione concreta.</div>
+          <div class="app-examples">
+            <div class="app-ex-label">Esempi concreti</div>
+            <div class="app-ex-tags">
+              <span class="app-tag">FAQ su sito web</span>
+              <span class="app-tag">Supporto clienti base</span>
+              <span class="app-tag">Assistente virtuale consumer</span>
+              <span class="app-tag">ChatGPT, Claude.ai (uso base)</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- COPILOT -->
+      <div class="app-card">
+        <div class="app-left">
+          <div class="app-level-bar lv2-bar"></div>
+          <div class="app-level-label lv2">// Livello 2 — Aumentativo</div>
+          <div class="app-name">Copilot & Strumenti Aumentativi</div>
+          <div class="app-tagline">L'LLM integrato in un tool esistente, affianca l'umano nel suo workflow</div>
+          <div class="autonomy-meter">
+            <span class="meter-label">Autonomia</span>
+            <div class="meter-track"><div class="meter-fill lv2-bar" style="width:25%"></div></div>
+          </div>
+        </div>
+        <div class="app-right">
+          <p>L'LLM non è uno strumento separato ma è integrato direttamente nell'ambiente di lavoro dell'utente — il documento, il foglio di calcolo, l'IDE di programmazione, il CRM. L'umano guida, il modello assiste e suggerisce.</p>
+          <p>Questa categoria ha prodotto i risultati di produttività più documentati. GitHub Copilot riduce il tempo di scrittura del codice del 20–40% nei team che lo adottano. Microsoft 365 Copilot accelera la sintesi di email e la generazione di documenti. Il modello ha accesso al contesto del documento corrente — ma l'umano decide ogni passo.</p>
+          <div class="app-highlight">La distinzione chiave con il livello successivo: il copilot suggerisce, l'umano esegue. Non compie azioni autonome.</div>
+          <div class="app-examples">
+            <div class="app-ex-label">Esempi concreti</div>
+            <div class="app-ex-tags">
+              <span class="app-tag">GitHub Copilot</span>
+              <span class="app-tag">Microsoft 365 Copilot</span>
+              <span class="app-tag">Notion AI</span>
+              <span class="app-tag">Salesforce Einstein</span>
+              <span class="app-tag">LLM in IDE / editor</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- RAG -->
+      <div class="app-card">
+        <div class="app-left">
+          <div class="app-level-bar lv3-bar"></div>
+          <div class="app-level-label lv3">// Livello 3 — Connesso alla conoscenza</div>
+          <div class="app-name">Knowledge Assistant (RAG)</div>
+          <div class="app-tagline">L'LLM risponde attingendo a documenti e knowledge base aziendali</div>
+          <div class="autonomy-meter">
+            <span class="meter-label">Autonomia</span>
+            <div class="meter-track"><div class="meter-fill lv3-bar" style="width:40%"></div></div>
+          </div>
+        </div>
+        <div class="app-right">
+          <p>Il paradigma RAG — Retrieval Augmented Generation — risolve uno dei limiti fondamentali degli LLM: la conoscenza ferma al training cutoff. Prima di rispondere, il sistema recupera i documenti rilevanti dalla knowledge base aziendale e li fornisce al modello come contesto. Il modello risponde basandosi su questi documenti, non solo sul suo training.</p>
+          <p>Il risultato è un assistente che sa rispondere su manualistica interna, policy aziendali, archivi contrattuali, normative aggiornate — con un drastico calo delle allucinazioni rispetto a un LLM "puro", perché il modello legge le informazioni invece di ricordarle.</p>
+          <div class="app-highlight">È il caso d'uso enterprise più maturo e con il miglior profilo rischio/beneficio. Migliaia di aziende lo hanno già in produzione su knowledge base di supporto, compliance, HR, normativa.</div>
+          <div class="app-examples">
+            <div class="app-ex-label">Esempi concreti</div>
+            <div class="app-ex-tags">
+              <span class="app-tag">Assistente su manualistica interna</span>
+              <span class="app-tag">Q&A su contratti e normativa</span>
+              <span class="app-tag">Supporto tecnico su documentazione prodotto</span>
+              <span class="app-tag">Ricerca in archivi legali</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- AGENTE SEMPLICE -->
+      <div class="app-card">
+        <div class="app-left">
+          <div class="app-level-bar lv4-bar"></div>
+          <div class="app-level-label lv4">// Livello 4 — Agente Semplice</div>
+          <div class="app-name">Agente con Strumenti</div>
+          <div class="app-tagline">L'LLM può usare tool esterni e agire sul mondo, su obiettivi definiti</div>
+          <div class="autonomy-meter">
+            <span class="meter-label">Autonomia</span>
+            <div class="meter-track"><div class="meter-fill lv4-bar" style="width:65%"></div></div>
+          </div>
+        </div>
+        <div class="app-right">
+          <p>Il salto qualitativo: l'LLM non risponde soltanto, ma <strong>agisce</strong>. Gli vengono forniti strumenti — ricerca web, esecuzione di codice, accesso a database, chiamate API — e il modello decide autonomamente quali usare per raggiungere l'obiettivo. L'umano definisce il goal; il modello pianifica ed esegue i passi.</p>
+          <p>Esempio concreto: "Analizza le ultime 10 fatture nel sistema, calcola i totali per fornitore, e crea un report Excel." Il modello chiama le API del gestionale, recupera i dati, scrive ed esegue il codice Python, genera il file. L'umano riceve il risultato — senza aver guidato ogni passo.</p>
+          <div class="app-highlight">Questo è il territorio dove il valore aumenta significativamente — ma anche dove i rischi emergono. Un agente che può scrivere su database o inviare email deve essere supervisionato con cura, specialmente nelle prime fasi di deployment.</div>
+          <div class="app-examples">
+            <div class="app-ex-label">Esempi concreti</div>
+            <div class="app-ex-tags">
+              <span class="app-tag">Automazione report</span>
+              <span class="app-tag">Data analysis pipeline</span>
+              <span class="app-tag">Ricerca e sintesi web</span>
+              <span class="app-tag">Integrazione con CRM / ERP</span>
+              <span class="app-tag">Claude con tool, GPT con function calling</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- AGENTE COMPLESSO -->
+      <div class="app-card">
+        <div class="app-left">
+          <div class="app-level-bar lv5-bar"></div>
+          <div class="app-level-label lv5">// Livello 5 — Agente Complesso</div>
+          <div class="app-name">Sistemi Multi-Agent</div>
+          <div class="app-tagline">Più LLM specializzati collaborano su obiettivi complessi e multi-step</div>
+          <div class="autonomy-meter">
+            <span class="meter-label">Autonomia</span>
+            <div class="meter-track"><div class="meter-fill lv5-bar" style="width:90%"></div></div>
+          </div>
+        </div>
+        <div class="app-right">
+          <p>Il livello più avanzato e il focus principale di questa serie. Un sistema multi-agent coordina più LLM specializzati: un orchestratore che pianifica, agenti lavoratori che eseguono task specifici (ricerca, analisi, scrittura, codice, validazione), un critico che verifica la qualità. Ognuno fa ciò che sa fare meglio.</p>
+          <p>Esempio: un sistema di due diligence automatizzato che, dato il nome di un'azienda target, raccoglie informazioni da fonti multiple, analizza bilanci e contratti, identifica rischi, redige una bozza di report strutturato — con supervisione umana ai checkpoint critici.</p>
+          <div class="app-highlight">Questa è la frontiera attuale. I sistemi multi-agent funzionano già in contesti ben definiti, ma richiedono architettura attenta, gestione degli errori robusta, e supervisione umana sui passi irreversibili. La complessità cresce — e con essa il valore potenziale.</div>
+          <div class="app-examples">
+            <div class="app-ex-label">Esempi concreti</div>
+            <div class="app-ex-tags">
+              <span class="app-tag">Due diligence automatizzata</span>
+              <span class="app-tag">Research pipeline complessi</span>
+              <span class="app-tag">Automazione processi documentali end-to-end</span>
+              <span class="app-tag">Sviluppo software assistito</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+    <div class="callout amber" style="margin-top: 32px">
+      <div class="callout-label">// Dove investire prima</div>
+      <p>Per la maggior parte delle organizzazioni, il percorso naturale è partire dai livelli 2 e 3 — copilot e knowledge assistant — dove il valore è alto, i rischi sono gestibili e la maturità tecnologica è consolidata. I livelli 4 e 5 offrono il maggior potenziale ma richiedono architettura, competenze e governance più sofisticate.</p>
+    </div>
+
+  </section>
+
+  <!-- ═══════════ BRIDGE ═══════════ -->
+  <section id="bridge" class="section">
+
+    <div class="eyebrow">Parte Quarta</div>
+    <h2>Verso <em>gli Agenti</em></h2>
+    <p class="intro-text">Gli LLM sono il motore. Gli agenti sono il veicolo. Capire come funzionano i primi è il prerequisito per capire perché i secondi sono una discontinuità rispetto a tutta l'automazione che è venuta prima.</p>
+
+    <div class="bridge">
+      <div class="bridge-left">
+        <div class="bridge-eyebrow">// Il collegamento</div>
+        <div class="bridge-title">Da modello linguistico ad agente autonomo</div>
+        <p class="bridge-text">Un LLM da solo è straordinariamente capace ma fondamentalmente passivo: aspetta input, produce output, si ferma. Un agente è un LLM a cui sono stati aggiunti tre elementi che cambiano radicalmente la natura del sistema: strumenti per agire sul mondo, memoria per mantenere il contesto nel tempo, e un loop di ragionamento che gli permette di pianificare, agire, osservare il risultato, e adattarsi.</p>
+        <p class="bridge-text">La combinazione di questi tre elementi trasforma uno strumento conversazionale in un sistema che può portare a termine obiettivi complessi in modo semi-autonomo — il che è sia il grande valore degli agenti, sia la fonte dei loro rischi specifici.</p>
+      </div>
+      <div class="bridge-right">
+        <div class="bridge-point">
+          <div class="bridge-point-icon">🧠</div>
+          <div class="bridge-point-text">
+            <strong>Il motore — LLM</strong>
+            Ragiona, pianifica, genera il linguaggio delle istruzioni agli strumenti, interpreta i risultati. La qualità del modello determina la qualità dell'agente.
+          </div>
+        </div>
+        <div class="bridge-point">
+          <div class="bridge-point-icon">🔧</div>
+          <div class="bridge-point-text">
+            <strong>Gli strumenti — Tool</strong>
+            Ricerca web, esecuzione codice, accesso a database, chiamate API, lettura e scrittura di file. Trasformano la parola in azione concreta nel mondo reale.
+          </div>
+        </div>
+        <div class="bridge-point">
+          <div class="bridge-point-icon">💾</div>
+          <div class="bridge-point-text">
+            <strong>La memoria — Context & Storage</strong>
+            Permette all'agente di mantenere il filo su task lunghi, ricordare informazioni tra sessioni, e accumulare conoscenza sul dominio specifico.
+          </div>
+        </div>
+        <div class="bridge-point">
+          <div class="bridge-point-icon">🔄</div>
+          <div class="bridge-point-text">
+            <strong>Il loop — Ragiona → Agisce → Osserva</strong>
+            L'agente non esegue uno script fisso: valuta il risultato di ogni azione e decide il passo successivo. È questo che lo rende adattivo.
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </section>
+
+</div>
+
+<script>
+  function showTab(id) {
+    document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+    document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+    document.getElementById(id).classList.add('active');
+    event.target.classList.add('active');
+    window.scrollTo({ top: document.querySelector('.sticky-nav').offsetTop - 10, behavior: 'smooth' });
+  }
+</script>
+</body>
+</html>

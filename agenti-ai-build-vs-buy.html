@@ -1,0 +1,1658 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Agenti Pronti vs Costruzione Custom — Analisi Comparativa</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=Manrope:wght@200;300;400;500;600;700;800&family=Fira+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg:     #f8f5f0;
+  --bg2:    #f0ece5;
+  --bg3:    #e8e3da;
+  --ink:    #1a1814;
+  --ink2:   #2d2a24;
+  --ink3:   #6e6a5e;
+  --ink4:   #a09b8e;
+  --border: #d8d2c6;
+  --border2:#c8c1b3;
+
+  /* Categorie prebuilt */
+  --c1: #b8860b;  --c1bg: #fdf6e3;  /* enterprise — oro scuro */
+  --c2: #2e7d9c;  --c2bg: #e6f3f8;  /* verticali SaaS — teal */
+  --c3: #c0562b;  --c3bg: #fdf0ea;  /* no-code — terracotta */
+  --c4: #4a8c3f;  --c4bg: #eef6ec;  /* open source — verde */
+  --c5: #7b5ea7;  --c5bg: #f3eef8;  /* embedded — viola */
+
+  /* Livelli di costruzione */
+  --l1: #d44;     /* codice puro — rosso */
+  --l2: #e88c30;  /* framework — arancio */
+  --l3: #5aa;     /* no/low-code — teal chiaro */
+
+  --accent: #c0562b;
+}
+
+* { margin:0; padding:0; box-sizing:border-box; }
+html { scroll-behavior:smooth; }
+
+body {
+  background: var(--bg);
+  color: var(--ink);
+  font-family: 'Manrope', sans-serif;
+  font-weight: 300;
+  font-size: 14px;
+  line-height: 1.75;
+}
+
+/* ── HEADER ── */
+.masthead {
+  background: var(--ink);
+  color: rgba(255,255,255,0.9);
+  padding: 64px 56px 56px;
+  position: relative;
+  overflow: hidden;
+}
+
+.masthead::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background:
+    repeating-linear-gradient(90deg, rgba(255,255,255,0.015) 0px, rgba(255,255,255,0.015) 1px, transparent 1px, transparent 80px),
+    repeating-linear-gradient(0deg, rgba(255,255,255,0.015) 0px, rgba(255,255,255,0.015) 1px, transparent 1px, transparent 80px);
+  pointer-events: none;
+}
+
+.masthead::after {
+  content: 'BUILD vs BUY';
+  position: absolute;
+  right: 48px; bottom: -14px;
+  font-family: 'Manrope', sans-serif;
+  font-weight: 800;
+  font-size: 120px;
+  line-height: 1;
+  color: rgba(255,255,255,0.025);
+  pointer-events: none;
+  letter-spacing: -4px;
+  white-space: nowrap;
+}
+
+.masthead-eye {
+  font-family: 'Fira Mono', monospace;
+  font-size: 10px;
+  letter-spacing: 3px;
+  text-transform: uppercase;
+  color: rgba(255,255,255,0.28);
+  margin-bottom: 20px;
+}
+
+.masthead h1 {
+  font-family: 'DM Serif Display', serif;
+  font-weight: 400;
+  font-size: clamp(34px, 5vw, 60px);
+  line-height: 1.05;
+  letter-spacing: -1px;
+  max-width: 720px;
+}
+
+.masthead-sub {
+  margin-top: 22px;
+  font-size: 15px;
+  font-weight: 300;
+  color: rgba(255,255,255,0.4);
+  max-width: 620px;
+  line-height: 1.7;
+}
+
+/* ── NAVIGATION ── */
+.nav-bar {
+  background: var(--ink2);
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  overflow-x: auto;
+  display: flex;
+  border-bottom: 1px solid rgba(255,255,255,0.06);
+}
+
+.nav-btn {
+  flex: 1;
+  min-width: 120px;
+  padding: 14px 18px;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  font-family: 'Manrope', sans-serif;
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: rgba(255,255,255,0.35);
+  border-right: 1px solid rgba(255,255,255,0.06);
+  transition: all 0.2s;
+  white-space: nowrap;
+}
+
+.nav-btn:last-child { border-right: none; }
+.nav-btn:hover { color: rgba(255,255,255,0.7); background: rgba(255,255,255,0.03); }
+.nav-btn.active { color: #fff; background: rgba(255,255,255,0.05); position: relative; }
+.nav-btn.active::after {
+  content: '';
+  position: absolute;
+  bottom: 0; left: 0; right: 0;
+  height: 3px;
+  background: var(--accent);
+}
+
+/* ── SECTIONS ── */
+.section {
+  display: none;
+}
+.section.active {
+  display: block;
+  animation: fadeIn 0.3s ease;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(8px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* ── SECTION INTRO ── */
+.sect-intro {
+  padding: 48px 56px 40px;
+  border-bottom: 1px solid var(--border);
+}
+
+.sect-num {
+  font-family: 'Fira Mono', monospace;
+  font-size: 10px;
+  letter-spacing: 3px;
+  text-transform: uppercase;
+  color: var(--ink4);
+  margin-bottom: 12px;
+}
+
+.sect-intro h2 {
+  font-family: 'DM Serif Display', serif;
+  font-weight: 400;
+  font-size: clamp(28px, 4vw, 44px);
+  line-height: 1.1;
+  letter-spacing: -0.5px;
+  margin-bottom: 18px;
+  max-width: 600px;
+}
+
+.sect-intro p {
+  color: var(--ink3);
+  max-width: 680px;
+  font-size: 14.5px;
+}
+
+/* ── BODY CONTENT ── */
+.body-wrap {
+  padding: 0 56px 56px;
+}
+
+/* ── BLOCKS ── */
+.block {
+  margin-top: 40px;
+}
+
+.block-title {
+  font-family: 'Manrope', sans-serif;
+  font-weight: 700;
+  font-size: 18px;
+  margin-bottom: 6px;
+  color: var(--ink);
+}
+
+.block-subtitle {
+  font-size: 13px;
+  color: var(--ink4);
+  margin-bottom: 20px;
+  font-weight: 400;
+}
+
+/* ── LEVEL CARDS ── */
+.level-cards {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1px;
+  background: var(--border);
+  border: 1px solid var(--border2);
+  margin-top: 20px;
+}
+
+.level-card {
+  background: var(--bg);
+  padding: 28px 24px;
+}
+
+.lc-num {
+  font-family: 'Fira Mono', monospace;
+  font-size: 10px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: var(--ink4);
+  margin-bottom: 10px;
+}
+
+.lc-title {
+  font-family: 'DM Serif Display', serif;
+  font-weight: 400;
+  font-size: 22px;
+  margin-bottom: 8px;
+}
+
+.lc-tag {
+  display: inline-block;
+  font-family: 'Fira Mono', monospace;
+  font-size: 9px;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  padding: 3px 10px;
+  border: 1px solid;
+  margin-bottom: 16px;
+}
+
+.lc-desc {
+  font-size: 13px;
+  color: var(--ink3);
+  line-height: 1.7;
+}
+
+.lc-desc strong { color: var(--ink2); font-weight: 500; }
+
+.lc-items {
+  margin-top: 14px;
+  list-style: none;
+}
+
+.lc-items li {
+  font-size: 12px;
+  color: var(--ink3);
+  padding: 5px 0;
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  gap: 8px;
+  line-height: 1.5;
+}
+
+.lc-items li:last-child { border-bottom: none; }
+.lc-items li::before { content: '→'; color: var(--ink4); flex-shrink: 0; }
+.lc-items li strong { color: var(--ink2); font-weight: 500; }
+
+/* ── DIMENSION BLOCKS ── */
+.dim-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 1px;
+  background: var(--border);
+  border: 1px solid var(--border2);
+  margin-top: 20px;
+}
+
+.dim-card {
+  background: var(--bg);
+  padding: 24px 22px;
+}
+
+.dim-num {
+  font-family: 'Fira Mono', monospace;
+  font-size: 9px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: var(--ink4);
+  margin-bottom: 8px;
+}
+
+.dim-title {
+  font-family: 'Manrope', sans-serif;
+  font-weight: 700;
+  font-size: 15px;
+  margin-bottom: 10px;
+  color: var(--ink);
+}
+
+.dim-text {
+  font-size: 13px;
+  color: var(--ink3);
+  line-height: 1.65;
+}
+
+.dim-text strong { color: var(--ink2); font-weight: 500; }
+
+/* ── CATEGORY COMPARISON TABLE ── */
+.comp-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 20px;
+  border: 1px solid var(--border2);
+  font-size: 12px;
+}
+
+.comp-table th, .comp-table td {
+  padding: 12px 14px;
+  border: 1px solid var(--border);
+  text-align: left;
+  vertical-align: top;
+}
+
+.comp-table thead th {
+  background: var(--ink);
+  color: rgba(255,255,255,0.8);
+  font-family: 'Manrope', sans-serif;
+  font-weight: 600;
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  position: sticky;
+  top: 48px;
+  z-index: 50;
+}
+
+.comp-table tbody tr:nth-child(even) { background: var(--bg2); }
+
+.comp-table .cat-label {
+  font-weight: 600;
+  white-space: nowrap;
+  font-size: 11px;
+}
+
+.comp-table .dim-header {
+  background: var(--bg3);
+  font-weight: 700;
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--ink3);
+}
+
+/* ── RATING BARS ── */
+.rate-bar {
+  display: flex;
+  gap: 2px;
+  margin-top: 4px;
+}
+
+.rate-dot {
+  width: 16px;
+  height: 6px;
+  border-radius: 1px;
+  background: var(--border);
+}
+
+.rate-dot.filled { background: var(--accent); }
+.rate-dot.filled.high { background: #4a8c3f; }
+.rate-dot.filled.mid { background: #e88c30; }
+.rate-dot.filled.low { background: #d44; }
+
+/* ── SCENARIO CARDS ── */
+.scenario-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1px;
+  background: var(--border);
+  border: 1px solid var(--border2);
+  margin-top: 20px;
+}
+
+.scenario-card {
+  background: var(--bg);
+  padding: 26px 22px;
+}
+
+.sc-tag {
+  font-family: 'Fira Mono', monospace;
+  font-size: 9px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  margin-bottom: 10px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.sc-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+}
+
+.sc-title {
+  font-weight: 700;
+  font-size: 15px;
+  margin-bottom: 8px;
+}
+
+.sc-text {
+  font-size: 13px;
+  color: var(--ink3);
+  line-height: 1.65;
+  margin-bottom: 12px;
+}
+
+.sc-text strong { color: var(--ink2); font-weight: 500; }
+
+.sc-rec {
+  font-family: 'Fira Mono', monospace;
+  font-size: 10px;
+  padding: 6px 12px;
+  display: inline-block;
+  letter-spacing: 0.5px;
+}
+
+.rec-prebuilt { background: var(--c4bg); color: var(--c4); border: 1px solid var(--c4); }
+.rec-framework { background: #fff4e6; color: var(--l2); border: 1px solid var(--l2); }
+.rec-custom { background: #ffe6e6; color: var(--l1); border: 1px solid var(--l1); }
+.rec-hybrid { background: #e6f3f8; color: var(--c2); border: 1px solid var(--c2); }
+
+/* ── FLOW DIAGRAM ── */
+.flow-box {
+  background: var(--ink);
+  color: rgba(255,255,255,0.85);
+  padding: 36px 32px;
+  margin-top: 20px;
+  position: relative;
+  overflow: hidden;
+}
+
+.flow-box::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background:
+    repeating-linear-gradient(90deg, rgba(255,255,255,0.02) 0px, rgba(255,255,255,0.02) 1px, transparent 1px, transparent 60px),
+    repeating-linear-gradient(0deg, rgba(255,255,255,0.02) 0px, rgba(255,255,255,0.02) 1px, transparent 1px, transparent 60px);
+  pointer-events: none;
+}
+
+.flow-title {
+  font-family: 'DM Serif Display', serif;
+  font-size: 22px;
+  margin-bottom: 8px;
+  position: relative;
+}
+
+.flow-desc {
+  font-size: 13px;
+  color: rgba(255,255,255,0.4);
+  margin-bottom: 28px;
+  max-width: 600px;
+  position: relative;
+}
+
+.flow-steps {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 16px;
+  position: relative;
+}
+
+.flow-step {
+  background: rgba(255,255,255,0.04);
+  border: 1px solid rgba(255,255,255,0.08);
+  padding: 20px 18px;
+}
+
+.fs-num {
+  font-family: 'Fira Mono', monospace;
+  font-size: 9px;
+  letter-spacing: 2px;
+  color: rgba(255,255,255,0.25);
+  margin-bottom: 8px;
+}
+
+.fs-label {
+  font-weight: 700;
+  font-size: 14px;
+  margin-bottom: 8px;
+}
+
+.fs-text {
+  font-size: 12px;
+  color: rgba(255,255,255,0.45);
+  line-height: 1.6;
+}
+
+/* ── KEY POINT ── */
+.key-point {
+  margin-top: 32px;
+  padding: 24px 28px;
+  border-left: 4px solid var(--accent);
+  background: var(--bg2);
+}
+
+.kp-label {
+  font-family: 'Fira Mono', monospace;
+  font-size: 9px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: var(--accent);
+  margin-bottom: 8px;
+}
+
+.kp-text {
+  font-family: 'DM Serif Display', serif;
+  font-size: 19px;
+  line-height: 1.45;
+  color: var(--ink2);
+}
+
+.kp-sub {
+  margin-top: 10px;
+  font-size: 13px;
+  color: var(--ink3);
+  line-height: 1.65;
+}
+
+/* ── DETAIL SECTION (per-category deep dive) ── */
+.cat-detail {
+  margin-top: 36px;
+  border: 1px solid var(--border2);
+}
+
+.cd-header {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 20px 24px;
+  background: var(--bg2);
+  border-bottom: 1px solid var(--border);
+  cursor: pointer;
+  user-select: none;
+}
+
+.cd-header:hover { background: var(--bg3); }
+
+.cd-dot {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.cd-cat-name {
+  font-family: 'Manrope', sans-serif;
+  font-weight: 700;
+  font-size: 15px;
+  flex: 1;
+}
+
+.cd-toggle {
+  font-family: 'Fira Mono', monospace;
+  font-size: 11px;
+  color: var(--ink4);
+  transition: transform 0.2s;
+}
+
+.cd-body {
+  display: none;
+  padding: 24px;
+}
+
+.cd-body.open {
+  display: block;
+  animation: fadeIn 0.3s ease;
+}
+
+.cd-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1px;
+  background: var(--border);
+}
+
+.cd-cell {
+  background: var(--bg);
+  padding: 20px 18px;
+}
+
+.cd-cell-title {
+  font-family: 'Fira Mono', monospace;
+  font-size: 9px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: var(--ink4);
+  margin-bottom: 10px;
+  padding-bottom: 6px;
+  border-bottom: 1px solid var(--border);
+}
+
+.cd-cell p {
+  font-size: 13px;
+  color: var(--ink3);
+  line-height: 1.65;
+}
+
+.cd-cell p strong { color: var(--ink2); font-weight: 500; }
+
+.cd-cell ul {
+  list-style: none;
+}
+
+.cd-cell ul li {
+  font-size: 12px;
+  color: var(--ink3);
+  padding: 5px 0;
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  gap: 8px;
+  line-height: 1.5;
+}
+
+.cd-cell ul li:last-child { border-bottom: none; }
+.cd-cell ul li::before { content: '→'; color: var(--ink4); flex-shrink: 0; }
+.cd-cell ul li strong { color: var(--ink2); font-weight: 500; }
+
+.vs-label {
+  font-family: 'Fira Mono', monospace;
+  font-size: 9px;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  color: var(--ink4);
+  margin-bottom: 6px;
+  display: block;
+}
+
+.cd-fullrow {
+  background: var(--bg);
+  padding: 20px 18px;
+  grid-column: 1 / -1;
+}
+
+/* ── MATRIX TABLE (compact) ── */
+.matrix-wrap {
+  overflow-x: auto;
+  margin-top: 20px;
+}
+
+.matrix {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 11px;
+  border: 1px solid var(--border2);
+  min-width: 900px;
+}
+
+.matrix th, .matrix td {
+  padding: 10px 12px;
+  border: 1px solid var(--border);
+  text-align: center;
+  vertical-align: middle;
+}
+
+.matrix thead th {
+  background: var(--ink);
+  color: rgba(255,255,255,0.8);
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+  font-size: 10px;
+}
+
+.matrix .row-head {
+  text-align: left;
+  font-weight: 600;
+  background: var(--bg2);
+  white-space: nowrap;
+  min-width: 160px;
+}
+
+.matrix tbody tr:nth-child(even) td { background: var(--bg2); }
+.matrix tbody tr:nth-child(even) .row-head { background: var(--bg3); }
+
+.mx-high { background: #eef6ec !important; color: #2d6b1f; font-weight: 600; }
+.mx-mid  { background: #fff8e6 !important; color: #8a6d00; font-weight: 500; }
+.mx-low  { background: #fdf0ea !important; color: #a0421f; font-weight: 500; }
+.mx-none { background: #f5f3f0 !important; color: #aaa; }
+
+/* ── DECISION TREE ── */
+.decision-flow {
+  margin-top: 20px;
+}
+
+.df-question {
+  background: var(--ink);
+  color: rgba(255,255,255,0.9);
+  padding: 18px 22px;
+  margin-bottom: 2px;
+  display: grid;
+  grid-template-columns: 40px 1fr;
+  gap: 16px;
+  align-items: start;
+}
+
+.df-num {
+  font-family: 'DM Serif Display', serif;
+  font-size: 28px;
+  color: rgba(255,255,255,0.2);
+  line-height: 1;
+}
+
+.df-q {
+  font-weight: 600;
+  font-size: 14px;
+  margin-bottom: 8px;
+}
+
+.df-branches {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  margin-top: 8px;
+}
+
+.df-branch {
+  font-size: 12px;
+  color: rgba(255,255,255,0.5);
+  line-height: 1.5;
+}
+
+.df-branch strong {
+  display: block;
+  color: rgba(255,255,255,0.75);
+  font-weight: 600;
+  margin-bottom: 3px;
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+/* ── PROSE ── */
+.prose {
+  max-width: 720px;
+  margin-top: 20px;
+}
+
+.prose p {
+  font-size: 14px;
+  color: var(--ink3);
+  line-height: 1.8;
+  margin-bottom: 14px;
+}
+
+.prose p strong { color: var(--ink2); font-weight: 500; }
+
+/* ── FOOTER ── */
+.footer {
+  background: var(--ink);
+  color: rgba(255,255,255,0.25);
+  padding: 32px 56px;
+  font-family: 'Fira Mono', monospace;
+  font-size: 10px;
+  letter-spacing: 1px;
+  display: flex;
+  justify-content: space-between;
+}
+
+/* ── RESPONSIVE ── */
+@media (max-width: 860px) {
+  .masthead, .sect-intro, .body-wrap { padding-left: 24px; padding-right: 24px; }
+  .level-cards { grid-template-columns: 1fr; }
+  .scenario-grid { grid-template-columns: 1fr; }
+  .cd-grid { grid-template-columns: 1fr; }
+  .flow-steps { grid-template-columns: 1fr; }
+  .df-branches { grid-template-columns: 1fr; }
+  .footer { flex-direction: column; gap: 8px; }
+}
+</style>
+</head>
+<body>
+
+<!-- ═══════════════════════════════════
+     HEADER
+═══════════════════════════════════ -->
+<div class="masthead">
+  <div class="masthead-eye">Serie Agenti AI — Report 05</div>
+  <h1>Agenti Pronti vs<br>Costruzione Custom</h1>
+  <p class="masthead-sub">Vantaggi concreti delle 5 categorie di agenti precostruiti confrontati con i diversi livelli di costruzione autonoma. Framework decisionale per scegliere l'approccio giusto.</p>
+</div>
+
+<!-- NAV -->
+<nav class="nav-bar">
+  <button class="nav-btn active" onclick="showSect(0)">Il Framework</button>
+  <button class="nav-btn" onclick="showSect(1)">Le 5 Dimensioni</button>
+  <button class="nav-btn" onclick="showSect(2)">Categoria per Categoria</button>
+  <button class="nav-btn" onclick="showSect(3)">Matrice Comparativa</button>
+  <button class="nav-btn" onclick="showSect(4)">Albero Decisionale</button>
+  <button class="nav-btn" onclick="showSect(5)">Strategia Ibrida</button>
+</nav>
+
+
+<!-- ═══════════════════════════════════
+     SEZIONE 0 — IL FRAMEWORK
+═══════════════════════════════════ -->
+<div class="section active" id="s0">
+  <div class="sect-intro">
+    <div class="sect-num">Capitolo 01</div>
+    <h2>Il punto di partenza: cosa significa "da zero"?</h2>
+    <p>Prima di confrontare le soluzioni precostruite con la costruzione autonoma, serve chiarire una distinzione fondamentale: "costruire da zero" non è un'unica opzione — sono almeno tre livelli molto diversi, con implicazioni radicalmente diverse.</p>
+  </div>
+
+  <div class="body-wrap">
+
+    <div class="block">
+      <div class="block-title">I tre livelli di costruzione autonoma</div>
+      <div class="block-subtitle">Ogni livello cambia il confronto con le soluzioni precostruite</div>
+
+      <div class="level-cards">
+        <!-- L1 -->
+        <div class="level-card">
+          <div class="lc-num" style="color:var(--l1)">Livello 1</div>
+          <div class="lc-title">Codice Puro su API</div>
+          <div class="lc-tag" style="color:var(--l1);border-color:var(--l1)">Massima libertà — Massima complessità</div>
+          <div class="lc-desc">
+            Prendi le API di un LLM (Claude, GPT, ecc.) e scrivi tu <strong>tutta la logica</strong>: il loop di ragionamento, la gestione della memoria, il routing tra tool, la gestione degli errori, il recovery in caso di fallimento. È il livello più basso, dove hai controllo totale ma devi risolvere da solo problemi che altri hanno già affrontato migliaia di volte.
+          </div>
+          <ul class="lc-items">
+            <li><strong>Competenze:</strong> Python/JS avanzato, prompt engineering, architettura software, comprensione profonda degli LLM</li>
+            <li><strong>Timeline tipica:</strong> 2-6 mesi per un agente in produzione</li>
+            <li><strong>Costi nascosti:</strong> debug, edge case, manutenzione continua al cambio modello</li>
+          </ul>
+        </div>
+
+        <!-- L2 -->
+        <div class="level-card">
+          <div class="lc-num" style="color:var(--l2)">Livello 2</div>
+          <div class="lc-title">Framework di Orchestrazione</div>
+          <div class="lc-tag" style="color:var(--l2);border-color:var(--l2)">I "mattoni" sono pronti — Il progetto è tuo</div>
+          <div class="lc-desc">
+            Usi LangGraph, CrewAI, Autogen o simili. Ti danno i <strong>building block architetturali</strong> — gestione del flusso, memoria, integrazione tool, pattern multi-agent — ma sei tu a decidere come assemblarli. È come avere i Lego: i pezzi sono standardizzati, il progetto è personalizzato.
+          </div>
+          <ul class="lc-items">
+            <li><strong>Competenze:</strong> Python medio-alto, conoscenza del framework, prompt engineering</li>
+            <li><strong>Timeline tipica:</strong> 2-6 settimane per un agente funzionante</li>
+            <li><strong>Valore chiave:</strong> pattern architetturali collaudati, community, observability integrata</li>
+          </ul>
+        </div>
+
+        <!-- L3 -->
+        <div class="level-card">
+          <div class="lc-num" style="color:var(--l3)">Livello 3</div>
+          <div class="lc-title">Piattaforma No/Low-code</div>
+          <div class="lc-tag" style="color:var(--l3);border-color:var(--l3)">Configurazione visuale — Codice minimo</div>
+          <div class="lc-desc">
+            Usi strumenti come n8n, Flowise, Dify, Relevance AI o piattaforme verticali dove <strong>configuri l'agente visualmente</strong>. Trascini nodi, connetti flussi, definisci trigger. Scrivi poco o niente codice, ma sei vincolato a ciò che la piattaforma ti permette di fare.
+          </div>
+          <ul class="lc-items">
+            <li><strong>Competenze:</strong> logica dei processi, comprensione base degli LLM, nessun coding obbligatorio</li>
+            <li><strong>Timeline tipica:</strong> 1-5 giorni per un agente operativo</li>
+            <li><strong>Limite strutturale:</strong> quando hai bisogno di qualcosa che la piattaforma non prevede, sei bloccato</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    <div class="key-point">
+      <div class="kp-label">Insight Fondamentale</div>
+      <div class="kp-text">Le 5 categorie di agenti precostruiti non si confrontano tutte con lo stesso livello di costruzione. Alcune sono <em>alternative</em> (ti evitano di costruire), altre sono <em>complementari</em> (ti aiutano a costruire meglio).</div>
+      <div class="kp-sub">Un agente enterprise (Salesforce Agentforce) è un'alternativa al costruire da zero. Un componente riusabile (un modulo di memoria) è complementare al tuo progetto custom. Un framework è a metà strada. Confondere queste relazioni porta a confronti sbagliati e decisioni sbagliate.</div>
+    </div>
+
+    <div class="block">
+      <div class="block-title">Come si posizionano le 5 categorie</div>
+      <div class="block-subtitle">Relazione tra categorie precostruite e livelli di costruzione autonoma</div>
+
+      <div class="flow-box">
+        <div class="flow-title">Alternativa ↔ Complemento: lo spettro</div>
+        <div class="flow-desc">Più una categoria è "alternativa", più ti sostituisce nella costruzione. Più è "complementare", più si integra nel tuo processo di costruzione.</div>
+        <div class="flow-steps">
+          <div class="flow-step" style="border-top:3px solid var(--c1)">
+            <div class="fs-num" style="color:var(--c1)">Cat. 1</div>
+            <div class="fs-label">Piattaforme Enterprise</div>
+            <div class="fs-text">Alternativa totale — l'agente esiste già, non lo costruisci. Il confronto è con il "non usare agenti" più che con la costruzione custom.</div>
+          </div>
+          <div class="flow-step" style="border-top:3px solid var(--c2)">
+            <div class="fs-num" style="color:var(--c2)">Cat. 2</div>
+            <div class="fs-label">Verticali SaaS</div>
+            <div class="fs-text">Alternativa forte — agente pronto per un dominio specifico. Competi con il costo di costruirne uno equivalente nel tuo dominio.</div>
+          </div>
+          <div class="flow-step" style="border-top:3px solid var(--c3)">
+            <div class="fs-num" style="color:var(--c3)">Cat. 3</div>
+            <div class="fs-label">No-code & Marketplace</div>
+            <div class="fs-text">Ibrido — possono essere alternative (agenti pronti) o strumenti per costruire (piattaforme no-code). Dipende dal prodotto.</div>
+          </div>
+          <div class="flow-step" style="border-top:3px solid var(--c4)">
+            <div class="fs-num" style="color:var(--c4)">Cat. 4</div>
+            <div class="fs-label">Open Source</div>
+            <div class="fs-text">Complemento forte — accelerano la costruzione ma non la sostituiscono. Framework, template, componenti che integri nel tuo progetto.</div>
+          </div>
+          <div class="flow-step" style="border-top:3px solid var(--c5)">
+            <div class="fs-num" style="color:var(--c5)">Cat. 5</div>
+            <div class="fs-label">Embedded in Prodotti</div>
+            <div class="fs-text">Alternativa implicita — l'agente è dentro un prodotto che già usi. Non lo scegli come agente: lo scopri come funzionalità.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+
+<!-- ═══════════════════════════════════
+     SEZIONE 1 — LE 5 DIMENSIONI
+═══════════════════════════════════ -->
+<div class="section" id="s1">
+  <div class="sect-intro">
+    <div class="sect-num">Capitolo 02</div>
+    <h2>Le 5 dimensioni del vantaggio</h2>
+    <p>Il vantaggio degli agenti precostruiti non si riduce al "risparmio di tempo". Ci sono cinque dimensioni distinte, e il peso di ciascuna cambia drasticamente a seconda della categoria e del contesto d'uso.</p>
+  </div>
+
+  <div class="body-wrap">
+
+    <div class="dim-grid">
+
+      <div class="dim-card">
+        <div class="dim-num">Dimensione 01</div>
+        <div class="dim-title">Velocità di Go-to-Market</div>
+        <div class="dim-text">
+          Quanto tempo passa dall'idea a qualcosa che funziona in produzione. È la dimensione più ovvia ma non sempre la più importante. Un agente enterprise può essere operativo in <strong>ore</strong>; uno su framework in <strong>settimane</strong>; uno da codice puro in <strong>mesi</strong>. Il differenziale è enorme ma va pesato contro la qualità del risultato: un agente attivato in fretta ma mal configurato può fare danni.
+          <br><br>
+          <strong>Quando pesa di più:</strong> validazione di un'idea, proof of concept, urgenza operativa, time-to-revenue critico.
+        </div>
+      </div>
+
+      <div class="dim-card">
+        <div class="dim-num">Dimensione 02</div>
+        <div class="dim-title">Soglia di Competenze</div>
+        <div class="dim-text">
+          Quali competenze servono nel team per rendere l'agente operativo e mantenerlo. Costruire al Livello 1 richiede sviluppatori senior con competenze di prompt engineering, architettura software e comprensione degli LLM. Un agente enterprise richiede un <strong>admin di piattaforma</strong> — profilo molto più accessibile. Un verticale SaaS può richiedere solo un <strong>power user</strong>.
+          <br><br>
+          <strong>Quando pesa di più:</strong> team piccoli, assenza di sviluppatori AI, necessità di autonomia operativa senza dipendere dall'IT.
+        </div>
+      </div>
+
+      <div class="dim-card">
+        <div class="dim-num">Dimensione 03</div>
+        <div class="dim-title">Robustezza e Affidabilità</div>
+        <div class="dim-text">
+          Questa è la dimensione <strong>più sottovalutata</strong>. Un agente precostruito con migliaia di utenti ha già affrontato edge case, errori di parsing, timeout, allucinazioni, comportamenti inattesi — in modi che tu, partendo da zero, scoprirai uno alla volta, spesso in produzione. Il valore della robustezza non è visibile al lancio ma diventa dominante dopo le prime settimane di utilizzo reale.
+          <br><br>
+          <strong>Quando pesa di più:</strong> uso su clienti finali, processi critici, alta frequenza d'uso, intolleranza agli errori.
+        </div>
+      </div>
+
+      <div class="dim-card">
+        <div class="dim-num">Dimensione 04</div>
+        <div class="dim-title">Costo Totale di Ownership (TCO)</div>
+        <div class="dim-text">
+          Non solo il costo di sviluppo iniziale, ma l'intera catena: manutenzione, aggiornamenti quando cambia il modello sottostante, monitoraggio in produzione, gestione degli errori, scaling. Un agente su piattaforma enterprise ha un canone alto ma include tutto. Un agente custom ha costo iniziale basso ma <strong>costi nascosti continui</strong> — il modello cambia, i prompt si rompono, il monitoring va costruito.
+          <br><br>
+          <strong>Quando pesa di più:</strong> orizzonte lungo (>12 mesi), risorse di manutenzione limitate, più agenti in parallelo.
+        </div>
+      </div>
+
+      <div class="dim-card" style="grid-column: 1 / -1;">
+        <div class="dim-num">Dimensione 05</div>
+        <div class="dim-title">Flessibilità e Controllo</div>
+        <div class="dim-text">
+          Qui il rapporto <strong>si inverte</strong>. Più un agente è "pronto", meno puoi personalizzarlo. E in molti casi d'uso reali, è proprio nella personalizzazione che sta il valore differenziante. Un agente enterprise fa quello che il vendor ha deciso — se il tuo workflow è diverso, non puoi cambiarlo. Un agente costruito su framework ti permette di personalizzare ogni aspetto del flusso. Un agente da codice puro ti dà libertà totale — ma al prezzo di doverti occupare di tutto.
+          <br><br>
+          La flessibilità non è un valore assoluto: serve solo nella misura in cui la usi. Pagare il prezzo della costruzione custom per poi implementare un workflow standard è uno spreco. Ma usare un agente rigido per un processo unico e differenziante è un errore strategico.
+          <br><br>
+          <strong>Quando pesa di più:</strong> processi proprietari, workflow unici che danno vantaggio competitivo, necessità di integrazioni non standard, esigenze di privacy/compliance particolari.
+        </div>
+      </div>
+
+    </div>
+
+    <div class="key-point">
+      <div class="kp-label">Il Trade-off Strutturale</div>
+      <div class="kp-text">Le prime quattro dimensioni favoriscono il precostruito. La quinta favorisce il custom. La scelta strategica è decidere quale dimensione conta di più nel tuo contesto specifico.</div>
+    </div>
+
+  </div>
+</div>
+
+
+<!-- ═══════════════════════════════════
+     SEZIONE 2 — CATEGORIA PER CATEGORIA
+═══════════════════════════════════ -->
+<div class="section" id="s2">
+  <div class="sect-intro">
+    <div class="sect-num">Capitolo 03</div>
+    <h2>Vantaggi concreti, categoria per categoria</h2>
+    <p>Per ogni categoria di agente precostruito: i vantaggi specifici rispetto alla costruzione autonoma, quando la categoria batte il custom e quando il custom batte la categoria. Clicca su ogni categoria per espandere il dettaglio.</p>
+  </div>
+
+  <div class="body-wrap">
+
+    <!-- CAT 1 — ENTERPRISE -->
+    <div class="cat-detail">
+      <div class="cd-header" onclick="toggleCat(this)">
+        <div class="cd-dot" style="background:var(--c1)"></div>
+        <div class="cd-cat-name">01 — Piattaforme Enterprise</div>
+        <div class="cd-toggle">▼</div>
+      </div>
+      <div class="cd-body">
+        <div class="cd-grid">
+          <div class="cd-cell" style="grid-column:1/-1;">
+            <div class="cd-cell-title">Il vantaggio distintivo</div>
+            <p>Il vantaggio fondamentale non è tecnologico: è di <strong>accesso ai dati</strong>. Un Salesforce Agentforce sa già chi sono i tuoi clienti, i loro contratti, la loro storia. Un Microsoft Copilot sa già i tuoi documenti, email, calendario. Costruire un agente custom con lo stesso livello di contesto richiederebbe settimane solo per le integrazioni — e il risultato sarebbe comunque meno fluido, perché i dati passerebbero attraverso API esterne anziché essere nativi.</p>
+          </div>
+          <div class="cd-cell">
+            <div class="cd-cell-title">Quando batte il custom</div>
+            <ul>
+              <li><strong>Dati già nella piattaforma</strong> — se il tuo CRM è Salesforce e vuoi un agente che qualifichi lead, il custom non ha senso</li>
+              <li><strong>Nessun team di sviluppo</strong> — attivi e configuri senza scrivere una riga di codice</li>
+              <li><strong>Compliance critica</strong> — SLA, audit trail, sicurezza enterprise gestiti dal vendor</li>
+              <li><strong>Processo standard</strong> — customer service tier-1, helpdesk IT, FAQ interne sono casi d'uso dove l'enterprise copre il 90% delle esigenze</li>
+              <li><strong>Adozione utente</strong> — gli utenti non cambiano strumento, l'agente appare nell'interfaccia che già conoscono</li>
+            </ul>
+          </div>
+          <div class="cd-cell">
+            <div class="cd-cell-title">Quando il custom vince</div>
+            <ul>
+              <li><strong>Workflow unico</strong> — se il tuo processo di business ha logiche proprietarie che il vendor non ha previsto</li>
+              <li><strong>Multi-piattaforma</strong> — se l'agente deve operare trasversalmente su più sistemi, il lock-in enterprise è un vincolo</li>
+              <li><strong>Scelta del modello</strong> — non puoi scegliere quale LLM usa, quando il vendor cambia modello il comportamento cambia</li>
+              <li><strong>Costi</strong> — i canoni enterprise con add-on AI possono superare il costo di un agente custom su volumi specifici</li>
+              <li><strong>Privacy estrema</strong> — i dati transitano nei server del vendor: se è inaccettabile, l'enterprise non è un'opzione</li>
+            </ul>
+          </div>
+          <div class="cd-cell" style="grid-column:1/-1;">
+            <div class="cd-cell-title">Rispetto ai 3 livelli di costruzione</div>
+            <p><span class="vs-label">vs Codice puro</span> Risparmia mesi di sviluppo e non richiede sviluppatori — ma flessibilità incomparabilmente più bassa. Il confronto ha senso solo se il caso d'uso è coperto nativamente dalla piattaforma.</p>
+            <p style="margin-top:10px"><span class="vs-label">vs Framework</span> Elimina il bisogno di competenze di orchestrazione e il costo di integrazione dati — ma sacrifica la possibilità di personalizzare il flusso. Scelta strategica: quanto è standard il tuo processo?</p>
+            <p style="margin-top:10px"><span class="vs-label">vs No/Low-code</span> Differenza più sfumata — entrambi non richiedono coding. L'enterprise vince su integrazione dati nativa; il no-code vince su flessibilità di workflow e libertà dalla piattaforma specifica.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- CAT 2 — VERTICALI -->
+    <div class="cat-detail">
+      <div class="cd-header" onclick="toggleCat(this)">
+        <div class="cd-dot" style="background:var(--c2)"></div>
+        <div class="cd-cat-name">02 — Verticali SaaS</div>
+        <div class="cd-toggle">▼</div>
+      </div>
+      <div class="cd-body">
+        <div class="cd-grid">
+          <div class="cd-cell" style="grid-column:1/-1;">
+            <div class="cd-cell-title">Il vantaggio distintivo</div>
+            <p>Il vantaggio va oltre la tecnologia: incorporano <strong>conoscenza di dominio</strong>. Un agente verticale per il customer service (Intercom Fin, Zendesk AI) non è solo codice — è il frutto di anni di esperienza su come gestire escalation, interpretare il tono del cliente, strutturare risposte appropriate. Un agente verticale per il legal (Harvey) ha già modellato i pattern del ragionamento giuridico. Replicare questa conoscenza da zero richiede non solo sviluppo, ma expertise di dominio che potrebbe non essere nel tuo team.</p>
+          </div>
+          <div class="cd-cell">
+            <div class="cd-cell-title">Quando batte il custom</div>
+            <ul>
+              <li><strong>Il dominio è coperto</strong> — se esiste un verticale per il tuo settore specifico, partire da lì è quasi sempre più efficiente</li>
+              <li><strong>Conoscenza di dominio mancante</strong> — non hai esperti del settore per addestrare e validare un agente custom</li>
+              <li><strong>Best practice incorporate</strong> — il verticale ha già ottimizzato prompt, flussi, gestione errori per quel dominio</li>
+              <li><strong>Velocità con qualità</strong> — non solo va in produzione prima: funziona meglio dal primo giorno perché è già stato affinato su quel tipo di interazioni</li>
+              <li><strong>Integrazione di settore</strong> — i verticali spesso si integrano nativamente con gli strumenti standard del settore (helpdesk, case management, ecc.)</li>
+            </ul>
+          </div>
+          <div class="cd-cell">
+            <div class="cd-cell-title">Quando il custom vince</div>
+            <ul>
+              <li><strong>Il tuo dominio non esiste</strong> — se operi in una nicchia non coperta dai verticali, non hai alternativa</li>
+              <li><strong>Differenziazione competitiva</strong> — se il modo in cui gestisci i clienti è il tuo vantaggio, delegarlo a un SaaS uguale per tutti lo annulla</li>
+              <li><strong>Personalizzazione profonda</strong> — il verticale copre l'80% ma quel 20% mancante è critico per il tuo business</li>
+              <li><strong>Proprietà dei dati</strong> — i dati di interazione dei tuoi clienti risiedono nel vendor</li>
+              <li><strong>Scalabilità dei costi</strong> — pricing per conversazione/utente che a volumi alti diventa proibitivo</li>
+            </ul>
+          </div>
+          <div class="cd-cell" style="grid-column:1/-1;">
+            <div class="cd-cell-title">Rispetto ai 3 livelli di costruzione</div>
+            <p><span class="vs-label">vs Codice puro</span> Il verticale porta in produzione un agente di qualità in giorni/settimane vs mesi. Il gap di qualità iniziale è significativo a favore del verticale. Il custom supera il verticale solo dopo mesi di iterazione e con expertise di dominio solida.</p>
+            <p style="margin-top:10px"><span class="vs-label">vs Framework</span> Anche con un framework, replicare la conoscenza di dominio del verticale richiede tempo e dati. Il framework vince se hai bisogno di un workflow molto diverso da quello che il verticale impone.</p>
+            <p style="margin-top:10px"><span class="vs-label">vs No/Low-code</span> Il verticale è più sofisticato e specifico del dominio. Il no-code è più generico ma più flessibile. La scelta dipende da quanto il tuo caso è "standard" per il settore.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- CAT 3 — NO-CODE -->
+    <div class="cat-detail">
+      <div class="cd-header" onclick="toggleCat(this)">
+        <div class="cd-dot" style="background:var(--c3)"></div>
+        <div class="cd-cat-name">03 — No-code & Marketplace</div>
+        <div class="cd-toggle">▼</div>
+      </div>
+      <div class="cd-body">
+        <div class="cd-grid">
+          <div class="cd-cell" style="grid-column:1/-1;">
+            <div class="cd-cell-title">Il vantaggio distintivo</div>
+            <p>Il vantaggio è duplice: <strong>accessibilità</strong> e <strong>velocità di sperimentazione</strong>. Piattaforme come Flowise, n8n, Dify, Relevance AI permettono a chi non programma di costruire agenti funzionanti. Marketplace come GPT Store e i bot di Poe permettono di usare agenti già fatti da altri. Il punto di forza principale è che abbassano la soglia d'ingresso fino a renderla accessibile a <strong>qualsiasi professionista</strong>, non solo a sviluppatori.</p>
+          </div>
+          <div class="cd-cell">
+            <div class="cd-cell-title">Quando batte il custom</div>
+            <ul>
+              <li><strong>Prototipazione rapida</strong> — testare un'idea di agente in ore, non settimane, prima di investire nello sviluppo</li>
+              <li><strong>Team non tecnico</strong> — operations, marketing, HR possono costruire i propri agenti senza dipendere dall'IT</li>
+              <li><strong>Casi d'uso semplici</strong> — chatbot su knowledge base, automazioni lineari, assistenti di contenuto</li>
+              <li><strong>Volume di agenti</strong> — se hai bisogno di 20 agenti per 20 processi diversi, il no-code scala molto più facilmente</li>
+              <li><strong>Esplorazione del possibile</strong> — capire cosa è fattibile prima di decidere se e come costruire custom</li>
+            </ul>
+          </div>
+          <div class="cd-cell">
+            <div class="cd-cell-title">Quando il custom vince</div>
+            <ul>
+              <li><strong>Complessità del flusso</strong> — branching complesso, gestione errori sofisticata, logica condizionale avanzata</li>
+              <li><strong>Integrazioni non standard</strong> — se devi connettere sistemi interni non supportati dalla piattaforma</li>
+              <li><strong>Performance</strong> — a volumi alti il no-code può essere lento e costoso per la ridondanza di chiamate API</li>
+              <li><strong>Evoluzione</strong> — se il progetto crescerà in complessità, il refactoring da no-code a custom è doloroso</li>
+              <li><strong>Affidabilità mission-critical</strong> — per processi dove l'errore ha conseguenze serie, serve più controllo</li>
+            </ul>
+          </div>
+          <div class="cd-cell" style="grid-column:1/-1;">
+            <div class="cd-cell-title">Rispetto ai 3 livelli di costruzione</div>
+            <p><span class="vs-label">vs Codice puro</span> Non confrontabili direttamente — risolvono problemi diversi. Il no-code eccelle nel "many simple agents" dove il codice puro non sarebbe giustificabile. Il codice puro serve per l'agente singolo, complesso, differenziante.</p>
+            <p style="margin-top:10px"><span class="vs-label">vs Framework</span> Il no-code è la versione "visual" del framework. Perde in potenza e flessibilità, guadagna in accessibilità. Confine sfumato: Dify e n8n stanno aggiungendo funzionalità che si avvicinano ai framework.</p>
+            <p style="margin-top:10px"><span class="vs-label">vs No/Low-code (sé stesso)</span> Dentro questa categoria la gamma è ampia: da GPT Store (zero configurazione) a n8n (quasi un framework visuale). La scelta dipende dal livello di personalizzazione necessario.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- CAT 4 — OPEN SOURCE -->
+    <div class="cat-detail">
+      <div class="cd-header" onclick="toggleCat(this)">
+        <div class="cd-dot" style="background:var(--c4)"></div>
+        <div class="cd-cat-name">04 — Open Source</div>
+        <div class="cd-toggle">▼</div>
+      </div>
+      <div class="cd-body">
+        <div class="cd-grid">
+          <div class="cd-cell" style="grid-column:1/-1;">
+            <div class="cd-cell-title">Il vantaggio distintivo</div>
+            <p>Il vantaggio è di <strong>accelerazione senza lock-in</strong>. Framework come LangChain/LangGraph, CrewAI, Autogen, template pronti su GitHub, componenti riusabili — tutto codice che puoi leggere, modificare, estendere, integrare nel tuo progetto. Non compri un prodotto: acquisisci un punto di partenza. Il secondo vantaggio, spesso sottovalutato, è <strong>formativo</strong>: leggere come altri hanno implementato un agente insegna pattern e best practice che un tutorial non trasmette.</p>
+          </div>
+          <div class="cd-cell">
+            <div class="cd-cell-title">Quando batte il custom</div>
+            <ul>
+              <li><strong>Sempre come punto di partenza</strong> — anche se costruisci custom, partire da un template open source è quasi sempre meglio che partire da zero</li>
+              <li><strong>Pattern architetturali</strong> — il framework ti impone strutture che funzionano, evitandoti errori architetturali costosi</li>
+              <li><strong>Community e debugging</strong> — migliaia di sviluppatori che incontrano (e risolvono) gli stessi problemi prima di te</li>
+              <li><strong>Componenti specifici</strong> — un modulo di memoria, un parser di documenti, un connettore API sono problemi risolti che non vale la pena reimplementare</li>
+              <li><strong>Observability e monitoring</strong> — strumenti come LangSmith, Langfuse offrono visibilità che costruire da zero richiederebbe mesi</li>
+            </ul>
+          </div>
+          <div class="cd-cell">
+            <div class="cd-cell-title">Quando il custom vince</div>
+            <ul>
+              <li><strong>Overhead del framework</strong> — per agenti molto semplici, il framework aggiunge complessità non necessaria</li>
+              <li><strong>Dipendenza dalla roadmap</strong> — se il framework cambia API o pattern, devi adattarti (LangChain ha cambiato API più volte)</li>
+              <li><strong>Esigenze di performance estreme</strong> — il codice puro elimina layer di astrazione e riduce la latenza</li>
+              <li><strong>Logica radicalmente diversa</strong> — se il tuo pattern agentico non rientra in quelli previsti dal framework, forzarlo è peggio che costruire da zero</li>
+            </ul>
+          </div>
+          <div class="cd-cell" style="grid-column:1/-1;">
+            <div class="cd-cell-title">La particolarità strategica dell'open source</div>
+            <p>L'open source è l'unica categoria che <strong>non si pone in alternativa alla costruzione custom — la potenzia</strong>. Usare LangGraph o CrewAI non è "non costruire da zero" — è "costruire da zero, ma più velocemente e con fondamenta più solide". Per questo motivo, la domanda giusta non è "open source o custom?" ma "quale livello di open source integro nel mio progetto custom?".</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- CAT 5 — EMBEDDED -->
+    <div class="cat-detail">
+      <div class="cd-header" onclick="toggleCat(this)">
+        <div class="cd-dot" style="background:var(--c5)"></div>
+        <div class="cd-cat-name">05 — Embedded in Prodotti</div>
+        <div class="cd-toggle">▼</div>
+      </div>
+      <div class="cd-body">
+        <div class="cd-grid">
+          <div class="cd-cell" style="grid-column:1/-1;">
+            <div class="cd-cell-title">Il vantaggio distintivo</div>
+            <p>Il vantaggio è di <strong>invisibilità e contesto</strong>. Gli agenti embedded — GitHub Copilot nel codice, Notion AI nei documenti, Canva Magic nel design, Cursor nell'IDE — non li "installi" come agenti: sono funzionalità del prodotto che già usi. Non hanno fase di setup, non richiedono configurazione, non necessitano di competenze AI. Funzionano nel contesto esatto del tuo lavoro perché <strong>sono</strong> il tuo strumento di lavoro, potenziato.</p>
+          </div>
+          <div class="cd-cell">
+            <div class="cd-cell-title">Quando batte il custom</div>
+            <ul>
+              <li><strong>Task ricorrenti nello strumento</strong> — scrivere codice, redigere documenti, creare visual, analizzare dati nel contesto dello strumento specifico</li>
+              <li><strong>Zero overhead</strong> — nessun setup, nessuna configurazione, nessuna manutenzione. Il vendor gestisce tutto</li>
+              <li><strong>Contesto profondo</strong> — l'agente ha accesso al grafo dei tuoi file, alla storia delle tue modifiche, alle relazioni tra contenuti</li>
+              <li><strong>Adozione universale</strong> — chiunque usi il prodotto può usare l'agente, senza formazione aggiuntiva</li>
+            </ul>
+          </div>
+          <div class="cd-cell">
+            <div class="cd-cell-title">Quando il custom vince</div>
+            <ul>
+              <li><strong>Cross-tool</strong> — l'embedded vive dentro UN prodotto. Se il tuo processo attraversa più strumenti, l'embedded non può seguirlo</li>
+              <li><strong>Personalizzazione del comportamento</strong> — non puoi cambiare come GitHub Copilot genera codice o come Notion AI scrive</li>
+              <li><strong>Automazione end-to-end</strong> — l'embedded assiste l'umano; non può eseguire workflow autonomi complessi</li>
+              <li><strong>Integrazione con sistemi interni</strong> — l'embedded non conosce il tuo CRM, il tuo gestionale, le tue API interne</li>
+            </ul>
+          </div>
+          <div class="cd-cell" style="grid-column:1/-1;">
+            <div class="cd-cell-title">Rispetto ai 3 livelli di costruzione</div>
+            <p>Il confronto diretto ha poco senso: gli embedded risolvono un problema diverso. Non stai scegliendo tra "costruire un agente" e "usare Notion AI" — stai scegliendo se il tuo workflow beneficia di un agente <strong>esterno</strong> che orchestra più strumenti, o se il potenziamento AI <strong>interno</strong> al singolo strumento è sufficiente. Nella pratica, la risposta è spesso "entrambi": usi gli embedded per i task puntuali e costruisci un agente custom per i workflow cross-tool.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+
+<!-- ═══════════════════════════════════
+     SEZIONE 3 — MATRICE COMPARATIVA
+═══════════════════════════════════ -->
+<div class="section" id="s3">
+  <div class="sect-intro">
+    <div class="sect-num">Capitolo 04</div>
+    <h2>La matrice comparativa</h2>
+    <p>Le 5 categorie precostruite e i 3 livelli di costruzione autonoma confrontati sulle 5 dimensioni del vantaggio. Una vista sinottica per orientare la scelta.</p>
+  </div>
+
+  <div class="body-wrap">
+
+    <div class="block">
+      <div class="block-title">Matrice completa: 8 approcci × 5 dimensioni</div>
+      <div class="block-subtitle">★★★ = eccellente · ★★☆ = buono · ★☆☆ = limitato · ✗ = scarso o assente</div>
+
+      <div class="matrix-wrap">
+        <table class="matrix">
+          <thead>
+            <tr>
+              <th style="text-align:left">Approccio</th>
+              <th>Velocità<br>Go-to-Market</th>
+              <th>Soglia<br>Competenze</th>
+              <th>Robustezza<br>Affidabilità</th>
+              <th>TCO<br>(3 anni)</th>
+              <th>Flessibilità<br>Controllo</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td class="row-head" colspan="6" style="background:var(--bg3);text-transform:uppercase;font-size:10px;letter-spacing:1px;color:var(--ink4);">Agenti Precostruiti</td>
+            </tr>
+            <tr>
+              <td class="row-head" style="border-left:3px solid var(--c1)">Piattaforme Enterprise</td>
+              <td class="mx-high">★★★</td>
+              <td class="mx-high">★★★<br><small>admin piattaforma</small></td>
+              <td class="mx-high">★★★</td>
+              <td class="mx-mid">★★☆<br><small>canoni alti</small></td>
+              <td class="mx-low">★☆☆</td>
+            </tr>
+            <tr>
+              <td class="row-head" style="border-left:3px solid var(--c2)">Verticali SaaS</td>
+              <td class="mx-high">★★★</td>
+              <td class="mx-high">★★★<br><small>power user</small></td>
+              <td class="mx-high">★★★<br><small>dominio testato</small></td>
+              <td class="mx-mid">★★☆<br><small>pay-per-use</small></td>
+              <td class="mx-low">★☆☆</td>
+            </tr>
+            <tr>
+              <td class="row-head" style="border-left:3px solid var(--c3)">No-code & Marketplace</td>
+              <td class="mx-high">★★★</td>
+              <td class="mx-high">★★★<br><small>nessun coding</small></td>
+              <td class="mx-mid">★★☆<br><small>variabile</small></td>
+              <td class="mx-high">★★★<br><small>costi bassi</small></td>
+              <td class="mx-mid">★★☆</td>
+            </tr>
+            <tr>
+              <td class="row-head" style="border-left:3px solid var(--c4)">Open Source</td>
+              <td class="mx-mid">★★☆</td>
+              <td class="mx-mid">★★☆<br><small>dev Python</small></td>
+              <td class="mx-mid">★★☆<br><small>community</small></td>
+              <td class="mx-high">★★★<br><small>gratuito + manutenzione</small></td>
+              <td class="mx-high">★★★</td>
+            </tr>
+            <tr>
+              <td class="row-head" style="border-left:3px solid var(--c5)">Embedded in Prodotti</td>
+              <td class="mx-high">★★★<br><small>già attivo</small></td>
+              <td class="mx-high">★★★<br><small>zero</small></td>
+              <td class="mx-high">★★★</td>
+              <td class="mx-high">★★★<br><small>incluso nel prodotto</small></td>
+              <td class="mx-none">✗<br><small>non personalizzabile</small></td>
+            </tr>
+            <tr>
+              <td class="row-head" colspan="6" style="background:var(--bg3);text-transform:uppercase;font-size:10px;letter-spacing:1px;color:var(--ink4);">Costruzione Autonoma</td>
+            </tr>
+            <tr>
+              <td class="row-head" style="border-left:3px solid var(--l3)">Low/No-code custom</td>
+              <td class="mx-mid">★★☆</td>
+              <td class="mx-mid">★★☆<br><small>logica processi</small></td>
+              <td class="mx-mid">★★☆</td>
+              <td class="mx-mid">★★☆</td>
+              <td class="mx-mid">★★☆</td>
+            </tr>
+            <tr>
+              <td class="row-head" style="border-left:3px solid var(--l2)">Framework di orchestrazione</td>
+              <td class="mx-mid">★★☆</td>
+              <td class="mx-low">★☆☆<br><small>dev AI senior</small></td>
+              <td class="mx-mid">★★☆<br><small>da costruire</small></td>
+              <td class="mx-mid">★★☆<br><small>dev + infra</small></td>
+              <td class="mx-high">★★★</td>
+            </tr>
+            <tr>
+              <td class="row-head" style="border-left:3px solid var(--l1)">Codice puro su API</td>
+              <td class="mx-low">★☆☆</td>
+              <td class="mx-low">★☆☆<br><small>dev AI esperto</small></td>
+              <td class="mx-low">★☆☆<br><small>tutta da costruire</small></td>
+              <td class="mx-low">★☆☆<br><small>tutto sulle tue spalle</small></td>
+              <td class="mx-high">★★★<br><small>libertà totale</small></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="key-point">
+      <div class="kp-label">Lettura della matrice</div>
+      <div class="kp-text">Nessun approccio domina su tutte le dimensioni. La scelta dipende da quale dimensione è prioritaria nel tuo contesto.</div>
+      <div class="kp-sub">Se la priorità è la velocità e la soglia di competenze è bassa → piattaforme enterprise o verticali SaaS. Se la priorità è la flessibilità e il controllo → open source + framework. Se la priorità è il TCO e l'accessibilità → no-code o embedded. Se la priorità è costruire un asset proprietario → framework o codice puro.</div>
+    </div>
+
+    <div class="block">
+      <div class="block-title">Matrice incrociata: Scenario d'uso × Approccio consigliato</div>
+      <div class="block-subtitle">Per i casi d'uso più comuni, quale approccio è più adatto</div>
+
+      <div class="matrix-wrap">
+        <table class="matrix">
+          <thead>
+            <tr>
+              <th style="text-align:left">Scenario</th>
+              <th>Approccio consigliato</th>
+              <th>Alternativa</th>
+              <th>Perché</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td class="row-head">Chatbot FAQ su documenti aziendali</td>
+              <td class="mx-high">No-code / Verticale SaaS</td>
+              <td>Enterprise (se già in piattaforma)</td>
+              <td>Caso d'uso standard, qualità consolidata, ROI immediato</td>
+            </tr>
+            <tr>
+              <td class="row-head">Customer service su CRM</td>
+              <td class="mx-high">Enterprise (Agentforce)</td>
+              <td>Verticale SaaS (Intercom Fin)</td>
+              <td>Accesso dati nativo al CRM è il vantaggio decisivo</td>
+            </tr>
+            <tr>
+              <td class="row-head">Assistente di coding</td>
+              <td class="mx-high">Embedded (Copilot/Cursor)</td>
+              <td>—</td>
+              <td>Contesto IDE e integrazione nativa imbattibili</td>
+            </tr>
+            <tr>
+              <td class="row-head">Automazione workflow multi-step</td>
+              <td class="mx-mid">Framework (LangGraph)</td>
+              <td>No-code (n8n) per flussi semplici</td>
+              <td>La complessità del flusso richiede controllo fine</td>
+            </tr>
+            <tr>
+              <td class="row-head">Agente con logica proprietaria</td>
+              <td class="mx-mid">Framework + componenti OS</td>
+              <td>Codice puro se flusso molto atipico</td>
+              <td>Il valore differenziante è nel workflow, non nell'infrastruttura</td>
+            </tr>
+            <tr>
+              <td class="row-head">Proof of concept rapido</td>
+              <td class="mx-high">No-code / Marketplace</td>
+              <td>Template open source</td>
+              <td>Obiettivo è validare l'idea, non costruire per la produzione</td>
+            </tr>
+            <tr>
+              <td class="row-head">Agente multi-sistema (CRM + ERP + email)</td>
+              <td class="mx-mid">Framework + codice custom</td>
+              <td>—</td>
+              <td>Nessun precostruito copre naturalmente il cross-system</td>
+            </tr>
+            <tr>
+              <td class="row-head">Analisi documentale in settore regolato</td>
+              <td class="mx-high">Verticale SaaS (Harvey, ecc.)</td>
+              <td>Framework + RAG custom</td>
+              <td>Conoscenza di dominio + compliance incorporate nel verticale</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+
+<!-- ═══════════════════════════════════
+     SEZIONE 4 — ALBERO DECISIONALE
+═══════════════════════════════════ -->
+<div class="section" id="s4">
+  <div class="sect-intro">
+    <div class="sect-num">Capitolo 05</div>
+    <h2>L'albero decisionale</h2>
+    <p>Cinque domande in sequenza per orientare la scelta tra le opzioni. Ogni risposta restringe lo spazio delle possibilità e porta verso l'approccio più adatto al caso specifico.</p>
+  </div>
+
+  <div class="body-wrap">
+
+    <div class="decision-flow">
+
+      <div class="df-question">
+        <div class="df-num">1</div>
+        <div>
+          <div class="df-q">Il tuo caso d'uso è già coperto da un prodotto esistente?</div>
+          <div class="df-branches">
+            <div class="df-branch">
+              <strong>Sì, c'è un prodotto specifico</strong>
+              Un verticale SaaS o un agente enterprise copre il tuo dominio (customer service, helpdesk, legal, coding…). → Parti da lì. Il costo di replicarlo da zero è quasi sempre superiore al costo della licenza, specialmente se consideri la conoscenza di dominio incorporata.
+            </div>
+            <div class="df-branch">
+              <strong>No, il mio caso è specifico</strong>
+              Nessun prodotto precostruito copre il tuo workflow. → Passa alla domanda 2. Dovrai costruire, ma questo non significa partire da zero.
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="df-question">
+        <div class="df-num">2</div>
+        <div>
+          <div class="df-q">Dove stanno i dati di cui l'agente ha bisogno?</div>
+          <div class="df-branches">
+            <div class="df-branch">
+              <strong>In una piattaforma enterprise (CRM, ERP, M365…)</strong>
+              L'accesso nativo ai dati è il vantaggio più forte delle piattaforme enterprise. Se il 70%+ dei dati è in una piattaforma che offre agenti AI → valuta seriamente l'opzione enterprise prima di costruire.
+            </div>
+            <div class="df-branch">
+              <strong>Distribuiti su più sistemi o interni</strong>
+              L'integrazione dati è un costo che pagherai comunque. Nessun precostruito la risolve magicamente. → Passa alla domanda 3. La risposta orienterà il livello di costruzione.
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="df-question">
+        <div class="df-num">3</div>
+        <div>
+          <div class="df-q">Quanto è complesso il workflow che l'agente deve eseguire?</div>
+          <div class="df-branches">
+            <div class="df-branch">
+              <strong>Lineare e prevedibile</strong>
+              Input → elaborazione → output, con pochi branching. → Il no-code (n8n, Dify) è probabilmente sufficiente e molto più veloce da implementare. Se hai bisogno di un prototipo: marketplace.
+            </div>
+            <div class="df-branch">
+              <strong>Complesso, con branching, retry, multi-step</strong>
+              Il workflow ha logica condizionale, gestione errori sofisticata, necessità di stato persistente. → Serve un framework (LangGraph, CrewAI) o, per casi estremi, codice puro. Passa alla domanda 4.
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="df-question">
+        <div class="df-num">4</div>
+        <div>
+          <div class="df-q">Hai un team di sviluppo con competenze AI?</div>
+          <div class="df-branches">
+            <div class="df-branch">
+              <strong>Sì, sviluppatori Python con interesse per AI</strong>
+              Un framework di orchestrazione è la scelta più efficiente: dà struttura senza togliere controllo. Usa componenti open source per i problemi risolti (memoria, parsing, connettori) e investi il tempo del team sulla logica di business.
+            </div>
+            <div class="df-branch">
+              <strong>No, o competenze limitate</strong>
+              Il no-code diventa obbligatorio per i workflow semplici. Per quelli complessi, considera di costruire competenze gradualmente o di coinvolgere un partner tecnico per l'architettura iniziale. → Passa alla domanda 5.
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="df-question">
+        <div class="df-num">5</div>
+        <div>
+          <div class="df-q">L'agente è un asset strategico o uno strumento operativo?</div>
+          <div class="df-branches">
+            <div class="df-branch">
+              <strong>Asset strategico / differenziante</strong>
+              Il modo in cui l'agente lavora è parte del tuo vantaggio competitivo. → Investi nella costruzione custom (framework + componenti OS). Il valore a lungo termine giustifica il costo iniziale maggiore. La proprietà intellettuale resta tua.
+            </div>
+            <div class="df-branch">
+              <strong>Strumento operativo / di efficienza</strong>
+              L'agente deve funzionare bene, non essere unico. → Privilegia soluzioni precostruite (verticali, enterprise, no-code). Non ha senso costruire un asset proprietario per un processo commodity.
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+    <div class="key-point">
+      <div class="kp-label">La domanda strategica vera</div>
+      <div class="kp-text">Non è "compro pronto o faccio da zero?" — è: a quale livello della catena voglio posizionare il mio investimento di personalizzazione?</div>
+      <div class="kp-sub">Se il tuo valore differenziante è nel workflow unico, usa componenti precostruiti per tutto il resto (connettori, memoria, parsing) e investi il tempo sulla logica di orchestrazione. Se il caso d'uso è standard, partire da un precostruito e personalizzarlo è quasi sempre la scelta più razionale.</div>
+    </div>
+
+  </div>
+</div>
+
+
+<!-- ═══════════════════════════════════
+     SEZIONE 5 — STRATEGIA IBRIDA
+═══════════════════════════════════ -->
+<div class="section" id="s5">
+  <div class="sect-intro">
+    <div class="sect-num">Capitolo 06</div>
+    <h2>La strategia ibrida: il caso reale</h2>
+    <p>Nella pratica, la scelta non è quasi mai binaria. Le organizzazioni che ottengono i migliori risultati combinano approcci diversi secondo una logica precisa. Ecco i tre modelli di combinazione più efficaci.</p>
+  </div>
+
+  <div class="body-wrap">
+
+    <div class="block">
+      <div class="block-title">Modello 1 — Combinazione per fase temporale</div>
+      <div class="block-subtitle">Evoluzione progressiva nel tempo</div>
+
+      <div class="flow-box">
+        <div class="flow-title">Dal prototipo alla produzione</div>
+        <div class="flow-desc">Inizia con il precostruito per validare, poi migra al custom se necessario. Il precostruito funziona come "laboratorio" economico.</div>
+        <div class="flow-steps">
+          <div class="flow-step">
+            <div class="fs-num">Fase 1 — Settimane 1-2</div>
+            <div class="fs-label">Validazione</div>
+            <div class="fs-text">No-code / marketplace per testare l'idea. Costo minimo, velocità massima. L'obiettivo è capire se l'agente crea valore, non costruirlo perfettamente.</div>
+          </div>
+          <div class="flow-step">
+            <div class="fs-num">Fase 2 — Mesi 1-3</div>
+            <div class="fs-label">Prima produzione</div>
+            <div class="fs-text">Se l'idea funziona: verticale SaaS o enterprise (se il caso è coperto) oppure framework + template OS (se serve personalizzazione). Go-to-market rapido.</div>
+          </div>
+          <div class="flow-step">
+            <div class="fs-num">Fase 3 — Mesi 3-12</div>
+            <div class="fs-label">Evoluzione</div>
+            <div class="fs-text">Se il valore è confermato e servono funzionalità non coperte: migrazione progressiva a framework custom, mantenendo i componenti precostruiti dove funzionano.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="block">
+      <div class="block-title">Modello 2 — Combinazione per livello architetturale</div>
+      <div class="block-subtitle">Approcci diversi per componenti diversi dello stesso agente</div>
+
+      <div class="prose">
+        <p>Un singolo agente può combinare componenti di categorie diverse. La logica di orchestrazione è custom (framework), ma usa un modulo di memoria open source, un connettore precostruito per il CRM, e un componente embedded per la generazione di documenti. <strong>Il custom si concentra dove c'è valore differenziante; il precostruito copre tutto il resto.</strong></p>
+        <p>Esempio concreto: un agente per la gestione lead costruito su LangGraph (orchestrazione custom), con LangChain per le integrazioni API (componente OS), Salesforce connector per i dati CRM (enterprise), e Claude come modello di ragionamento. L'investimento custom è solo sulla logica di qualificazione lead — che è il valore proprietario.</p>
+      </div>
+    </div>
+
+    <div class="block">
+      <div class="block-title">Modello 3 — Combinazione per utente/funzione</div>
+      <div class="block-subtitle">Approcci diversi per team diversi nella stessa organizzazione</div>
+
+      <div class="scenario-grid">
+        <div class="scenario-card">
+          <div class="sc-tag" style="color:var(--c3)"><div class="sc-dot" style="background:var(--c3)"></div>Marketing & Sales</div>
+          <div class="sc-title">No-code + Enterprise</div>
+          <div class="sc-text">Il team marketing usa agenti no-code per generazione contenuti e analisi. Il team sales usa Agentforce nel CRM. Nessuna competenza tecnica richiesta, deployment in giorni.</div>
+          <div class="sc-rec rec-prebuilt">→ Precostruito</div>
+        </div>
+        <div class="scenario-card">
+          <div class="sc-tag" style="color:var(--c4)"><div class="sc-dot" style="background:var(--c4)"></div>Product & Engineering</div>
+          <div class="sc-title">Framework + Open Source</div>
+          <div class="sc-text">Il team tech costruisce agenti custom per i workflow proprietari, usando framework e componenti open source. Massimo controllo, massima personalizzazione, proprietà del codice.</div>
+          <div class="sc-rec rec-framework">→ Framework Custom</div>
+        </div>
+        <div class="scenario-card">
+          <div class="sc-tag" style="color:var(--c5)"><div class="sc-dot" style="background:var(--c5)"></div>Operations & HR</div>
+          <div class="sc-title">Verticale SaaS + Embedded</div>
+          <div class="sc-text">HR usa un verticale per screening CV e onboarding. Operations usa gli agenti embedded nei tool quotidiani (Notion AI, Excel Copilot). Zero sviluppo.</div>
+          <div class="sc-rec rec-prebuilt">→ Precostruito</div>
+        </div>
+        <div class="scenario-card">
+          <div class="sc-tag" style="color:var(--c2)"><div class="sc-dot" style="background:var(--c2)"></div>Customer Support</div>
+          <div class="sc-title">Verticale SaaS → Custom graduale</div>
+          <div class="sc-text">Si parte con un verticale (Intercom Fin, Zendesk AI). Se emergono esigenze non coperte → migrazione graduale a framework custom, mantenendo il verticale come fallback.</div>
+          <div class="sc-rec rec-hybrid">→ Ibrido Evolutivo</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="key-point">
+      <div class="kp-label">Il Principio Guida</div>
+      <div class="kp-text">Costruisci custom solo dove crei valore unico. Per tutto il resto, usa il precostruito migliore disponibile.</div>
+      <div class="kp-sub">L'errore più comune è costruire custom per orgoglio tecnico ("lo facciamo noi") o per paura del vendor lock-in. L'errore opposto è usare il precostruito anche dove il tuo differenziante richiede personalizzazione profonda. La strategia migliore è quasi sempre ibrida: la composizione giusta di precostruito e custom, scelta per ogni componente in base al valore strategico che quel componente porta.</div>
+    </div>
+
+  </div>
+</div>
+
+
+<!-- ═══════════════════════════════════
+     FOOTER
+═══════════════════════════════════ -->
+<div class="footer">
+  <span>Serie Agenti AI — Report 05 · Build vs Buy</span>
+  <span>Marzo 2026</span>
+</div>
+
+
+<script>
+// Navigation
+function showSect(n) {
+  document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+  document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('s'+n).classList.add('active');
+  document.querySelectorAll('.nav-btn')[n].classList.add('active');
+  window.scrollTo({top: 0, behavior: 'smooth'});
+}
+
+// Category accordion
+function toggleCat(header) {
+  const body = header.nextElementSibling;
+  const toggle = header.querySelector('.cd-toggle');
+  const isOpen = body.classList.contains('open');
+  
+  // Close all
+  document.querySelectorAll('.cd-body').forEach(b => b.classList.remove('open'));
+  document.querySelectorAll('.cd-toggle').forEach(t => t.textContent = '▼');
+  
+  // Toggle clicked
+  if (!isOpen) {
+    body.classList.add('open');
+    toggle.textContent = '▲';
+  }
+}
+</script>
+
+</body>
+</html>

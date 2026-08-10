@@ -1,0 +1,520 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>L'Orchestrazione Invisibile — Come Tutto si Cuce Insieme</title>
+<link href="https://fonts.googleapis.com/css2?family=Spectral:ital,wght@0,300;0,400;0,500;0,600;1,400&family=Sora:wght@200;300;400;500;600;700;800&family=IBM+Plex+Mono:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg:     #f4f3f0;
+  --bg2:    #ebe9e3;
+  --bg3:    #e0ddd3;
+  --ink:    #161410;
+  --ink2:   #27241c;
+  --ink3:   #5d5749;
+  --ink4:   #948d7c;
+  --border: #d7d3c7;
+  --border2:#c5bfb0;
+
+  --core:   #8b7355;
+  --core2:  #6b5740;
+  --warm:   #b3402a;
+  --good:   #3d7a45;
+  --bad:    #b3402a;
+  --teal:   #2e7d9c;
+  --violet: #7b5ea7;
+  --gold:   #b8860b;
+  --blue:   #3a7ca5;
+  --green:  #4a8c3f;
+  --red:    #c0392b;
+}
+
+* { margin:0; padding:0; box-sizing:border-box; }
+html { scroll-behavior:smooth; }
+
+body { background: var(--bg); color: var(--ink); font-family: 'Sora', sans-serif; font-weight: 300; font-size: 14px; line-height: 1.78; }
+
+.masthead { background: var(--ink); color: rgba(255,255,255,0.9); padding: 64px 56px 54px; position: relative; overflow: hidden; }
+.masthead::before { content: ''; position: absolute; inset: 0; background: radial-gradient(circle at 80% 35%, rgba(139,115,85,0.34) 0, transparent 45%), repeating-linear-gradient(0deg, rgba(255,255,255,0.012) 0, rgba(255,255,255,0.012) 1px, transparent 1px, transparent 58px); pointer-events: none; }
+.mh-eye { font-family: 'IBM Plex Mono', monospace; font-size: 10px; letter-spacing: 3px; text-transform: uppercase; color: rgba(255,255,255,0.28); margin-bottom: 20px; position: relative; }
+.masthead h1 { font-family: 'Spectral', serif; font-weight: 400; font-size: clamp(33px, 5.2vw, 60px); line-height: 1.06; letter-spacing: -1px; max-width: 720px; position: relative; }
+.masthead h1 em { font-style: italic; color: #d2bb98; }
+.mh-sub { margin-top: 22px; font-size: 15px; font-weight: 300; color: rgba(255,255,255,0.4); max-width: 690px; line-height: 1.72; position: relative; }
+
+.nav { background: var(--ink2); position: sticky; top: 0; z-index: 100; display: flex; overflow-x: auto; border-bottom: 1px solid rgba(255,255,255,0.06); }
+.nav-btn { flex: 1; min-width: 116px; padding: 13px 14px; border: none; background: transparent; cursor: pointer; font-family: 'Sora', sans-serif; font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.4px; color: rgba(255,255,255,0.3); border-right: 1px solid rgba(255,255,255,0.06); transition: all 0.2s; white-space: nowrap; }
+.nav-btn:last-child { border-right: none; }
+.nav-btn:hover { color: rgba(255,255,255,0.62); }
+.nav-btn.active { color: #fff; background: rgba(255,255,255,0.05); }
+.nav-btn.active::after { content: ''; display: block; height: 2px; background: var(--core); margin-top: 6px; border-radius: 1px; }
+
+.sect { display: none; }
+.sect.active { display: block; animation: fadeIn 0.3s ease; }
+@keyframes fadeIn { from { opacity:0; transform:translateY(6px); } to { opacity:1; transform:translateY(0); } }
+.sect-head { padding: 50px 56px 36px; border-bottom: 1px solid var(--border); }
+.sect-num { font-family: 'IBM Plex Mono', monospace; font-size: 10px; letter-spacing: 3px; text-transform: uppercase; color: var(--ink4); margin-bottom: 12px; }
+.sect-head h2 { font-family: 'Spectral', serif; font-weight: 400; font-size: clamp(27px, 3.6vw, 43px); line-height: 1.1; letter-spacing: -0.5px; max-width: 660px; margin-bottom: 14px; }
+.sect-head h2 em { font-style: italic; }
+.sect-head p { color: var(--ink3); max-width: 700px; font-size: 14.5px; }
+.wrap { padding: 36px 56px 60px; }
+
+.prose { max-width: 760px; }
+.prose p { color: var(--ink3); margin-bottom: 18px; font-size: 14.5px; }
+.prose p strong { color: var(--ink2); font-weight: 500; }
+.prose p em { font-style: italic; color: var(--ink2); }
+.lead { font-size: 16px !important; color: var(--ink2) !important; }
+.prose ul { max-width: 760px; margin: 0 0 18px; padding-left: 0; list-style: none; }
+.prose ul li { color: var(--ink3); font-size: 14px; line-height: 1.7; padding: 4px 0 4px 22px; position: relative; }
+.prose ul li::before { content: '—'; position: absolute; left: 0; color: var(--core); font-weight: 500; }
+.prose ul li strong { color: var(--ink2); font-weight: 500; }
+
+.h3 { font-family: 'IBM Plex Mono', monospace; font-size: 10px; letter-spacing: 2px; text-transform: uppercase; color: var(--ink4); margin: 40px 0 16px; padding-bottom: 8px; border-bottom: 1px solid var(--border); max-width: 760px; }
+.h3:first-child { margin-top: 0; }
+
+.diagram-wrap { margin: 10px 0; padding: 36px 24px; background: var(--ink); border: 1px solid var(--border2); overflow-x: auto; }
+.diagram-wrap svg { display: block; margin: 0 auto; }
+.diagram-cap { font-family: 'IBM Plex Mono', monospace; font-size: 11px; color: var(--ink4); text-align: center; margin-top: 14px; letter-spacing: 0.5px; }
+
+.assembly { margin: 18px 0; max-width: 820px; }
+.as { display: grid; grid-template-columns: 32px 1fr; border: 1px solid var(--border); border-bottom: none; background: var(--bg); }
+.as:last-child { border-bottom: 1px solid var(--border); }
+.as-n { color: #fff; font-family: 'IBM Plex Mono', monospace; font-size: 11px; font-weight: 500; display: flex; align-items: center; justify-content: center; }
+.as-body { padding: 12px 18px; }
+.as-name { font-weight: 600; font-size: 13.5px; color: var(--ink2); margin-bottom: 2px; }
+.as-name span { font-family: 'IBM Plex Mono', monospace; font-size: 9px; font-weight: 400; color: var(--ink4); letter-spacing: 0.5px; margin-left: 8px; text-transform: uppercase; }
+.as-desc { font-size: 12.5px; color: var(--ink3); line-height: 1.58; }
+.as-desc strong { color: var(--ink2); font-weight: 500; }
+
+.insight { margin: 24px 0; padding: 18px 22px; border-left: 4px solid var(--teal); background: var(--bg2); max-width: 820px; }
+.insight-label { font-family: 'IBM Plex Mono', monospace; font-size: 9px; letter-spacing: 2px; text-transform: uppercase; margin-bottom: 6px; color: var(--teal); }
+.insight p { font-size: 13.5px; line-height: 1.7; color: var(--ink2); margin: 0; }
+.insight.w { border-left-color: var(--warm); }
+.insight.w .insight-label { color: var(--warm); }
+.insight.g { border-left-color: var(--gold); }
+.insight.g .insight-label { color: var(--gold); }
+.insight.v { border-left-color: var(--violet); }
+.insight.v .insight-label { color: var(--violet); }
+
+.key-point { margin: 36px 0 8px; padding: 26px 30px; border-left: 4px solid var(--core); background: var(--bg2); max-width: 820px; }
+.kp-label { font-family: 'IBM Plex Mono', monospace; font-size: 9px; letter-spacing: 2px; text-transform: uppercase; color: var(--core2); margin-bottom: 8px; }
+.kp-text { font-family: 'Spectral', serif; font-size: 20px; line-height: 1.42; color: var(--ink2); font-style: italic; }
+.kp-sub { margin-top: 12px; font-size: 13px; color: var(--ink3); line-height: 1.65; }
+
+.types { display: grid; grid-template-columns: 1fr 1fr; gap: 1px; background: var(--border2); border: 1px solid var(--border2); margin: 20px 0; max-width: 880px; }
+.type-col { background: var(--bg); padding: 20px 22px; }
+.type-name { font-weight: 600; font-size: 15px; color: var(--ink2); margin-bottom: 4px; }
+.type-where { font-family: 'IBM Plex Mono', monospace; font-size: 9px; letter-spacing: 1px; text-transform: uppercase; color: var(--core2); margin-bottom: 12px; }
+.type-desc { font-size: 12.5px; color: var(--ink3); line-height: 1.62; }
+.type-desc strong { color: var(--ink2); font-weight: 500; }
+.type-desc em { font-style: italic; color: var(--ink2); }
+
+.sum-table { width: 100%; max-width: 880px; border-collapse: collapse; font-size: 12.5px; margin: 20px 0; border: 1px solid var(--border2); }
+.sum-table th, .sum-table td { padding: 11px 14px; border: 1px solid var(--border); text-align: left; vertical-align: top; }
+.sum-table thead th { background: var(--ink); color: rgba(255,255,255,0.82); font-weight: 600; font-size: 10px; text-transform: uppercase; letter-spacing: 0.3px; }
+.sum-table tbody tr:nth-child(even) { background: var(--bg2); }
+.sum-table td { color: var(--ink3); }
+.sum-table .p-cell { font-weight: 600; color: var(--ink2); white-space: nowrap; }
+.sum-table td strong { color: var(--ink2); font-weight: 500; }
+
+.bp { margin: 28px 0 8px; border: 1px solid var(--good); background: var(--bg); max-width: 880px; }
+.bp-head { background: var(--good); color: #fff; padding: 12px 22px; font-family: 'IBM Plex Mono', monospace; font-size: 11px; letter-spacing: 2px; text-transform: uppercase; display: flex; align-items: center; gap: 10px; }
+.bp-head::before { content: '\25C6'; font-size: 11px; }
+.bp-body { padding: 0; }
+.bp-row { display: grid; grid-template-columns: 1fr 1fr; gap: 1px; background: var(--border); border-bottom: 1px solid var(--border); }
+.bp-row:last-child { border-bottom: none; }
+.bp-do, .bp-dont { padding: 14px 20px; background: var(--bg); }
+.bp-tag { font-family: 'IBM Plex Mono', monospace; font-size: 9px; letter-spacing: 1.5px; text-transform: uppercase; margin-bottom: 7px; display: flex; align-items: center; gap: 6px; }
+.bp-do .bp-tag { color: var(--good); }
+.bp-dont .bp-tag { color: var(--bad); }
+.bp-do .bp-tag::before { content: '\2713'; font-weight: 700; }
+.bp-dont .bp-tag::before { content: '\2717'; font-weight: 700; }
+.bp-text { font-size: 12.5px; color: var(--ink3); line-height: 1.6; }
+.bp-text strong { color: var(--ink2); font-weight: 500; }
+.bp-single { padding: 14px 20px; border-bottom: 1px solid var(--border); font-size: 13px; color: var(--ink3); line-height: 1.65; }
+.bp-single:last-child { border-bottom: none; }
+.bp-single strong { color: var(--ink2); font-weight: 600; }
+
+.srcnote { margin: 22px 0; padding: 14px 20px; background: var(--bg2); border: 1px dashed var(--border2); max-width: 820px; font-size: 12px; color: var(--ink3); line-height: 1.6; }
+.srcnote b { font-family: 'IBM Plex Mono', monospace; font-size: 9px; letter-spacing: 1.5px; text-transform: uppercase; color: var(--ink4); display: block; margin-bottom: 4px; }
+
+.footer { background: var(--ink); color: rgba(255,255,255,0.22); padding: 30px 56px; font-family: 'IBM Plex Mono', monospace; font-size: 10px; letter-spacing: 1px; display: flex; justify-content: space-between; }
+
+@media (max-width: 860px) {
+  .masthead, .sect-head, .wrap, .footer { padding-left: 20px; padding-right: 20px; }
+  .types, .bp-row { grid-template-columns: 1fr; }
+  .footer { flex-direction: column; gap: 6px; }
+}
+</style>
+</head>
+<body>
+
+<div class="masthead">
+  <div class="mh-eye">Serie Agenti AI &middot; Parte II &mdash; Report 08</div>
+  <h1>L'orchestrazione invisibile:<br>come tutto si <em>cuce insieme</em></h1>
+  <p class="mh-sub">Abbiamo smontato otto strati, uno per uno. Ma un chatbot non li vive in sequenza isolata: a ogni singolo messaggio li assembla tutti, nell'ordine giusto, in un flusso unico. Questo &egrave; lo strato che rende il sistema un sistema &mdash; e che il chatbot nasconde meglio di ogni altro.</p>
+</div>
+
+<nav class="nav">
+  <button class="nav-btn active" onclick="show(0)">Il problema</button>
+  <button class="nav-btn" onclick="show(1)">Un turno</button>
+  <button class="nav-btn" onclick="show(2)">L'ordine</button>
+  <button class="nav-btn" onclick="show(3)">Il loop</button>
+  <button class="nav-btn" onclick="show(4)">Oltre il turno</button>
+  <button class="nav-btn" onclick="show(5)">Trade-off</button>
+  <button class="nav-btn" onclick="show(6)">Best practice</button>
+</nav>
+
+
+<!-- S0 -->
+<div class="sect active" id="s0">
+  <div class="sect-head">
+    <div class="sect-num">Sezione 00 &middot; Il problema da risolvere</div>
+    <h2>Otto strati, <em>un solo</em> messaggio</h2>
+    <p>Ogni report finora ha isolato uno strato per studiarlo. Ma nella realt&agrave; nessuno strato agisce da solo: a ogni turno, qualcosa deve metterli in fila e farli collaborare. Quel qualcosa &egrave; l'orchestrazione.</p>
+  </div>
+  <div class="wrap">
+    <div class="prose">
+      <p class="lead">Quando scrivi un messaggio a Claude e premi invio, succede molto pi&ugrave; di una chiamata al modello. In una frazione di secondo, gli strati che abbiamo studiato &mdash; system prompt, memoria, strumenti, RAG, configurazione, guardrail &mdash; vengono <strong>assemblati in un ordine preciso</strong>, dati in pasto al modello, e il risultato viene processato all'indietro attraverso gli stessi strati prima di tornare a te. L'orchestrazione &egrave; la regia di tutto questo.</p>
+
+      <p>&Egrave; lo strato pi&ugrave; esterno della cipolla, e per una ragione precisa: non aggiunge una <em>nuova capacit&agrave;</em> come gli altri, ma <strong>coordina tutte le capacit&agrave;</strong> che gli strati interni hanno introdotto. Se il system prompt &egrave; l'identit&agrave; e gli strumenti sono le mani, l'orchestrazione &egrave; il sistema nervoso che decide cosa attivare, quando, e in che ordine &mdash; a ogni singolo turno.</p>
+
+      <p>&Egrave; anche lo strato che il chatbot nasconde con pi&ugrave; cura. Tu vedi un campo di testo e una risposta; tutto il lavoro di assemblaggio &egrave; invisibile. Eppure &egrave; proprio qui che un agente diventa robusto o fragile: non nel singolo strato fatto bene, ma nel <em>modo</em> in cui gli strati vengono cuciti insieme. Due agenti con gli stessi componenti possono comportarsi in modo radicalmente diverso a seconda di come sono orchestrati.</p>
+
+      <div class="key-point">
+        <div class="kp-label">Il principio di questo strato</div>
+        <div class="kp-text">Un chatbot non &egrave; la somma dei suoi strati: &egrave; il modo in cui li mette in fila a ogni turno. L'orchestrazione &egrave; ci&ograve; che trasforma un mucchio di componenti in un sistema.</div>
+        <div class="kp-sub">&Egrave; la lezione che chiude la serie: puoi avere il miglior system prompt, la miglior memoria e i migliori strumenti, ma se l'orchestrazione &egrave; sciatta l'agente sar&agrave; inaffidabile. La qualit&agrave; di un agente si gioca nelle cuciture.</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+<!-- S1 -->
+<div class="sect" id="s1">
+  <div class="sect-head">
+    <div class="sect-num">Sezione 01 &middot; L'anatomia di un turno</div>
+    <h2>Cosa accade <em>davvero</em> quando premi invio</h2>
+    <p>Ricostruiamo il percorso completo di un singolo messaggio, dallo schermo al modello e ritorno. &Egrave; la sintesi operativa di tutta la serie: ogni passo &egrave; uno strato che abbiamo gi&agrave; studiato.</p>
+  </div>
+  <div class="wrap">
+    <div class="prose">
+      <p>Ecco la sequenza di assemblaggio di una singola richiesta. I primi passi costruiscono il contesto <em>prima</em> del modello; gli ultimi processano il risultato <em>dopo</em>. Nota come ciascuno corrisponda a un report della serie.</p>
+    </div>
+
+    <div class="assembly">
+      <div class="as">
+        <div class="as-n" style="background:var(--red)">A</div>
+        <div class="as-body">
+          <div class="as-name">Guardrail in ingresso <span>Report 07</span></div>
+          <div class="as-desc">Il tuo messaggio viene <strong>prima esaminato</strong>: tentativi di manipolazione, contenuti vietati, pattern di abuso. Se scatta l'allarme, la richiesta si ferma qui, prima di consumare il modello.</div>
+        </div>
+      </div>
+      <div class="as">
+        <div class="as-n" style="background:var(--violet)">B</div>
+        <div class="as-body">
+          <div class="as-name">Composizione del system prompt <span>Report 02</span></div>
+          <div class="as-desc">Si antepone il system prompt: identit&agrave;, comportamento, data corrente, regole. &Egrave; la prima cosa che il modello legger&agrave;, e definisce il quadro di tutto.</div>
+        </div>
+      </div>
+      <div class="as">
+        <div class="as-n" style="background:var(--gold)">C</div>
+        <div class="as-body">
+          <div class="as-name">Iniezione di memoria e contesto <span>Report 03</span></div>
+          <div class="as-desc">Si aggiungono il profilo di memoria rilevante e la cronologia della conversazione (eventualmente compattata), per dare continuit&agrave; e personalizzazione.</div>
+        </div>
+      </div>
+      <div class="as">
+        <div class="as-n" style="background:var(--core)">D</div>
+        <div class="as-body">
+          <div class="as-name">Caricamento di skills e configurazione <span>Report 06</span></div>
+          <div class="as-desc">Si scansionano le skills disponibili; quelle rilevanti per il compito vengono caricate (progressive disclosure). Si applicano istruzioni personalizzate e stile.</div>
+        </div>
+      </div>
+      <div class="as">
+        <div class="as-n" style="background:var(--green)">E</div>
+        <div class="as-body">
+          <div class="as-name">Dichiarazione degli strumenti <span>Report 04</span></div>
+          <div class="as-desc">Si include l'elenco degli strumenti disponibili con le loro descrizioni, cos&igrave; il modello sa cosa pu&ograve; invocare in questo turno.</div>
+        </div>
+      </div>
+      <div class="as">
+        <div class="as-n" style="background:var(--core2)">F</div>
+        <div class="as-body">
+          <div class="as-name">Chiamata al modello + ciclo agentico <span>Report 01 &middot; 04 &middot; 05</span></div>
+          <div class="as-desc">Il modello (con i suoi parametri) elabora il tutto. Se chiede uno strumento, parte il <strong>ciclo</strong>: esecuzione, risultato, di nuovo al modello &mdash; incluso il RAG, che &egrave; un'invocazione di ricerca. Si ripete finch&eacute; serve.</div>
+        </div>
+      </div>
+      <div class="as">
+        <div class="as-n" style="background:var(--red)">G</div>
+        <div class="as-body">
+          <div class="as-name">Guardrail in uscita <span>Report 07</span></div>
+          <div class="as-desc">La risposta prodotta viene <strong>esaminata prima di raggiungerti</strong>: contenuti dannosi, fughe di dati, deviazioni. &Egrave; l'ultimo posto di controllo.</div>
+        </div>
+      </div>
+      <div class="as">
+        <div class="as-n" style="background:var(--gold)">H</div>
+        <div class="as-body">
+          <div class="as-name">Aggiornamento dello stato <span>Report 03</span></div>
+          <div class="as-desc">Dopo la risposta, si aggiorna la cronologia e, se opportuno, si estraggono nuovi fatti per la memoria. Il turno successivo partir&agrave; da qui.</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="insight g">
+      <div class="insight-label">Perch&eacute; questa &egrave; la sintesi della serie</div>
+      <p>Questo elenco &egrave; la cipolla vista "in movimento". Ogni report ha descritto uno strato come un oggetto statico; qui li vedi come <strong>passi di un processo</strong> che si svolge a ogni messaggio. Capire questa sequenza significa capire come un chatbot funziona davvero &mdash; e avere lo schema esatto da implementare nei tuoi agenti.</p>
+    </div>
+  </div>
+</div>
+
+
+<!-- S2 -->
+<div class="sect" id="s2">
+  <div class="sect-head">
+    <div class="sect-num">Sezione 02 &middot; Perch&eacute; l'ordine conta</div>
+    <h2>L'<em>ordine</em> non &egrave; arbitrario</h2>
+    <p>La sequenza degli strati non &egrave; casuale: ogni posizione ha una ragione. Sbagliare l'ordine &egrave; uno degli errori pi&ugrave; sottili e dannosi nella costruzione di un agente.</p>
+  </div>
+  <div class="wrap">
+    <div class="prose">
+      <p>Perch&eacute; il guardrail in ingresso viene <em>prima</em> di tutto? Perch&eacute; bloccare una richiesta abusiva prima di assemblare il contesto e chiamare il modello fa risparmiare lavoro, tempo e denaro &mdash; e impedisce alla manipolazione di entrare nel sistema. Un controllo messo dopo arriverebbe a giochi gi&agrave; fatti.</p>
+
+      <p>Perch&eacute; il system prompt viene <em>prima</em> della cronologia e degli strumenti? Perch&eacute; stabilisce il quadro entro cui tutto il resto va interpretato: l'identit&agrave; e le regole devono essere "in testa" perch&eacute; il modello le applichi a ci&ograve; che legge dopo. &Egrave; la gerarchia di autorit&agrave; del Report 02, resa concreta nell'ordine di assemblaggio.</p>
+
+      <p>Perch&eacute; i guardrail in uscita vengono <em>dopo</em> il modello ma <em>prima</em> dell'utente? Perch&eacute; sono l'ultima rete: devono vedere il prodotto finito, non un abbozzo, ma devono intercettarlo prima che faccia danno. La loro posizione &egrave; vincolata: non possono stare altrove.</p>
+
+      <div class="insight w">
+        <div class="insight-label">L'errore d'ordine pi&ugrave; comune</div>
+        <p>Un classico inciampo: mettere informazioni fidate (regole, istruzioni di sistema) <em>dopo</em> contenuti non fidati (un documento recuperato, l'input dell'utente) nella stessa porzione di contesto. Cos&igrave; facendo, un contenuto ostile potrebbe "sovrascrivere" le istruzioni che lo precedono &mdash; &egrave; la porta d'ingresso della prompt injection (Report 07). La regola di orchestrazione &egrave; netta: <strong>ci&ograve; che &egrave; autorevole va posizionato in modo che i contenuti esterni non possano scavalcarlo</strong>. L'ordine non &egrave; estetica: &egrave; sicurezza.</p>
+      </div>
+
+      <p>C'&egrave; poi la dimensione del <strong>budget di contesto</strong>, che attraversa tutta la sequenza. Ogni strato che si aggiunge &mdash; system prompt, memoria, skills, strumenti, risultati RAG &mdash; consuma una fetta della finestra <em>prima</em> che il modello risponda. L'orchestrazione &egrave; anche la gestione di questo budget in tempo reale: decidere quanta memoria iniettare, quante skills caricare, quanti risultati di ricerca includere, senza saturare lo spazio e innescare il context rot del Report 01. &Egrave; un bilancio che si rifà a ogni turno.</p>
+    </div>
+  </div>
+</div>
+
+
+<!-- S3 -->
+<div class="sect" id="s3">
+  <div class="sect-head">
+    <div class="sect-num">Sezione 03 &middot; Il cuore dinamico</div>
+    <h2>Il <em>loop</em> e le sue insidie</h2>
+    <p>Il passo F &mdash; il ciclo agentico &mdash; &egrave; dove l'orchestrazione diventa pi&ugrave; delicata. Gestirlo bene &egrave; ci&ograve; che separa un agente robusto da uno che si blocca, spreca o impazzisce.</p>
+  </div>
+  <div class="wrap">
+    <div class="prose">
+      <p>Nel Report 04 abbiamo visto il ciclo nella sua forma pulita: il modello chiede uno strumento, il codice esegue, il risultato rientra, si ripete finch&eacute; non c'&egrave; pi&ugrave; nulla da chiamare. In teoria &egrave; semplice. In pratica, &egrave; il punto dove nascono i guasti pi&ugrave; insidiosi, perch&eacute; il loop &egrave; <strong>dinamico</strong>: non sai in anticipo quante iterazioni servir&agrave;, n&eacute; se andranno tutte a buon fine.</p>
+
+      <p>L'orchestrazione deve rispondere a domande che il loop "felice" ignora:</p>
+      <ul>
+        <li><strong>E se uno strumento fallisce?</strong> Si riprova, si cambia strategia, si avvisa l'utente? Un errore non gestito blocca l'intero agente.</li>
+        <li><strong>E se il modello entra in loop?</strong> Continua a chiamare lo stesso strumento senza progredire. Serve un tetto massimo di iterazioni e un rilevatore di stallo.</li>
+        <li><strong>E se i risultati riempiono il contesto?</strong> Un loop lungo accumula tool_result voluminosi: va gestita la pulizia (Report 03 e 04) man mano.</li>
+        <li><strong>E se serve un umano?</strong> Per le azioni irreversibili, il loop deve potersi fermare e chiedere conferma, non procedere ciecamente.</li>
+      </ul>
+
+      <p>&Egrave; per questo che, come notava il Report 04, "il ciclo &egrave; semplice da descrivere e difficile da rendere robusto". La maggior parte del codice di un agente serio non &egrave; nel prompt o negli strumenti: &egrave; nella <strong>logica di orchestrazione del loop</strong> &mdash; gestione degli errori, limiti, rilevamento di stalli, punti di intervento umano. &Egrave; lavoro poco appariscente ma decisivo.</p>
+
+      <div class="insight v">
+        <div class="insight-label">La verit&agrave; che la serie ha costruito fin qui</div>
+        <p>Ripensa al confine chatbot/agente del Report 04: un agente &egrave; un LLM con strumenti <em>dentro un ciclo</em>. Ora possiamo essere precisi su dove vive quel "dentro un ciclo": &egrave; nell'orchestrazione. L'agente non &egrave; il modello, e non sono gli strumenti: &egrave; <strong>la regia che li fa lavorare insieme, turno dopo turno, gestendo ci&ograve; che pu&ograve; andare storto</strong>. La differenza tra una demo che funziona una volta e un prodotto che funziona sempre sta quasi tutta qui.</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+<!-- S4 -->
+<div class="sect" id="s4">
+  <div class="sect-head">
+    <div class="sect-num">Sezione 04 &middot; L'orizzonte</div>
+    <h2>Oltre il singolo turno: <em>pi&ugrave; agenti</em></h2>
+    <p>Finora abbiamo parlato di orchestrazione <em>dentro</em> un turno. Ma il 2026 ha spostato la frontiera: l'orchestrazione di pi&ugrave; agenti che collaborano. &Egrave; il naturale passo successivo della tua crescita.</p>
+  </div>
+  <div class="wrap">
+    <div class="prose">
+      <p>Tutto ci&ograve; che abbiamo descritto riguarda un singolo agente che assembla i suoi strati a ogni messaggio. Esiste per&ograve; un secondo livello di orchestrazione, oggi al centro dell'attenzione: il coordinamento di <strong>pi&ugrave; agenti specializzati</strong> che lavorano insieme su un compito complesso. La pratica del 2026 lo descrive come il passaggio dall'era del singolo agente all'era dell'orchestrazione.</p>
+
+      <p>Il pattern dominante &egrave; l'<strong>orchestrator-worker</strong> (o lead-and-subagents): un agente "capo" scompone un problema in parti e le delega ad agenti specialisti, ciascuno con il proprio modello, prompt e strumenti. I sub-agenti lavorano &mdash; spesso in parallelo, su uno spazio condiviso &mdash; e restituiscono i risultati al capo, che li sintetizza. L'esempio tipico: un agente conduce un'indagine mentre i sub-agenti si distribuiscono su cronologia dei deploy, log di errore, metriche e ticket di supporto, simultaneamente.</p>
+
+      <div class="types">
+        <div class="type-col">
+          <div class="type-name">Catena sequenziale</div>
+          <div class="type-where">a staffetta</div>
+          <div class="type-desc">Gli agenti lavorano in fila: l'output di uno &egrave; l'input del successivo (recupera &rarr; analizza &rarr; sintetizza &rarr; formatta). Ideale quando ogni passo dipende davvero dal precedente. Come una catena di montaggio.</div>
+        </div>
+        <div class="type-col">
+          <div class="type-name">Fan-out parallelo</div>
+          <div class="type-where">a ventaglio</div>
+          <div class="type-desc">Un orchestratore distribuisce sotto-compiti indipendenti a pi&ugrave; agenti che lavorano <em>insieme</em>, poi raccoglie e fonde i risultati. Ideale quando le parti non dipendono l'una dall'altra. Pi&ugrave; veloce, ma pi&ugrave; complesso da coordinare.</div>
+        </div>
+      </div>
+
+      <p>Questo &egrave; esattamente il territorio dei tuoi report precedenti sull'architettura degli agenti: l'orchestratore come componente, le sue relazioni con gli altri. La serie "cipolla" ti ha mostrato cosa c'&egrave; <em>dentro</em> un singolo agente; l'orchestrazione multi-agente &egrave; il livello in cui pi&ugrave; di queste cipolle collaborano. Sono due scale dello stesso principio: scomporre e coordinare.</p>
+
+      <div class="insight">
+        <div class="insight-label">Un avvertimento dalla pratica del 2026</div>
+        <p>La ricerca corrente segnala una cosa importante per chi costruisce: allineare bene i singoli agenti <strong>non garantisce</strong> la sicurezza del sistema nel suo insieme. Quando pi&ugrave; agenti interagiscono emergono comportamenti collettivi che nessuno dei singoli avrebbe. Lo stesso vale per la sicurezza dei guardrail (Report 07): vanno pensati anche a livello di sistema, non solo di agente. Prima di moltiplicare gli agenti, conviene padroneggiare l'orchestrazione di uno solo &mdash; che &egrave; esattamente ci&ograve; che questa serie ti ha dato.</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+<!-- S5 -->
+<div class="sect" id="s5">
+  <div class="sect-head">
+    <div class="sect-num">Sezione 05 &middot; Le scelte</div>
+    <h2>I <em>trade-off</em> dell'orchestrazione</h2>
+    <p>Decisioni con pro e contro, da soppesare in base al tuo caso d'uso. L'orchestrazione &egrave; dove la complessit&agrave; si accumula &mdash; e va spesa con parsimonia.</p>
+  </div>
+  <div class="wrap">
+    <div class="bp" style="border-color:var(--ink3);">
+      <div class="bp-head" style="background:var(--ink3);">Trade-off &middot; da soppesare nel tuo contesto</div>
+      <div class="bp-body">
+        <div class="bp-single"><strong>Autonomia vs prevedibilit&agrave;.</strong> Un'orchestrazione che lascia il modello libero di decidere il flusso &egrave; flessibile e gestisce casi imprevisti, ma &egrave; difficile da testare e pu&ograve; sorprenderti; un flusso rigido e predeterminato &egrave; prevedibile e verificabile, ma fragile davanti all'inatteso. Pi&ugrave; il compito &egrave; critico, pi&ugrave; conviene la prevedibilit&agrave;.</div>
+        <div class="bp-single"><strong>Singolo agente vs multi-agente.</strong> Un solo agente &egrave; pi&ugrave; semplice da costruire, debuggare e ragionarci sopra; un sistema multi-agente affronta compiti pi&ugrave; grandi ma moltiplica la complessit&agrave;, i costi e i modi di fallire. La maggior parte dei problemi reali si risolve con un singolo agente ben orchestrato: il multi-agente &egrave; per quando uno solo davvero non basta.</div>
+        <div class="bp-single"><strong>Ricchezza di contesto vs budget.</strong> Iniettare pi&ugrave; memoria, pi&ugrave; skills, pi&ugrave; risultati a ogni turno rende l'agente pi&ugrave; informato ma consuma finestra, costa di pi&ugrave; e rischia il context rot. L'orchestrazione decide questo equilibrio a ogni messaggio: pi&ugrave; non &egrave; sempre meglio.</div>
+        <div class="bp-single"><strong>Controllo umano vs automazione.</strong> Inserire punti di conferma umana rende l'agente pi&ugrave; sicuro ma pi&ugrave; lento e meno autonomo; rimuoverli lo rende fluido ma pericoloso sulle azioni irreversibili. Dove va messo l'umano nel loop &egrave; una delle decisioni di orchestrazione pi&ugrave; importanti, e dipende dalla gravit&agrave; delle conseguenze.</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+<!-- S6 -->
+<div class="sect" id="s6">
+  <div class="sect-head">
+    <div class="sect-num">Sezione 06 &middot; Cosa porto a casa</div>
+    <h2>Best practice dell'<em>orchestrazione</em></h2>
+    <p>Indicazioni azionabili per cucire insieme gli strati nei tuoi agenti, nel formato fai-cos&igrave; / non-fare-cos&igrave; della serie.</p>
+  </div>
+  <div class="wrap">
+
+    <div class="bp">
+      <div class="bp-head">Best practice &middot; orchestrazione</div>
+      <div class="bp-body">
+        <div class="bp-row">
+          <div class="bp-do">
+            <div class="bp-tag">Fai cos&igrave;</div>
+            <div class="bp-text">Definisci l'<strong>ordine di assemblaggio</strong> in modo esplicito e consapevole: guardrail in ingresso, poi system prompt, contesto, configurazione, strumenti, modello, guardrail in uscita.</div>
+          </div>
+          <div class="bp-dont">
+            <div class="bp-tag">Non fare cos&igrave;</div>
+            <div class="bp-text">Non assemblare il contesto "a caso" o lasciando che cresca per accumulo: l'ordine influenza sicurezza, costo e comportamento, e un ordine sbagliato apre falle sottili.</div>
+          </div>
+        </div>
+        <div class="bp-row">
+          <div class="bp-do">
+            <div class="bp-tag">Fai cos&igrave;</div>
+            <div class="bp-text">Posiziona ci&ograve; che &egrave; <strong>autorevole</strong> (regole, istruzioni) in modo che i contenuti esterni non fidati non possano scavalcarlo nel contesto.</div>
+          </div>
+          <div class="bp-dont">
+            <div class="bp-tag">Non fare cos&igrave;</div>
+            <div class="bp-text">Non mischiare istruzioni fidate e contenuti esterni allo stesso livello: &egrave; cos&igrave; che una prompt injection sovrascrive le tue regole.</div>
+          </div>
+        </div>
+        <div class="bp-row">
+          <div class="bp-do">
+            <div class="bp-tag">Fai cos&igrave;</div>
+            <div class="bp-text">Rendi il <strong>loop robusto</strong>: tetto massimo di iterazioni, gestione degli errori degli strumenti, rilevamento degli stalli, vie d'uscita pulite.</div>
+          </div>
+          <div class="bp-dont">
+            <div class="bp-tag">Non fare cos&igrave;</div>
+            <div class="bp-text">Non implementare solo il "caso felice" del ciclo: in produzione gli strumenti falliscono e i modelli si incartano, e un loop senza freni brucia token o non conclude mai.</div>
+          </div>
+        </div>
+        <div class="bp-row">
+          <div class="bp-do">
+            <div class="bp-tag">Fai cos&igrave;</div>
+            <div class="bp-text">Gestisci il <strong>budget di contesto a ogni turno</strong>: decidi quanta memoria, quante skills e quanti risultati includere in base alla rilevanza, non al "tutto disponibile".</div>
+          </div>
+          <div class="bp-dont">
+            <div class="bp-tag">Non fare cos&igrave;</div>
+            <div class="bp-text">Non iniettare tutto ci&ograve; che hai a ogni messaggio: saturi la finestra, paghi di pi&ugrave; e peggiori la qualit&agrave; per il context rot.</div>
+          </div>
+        </div>
+        <div class="bp-row">
+          <div class="bp-do">
+            <div class="bp-tag">Fai cos&igrave;</div>
+            <div class="bp-text">Inserisci <strong>punti di controllo umano</strong> in proporzione alla gravit&agrave; delle azioni: conferme per ci&ograve; che &egrave; irreversibile, autonomia per ci&ograve; che &egrave; innocuo.</div>
+          </div>
+          <div class="bp-dont">
+            <div class="bp-tag">Non fare cos&igrave;</div>
+            <div class="bp-text">Non automatizzare ciecamente l'intero flusso: un agente che esegue azioni gravi senza un freno umano &egrave; un incidente che aspetta di accadere.</div>
+          </div>
+        </div>
+        <div class="bp-row">
+          <div class="bp-do">
+            <div class="bp-tag">Fai cos&igrave;</div>
+            <div class="bp-text">Rendi il flusso <strong>osservabile</strong>: registra cosa &egrave; stato assemblato, quali strumenti sono stati chiamati e in che ordine, per poter capire i comportamenti.</div>
+          </div>
+          <div class="bp-dont">
+            <div class="bp-tag">Non fare cos&igrave;</div>
+            <div class="bp-text">Non trattare l'orchestrazione come una scatola nera: se non puoi ispezionare cosa &egrave; successo a ogni turno, non potrai mai capire perch&eacute; l'agente ha sbagliato.</div>
+          </div>
+        </div>
+        <div class="bp-row">
+          <div class="bp-do">
+            <div class="bp-tag">Fai cos&igrave;</div>
+            <div class="bp-text"><strong>Padroneggia un agente solo</strong> prima di passare al multi-agente. Un singolo agente ben orchestrato risolve la maggior parte dei problemi reali.</div>
+          </div>
+          <div class="bp-dont">
+            <div class="bp-tag">Non fare cos&igrave;</div>
+            <div class="bp-text">Non saltare al multi-agente per moda: moltiplichi complessit&agrave;, costi e modi di fallire, e allineare i singoli agenti non garantisce la sicurezza del sistema.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="h3">L'ordine di assemblaggio in sintesi</div>
+    <table class="sum-table">
+      <thead>
+        <tr><th>Fase</th><th>Passo</th><th>Strato</th><th>Momento</th></tr>
+      </thead>
+      <tbody>
+        <tr><td class="p-cell">A</td><td>Guardrail in ingresso</td><td>Sicurezza (07)</td><td>Prima del modello</td></tr>
+        <tr><td class="p-cell">B</td><td>System prompt</td><td>Identit&agrave; (02)</td><td>Prima del modello</td></tr>
+        <tr><td class="p-cell">C</td><td>Memoria e contesto</td><td>Memoria (03)</td><td>Prima del modello</td></tr>
+        <tr><td class="p-cell">D</td><td>Skills e configurazione</td><td>Config (06)</td><td>Prima del modello</td></tr>
+        <tr><td class="p-cell">E</td><td>Dichiarazione strumenti</td><td>Strumenti (04)</td><td>Prima del modello</td></tr>
+        <tr><td class="p-cell">F</td><td>Modello + ciclo (incl. RAG)</td><td>Nucleo (01), Tool (04), RAG (05)</td><td><strong>Il modello lavora</strong></td></tr>
+        <tr><td class="p-cell">G</td><td>Guardrail in uscita</td><td>Sicurezza (07)</td><td>Dopo il modello</td></tr>
+        <tr><td class="p-cell">H</td><td>Aggiornamento stato/memoria</td><td>Memoria (03)</td><td>Dopo il modello</td></tr>
+      </tbody>
+    </table>
+
+    <div class="srcnote">
+      <b>Affidabilit&agrave; di queste indicazioni</b>
+      I pattern di orchestrazione multi-agente (orchestrator-worker, catene sequenziali, fan-out parallelo), la transizione 2026 verso l'era dell'orchestrazione e l'avvertimento che allineare i singoli agenti non garantisce la sicurezza del sistema sono <strong>documentati</strong> dalla pratica e dalla ricerca correnti. La sequenza di assemblaggio di un singolo turno (passi A&ndash;H) &egrave; una <strong>ricostruzione</strong> didattica: rappresenta l'ordine logico con cui gli strati descritti nella serie si combinano, non un tracciato ufficiale dell'implementazione interna di Claude, che non &egrave; pubblica. L'ordine esatto e i dettagli variano tra prodotti e versioni. Le best practice combinano principi documentati e pattern consolidati dello sviluppo di agenti.
+    </div>
+
+    <div class="key-point">
+      <div class="kp-label">Verso il Report 09</div>
+      <div class="kp-text">La cipolla &egrave; completa: dal nucleo all'orchestrazione, abbiamo smontato ogni strato. Resta da ricomporre il quadro e distillarne le lezioni trasversali.</div>
+      <div class="kp-sub">Il report finale &mdash; la sintesi &mdash; consolider&agrave; le best practice che attraversano tutti gli strati, con la tabella decisiva: per ogni strato, cosa replicare, cosa semplificare e cosa evitare quando costruisci i tuoi agenti.</div>
+    </div>
+
+  </div>
+</div>
+
+
+<div class="footer">
+  <span>Serie Agenti AI &middot; Parte II &mdash; Report 08 &middot; L'Orchestrazione Invisibile</span>
+  <span>Maggio 2026</span>
+</div>
+
+<script>
+function show(n) {
+  document.querySelectorAll('.sect').forEach(s => s.classList.remove('active'));
+  document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('s'+n).classList.add('active');
+  document.querySelectorAll('.nav-btn')[n].classList.add('active');
+  window.scrollTo({top:0, behavior:'smooth'});
+}
+</script>
+
+</body>
+</html>

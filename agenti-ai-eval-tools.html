@@ -1,0 +1,1837 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Strumenti di Valutazione LLM — Guida Operativa</title>
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;1,400&family=Barlow:wght@300;400;500;600&family=Fira+Code:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg:   #f7f5f0;
+  --bg2:  #edeae3;
+  --bg3:  #e2dfd7;
+  --bg4:  #d5d2c8;
+  --ink:  #18160f;
+  --ink2: #2e2c22;
+  --ink3: #6a6758;
+  --ink4: #a8a598;
+  --line: #ccc9be;
+  --line2:#b8b5a8;
+
+  /* Categorie */
+  --c1:   #1a3d7a;  --c1l: #e8eef8;  /* Piattaforme eval */
+  --c2:   #5c1a00;  --c2l: #fdf0e8;  /* Leaderboard */
+  --c3:   #003d2a;  --c3l: #e6f5f0;  /* Observability */
+  --c4:   #3d1a5c;  --c4l: #f0e8f8;  /* Framework custom */
+}
+
+* { margin:0; padding:0; box-sizing:border-box; }
+html { scroll-behavior:smooth; }
+
+body {
+  background: var(--bg);
+  color: var(--ink);
+  font-family: 'Barlow', sans-serif;
+  font-weight: 300;
+  font-size: 13px;
+  line-height: 1.65;
+}
+
+/* ── HEADER ── */
+.site-header {
+  background: var(--ink);
+  padding: 0;
+  display: grid;
+  grid-template-columns: 1fr auto;
+}
+
+.sh-left {
+  padding: 48px 56px 44px;
+  border-right: 1px solid rgba(255,255,255,0.06);
+}
+
+.sh-eyebrow {
+  font-family: 'Fira Code', monospace;
+  font-size: 10px;
+  letter-spacing: 2px;
+  color: rgba(255,255,255,0.25);
+  margin-bottom: 18px;
+  text-transform: uppercase;
+}
+
+.sh-h1 {
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: clamp(40px, 6vw, 78px);
+  font-weight: 800;
+  line-height: 0.92;
+  letter-spacing: -1px;
+  color: #fff;
+  margin-bottom: 18px;
+  text-transform: uppercase;
+}
+
+.sh-h1 span {
+  color: rgba(255,255,255,0.2);
+  font-weight: 300;
+  font-style: italic;
+}
+
+.sh-desc {
+  font-size: 13px;
+  color: rgba(255,255,255,0.38);
+  max-width: 560px;
+  line-height: 1.75;
+}
+
+.sh-desc strong { color: rgba(255,255,255,0.6); font-weight: 500; }
+
+.sh-right {
+  padding: 48px 48px;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  gap: 24px;
+  min-width: 220px;
+}
+
+.sh-stat {
+  text-align: right;
+}
+
+.sh-stat-n {
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 52px;
+  font-weight: 700;
+  line-height: 1;
+  color: rgba(255,255,255,0.15);
+  letter-spacing: -2px;
+  display: block;
+}
+
+.sh-stat-l {
+  font-family: 'Fira Code', monospace;
+  font-size: 9px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: rgba(255,255,255,0.2);
+}
+
+/* ── CATEGORY TABS ── */
+.cat-tabs {
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  background: var(--ink2);
+}
+
+.ct {
+  padding: 0;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  border-right: 1px solid rgba(255,255,255,0.05);
+  text-align: left;
+  transition: background 0.12s;
+}
+
+.ct:last-child { border-right: none; }
+.ct:hover { background: rgba(255,255,255,0.03); }
+
+.ct-inner {
+  display: block;
+  padding: 14px 18px 12px;
+  border-bottom: 3px solid transparent;
+}
+
+.ct-num {
+  font-family: 'Fira Code', monospace;
+  font-size: 9px;
+  letter-spacing: 2px;
+  color: rgba(255,255,255,0.18);
+  margin-bottom: 3px;
+}
+
+.ct-name {
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 14px;
+  font-weight: 600;
+  letter-spacing: 0.3px;
+  text-transform: uppercase;
+  color: rgba(255,255,255,0.3);
+  line-height: 1.2;
+}
+
+.ct-sub {
+  font-family: 'Fira Code', monospace;
+  font-size: 8px;
+  color: rgba(255,255,255,0.12);
+  margin-top: 2px;
+  letter-spacing: 1px;
+}
+
+.ct.active .ct-name { color: #fff; }
+.ct[data-c="1"].active .ct-inner { border-bottom-color: var(--c1); }
+.ct[data-c="2"].active .ct-inner { border-bottom-color: #c05a20; }
+.ct[data-c="3"].active .ct-inner { border-bottom-color: var(--c3); }
+.ct[data-c="4"].active .ct-inner { border-bottom-color: #8a50c0; }
+
+/* ── PANELS ── */
+.panel { display: none; }
+.panel.active { display: block; animation: fadeUp 0.2s ease; }
+@keyframes fadeUp {
+  from { opacity:0; transform:translateY(5px); }
+  to   { opacity:1; transform:none; }
+}
+
+/* ── WHERE IN FRAMEWORK BANNER ── */
+.where-banner {
+  background: var(--bg2);
+  border-bottom: 1px solid var(--line2);
+  padding: 14px 56px;
+  display: flex;
+  align-items: center;
+  gap: 24px;
+  overflow-x: auto;
+}
+
+.wb-label {
+  font-family: 'Fira Code', monospace;
+  font-size: 9px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: var(--ink4);
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.wb-phases {
+  display: flex;
+  gap: 2px;
+  align-items: center;
+}
+
+.wb-phase {
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  padding: 4px 14px;
+  background: var(--bg3);
+  color: var(--ink4);
+  white-space: nowrap;
+}
+
+.wb-phase.active-phase {
+  color: #fff;
+}
+
+.wb-arrow {
+  font-size: 10px;
+  color: var(--ink4);
+}
+
+/* ── SECTION ── */
+.section {
+  padding: 48px 56px;
+  border-bottom: 1px solid var(--line);
+}
+
+.section:last-child { border-bottom: none; }
+
+.sec-row {
+  display: grid;
+  grid-template-columns: 240px 1fr;
+  gap: 40px;
+  align-items: start;
+}
+
+.sec-aside {}
+
+.sec-cat-label {
+  font-family: 'Fira Code', monospace;
+  font-size: 9px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: var(--ink4);
+  margin-bottom: 8px;
+}
+
+.sec-h2 {
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: clamp(22px, 3vw, 38px);
+  font-weight: 800;
+  text-transform: uppercase;
+  line-height: 0.95;
+  letter-spacing: -0.5px;
+  margin-bottom: 12px;
+}
+
+.sec-intro {
+  font-size: 12px;
+  color: var(--ink3);
+  line-height: 1.7;
+}
+
+.sec-intro strong { color: var(--ink2); font-weight: 500; }
+
+.sec-content {}
+
+/* ── TOOL CARDS ── */
+.tools-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  border: 1px solid var(--line2);
+  background: var(--line2);
+  margin-bottom: 28px;
+}
+
+.tool-card {
+  background: var(--bg);
+  display: grid;
+  grid-template-columns: 220px 1fr;
+}
+
+.tc-left {
+  padding: 20px 18px;
+  border-right: 1px solid var(--line);
+  background: var(--bg2);
+}
+
+.tc-logo {
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 22px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: -0.5px;
+  margin-bottom: 4px;
+  line-height: 1;
+}
+
+.tc-vendor {
+  font-family: 'Fira Code', monospace;
+  font-size: 9px;
+  letter-spacing: 1px;
+  color: var(--ink4);
+  margin-bottom: 12px;
+}
+
+.tc-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+
+.tc-tag {
+  font-family: 'Fira Code', monospace;
+  font-size: 8px;
+  padding: 2px 7px;
+  border: 1px solid var(--line2);
+  color: var(--ink4);
+  letter-spacing: 0.5px;
+}
+
+.tc-tag.free { border-color: #3a8a3a; color: #3a8a3a; }
+.tc-tag.open { border-color: #8a6020; color: #8a6020; }
+.tc-tag.cloud { border-color: #1a3d7a; color: #1a3d7a; }
+.tc-tag.self { border-color: #3d1a5c; color: #6a40a0; }
+
+.tc-right {
+  padding: 20px 22px;
+}
+
+.tc-what {
+  font-size: 13px;
+  color: var(--ink2);
+  line-height: 1.6;
+  margin-bottom: 14px;
+}
+
+.tc-what strong { color: var(--ink); font-weight: 500; }
+
+/* ── FEATURE GRID ── */
+.feature-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 1px;
+  background: var(--line);
+  border: 1px solid var(--line);
+  margin-bottom: 12px;
+}
+
+.feat {
+  background: var(--bg2);
+  padding: 10px 12px;
+  display: grid;
+  grid-template-columns: 18px 1fr;
+  gap: 8px;
+  align-items: start;
+}
+
+.feat-icon { font-size: 12px; line-height: 1.5; }
+.feat-text { font-size: 11px; color: var(--ink3); line-height: 1.45; }
+.feat-text strong { color: var(--ink2); font-weight: 500; }
+
+/* ── CODE SNIPPET ── */
+.code-snip {
+  background: var(--ink);
+  border: 1px solid var(--line2);
+  overflow: hidden;
+  margin-bottom: 14px;
+}
+
+.cs-label {
+  background: rgba(255,255,255,0.04);
+  padding: 7px 14px;
+  font-family: 'Fira Code', monospace;
+  font-size: 9px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: rgba(255,255,255,0.2);
+  border-bottom: 1px solid rgba(255,255,255,0.05);
+}
+
+.cs-body {
+  padding: 12px 16px;
+  font-family: 'Fira Code', monospace;
+  font-size: 11px;
+  line-height: 1.75;
+  overflow-x: auto;
+  color: rgba(255,255,255,0.65);
+}
+
+.cs-body .cm { color: rgba(255,255,255,0.2); }
+.cs-body .kw { color: #7ab4f0; }
+.cs-body .fn { color: #f0d060; }
+.cs-body .st { color: #88d070; }
+.cs-body .nu { color: #f09050; }
+.cs-body .hl { color: #f0c060; }
+.cs-body .di { color: #c090f0; }
+
+/* ── WHEN TO USE ── */
+.when-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1px;
+  background: var(--line);
+  border: 1px solid var(--line);
+  margin-top: 14px;
+}
+
+.when-use {
+  background: var(--bg);
+  padding: 12px 14px;
+}
+
+.wu-label {
+  font-family: 'Fira Code', monospace;
+  font-size: 8px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: var(--ink4);
+  margin-bottom: 6px;
+}
+
+.wu-list {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.wu-list li {
+  font-size: 11px;
+  color: var(--ink3);
+  display: flex;
+  gap: 7px;
+  line-height: 1.4;
+}
+
+.wu-list li.yes::before { content: '✓'; color: #3a8a3a; flex-shrink: 0; }
+.wu-list li.no::before  { content: '✗'; color: #aa3020; flex-shrink: 0; }
+
+/* ── HOW SECTION ── */
+.how-steps {
+  display: grid;
+  gap: 1px;
+  background: var(--line);
+  border: 1px solid var(--line2);
+  margin-bottom: 28px;
+}
+
+.how-step {
+  background: var(--bg);
+  display: grid;
+  grid-template-columns: 52px 1fr;
+}
+
+.hs-num {
+  background: var(--bg3);
+  border-right: 1px solid var(--line);
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  padding-top: 16px;
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--ink4);
+}
+
+.hs-content {
+  padding: 14px 18px;
+}
+
+.hs-title {
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 16px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+  margin-bottom: 5px;
+  color: var(--ink);
+}
+
+.hs-desc {
+  font-size: 12px;
+  color: var(--ink3);
+  line-height: 1.6;
+}
+
+.hs-desc strong { color: var(--ink2); font-weight: 500; }
+
+/* ── COMPARISON TABLE ── */
+.comp-table {
+  width: 100%;
+  border-collapse: collapse;
+  border: 1px solid var(--line2);
+  font-size: 12px;
+  margin-bottom: 28px;
+}
+
+.comp-table th {
+  background: var(--bg3);
+  padding: 10px 12px;
+  font-family: 'Fira Code', monospace;
+  font-size: 9px;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  color: var(--ink4);
+  border-right: 1px solid var(--line);
+  border-bottom: 1px solid var(--line2);
+  text-align: left;
+  font-weight: 400;
+}
+
+.comp-table th:last-child { border-right: none; }
+
+.comp-table td {
+  padding: 10px 12px;
+  border-bottom: 1px solid var(--line);
+  border-right: 1px solid var(--line);
+  color: var(--ink3);
+  vertical-align: top;
+  line-height: 1.5;
+}
+
+.comp-table td:last-child { border-right: none; }
+.comp-table tr:last-child td { border-bottom: none; }
+.comp-table tr:hover td { background: var(--bg2); }
+.comp-table .tname { color: var(--ink); font-weight: 500; font-size: 13px; }
+.comp-table .good { color: #3a7a3a; font-weight: 500; }
+.comp-table .bad  { color: #aa3020; }
+.comp-table .mid  { color: #8a5010; }
+
+/* ── ALERT ── */
+.alert {
+  padding: 14px 18px;
+  border: 1px solid;
+  display: grid;
+  grid-template-columns: 22px 1fr;
+  gap: 10px;
+  margin-bottom: 20px;
+}
+
+.alert.warn { background: rgba(200,160,20,0.06); border-color: rgba(200,160,20,0.3); }
+.alert.info { background: rgba(26,61,122,0.06); border-color: rgba(26,61,122,0.25); }
+.alert.tip  { background: rgba(0,61,42,0.06); border-color: rgba(0,61,42,0.25); }
+
+.alert-body { font-size: 12px; color: var(--ink3); line-height: 1.6; }
+.alert-body strong { color: var(--ink2); font-weight: 500; }
+
+/* ── LEADERBOARD VISUAL ── */
+.lb-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1px;
+  background: var(--line2);
+  border: 1px solid var(--line2);
+  margin-bottom: 28px;
+}
+
+.lb-card {
+  background: var(--bg);
+  padding: 20px 16px;
+}
+
+.lb-name {
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 20px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: -0.3px;
+  margin-bottom: 4px;
+}
+
+.lb-url {
+  font-family: 'Fira Code', monospace;
+  font-size: 9px;
+  color: var(--ink4);
+  margin-bottom: 12px;
+}
+
+.lb-what {
+  font-size: 12px;
+  color: var(--ink3);
+  line-height: 1.6;
+  margin-bottom: 12px;
+}
+
+.lb-what strong { color: var(--ink2); font-weight: 500; }
+
+.lb-pros-cons {
+  display: grid;
+  gap: 6px;
+}
+
+.lb-item {
+  font-size: 11px;
+  display: flex;
+  gap: 7px;
+  color: var(--ink3);
+  line-height: 1.4;
+}
+
+.lb-item.pro::before  { content: '+'; color: #3a7a3a; flex-shrink: 0; font-weight: 700; }
+.lb-item.con::before  { content: '−'; color: #aa3020; flex-shrink: 0; font-weight: 700; }
+
+/* ── WORKFLOW MAP ── */
+.workflow-map {
+  border: 1px solid var(--line2);
+  overflow: hidden;
+  margin-bottom: 28px;
+}
+
+.wm-header {
+  background: var(--ink);
+  padding: 10px 18px;
+  font-family: 'Fira Code', monospace;
+  font-size: 9px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: rgba(255,255,255,0.25);
+}
+
+.wm-row {
+  display: grid;
+  grid-template-columns: 180px 1fr;
+  border-bottom: 1px solid var(--line);
+  background: var(--bg);
+}
+
+.wm-row:last-child { border-bottom: none; }
+.wm-row:hover { background: var(--bg2); }
+
+.wm-phase {
+  padding: 14px 16px;
+  border-right: 1px solid var(--line);
+  background: var(--bg2);
+}
+
+.wm-phase-name {
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 14px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+  color: var(--ink);
+  margin-bottom: 2px;
+}
+
+.wm-phase-num {
+  font-family: 'Fira Code', monospace;
+  font-size: 9px;
+  color: var(--ink4);
+  letter-spacing: 1px;
+}
+
+.wm-tools {
+  padding: 14px 18px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  align-items: center;
+}
+
+.wm-tool {
+  font-family: 'Fira Code', monospace;
+  font-size: 10px;
+  padding: 4px 10px;
+  border: 1px solid var(--line2);
+  color: var(--ink3);
+  background: var(--bg2);
+}
+
+.wm-tool.primary {
+  font-weight: 500;
+  color: var(--ink2);
+  border-color: var(--ink4);
+}
+
+/* ── FINAL MATRIX ── */
+.final-section {
+  background: var(--ink);
+  padding: 52px 56px;
+}
+
+.fs-label {
+  font-family: 'Fira Code', monospace;
+  font-size: 9px;
+  letter-spacing: 3px;
+  text-transform: uppercase;
+  color: rgba(255,255,255,0.2);
+  margin-bottom: 20px;
+}
+
+.fs-h2 {
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: clamp(28px, 4vw, 52px);
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: -1px;
+  color: #fff;
+  margin-bottom: 32px;
+  line-height: 0.95;
+}
+
+.final-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 1px;
+  background: rgba(255,255,255,0.06);
+  border: 1px solid rgba(255,255,255,0.06);
+  margin-bottom: 32px;
+}
+
+.fg-col {
+  background: rgba(255,255,255,0.02);
+  padding: 20px 16px;
+}
+
+.fg-cat {
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 14px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+  color: rgba(255,255,255,0.5);
+  margin-bottom: 16px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid rgba(255,255,255,0.06);
+}
+
+.fg-item {
+  margin-bottom: 12px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid rgba(255,255,255,0.04);
+}
+
+.fg-item:last-child { border-bottom: none; margin-bottom: 0; padding-bottom: 0; }
+
+.fg-tool {
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 15px;
+  font-weight: 700;
+  text-transform: uppercase;
+  color: rgba(255,255,255,0.7);
+  margin-bottom: 3px;
+}
+
+.fg-note {
+  font-size: 11px;
+  color: rgba(255,255,255,0.25);
+  line-height: 1.4;
+}
+
+/* ── RECOMMENDATION BOX ── */
+.rec-box {
+  background: rgba(255,255,255,0.04);
+  border: 1px solid rgba(255,255,255,0.08);
+  padding: 24px;
+}
+
+.rb-label {
+  font-family: 'Fira Code', monospace;
+  font-size: 9px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: rgba(255,255,255,0.2);
+  margin-bottom: 12px;
+}
+
+.rb-title {
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 22px;
+  font-weight: 700;
+  text-transform: uppercase;
+  color: #fff;
+  margin-bottom: 10px;
+}
+
+.rb-text {
+  font-size: 12px;
+  color: rgba(255,255,255,0.4);
+  line-height: 1.7;
+}
+
+.rb-text strong { color: rgba(255,255,255,0.65); font-weight: 500; }
+
+.rb-stack {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 14px;
+}
+
+.rb-chip {
+  font-family: 'Fira Code', monospace;
+  font-size: 10px;
+  padding: 5px 12px;
+  border: 1px solid rgba(255,255,255,0.12);
+  color: rgba(255,255,255,0.45);
+}
+
+.rb-chip.primary {
+  border-color: rgba(255,255,255,0.3);
+  color: rgba(255,255,255,0.75);
+}
+
+/* ── FOOTER ── */
+footer {
+  background: var(--bg);
+  border-top: 1px solid var(--line2);
+  padding: 20px 56px;
+  display: flex;
+  justify-content: space-between;
+  font-family: 'Fira Code', monospace;
+  font-size: 10px;
+  color: var(--ink4);
+  letter-spacing: 1px;
+}
+
+/* ── RESPONSIVE ── */
+@media (max-width: 900px) {
+  .sh-left, .section, .final-section, footer { padding-left: 20px; padding-right: 20px; }
+  .site-header { grid-template-columns: 1fr; }
+  .sh-right { display: none; }
+  .cat-tabs { grid-template-columns: 1fr 1fr; }
+  .sec-row { grid-template-columns: 1fr; }
+  .tool-card { grid-template-columns: 1fr; }
+  .feature-grid { grid-template-columns: 1fr; }
+  .when-grid { grid-template-columns: 1fr; }
+  .lb-grid { grid-template-columns: 1fr; }
+  .final-grid { grid-template-columns: 1fr 1fr; }
+  .where-banner { padding: 12px 20px; }
+  footer { flex-direction: column; gap: 6px; }
+}
+</style>
+</head>
+<body>
+
+<!-- HEADER -->
+<header class="site-header">
+  <div class="sh-left">
+    <div class="sh-eyebrow">Guida operativa · Strumenti di valutazione LLM · 2026</div>
+    <h1 class="sh-h1">Strumenti di<br>Eval <span>&amp; Osservabilità</span></h1>
+    <p class="sh-desc">
+      Quattro categorie di strumenti per valutare, monitorare e confrontare modelli LLM. <strong>Cosa fanno concretamente, come si usano, dove si inseriscono nel ciclo di sviluppo.</strong> Con codice reale e raccomandazioni specifiche per team con esperienza Python.
+    </p>
+  </div>
+  <div class="sh-right">
+    <div class="sh-stat"><span class="sh-stat-n">4</span><span class="sh-stat-l">Categorie strumenti</span></div>
+    <div class="sh-stat"><span class="sh-stat-n">14</span><span class="sh-stat-l">Tool analizzati</span></div>
+    <div class="sh-stat"><span class="sh-stat-n">∞</span><span class="sh-stat-l">Iterazioni di eval</span></div>
+  </div>
+</header>
+
+<!-- CATEGORY TABS -->
+<nav class="cat-tabs">
+  <button class="ct active" data-c="1" onclick="showPanel('p1',this)">
+    <span class="ct-inner"><span class="ct-num">01</span><span class="ct-name">Piattaforme<br>Eval & Testing</span><span class="ct-sub">LangSmith · Langfuse · Braintrust</span></span>
+  </button>
+  <button class="ct" data-c="2" onclick="showPanel('p2',this)">
+    <span class="ct-inner"><span class="ct-num">02</span><span class="ct-name">Leaderboard<br>& Benchmark</span><span class="ct-sub">LMSYS · OpenLLM · LiveBench</span></span>
+  </button>
+  <button class="ct" data-c="3" onclick="showPanel('p3',this)">
+    <span class="ct-inner"><span class="ct-num">03</span><span class="ct-name">Observability<br>& Tracing</span><span class="ct-sub">Langfuse · Phoenix · Helicone</span></span>
+  </button>
+  <button class="ct" data-c="4" onclick="showPanel('p4',this)">
+    <span class="ct-inner"><span class="ct-num">04</span><span class="ct-name">Framework<br>Eval Custom</span><span class="ct-sub">RAGAS · DeepEval · PromptFoo</span></span>
+  </button>
+</nav>
+
+
+<!-- ════════════════════════════
+     PANEL 1 — PIATTAFORME EVAL
+════════════════════════════ -->
+<div class="panel active" id="p1">
+
+  <div class="where-banner">
+    <span class="wb-label">Dove nel framework →</span>
+    <div class="wb-phases">
+      <span class="wb-phase">Comprensione</span><span class="wb-arrow">›</span>
+      <span class="wb-phase">Progettazione</span><span class="wb-arrow">›</span>
+      <span class="wb-phase active-phase" style="background:var(--c1)">Costruzione</span><span class="wb-arrow">›</span>
+      <span class="wb-phase active-phase" style="background:var(--c1)">Valutazione</span><span class="wb-arrow">›</span>
+      <span class="wb-phase active-phase" style="background:var(--c1)">Deploy</span><span class="wb-arrow">›</span>
+      <span class="wb-phase active-phase" style="background:var(--c1)">Evoluzione</span>
+    </div>
+  </div>
+
+  <!-- COSA SONO -->
+  <div class="section">
+    <div class="sec-row">
+      <div class="sec-aside">
+        <div class="sec-cat-label" style="color:var(--c1)">Categoria 01</div>
+        <div class="sec-h2" style="color:var(--c1)">Piattaforme<br>Eval &<br>Testing</div>
+        <div class="sec-intro">
+          Ambienti integrati per costruire dataset di test, eseguire eval automatiche, confrontare varianti di prompt e modelli, e tracciare i risultati nel tempo. <strong>Il centro operativo della fase di valutazione.</strong>
+        </div>
+      </div>
+      <div class="sec-content">
+
+        <div class="tools-stack">
+
+          <!-- LANGSMITH -->
+          <div class="tool-card">
+            <div class="tc-left">
+              <div class="tc-logo" style="color:var(--c1)">LangSmith</div>
+              <div class="tc-vendor">di LangChain Inc.</div>
+              <div class="tc-tags">
+                <span class="tc-tag cloud">Cloud</span>
+                <span class="tc-tag self">Self-host (beta)</span>
+                <span class="tc-tag free">Free tier</span>
+              </div>
+            </div>
+            <div class="tc-right">
+              <div class="tc-what">
+                La piattaforma più integrata nell'ecosistema LangChain/LangGraph. <strong>Traccia automaticamente ogni run del tuo agente</strong> con 2 variabili d'ambiente — zero codice aggiuntivo. Poi costruisci dataset, esegui eval, compara versioni.
+              </div>
+              <div class="feature-grid">
+                <div class="feat"><div class="feat-icon">📊</div><div class="feat-text"><strong>Tracing automatico</strong> — ogni tool call, ogni nodo del grafo, ogni LLM call con input/output/latenza/costo</div></div>
+                <div class="feat"><div class="feat-icon">🗂️</div><div class="feat-text"><strong>Dataset builder</strong> — raccogli esempi da trace reali con un click, costruisci eval set senza scrivere dati manualmente</div></div>
+                <div class="feat"><div class="feat-icon">🧪</div><div class="feat-text"><strong>Eval runner</strong> — esegui suite di test su modelli/prompt diversi, vedi i delta di qualità fianco a fianco</div></div>
+                <div class="feat"><div class="feat-icon">🔁</div><div class="feat-text"><strong>CI integration</strong> — esegui eval automaticamente su ogni PR via GitHub Actions, blocca deploy se le metriche peggiorano</div></div>
+                <div class="feat"><div class="feat-icon">🤖</div><div class="feat-text"><strong>LLM-as-judge</strong> — configurazione guided per usare un modello come valutatore su criteri custom</div></div>
+                <div class="feat"><div class="feat-icon">📈</div><div class="feat-text"><strong>Monitoring produzione</strong> — dashboard metriche su run in produzione con alert configurabili</div></div>
+              </div>
+              <div class="when-grid">
+                <div class="when-use">
+                  <div class="wu-label">Usa LangSmith quando</div>
+                  <ul class="wu-list">
+                    <li class="yes">Usi già LangChain o LangGraph</li>
+                    <li class="yes">Vuoi tracing zero-config in 5 minuti</li>
+                    <li class="yes">Vuoi eval integrate nel workflow CI/CD</li>
+                    <li class="yes">Hai bisogno di confrontare varianti prompt</li>
+                  </ul>
+                </div>
+                <div class="when-use">
+                  <div class="wu-label">Considera alternative se</div>
+                  <ul class="wu-list">
+                    <li class="no">Non usi LangChain (integrazione manuale)</li>
+                    <li class="no">Hai requisiti di privacy dati molto stretti</li>
+                    <li class="no">Vuoi open source completo e self-hostabile</li>
+                    <li class="no">Il budget è zero (piano free limitato)</li>
+                  </ul>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- LANGFUSE -->
+          <div class="tool-card">
+            <div class="tc-left">
+              <div class="tc-logo" style="color:var(--c3)">Langfuse</div>
+              <div class="tc-vendor">Open Source · Langfuse GmbH</div>
+              <div class="tc-tags">
+                <span class="tc-tag open">Open Source</span>
+                <span class="tc-tag self">Self-host</span>
+                <span class="tc-tag cloud">Cloud</span>
+                <span class="tc-tag free">Free self-host</span>
+              </div>
+            </div>
+            <div class="tc-right">
+              <div class="tc-what">
+                L'alternativa open source a LangSmith. <strong>Completamente self-hostabile via Docker</strong> — i dati non escono mai dalla tua infrastruttura. Funzionalità simili a LangSmith ma con SDK framework-agnostic (funziona con qualsiasi stack, non solo LangChain).
+              </div>
+              <div class="feature-grid">
+                <div class="feat"><div class="feat-icon">🔒</div><div class="feat-text"><strong>Privacy-first</strong> — self-host completo, dati sul tuo server, GDPR-compliant senza configurazioni speciali</div></div>
+                <div class="feat"><div class="feat-icon">🔌</div><div class="feat-text"><strong>Framework agnostic</strong> — SDK per Python, JS, e API REST. Funziona con LangChain, LlamaIndex, custom, e qualsiasi stack</div></div>
+                <div class="feat"><div class="feat-icon">📊</div><div class="feat-text"><strong>Tracing + Scores</strong> — traccia le sessioni e aggiungi scores human o automatici su ogni trace</div></div>
+                <div class="feat"><div class="feat-icon">🧪</div><div class="feat-text"><strong>Datasets & Experiments</strong> — gestione dataset e run di esperimenti con confronto versioni</div></div>
+              </div>
+              <div class="when-grid">
+                <div class="when-use">
+                  <div class="wu-label">Usa Langfuse quando</div>
+                  <ul class="wu-list">
+                    <li class="yes">La privacy è un requisito (self-host)</li>
+                    <li class="yes">Non usi LangChain come stack principale</li>
+                    <li class="yes">Vuoi open source con community attiva</li>
+                    <li class="yes">Budget zero (self-hosting gratuito)</li>
+                  </ul>
+                </div>
+                <div class="when-use">
+                  <div class="wu-label">Considera alternative se</div>
+                  <ul class="wu-list">
+                    <li class="no">Vuoi zero overhead di infrastruttura</li>
+                    <li class="no">Sei full-in su ecosistema LangChain</li>
+                    <li class="no">Hai bisogno di supporto enterprise SLA</li>
+                  </ul>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- BRAINTRUST -->
+          <div class="tool-card">
+            <div class="tc-left">
+              <div class="tc-logo" style="color:#7a4000">Braintrust</div>
+              <div class="tc-vendor">Braintrust Data Inc.</div>
+              <div class="tc-tags">
+                <span class="tc-tag cloud">Cloud</span>
+                <span class="tc-tag free">Free tier</span>
+              </div>
+            </div>
+            <div class="tc-right">
+              <div class="tc-what">
+                Piattaforma specializzata nell'<strong>eval sistematica con focus su sperimentazione A/B di prompt e modelli</strong>. Particolarmente forte per team che fanno molti esperimenti di prompt engineering e vogliono un'interfaccia dedicata per confrontare varianti.
+              </div>
+              <div class="feature-grid">
+                <div class="feat"><div class="feat-icon">⚗️</div><div class="feat-text"><strong>Experiment-first</strong> — workflow ottimizzato per A/B test di prompt, modelli, parametri con delta statisticamente significativi</div></div>
+                <div class="feat"><div class="feat-icon">📋</div><div class="feat-text"><strong>Prompt playground</strong> — interfaccia per testare prompt con dataset, vedere output fianco a fianco tra varianti</div></div>
+                <div class="feat"><div class="feat-icon">🎯</div><div class="feat-text"><strong>Scorers library</strong> — libreria di funzioni di scoring predefinite (factuality, toxicity, custom) pronte all'uso</div></div>
+                <div class="feat"><div class="feat-icon">🔄</div><div class="feat-text"><strong>Prompt versioning</strong> — gestione versioni dei prompt con storage centralizzato e rollback immediato</div></div>
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- COME SI USA: LANGSMITH -->
+  <div class="section">
+    <div class="sec-row">
+      <div class="sec-aside">
+        <div class="sec-cat-label" style="color:var(--c1)">Come si usa</div>
+        <div class="sec-h2" style="color:var(--c1)">LangSmith:<br>setup in<br>5 minuti</div>
+        <div class="sec-intro">Il percorso completo dalla prima configurazione alla prima eval automatica.</div>
+      </div>
+      <div class="sec-content">
+
+        <div class="how-steps">
+          <div class="how-step">
+            <div class="hs-num" style="color:var(--c1)">1</div>
+            <div class="hs-content">
+              <div class="hs-title">Attivare il tracing con 2 variabili d'ambiente</div>
+              <div class="hs-desc">Non devi modificare il codice dell'agente. LangChain rileva automaticamente le variabili e invia i trace a LangSmith.</div>
+            </div>
+          </div>
+          <div class="how-step">
+            <div class="hs-num" style="color:var(--c1)">2</div>
+            <div class="hs-content">
+              <div class="hs-title">Costruire il dataset da trace reali</div>
+              <div class="hs-desc">Dopo alcune run, vai in LangSmith → Traces. Seleziona le run che rappresentano il comportamento corretto atteso. <strong>Clicca "Add to Dataset"</strong> — l'input e l'output diventano automaticamente un esempio nel tuo eval set. Non devi costruire il dataset manualmente.</div>
+            </div>
+          </div>
+          <div class="how-step">
+            <div class="hs-num" style="color:var(--c1)">3</div>
+            <div class="hs-content">
+              <div class="hs-title">Definire la funzione di valutazione</div>
+              <div class="hs-desc">Scrivi una funzione che prende (input, output, expected) e restituisce un score. Può essere una metrica semplice (exact match) o un LLM-as-judge con rubrica personalizzata.</div>
+            </div>
+          </div>
+          <div class="how-step">
+            <div class="hs-num" style="color:var(--c1)">4</div>
+            <div class="hs-content">
+              <div class="hs-title">Eseguire l'eval e confrontare varianti</div>
+              <div class="hs-desc">Avvia l'eval sull'intero dataset. LangSmith esegue il tuo agente su ogni esempio, applica la funzione di valutazione, e mostra i risultati aggregati. <strong>Puoi eseguire la stessa eval con un prompt diverso o un modello diverso e vedere il confronto fianco a fianco.</strong></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="code-snip">
+          <div class="cs-label">Setup LangSmith — configurazione minima</div>
+          <div class="cs-body">
+<span class="cm"># .env — attiva tracing automatico su tutto</span><br>
+<span class="hl">LANGCHAIN_TRACING_V2</span>=<span class="st">true</span><br>
+<span class="hl">LANGCHAIN_API_KEY</span>=<span class="st">ls__...</span>        <span class="cm"># da smith.langchain.com</span><br>
+<span class="hl">LANGCHAIN_PROJECT</span>=<span class="st">mio-agente-v1</span>  <span class="cm"># raggruppa i trace per progetto</span><br>
+<br>
+<span class="cm"># Funzione di valutazione custom</span><br>
+<span class="kw">from</span> <span class="di">langsmith.evaluation</span> <span class="kw">import</span> <span class="fn">evaluate</span>, <span class="fn">LangChainStringEvaluator</span><br>
+<br>
+<span class="kw">def</span> <span class="fn">my_evaluator</span>(<span class="hl">run</span>, <span class="hl">example</span>):<br>
+&nbsp;&nbsp;<span class="cm"># run.outputs["output"] = risposta dell'agente</span><br>
+&nbsp;&nbsp;<span class="cm"># example.outputs["answer"] = risposta attesa</span><br>
+&nbsp;&nbsp;<span class="hl">score</span> = <span class="fn">compute_similarity</span>(<br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="hl">run</span>.outputs[<span class="st">"output"</span>],<br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="hl">example</span>.outputs[<span class="st">"answer"</span>]<br>
+&nbsp;&nbsp;)<br>
+&nbsp;&nbsp;<span class="kw">return</span> {<span class="st">"key"</span>: <span class="st">"similarity"</span>, <span class="st">"score"</span>: <span class="hl">score</span>}<br>
+<br>
+<span class="cm"># Esegui eval sull'intero dataset</span><br>
+<span class="fn">evaluate</span>(<br>
+&nbsp;&nbsp;<span class="hl">agent_executor</span>.invoke,          <span class="cm"># la funzione da valutare</span><br>
+&nbsp;&nbsp;data=<span class="st">"mio-dataset-eval"</span>,         <span class="cm"># dataset in LangSmith</span><br>
+&nbsp;&nbsp;evaluators=[<span class="hl">my_evaluator</span>],       <span class="cm"># funzioni di scoring</span><br>
+&nbsp;&nbsp;experiment_prefix=<span class="st">"sonnet-v2-prompt3"</span>  <span class="cm"># nome dell'esperimento</span><br>
+)
+          </div>
+        </div>
+
+        <div class="code-snip">
+          <div class="cs-label">Setup Langfuse self-hosted (alternativa privacy-first)</div>
+          <div class="cs-body">
+<span class="cm"># 1. Deploy self-hosted via Docker Compose</span><br>
+<span class="fn">git</span> clone https://github.com/langfuse/langfuse<br>
+<span class="fn">cd</span> langfuse && <span class="fn">docker compose up</span> -d<br>
+<span class="cm"># → UI su http://localhost:3000</span><br>
+<br>
+<span class="cm"># 2. Installare SDK Python</span><br>
+<span class="fn">pip</span> install langfuse<br>
+<br>
+<span class="cm"># 3. Tracciare chiamate — funziona con qualsiasi stack</span><br>
+<span class="kw">from</span> <span class="di">langfuse</span> <span class="kw">import</span> <span class="fn">Langfuse</span><br>
+<span class="hl">lf</span> = <span class="fn">Langfuse</span>(host=<span class="st">"http://localhost:3000"</span>)<br>
+<br>
+<span class="kw">with</span> <span class="hl">lf</span>.<span class="fn">trace</span>(name=<span class="st">"agent-run"</span>, user_id=<span class="hl">user_id</span>) <span class="kw">as</span> <span class="hl">trace</span>:<br>
+&nbsp;&nbsp;<span class="hl">span</span> = <span class="hl">trace</span>.<span class="fn">span</span>(name=<span class="st">"llm-call"</span>)<span class="cm"></span><br>
+&nbsp;&nbsp;<span class="hl">result</span> = <span class="fn">call_your_agent</span>(<span class="hl">user_input</span>)<br>
+&nbsp;&nbsp;<span class="hl">span</span>.<span class="fn">end</span>(output=<span class="hl">result</span>)<br>
+&nbsp;&nbsp;<span class="cm"># Aggiungi score human review</span><br>
+&nbsp;&nbsp;<span class="hl">trace</span>.<span class="fn">score</span>(name=<span class="st">"quality"</span>, value=<span class="nu">0.85</span>)
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+</div>
+
+
+<!-- ════════════════════════════
+     PANEL 2 — LEADERBOARD
+════════════════════════════ -->
+<div class="panel" id="p2">
+
+  <div class="where-banner">
+    <span class="wb-label">Dove nel framework →</span>
+    <div class="wb-phases">
+      <span class="wb-phase">Comprensione</span><span class="wb-arrow">›</span>
+      <span class="wb-phase active-phase" style="background:#8a3010">Progettazione</span><span class="wb-arrow">›</span>
+      <span class="wb-phase">Costruzione</span><span class="wb-arrow">›</span>
+      <span class="wb-phase active-phase" style="background:#8a3010">Valutazione</span><span class="wb-arrow">›</span>
+      <span class="wb-phase">Deploy</span><span class="wb-arrow">›</span>
+      <span class="wb-phase">Evoluzione</span>
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="sec-row">
+      <div class="sec-aside">
+        <div class="sec-cat-label" style="color:#8a3010">Categoria 02</div>
+        <div class="sec-h2" style="color:#8a3010">Leaderboard<br>&<br>Benchmark<br>Pubblici</div>
+        <div class="sec-intro">
+          Classifiche pubbliche che confrontano modelli su benchmark standardizzati. Utili per una <strong>prima orientazione nella scelta</strong>, non per la decisione finale. Devono sempre essere integrati con eval sul proprio task specifico.
+        </div>
+      </div>
+      <div class="sec-content">
+
+        <div class="alert warn">
+          <div>⚠</div>
+          <div class="alert-body"><strong>Regola d'oro:</strong> i leaderboard pubblici ti dicono chi è bravo in generale. Non ti dicono chi è bravo sul tuo task specifico. Usali per restringere i candidati a 2-3 modelli, poi valuta direttamente sul tuo eval set. Un modello in cima al leaderboard può sottoperformare significativamente su task verticali.</div>
+        </div>
+
+        <div class="lb-grid">
+
+          <div class="lb-card">
+            <div class="lb-name" style="color:var(--c2)">LMSYS Chatbot Arena</div>
+            <div class="lb-url">lmarena.ai</div>
+            <div class="lb-what">
+              <strong>Cosa fa:</strong> confronto blind tra due modelli su domanda reale dell'utente. Gli utenti votano quale risposta preferiscono. Classifica Elo calcolata su milioni di voti umani reali.
+            </div>
+            <div class="lb-pros-cons">
+              <div class="lb-item pro">Basato su preferenze umane reali, non metriche automatiche</div>
+              <div class="lb-item pro">Copre tutti i modelli principali continuamente aggiornato</div>
+              <div class="lb-item pro">Filtrabile per categoria (coding, creative, reasoning...)</div>
+              <div class="lb-item con">Le preferenze sono aggregate — non specifiche per il tuo task</div>
+              <div class="lb-item con">I voti possono essere influenzati da stile risposta, non solo qualità</div>
+            </div>
+          </div>
+
+          <div class="lb-card">
+            <div class="lb-name" style="color:var(--c2)">Open LLM Leaderboard</div>
+            <div class="lb-url">huggingface.co/spaces/open-llm-leaderboard</div>
+            <div class="lb-what">
+              <strong>Cosa fa:</strong> benchmark automatici standardizzati (MMLU, HellaSwag, ARC, TruthfulQA) su modelli open-source. Particolarmente utile per confrontare modelli self-hostabili.
+            </div>
+            <div class="lb-pros-cons">
+              <div class="lb-item pro">Unica fonte affidabile per modelli open-weight (Llama, Mistral, Qwen)</div>
+              <div class="lb-item pro">Benchmark ripetibili e confrontabili nel tempo</div>
+              <div class="lb-item pro">Filtri per dimensione modello, licenza, architettura</div>
+              <div class="lb-item con">Solo modelli open — i grandi cloud model non sono comparabili qui</div>
+              <div class="lb-item con">Benchmark standardizzati, poco predittivi su task verticali</div>
+            </div>
+          </div>
+
+          <div class="lb-card">
+            <div class="lb-name" style="color:var(--c2)">LiveBench</div>
+            <div class="lb-url">livebench.ai</div>
+            <div class="lb-what">
+              <strong>Cosa fa:</strong> benchmark aggiornato mensilmente con domande nuove basate su eventi recenti. Progettato per minimizzare il rischio di data contamination (modelli addestrati sui dati del benchmark).
+            </div>
+            <div class="lb-pros-cons">
+              <div class="lb-item pro">Dati freschi ogni mese — meno rischio contaminazione</div>
+              <div class="lb-item pro">Categorie più specifiche: math, coding, reasoning, data analysis</div>
+              <div class="lb-item pro">Copre sia modelli proprietari che open</div>
+              <div class="lb-item con">Dataset più piccolo degli altri benchmark</div>
+              <div class="lb-item con">Ancora meno diffuso, community più piccola</div>
+            </div>
+          </div>
+
+          <div class="lb-card">
+            <div class="lb-name" style="color:var(--c2)">SWE-bench</div>
+            <div class="lb-url">swebench.com</div>
+            <div class="lb-what">
+              <strong>Cosa fa:</strong> valuta la capacità di risolvere issue reali di GitHub in repository Python reali. Il benchmark più rilevante se stai costruendo un coding agent o strumento di code review.
+            </div>
+            <div class="lb-pros-cons">
+              <div class="lb-item pro">Task reali, non algoritmi accademici — molto predittivo per coding agent</div>
+              <div class="lb-item pro">Misura il ciclo completo: capire → modificare → testare</div>
+              <div class="lb-item con">Solo per use case di coding — non rilevante per altri task</div>
+              <div class="lb-item con">I risultati dipendono molto dallo scaffolding usato</div>
+            </div>
+          </div>
+
+          <div class="lb-card">
+            <div class="lb-name" style="color:var(--c2)">MMLU-Pro</div>
+            <div class="lb-url">huggingface.co/datasets/TIGER-Lab/MMLU-Pro</div>
+            <div class="lb-what">
+              <strong>Cosa fa:</strong> versione potenziata di MMLU con domande più difficili e più opzioni di risposta. Meno saturato dei benchmark standard — distingue meglio i modelli frontier.
+            </div>
+            <div class="lb-pros-cons">
+              <div class="lb-item pro">Migliore discriminazione tra modelli top rispetto a MMLU standard</div>
+              <div class="lb-item pro">Domande che richiedono ragionamento, non solo memoria</div>
+              <div class="lb-item con">Ancora un benchmark di conoscenza generale — non task-specific</div>
+              <div class="lb-item con">Modelli potrebbero essere stati addestrati su varianti</div>
+            </div>
+          </div>
+
+          <div class="lb-card">
+            <div class="lb-name" style="color:var(--c2)">AgentBench</div>
+            <div class="lb-url">llmbench.github.io/AgentBench</div>
+            <div class="lb-what">
+              <strong>Cosa fa:</strong> valuta specificamente la capacità dei modelli di agire come agenti in ambienti interattivi (web browsing, database query, OS interaction). Il più rilevante per chi costruisce agenti.
+            </div>
+            <div class="lb-pros-cons">
+              <div class="lb-item pro">Specifico per agenti — misura tool use, multi-step reasoning, error recovery</div>
+              <div class="lb-item pro">Task in ambienti diversi: OS, DB, web, codice</div>
+              <div class="lb-item con">Meno modelli coperti rispetto ai benchmark mainstream</div>
+              <div class="lb-item con">Ancora in evoluzione — meno citato nelle documentazioni vendor</div>
+            </div>
+          </div>
+
+        </div>
+
+        <div class="alert info">
+          <div>ℹ</div>
+          <div class="alert-body"><strong>Come usare i leaderboard correttamente nel tuo workflow:</strong> (1) usa LMSYS Arena per orientarti sui modelli più apprezzati in generale. (2) se stai scegliendo per coding, guarda SWE-bench. (3) se stai scegliendo modelli self-hosted, guarda Open LLM Leaderboard. (4) poi prendi i 2-3 candidati migliori e <strong>testali direttamente sul tuo eval set custom</strong> — questo è l'unico confronto che conta per la tua decisione finale.</div>
+        </div>
+
+        <table class="comp-table">
+          <thead>
+            <tr>
+              <th>Leaderboard</th>
+              <th>Tipo valutazione</th>
+              <th>Migliore per</th>
+              <th>Copre open source</th>
+              <th>Affidabilità</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><span class="tname">LMSYS Arena</span></td>
+              <td>Human preference (voti blind)</td>
+              <td>Orientamento generale, chat quality</td>
+              <td class="good">Parzialmente</td>
+              <td class="good">Alta (voti reali)</td>
+            </tr>
+            <tr>
+              <td><span class="tname">Open LLM Leaderboard</span></td>
+              <td>Benchmark automatici (MMLU, ARC...)</td>
+              <td>Scegliere modelli self-hosted</td>
+              <td class="good">Sì, completo</td>
+              <td class="mid">Media (rischio contamination)</td>
+            </tr>
+            <tr>
+              <td><span class="tname">LiveBench</span></td>
+              <td>Benchmark auto + dati freschi mensili</td>
+              <td>Confronto aggiornato, meno contaminato</td>
+              <td class="good">Sì</td>
+              <td class="good">Alta (dati freschi)</td>
+            </tr>
+            <tr>
+              <td><span class="tname">SWE-bench</span></td>
+              <td>Task reali su repository GitHub</td>
+              <td>Coding agent, code review</td>
+              <td class="mid">Parzialmente</td>
+              <td class="good">Alta per coding</td>
+            </tr>
+            <tr>
+              <td><span class="tname">AgentBench</span></td>
+              <td>Task agente in ambienti interattivi</td>
+              <td>Scegliere modello per agenti</td>
+              <td class="mid">Parzialmente</td>
+              <td class="mid">Media (meno coverage)</td>
+            </tr>
+          </tbody>
+        </table>
+
+      </div>
+    </div>
+  </div>
+
+</div>
+
+
+<!-- ════════════════════════════
+     PANEL 3 — OBSERVABILITY
+════════════════════════════ -->
+<div class="panel" id="p3">
+
+  <div class="where-banner">
+    <span class="wb-label">Dove nel framework →</span>
+    <div class="wb-phases">
+      <span class="wb-phase">Comprensione</span><span class="wb-arrow">›</span>
+      <span class="wb-phase">Progettazione</span><span class="wb-arrow">›</span>
+      <span class="wb-phase active-phase" style="background:var(--c3)">Costruzione</span><span class="wb-arrow">›</span>
+      <span class="wb-phase active-phase" style="background:var(--c3)">Valutazione</span><span class="wb-arrow">›</span>
+      <span class="wb-phase active-phase" style="background:var(--c3)">Deploy</span><span class="wb-arrow">›</span>
+      <span class="wb-phase active-phase" style="background:var(--c3)">Evoluzione</span>
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="sec-row">
+      <div class="sec-aside">
+        <div class="sec-cat-label" style="color:var(--c3)">Categoria 03</div>
+        <div class="sec-h2" style="color:var(--c3)">Observability<br>&<br>Tracing</div>
+        <div class="sec-intro">
+          Strumenti per vedere cosa fa l'agente durante l'esecuzione: ogni tool call, ogni step di ragionamento, ogni token generato. <strong>Indispensabili per il debug e il miglioramento continuo in produzione.</strong>
+        </div>
+      </div>
+      <div class="sec-content">
+
+        <div class="alert tip">
+          <div>💡</div>
+          <div class="alert-body"><strong>Differenza tra Eval e Observability:</strong> gli strumenti di eval misurano la qualità offline su dataset fissi. Gli strumenti di observability tracciano il comportamento in produzione su richieste reali. Entrambi sono necessari — complementari, non alternativi.</div>
+        </div>
+
+        <div class="tools-stack">
+
+          <div class="tool-card">
+            <div class="tc-left">
+              <div class="tc-logo" style="color:var(--c3)">Langfuse</div>
+              <div class="tc-vendor">Open Source · anche per observability</div>
+              <div class="tc-tags">
+                <span class="tc-tag open">Open Source</span>
+                <span class="tc-tag self">Self-host</span>
+                <span class="tc-tag free">Free self-host</span>
+              </div>
+            </div>
+            <div class="tc-right">
+              <div class="tc-what">
+                Langfuse non è solo per eval — è anche il principale strumento open source di <strong>observability per agenti LLM</strong>. Traccia ogni sessione in produzione, mostra il trace gerarchico di ogni operazione, permette di aggiungere feedback umano sulle run reali.
+              </div>
+              <div class="feature-grid">
+                <div class="feat"><div class="feat-icon">🌳</div><div class="feat-text"><strong>Trace tree</strong> — visualizzazione gerarchica di ogni step dell'agente: quale tool, con quali argomenti, quanto ha impiegato, cosa ha risposto</div></div>
+                <div class="feat"><div class="feat-icon">💰</div><div class="feat-text"><strong>Cost tracking</strong> — token e costo per ogni call, aggregati per sessione, per utente, per periodo</div></div>
+                <div class="feat"><div class="feat-icon">👍</div><div class="feat-text"><strong>Human feedback</strong> — gli utenti possono votare le risposte, il feedback viene collegato al trace corrispondente</div></div>
+                <div class="feat"><div class="feat-icon">🔔</div><div class="feat-text"><strong>Alert</strong> — notifiche quando latenza o tasso di errori supera soglie configurabili</div></div>
+              </div>
+            </div>
+          </div>
+
+          <div class="tool-card">
+            <div class="tc-left">
+              <div class="tc-logo" style="color:#1a5050">Arize Phoenix</div>
+              <div class="tc-vendor">Arize AI · Open Source</div>
+              <div class="tc-tags">
+                <span class="tc-tag open">Open Source</span>
+                <span class="tc-tag self">Self-host</span>
+                <span class="tc-tag free">Free</span>
+              </div>
+            </div>
+            <div class="tc-right">
+              <div class="tc-what">
+                Piattaforma di observability specificamente progettata per sistemi AI/ML. <strong>Particolarmente forte su RAG</strong> — analizza la qualità del retrieval, visualizza i documenti recuperati, identifica dove il sistema perde qualità.
+              </div>
+              <div class="feature-grid">
+                <div class="feat"><div class="feat-icon">🔍</div><div class="feat-text"><strong>RAG analysis</strong> — visualizza quali documenti vengono recuperati, la loro rilevanza, e se vengono usati nella risposta finale</div></div>
+                <div class="feat"><div class="feat-icon">📊</div><div class="feat-text"><strong>Embedding drift</strong> — monitora se la distribuzione degli embedding cambia nel tempo (segnale che la KB si sta degradando)</div></div>
+                <div class="feat"><div class="feat-icon">🔌</div><div class="feat-text"><strong>OpenTelemetry</strong> — usa standard aperti, si integra con il tooling di observability che già usi</div></div>
+                <div class="feat"><div class="feat-icon">🧪</div><div class="feat-text"><strong>Eval integrata</strong> — metriche di eval su RAG (faithfulness, relevance) direttamente nelle trace</div></div>
+              </div>
+              <div class="when-grid">
+                <div class="when-use">
+                  <div class="wu-label">Usa Phoenix quando</div>
+                  <ul class="wu-list">
+                    <li class="yes">Hai un agente con RAG e vuoi analizzare il retrieval</li>
+                    <li class="yes">Hai già infrastruttura OpenTelemetry</li>
+                    <li class="yes">Vuoi analisi dei vettori e degli embedding</li>
+                  </ul>
+                </div>
+                <div class="when-use">
+                  <div class="wu-label">Considera Langfuse se</div>
+                  <ul class="wu-list">
+                    <li class="no">Vuoi one-tool per eval + observability</li>
+                    <li class="no">Hai bisogno di human feedback UI inclusa</li>
+                    <li class="no">Preferisci community più grande e documentazione</li>
+                  </ul>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="tool-card">
+            <div class="tc-left">
+              <div class="tc-logo" style="color:#1a3a6a">Helicone</div>
+              <div class="tc-vendor">Helicone Inc.</div>
+              <div class="tc-tags">
+                <span class="tc-tag cloud">Cloud</span>
+                <span class="tc-tag self">Self-host</span>
+                <span class="tc-tag free">Free tier</span>
+              </div>
+            </div>
+            <div class="tc-right">
+              <div class="tc-what">
+                Proxy trasparente che si mette davanti alla chiamata API LLM — <strong>zero modifiche al codice</strong>. Cambia solo la base URL del client. Tutto il traffico passa per Helicone che registra automaticamente ogni chiamata.
+              </div>
+              <div class="feature-grid">
+                <div class="feat"><div class="feat-icon">⚡</div><div class="feat-text"><strong>Zero-code integration</strong> — cambia la base URL, hai subito logging di ogni chiamata LLM. Nessun SDK da installare.</div></div>
+                <div class="feat"><div class="feat-icon">🔄</div><div class="feat-text"><strong>Caching proxy</strong> — cacha le risposte identiche automaticamente, riduce costi senza modificare il codice applicativo</div></div>
+                <div class="feat"><div class="feat-icon">🛡️</div><div class="feat-text"><strong>Rate limiting</strong> — limita le chiamate per utente/API key direttamente a livello proxy</div></div>
+                <div class="feat"><div class="feat-icon">💰</div><div class="feat-text"><strong>Cost dashboard</strong> — breakdown costi per modello, per utente, per tag personalizzati</div></div>
+              </div>
+            </div>
+          </div>
+
+        </div>
+
+        <div class="code-snip">
+          <div class="cs-label">Helicone — integrazione zero-code con Claude</div>
+          <div class="cs-body">
+<span class="cm"># Prima (chiamata diretta ad Anthropic)</span><br>
+<span class="hl">client</span> = <span class="fn">anthropic.Anthropic</span>()<br>
+<br>
+<span class="cm"># Dopo (via Helicone proxy — zero altre modifiche)</span><br>
+<span class="hl">client</span> = <span class="fn">anthropic.Anthropic</span>(<br>
+&nbsp;&nbsp;base_url=<span class="st">"https://anthropic.helicone.ai"</span>,<br>
+&nbsp;&nbsp;default_headers={<br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="st">"Helicone-Auth"</span>: <span class="st">f"Bearer {HELICONE_API_KEY}"</span>,<br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="cm"># Metadati opzionali per filtrare in dashboard</span><br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="st">"Helicone-User-Id"</span>: <span class="hl">user_id</span>,<br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="st">"Helicone-Property-Feature"</span>: <span class="st">"support-agent"</span><br>
+&nbsp;&nbsp;}<br>
+)<br>
+<span class="cm"># Tutto il resto del codice rimane identico</span><br>
+<span class="cm"># → ogni chiamata è ora loggata, costificata, e cacheabile</span>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <!-- COSA GUARDARE IN PRODUZIONE -->
+  <div class="section">
+    <div class="sec-row">
+      <div class="sec-aside">
+        <div class="sec-cat-label" style="color:var(--c3)">Monitoring</div>
+        <div class="sec-h2" style="color:var(--c3)">Cosa<br>monitorare<br>in produzione</div>
+        <div class="sec-intro">Le metriche che contano, non quelle che è facile misurare.</div>
+      </div>
+      <div class="sec-content">
+        <div class="how-steps">
+          <div class="how-step">
+            <div class="hs-num" style="color:var(--c3)">1</div>
+            <div class="hs-content">
+              <div class="hs-title">Latenza P95, non solo media</div>
+              <div class="hs-desc">La latenza media può essere 2s mentre il 5% delle richieste impiega 30s. <strong>Il P95 (il 95° percentile) rappresenta l'esperienza peggiore dell'utente</strong> su richieste normali. Monitora P50, P95, P99 separatamente.</div>
+            </div>
+          </div>
+          <div class="how-step">
+            <div class="hs-num" style="color:var(--c3)">2</div>
+            <div class="hs-content">
+              <div class="hs-title">Tasso di errori per tipo</div>
+              <div class="hs-desc">Distingui: errori API (rate limit, timeout), errori di parsing output (JSON malformato), errori applicativi (tool fallito), errori logici (agente che non completa il task). <strong>Ogni tipo richiede un'azione correttiva diversa.</strong></div>
+            </div>
+          </div>
+          <div class="how-step">
+            <div class="hs-num" style="color:var(--c3)">3</div>
+            <div class="hs-content">
+              <div class="hs-title">Costo per task nel tempo</div>
+              <div class="hs-desc">Il costo per task tende a crescere con aggiornamenti (prompt più lunghi, più iterazioni). <strong>Monitora la deriva nel tempo</strong> — un aumento del 20% mensile si accumula velocemente.</div>
+            </div>
+          </div>
+          <div class="how-step">
+            <div class="hs-num" style="color:var(--c3)">4</div>
+            <div class="hs-content">
+              <div class="hs-title">Tasso di escalation / fallback</div>
+              <div class="hs-desc">Quante richieste finiscono con "non so rispondere" o escalation a un umano? <strong>Questo è il proxy più diretto per la qualità percepita</strong> — più alto è, meno l'agente copre il suo task.</div>
+            </div>
+          </div>
+          <div class="how-step">
+            <div class="hs-num" style="color:var(--c3)">5</div>
+            <div class="hs-content">
+              <div class="hs-title">Feedback esplicito degli utenti</div>
+              <div class="hs-desc">Thumbs up/down, rating, correzioni. <strong>Ogni feedback negativo è un caso di test da aggiungere all'eval set.</strong> Il ciclo feedback → eval set → miglioramento è il motore del miglioramento continuo.</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+
+<!-- ════════════════════════════
+     PANEL 4 — FRAMEWORK CUSTOM
+════════════════════════════ -->
+<div class="panel" id="p4">
+
+  <div class="where-banner">
+    <span class="wb-label">Dove nel framework →</span>
+    <div class="wb-phases">
+      <span class="wb-phase">Comprensione</span><span class="wb-arrow">›</span>
+      <span class="wb-phase">Progettazione</span><span class="wb-arrow">›</span>
+      <span class="wb-phase active-phase" style="background:#5a2080">Costruzione</span><span class="wb-arrow">›</span>
+      <span class="wb-phase active-phase" style="background:#5a2080">Valutazione</span><span class="wb-arrow">›</span>
+      <span class="wb-phase active-phase" style="background:#5a2080">Deploy</span><span class="wb-arrow">›</span>
+      <span class="wb-phase active-phase" style="background:#5a2080">Evoluzione</span>
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="sec-row">
+      <div class="sec-aside">
+        <div class="sec-cat-label" style="color:#6a30a0">Categoria 04</div>
+        <div class="sec-h2" style="color:#6a30a0">Framework<br>Eval<br>Custom</div>
+        <div class="sec-intro">
+          Librerie Python per costruire eval sistematiche con metriche specializzate. <strong>Diversamente dalle piattaforme, questi sono framework programmabili</strong> — scrivi le tue suite di test come codice, le esegui in CI, le versionai con il tuo agente.
+        </div>
+      </div>
+      <div class="sec-content">
+
+        <div class="tools-stack">
+
+          <div class="tool-card">
+            <div class="tc-left">
+              <div class="tc-logo" style="color:#6a30a0">RAGAS</div>
+              <div class="tc-vendor">Explodinggradients · Open Source</div>
+              <div class="tc-tags">
+                <span class="tc-tag open">Open Source</span>
+                <span class="tc-tag free">Free</span>
+              </div>
+            </div>
+            <div class="tc-right">
+              <div class="tc-what">
+                Il framework di valutazione standard per pipeline RAG. <strong>Misura automaticamente le 4 metriche fondamentali del RAG</strong> usando un LLM come giudice — senza annotazioni umane richieste.
+              </div>
+              <div class="feature-grid">
+                <div class="feat"><div class="feat-icon">🎯</div><div class="feat-text"><strong>Faithfulness</strong> — la risposta è supportata dai documenti recuperati? Misura le allucinazioni rispetto al contesto</div></div>
+                <div class="feat"><div class="feat-icon">📌</div><div class="feat-text"><strong>Answer Relevance</strong> — la risposta è pertinente alla domanda? Rileva risposte che divagano o cambiano argomento</div></div>
+                <div class="feat"><div class="feat-icon">📚</div><div class="feat-text"><strong>Context Recall</strong> — i documenti recuperati contengono le informazioni necessarie? Misura se il retriever perde informazioni</div></div>
+                <div class="feat"><div class="feat-icon">🎯</div><div class="feat-text"><strong>Context Precision</strong> — i documenti recuperati sono tutti rilevanti? Misura se il retriever porta "rumore"</div></div>
+              </div>
+              <div class="when-grid">
+                <div class="when-use">
+                  <div class="wu-label">Usa RAGAS quando</div>
+                  <ul class="wu-list">
+                    <li class="yes">Stai costruendo un agente con RAG (quasi sempre)</li>
+                    <li class="yes">Vuoi misurare retrieval e generation separatamente</li>
+                    <li class="yes">Non vuoi annotazioni umane per le metriche di base</li>
+                    <li class="yes">Vuoi integrare le metriche nel CI pipeline</li>
+                  </ul>
+                </div>
+                <div class="when-use">
+                  <div class="wu-label">Non è sufficiente se</div>
+                  <ul class="wu-list">
+                    <li class="no">Il tuo agente non usa RAG</li>
+                    <li class="no">Hai bisogno di metriche task-specific molto personalizzate</li>
+                    <li class="no">La correttezza fattuale richiede verifica umana</li>
+                  </ul>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="tool-card">
+            <div class="tc-left">
+              <div class="tc-logo" style="color:#6a30a0">DeepEval</div>
+              <div class="tc-vendor">Confident AI · Open Source</div>
+              <div class="tc-tags">
+                <span class="tc-tag open">Open Source</span>
+                <span class="tc-tag cloud">Cloud dashboard</span>
+                <span class="tc-tag free">Free tier</span>
+              </div>
+            </div>
+            <div class="tc-right">
+              <div class="tc-what">
+                Framework di unit testing per LLM che porta il paradigma pytest nell'eval degli agenti. <strong>Scrivi test come codice Python, eseguili con pytest, integra in CI.</strong> Vasta libreria di metriche predefinite per agenti.
+              </div>
+              <div class="feature-grid">
+                <div class="feat"><div class="feat-icon">🧪</div><div class="feat-text"><strong>Pytest-style</strong> — scrivi test con <code>assert_test()</code>, esegui con <code>deepeval test run</code>, vedi i risultati come una test suite normale</div></div>
+                <div class="feat"><div class="feat-icon">📏</div><div class="feat-text"><strong>Metriche agente</strong> — tool correctness, task completion, conversation coherence, hallucination, toxicity e 15+ altre metriche built-in</div></div>
+                <div class="feat"><div class="feat-icon">🔄</div><div class="feat-text"><strong>CI/CD ready</strong> — esce con exit code non-zero se le metriche non superano le soglie, blocca i deploy automaticamente</div></div>
+                <div class="feat"><div class="feat-icon">📊</div><div class="feat-text"><strong>Dashboard cloud</strong> — visualizzazione risultati e trend nel tempo opzionale su Confident AI cloud</div></div>
+              </div>
+            </div>
+          </div>
+
+          <div class="tool-card">
+            <div class="tc-left">
+              <div class="tc-logo" style="color:#4a0060">PromptFoo</div>
+              <div class="tc-vendor">Open Source · PromptFoo Inc.</div>
+              <div class="tc-tags">
+                <span class="tc-tag open">Open Source</span>
+                <span class="tc-tag free">Free</span>
+              </div>
+            </div>
+            <div class="tc-right">
+              <div class="tc-what">
+                Strumento per <strong>testare e confrontare prompt e modelli</strong> con configurazione YAML. Ideale per chi vuole A/B test sistematici di varianti prompt senza scrivere codice di eval da zero. Include anche red-teaming automatico.
+              </div>
+              <div class="feature-grid">
+                <div class="feat"><div class="feat-icon">⚗️</div><div class="feat-text"><strong>Prompt A/B testing</strong> — configuri N varianti di prompt e M modelli, esegui su dataset, vedi matrice di risultati comparativi</div></div>
+                <div class="feat"><div class="feat-icon">🔴</div><div class="feat-text"><strong>Red teaming</strong> — genera automaticamente input avversariali per testare la robustezza del tuo prompt contro jailbreak e prompt injection</div></div>
+                <div class="feat"><div class="feat-icon">📄</div><div class="feat-text"><strong>YAML config</strong> — tutta la configurazione in file YAML versionabili con il codice. Nessun codice Python richiesto per eval base.</div></div>
+                <div class="feat"><div class="feat-icon">🌐</div><div class="feat-text"><strong>Multi-provider</strong> — supporta Claude, OpenAI, Gemini, Mistral, modelli self-hosted via Ollama nella stessa configurazione</div></div>
+              </div>
+            </div>
+          </div>
+
+        </div>
+
+        <div class="code-snip">
+          <div class="cs-label">RAGAS — valutazione pipeline RAG in 15 righe</div>
+          <div class="cs-body">
+<span class="kw">from</span> <span class="di">ragas</span> <span class="kw">import</span> <span class="fn">evaluate</span><br>
+<span class="kw">from</span> <span class="di">ragas.metrics</span> <span class="kw">import</span> <span class="di">faithfulness</span>, <span class="di">answer_relevancy</span>, <span class="di">context_recall</span><br>
+<span class="kw">from</span> <span class="di">datasets</span> <span class="kw">import</span> <span class="fn">Dataset</span><br>
+<br>
+<span class="cm"># Dataset con domande, contesti recuperati, risposte generate, risposte attese</span><br>
+<span class="hl">eval_data</span> = {<br>
+&nbsp;&nbsp;<span class="st">"question"</span>:  [<span class="st">"Come si imposta un ordine ricorrente?"</span>, <span class="st">"..."</span>],<br>
+&nbsp;&nbsp;<span class="st">"contexts"</span>:  [[<span class="st">"Documenti recuperati dal vector store..."</span>], [<span class="st">"..."</span>]],<br>
+&nbsp;&nbsp;<span class="st">"answer"</span>:    [<span class="st">"Risposta generata dall'agente..."</span>, <span class="st">"..."</span>],<br>
+&nbsp;&nbsp;<span class="st">"ground_truth"</span>: [<span class="st">"Risposta corretta attesa..."</span>, <span class="st">"..."</span>]<br>
+}<br>
+<br>
+<span class="hl">result</span> = <span class="fn">evaluate</span>(<br>
+&nbsp;&nbsp;<span class="fn">Dataset.from_dict</span>(<span class="hl">eval_data</span>),<br>
+&nbsp;&nbsp;metrics=[<span class="di">faithfulness</span>, <span class="di">answer_relevancy</span>, <span class="di">context_recall</span>]<br>
+)<br>
+<br>
+<span class="fn">print</span>(<span class="hl">result</span>)<br>
+<span class="cm"># → {'faithfulness': 0.82, 'answer_relevancy': 0.91, 'context_recall': 0.76}</span><br>
+<span class="cm"># faithfulness 0.82 → 18% delle affermazioni non supportate dal contesto</span>
+          </div>
+        </div>
+
+        <div class="code-snip">
+          <div class="cs-label">DeepEval — unit test per agente con pytest</div>
+          <div class="cs-body">
+<span class="kw">from</span> <span class="di">deepeval</span> <span class="kw">import</span> <span class="fn">assert_test</span><br>
+<span class="kw">from</span> <span class="di">deepeval.test_case</span> <span class="kw">import</span> <span class="fn">LLMTestCase</span><br>
+<span class="kw">from</span> <span class="di">deepeval.metrics</span> <span class="kw">import</span> <span class="fn">HallucinationMetric</span>, <span class="fn">AnswerRelevancyMetric</span><br>
+<br>
+<span class="kw">def</span> <span class="fn">test_support_agent_no_hallucination</span>():<br>
+&nbsp;&nbsp;<span class="hl">test_case</span> = <span class="fn">LLMTestCase</span>(<br>
+&nbsp;&nbsp;&nbsp;&nbsp;input=<span class="st">"Qual è il costo del piano Enterprise?"</span>,<br>
+&nbsp;&nbsp;&nbsp;&nbsp;actual_output=<span class="fn">my_agent.run</span>(<span class="st">"Qual è il costo del piano Enterprise?"</span>),<br>
+&nbsp;&nbsp;&nbsp;&nbsp;retrieval_context=[<span class="st">"Il piano Enterprise parte da €500/mese..."</span>]<br>
+&nbsp;&nbsp;)<br>
+&nbsp;&nbsp;<span class="fn">assert_test</span>(<span class="hl">test_case</span>, metrics=[<br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="fn">HallucinationMetric</span>(threshold=<span class="nu">0.5</span>),   <span class="cm"># max 50% allucinazioni</span><br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="fn">AnswerRelevancyMetric</span>(threshold=<span class="nu">0.7</span>)  <span class="cm"># min 70% rilevanza</span><br>
+&nbsp;&nbsp;])<br>
+<br>
+<span class="cm"># Esegui: deepeval test run test_agent.py</span><br>
+<span class="cm"># → fallisce (exit code 1) se i threshold non sono rispettati</span><br>
+<span class="cm"># → integrabile in GitHub Actions per bloccare il deploy</span>
+          </div>
+        </div>
+
+        <div class="code-snip">
+          <div class="cs-label">PromptFoo — confronto A/B prompt × modello (config YAML)</div>
+          <div class="cs-body">
+<span class="cm"># promptfooconfig.yaml — nessun codice Python richiesto</span><br>
+<span class="hl">prompts</span>:<br>
+&nbsp;&nbsp;- <span class="st">"Sei un assistente di supporto. Rispondi a: {{question}}"</span><br>
+&nbsp;&nbsp;- <span class="st">"Sei un esperto di prodotto. Rispondi concisamente a: {{question}}"</span><br>
+<br>
+<span class="hl">providers</span>:<br>
+&nbsp;&nbsp;- <span class="di">anthropic:claude-sonnet-4-5</span><br>
+&nbsp;&nbsp;- <span class="di">anthropic:claude-haiku-3-5</span><br>
+<br>
+<span class="hl">tests</span>:<br>
+&nbsp;&nbsp;- <span class="hl">vars</span>: {<span class="hl">question</span>: <span class="st">"Come esporto i dati?"</span>}<br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="hl">assert</span>:<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;- <span class="hl">type</span>: <span class="di">contains</span><br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="hl">value</span>: <span class="st">"CSV"</span><br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;- <span class="hl">type</span>: <span class="di">llm-rubric</span><br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="hl">value</span>: <span class="st">"La risposta è chiara e include i passi necessari?"</span><br>
+<br>
+<span class="cm"># Esegui: promptfoo eval</span><br>
+<span class="cm"># → matrice 2 prompt × 2 modelli = 4 combinazioni testate</span><br>
+<span class="cm"># → report HTML con comparison side-by-side</span>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+</div>
+
+
+<!-- ════════════════════════════
+     SEZIONE FINALE — MAP COMPLETA
+════════════════════════════ -->
+<div class="final-section">
+  <div class="fs-label">Vista d'insieme · Tutti gli strumenti nel framework di sviluppo</div>
+  <div class="fs-h2">Dove si inserisce<br>ogni strumento</div>
+
+  <div class="workflow-map" style="margin-bottom:32px">
+    <div class="wm-header">Roadmap di sviluppo → strumenti per fase</div>
+    <div class="wm-row">
+      <div class="wm-phase"><div class="wm-phase-num">Fase 1–2</div><div class="wm-phase-name">Comprensione & Progettazione</div></div>
+      <div class="wm-tools">
+        <span class="wm-tool primary">LMSYS Arena</span>
+        <span class="wm-tool primary">Open LLM Leaderboard</span>
+        <span class="wm-tool primary">LiveBench</span>
+        <span class="wm-tool">SWE-bench (se coding)</span>
+        <span class="wm-tool">AgentBench (se agente)</span>
+      </div>
+    </div>
+    <div class="wm-row">
+      <div class="wm-phase"><div class="wm-phase-num">Fase 3</div><div class="wm-phase-name">Costruzione</div></div>
+      <div class="wm-tools">
+        <span class="wm-tool primary">LangSmith (tracing)</span>
+        <span class="wm-tool primary">Langfuse (tracing self-host)</span>
+        <span class="wm-tool">Phoenix (se RAG)</span>
+        <span class="wm-tool">Helicone (zero-code logging)</span>
+        <span class="wm-tool">PromptFoo (A/B prompt)</span>
+      </div>
+    </div>
+    <div class="wm-row">
+      <div class="wm-phase"><div class="wm-phase-num">Fase 4</div><div class="wm-phase-name">Valutazione</div></div>
+      <div class="wm-tools">
+        <span class="wm-tool primary">LangSmith Evals</span>
+        <span class="wm-tool primary">RAGAS (se RAG)</span>
+        <span class="wm-tool primary">DeepEval (unit test)</span>
+        <span class="wm-tool">Braintrust (A/B experiments)</span>
+        <span class="wm-tool">PromptFoo (model comparison)</span>
+      </div>
+    </div>
+    <div class="wm-row">
+      <div class="wm-phase"><div class="wm-phase-num">Fase 5–6</div><div class="wm-phase-name">Deploy & Evoluzione</div></div>
+      <div class="wm-tools">
+        <span class="wm-tool primary">Langfuse (monitoring)</span>
+        <span class="wm-tool primary">Helicone (cost tracking)</span>
+        <span class="wm-tool primary">DeepEval in CI/CD</span>
+        <span class="wm-tool">Phoenix (embedding drift)</span>
+        <span class="wm-tool">LangSmith (feedback loop)</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="final-grid">
+    <div class="fg-col">
+      <div class="fg-cat">Piattaforme Eval</div>
+      <div class="fg-item"><div class="fg-tool">LangSmith</div><div class="fg-note">Se usi LangChain. Best UX, meno privacy.</div></div>
+      <div class="fg-item"><div class="fg-tool">Langfuse</div><div class="fg-note">Self-host, open source. Raccomandato per privacy.</div></div>
+      <div class="fg-item"><div class="fg-tool">Braintrust</div><div class="fg-note">Quando il focus è A/B testing di prompt sistematico.</div></div>
+    </div>
+    <div class="fg-col">
+      <div class="fg-cat">Leaderboard</div>
+      <div class="fg-item"><div class="fg-tool">LMSYS Arena</div><div class="fg-note">Orientamento generale. Prima tappa sempre.</div></div>
+      <div class="fg-item"><div class="fg-tool">Open LLM LB</div><div class="fg-note">Per scegliere tra modelli self-hosted.</div></div>
+      <div class="fg-item"><div class="fg-tool">SWE-bench</div><div class="fg-note">Se stai costruendo un coding agent.</div></div>
+      <div class="fg-item"><div class="fg-tool">AgentBench</div><div class="fg-note">Per confrontare capacità agentiche.</div></div>
+    </div>
+    <div class="fg-col">
+      <div class="fg-cat">Observability</div>
+      <div class="fg-item"><div class="fg-tool">Langfuse</div><div class="fg-note">Anche per monitoring produzione. One tool per tutto.</div></div>
+      <div class="fg-item"><div class="fg-tool">Arize Phoenix</div><div class="fg-note">Se vuoi analisi deep del retrieval RAG.</div></div>
+      <div class="fg-item"><div class="fg-tool">Helicone</div><div class="fg-note">Zero-code proxy. Il più rapido da attivare.</div></div>
+    </div>
+    <div class="fg-col">
+      <div class="fg-cat">Framework Custom</div>
+      <div class="fg-item"><div class="fg-tool">RAGAS</div><div class="fg-note">Se hai RAG — metriche di valutazione standard.</div></div>
+      <div class="fg-item"><div class="fg-tool">DeepEval</div><div class="fg-note">Unit test agente integrabili in CI/CD.</div></div>
+      <div class="fg-item"><div class="fg-tool">PromptFoo</div><div class="fg-note">A/B test prompt e modelli via YAML.</div></div>
+    </div>
+  </div>
+
+  <div class="rec-box">
+    <div class="rb-label">Raccomandazione per il tuo profilo (team Python, privacy, velocità)</div>
+    <div class="rb-title">Stack minimo raccomandato per iniziare</div>
+    <div class="rb-text">
+      Non serve installare tutto. Con questo stack copri il 90% delle esigenze di valutazione per un agente in produzione, con un footprint di infrastruttura minimo e full privacy. <strong>Langfuse self-hosted</strong> copre tracing, eval, monitoring e cost tracking in un'unica piattaforma. <strong>RAGAS</strong> aggiunge metriche RAG automatiche se il tuo agente usa retrieval. <strong>DeepEval in CI</strong> garantisce che ogni modifica venga testata prima del deploy. I leaderboard pubblici servono solo nella fase di selezione iniziale — non richiedono nessun setup.
+    </div>
+    <div class="rb-stack">
+      <span class="rb-chip primary">Langfuse self-host (Docker)</span>
+      <span class="rb-chip primary">RAGAS (se RAG)</span>
+      <span class="rb-chip primary">DeepEval in GitHub Actions</span>
+      <span class="rb-chip">LMSYS Arena (fase selezione)</span>
+      <span class="rb-chip">PromptFoo (A/B prompt opzionale)</span>
+    </div>
+  </div>
+
+</div>
+
+<footer>
+  <span>Agenti AI · Strumenti di eval e osservabilità · Febbraio 2026</span>
+  <span>agenti-ai-eval-tools.html</span>
+</footer>
+
+<script>
+function showPanel(id, btn) {
+  document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.ct').forEach(t => t.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  btn.classList.add('active');
+  window.scrollTo({ top: document.querySelector('.cat-tabs').offsetTop - 10, behavior: 'smooth' });
+}
+</script>
+</body>
+</html>

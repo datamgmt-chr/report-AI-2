@@ -1,0 +1,1321 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Ecosistema Agenti Pronti — Mappa</title>
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@300;400;500;600;700;800&family=Barlow:wght@300;400;500&family=Fira+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg:    #0a0a0a;
+  --bg2:   #111;
+  --bg3:   #181818;
+  --wire:  rgba(255,255,255,0.06);
+  --text:  rgba(255,255,255,0.88);
+  --muted: rgba(255,255,255,0.38);
+  --dim:   rgba(255,255,255,0.12);
+  --border: rgba(255,255,255,0.09);
+
+  /* Categorie */
+  --cat-plat:    #e8c840;   /* piattaforme enterprise */
+  --cat-vert:    #40c8e8;   /* verticali SaaS */
+  --cat-nocode:  #e87840;   /* no-code marketplace */
+  --cat-open:    #78e840;   /* open source */
+  --cat-embed:   #c840e8;   /* embedded in prodotti */
+
+  /* Livelli di pronto */
+  --lv1: #ff6b35;
+  --lv2: #f7c35f;
+  --lv3: #a8e063;
+}
+
+* { margin:0; padding:0; box-sizing:border-box; }
+html { scroll-behavior: smooth; }
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: 'Barlow', sans-serif;
+  font-weight: 300;
+  line-height: 1.6;
+  font-size: 14px;
+}
+
+/* ── HEADER / COPERTINA ── */
+.cover {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  padding: 0 0 64px;
+  position: relative;
+  overflow: hidden;
+  border-bottom: 1px solid var(--border);
+}
+
+/* griglia di sfondo */
+.cover::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-image:
+    linear-gradient(var(--wire) 1px, transparent 1px),
+    linear-gradient(90deg, var(--wire) 1px, transparent 1px);
+  background-size: 60px 60px;
+  pointer-events: none;
+}
+
+/* blob centrale */
+.cover-blob {
+  position: absolute;
+  top: 50%; left: 50%;
+  transform: translate(-50%, -60%);
+  width: 600px; height: 600px;
+  border-radius: 50%;
+  background: radial-gradient(circle,
+    rgba(232,200,64,0.08) 0%,
+    rgba(64,200,232,0.05) 40%,
+    transparent 70%);
+  pointer-events: none;
+}
+
+.cover-content {
+  position: relative;
+  padding: 0 64px;
+}
+
+.cover-eyebrow {
+  font-family: 'Fira Mono', monospace;
+  font-size: 11px;
+  letter-spacing: 3px;
+  text-transform: uppercase;
+  color: var(--muted);
+  margin-bottom: 20px;
+}
+
+.cover h1 {
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: clamp(52px, 8vw, 110px);
+  font-weight: 800;
+  line-height: 0.92;
+  letter-spacing: -1px;
+  text-transform: uppercase;
+}
+
+.cover h1 .line2 {
+  color: var(--muted);
+  font-weight: 300;
+  font-style: italic;
+}
+
+.cover-sub {
+  margin-top: 28px;
+  font-size: 15px;
+  color: var(--muted);
+  max-width: 520px;
+  line-height: 1.7;
+}
+
+.cover-stats {
+  display: flex;
+  gap: 48px;
+  margin-top: 48px;
+  flex-wrap: wrap;
+}
+
+.cover-stat {
+  border-top: 1px solid var(--border);
+  padding-top: 14px;
+}
+
+.cover-stat .n {
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 44px;
+  font-weight: 700;
+  line-height: 1;
+  display: block;
+}
+
+.cover-stat .l {
+  font-family: 'Fira Mono', monospace;
+  font-size: 10px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: var(--muted);
+  margin-top: 4px;
+}
+
+/* ── CAT LEGEND BAR ── */
+.cat-bar {
+  display: flex;
+  border-bottom: 1px solid var(--border);
+  overflow-x: auto;
+}
+
+.cat-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 16px 24px;
+  border-right: 1px solid var(--border);
+  white-space: nowrap;
+  font-family: 'Fira Mono', monospace;
+  font-size: 11px;
+  color: var(--muted);
+}
+
+.cat-dot {
+  width: 10px; height: 10px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+/* ── SECTION ── */
+.section {
+  padding: 64px;
+  border-bottom: 1px solid var(--border);
+}
+
+.sec-eyebrow {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 40px;
+}
+
+.sec-num {
+  font-family: 'Fira Mono', monospace;
+  font-size: 11px;
+  color: var(--muted);
+}
+
+.sec-line { flex:1; height:1px; background:var(--border); }
+
+.sec-tag {
+  font-family: 'Fira Mono', monospace;
+  font-size: 10px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.sec-title {
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: clamp(28px, 4vw, 52px);
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: -0.5px;
+  line-height: 1.05;
+  margin-bottom: 16px;
+}
+
+.sec-intro {
+  font-size: 14px;
+  color: var(--muted);
+  max-width: 640px;
+  margin-bottom: 48px;
+  line-height: 1.7;
+}
+
+.sec-intro strong { color: var(--text); font-weight: 500; }
+
+/* ── ECOSYSTEM MAP ── */
+.eco-map {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 1px;
+  background: var(--border);
+  border: 1px solid var(--border);
+}
+
+.eco-col-header {
+  background: var(--bg2);
+  padding: 16px 16px 14px;
+  border-bottom: 2px solid;
+}
+
+.eco-col-header .col-cat {
+  font-family: 'Fira Mono', monospace;
+  font-size: 9px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  margin-bottom: 6px;
+}
+
+.eco-col-header .col-title {
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 17px;
+  font-weight: 600;
+  text-transform: uppercase;
+  line-height: 1.2;
+}
+
+.eco-col-header .col-desc {
+  font-size: 11px;
+  color: var(--muted);
+  margin-top: 6px;
+  line-height: 1.5;
+}
+
+/* Colori header per categoria */
+.col-plat    { border-color: var(--cat-plat); }
+.col-vert    { border-color: var(--cat-vert); }
+.col-nocode  { border-color: var(--cat-nocode); }
+.col-open    { border-color: var(--cat-open); }
+.col-embed   { border-color: var(--cat-embed); }
+
+.col-plat   .col-cat  { color: var(--cat-plat); }
+.col-vert   .col-cat  { color: var(--cat-vert); }
+.col-nocode .col-cat  { color: var(--cat-nocode); }
+.col-open   .col-cat  { color: var(--cat-open); }
+.col-embed  .col-cat  { color: var(--cat-embed); }
+
+/* Agent card in the map */
+.agent-card {
+  background: var(--bg);
+  padding: 16px;
+  border-bottom: 1px solid var(--border);
+  transition: background 0.15s;
+  position: relative;
+}
+
+.agent-card:hover { background: var(--bg3); }
+
+.agent-card:last-child { border-bottom: none; }
+
+.agent-name {
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 16px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+  margin-bottom: 4px;
+  line-height: 1.2;
+}
+
+.agent-by {
+  font-family: 'Fira Mono', monospace;
+  font-size: 9px;
+  color: var(--muted);
+  letter-spacing: 1px;
+  margin-bottom: 8px;
+}
+
+.agent-desc {
+  font-size: 11px;
+  color: var(--muted);
+  line-height: 1.5;
+  margin-bottom: 10px;
+}
+
+.agent-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+
+.tag {
+  font-family: 'Fira Mono', monospace;
+  font-size: 9px;
+  padding: 2px 6px;
+  border: 1px solid var(--dim);
+  color: var(--muted);
+  letter-spacing: 0.5px;
+}
+
+.tag.domain {
+  border-color: transparent;
+  background: var(--bg3);
+}
+
+/* ── READINESS SPECTRUM ── */
+.readiness-wrap {
+  border: 1px solid var(--border);
+  overflow: hidden;
+  margin-bottom: 48px;
+}
+
+.readiness-header {
+  background: var(--bg2);
+  padding: 14px 24px;
+  font-family: 'Fira Mono', monospace;
+  font-size: 10px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: var(--muted);
+  border-bottom: 1px solid var(--border);
+}
+
+.readiness-levels {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1px;
+  background: var(--border);
+}
+
+.rl {
+  background: var(--bg);
+  padding: 24px;
+}
+
+.rl-bar {
+  height: 4px;
+  margin-bottom: 16px;
+  border-radius: 2px;
+}
+
+.rl-num {
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 48px;
+  font-weight: 800;
+  line-height: 1;
+  margin-bottom: 8px;
+  opacity: 0.3;
+}
+
+.rl-title {
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 20px;
+  font-weight: 600;
+  text-transform: uppercase;
+  margin-bottom: 10px;
+}
+
+.rl-desc {
+  font-size: 12px;
+  color: var(--muted);
+  line-height: 1.6;
+  margin-bottom: 14px;
+}
+
+.rl-examples {
+  font-family: 'Fira Mono', monospace;
+  font-size: 10px;
+  color: var(--muted);
+  line-height: 1.8;
+}
+
+.rl-examples strong {
+  color: var(--text);
+  font-weight: 500;
+}
+
+/* ── HOW TO INTERFACE ── */
+.interface-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1px;
+  background: var(--border);
+  border: 1px solid var(--border);
+  margin-bottom: 48px;
+}
+
+.iface-card {
+  background: var(--bg);
+  padding: 28px 24px;
+}
+
+.iface-icon {
+  font-size: 32px;
+  display: block;
+  margin-bottom: 14px;
+}
+
+.iface-role {
+  font-family: 'Fira Mono', monospace;
+  font-size: 10px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: var(--muted);
+  margin-bottom: 8px;
+}
+
+.iface-title {
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 22px;
+  font-weight: 600;
+  text-transform: uppercase;
+  margin-bottom: 12px;
+}
+
+.iface-desc {
+  font-size: 13px;
+  color: var(--muted);
+  line-height: 1.65;
+  margin-bottom: 16px;
+}
+
+.iface-actions {
+  list-style: none;
+}
+
+.iface-actions li {
+  font-size: 12px;
+  color: var(--muted);
+  padding: 6px 0;
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  gap: 8px;
+  line-height: 1.4;
+}
+
+.iface-actions li:last-child { border-bottom: none; }
+.iface-actions li::before { content: '→'; color: var(--dim); flex-shrink:0; }
+
+/* ── ADAPTATION LADDER ── */
+.ladder {
+  border: 1px solid var(--border);
+  overflow: hidden;
+  margin-bottom: 48px;
+}
+
+.ladder-header {
+  background: var(--bg2);
+  padding: 14px 24px;
+  font-family: 'Fira Mono', monospace;
+  font-size: 10px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: var(--muted);
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  justify-content: space-between;
+}
+
+.ladder-row {
+  display: grid;
+  grid-template-columns: 48px 200px 1fr auto;
+  border-bottom: 1px solid var(--border);
+  align-items: stretch;
+}
+
+.ladder-row:last-child { border-bottom: none; }
+
+.ladder-lv {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-right: 1px solid var(--border);
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 22px;
+  font-weight: 800;
+  color: var(--dim);
+  background: var(--bg2);
+}
+
+.ladder-name {
+  padding: 18px 20px;
+  border-right: 1px solid var(--border);
+  background: var(--bg2);
+}
+
+.ladder-name-title {
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 16px;
+  font-weight: 600;
+  text-transform: uppercase;
+  margin-bottom: 4px;
+}
+
+.ladder-name-sub {
+  font-family: 'Fira Mono', monospace;
+  font-size: 9px;
+  color: var(--muted);
+  letter-spacing: 1px;
+}
+
+.ladder-desc {
+  padding: 18px 24px;
+  font-size: 13px;
+  color: var(--muted);
+  line-height: 1.6;
+}
+
+.ladder-desc strong { color: var(--text); font-weight: 500; }
+
+.ladder-req {
+  padding: 18px 20px;
+  border-left: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  background: var(--bg2);
+  white-space: nowrap;
+}
+
+.req-badge {
+  font-family: 'Fira Mono', monospace;
+  font-size: 10px;
+  padding: 4px 10px;
+  border: 1px solid;
+  letter-spacing: 1px;
+}
+
+.req-none    { border-color: var(--lv3); color: var(--lv3); }
+.req-low     { border-color: var(--lv2); color: var(--lv2); }
+.req-med     { border-color: var(--lv1); color: var(--lv1); }
+.req-high    { border-color: #f55; color: #f55; }
+
+/* ── DECISION HELPER ── */
+.decision-box {
+  border: 1px solid var(--border);
+  overflow: hidden;
+}
+
+.decision-box-header {
+  background: var(--bg2);
+  padding: 14px 24px;
+  font-family: 'Fira Mono', monospace;
+  font-size: 10px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: var(--muted);
+  border-bottom: 1px solid var(--border);
+}
+
+.dq-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 1px;
+  background: var(--border);
+}
+
+.dq-item {
+  background: var(--bg);
+  padding: 24px;
+}
+
+.dq-q {
+  font-family: 'Barlow Condensed', sans-serif;
+  font-size: 17px;
+  font-weight: 600;
+  text-transform: uppercase;
+  margin-bottom: 12px;
+  line-height: 1.2;
+}
+
+.dq-answers {
+  list-style: none;
+}
+
+.dq-answers li {
+  font-size: 12px;
+  padding: 7px 0;
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  gap: 10px;
+  line-height: 1.4;
+  color: var(--muted);
+}
+
+.dq-answers li:last-child { border-bottom: none; }
+
+.dq-opt {
+  font-family: 'Fira Mono', monospace;
+  font-size: 10px;
+  padding: 1px 7px;
+  border: 1px solid var(--dim);
+  color: var(--muted);
+  flex-shrink: 0;
+  height: fit-content;
+  margin-top: 1px;
+}
+
+/* ── FOOTER ── */
+footer {
+  border-top: 1px solid var(--border);
+  padding: 24px 64px;
+  display: flex;
+  justify-content: space-between;
+  font-family: 'Fira Mono', monospace;
+  font-size: 10px;
+  color: var(--muted);
+  letter-spacing: 1px;
+}
+
+/* ── RESPONSIVE ── */
+@media (max-width: 1000px) {
+  .eco-map { grid-template-columns: 1fr 1fr; }
+}
+
+@media (max-width: 700px) {
+  .cover, .section { padding: 40px 20px; }
+  .cover { padding-bottom: 48px; }
+  .eco-map, .readiness-levels, .interface-grid, .dq-grid { grid-template-columns: 1fr; }
+  .ladder-row { grid-template-columns: 40px 1fr; }
+  .ladder-req, .ladder-desc { grid-column: 2; }
+  .cat-bar { flex-wrap: wrap; }
+  footer { padding: 20px; flex-direction: column; gap: 6px; }
+}
+</style>
+</head>
+<body>
+
+<!-- ══════════════════
+     COVER
+══════════════════ -->
+<div class="cover">
+  <div class="cover-blob"></div>
+  <div class="cover-content">
+    <div class="cover-eyebrow">Mappa dell'ecosistema · Agenti AI pronti all'uso · 2026</div>
+    <h1>
+      Il mercato<br>
+      <span class="line2">degli agenti già fatti</span>
+    </h1>
+    <p class="cover-sub">
+      Cosa si intende per agente "pronto all'uso", dove si trovano, come si valutano, come si adattano, come ci si interfaccia. Una mappa completa per chi deve orientarsi.
+    </p>
+    <div class="cover-stats">
+      <div class="cover-stat">
+        <span class="n" style="color:var(--cat-plat)">5</span>
+        <div class="l">Categorie di mercato</div>
+      </div>
+      <div class="cover-stat">
+        <span class="n" style="color:var(--cat-vert)">3</span>
+        <div class="l">Livelli di "pronto"</div>
+      </div>
+      <div class="cover-stat">
+        <span class="n" style="color:var(--cat-nocode)">3</span>
+        <div class="l">Modi di interfacciarsi</div>
+      </div>
+      <div class="cover-stat">
+        <span class="n" style="color:var(--cat-open)">5</span>
+        <div class="l">Livelli di adattamento</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ── CATEGORY BAR ── -->
+<div class="cat-bar">
+  <div class="cat-item"><div class="cat-dot" style="background:var(--cat-plat)"></div>Piattaforme enterprise</div>
+  <div class="cat-item"><div class="cat-dot" style="background:var(--cat-vert)"></div>Verticali SaaS</div>
+  <div class="cat-item"><div class="cat-dot" style="background:var(--cat-nocode)"></div>No-code &amp; marketplace</div>
+  <div class="cat-item"><div class="cat-dot" style="background:var(--cat-open)"></div>Open source</div>
+  <div class="cat-item"><div class="cat-dot" style="background:var(--cat-embed)"></div>Embedded in prodotti</div>
+</div>
+
+
+<!-- ══════════════════
+     01 — MAPPA ECOSISTEMA
+══════════════════ -->
+<div class="section" id="mappa">
+  <div class="sec-eyebrow">
+    <span class="sec-num">01</span>
+    <div class="sec-line"></div>
+    <span class="sec-tag">Mappa dell'ecosistema</span>
+  </div>
+  <div class="sec-title">Chi fa cosa —<br>l'ecosistema completo</div>
+  <p class="sec-intro">Cinque categorie di attori, ognuna con un modello diverso. Un agente "pronto" di Salesforce e uno su GitHub sono entrambi "pronti" — ma in senso completamente diverso.</p>
+
+  <div class="eco-map">
+
+    <!-- COLONNA 1: PIATTAFORME ENTERPRISE -->
+    <div>
+      <div class="eco-col-header col-plat">
+        <div class="col-cat">Categoria 01</div>
+        <div class="col-title">Piattaforme<br>Enterprise</div>
+        <div class="col-desc">Agenti prebuilt dentro ecosistemi aziendali già in uso. Si attivano, non si costruiscono.</div>
+      </div>
+
+      <div class="agent-card">
+        <div class="agent-name">Agentforce</div>
+        <div class="agent-by">SALESFORCE</div>
+        <div class="agent-desc">Agenti prebuilt per sales, service, marketing. Integrati nel CRM. Accedono a tutti i dati Salesforce.</div>
+        <div class="agent-tags">
+          <span class="tag domain">CRM</span>
+          <span class="tag domain">Sales</span>
+          <span class="tag domain">Service</span>
+        </div>
+      </div>
+
+      <div class="agent-card">
+        <div class="agent-name">Copilot Studio</div>
+        <div class="agent-by">MICROSOFT</div>
+        <div class="agent-desc">Costruisci agenti custom dentro l'ecosistema M365. Template per HR, IT helpdesk, finance. Si integra con Teams, SharePoint, Outlook.</div>
+        <div class="agent-tags">
+          <span class="tag domain">M365</span>
+          <span class="tag domain">HR</span>
+          <span class="tag domain">IT</span>
+        </div>
+      </div>
+
+      <div class="agent-card">
+        <div class="agent-name">AI Agents</div>
+        <div class="agent-by">SERVICENOW</div>
+        <div class="agent-desc">Gestione ticket IT, richieste di servizio, approvazioni. Integrato con CMDB e workflow aziendali.</div>
+        <div class="agent-tags">
+          <span class="tag domain">ITSM</span>
+          <span class="tag domain">IT Ops</span>
+        </div>
+      </div>
+
+      <div class="agent-card">
+        <div class="agent-name">Einstein AI</div>
+        <div class="agent-by">SALESFORCE</div>
+        <div class="agent-desc">Layer AI su tutti i prodotti Salesforce. Predizioni, raccomandazioni, automazioni dentro il flusso di lavoro CRM.</div>
+        <div class="agent-tags">
+          <span class="tag domain">Previsioni</span>
+          <span class="tag domain">Automazione</span>
+        </div>
+      </div>
+
+      <div class="agent-card">
+        <div class="agent-name">Workday AI</div>
+        <div class="agent-by">WORKDAY</div>
+        <div class="agent-desc">Agenti per HR, finance, planning. Integrati nell'ERP. Automatizzano processi come onboarding, forecast, approvazioni spese.</div>
+        <div class="agent-tags">
+          <span class="tag domain">HR</span>
+          <span class="tag domain">Finance</span>
+          <span class="tag domain">ERP</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- COLONNA 2: VERTICALI SAAS -->
+    <div>
+      <div class="eco-col-header col-vert">
+        <div class="col-cat">Categoria 02</div>
+        <div class="col-title">Verticali<br>SaaS</div>
+        <div class="col-desc">Prodotti costruiti attorno a un singolo caso d'uso agente. Si acquistano come software.</div>
+      </div>
+
+      <div class="agent-card">
+        <div class="agent-name">Fin</div>
+        <div class="agent-by">INTERCOM</div>
+        <div class="agent-desc">Agente AI per customer support. Risponde autonomamente alle richieste dei clienti. Si addestra sulla knowledge base aziendale.</div>
+        <div class="agent-tags">
+          <span class="tag domain">Support</span>
+          <span class="tag domain">Chat</span>
+        </div>
+      </div>
+
+      <div class="agent-card">
+        <div class="agent-name">Devin</div>
+        <div class="agent-by">COGNITION AI</div>
+        <div class="agent-desc">Agente per sviluppo software. Riceve task, scrive codice, testa, debugga in autonomia. Accede a terminale e browser.</div>
+        <div class="agent-tags">
+          <span class="tag domain">Dev</span>
+          <span class="tag domain">Codice</span>
+        </div>
+      </div>
+
+      <div class="agent-card">
+        <div class="agent-name">Harvey</div>
+        <div class="agent-by">HARVEY AI</div>
+        <div class="agent-desc">Agente verticale per studi legali. Analisi contratti, ricerca giurisprudenza, redazione documenti legali.</div>
+        <div class="agent-tags">
+          <span class="tag domain">Legal</span>
+          <span class="tag domain">Contratti</span>
+        </div>
+      </div>
+
+      <div class="agent-card">
+        <div class="agent-name">Jasper</div>
+        <div class="agent-by">JASPER AI</div>
+        <div class="agent-desc">Agente per marketing content. Genera testi, campagne, copy su brief. Rispetta il brand voice configurato.</div>
+        <div class="agent-tags">
+          <span class="tag domain">Marketing</span>
+          <span class="tag domain">Content</span>
+        </div>
+      </div>
+
+      <div class="agent-card">
+        <div class="agent-name">Deep Research</div>
+        <div class="agent-by">OPENAI / PERPLEXITY</div>
+        <div class="agent-desc">Agente di ricerca multi-source. Pianifica query, interroga decine di fonti, sintetizza report strutturati in autonomia.</div>
+        <div class="agent-tags">
+          <span class="tag domain">Ricerca</span>
+          <span class="tag domain">Report</span>
+        </div>
+      </div>
+
+      <div class="agent-card">
+        <div class="agent-name">Sierra</div>
+        <div class="agent-by">SIERRA AI</div>
+        <div class="agent-desc">Agente per customer experience enterprise. Si integra con i sistemi aziendali e gestisce interazioni complesse con i clienti.</div>
+        <div class="agent-tags">
+          <span class="tag domain">CX</span>
+          <span class="tag domain">Enterprise</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- COLONNA 3: NO-CODE & MARKETPLACE -->
+    <div>
+      <div class="eco-col-header col-nocode">
+        <div class="col-cat">Categoria 03</div>
+        <div class="col-title">No-code &amp;<br>Marketplace</div>
+        <div class="col-desc">Template e flussi preconfigurati da importare e adattare senza scrivere codice.</div>
+      </div>
+
+      <div class="agent-card">
+        <div class="agent-name">Template Hub</div>
+        <div class="agent-by">FLOWISE</div>
+        <div class="agent-desc">Marketplace di flussi agente preconfigurati. RAG su documenti, chatbot, agenti multi-step. Importa e collega i tuoi dati.</div>
+        <div class="agent-tags">
+          <span class="tag domain">RAG</span>
+          <span class="tag domain">Chatbot</span>
+          <span class="tag domain">Open Source</span>
+        </div>
+      </div>
+
+      <div class="agent-card">
+        <div class="agent-name">Explore</div>
+        <div class="agent-by">DIFY.AI</div>
+        <div class="agent-desc">Galleria di applicazioni AI prebuilt. Chatbot, agenti di ricerca, assistenti per codice. Fork e personalizza.</div>
+        <div class="agent-tags">
+          <span class="tag domain">Template</span>
+          <span class="tag domain">Fork</span>
+        </div>
+      </div>
+
+      <div class="agent-card">
+        <div class="agent-name">Workflow Templates</div>
+        <div class="agent-by">N8N</div>
+        <div class="agent-desc">500+ template di automazione con AI nodes. Agenti che integrano tool aziendali (Slack, Gmail, CRM) con LLM.</div>
+        <div class="agent-tags">
+          <span class="tag domain">Automazione</span>
+          <span class="tag domain">Integrazioni</span>
+        </div>
+      </div>
+
+      <div class="agent-card">
+        <div class="agent-name">AI Agents</div>
+        <div class="agent-by">ZAPIER</div>
+        <div class="agent-desc">Agenti prebuilt che si connettono a 7000+ app. Trigger-based, zero codice. Ideale per workflow business standard.</div>
+        <div class="agent-tags">
+          <span class="tag domain">Workflow</span>
+          <span class="tag domain">Zero-code</span>
+        </div>
+      </div>
+
+      <div class="agent-card">
+        <div class="agent-name">Relevance AI</div>
+        <div class="agent-by">RELEVANCE AI</div>
+        <div class="agent-desc">Marketplace di agenti prebuilt acquistabili. Sales agent, research agent, support agent. Configurabili e deployabili.</div>
+        <div class="agent-tags">
+          <span class="tag domain">Marketplace</span>
+          <span class="tag domain">SaaS</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- COLONNA 4: OPEN SOURCE -->
+    <div>
+      <div class="eco-col-header col-open">
+        <div class="col-cat">Categoria 04</div>
+        <div class="col-title">Open<br>Source</div>
+        <div class="col-desc">Repository GitHub pronti al deploy. Richiedono setup tecnico ma sono modificabili al 100%.</div>
+      </div>
+
+      <div class="agent-card">
+        <div class="agent-name">AutoGPT</div>
+        <div class="agent-by">SIGNIFICANT GRAVITAS</div>
+        <div class="agent-desc">Agente autonomo general purpose. Si dà un obiettivo, lui pianifica e agisce. Uno dei primi agenti open source virali.</div>
+        <div class="agent-tags">
+          <span class="tag domain">General</span>
+          <span class="tag domain">Autonomo</span>
+        </div>
+      </div>
+
+      <div class="agent-card">
+        <div class="agent-name">Open Interpreter</div>
+        <div class="agent-by">OPEN INTERPRETER</div>
+        <div class="agent-desc">Agente che esegue codice in locale. Parli in linguaggio naturale, lui scrive ed esegue Python/JS/Shell sul tuo computer.</div>
+        <div class="agent-tags">
+          <span class="tag domain">Codice</span>
+          <span class="tag domain">Locale</span>
+        </div>
+      </div>
+
+      <div class="agent-card">
+        <div class="agent-name">CrewAI Templates</div>
+        <div class="agent-by">CREWAI</div>
+        <div class="agent-desc">Template di crew preconfigurate per casi d'uso comuni: research team, content team, analysis team. Fork su GitHub.</div>
+        <div class="agent-tags">
+          <span class="tag domain">Multi-agent</span>
+          <span class="tag domain">Template</span>
+        </div>
+      </div>
+
+      <div class="agent-card">
+        <div class="agent-name">Claude Code</div>
+        <div class="agent-by">ANTHROPIC</div>
+        <div class="agent-desc">Agente per sviluppo software da riga di comando. Legge il codebase, scrive, modifica, testa. Open source e configurabile.</div>
+        <div class="agent-tags">
+          <span class="tag domain">Dev</span>
+          <span class="tag domain">CLI</span>
+        </div>
+      </div>
+
+      <div class="agent-card">
+        <div class="agent-name">LangChain Templates</div>
+        <div class="agent-by">LANGCHAIN</div>
+        <div class="agent-desc">Repository di agenti prebuilt: RAG agent, SQL agent, CSV agent, research agent. Punto di partenza per sviluppatori.</div>
+        <div class="agent-tags">
+          <span class="tag domain">Framework</span>
+          <span class="tag domain">Dev</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- COLONNA 5: EMBEDDED -->
+    <div>
+      <div class="eco-col-header col-embed">
+        <div class="col-cat">Categoria 05</div>
+        <div class="col-title">Embedded<br>in Prodotti</div>
+        <div class="col-desc">Agenti invisibili già dentro strumenti che usi ogni giorno. Non si "acquistano" separatamente.</div>
+      </div>
+
+      <div class="agent-card">
+        <div class="agent-name">GitHub Copilot<br>Agent Mode</div>
+        <div class="agent-by">MICROSOFT / GITHUB</div>
+        <div class="agent-desc">Agente dentro l'IDE. Non solo suggerisce codice — modifica file, esegue test, corregge errori in autonomia su task multi-step.</div>
+        <div class="agent-tags">
+          <span class="tag domain">IDE</span>
+          <span class="tag domain">Codice</span>
+        </div>
+      </div>
+
+      <div class="agent-card">
+        <div class="agent-name">Cursor Agent</div>
+        <div class="agent-by">ANYSPHERE</div>
+        <div class="agent-desc">IDE con agente integrato. Riceve task in linguaggio naturale, naviga il codebase, fa modifiche multi-file in autonomia.</div>
+        <div class="agent-tags">
+          <span class="tag domain">IDE</span>
+          <span class="tag domain">Dev</span>
+        </div>
+      </div>
+
+      <div class="agent-card">
+        <div class="agent-name">Notion AI</div>
+        <div class="agent-by">NOTION</div>
+        <div class="agent-desc">Agente embedded nel workspace. Genera, sintetizza, trasforma contenuto. Accede a tutte le pagine del workspace come knowledge base.</div>
+        <div class="agent-tags">
+          <span class="tag domain">Produttività</span>
+          <span class="tag domain">Docs</span>
+        </div>
+      </div>
+
+      <div class="agent-card">
+        <div class="agent-name">M365 Copilot</div>
+        <div class="agent-by">MICROSOFT</div>
+        <div class="agent-desc">Agente dentro Word, Excel, Teams, Outlook, PowerPoint. Accede a tutti i dati M365 dell'utente come contesto.</div>
+        <div class="agent-tags">
+          <span class="tag domain">Produttività</span>
+          <span class="tag domain">Office</span>
+        </div>
+      </div>
+
+      <div class="agent-card">
+        <div class="agent-name">Operator</div>
+        <div class="agent-by">OPENAI</div>
+        <div class="agent-desc">Agente che naviga il web per conto dell'utente. Prenota, compila form, fa acquisti, estrae dati. Computer use nativo.</div>
+        <div class="agent-tags">
+          <span class="tag domain">Browser</span>
+          <span class="tag domain">Autonomo</span>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- /eco-map -->
+</div>
+
+
+<!-- ══════════════════
+     02 — LIVELLI DI PRONTO
+══════════════════ -->
+<div class="section" id="pronto">
+  <div class="sec-eyebrow">
+    <span class="sec-num">02</span>
+    <div class="sec-line"></div>
+    <span class="sec-tag">Cosa significa "pronto"</span>
+  </div>
+  <div class="sec-title">Tre livelli di<br>"pronto all'uso"</div>
+  <p class="sec-intro">La parola "pronto" nasconde realtà molto diverse. Un agente Intercom Fin e un template LangChain su GitHub sono entrambi "già fatti" — ma richiedono sforzo completamente diverso per usarli.</p>
+
+  <div class="readiness-wrap">
+    <div class="readiness-header">Spettro da "attiva e usa" a "scarica e configura"</div>
+    <div class="readiness-levels">
+      <div class="rl">
+        <div class="rl-bar" style="background:var(--lv3)"></div>
+        <div class="rl-num">1</div>
+        <div class="rl-title">Pronto da attivare</div>
+        <div class="rl-desc">Zero configurazione tecnica. Compri o attivi, funziona immediatamente per il caso d'uso per cui è stato costruito. Non puoi cambiare quasi nulla.</div>
+        <div class="rl-examples">
+          <strong>Esempi</strong><br>
+          Intercom Fin<br>
+          M365 Copilot<br>
+          Agentforce (funzioni base)<br>
+          Notion AI<br>
+          Operator (OpenAI)
+        </div>
+      </div>
+      <div class="rl">
+        <div class="rl-bar" style="background:var(--lv2)"></div>
+        <div class="rl-num">2</div>
+        <div class="rl-title">Pronto da configurare</div>
+        <div class="rl-desc">Il motore è costruito, tu fornisci i tuoi dati, documenti, connessioni e preferenze. Richiede alcune ore/giorni di setup. Nessun codice necessario.</div>
+        <div class="rl-examples">
+          <strong>Esempi</strong><br>
+          Agentforce (custom flows)<br>
+          Copilot Studio<br>
+          Zapier AI Agents<br>
+          Relevance AI<br>
+          Dify (template configurati)
+        </div>
+      </div>
+      <div class="rl">
+        <div class="rl-bar" style="background:var(--lv1)"></div>
+        <div class="rl-num">3</div>
+        <div class="rl-title">Pronto come punto di partenza</div>
+        <div class="rl-desc">Template o repository open source che dà la struttura. Richiede personalizzazione tecnica significativa, ma risparmia la progettazione da zero.</div>
+        <div class="rl-examples">
+          <strong>Esempi</strong><br>
+          LangChain Templates<br>
+          CrewAI Templates<br>
+          AutoGPT<br>
+          Flowise templates<br>
+          Open Interpreter
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+<!-- ══════════════════
+     03 — COME ADATTARLO
+══════════════════ -->
+<div class="section" id="adattamento">
+  <div class="sec-eyebrow">
+    <span class="sec-num">03</span>
+    <div class="sec-line"></div>
+    <span class="sec-tag">Adattamento al tuo caso d'uso</span>
+  </div>
+  <div class="sec-title">5 livelli per<br>adattare un agente</div>
+  <p class="sec-intro">Ogni agente prebuilt può essere personalizzato — ma fino a che punto dipende da quanto è "aperto". Ecco i livelli, dal più semplice al più tecnico.</p>
+
+  <div class="ladder">
+    <div class="ladder-header">
+      <span>Livello di personalizzazione</span>
+      <span>← più semplice · più tecnico →</span>
+    </div>
+
+    <div class="ladder-row">
+      <div class="ladder-lv" style="color:var(--lv3)">1</div>
+      <div class="ladder-name">
+        <div class="ladder-name-title">Prompt e istruzioni</div>
+        <div class="ladder-name-sub">Accessibile a tutti</div>
+      </div>
+      <div class="ladder-desc">
+        Quasi tutti gli agenti prebuilt espongono un campo dove scrivi le istruzioni di comportamento. Definisci <strong>tono, argomenti da evitare, come rispondere</strong>, in che lingua comunicare. È il livello più accessibile e copre già molto. Non richiede nessuna competenza tecnica.
+      </div>
+      <div class="ladder-req"><span class="req-badge req-none">Nessuna competenza</span></div>
+    </div>
+
+    <div class="ladder-row">
+      <div class="ladder-lv" style="color:var(--lv3)">2</div>
+      <div class="ladder-name">
+        <div class="ladder-name-title">Knowledge base</div>
+        <div class="ladder-name-sub">Carica i tuoi documenti</div>
+      </div>
+      <div class="ladder-desc">
+        Carichi i tuoi documenti — manuali, FAQ, policy, knowledge base aziendale — e l'agente li usa per rispondere. <strong>È il modo principale per far sapere all'agente cose specifiche della tua azienda.</strong> La qualità dei documenti caricati è il principale determinante della qualità delle risposte. Nessun codice necessario.
+      </div>
+      <div class="ladder-req"><span class="req-badge req-none">Nessuna competenza</span></div>
+    </div>
+
+    <div class="ladder-row">
+      <div class="ladder-lv" style="color:var(--lv2)">3</div>
+      <div class="ladder-name">
+        <div class="ladder-name-title">Connessioni e tool</div>
+        <div class="ladder-name-sub">Collega i tuoi sistemi</div>
+      </div>
+      <div class="ladder-desc">
+        Connetti l'agente ai tuoi sistemi aziendali — CRM, database, API interne, calendario, email. L'agente può <strong>leggere e scrivere su questi sistemi</strong> per completare task reali. Richiede di avere le credenziali API dei sistemi e un minimo di configurazione tecnica. Trasforma un agente generico in uno specifico per la tua azienda.
+      </div>
+      <div class="ladder-req"><span class="req-badge req-low">Config base</span></div>
+    </div>
+
+    <div class="ladder-row">
+      <div class="ladder-lv" style="color:var(--lv2)">4</div>
+      <div class="ladder-name">
+        <div class="ladder-name-title">Flussi e logica</div>
+        <div class="ladder-name-sub">Ridisegna il comportamento</div>
+      </div>
+      <div class="ladder-desc">
+        Nei sistemi più flessibili (Copilot Studio, n8n, Agentforce) puoi modificare i <strong>flussi decisionali</strong>: quando escalare a un umano, che azioni intraprendere in certi scenari, come gestire edge case. Richiede comprensione dello strumento di configurazione e del caso d'uso. Niente codice, ma logica di business avanzata.
+      </div>
+      <div class="ladder-req"><span class="req-badge req-med">Config avanzata</span></div>
+    </div>
+
+    <div class="ladder-row">
+      <div class="ladder-lv" style="color:var(--lv1)">5</div>
+      <div class="ladder-name">
+        <div class="ladder-name-title">Codice</div>
+        <div class="ladder-name-sub">Modifica il sorgente</div>
+      </div>
+      <div class="ladder-desc">
+        Con agenti open source o template su framework, puoi <strong>modificare il codice direttamente</strong>: cambiare il loop agente, aggiungere strumenti custom, modificare la strategia di memoria, ottimizzare le performance. Massima flessibilità, massima responsabilità tecnica. Richiede sviluppatori Python con esperienza su LangChain/LlamaIndex.
+      </div>
+      <div class="ladder-req"><span class="req-badge req-high">Dev Python</span></div>
+    </div>
+
+  </div>
+</div>
+
+
+<!-- ══════════════════
+     04 — COME INTERFACCIARSI
+══════════════════ -->
+<div class="section" id="interfaccia">
+  <div class="sec-eyebrow">
+    <span class="sec-num">04</span>
+    <div class="sec-line"></div>
+    <span class="sec-tag">Come ci si interfaccia</span>
+  </div>
+  <div class="sec-title">Tre ruoli,<br>tre modi di interagire</div>
+  <p class="sec-intro">Come ti interfacci con un agente dipende dal ruolo che ricopri. Lo stesso sistema ha porte di accesso diverse per utenti diversi.</p>
+
+  <div class="interface-grid">
+
+    <div class="iface-card">
+      <span class="iface-icon">💬</span>
+      <div class="iface-role">Ruolo · Utente finale</div>
+      <div class="iface-title">Parli con lui</div>
+      <div class="iface-desc">
+        Interagisci attraverso un'interfaccia chat, un form, o un canale aziendale (Teams, Slack, email). L'agente è un interlocutore. Non sai né ti interessa cosa c'è sotto.
+      </div>
+      <ul class="iface-actions">
+        <li>Fai domande in linguaggio naturale</li>
+        <li>Dai task e aspetti il risultato</li>
+        <li>Chiedi spiegazioni e iterazioni</li>
+        <li>Validi l'output prima di usarlo</li>
+        <li>Segnali quando sbaglia (feedback)</li>
+      </ul>
+    </div>
+
+    <div class="iface-card">
+      <span class="iface-icon">⚙️</span>
+      <div class="iface-role">Ruolo · Amministratore</div>
+      <div class="iface-title">Lo configuri e gestisci</div>
+      <div class="iface-desc">
+        Accedi a una dashboard di configurazione. Non interagisci con l'agente — gestisci il sistema che lo fa girare. Monitori le performance, aggiorni la knowledge base, modifichi i parametri.
+      </div>
+      <ul class="iface-actions">
+        <li>Carichi e aggiorni documenti e KB</li>
+        <li>Modifichi prompt e istruzioni</li>
+        <li>Leggi i log e analizzi le conversazioni</li>
+        <li>Misuri tassi di risoluzione e escalation</li>
+        <li>Configuri integrazioni con altri sistemi</li>
+      </ul>
+    </div>
+
+    <div class="iface-card">
+      <span class="iface-icon">🔌</span>
+      <div class="iface-role">Ruolo · Sviluppatore / Integratore</div>
+      <div class="iface-title">Lo integri in altri sistemi</div>
+      <div class="iface-desc">
+        Se l'agente espone un'API, lo chiami programmaticamente da altri sistemi. L'agente diventa un componente dell'architettura più grande, invisibile all'utente finale.
+      </div>
+      <ul class="iface-actions">
+        <li>Chiami l'API dell'agente da CRM/ERP</li>
+        <li>Passi input strutturati e ricevi output</li>
+        <li>Gestisci autenticazione e rate limiting</li>
+        <li>Monitoriori errori e latenza via API</li>
+        <li>Costruisci workflow che orchestrano più agenti</li>
+      </ul>
+    </div>
+
+  </div>
+</div>
+
+
+<!-- ══════════════════
+     05 — DOMANDE PER VALUTARE
+══════════════════ -->
+<div class="section" id="valutazione">
+  <div class="sec-eyebrow">
+    <span class="sec-num">05</span>
+    <div class="sec-line"></div>
+    <span class="sec-tag">Come valutare un agente prebuilt</span>
+  </div>
+  <div class="sec-title">Le domande giuste<br>prima di scegliere</div>
+  <p class="sec-intro">Quando in azienda ti propongono un agente "già pronto", queste sono le domande che devi fare — prima di comprare o adottare.</p>
+
+  <div class="decision-box">
+    <div class="decision-box-header">Checklist di valutazione</div>
+    <div class="dq-grid">
+
+      <div class="dq-item">
+        <div class="dq-q">Dove vanno i miei dati?</div>
+        <ul class="dq-answers">
+          <li><span class="dq-opt">Chiedi</span>I dati escono dall'azienda? Su quali server?</li>
+          <li><span class="dq-opt">Chiedi</span>Il vendor usa i tuoi dati per addestrare il modello?</li>
+          <li><span class="dq-opt">Chiedi</span>È disponibile data residency europea?</li>
+          <li><span class="dq-opt">Chiedi</span>Esiste versione self-hosted per dati sensibili?</li>
+        </ul>
+      </div>
+
+      <div class="dq-item">
+        <div class="dq-q">Quanto posso personalizzarlo?</div>
+        <ul class="dq-answers">
+          <li><span class="dq-opt">Test</span>Posso modificare le istruzioni di comportamento?</li>
+          <li><span class="dq-opt">Test</span>Posso connettere i miei sistemi aziendali?</li>
+          <li><span class="dq-opt">Test</span>Posso caricare la mia knowledge base?</li>
+          <li><span class="dq-opt">Chiedi</span>Quali sono i limiti invalicabili della piattaforma?</li>
+        </ul>
+      </div>
+
+      <div class="dq-item">
+        <div class="dq-q">Come gestisco gli errori?</div>
+        <ul class="dq-answers">
+          <li><span class="dq-opt">Test</span>Quando l'agente sbaglia, come lo correggo?</li>
+          <li><span class="dq-opt">Chiedi</span>Ho accesso ai log per capire perché ha sbagliato?</li>
+          <li><span class="dq-opt">Chiedi</span>Chi è responsabile se l'agente dà info sbagliate?</li>
+          <li><span class="dq-opt">Test</span>Posso configurare human-in-the-loop su azioni critiche?</li>
+        </ul>
+      </div>
+
+      <div class="dq-item">
+        <div class="dq-q">Quale è il costo reale?</div>
+        <ul class="dq-answers">
+          <li><span class="dq-opt">Chiedi</span>Il prezzo scala con l'uso o è canone fisso?</li>
+          <li><span class="dq-opt">Calcola</span>Costo per conversazione / per task completato</li>
+          <li><span class="dq-opt">Calcola</span>Costo del setup e della configurazione iniziale</li>
+          <li><span class="dq-opt">Stima</span>Costo di uscita se decido di cambiare vendor</li>
+        </ul>
+      </div>
+
+      <div class="dq-item">
+        <div class="dq-q">Come misuro se funziona?</div>
+        <ul class="dq-answers">
+          <li><span class="dq-opt">Definisci</span>Quali metriche usi per valutare il successo?</li>
+          <li><span class="dq-opt">Chiedi</span>Quali analytics espone la piattaforma?</li>
+          <li><span class="dq-opt">Test</span>Posso fare A/B test tra versioni diverse?</li>
+          <li><span class="dq-opt">Pianifica</span>Come misuri il tasso di escalation a umano?</li>
+        </ul>
+      </div>
+
+      <div class="dq-item">
+        <div class="dq-q">Cosa succede se il vendor cambia?</div>
+        <ul class="dq-answers">
+          <li><span class="dq-opt">Verifica</span>Quanto siamo dipendenti da questo vendor?</li>
+          <li><span class="dq-opt">Chiedi</span>Posso esportare dati e configurazioni?</li>
+          <li><span class="dq-opt">Valuta</span>Esiste un'alternativa comparabile sul mercato?</li>
+          <li><span class="dq-opt">Stima</span>Quanto costerebbe migrare tra 2 anni?</li>
+        </ul>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<footer>
+  <span>Agenti AI · Ecosistema agenti pronti all'uso · Febbraio 2026</span>
+  <span>agenti-ai-ecosistema-prebuilt.html</span>
+</footer>
+
+</body>
+</html>

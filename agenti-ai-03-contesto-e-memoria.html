@@ -1,0 +1,524 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Contesto e Memoria — Come il Chatbot Ricorda</title>
+<link href="https://fonts.googleapis.com/css2?family=Spectral:ital,wght@0,300;0,400;0,500;0,600;1,400&family=Sora:wght@200;300;400;500;600;700;800&family=IBM+Plex+Mono:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg:     #f7f5ef;
+  --bg2:    #f0ece2;
+  --bg3:    #e6dfd0;
+  --ink:    #1a1710;
+  --ink2:   #2b2619;
+  --ink3:   #635c47;
+  --ink4:   #9d9580;
+  --border: #dad3c3;
+  --border2:#c9c0ad;
+
+  --core:   #b8860b;   /* lo strato di questo report: memoria — oro */
+  --core2:  #8c6608;
+  --warm:   #b3402a;
+  --good:   #3d7a45;
+  --bad:    #b3402a;
+  --teal:   #2e7d9c;
+  --violet: #7b5ea7;
+  --rag:    #3a7ca5;
+}
+
+* { margin:0; padding:0; box-sizing:border-box; }
+html { scroll-behavior:smooth; }
+
+body {
+  background: var(--bg); color: var(--ink); font-family: 'Sora', sans-serif;
+  font-weight: 300; font-size: 14px; line-height: 1.78;
+}
+
+/* HEADER */
+.masthead { background: var(--ink); color: rgba(255,255,255,0.9); padding: 64px 56px 54px; position: relative; overflow: hidden; }
+.masthead::before {
+  content: ''; position: absolute; inset: 0;
+  background:
+    radial-gradient(circle at 80% 35%, rgba(184,134,11,0.30) 0, transparent 45%),
+    repeating-linear-gradient(0deg, rgba(255,255,255,0.012) 0, rgba(255,255,255,0.012) 1px, transparent 1px, transparent 58px);
+  pointer-events: none;
+}
+.mh-eye { font-family: 'IBM Plex Mono', monospace; font-size: 10px; letter-spacing: 3px; text-transform: uppercase; color: rgba(255,255,255,0.28); margin-bottom: 20px; position: relative; }
+.masthead h1 { font-family: 'Spectral', serif; font-weight: 400; font-size: clamp(33px, 5.2vw, 60px); line-height: 1.06; letter-spacing: -1px; max-width: 720px; position: relative; }
+.masthead h1 em { font-style: italic; color: #e6c668; }
+.mh-sub { margin-top: 22px; font-size: 15px; font-weight: 300; color: rgba(255,255,255,0.4); max-width: 690px; line-height: 1.72; position: relative; }
+
+/* NAV */
+.nav { background: var(--ink2); position: sticky; top: 0; z-index: 100; display: flex; overflow-x: auto; border-bottom: 1px solid rgba(255,255,255,0.06); }
+.nav-btn { flex: 1; min-width: 116px; padding: 13px 14px; border: none; background: transparent; cursor: pointer; font-family: 'Sora', sans-serif; font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.4px; color: rgba(255,255,255,0.3); border-right: 1px solid rgba(255,255,255,0.06); transition: all 0.2s; white-space: nowrap; }
+.nav-btn:last-child { border-right: none; }
+.nav-btn:hover { color: rgba(255,255,255,0.62); }
+.nav-btn.active { color: #fff; background: rgba(255,255,255,0.05); }
+.nav-btn.active::after { content: ''; display: block; height: 2px; background: var(--core); margin-top: 6px; border-radius: 1px; }
+
+/* SECTIONS */
+.sect { display: none; }
+.sect.active { display: block; animation: fadeIn 0.3s ease; }
+@keyframes fadeIn { from { opacity:0; transform:translateY(6px); } to { opacity:1; transform:translateY(0); } }
+.sect-head { padding: 50px 56px 36px; border-bottom: 1px solid var(--border); }
+.sect-num { font-family: 'IBM Plex Mono', monospace; font-size: 10px; letter-spacing: 3px; text-transform: uppercase; color: var(--ink4); margin-bottom: 12px; }
+.sect-head h2 { font-family: 'Spectral', serif; font-weight: 400; font-size: clamp(27px, 3.6vw, 43px); line-height: 1.1; letter-spacing: -0.5px; max-width: 660px; margin-bottom: 14px; }
+.sect-head h2 em { font-style: italic; }
+.sect-head p { color: var(--ink3); max-width: 700px; font-size: 14.5px; }
+.wrap { padding: 36px 56px 60px; }
+
+/* prose */
+.prose { max-width: 760px; }
+.prose p { color: var(--ink3); margin-bottom: 18px; font-size: 14.5px; }
+.prose p strong { color: var(--ink2); font-weight: 500; }
+.prose p em { font-style: italic; color: var(--ink2); }
+.lead { font-size: 16px !important; color: var(--ink2) !important; }
+.prose ul { max-width: 760px; margin: 0 0 18px; padding-left: 0; list-style: none; }
+.prose ul li { color: var(--ink3); font-size: 14px; line-height: 1.7; padding: 4px 0 4px 22px; position: relative; }
+.prose ul li::before { content: '—'; position: absolute; left: 0; color: var(--core); font-weight: 500; }
+.prose ul li strong { color: var(--ink2); font-weight: 500; }
+
+.h3 { font-family: 'IBM Plex Mono', monospace; font-size: 10px; letter-spacing: 2px; text-transform: uppercase; color: var(--ink4); margin: 40px 0 16px; padding-bottom: 8px; border-bottom: 1px solid var(--border); max-width: 760px; }
+.h3:first-child { margin-top: 0; }
+
+/* diagram */
+.diagram-wrap { margin: 10px 0; padding: 36px 24px; background: var(--ink); border: 1px solid var(--border2); overflow-x: auto; }
+.diagram-wrap svg { display: block; margin: 0 auto; }
+.diagram-cap { font-family: 'IBM Plex Mono', monospace; font-size: 11px; color: var(--ink4); text-align: center; margin-top: 14px; letter-spacing: 0.5px; }
+
+/* three-mechanism cards */
+.mech { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 1px; background: var(--border2); border: 1px solid var(--border2); margin: 20px 0; max-width: 880px; }
+.mech-col { background: var(--bg); padding: 20px; }
+.mech-icon { font-family: 'IBM Plex Mono', monospace; font-size: 22px; font-weight: 500; margin-bottom: 10px; }
+.mech-name { font-weight: 600; font-size: 14px; color: var(--ink2); margin-bottom: 6px; }
+.mech-scope { font-family: 'IBM Plex Mono', monospace; font-size: 9px; letter-spacing: 1px; text-transform: uppercase; color: var(--ink4); margin-bottom: 10px; }
+.mech-desc { font-size: 12.5px; color: var(--ink3); line-height: 1.6; }
+
+/* code block */
+.codeblock { font-family: 'IBM Plex Mono', monospace; font-size: 12px; line-height: 1.7; background: #1d1a12; color: rgba(255,255,255,0.82); padding: 20px 22px; margin: 18px 0; max-width: 820px; overflow-x: auto; white-space: pre-wrap; word-break: break-word; border-left: 3px solid var(--core); }
+.codeblock .cm { color: #9d9580; font-style: italic; }
+.codeblock .hl { color: #e6c668; }
+.codeblock .r { color: #e88c30; }
+
+/* vs comparison */
+.vs { display: grid; grid-template-columns: 1fr 1fr; gap: 1px; background: var(--border2); border: 1px solid var(--border2); margin: 18px 0; max-width: 880px; }
+.vs-col { background: var(--bg); padding: 22px 24px; }
+.vs-col.api { background: var(--bg2); }
+.vs-tag { font-family: 'IBM Plex Mono', monospace; font-size: 9px; letter-spacing: 1.5px; text-transform: uppercase; padding: 4px 10px; display: inline-block; margin-bottom: 14px; border: 1px solid; }
+.vs-tag.api { color: var(--ink3); border-color: var(--border2); }
+.vs-tag.bot { color: var(--core2); border-color: var(--core); }
+.vs-q { font-family: 'IBM Plex Mono', monospace; font-size: 12px; color: var(--ink2); background: var(--bg3); padding: 8px 12px; border-left: 3px solid var(--ink4); margin-bottom: 14px; line-height: 1.5; }
+.vs-out { font-size: 13px; color: var(--ink3); line-height: 1.65; }
+.vs-out strong { color: var(--ink2); font-weight: 500; }
+
+/* insight */
+.insight { margin: 24px 0; padding: 18px 22px; border-left: 4px solid var(--teal); background: var(--bg2); max-width: 820px; }
+.insight-label { font-family: 'IBM Plex Mono', monospace; font-size: 9px; letter-spacing: 2px; text-transform: uppercase; margin-bottom: 6px; color: var(--teal); }
+.insight p { font-size: 13.5px; line-height: 1.7; color: var(--ink2); margin: 0; }
+.insight.r { border-left-color: var(--rag); }
+.insight.r .insight-label { color: var(--rag); }
+.insight.w { border-left-color: var(--warm); }
+.insight.w .insight-label { color: var(--warm); }
+
+/* key point */
+.key-point { margin: 36px 0 8px; padding: 26px 30px; border-left: 4px solid var(--core); background: var(--bg2); max-width: 820px; }
+.kp-label { font-family: 'IBM Plex Mono', monospace; font-size: 9px; letter-spacing: 2px; text-transform: uppercase; color: var(--core2); margin-bottom: 8px; }
+.kp-text { font-family: 'Spectral', serif; font-size: 20px; line-height: 1.42; color: var(--ink2); font-style: italic; }
+.kp-sub { margin-top: 12px; font-size: 13px; color: var(--ink3); line-height: 1.65; }
+
+/* table */
+.sum-table { width: 100%; max-width: 880px; border-collapse: collapse; font-size: 12.5px; margin: 20px 0; border: 1px solid var(--border2); }
+.sum-table th, .sum-table td { padding: 11px 14px; border: 1px solid var(--border); text-align: left; vertical-align: top; }
+.sum-table thead th { background: var(--ink); color: rgba(255,255,255,0.82); font-weight: 600; font-size: 10px; text-transform: uppercase; letter-spacing: 0.3px; }
+.sum-table tbody tr:nth-child(even) { background: var(--bg2); }
+.sum-table td { color: var(--ink3); }
+.sum-table .p-cell { font-weight: 600; color: var(--ink2); white-space: nowrap; }
+.sum-table td strong { color: var(--ink2); font-weight: 500; }
+
+/* best practice block */
+.bp { margin: 28px 0 8px; border: 1px solid var(--good); background: var(--bg); max-width: 880px; }
+.bp-head { background: var(--good); color: #fff; padding: 12px 22px; font-family: 'IBM Plex Mono', monospace; font-size: 11px; letter-spacing: 2px; text-transform: uppercase; display: flex; align-items: center; gap: 10px; }
+.bp-head::before { content: '◆'; font-size: 11px; }
+.bp-body { padding: 0; }
+.bp-row { display: grid; grid-template-columns: 1fr 1fr; gap: 1px; background: var(--border); border-bottom: 1px solid var(--border); }
+.bp-row:last-child { border-bottom: none; }
+.bp-do, .bp-dont { padding: 14px 20px; background: var(--bg); }
+.bp-tag { font-family: 'IBM Plex Mono', monospace; font-size: 9px; letter-spacing: 1.5px; text-transform: uppercase; margin-bottom: 7px; display: flex; align-items: center; gap: 6px; }
+.bp-do .bp-tag { color: var(--good); }
+.bp-dont .bp-tag { color: var(--bad); }
+.bp-do .bp-tag::before { content: '✓'; font-weight: 700; }
+.bp-dont .bp-tag::before { content: '✕'; font-weight: 700; }
+.bp-text { font-size: 12.5px; color: var(--ink3); line-height: 1.6; }
+.bp-text strong { color: var(--ink2); font-weight: 500; }
+.bp-single { padding: 14px 20px; border-bottom: 1px solid var(--border); font-size: 13px; color: var(--ink3); line-height: 1.65; }
+.bp-single:last-child { border-bottom: none; }
+.bp-single strong { color: var(--ink2); font-weight: 600; }
+
+/* source note */
+.srcnote { margin: 22px 0; padding: 14px 20px; background: var(--bg2); border: 1px dashed var(--border2); max-width: 820px; font-size: 12px; color: var(--ink3); line-height: 1.6; }
+.srcnote b { font-family: 'IBM Plex Mono', monospace; font-size: 9px; letter-spacing: 1.5px; text-transform: uppercase; color: var(--ink4); display: block; margin-bottom: 4px; }
+
+/* footer */
+.footer { background: var(--ink); color: rgba(255,255,255,0.22); padding: 30px 56px; font-family: 'IBM Plex Mono', monospace; font-size: 10px; letter-spacing: 1px; display: flex; justify-content: space-between; }
+
+@media (max-width: 860px) {
+  .masthead, .sect-head, .wrap, .footer { padding-left: 20px; padding-right: 20px; }
+  .vs, .bp-row, .mech { grid-template-columns: 1fr; }
+  .footer { flex-direction: column; gap: 6px; }
+}
+</style>
+</head>
+<body>
+
+<!-- HEADER -->
+<div class="masthead">
+  <div class="mh-eye">Serie Agenti AI · Parte II — Report 03</div>
+  <h1>Contesto e memoria:<br>come il chatbot <em>ricorda</em></h1>
+  <p class="mh-sub">Il modello nudo è senza memoria: ogni chiamata è indipendente, e nulla sopravvive al turno precedente. Questo strato affronta quel limite con tre meccanismi distinti — che è facile confondere. Distinguerli bene è la chiave per progettare agenti che ricordano senza sprecare contesto.</p>
+</div>
+
+<!-- NAV -->
+<nav class="nav">
+  <button class="nav-btn active" onclick="show(0)">Il limite</button>
+  <button class="nav-btn" onclick="show(1)">I tre meccanismi</button>
+  <button class="nav-btn" onclick="show(2)">La finestra</button>
+  <button class="nav-btn" onclick="show(3)">La memoria</button>
+  <button class="nav-btn" onclick="show(4)">Compattazione</button>
+  <button class="nav-btn" onclick="show(5)">Trade-off</button>
+  <button class="nav-btn" onclick="show(6)">Best practice</button>
+</nav>
+
+
+<!-- ═══════════════════════════ S0 — IL LIMITE ═══════════════════════════ -->
+<div class="sect active" id="s0">
+  <div class="sect-head">
+    <div class="sect-num">Sezione 00 · Il problema da risolvere</div>
+    <h2>Un modello che <em>dimentica tutto</em>, sempre</h2>
+    <p>Nel Report 01 abbiamo elencato i tre limiti del modello nudo. Questo strato attacca il secondo, e il più controintuitivo per chi viene dall'esperienza del chatbot: l'assenza totale di memoria.</p>
+  </div>
+  <div class="wrap">
+    <div class="prose">
+      <p class="lead">Il modello, da solo, è <strong>completamente privo di memoria</strong>. Ogni chiamata all'API è un evento isolato: il modello non ricorda nulla della richiesta precedente, non sa che esiste una "conversazione", non ha alcuna nozione di "ieri" o "l'altra chat". L'unica cosa che conosce è ciò che gli viene passato <em>in quel preciso istante</em>, dentro la finestra di contesto.</p>
+
+      <p>Questo spiazza, perché l'esperienza del chatbot suggerisce l'opposto: scrivi "e quanto costa?" e Claude sa che stai parlando del prodotto di due messaggi fa. Sembra che ricordi. In realtà non ricorda nulla — <strong>il chatbot gli ripassa l'intera conversazione a ogni turno</strong>. L'illusione della continuità è costruita da uno strato, non è una proprietà del modello.</p>
+
+      <p>Capire questo punto cambia il modo di progettare. La "memoria" di un agente non è qualcosa che il modello <em>ha</em>: è qualcosa che <strong>tu gli fornisci</strong>, decidendo a ogni chiamata cosa rimettere nella finestra di contesto. E siccome la finestra è un budget limitato e costoso (Report 01), la memoria non è "ricordare tutto" — è <strong>scegliere bene cosa vale la pena ricordare</strong>.</p>
+
+      <div class="key-point">
+        <div class="kp-label">Il principio di questo strato</div>
+        <div class="kp-text">Il modello non ricorda: gli viene ricordato. Ogni forma di memoria è una decisione su cosa reinserire nel contesto, e quindi su come spendere un budget limitato.</div>
+        <div class="kp-sub">È la differenza più importante da interiorizzare: progettare la memoria di un agente significa progettare una <em>politica di selezione</em>, non un archivio infinito.</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+<!-- ═══════════════════════════ S1 — I TRE MECCANISMI ═══════════════════════════ -->
+<div class="sect" id="s1">
+  <div class="sect-head">
+    <div class="sect-num">Sezione 01 · La distinzione che chiarisce tutto</div>
+    <h2>Tre meccanismi <em>diversi</em>, spesso confusi</h2>
+    <p>Quando si parla di "memoria di Claude" si mescolano tre cose tecnicamente distinte. Tenerle separate è il singolo concetto più utile di questo report, perché ciascuna risolve un problema diverso e ha costi diversi.</p>
+  </div>
+  <div class="wrap">
+
+    <div class="mech">
+      <div class="mech-col">
+        <div class="mech-icon" style="color:var(--core2)">①</div>
+        <div class="mech-name">Contesto di sessione</div>
+        <div class="mech-scope">qui e ora · una conversazione</div>
+        <div class="mech-desc">La cronologia della conversazione corrente, ripassata al modello a ogni turno dentro la finestra di contesto. È ciò che crea la continuità <em>dentro</em> una singola chat. Sparisce quando apri una chat nuova.</div>
+      </div>
+      <div class="mech-col">
+        <div class="mech-icon" style="color:var(--core2)">②</div>
+        <div class="mech-name">Memoria sintetizzata</div>
+        <div class="mech-scope">tra sessioni · un profilo</div>
+        <div class="mech-desc">Un riassunto di fatti su di te (ruolo, preferenze, temi ricorrenti) estratto automaticamente dalle conversazioni e riproposto nelle sessioni future. Carica il <em>profilo</em>, non i dettagli.</div>
+      </div>
+      <div class="mech-col">
+        <div class="mech-icon" style="color:var(--rag)">③</div>
+        <div class="mech-name">Ricerca chat passate</div>
+        <div class="mech-scope">su richiesta · un archivio</div>
+        <div class="mech-desc">Un sistema di <em>retrieval</em> che cerca nelle conversazioni passate e ne recupera estratti specifici quando servono. Tecnicamente è RAG (Report 05), non memoria in senso stretto.</div>
+      </div>
+    </div>
+
+    <div class="prose">
+      <p>La documentazione di Anthropic conferma questa tripartizione. Il contesto di sessione è la finestra di cui abbiamo parlato nel Report 01. La <strong>memoria</strong> deriva riassunti delle conversazioni passate e li porta avanti tra le sessioni, ed è visualizzabile e modificabile nelle impostazioni. La <strong>ricerca delle chat passate</strong> è descritta esplicitamente come basata su RAG e compare come chiamata a uno strumento durante la conversazione: quando chiedi "cosa avevamo deciso sul prezzo?", Claude usa lo strumento per trovare le conversazioni rilevanti e citarne gli estratti.</p>
+
+      <p>La distinzione pratica è netta. La memoria sintetizzata sa che <em>"sei uno sviluppatore che preferisce Postgres"</em>. La ricerca chat passate può recuperare <em>perché</em> hai scelto Postgres invece di MySQL in quella conversazione di martedì scorso, con lo schema che avevi deciso. La prima è un profilo compatto sempre presente; la seconda è un recupero puntuale su richiesta. Confonderle porta a progettare male: si chiede a un profilo di ricordare dettagli che non contiene, o si fa retrieval pesante per informazioni che starebbero meglio in un profilo leggero.</p>
+    </div>
+
+    <div class="insight r">
+      <div class="insight-label">Un confine importante per i progetti</div>
+      <p>Un dettaglio documentato e facile da ignorare: i <strong>Progetti hanno uno spazio di memoria separato</strong> dalle chat normali. La memoria sintetizzata si genera dalle conversazioni standalone; le chat dentro un progetto hanno la loro memoria isolata, e la ricerca è limitata all'interno di ciascun progetto. Per i tuoi agenti questo è un principio di design ricorrente: <strong>la memoria ha sempre un <em>scope</em></strong>, e definire male i confini (cosa è condiviso, cosa è isolato) è una fonte classica di comportamenti sorprendenti.</p>
+    </div>
+  </div>
+</div>
+
+
+<!-- ═══════════════════════════ S2 — LA FINESTRA ═══════════════════════════ -->
+<div class="sect" id="s2">
+  <div class="sect-head">
+    <div class="sect-num">Sezione 02 · Meccanismo ①</div>
+    <h2>Il contesto di <em>sessione</em></h2>
+    <p>La forma di memoria più semplice e più usata: ripassare la conversazione al modello a ogni turno. Semplice da capire, ma con un costo che cresce a ogni messaggio.</p>
+  </div>
+  <div class="wrap">
+    <div class="prose">
+      <p>Dentro una singola conversazione, la continuità si ottiene così: a ogni nuovo messaggio, si invia al modello <strong>non solo l'ultimo turno, ma l'intera cronologia</strong> accumulata fino a quel punto. Il modello rilegge tutto da capo, ogni volta, e su quella base produce la risposta. È per questo che "ricorda" — sta semplicemente rileggendo.</p>
+    </div>
+
+    <div class="codeblock"><span class="cm">// cosa viene inviato al modello al 3° turno di una chat</span>
+messages: [
+  <span class="r">{ role: "user",      content: "Consigliami una bici da città" }</span>
+  <span class="r">{ role: "assistant", content: "Ti consiglio una city bike..." }</span>
+  <span class="r">{ role: "user",      content: "E quanto costa?" }</span>   <span class="cm">// ← serve tutto il</span>
+]                                                <span class="cm">// resto per capire "costa cosa"</span>
+<span class="cm">// + il system prompt, sempre in testa (Report 02)</span></div>
+
+    <div class="prose">
+      <p>Questo meccanismo è elegante nella sua semplicità, ma ha una conseguenza economica diretta che bisogna avere ben presente: <strong>il costo di ogni turno cresce con la lunghezza della conversazione</strong>. Al decimo messaggio, stai re-inviando (e ripagando) i nove precedenti più il system prompt. Una conversazione lunga è un conto che si gonfia a ogni battuta.</p>
+
+      <p>E poi c'è il muro: la conversazione può crescere finché <strong>non riempie la finestra di contesto</strong>. A quel punto qualcosa deve cedere — non si può semplicemente continuare ad accumulare. È esattamente questo il problema che la compattazione (Sezione 04) risolve.</p>
+    </div>
+
+    <div class="insight">
+      <div class="insight-label">Cosa fa il chatbot al posto tuo</div>
+      <p>In Claude.ai tutto questo è invisibile: il chatbot accumula la cronologia, la gestisce e la compatta quando serve, senza che tu te ne accorga. Via API <strong>sei tu a costruire e inviare l'array dei messaggi a ogni chiamata</strong>, e sei tu a decidere quando e come tagliarlo. La continuità che nel chatbot sembra magica, nell'agente è codice che scrivi e contesto che paghi.</p>
+    </div>
+  </div>
+</div>
+
+
+<!-- ═══════════════════════════ S3 — LA MEMORIA ═══════════════════════════ -->
+<div class="sect" id="s3">
+  <div class="sect-head">
+    <div class="sect-num">Sezione 03 · Meccanismo ②</div>
+    <h2>La memoria <em>sintetizzata</em></h2>
+    <p>Il contesto di sessione muore quando chiudi la chat. La memoria persistente serve a far sopravvivere qualcosa: un profilo compatto che attraversa le conversazioni.</p>
+  </div>
+  <div class="wrap">
+    <div class="prose">
+      <p>La memoria sintetizzata risolve il problema "ogni nuova chat riparte da zero". Funziona estraendo automaticamente dalle conversazioni un <strong>riassunto sintetico di fatti rilevanti</strong> — il tuo ruolo, le tue preferenze, i temi che ricorrono — e riproponendolo nelle sessioni successive. Menzioni una volta che stai costruendo un SaaS B2B, e Claude porta avanti quel contesto senza che tu lo ripeta.</p>
+
+      <p>La chiave per capirla è che è un <strong>profilo, non un registro</strong>. Cattura preferenze e fatti stabili, non l'intera cronologia né le catene di ragionamento. È compatta per natura, perché deve stare nel contesto a ogni sessione senza divorare il budget: un riassunto di poche righe, non un archivio. Questo è anche il suo limite — e la ragione per cui esiste il terzo meccanismo, il retrieval, per i dettagli che il profilo non può contenere.</p>
+
+      <div class="vs">
+        <div class="vs-col api">
+          <span class="vs-tag api">API · nessuna memoria nativa</span>
+          <div class="vs-out">Il modello via API <strong>non ha alcuna memoria persistente</strong>. Se vuoi che un agente ricordi l'utente tra sessioni, devi costruirtela: un database che salva i fatti, e la logica che li reinietta nel contesto all'avvio di ogni nuova sessione.</div>
+        </div>
+        <div class="vs-col">
+          <span class="vs-tag bot">Chatbot · memoria gestita</span>
+          <div class="vs-out">Il chatbot <strong>genera e mantiene il profilo per te</strong>, lo reinietta automaticamente, e ti permette di vederlo e modificarlo dalle impostazioni. È una funzione di prodotto che avvolge un modello che, sotto, resta senza memoria.</div>
+        </div>
+      </div>
+
+      <p>Tre proprietà di design valgono la pena di essere notate, perché sono trasferibili. Primo: la memoria è <strong>controllabile dall'utente</strong> — visualizzabile, modificabile, cancellabile, anche a voce ("dimentica che ho menzionato la mia posizione"). Secondo: è <strong>trasparente</strong> — una scelta dichiarata di Anthropic è che Claude segnali quando sta usando una memoria, invece di incorporarla silenziosamente. Terzo: esiste una <strong>modalità senza memoria</strong> (chat temporanee/incognito) per le conversazioni che non devono lasciare traccia.</p>
+
+      <div class="insight w">
+        <div class="insight-label">Una sottigliezza di sicurezza per i tuoi agenti</div>
+        <p>La memoria persistente introduce un rischio che il contesto di sessione non ha: ciò che viene salvato può contenere <strong>istruzioni malevole</strong> destinate a riemergere in futuro, o dati sensibili che non dovrebbero persistere. Un agente ben progettato non salva ciecamente tutto: filtra cosa merita di entrare nella memoria, evita di persistere segreti (password, numeri di carte) e tratta i contenuti recuperati dalla memoria con la stessa cautela di un input esterno. La memoria è potente proprio perché sopravvive — ed è per questo che va curata.</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+<!-- ═══════════════════════════ S4 — COMPATTAZIONE ═══════════════════════════ -->
+<div class="sect" id="s4">
+  <div class="sect-head">
+    <div class="sect-num">Sezione 04 · Quando il contesto si riempie</div>
+    <h2>Troncamento, riassunto, <em>compattazione</em></h2>
+    <p>Prima o poi una conversazione lunga riempie la finestra. Cosa succede allora è una delle decisioni di design più importanti — e una di quelle che il chatbot nasconde meglio.</p>
+  </div>
+  <div class="wrap">
+    <div class="prose">
+      <p>Quando la cronologia accumulata si avvicina al limite della finestra di contesto, non si può continuare ad aggiungere. Esistono tre strategie principali, in ordine crescente di sofisticazione:</p>
+      <ul>
+        <li><strong>Troncamento.</strong> Si buttano via i messaggi più vecchi, tenendo i più recenti (e di solito il system prompt). Semplice ed economico, ma brutale: l'agente "dimentica" l'inizio della conversazione, a volte perdendo informazioni cruciali stabilite all'avvio.</li>
+        <li><strong>Riassunto.</strong> Si chiede al modello stesso di riassumere la parte vecchia della conversazione, e si sostituisce il blocco di messaggi originali con il loro riassunto compatto. Si perde il dettaglio ma si conserva la sostanza, a un costo molto minore di token.</li>
+        <li><strong>Compattazione (compaction).</strong> Una versione evoluta del riassunto, oggi gestita automaticamente da strumenti come Claude Code: il sistema condensa il contesto man mano, preservando ciò che conta (decisioni, stato corrente) e scartando il rumore, così che sessioni molto lunghe restino dentro i limiti senza intervento manuale.</li>
+      </ul>
+
+      <p>La compattazione automatica è uno dei cambiamenti recenti più significativi. In passato gli sviluppatori facevano questo lavoro a mano: ripulivano le sessioni, conservavano note, ricostruivano lo stato con prompt elaborati. Oggi parte di questa disciplina è incorporata negli strumenti, che gestiscono i limiti della finestra per impostazione predefinita. Ma il principio sottostante non cambia: <strong>qualcuno deve decidere cosa tenere e cosa lasciar andare</strong>. Nel chatbot decide il prodotto; nel tuo agente, decidi tu.</p>
+    </div>
+
+    <div class="diagram-wrap">
+      <svg viewBox="0 0 700 280" width="700" height="280" xmlns="http://www.w3.org/2000/svg" font-family="'Sora', sans-serif">
+        <text x="350" y="28" text-anchor="middle" fill="rgba(255,255,255,0.85)" font-size="13" font-weight="500">La finestra si riempie → bisogna decidere cosa tenere</text>
+
+        <!-- full window -->
+        <text x="60" y="70" fill="rgba(255,255,255,0.5)" font-size="10" font-family="'IBM Plex Mono', monospace">PRIMA</text>
+        <rect x="60" y="78" width="260" height="34" fill="#7b5ea7" opacity="0.85"/>
+        <text x="68" y="100" fill="#fff" font-size="10">system prompt</text>
+        <rect x="60" y="114" width="260" height="80" fill="rgba(255,255,255,0.16)"/>
+        <text x="68" y="140" fill="rgba(255,255,255,0.7)" font-size="10">cronologia accumulata</text>
+        <text x="68" y="158" fill="rgba(255,255,255,0.5)" font-size="9">(turni 1…20 — sta per</text>
+        <text x="68" y="172" fill="rgba(255,255,255,0.5)" font-size="9">saturare la finestra)</text>
+
+        <!-- arrow -->
+        <text x="350" y="150" text-anchor="middle" fill="#e6c668" font-size="22">→</text>
+
+        <!-- after compaction -->
+        <text x="400" y="70" fill="rgba(255,255,255,0.5)" font-size="10" font-family="'IBM Plex Mono', monospace">DOPO (compattazione)</text>
+        <rect x="400" y="78" width="240" height="34" fill="#7b5ea7" opacity="0.85"/>
+        <text x="408" y="100" fill="#fff" font-size="10">system prompt</text>
+        <rect x="400" y="114" width="240" height="30" fill="#b8860b" opacity="0.8"/>
+        <text x="408" y="133" fill="#fff" font-size="10">riassunto dei turni vecchi</text>
+        <rect x="400" y="146" width="240" height="40" fill="rgba(255,255,255,0.16)"/>
+        <text x="408" y="170" fill="rgba(255,255,255,0.7)" font-size="10">turni recenti (integri)</text>
+
+        <text x="60" y="235" fill="rgba(255,255,255,0.55)" font-size="11">Si comprime il vecchio in un riassunto, si tengono integri i turni recenti:</text>
+        <text x="60" y="253" fill="rgba(255,255,255,0.55)" font-size="11">la conversazione continua restando dentro il budget di contesto.</text>
+      </svg>
+      <div class="diagram-cap">La compattazione condensa il passato per fare spazio al presente, senza perdere il filo.</div>
+    </div>
+  </div>
+</div>
+
+
+<!-- ═══════════════════════════ S5 — TRADE-OFF ═══════════════════════════ -->
+<div class="sect" id="s5">
+  <div class="sect-head">
+    <div class="sect-num">Sezione 05 · Le scelte</div>
+    <h2>I <em>trade-off</em> della memoria</h2>
+    <p>Decisioni con pro e contro, da soppesare in base al tuo caso d'uso. La memoria è l'area dove "fare di più" spesso peggiora le cose.</p>
+  </div>
+  <div class="wrap">
+    <div class="bp" style="border-color:var(--ink3);">
+      <div class="bp-head" style="background:var(--ink3);">Trade-off · da soppesare nel tuo contesto</div>
+      <div class="bp-body">
+        <div class="bp-single"><strong>Ricordare tutto vs ricordare bene.</strong> Reinserire l'intera storia massimizza la continuità ma satura il contesto, fa lievitare i costi e, per il context rot (Report 01), può <em>peggiorare</em> la qualità. Un contesto piccolo e ben selezionato batte quasi sempre un contesto enorme e indistinto.</div>
+        <div class="bp-single"><strong>Memoria persistente sì o no.</strong> La persistenza tra sessioni è comoda per gli utenti ricorrenti ma introduce costi, complessità (un database da gestire) e rischi (dati sensibili, istruzioni malevole che sopravvivono). Molti agenti — un bot di supporto monouso, un tool di analisi — funzionano benissimo <em>senza</em> memoria persistente.</div>
+        <div class="bp-single"><strong>Profilo vs retrieval.</strong> Un profilo compatto è sempre presente ma povero di dettaglio; il retrieval recupera dettagli ricchi ma solo su richiesta e con un costo per ogni ricerca. La scelta dipende da cosa l'agente deve ricordare: fatti stabili → profilo; dettagli puntuali e numerosi → retrieval.</div>
+        <div class="bp-single"><strong>Troncare vs riassumere.</strong> Troncare è economico ma perde informazioni in modo cieco; riassumere conserva la sostanza ma costa una chiamata extra al modello e può introdurre imprecisioni. Per conversazioni brevi il troncamento basta; per sessioni lunghe e complesse il riassunto ripaga il suo costo.</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+<!-- ═══════════════════════════ S6 — BEST PRACTICE ═══════════════════════════ -->
+<div class="sect" id="s6">
+  <div class="sect-head">
+    <div class="sect-num">Sezione 06 · Cosa porto a casa</div>
+    <h2>Best practice della <em>memoria</em></h2>
+    <p>Indicazioni azionabili per progettare contesto e memoria nei tuoi agenti, nel formato fai-così / non-fare-così della serie.</p>
+  </div>
+  <div class="wrap">
+
+    <div class="bp">
+      <div class="bp-head">Best practice · contesto e memoria</div>
+      <div class="bp-body">
+        <div class="bp-row">
+          <div class="bp-do">
+            <div class="bp-tag">Fai così</div>
+            <div class="bp-text">Decidi <strong>esplicitamente quale dei tre meccanismi</strong> ti serve per ogni esigenza: sessione per la continuità immediata, profilo per i fatti stabili, retrieval per i dettagli puntuali.</div>
+          </div>
+          <div class="bp-dont">
+            <div class="bp-tag">Non fare così</div>
+            <div class="bp-text">Non trattare "la memoria" come un'unica cosa: chiedere a un profilo compatto di ricordare dettagli specifici, o fare retrieval pesante per preferenze stabili, sono errori che nascono dal confonderli.</div>
+          </div>
+        </div>
+        <div class="bp-row">
+          <div class="bp-do">
+            <div class="bp-tag">Fai così</div>
+            <div class="bp-text">Tratta la memoria come una <strong>politica di selezione</strong>: a ogni turno scegli cosa vale la pena reinserire nel contesto, in base a rilevanza e costo.</div>
+          </div>
+          <div class="bp-dont">
+            <div class="bp-tag">Non fare così</div>
+            <div class="bp-text">Non reinserire l'intera cronologia "per sicurezza": gonfi i costi a ogni turno e rischi il context rot, con il modello che ignora informazioni diluite in troppo testo.</div>
+          </div>
+        </div>
+        <div class="bp-row">
+          <div class="bp-do">
+            <div class="bp-tag">Fai così</div>
+            <div class="bp-text">Definisci con chiarezza lo <strong>scope</strong> della memoria: cosa è condiviso e cosa è isolato (come i Progetti di Claude, con memoria separata dalle chat normali).</div>
+          </div>
+          <div class="bp-dont">
+            <div class="bp-tag">Non fare così</div>
+            <div class="bp-text">Non lasciare confini ambigui tra contesti: la memoria che "trabocca" da un ambito all'altro è una fonte classica di comportamenti sorprendenti e fughe di dati.</div>
+          </div>
+        </div>
+        <div class="bp-row">
+          <div class="bp-do">
+            <div class="bp-tag">Fai così</div>
+            <div class="bp-text">Implementa una strategia di <strong>compattazione</strong> per le sessioni lunghe: riassumi il vecchio, tieni integri i turni recenti e il system prompt.</div>
+          </div>
+          <div class="bp-dont">
+            <div class="bp-tag">Non fare così</div>
+            <div class="bp-text">Non aspettare di sbattere contro il limite della finestra senza un piano: un errore di "contesto pieno" in produzione, senza compattazione, blocca l'agente a metà conversazione.</div>
+          </div>
+        </div>
+        <div class="bp-row">
+          <div class="bp-do">
+            <div class="bp-tag">Fai così</div>
+            <div class="bp-text">Rendi la memoria <strong>trasparente e controllabile</strong>: fai sapere quando la usi e dai modo di vederla e correggerla, come fa il chatbot citando le fonti.</div>
+          </div>
+          <div class="bp-dont">
+            <div class="bp-tag">Non fare così</div>
+            <div class="bp-text">Non iniettare ricordi silenziosamente: una memoria invisibile che influenza le risposte senza spiegazione confonde l'utente e rende impossibile correggere gli errori.</div>
+          </div>
+        </div>
+        <div class="bp-row">
+          <div class="bp-do">
+            <div class="bp-tag">Fai così</div>
+            <div class="bp-text"><strong>Filtra cosa persiste.</strong> Salva fatti stabili e utili; tieni fuori segreti (password, numeri di carte) e tratta i contenuti recuperati dalla memoria con la cautela di un input esterno.</div>
+          </div>
+          <div class="bp-dont">
+            <div class="bp-tag">Non fare così</div>
+            <div class="bp-text">Non salvare ciecamente tutto: una memoria che persiste dati sensibili o istruzioni malevole li fa riemergere in futuro, quando meno te lo aspetti.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="h3">I tre meccanismi a confronto</div>
+    <table class="sum-table">
+      <thead>
+        <tr><th>Meccanismo</th><th>Scope</th><th>Cosa conserva</th><th>Costo principale</th><th>Quando usarlo</th></tr>
+      </thead>
+      <tbody>
+        <tr><td class="p-cell">Contesto di sessione</td><td>Una conversazione</td><td>Cronologia integrale</td><td>Token crescenti a ogni turno</td><td>Sempre — è la continuità di base</td></tr>
+        <tr><td class="p-cell">Memoria sintetizzata</td><td>Tra sessioni</td><td>Profilo di fatti stabili</td><td>Database + reiniezione</td><td>Utenti ricorrenti, preferenze</td></tr>
+        <tr><td class="p-cell">Ricerca chat passate</td><td>Archivio (per scope)</td><td>Dettagli su richiesta</td><td>Una ricerca per recupero</td><td>Dettagli puntuali e numerosi</td></tr>
+      </tbody>
+    </table>
+
+    <div class="srcnote">
+      <b>Affidabilità di queste indicazioni</b>
+      L'assenza di memoria nativa del modello, il re-invio della cronologia a ogni turno, l'esistenza dei tre meccanismi (contesto di sessione, memoria sintetizzata, ricerca chat passate basata su RAG), lo scope separato dei Progetti, la trasparenza e la controllabilità della memoria, e la compattazione automatica negli strumenti recenti sono <strong>documentati</strong> da Anthropic e dalla pratica corrente. Le tre strategie di gestione del contesto (troncamento, riassunto, compattazione) sono pattern <strong>generali</strong> dello sviluppo di agenti, non specifici di Claude. I dettagli implementativi interni della memoria di Claude non sono pubblici: qui descriviamo comportamento e principi, non il meccanismo esatto.
+    </div>
+
+    <div class="key-point">
+      <div class="kp-label">Verso il Report 04</div>
+      <div class="kp-text">Con memoria e contesto, l'agente sa e ricorda. Ma resta ancora passivo: parla, non agisce. Il prossimo strato rompe questo limite.</div>
+      <div class="kp-sub">Gli strumenti (tool use) affrontano il terzo limite del modello nudo. Vedremo come il modello "decide" di usare uno strumento, riceve il risultato e lo integra — il passaggio da assistente che risponde ad agente che agisce.</div>
+    </div>
+
+  </div>
+</div>
+
+
+<!-- FOOTER -->
+<div class="footer">
+  <span>Serie Agenti AI · Parte II — Report 03 · Contesto e Memoria</span>
+  <span>Maggio 2026</span>
+</div>
+
+<script>
+function show(n) {
+  document.querySelectorAll('.sect').forEach(s => s.classList.remove('active'));
+  document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('s'+n).classList.add('active');
+  document.querySelectorAll('.nav-btn')[n].classList.add('active');
+  window.scrollTo({top:0, behavior:'smooth'});
+}
+</script>
+
+</body>
+</html>

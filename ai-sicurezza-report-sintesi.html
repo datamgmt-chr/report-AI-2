@@ -1,0 +1,1219 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AI e Sicurezza dei Dati — Report di Sintesi</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;700&family=DM+Serif+Display:ital@0;1&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg:        #f7f5f0;
+  --surface:   #ffffff;
+  --surface2:  #f0ede6;
+  --border:    #e0dbd0;
+  --border2:   #ccc8be;
+  --ink:       #1a1916;
+  --ink2:      #4a4840;
+  --ink3:      #8a8780;
+  --ink4:      #b8b5ae;
+
+  --green:     #1a7a4a;
+  --green-l:   #e8f5ee;
+  --green-b:   #b8e0cc;
+  --amber:     #b85c00;
+  --amber-l:   #fff3e6;
+  --amber-b:   #ffc880;
+  --red:       #c02020;
+  --red-l:     #fdeaea;
+  --red-b:     #f0a0a0;
+  --blue:      #1a5a9a;
+  --blue-l:    #e8f0fa;
+  --blue-b:    #a8c8f0;
+  --violet:    #6040b0;
+  --violet-l:  #f0eaff;
+}
+
+* { margin:0; padding:0; box-sizing:border-box; }
+html { scroll-behavior:smooth; }
+
+body {
+  background: var(--bg);
+  color: var(--ink);
+  font-family: 'DM Sans', sans-serif;
+  font-weight: 400;
+  font-size: 16px;
+  line-height: 1.78;
+}
+
+/* ── COVER ── */
+.cover {
+  background: var(--ink);
+  color: #fff;
+  padding: 72px 72px 60px;
+  position: relative; overflow: hidden;
+  min-height: 320px;
+  display: flex; flex-direction: column; justify-content: flex-end;
+}
+
+.cover::before {
+  content: '';
+  position: absolute; top:0; left:0; right:0; bottom:0;
+  background: repeating-linear-gradient(-45deg,rgba(255,255,255,0.012) 0px,rgba(255,255,255,0.012) 1px,transparent 1px,transparent 14px);
+  pointer-events: none;
+}
+
+.cover-label {
+  font-family: 'DM Mono', monospace;
+  font-size: 10px; letter-spacing: 4px; text-transform: uppercase;
+  color: rgba(255,255,255,0.35); margin-bottom: 22px;
+}
+
+.cover h1 {
+  font-family: 'DM Serif Display', serif;
+  font-size: clamp(32px, 5vw, 58px);
+  font-weight: 400; line-height: 1.08; letter-spacing: -1px;
+  max-width: 760px; margin-bottom: 24px;
+}
+
+.cover h1 em { font-style: italic; color: rgba(255,255,255,0.55); }
+
+.cover-sub {
+  font-size: 16px; color: rgba(255,255,255,0.5);
+  max-width: 580px; line-height: 1.7; margin-bottom: 44px;
+}
+
+.cover-meta {
+  display: flex; gap: 48px; flex-wrap: wrap;
+  padding-top: 28px; border-top: 1px solid rgba(255,255,255,0.12);
+}
+.cover-meta-item span { font-family:'DM Mono',monospace; font-size:10px; letter-spacing:2px; text-transform:uppercase; color:rgba(255,255,255,0.28); display:block; }
+.cover-meta-item strong { font-size:13px; font-weight:500; color:rgba(255,255,255,0.65); display:block; margin-top:3px; }
+
+/* ── TOC ── */
+.toc {
+  background: var(--surface2);
+  border-bottom: 1px solid var(--border);
+  padding: 32px 72px;
+}
+
+.toc-label {
+  font-family: 'DM Mono', monospace;
+  font-size: 10px; letter-spacing: 3px; text-transform: uppercase;
+  color: var(--ink4); margin-bottom: 18px;
+}
+
+.toc-grid {
+  display: grid; grid-template-columns: repeat(4, 1fr);
+  gap: 2px;
+}
+
+.toc-item {
+  background: var(--surface); border: 1px solid var(--border);
+  padding: 14px 16px; text-decoration: none; color: var(--ink2);
+  font-size: 13px; line-height: 1.4;
+  transition: all 0.2s; display: block;
+}
+.toc-item:hover { background: var(--ink); color: #fff; }
+
+.toc-num {
+  font-family: 'DM Mono', monospace;
+  font-size: 9px; letter-spacing: 1.5px; color: var(--ink4);
+  display: block; margin-bottom: 4px;
+}
+.toc-item:hover .toc-num { color: rgba(255,255,255,0.45); }
+
+.toc-title { font-weight: 500; display: block; }
+
+/* ── LAYOUT ── */
+.report-body {
+  max-width: 860px;
+  margin: 0 auto;
+  padding: 0 56px;
+}
+
+/* ── SECTIONS ── */
+.section {
+  padding: 64px 0 0;
+  margin-top: 64px;
+  border-top: 1px solid var(--border);
+}
+.section:first-child { border-top: none; margin-top: 0; padding-top: 56px; }
+
+.section-header {
+  display: flex; align-items: baseline; gap: 16px;
+  margin-bottom: 28px; padding-bottom: 18px;
+  border-bottom: 2px solid var(--ink);
+}
+
+.section-num {
+  font-family: 'DM Mono', monospace;
+  font-size: 11px; letter-spacing: 2px; color: var(--ink4);
+  flex-shrink: 0;
+}
+
+.section h2 {
+  font-family: 'DM Serif Display', serif;
+  font-size: clamp(22px, 3vw, 32px);
+  font-weight: 400; letter-spacing: -0.3px; line-height: 1.2;
+}
+
+.section > p {
+  font-size: 15px; color: var(--ink2);
+  margin-bottom: 20px; line-height: 1.85;
+}
+.section > p strong { color: var(--ink); font-weight: 500; }
+
+.section h3 {
+  font-size: 17px; font-weight: 700;
+  color: var(--ink); margin: 36px 0 14px;
+  letter-spacing: -0.2px;
+}
+
+/* ── COMPONENT: FLOW ── */
+.flow-steps {
+  display: flex; align-items: stretch; gap: 0;
+  margin: 28px 0;
+}
+
+.flow-node {
+  flex: 1; background: var(--surface);
+  border: 1px solid var(--border);
+  padding: 18px 14px; text-align: center;
+  position: relative;
+}
+
+.flow-node.danger {
+  border-color: var(--red-b);
+  background: var(--red-l);
+}
+
+.flow-node::after {
+  content: '→';
+  position: absolute; right:-14px; top:50%;
+  transform: translateY(-50%);
+  color: var(--ink4); font-size: 16px; z-index: 1;
+  background: var(--bg); padding: 0 2px;
+}
+.flow-node:last-child::after { display: none; }
+
+.flow-label { font-size: 12px; font-weight: 600; color: var(--ink); margin-bottom: 4px; line-height: 1.3; }
+.flow-node.danger .flow-label { color: var(--red); }
+.flow-desc { font-size: 11px; color: var(--ink3); line-height: 1.45; }
+.flow-step-num { font-family:'DM Mono',monospace; font-size:9px; color:var(--ink4); letter-spacing:1px; margin-bottom:8px; }
+
+/* ── COMPONENT: RISK TABLE ── */
+.risk-table-wrap { overflow-x: auto; margin: 28px 0; }
+
+.risk-table {
+  width: 100%; border-collapse: collapse; font-size: 13px;
+}
+
+.risk-table th {
+  font-family: 'DM Mono', monospace;
+  font-size: 9px; letter-spacing: 2px; text-transform: uppercase;
+  color: var(--ink4); text-align: left; padding: 10px 14px;
+  border-bottom: 1px solid var(--border2); background: var(--surface2);
+}
+
+.risk-table td {
+  padding: 13px 14px; border-bottom: 1px solid var(--border);
+  color: var(--ink2); vertical-align: top; line-height: 1.6;
+}
+.risk-table tr:hover td { background: var(--surface); }
+.risk-table td:first-child { font-weight: 500; color: var(--ink); }
+
+/* ── COMPONENT: LEVEL CARDS ── */
+.level-grid {
+  display: flex; flex-direction: column; gap: 2px; margin: 28px 0;
+}
+
+.level-card {
+  display: grid; grid-template-columns: 8px 120px 1fr auto;
+  background: var(--surface); border: 1px solid var(--border);
+  overflow: hidden; align-items: stretch;
+}
+
+.lc-stripe { }
+.level-card.r-none  .lc-stripe { background: var(--green); }
+.level-card.r-low   .lc-stripe { background: #78c878; }
+.level-card.r-mid   .lc-stripe { background: var(--amber); }
+.level-card.r-high  .lc-stripe { background: var(--red); }
+
+.lc-level {
+  padding: 16px 14px;
+  border-right: 1px solid var(--border);
+  display: flex; flex-direction: column;
+  justify-content: center; gap: 4px;
+}
+
+.lc-level-badge {
+  display: inline-block;
+  font-family: 'DM Mono', monospace;
+  font-size: 9px; letter-spacing: 1.5px; text-transform: uppercase;
+  padding: 3px 8px; border-radius: 2px; text-align: center;
+}
+.level-card.r-none  .lc-level-badge { background: var(--green-l); color: var(--green); }
+.level-card.r-low   .lc-level-badge { background: #e8f5e8; color: #3a8a3a; }
+.level-card.r-mid   .lc-level-badge { background: var(--amber-l); color: var(--amber); }
+.level-card.r-high  .lc-level-badge { background: var(--red-l); color: var(--red); }
+
+.lc-body { padding: 16px 20px; }
+.lc-body h4 { font-size: 14px; font-weight: 700; color: var(--ink); margin-bottom: 5px; }
+.lc-body p  { font-size: 13px; color: var(--ink2); line-height: 1.65; margin: 0; }
+.lc-body p strong { color: var(--ink); font-weight: 500; }
+
+.lc-impact {
+  padding: 16px 16px;
+  border-left: 1px solid var(--border);
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+  gap: 3px; min-width: 80px;
+}
+.lc-impact span { font-family:'DM Mono',monospace; font-size:9px; letter-spacing:1px; text-transform:uppercase; color:var(--ink4); }
+.lc-impact strong { font-size:13px; font-weight:700; }
+.level-card.r-none  .lc-impact strong { color: var(--green); }
+.level-card.r-low   .lc-impact strong { color: #3a8a3a; }
+.level-card.r-mid   .lc-impact strong { color: var(--amber); }
+.level-card.r-high  .lc-impact strong { color: var(--red); }
+
+/* ── COMPONENT: MYTH BOX ── */
+.myth-grid {
+  display: grid; grid-template-columns: 1fr 1fr;
+  gap: 2px; margin: 28px 0;
+}
+
+.myth-cell {
+  padding: 20px 22px; border: 1px solid var(--border);
+}
+.myth-cell.fear    { background: var(--red-l); }
+.myth-cell.reality { background: var(--green-l); }
+
+.myth-cell-label {
+  font-family: 'DM Mono', monospace;
+  font-size: 9px; letter-spacing: 2px; text-transform: uppercase;
+  margin-bottom: 10px; display: block;
+}
+.myth-cell.fear    .myth-cell-label { color: var(--red); }
+.myth-cell.reality .myth-cell-label { color: var(--green); }
+
+.myth-cell h4 { font-size: 14px; font-weight: 700; color: var(--ink); margin-bottom: 8px; }
+.myth-cell p  { font-size: 13px; color: var(--ink2); line-height: 1.7; margin: 0; }
+.myth-cell p strong { color: var(--ink); font-weight: 500; }
+
+/* ── COMPONENT: MITIGATION LEVELS ── */
+.mit-list {
+  display: flex; flex-direction: column; gap: 2px; margin: 28px 0;
+}
+
+.mit-item {
+  display: grid; grid-template-columns: 48px 1fr 100px;
+  background: var(--surface); border: 1px solid var(--border);
+  overflow: hidden; align-items: stretch;
+}
+
+.mit-num {
+  background: var(--ink); color: #fff;
+  display: flex; align-items: center; justify-content: center;
+  font-family: 'DM Serif Display', serif;
+  font-size: 20px; border-right: 1px solid var(--border);
+}
+
+.mit-body { padding: 16px 20px; }
+.mit-body h4 { font-size: 14px; font-weight: 700; color: var(--ink); margin-bottom: 5px; }
+.mit-body p  { font-size: 13px; color: var(--ink2); line-height: 1.65; margin: 0; }
+.mit-body p strong { color: var(--ink); font-weight: 500; }
+
+.mit-effort {
+  padding: 16px 14px; border-left: 1px solid var(--border);
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: center; gap: 6px;
+}
+.mit-effort span { font-family:'DM Mono',monospace; font-size:9px; letter-spacing:1px; text-transform:uppercase; color:var(--ink4); text-align:center; }
+.mit-effort strong { font-size:12px; font-weight:700; text-align:center; }
+.mit-effort.easy   strong { color: var(--green); }
+.mit-effort.medium strong { color: var(--amber); }
+.mit-effort.hard   strong { color: var(--blue); }
+
+/* ── COMPONENT: ZONE SEMAFORO ── */
+.zones {
+  display: flex; flex-direction: column; gap: 2px; margin: 28px 0;
+}
+
+.zone {
+  display: grid; grid-template-columns: 72px 1fr;
+  overflow: hidden; border: 1px solid var(--border);
+}
+
+.zone-icon {
+  display: flex; align-items: center; justify-content: center;
+  font-size: 20px; border-right: 1px solid var(--border);
+}
+
+.zone.ok   { border-left: 4px solid var(--green); }
+.zone.warn { border-left: 4px solid var(--amber); }
+.zone.stop { border-left: 4px solid var(--red); }
+.zone.ok   .zone-icon { background: var(--green-l); }
+.zone.warn .zone-icon { background: var(--amber-l); }
+.zone.stop .zone-icon { background: var(--red-l); }
+
+.zone-body { padding: 16px 20px; background: var(--surface); }
+.zone-title { font-size:14px; font-weight:700; margin-bottom:5px; }
+.zone.ok   .zone-title { color: var(--green); }
+.zone.warn .zone-title { color: var(--amber); }
+.zone.stop .zone-title { color: var(--red); }
+.zone-desc { font-size:13px; color:var(--ink2); line-height:1.65; }
+
+.zone-examples {
+  margin-top: 10px; display: flex; flex-wrap: wrap; gap: 5px;
+}
+.zone-ex {
+  font-size: 12px; font-weight: 500;
+  padding: 3px 10px; border-radius: 16px;
+}
+.zone.ok   .zone-ex { background: var(--green-b); color: var(--green); }
+.zone.warn .zone-ex { background: var(--amber-b); color: var(--amber); }
+.zone.stop .zone-ex { background: var(--red-b);   color: var(--red); }
+
+/* ── COMPONENT: EXAMPLES TABLE ── */
+.ex-table {
+  width: 100%; border-collapse: collapse; margin: 28px 0; font-size: 13px;
+}
+.ex-table th {
+  font-family:'DM Mono',monospace; font-size:9px; letter-spacing:2px; text-transform:uppercase;
+  color:var(--ink4); text-align:left; padding:10px 14px;
+  border-bottom:1px solid var(--border2); background:var(--surface2);
+}
+.ex-table td {
+  padding: 13px 14px; border-bottom: 1px solid var(--border);
+  color: var(--ink2); vertical-align: top; line-height: 1.6;
+}
+.ex-table tr:hover td { background: var(--surface); }
+.ex-table td:first-child { font-weight: 500; color: var(--ink); width: 140px; }
+
+.tag {
+  display: inline-block; font-size:11px; font-weight:500;
+  padding:2px 8px; border-radius:2px;
+}
+.tag.ok   { background:var(--green-l); color:var(--green); }
+.tag.warn { background:var(--amber-l); color:var(--amber); }
+.tag.stop { background:var(--red-l);   color:var(--red); }
+
+/* ── COMPONENT: STEPS ── */
+.steps {
+  display: flex; flex-direction: column; gap: 2px; margin: 28px 0;
+}
+
+.step {
+  display: grid; grid-template-columns: 52px 1fr;
+  background: var(--surface); border: 1px solid var(--border); overflow: hidden;
+}
+.step-num {
+  background: var(--surface2);
+  display: flex; align-items: center; justify-content: center;
+  font-family: 'DM Serif Display', serif;
+  font-size: 22px; color: var(--ink3);
+  border-right: 1px solid var(--border);
+}
+.step-body { padding: 16px 20px; }
+.step-body h4 { font-size:14px; font-weight:700; color:var(--ink); margin-bottom:4px; }
+.step-body p  { font-size:13px; color:var(--ink2); line-height:1.65; margin:0; }
+.step-body p strong { color:var(--ink); font-weight:500; }
+
+/* ── COMPONENT: IBOX ── */
+.ibox {
+  padding: 20px 24px; margin: 24px 0;
+  font-size: 14px; color: var(--ink2); line-height: 1.75;
+  border: 1px solid; border-left-width: 4px;
+}
+.ibox strong { color: var(--ink); font-weight: 500; }
+.ibox.blue   { background:var(--blue-l);   border-color:var(--blue-b);   border-left-color:var(--blue); }
+.ibox.amber  { background:var(--amber-l);  border-color:var(--amber-b);  border-left-color:var(--amber); }
+.ibox.green  { background:var(--green-l);  border-color:var(--green-b);  border-left-color:var(--green); }
+.ibox.red    { background:var(--red-l);    border-color:var(--red-b);    border-left-color:var(--red); }
+.ibox.violet { background:var(--violet-l); border-color:#d0c0f0; border-left-color:var(--violet); }
+
+.ibox-label {
+  font-family:'DM Mono',monospace; font-size:9px; letter-spacing:2.5px;
+  text-transform:uppercase; margin-bottom:8px; display:block;
+}
+.ibox.blue   .ibox-label { color:var(--blue); }
+.ibox.amber  .ibox-label { color:var(--amber); }
+.ibox.green  .ibox-label { color:var(--green); }
+.ibox.red    .ibox-label { color:var(--red); }
+.ibox.violet .ibox-label { color:var(--violet); }
+
+/* ── COMPONENT: GOLDEN RULE ── */
+.golden {
+  background: var(--ink); color: #fff;
+  padding: 28px 32px; margin: 28px 0;
+}
+.golden-label {
+  font-family:'DM Mono',monospace; font-size:9px; letter-spacing:2.5px;
+  text-transform:uppercase; color:rgba(255,255,255,0.35); margin-bottom:12px; display:block;
+}
+.golden p { font-size:17px; font-weight:300; color:#fff; line-height:1.65; }
+.golden p strong { font-weight:600; }
+
+/* ── COMPONENT: REFS ── */
+.ref-list {
+  display: flex; flex-direction: column; gap: 2px; margin: 24px 0;
+}
+.ref-item {
+  display: grid; grid-template-columns: 40px 1fr;
+  background: var(--surface); border: 1px solid var(--border); overflow: hidden;
+}
+.ref-badge {
+  background: var(--ink); color: #fff;
+  display: flex; align-items: center; justify-content: center;
+  font-family:'DM Mono',monospace; font-size:11px; font-weight:500;
+  border-right: 1px solid var(--border); letter-spacing: 0.5px;
+}
+.ref-body { padding: 12px 18px; }
+.ref-body strong { font-size:13px; font-weight:700; color:var(--ink); display:block; margin-bottom:2px; }
+.ref-body span   { font-size:12px; color:var(--ink3); }
+
+/* ── FOOTER ── */
+footer {
+  border-top: 1px solid var(--border); background: var(--surface);
+  padding: 32px 72px; display: flex; justify-content: space-between;
+  align-items: center; flex-wrap: wrap; gap: 8px; margin-top: 80px;
+}
+footer p { font-family:'DM Mono',monospace; font-size:11px; color:var(--ink4); }
+
+/* ── RESPONSIVE ── */
+@media (max-width: 760px) {
+  .cover, footer { padding-left: 28px; padding-right: 28px; }
+  .toc { padding: 24px 28px; }
+  .toc-grid { grid-template-columns: 1fr 1fr; }
+  .report-body { padding: 0 24px; }
+  .flow-steps { flex-direction: column; }
+  .flow-node::after { display: none; }
+  .level-card { grid-template-columns: 8px 1fr; }
+  .lc-level, .lc-impact { display: none; }
+  .mit-item { grid-template-columns: 48px 1fr; }
+  .mit-effort { display: none; }
+  .myth-grid { grid-template-columns: 1fr; }
+  .zone { grid-template-columns: 56px 1fr; }
+}
+</style>
+</head>
+<body>
+
+<!-- COVER -->
+<header class="cover">
+  <div class="cover-label">Comunicazione interna · Report di sintesi</div>
+  <h1>AI e sicurezza<br>dei <em>dati aziendali</em></h1>
+  <p class="cover-sub">Una guida completa e autonoma: cosa sono i rischi legati all'intelligenza artificiale, come si classificano, e cosa può fare ogni dipendente per ridurli — a partire da subito.</p>
+  <div class="cover-meta">
+    <div class="cover-meta-item"><span>Destinatari</span><strong>Tutti i dipendenti e manager</strong></div>
+    <div class="cover-meta-item"><span>Livello</span><strong>Nessuna competenza tecnica richiesta</strong></div>
+    <div class="cover-meta-item"><span>Tipo</span><strong>Documento di riferimento autonomo</strong></div>
+    <div class="cover-meta-item"><span>Anno</span><strong>2026</strong></div>
+  </div>
+</header>
+
+<!-- SOMMARIO -->
+<nav class="toc">
+  <div class="toc-label">Contenuti</div>
+  <div class="toc-grid">
+    <a href="#s1" class="toc-item"><span class="toc-num">01</span><span class="toc-title">Cosa sono gli strumenti AI</span></a>
+    <a href="#s2" class="toc-item"><span class="toc-num">02</span><span class="toc-title">Cosa succede ai dati</span></a>
+    <a href="#s3" class="toc-item"><span class="toc-num">03</span><span class="toc-title">Classificazione dei rischi</span></a>
+    <a href="#s4" class="toc-item"><span class="toc-num">04</span><span class="toc-title">La paura più comune</span></a>
+    <a href="#s5" class="toc-item"><span class="toc-num">05</span><span class="toc-title">Strategie di mitigazione</span></a>
+    <a href="#s6" class="toc-item"><span class="toc-num">06</span><span class="toc-title">Le regole pratiche</span></a>
+    <a href="#s7" class="toc-item"><span class="toc-num">07</span><span class="toc-title">In caso di errore</span></a>
+    <a href="#s8" class="toc-item"><span class="toc-num">08</span><span class="toc-title">Riferimenti</span></a>
+  </div>
+</nav>
+
+<main class="report-body">
+
+<!-- ══════════════════════════════════
+     SEZIONE 1
+══════════════════════════════════ -->
+<section class="section" id="s1">
+  <div class="section-header">
+    <span class="section-num">01</span>
+    <h2>Cosa sono gli strumenti AI e come vengono usati</h2>
+  </div>
+
+  <p>Negli ultimi anni strumenti come <strong>ChatGPT, Claude, Gemini e Microsoft Copilot</strong> sono entrati nell'uso quotidiano di molte persone — in azienda e nella vita privata. Permettono di scrivere testi, rispondere a domande, analizzare documenti, tradurre, generare idee. Sono strumenti utili, accessibili e spesso gratuiti.</p>
+
+  <p>Per usarli in modo responsabile in un contesto lavorativo, è importante capire come funzionano a un livello elementare — non tecnico, ma sufficiente a prendere decisioni consapevoli.</p>
+
+  <h3>Come funzionano in modo semplice</h3>
+  <p>Quando scrivi un testo in uno di questi strumenti, stai inviando quel testo a un elaboratore molto potente che si trova su un server remoto — nella maggior parte dei casi negli Stati Uniti. Il server analizza il testo, genera una risposta e te la restituisce. È un processo rapido, quasi istantaneo, ma comporta un passaggio fondamentale: <strong>il testo lascia il tuo dispositivo e viaggia verso un server esterno all'azienda.</strong></p>
+
+  <div class="flow-steps">
+    <div class="flow-node">
+      <div class="flow-step-num">STEP 1</div>
+      <div class="flow-label">Tu scrivi</div>
+      <div class="flow-desc">Il testo è ancora sul tuo dispositivo</div>
+    </div>
+    <div class="flow-node danger">
+      <div class="flow-step-num">STEP 2</div>
+      <div class="flow-label">Il testo viaggia</div>
+      <div class="flow-desc">Esce dal tuo dispositivo verso server esterni (USA)</div>
+    </div>
+    <div class="flow-node danger">
+      <div class="flow-step-num">STEP 3</div>
+      <div class="flow-label">Viene conservato</div>
+      <div class="flow-desc">Rimane sui server del provider per un periodo variabile</div>
+    </div>
+    <div class="flow-node">
+      <div class="flow-step-num">STEP 4</div>
+      <div class="flow-label">Ricevi la risposta</div>
+      <div class="flow-desc">Il modello elabora e risponde</div>
+    </div>
+  </div>
+
+  <p>I passaggi critici sono il 2 e il 3. Il testo inviato <strong>esce dal perimetro aziendale</strong> e resta conservato sui server del provider per un periodo che dipende dal tipo di contratto o abbonamento. Non c'è modo di "ritirarlo" una volta inviato.</p>
+
+  <h3>Non tutti gli strumenti sono uguali</h3>
+  <p>Esiste una differenza importante tra le versioni <strong>gratuite o personali</strong> e le versioni <strong>enterprise</strong> degli stessi strumenti:</p>
+
+  <div class="risk-table-wrap">
+    <table class="risk-table">
+      <thead>
+        <tr>
+          <th>Tipo di piano</th>
+          <th>Conservazione dati</th>
+          <th>Uso per migliorare il modello</th>
+          <th>Contratto aziendale</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>Account gratuito / personale</td>
+          <td>30–90 giorni o più</td>
+          <td>Possibile (dipende dalle impostazioni)</td>
+          <td>Nessuno — nessuna protezione</td>
+        </tr>
+        <tr>
+          <td>Piano API standard</td>
+          <td>Tipicamente 30 giorni</td>
+          <td>Generalmente escluso</td>
+          <td>Parziale</td>
+        </tr>
+        <tr>
+          <td>Piano enterprise</td>
+          <td>Zero (solo durante l'elaborazione)</td>
+          <td>Escluso per contratto</td>
+          <td>Completo con DPA e garanzie GDPR</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="ibox amber">
+    <span class="ibox-label">Il rischio più frequente</span>
+    I dipendenti che usano account personali gratuiti per svolgere attività lavorative operano nel profilo di rischio più alto — spesso senza saperlo. Questo non è colpa loro: questi strumenti sono utili, facili da usare e non hanno avvisi espliciti sui rischi per i dati aziendali. L'obiettivo di questo documento è dare le informazioni necessarie per fare scelte consapevoli.
+  </div>
+</section>
+
+
+<!-- ══════════════════════════════════
+     SEZIONE 2
+══════════════════════════════════ -->
+<section class="section" id="s2">
+  <div class="section-header">
+    <span class="section-num">02</span>
+    <h2>Cosa succede davvero ai dati che condividi</h2>
+  </div>
+
+  <p>Comprendere cosa succede ai dati dopo che vengono inviati a uno strumento AI aiuta a valutare i rischi in modo proporzionato — né esagerato né minimizzato.</p>
+
+  <h3>Il modello non "memorizza" la tua conversazione — ma i dati restano</h3>
+  <p>Una distinzione importante: il modello AI — cioè il sistema che genera le risposte — <strong>non impara dalla tua singola conversazione</strong> nel senso che non la "ricorda" la prossima volta che parli. Ogni conversazione è elaborata in modo indipendente.</p>
+  <p>Tuttavia, questo non significa che i dati spariscano. La conversazione viene <strong>conservata nei sistemi del provider</strong> per le finalità indicate nei termini di servizio: sicurezza, anti-abuso, debug, e — nel caso dei piani gratuiti — potenzialmente anche per migliorare le versioni future del modello. Questi dati possono essere accessibili agli operatori del provider e, in certi contesti giuridici, a autorità competenti.</p>
+
+  <h3>La questione della giurisdizione</h3>
+  <p>I principali fornitori di strumenti AI (OpenAI, Google, Anthropic, Microsoft) hanno sede negli <strong>Stati Uniti</strong>. Questo ha implicazioni concrete: i dati conservati sui loro server sono soggetti alla legislazione americana, incluso il cosiddetto CLOUD Act, che consente alle autorità USA di richiedere l'accesso a dati conservati da aziende americane anche su server europei.</p>
+  <p>Per i dati personali (nomi, informazioni su dipendenti e clienti), inviare questi dati a server extra-UE senza le garanzie contrattuali richieste dal <strong>GDPR</strong> configura una violazione normativa — indipendentemente da qualsiasi problema di sicurezza. La sola trasmissione è sufficiente a creare un'esposizione legale.</p>
+
+  <h3>Il problema degli NDA</h3>
+  <p>Molte aziende manifatturiere hanno accordi di riservatezza (NDA) con clienti e fornitori. Questi accordi vietano tipicamente la condivisione delle informazioni coperte con "terze parti". Un sistema AI esterno — anche il più affidabile — è, a tutti gli effetti legali, una terza parte.</p>
+
+  <div class="ibox red">
+    <span class="ibox-label">Punto critico</span>
+    La violazione di un NDA avviene nell'atto stesso della condivisione — non è necessario che i dati vengano "usati male" o che si verifichi un incidente. Inviare informazioni coperte da NDA a un sistema AI esterno può configurare un inadempimento contrattuale immediato, con le relative conseguenze legali.
+  </div>
+</section>
+
+
+<!-- ══════════════════════════════════
+     SEZIONE 3
+══════════════════════════════════ -->
+<section class="section" id="s3">
+  <div class="section-header">
+    <span class="section-num">03</span>
+    <h2>Classificazione dei rischi</h2>
+  </div>
+
+  <p>I rischi legati all'uso degli strumenti AI non sono tutti uguali. Si distinguono per natura (tecnico, contrattuale, normativo), probabilità e impatto potenziale. Una classificazione chiara permette di rispondere in modo proporzionato — senza allarmismi inutili e senza sottovalutare i rischi reali.</p>
+
+  <h3>I sei rischi principali</h3>
+
+  <div class="level-grid">
+
+    <div class="level-card r-high">
+      <div class="lc-stripe"></div>
+      <div class="lc-level">
+        <span class="lc-level-badge">Alto</span>
+      </div>
+      <div class="lc-body">
+        <h4>R1 — Uscita di IP industriale dal perimetro aziendale</h4>
+        <p>Specifiche tecniche di prodotto, processi produttivi, ricette, disegni — il know-how che rappresenta il vantaggio competitivo dell'azienda — inviati a server esterni. Una volta inviato, il dato non può essere "ritirato". Il danno è permanente, anche se non si manifesta immediatamente. <strong>Priorità: massima per l'ufficio tecnico, R&D, produzione.</strong></p>
+      </div>
+      <div class="lc-impact">
+        <span>Impatto</span>
+        <strong>Molto alto</strong>
+      </div>
+    </div>
+
+    <div class="level-card r-high">
+      <div class="lc-stripe"></div>
+      <div class="lc-level">
+        <span class="lc-level-badge">Alto</span>
+      </div>
+      <div class="lc-body">
+        <h4>R2 — Violazione di accordi di riservatezza (NDA)</h4>
+        <p>Condivisione con sistemi AI esterni di informazioni coperte da NDA con clienti o fornitori. La violazione si configura nell'atto della trasmissione, non in un eventuale abuso successivo. <strong>Priorità: alta per commerciale, acquisti, ufficio tecnico su commesse.</strong></p>
+      </div>
+      <div class="lc-impact">
+        <span>Impatto</span>
+        <strong>Alto</strong>
+      </div>
+    </div>
+
+    <div class="level-card r-mid">
+      <div class="lc-stripe"></div>
+      <div class="lc-level">
+        <span class="lc-level-badge">Medio</span>
+      </div>
+      <div class="lc-body">
+        <h4>R3 — Violazione del GDPR per trasferimento di dati personali</h4>
+        <p>Invio di dati personali di dipendenti, clienti o candidati a servizi AI con server extra-UE senza le garanzie contrattuali (DPA) richieste. Comporta potenziali sanzioni amministrative e obbligo di notifica all'autorità di controllo. <strong>Priorità: alta per HR, commerciale con dati anagrafici clienti.</strong></p>
+      </div>
+      <div class="lc-impact">
+        <span>Impatto</span>
+        <strong>Medio-alto</strong>
+      </div>
+    </div>
+
+    <div class="level-card r-mid">
+      <div class="lc-stripe"></div>
+      <div class="lc-level">
+        <span class="lc-level-badge">Medio</span>
+      </div>
+      <div class="lc-body">
+        <h4>R4 — Uso dei dati per addestrare versioni future del modello</h4>
+        <p>Sui piani gratuiti e consumer, i provider si riservano la possibilità di usare le conversazioni per migliorare il modello. I dati non vengono "restituiti" letteralmente ad altri utenti, ma possono influenzare in modo indiretto il comportamento futuro del sistema. <strong>Questo rischio è eliminato con i piani enterprise.</strong></p>
+      </div>
+      <div class="lc-impact">
+        <span>Impatto</span>
+        <strong>Medio</strong>
+      </div>
+    </div>
+
+    <div class="level-card r-low">
+      <div class="lc-stripe"></div>
+      <div class="lc-level">
+        <span class="lc-level-badge">Basso</span>
+      </div>
+      <div class="lc-body">
+        <h4>R5 — Violazione o incidente di sicurezza lato provider</h4>
+        <p>I provider AI hanno infrastrutture di sicurezza avanzate, ma non sono immuni da violazioni. Se i dati sono presenti nei loro sistemi al momento di un eventuale incidente, l'azienda ne subisce le conseguenze senza aver commesso errori propri. La probabilità è bassa, l'impatto potenzialmente alto. <strong>Il rischio si riduce azzerando la retention dei dati (piano enterprise).</strong></p>
+      </div>
+      <div class="lc-impact">
+        <span>Impatto</span>
+        <strong>Potenz. alto</strong>
+      </div>
+    </div>
+
+    <div class="level-card r-none">
+      <div class="lc-stripe"></div>
+      <div class="lc-level">
+        <span class="lc-level-badge">Basso</span>
+      </div>
+      <div class="lc-body">
+        <h4>R6 — Risposta errata o fuorviante del modello (allucinazione)</h4>
+        <p>I modelli AI possono produrre informazioni plausibili ma errate — un fenomeno noto come "allucinazione". Non è un rischio di sicurezza dei dati, ma un rischio di qualità: decisioni prese sulla base di output AI non verificati. <strong>Rilevante per tutti i ruoli: verificare sempre le informazioni critiche su fonti autorevoli.</strong></p>
+      </div>
+      <div class="lc-impact">
+        <span>Impatto</span>
+        <strong>Variabile</strong>
+      </div>
+    </div>
+
+  </div>
+
+  <h3>Mappa del rischio per funzione aziendale</h3>
+
+  <div class="risk-table-wrap">
+    <table class="risk-table">
+      <thead>
+        <tr>
+          <th>Funzione</th>
+          <th>Rischi prioritari</th>
+          <th>Dati più critici</th>
+          <th>Livello complessivo</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>Ufficio Tecnico / R&D</td>
+          <td>R1, R2</td>
+          <td>Specifiche, disegni, processi, ricette</td>
+          <td><span class="tag stop">Alto</span></td>
+        </tr>
+        <tr>
+          <td>Commerciale / Vendite</td>
+          <td>R2, R3</td>
+          <td>Offerte, prezzi, comunicazioni clienti, NDA</td>
+          <td><span class="tag stop">Alto</span></td>
+        </tr>
+        <tr>
+          <td>Qualità</td>
+          <td>R1, R2</td>
+          <td>Rapporti NC, dati di processo, audit</td>
+          <td><span class="tag stop">Alto</span></td>
+        </tr>
+        <tr>
+          <td>Produzione / Manutenzione</td>
+          <td>R1</td>
+          <td>Parametri di processo, setpoint, ricette</td>
+          <td><span class="tag warn">Medio-alto</span></td>
+        </tr>
+        <tr>
+          <td>HR / Risorse Umane</td>
+          <td>R3</td>
+          <td>Dati dipendenti, valutazioni, stipendi, CV</td>
+          <td><span class="tag warn">Medio-alto</span></td>
+        </tr>
+        <tr>
+          <td>Acquisti / Supply Chain</td>
+          <td>R2, R1</td>
+          <td>Condizioni fornitori, piani approvvigionamento</td>
+          <td><span class="tag warn">Medio</span></td>
+        </tr>
+        <tr>
+          <td>Amministrazione / Finance</td>
+          <td>R3, R2</td>
+          <td>Dati finanziari riservati, dati personali</td>
+          <td><span class="tag warn">Medio</span></td>
+        </tr>
+        <tr>
+          <td>Funzioni di staff generiche</td>
+          <td>R6</td>
+          <td>Comunicazioni standard, contenuti pubblici</td>
+          <td><span class="tag ok">Basso</span></td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+
+<!-- ══════════════════════════════════
+     SEZIONE 4
+══════════════════════════════════ -->
+<section class="section" id="s4">
+  <div class="section-header">
+    <span class="section-num">04</span>
+    <h2>La paura più comune — e la risposta onesta</h2>
+  </div>
+
+  <p>In molte aziende circola una preoccupazione specifica: <em>"Se un nostro dipendente incolla una specifica tecnica su ChatGPT, quella specifica potrebbe finire a un concorrente."</em> È una preoccupazione comprensibile. Ma il meccanismo reale è diverso da come viene spesso immaginato — e capirlo è importante per rispondere in modo proporzionato.</p>
+
+  <div class="myth-grid">
+    <div class="myth-cell fear">
+      <span class="myth-cell-label">✗ Il timore diffuso</span>
+      <h4>"I miei dati vengono dati direttamente a un competitor"</h4>
+      <p>Il sistema AI riceve le mie specifiche e le restituisce come risposta a un'altra azienda. I miei segreti industriali finiscono nelle mani di chi mi fa concorrenza.</p>
+    </div>
+    <div class="myth-cell reality">
+      <span class="myth-cell-label">✓ La realtà</span>
+      <h4>Non è il funzionamento normale del sistema</h4>
+      <p>Le conversazioni degli utenti sono isolate tra loro. Un'altra azienda non riceve come risposta i tuoi documenti. Questo scenario diretto <strong>non avviene nel normale funzionamento</strong> dei principali provider e viene escluso esplicitamente nei loro termini di servizio.</p>
+    </div>
+  </div>
+
+  <p>Detto questo, sarebbe sbagliato concludere che non esiste nessun rischio. Esistono due scenari reali che meritano attenzione:</p>
+
+  <div class="myth-grid">
+    <div class="myth-cell fear">
+      <span class="myth-cell-label">⚠ Rischio reale 1</span>
+      <h4>Uso indiretto per l'addestramento</h4>
+      <p>Sui piani gratuiti, le conversazioni possono contribuire all'addestramento di versioni future del modello. Non è una "consegna diretta" dei tuoi dati, ma è una forma di assorbimento indiretto del know-how che va prevenuta.</p>
+    </div>
+    <div class="myth-cell reality">
+      <span class="myth-cell-label">✓ Come si mitiga</span>
+      <h4>Piano enterprise o anonimizzazione</h4>
+      <p>I piani enterprise escludono per contratto qualsiasi uso dei dati per l'addestramento. In alternativa, inviare dati anonimizzati (senza riferimenti specifici al prodotto) elimina praticamente questo rischio.</p>
+    </div>
+  </div>
+
+  <div class="myth-grid">
+    <div class="myth-cell fear">
+      <span class="myth-cell-label">⚠ Rischio reale 2</span>
+      <h4>Violazione o accesso non autorizzato al provider</h4>
+      <p>Se i server del provider subiscono un attacco informatico o un accesso non autorizzato, i dati conservati nei log delle conversazioni potrebbero essere esposti. Questo è il canale attraverso cui dati aziendali potrebbero teoricamente raggiungere terzi non autorizzati.</p>
+    </div>
+    <div class="myth-cell reality">
+      <span class="myth-cell-label">✓ Come si mitiga</span>
+      <h4>Zero retention e anonimizzazione</h4>
+      <p>Con un piano enterprise a zero retention, i dati non vengono conservati dopo l'elaborazione — non c'è nulla da sottrarre. Combinato con l'anonimizzazione preventiva, il rischio residuo è molto basso.</p>
+    </div>
+  </div>
+
+  <div class="ibox green">
+    <span class="ibox-label">Il messaggio da portare</span>
+    Il rischio che i dati aziendali vengano consegnati direttamente a un competitor non è il funzionamento normale di questi sistemi. Il rischio reale è che i dati escano dal perimetro aziendale — e da lì possano essere esposti in modi non previsti. È un rischio diverso, meno drammatico di come viene a volte immaginato, ma concreto e gestibile con misure specifiche.
+  </div>
+</section>
+
+
+<!-- ══════════════════════════════════
+     SEZIONE 5
+══════════════════════════════════ -->
+<section class="section" id="s5">
+  <div class="section-header">
+    <span class="section-num">05</span>
+    <h2>Strategie di mitigazione</h2>
+  </div>
+
+  <p>Le strategie di mitigazione si distribuiscono su un continuum che va dalle azioni immediatamente adottabili da qualsiasi dipendente, alle misure organizzative e tecniche che richiedono un intervento aziendale strutturato. Sono complementari, non alternative.</p>
+
+  <div class="mit-list">
+
+    <div class="mit-item">
+      <div class="mit-num">1</div>
+      <div class="mit-body">
+        <h4>Conoscere le regole e applicarle</h4>
+        <p>La prima mitigazione è la consapevolezza. Sapere cosa si può e non si può condividere — e perché — è il prerequisito di tutto il resto. <strong>Questo documento è già parte di questa strategia.</strong> Un dipendente consapevole che usa l'AI su testi generici, senza dati riservati, non espone l'azienda ad alcun rischio significativo.</p>
+      </div>
+      <div class="mit-effort easy">
+        <span>Sforzo</span>
+        <strong>Immediato</strong>
+      </div>
+    </div>
+
+    <div class="mit-item">
+      <div class="mit-num">2</div>
+      <div class="mit-body">
+        <h4>Anonimizzare prima di condividere</h4>
+        <p>Prima di inviare un testo a uno strumento AI, rimuovere tutti gli elementi identificativi e specifici: nomi di clienti, prodotti, fornitori, cifre reali, riferimenti contrattuali. L'AI aiuta ugualmente sulla struttura, il linguaggio e il metodo — <strong>senza bisogno di conoscere i dati specifici</strong>. Questa tecnica rende sicura la stragrande maggioranza dei task per cui si userebbe normalmente l'AI.</p>
+      </div>
+      <div class="mit-effort easy">
+        <span>Sforzo</span>
+        <strong>Immediato</strong>
+      </div>
+    </div>
+
+    <div class="mit-item">
+      <div class="mit-num">3</div>
+      <div class="mit-body">
+        <h4>Non usare account personali per dati aziendali</h4>
+        <p>Un account ChatGPT o Claude personale e gratuito ha il profilo di protezione più basso disponibile. Usarlo per dati di lavoro significa operare senza nessuna delle garanzie che i piani enterprise offrono. <strong>Per qualsiasi attività lavorativa che coinvolga informazioni aziendali, usare solo gli strumenti approvati dall'azienda.</strong></p>
+      </div>
+      <div class="mit-effort easy">
+        <span>Sforzo</span>
+        <strong>Immediato</strong>
+      </div>
+    </div>
+
+    <div class="mit-item">
+      <div class="mit-num">4</div>
+      <div class="mit-body">
+        <h4>Verificare sempre gli output su informazioni critiche</h4>
+        <p>Gli strumenti AI possono produrre informazioni plausibili ma errate (allucinazioni). Per qualsiasi output che viene utilizzato in contesti critici — tecnici, legali, commerciali — <strong>la verifica su fonti autorevoli è obbligatoria</strong>. L'AI è un punto di partenza, non una fonte definitiva.</p>
+      </div>
+      <div class="mit-effort easy">
+        <span>Sforzo</span>
+        <strong>Immediato</strong>
+      </div>
+    </div>
+
+    <div class="mit-item">
+      <div class="mit-num">5</div>
+      <div class="mit-body">
+        <h4>Adottare un piano enterprise per gli strumenti in uso</h4>
+        <p>A livello aziendale, la transizione dai piani gratuiti o consumer a piani enterprise con garanzie contrattuali risolve quasi completamente i rischi normativi (GDPR) e contrattuali (NDA). Include zero data retention, nessun uso per addestramento, DPA conforme al GDPR e, spesso, datacenter europei. <strong>È l'intervento strutturale più efficace a parità di strumenti usati.</strong></p>
+      </div>
+      <div class="mit-effort medium">
+        <span>Sforzo</span>
+        <strong>Medio</strong>
+      </div>
+    </div>
+
+    <div class="mit-item">
+      <div class="mit-num">6</div>
+      <div class="mit-body">
+        <h4>Definire una policy aziendale formale</h4>
+        <p>Una policy scritta, comunicata e periodicamente aggiornata che classifica i dati aziendali, stabilisce le regole d'uso degli strumenti AI e definisce le procedure in caso di incidente. Trasforma le buone pratiche individuali in un sistema organizzativo robusto. <strong>Questo documento è il primo passo verso quella policy.</strong></p>
+      </div>
+      <div class="mit-effort medium">
+        <span>Sforzo</span>
+        <strong>Medio</strong>
+      </div>
+    </div>
+
+    <div class="mit-item">
+      <div class="mit-num">7</div>
+      <div class="mit-body">
+        <h4>Valutare soluzioni self-hosted per i dati più critici</h4>
+        <p>Per i flussi di lavoro che coinvolgono IP industriale che non può in nessuna forma uscire dal perimetro aziendale, esistono soluzioni tecniche che permettono di ospitare un modello AI su infrastruttura propria. I dati non escono mai dall'azienda. Si tratta di una soluzione tecnicamente più complessa e costosa, da valutare quando il profilo di rischio lo giustifica.</p>
+      </div>
+      <div class="mit-effort hard">
+        <span>Sforzo</span>
+        <strong>Strutturale</strong>
+      </div>
+    </div>
+
+  </div>
+
+  <div class="ibox blue">
+    <span class="ibox-label">Quale strategia per quale situazione</span>
+    Le strategie 1–4 sono adottabili immediatamente da ogni dipendente, senza aspettare decisioni organizzative. Le strategie 5–6 richiedono un intervento aziendale e risolvono la maggior parte dei rischi normativi e contrattuali. La strategia 7 è pertinente per i casi in cui il profilo di sicurezza dei dati non ammette nessuna forma di uscita dal perimetro.
+  </div>
+</section>
+
+
+<!-- ══════════════════════════════════
+     SEZIONE 6
+══════════════════════════════════ -->
+<section class="section" id="s6">
+  <div class="section-header">
+    <span class="section-num">06</span>
+    <h2>Le regole pratiche: cosa puoi e non puoi condividere</h2>
+  </div>
+
+  <p>La classificazione dei dati in tre categorie operative è lo strumento più immediato per tradurre i rischi in comportamenti concreti. Vale per qualsiasi strumento AI esterno, indipendentemente da quanto sembri affidabile.</p>
+
+  <div class="golden">
+    <span class="golden-label">La regola fondamentale</span>
+    <p>Se quella informazione <strong>non la diresti a voce a uno sconosciuto</strong> per strada, non metterla in uno strumento AI esterno. Se hai un dubbio, <strong>chiedi prima di inviare</strong>.</p>
+  </div>
+
+  <div class="zones">
+
+    <div class="zone ok">
+      <div class="zone-icon">✓</div>
+      <div class="zone-body">
+        <div class="zone-title">Categoria 1 — Condivisibile liberamente</div>
+        <div class="zone-desc">Informazioni già pubbliche, testi generici senza riferimenti aziendali specifici, domande su concetti e normative pubbliche, richieste di aiuto su struttura e metodo che non richiedono i dati reali.</div>
+        <div class="zone-examples">
+          <span class="zone-ex">Scrittura di testi generici</span>
+          <span class="zone-ex">Domande su normative pubbliche</span>
+          <span class="zone-ex">Traduzioni di contenuti pubblici</span>
+          <span class="zone-ex">Strutturazione di documenti (senza dati)</span>
+          <span class="zone-ex">Correzione grammaticale neutra</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="zone warn">
+      <div class="zone-icon">!</div>
+      <div class="zone-body">
+        <div class="zone-title">Categoria 2 — Condivisibile solo dopo anonimizzazione</div>
+        <div class="zone-desc">Contenuti aziendali dai quali sono stati rimossi tutti gli elementi identificativi: nomi di clienti, prodotti, fornitori, cifre specifiche, riferimenti a commesse o accordi. Il testo può essere migliorato, tradotto o strutturato dall'AI — ma i dati specifici devono restare fuori.</div>
+        <div class="zone-examples">
+          <span class="zone-ex">Email a clienti (con nome rimosso)</span>
+          <span class="zone-ex">Relazioni con dati sostituiti</span>
+          <span class="zone-ex">Calcoli con valori fittizi</span>
+          <span class="zone-ex">Descrizioni di situazioni generiche</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="zone stop">
+      <div class="zone-icon">✕</div>
+      <div class="zone-body">
+        <div class="zone-title">Categoria 3 — Non condividere mai</div>
+        <div class="zone-desc">Informazioni che rappresentano il core business, gli obblighi contrattuali o i dati personali dell'azienda. Non esiste anonimizzazione sufficiente per renderle sicure — il dato stesso è troppo sensibile per lasciare il perimetro aziendale in qualsiasi forma.</div>
+        <div class="zone-examples">
+          <span class="zone-ex">Specifiche tecniche di prodotto</span>
+          <span class="zone-ex">Processi produttivi e ricette</span>
+          <span class="zone-ex">Offerte, prezzi, condizioni contrattuali</span>
+          <span class="zone-ex">Documenti coperti da NDA</span>
+          <span class="zone-ex">Dati personali di dipendenti o clienti</span>
+          <span class="zone-ex">Parametri di processo e setpoint</span>
+          <span class="zone-ex">Piani strategici non pubblici</span>
+          <span class="zone-ex">Fotografie di impianti e macchinari</span>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <h3>Esempi per contesto lavorativo</h3>
+
+  <table class="ex-table">
+    <thead>
+      <tr>
+        <th>Ruolo</th>
+        <th>Task da fare</th>
+        <th>Modo corretto</th>
+        <th>Cosa evitare</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>Tecnico / Ingegnere</td>
+        <td>Aiuto su un calcolo strutturale</td>
+        <td><span class="tag ok">OK</span> Chiedere il metodo con valori fittizi</td>
+        <td>Caricare il PDF con le specifiche reali del prodotto</td>
+      </tr>
+      <tr>
+        <td>Commerciale</td>
+        <td>Risposta a un reclamo cliente</td>
+        <td><span class="tag ok">OK</span> Descrivere la situazione in modo generico</td>
+        <td>Incollare l'email originale del cliente con nome e dati</td>
+      </tr>
+      <tr>
+        <td>Responsabile Qualità</td>
+        <td>Impostare un'analisi causa radice</td>
+        <td><span class="tag ok">OK</span> Chiedere come si applica il metodo 8D</td>
+        <td>Caricare il rapporto di non conformità con dati reali</td>
+      </tr>
+      <tr>
+        <td>HR Manager</td>
+        <td>Comunicare una decisione difficile</td>
+        <td><span class="tag ok">OK</span> "Come si comunica la mancata conferma di un contratto?"</td>
+        <td>Condividere dati del dipendente (nome, situazione contrattuale)</td>
+      </tr>
+      <tr>
+        <td>Tecnico di manutenzione</td>
+        <td>Troubleshooting su macchina</td>
+        <td><span class="tag ok">OK</span> "CNC produce vibrazioni a fine corsa: possibili cause?"</td>
+        <td>Condividere i parametri di processo reali o fotografie dell'impianto</td>
+      </tr>
+      <tr>
+        <td>Buyer / Acquisti</td>
+        <td>Strutturare una negoziazione</td>
+        <td><span class="tag ok">OK</span> Chiedere strategie di negoziazione in modo generico</td>
+        <td>Condividere listini, sconti ottenuti o condizioni negoziate con fornitori</td>
+      </tr>
+    </tbody>
+  </table>
+</section>
+
+
+<!-- ══════════════════════════════════
+     SEZIONE 7
+══════════════════════════════════ -->
+<section class="section" id="s7">
+  <div class="section-header">
+    <span class="section-num">07</span>
+    <h2>Cosa fare in caso di errore</h2>
+  </div>
+
+  <p>Gli errori accadono — specialmente quando le regole sono nuove e i comportamenti devono ancora diventare abitudine. La risposta a un errore è più importante dell'errore stesso: un incidente segnalato tempestivamente è quasi sempre gestibile; uno ignorato può diventare un problema serio.</p>
+
+  <div class="ibox amber">
+    <span class="ibox-label">Principio fondamentale</span>
+    Nessun dipendente verrà penalizzato per aver segnalato in buona fede una condivisione accidentale di dati riservati. Chi tace, per paura o per minimizzare, trasforma un incidente gestibile in un rischio cronico. <strong>Segnalare subito è la scelta giusta — sempre.</strong>
+  </div>
+
+  <h3>La procedura in quattro passi</h3>
+
+  <div class="steps">
+    <div class="step">
+      <div class="step-num">1</div>
+      <div class="step-body">
+        <h4>Riconoscere l'errore e non aspettare</h4>
+        <p>Se ti rendi conto di aver inviato informazioni riservate a uno strumento AI, <strong>agisci immediatamente</strong>. Ogni ora di ritardo riduce le possibilità di gestione efficace. Non minimizzare ("tanto è solo un testo"), non aspettare di capire se è un problema: segnala subito.</p>
+      </div>
+    </div>
+    <div class="step">
+      <div class="step-num">2</div>
+      <div class="step-body">
+        <h4>Avvisare il proprio responsabile</h4>
+        <p>Descrivi in modo chiaro: <strong>cosa hai condiviso</strong> (tipo di informazione, non necessariamente il contenuto esatto), <strong>con quale strumento</strong> (ChatGPT, Claude, Copilot…), <strong>in quale contesto</strong> (task che stavi svolgendo). Non serve un rapporto formale — serve comunicazione rapida e precisa.</p>
+      </div>
+    </div>
+    <div class="step">
+      <div class="step-num">3</div>
+      <div class="step-body">
+        <h4>Il responsabile avvisa l'IT e, se necessario, il DPO</h4>
+        <p>L'IT valuta la situazione tecnicamente e decide le azioni appropriate. <strong>Se i dati condivisi includono informazioni personali di dipendenti o clienti</strong>, va coinvolto anche il DPO (responsabile della protezione dei dati) per valutare eventuali obblighi di notifica previsti dal GDPR.</p>
+      </div>
+    </div>
+    <div class="step">
+      <div class="step-num">4</div>
+      <div class="step-body">
+        <h4>Usare l'episodio come opportunità di apprendimento</h4>
+        <p>Un incidente gestito bene diventa un caso concreto utile per rafforzare la consapevolezza del team. <strong>Il responsabile può condividere l'episodio in modo anonimo</strong> come esempio reale nelle comunicazioni al team — senza identificare la persona, ma rendendo tangibile un rischio che spesso rimane astratto.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+
+<!-- ══════════════════════════════════
+     SEZIONE 8
+══════════════════════════════════ -->
+<section class="section" id="s8">
+  <div class="section-header">
+    <span class="section-num">08</span>
+    <h2>Riferimenti e approfondimenti</h2>
+  </div>
+
+  <p>Questo documento è parte di una serie di materiali interni sviluppati per supportare un uso responsabile degli strumenti AI in azienda. Per approfondimenti su aspetti specifici, sono disponibili i seguenti documenti:</p>
+
+  <div class="ref-list">
+    <div class="ref-item">
+      <div class="ref-badge">D1</div>
+      <div class="ref-body">
+        <strong>Guida all'uso responsabile dell'AI — Per tutti i dipendenti</strong>
+        <span>Guida pratica e narrativa con esempi concreti, FAQ interattive e scheda rapida. Destinata a tutti i livelli aziendali.</span>
+      </div>
+    </div>
+    <div class="ref-item">
+      <div class="ref-badge">D2</div>
+      <div class="ref-body">
+        <strong>AI e sicurezza dei dati — Guida per manager e responsabili di funzione</strong>
+        <span>Sezioni specifiche per ogni funzione aziendale (Tecnica, Commerciale, Qualità, Produzione, HR, Acquisti) con rischi, regole e checklist. Include una sezione dedicata al ruolo del manager nella comunicazione al team.</span>
+      </div>
+    </div>
+    <div class="ref-item">
+      <div class="ref-badge">D3</div>
+      <div class="ref-body">
+        <strong>Scheda tascabile — Le regole in un colpo d'occhio</strong>
+        <span>Documento sintetico ottimizzato per la stampa. Semaforo verde/giallo/rosso, test rapido, esempi per ruolo, procedura incidenti. Da tenere sulla scrivania o appesa in area comune.</span>
+      </div>
+    </div>
+    <div class="ref-item">
+      <div class="ref-badge">A</div>
+      <div class="ref-body">
+        <strong>LLM e sicurezza dei dati — Executive Summary</strong>
+        <span>Report per il management: scenari di danno concreti, cosa dicono davvero i provider, le opzioni disponibili con trade-off espliciti. Livello non tecnico, linguaggio da business case.</span>
+      </div>
+    </div>
+    <div class="ref-item">
+      <div class="ref-badge">B</div>
+      <div class="ref-body">
+        <strong>LLM e sicurezza dei dati — Guida tecnico-operativa</strong>
+        <span>Report per IT e CTO: flusso tecnico dei dati, analisi policy provider, matrice rischi per categoria di dato, albero decisionale e bozza di policy aziendale. Livello tecnico.</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="ibox violet">
+    <span class="ibox-label">Nota sul contesto normativo</span>
+    Il quadro normativo e tecnologico in questo ambito evolve rapidamente. Il <strong>Regolamento europeo sull'AI (AI Act)</strong>, entrato in vigore nel 2024 e in progressiva applicazione, introduce requisiti specifici per i sistemi AI ad alto rischio. Le policy aziendali sull'uso dell'AI dovranno essere aggiornate periodicamente per rimanere allineate alle evoluzioni normative. La revisione annuale di questo documento e dei materiali correlati è raccomandata.
+  </div>
+
+</section>
+
+</main>
+
+<footer>
+  <p>Comunicazione interna · AI e sicurezza dei dati · 2026</p>
+  <p>Report di sintesi · Documento autonomo di riferimento</p>
+</footer>
+
+</body>
+</html>

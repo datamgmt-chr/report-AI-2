@@ -1,0 +1,701 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Il System Prompt — Dare un'Identità al Modello</title>
+<link href="https://fonts.googleapis.com/css2?family=Spectral:ital,wght@0,300;0,400;0,500;0,600;1,400&family=Sora:wght@200;300;400;500;600;700;800&family=IBM+Plex+Mono:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg:     #f6f3f7;
+  --bg2:    #efeaf1;
+  --bg3:    #e4dce7;
+  --ink:    #18141a;
+  --ink2:   #281f2b;
+  --ink3:   #5f5563;
+  --ink4:   #9a8f9e;
+  --border: #d8d0db;
+  --border2:#c7bccb;
+
+  --core:   #7b5ea7;   /* lo strato di questo report: system prompt — viola */
+  --core2:  #5e4485;
+  --warm:   #b3402a;
+  --good:   #3d7a45;
+  --bad:    #b3402a;
+  --gold:   #b8860b;
+  --teal:   #2e7d9c;
+}
+
+* { margin:0; padding:0; box-sizing:border-box; }
+html { scroll-behavior:smooth; }
+
+body {
+  background: var(--bg);
+  color: var(--ink);
+  font-family: 'Sora', sans-serif;
+  font-weight: 300;
+  font-size: 14px;
+  line-height: 1.78;
+}
+
+/* HEADER */
+.masthead {
+  background: var(--ink);
+  color: rgba(255,255,255,0.9);
+  padding: 64px 56px 54px;
+  position: relative;
+  overflow: hidden;
+}
+.masthead::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(circle at 80% 35%, rgba(123,94,167,0.32) 0, transparent 45%),
+    repeating-linear-gradient(0deg, rgba(255,255,255,0.012) 0, rgba(255,255,255,0.012) 1px, transparent 1px, transparent 58px);
+  pointer-events: none;
+}
+.mh-eye {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 10px; letter-spacing: 3px; text-transform: uppercase;
+  color: rgba(255,255,255,0.28); margin-bottom: 20px; position: relative;
+}
+.masthead h1 {
+  font-family: 'Spectral', serif; font-weight: 400;
+  font-size: clamp(33px, 5.2vw, 60px); line-height: 1.06;
+  letter-spacing: -1px; max-width: 720px; position: relative;
+}
+.masthead h1 em { font-style: italic; color: #c3a9e0; }
+.mh-sub {
+  margin-top: 22px; font-size: 15px; font-weight: 300;
+  color: rgba(255,255,255,0.4); max-width: 690px; line-height: 1.72; position: relative;
+}
+
+/* NAV */
+.nav {
+  background: var(--ink2); position: sticky; top: 0; z-index: 100;
+  display: flex; overflow-x: auto; border-bottom: 1px solid rgba(255,255,255,0.06);
+}
+.nav-btn {
+  flex: 1; min-width: 116px; padding: 13px 14px; border: none; background: transparent;
+  cursor: pointer; font-family: 'Sora', sans-serif; font-size: 11px; font-weight: 600;
+  text-transform: uppercase; letter-spacing: 0.4px; color: rgba(255,255,255,0.3);
+  border-right: 1px solid rgba(255,255,255,0.06); transition: all 0.2s; white-space: nowrap;
+}
+.nav-btn:last-child { border-right: none; }
+.nav-btn:hover { color: rgba(255,255,255,0.62); }
+.nav-btn.active { color: #fff; background: rgba(255,255,255,0.05); }
+.nav-btn.active::after {
+  content: ''; display: block; height: 2px; background: var(--core);
+  margin-top: 6px; border-radius: 1px;
+}
+
+/* SECTIONS */
+.sect { display: none; }
+.sect.active { display: block; animation: fadeIn 0.3s ease; }
+@keyframes fadeIn { from { opacity:0; transform:translateY(6px); } to { opacity:1; transform:translateY(0); } }
+.sect-head { padding: 50px 56px 36px; border-bottom: 1px solid var(--border); }
+.sect-num {
+  font-family: 'IBM Plex Mono', monospace; font-size: 10px; letter-spacing: 3px;
+  text-transform: uppercase; color: var(--ink4); margin-bottom: 12px;
+}
+.sect-head h2 {
+  font-family: 'Spectral', serif; font-weight: 400; font-size: clamp(27px, 3.6vw, 43px);
+  line-height: 1.1; letter-spacing: -0.5px; max-width: 660px; margin-bottom: 14px;
+}
+.sect-head h2 em { font-style: italic; }
+.sect-head p { color: var(--ink3); max-width: 700px; font-size: 14.5px; }
+.wrap { padding: 36px 56px 60px; }
+
+/* prose */
+.prose { max-width: 760px; }
+.prose p { color: var(--ink3); margin-bottom: 18px; font-size: 14.5px; }
+.prose p strong { color: var(--ink2); font-weight: 500; }
+.prose p em { font-style: italic; color: var(--ink2); }
+.lead { font-size: 16px !important; color: var(--ink2) !important; }
+.prose ul { max-width: 760px; margin: 0 0 18px; padding-left: 0; list-style: none; }
+.prose ul li { color: var(--ink3); font-size: 14px; line-height: 1.7; padding: 4px 0 4px 22px; position: relative; }
+.prose ul li::before { content: '—'; position: absolute; left: 0; color: var(--core); font-weight: 500; }
+.prose ul li strong { color: var(--ink2); font-weight: 500; }
+
+.h3 {
+  font-family: 'IBM Plex Mono', monospace; font-size: 10px; letter-spacing: 2px;
+  text-transform: uppercase; color: var(--ink4); margin: 40px 0 16px;
+  padding-bottom: 8px; border-bottom: 1px solid var(--border); max-width: 760px;
+}
+.h3:first-child { margin-top: 0; }
+
+/* diagram */
+.diagram-wrap {
+  margin: 10px 0; padding: 36px 24px; background: var(--ink);
+  border: 1px solid var(--border2); overflow-x: auto;
+}
+.diagram-wrap svg { display: block; margin: 0 auto; }
+.diagram-cap {
+  font-family: 'IBM Plex Mono', monospace; font-size: 11px; color: var(--ink4);
+  text-align: center; margin-top: 14px; letter-spacing: 0.5px;
+}
+
+/* code/prompt block */
+.codeblock {
+  font-family: 'IBM Plex Mono', monospace; font-size: 12px; line-height: 1.7;
+  background: #1d1820; color: rgba(255,255,255,0.82); padding: 20px 22px;
+  margin: 18px 0; max-width: 820px; overflow-x: auto; white-space: pre-wrap; word-break: break-word;
+  border-left: 3px solid var(--core);
+}
+.codeblock .cm { color: #9a8f9e; font-style: italic; }
+.codeblock .hl { color: #c3a9e0; }
+.codeblock .tag { color: #7ec7e0; }
+
+/* vs comparison */
+.vs {
+  display: grid; grid-template-columns: 1fr 1fr; gap: 1px; background: var(--border2);
+  border: 1px solid var(--border2); margin: 18px 0; max-width: 880px;
+}
+.vs-col { background: var(--bg); padding: 22px 24px; }
+.vs-col.api { background: var(--bg2); }
+.vs-tag {
+  font-family: 'IBM Plex Mono', monospace; font-size: 9px; letter-spacing: 1.5px;
+  text-transform: uppercase; padding: 4px 10px; display: inline-block; margin-bottom: 14px; border: 1px solid;
+}
+.vs-tag.api { color: var(--ink3); border-color: var(--border2); }
+.vs-tag.bot { color: var(--core); border-color: var(--core); }
+.vs-q {
+  font-family: 'IBM Plex Mono', monospace; font-size: 12px; color: var(--ink2);
+  background: var(--bg3); padding: 8px 12px; border-left: 3px solid var(--ink4);
+  margin-bottom: 14px; line-height: 1.5;
+}
+.vs-out { font-size: 13px; color: var(--ink3); line-height: 1.65; }
+.vs-out strong { color: var(--ink2); font-weight: 500; }
+
+/* anatomy list */
+.anat { margin: 18px 0; max-width: 820px; }
+.anat-item {
+  display: grid; grid-template-columns: 5px 1fr; border: 1px solid var(--border);
+  border-bottom: none; background: var(--bg);
+}
+.anat-item:last-child { border-bottom: 1px solid var(--border); }
+.anat-accent { }
+.anat-body { padding: 15px 20px; }
+.anat-name {
+  font-weight: 600; font-size: 14px; color: var(--ink2); margin-bottom: 3px;
+  display: flex; align-items: baseline; gap: 10px;
+}
+.anat-name span {
+  font-family: 'IBM Plex Mono', monospace; font-size: 9px; font-weight: 400;
+  color: var(--ink4); letter-spacing: 1px; text-transform: uppercase;
+}
+.anat-desc { font-size: 13px; color: var(--ink3); line-height: 1.65; }
+.anat-desc strong { color: var(--ink2); font-weight: 500; }
+
+/* insight */
+.insight {
+  margin: 24px 0; padding: 18px 22px; border-left: 4px solid var(--gold);
+  background: var(--bg2); max-width: 820px;
+}
+.insight-label {
+  font-family: 'IBM Plex Mono', monospace; font-size: 9px; letter-spacing: 2px;
+  text-transform: uppercase; margin-bottom: 6px; color: var(--gold);
+}
+.insight p { font-size: 13.5px; line-height: 1.7; color: var(--ink2); margin: 0; }
+.insight.t { border-left-color: var(--teal); }
+.insight.t .insight-label { color: var(--teal); }
+
+/* key point */
+.key-point {
+  margin: 36px 0 8px; padding: 26px 30px; border-left: 4px solid var(--core);
+  background: var(--bg2); max-width: 820px;
+}
+.kp-label {
+  font-family: 'IBM Plex Mono', monospace; font-size: 9px; letter-spacing: 2px;
+  text-transform: uppercase; color: var(--core); margin-bottom: 8px;
+}
+.kp-text { font-family: 'Spectral', serif; font-size: 20px; line-height: 1.42; color: var(--ink2); font-style: italic; }
+.kp-sub { margin-top: 12px; font-size: 13px; color: var(--ink3); line-height: 1.65; }
+
+/* table */
+.sum-table {
+  width: 100%; max-width: 880px; border-collapse: collapse; font-size: 12.5px;
+  margin: 20px 0; border: 1px solid var(--border2);
+}
+.sum-table th, .sum-table td { padding: 11px 14px; border: 1px solid var(--border); text-align: left; vertical-align: top; }
+.sum-table thead th {
+  background: var(--ink); color: rgba(255,255,255,0.82); font-weight: 600;
+  font-size: 10px; text-transform: uppercase; letter-spacing: 0.3px;
+}
+.sum-table tbody tr:nth-child(even) { background: var(--bg2); }
+.sum-table td { color: var(--ink3); }
+.sum-table .p-cell { font-weight: 600; color: var(--ink2); white-space: nowrap; }
+.sum-table td strong { color: var(--ink2); font-weight: 500; }
+
+/* best practice block */
+.bp { margin: 28px 0 8px; border: 1px solid var(--good); background: var(--bg); max-width: 880px; }
+.bp-head {
+  background: var(--good); color: #fff; padding: 12px 22px; font-family: 'IBM Plex Mono', monospace;
+  font-size: 11px; letter-spacing: 2px; text-transform: uppercase; display: flex; align-items: center; gap: 10px;
+}
+.bp-head::before { content: '◆'; font-size: 11px; }
+.bp-body { padding: 0; }
+.bp-row {
+  display: grid; grid-template-columns: 1fr 1fr; gap: 1px; background: var(--border);
+  border-bottom: 1px solid var(--border);
+}
+.bp-row:last-child { border-bottom: none; }
+.bp-do, .bp-dont { padding: 14px 20px; background: var(--bg); }
+.bp-tag {
+  font-family: 'IBM Plex Mono', monospace; font-size: 9px; letter-spacing: 1.5px;
+  text-transform: uppercase; margin-bottom: 7px; display: flex; align-items: center; gap: 6px;
+}
+.bp-do .bp-tag { color: var(--good); }
+.bp-dont .bp-tag { color: var(--bad); }
+.bp-do .bp-tag::before { content: '✓'; font-weight: 700; }
+.bp-dont .bp-tag::before { content: '✕'; font-weight: 700; }
+.bp-text { font-size: 12.5px; color: var(--ink3); line-height: 1.6; }
+.bp-text strong { color: var(--ink2); font-weight: 500; }
+.bp-single {
+  padding: 14px 20px; border-bottom: 1px solid var(--border); font-size: 13px;
+  color: var(--ink3); line-height: 1.65;
+}
+.bp-single:last-child { border-bottom: none; }
+.bp-single strong { color: var(--ink2); font-weight: 600; }
+
+/* source note */
+.srcnote {
+  margin: 22px 0; padding: 14px 20px; background: var(--bg2); border: 1px dashed var(--border2);
+  max-width: 820px; font-size: 12px; color: var(--ink3); line-height: 1.6;
+}
+.srcnote b {
+  font-family: 'IBM Plex Mono', monospace; font-size: 9px; letter-spacing: 1.5px;
+  text-transform: uppercase; color: var(--ink4); display: block; margin-bottom: 4px;
+}
+
+/* footer */
+.footer {
+  background: var(--ink); color: rgba(255,255,255,0.22); padding: 30px 56px;
+  font-family: 'IBM Plex Mono', monospace; font-size: 10px; letter-spacing: 1px;
+  display: flex; justify-content: space-between;
+}
+
+@media (max-width: 860px) {
+  .masthead, .sect-head, .wrap, .footer { padding-left: 20px; padding-right: 20px; }
+  .vs, .bp-row { grid-template-columns: 1fr; }
+  .footer { flex-direction: column; gap: 6px; }
+}
+</style>
+</head>
+<body>
+
+<!-- HEADER -->
+<div class="masthead">
+  <div class="mh-eye">Serie Agenti AI · Parte II — Report 02</div>
+  <h1>Il system prompt:<br>dare un'<em>identità</em> al modello</h1>
+  <p class="mh-sub">Lo strato a più alto impatto sul comportamento, e il più invisibile. È il testo che il chatbot antepone a ogni conversazione per trasformare un predittore di testo in un assistente con un nome, uno stile, dei limiti e la consapevolezza del presente. È anche lo strato che, da solo, spiega gran parte della differenza tra API e chatbot.</p>
+</div>
+
+<!-- NAV -->
+<nav class="nav">
+  <button class="nav-btn active" onclick="show(0)">Cos'è</button>
+  <button class="nav-btn" onclick="show(1)">La dimostrazione</button>
+  <button class="nav-btn" onclick="show(2)">Anatomia</button>
+  <button class="nav-btn" onclick="show(3)">System vs user</button>
+  <button class="nav-btn" onclick="show(4)">Tecniche</button>
+  <button class="nav-btn" onclick="show(5)">Trade-off</button>
+  <button class="nav-btn" onclick="show(6)">Best practice</button>
+</nav>
+
+
+<!-- ═══════════════════════════ S0 — COS'È ═══════════════════════════ -->
+<div class="sect active" id="s0">
+  <div class="sect-head">
+    <div class="sect-num">Sezione 00 · Definizione</div>
+    <h2>Il testo <em>invisibile</em> che viene prima di tutto</h2>
+    <p>Tra il modello nudo e il tuo messaggio si interpone uno strato di istruzioni che tu non vedi e non scrivi. È il system prompt: la prima cosa che il modello legge, e quella che condiziona tutto ciò che segue.</p>
+  </div>
+  <div class="wrap">
+    <div class="prose">
+      <p class="lead">Nel Report 01 abbiamo visto che il modello nudo è congelato nel tempo, senza memoria e passivo. Il system prompt è il primo strato che inizia a compensare questi limiti: è un blocco di testo, scritto in linguaggio naturale, che viene <strong>anteposto a ogni conversazione</strong> e che dice al modello chi è, come deve comportarsi, cosa sa del presente e quali sono i suoi limiti.</p>
+
+      <p>La documentazione di Anthropic lo dichiara in modo esplicito: l'interfaccia web e le app di Claude usano un system prompt per fornire informazioni aggiornate — come la data corrente — all'inizio di <em>ogni</em> conversazione, e per incoraggiare comportamenti specifici, come fornire sempre i blocchi di codice in Markdown. Lo stesso documento aggiunge la frase che, per chi sviluppa, vale oro: <strong>questi system prompt non si applicano all'API</strong>.</p>
+
+      <p>Ecco perché questo è lo strato che, più di ogni altro, spiega l'intuizione di partenza della serie. Quando lo stesso modello "si comporta diversamente" tra chatbot e API, nella maggior parte dei casi la differenza nasce qui: il chatbot ha un system prompt ricco e curato, l'API parte da una pagina bianca.</p>
+
+      <p>Una nota terminologica utile, perché Anthropic la sottolinea spesso: il system prompt è anche il luogo del <strong>"role prompting"</strong>, cioè dell'assegnazione di un ruolo. Dare al modello un ruolo definito ("sei un assistente legale", "sei un insegnante di scienze paziente") è descritto dalla documentazione come uno dei modi più efficaci per orientarne tono e comportamento — e basta una sola frase per fare una differenza misurabile.</p>
+
+      <div class="key-point">
+        <div class="kp-label">Il principio di questo strato</div>
+        <div class="kp-text">Il modello non "è" Claude. Diventa Claude perché un system prompt, anteposto a ogni conversazione, gli dice di esserlo.</div>
+        <div class="kp-sub">Questa è l'idea più trasferibile dell'intero report: l'identità, il tono e i limiti di un agente non vivono nei pesi del modello, ma in un testo che tu controlli. È lo strato su cui hai il massimo potere con il minimo sforzo.</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+<!-- ═══════════════════════════ S1 — LA DIMOSTRAZIONE ═══════════════════════════ -->
+<div class="sect" id="s1">
+  <div class="sect-head">
+    <div class="sect-num">Sezione 01 · La prova concreta</div>
+    <h2>Lo stesso modello, <em>con e senza</em></h2>
+    <p>Il modo più diretto per misurare il peso di questo strato è osservare lo stesso modello rispondere con e senza system prompt. La differenza non è di sfumatura: è di sostanza.</p>
+  </div>
+  <div class="wrap">
+    <div class="prose">
+      <p>Anthropic pubblica i propri system prompt, e tutti iniziano con una struttura riconoscibile. L'apertura, semplificata, è di questo tenore:</p>
+    </div>
+
+    <div class="codeblock"><span class="cm">// estratto rappresentativo dell'apertura pubblicata da Anthropic</span>
+The assistant is Claude, created by Anthropic.
+The current date is <span class="hl">{{currentDateTime}}</span>.
+<span class="cm">// ...seguono informazioni sui prodotti, sullo stile,
+// sui comportamenti da adottare e sui limiti...</span></div>
+
+    <div class="prose">
+      <p>Bastano queste due righe per spiegare un comportamento che nel Report 00 avevamo osservato. Vediamolo di nuovo, ora che ne conosciamo la causa.</p>
+    </div>
+
+    <div class="vs">
+      <div class="vs-col api">
+        <span class="vs-tag api">API · system prompt vuoto</span>
+        <div class="vs-q">"Che giorno è oggi?"</div>
+        <div class="vs-out">Il modello non ha modo di saperlo. Rimanda al proprio knowledge cutoff o dichiara di non poter conoscere la data odierna. <strong>L'informazione non esiste nei suoi pesi.</strong></div>
+      </div>
+      <div class="vs-col">
+        <span class="vs-tag bot">Chatbot · system prompt attivo</span>
+        <div class="vs-q">"Che giorno è oggi?"</div>
+        <div class="vs-out">Risponde con la data esatta — perché la riga <em>"The current date is..."</em> gliel'ha appena fornita. <strong>L'informazione viene dallo strato, non dal modello.</strong></div>
+      </div>
+    </div>
+
+    <div class="vs">
+      <div class="vs-col api">
+        <span class="vs-tag api">API · system prompt vuoto</span>
+        <div class="vs-q">"Chi sei?"</div>
+        <div class="vs-out">Risposta variabile e generica: "sono un modello linguistico". Senza istruzioni, non ha un'identità stabile né un tono definito.</div>
+      </div>
+      <div class="vs-col">
+        <span class="vs-tag bot">Chatbot · system prompt attivo</span>
+        <div class="vs-q">"Chi sei?"</div>
+        <div class="vs-out">"Sono Claude, creato da Anthropic." Identità, tono e perfino la conoscenza dei prodotti correlati provengono dal system prompt.</div>
+      </div>
+    </div>
+
+    <div class="insight">
+      <div class="insight-label">Il dato che dà la misura dello strato</div>
+      <p>Analisi pubbliche dei system prompt di Claude hanno stimato che, in alcune versioni, il solo system prompt possa occupare nell'ordine di <strong>decine di migliaia di token</strong> — una quota che è stata stimata anche <em>oltre il 10% dell'intera finestra di contesto</em> — prima ancora che l'utente scriva una parola. Non è un'istruzione di una riga: è un documento corposo, iterato nel tempo, che definisce gran parte dell'esperienza del prodotto. Ed è interamente "a carico" del budget di contesto di cui parlavamo nel Report 01.</p>
+    </div>
+  </div>
+</div>
+
+
+<!-- ═══════════════════════════ S2 — ANATOMIA ═══════════════════════════ -->
+<div class="sect" id="s2">
+  <div class="sect-head">
+    <div class="sect-num">Sezione 02 · Cosa contiene</div>
+    <h2>L'<em>anatomia</em> di un system prompt</h2>
+    <p>Un system prompt di un chatbot maturo non è un blob disordinato: è organizzato in blocchi tematici. Conoscerli è la base per scriverne uno tuo, perché sono le stesse categorie di cui ogni agente ha bisogno.</p>
+  </div>
+  <div class="wrap">
+    <div class="prose">
+      <p>Ricostruendo dai system prompt pubblicati da Anthropic e dalla pratica documentata, un system prompt di un assistente generalista tende a contenere questi blocchi. Non tutti gli agenti li useranno tutti, ma questa è la "tavolozza" completa.</p>
+    </div>
+
+    <div class="anat">
+      <div class="anat-item">
+        <div class="anat-accent" style="background:var(--core)"></div>
+        <div class="anat-body">
+          <div class="anat-name">Identità <span>chi è</span></div>
+          <div class="anat-desc">L'apertura che assegna nome, creatore e natura: <strong>"The assistant is Claude, created by Anthropic"</strong>. Definisce il ruolo di base da cui discende tutto il resto.</div>
+        </div>
+      </div>
+      <div class="anat-item">
+        <div class="anat-accent" style="background:var(--teal)"></div>
+        <div class="anat-body">
+          <div class="anat-name">Informazioni temporali <span>cosa sa del presente</span></div>
+          <div class="anat-desc">La data corrente, e in genere indicazioni sul knowledge cutoff. Compensa direttamente il limite del modello "congelato nel tempo".</div>
+        </div>
+      </div>
+      <div class="anat-item">
+        <div class="anat-accent" style="background:var(--gold)"></div>
+        <div class="anat-body">
+          <div class="anat-name">Conoscenza di contesto <span>fatti utili da sapere</span></div>
+          <div class="anat-desc">Informazioni che il modello deve avere a portata di mano: nei system prompt di Claude, per esempio, dettagli sui prodotti Anthropic da comunicare se l'utente chiede.</div>
+        </div>
+      </div>
+      <div class="anat-item">
+        <div class="anat-accent" style="background:var(--warm)"></div>
+        <div class="anat-body">
+          <div class="anat-name">Comportamento e stile <span>come deve rispondere</span></div>
+          <div class="anat-desc">Le regole di tono, formato e atteggiamento: per esempio <strong>fornire sempre il codice in Markdown</strong>, essere conciso o esteso, quando usare elenchi. È il blocco che plasma la "voce" dell'assistente.</div>
+        </div>
+      </div>
+      <div class="anat-item">
+        <div class="anat-accent" style="background:var(--good)"></div>
+        <div class="anat-body">
+          <div class="anat-name">Capacità e strumenti <span>cosa può fare</span></div>
+          <div class="anat-desc">Le indicazioni su quali strumenti sono disponibili e quando usarli (ricerca, artefatti, codice). Prepara lo strato degli strumenti che vedremo nel Report 04.</div>
+        </div>
+      </div>
+      <div class="anat-item">
+        <div class="anat-accent" style="background:var(--bad)"></div>
+        <div class="anat-body">
+          <div class="anat-name">Limiti e regole di sicurezza <span>cosa non deve fare</span></div>
+          <div class="anat-desc">I confini di comportamento, i temi da evitare, le regole di rifiuto. È un primo livello di guardrail "morbido", incorporato nelle istruzioni, distinto dai guardrail tecnici del Report 07.</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="insight t">
+      <div class="insight-label">Una scelta di trasparenza notevole</div>
+      <p>Anthropic è tra i pochi a <strong>pubblicare i propri system prompt</strong> e ad aggiornarli versione per versione, evidenziando le modifiche. Per chi studia l'architettura è una miniera: leggere come cambia il system prompt nel tempo mostra quali comportamenti vengono "corretti via prompt" prima ancora che via addestramento. C'è però un limite dichiarato: la parte relativa alle <em>descrizioni degli strumenti</em> di norma non viene pubblicata, quindi la versione ufficiale non è la storia completa.</p>
+    </div>
+  </div>
+</div>
+
+
+<!-- ═══════════════════════════ S3 — SYSTEM VS USER ═══════════════════════════ -->
+<div class="sect" id="s3">
+  <div class="sect-head">
+    <div class="sect-num">Sezione 03 · La gerarchia</div>
+    <h2>System, <em>user</em> e la catena di priorità</h2>
+    <p>Capire perché esiste un canale separato per le istruzioni di sistema — distinto dai messaggi dell'utente — è essenziale per progettare agenti robusti e sicuri.</p>
+  </div>
+  <div class="wrap">
+    <div class="prose">
+      <p>Nell'API di Claude il system prompt non è un messaggio come gli altri: è un <strong>parametro a sé</strong>, separato dalla lista dei messaggi della conversazione. Tecnicamente, mentre i turni di dialogo hanno ruoli <em>user</em> e <em>assistant</em>, le istruzioni di sistema viaggiano in un campo dedicato. Questa separazione non è un dettaglio implementativo: riflette una <strong>gerarchia di autorità</strong>.</p>
+
+      <p>La catena, dalla più forte alla più debole, è in genere questa:</p>
+      <ul>
+        <li><strong>Addestramento del modello</strong> — i valori di base e i limiti invalicabili, fissati da Anthropic. Non sono sovrascrivibili da nessun prompt.</li>
+        <li><strong>System prompt</strong> — scritto da chi costruisce il prodotto (Anthropic per Claude.ai, l'operatore per un'app di terze parti, <em>tu</em> per il tuo agente). Definisce il quadro entro cui l'utente opera.</li>
+        <li><strong>Messaggi dell'utente</strong> — lavorano dentro lo spazio che il system prompt concede.</li>
+      </ul>
+
+      <p>La conseguenza pratica è importante: se un utente chiede qualcosa che il system prompt vieta, un modello ben allineato <strong>rifiuta</strong>, anche se la richiesta sembrerebbe ragionevole presa da sola. È esattamente questo meccanismo che permette allo stesso modello di comportarsi diversamente in prodotti diversi — Claude, un assistente di scrittura, un bot di customer care — pur essendo lo stesso LLM sotto il cofano: cambia il system prompt, cambia il prodotto.</p>
+
+      <div class="insight">
+        <div class="insight-label">Perché questo conta per i tuoi agenti</div>
+        <p>Metti nel system prompt ciò che deve valere <strong>sempre</strong>, a prescindere da cosa scrive l'utente: identità, regole, limiti, formato. Lascia nei messaggi user ciò che cambia di turno in turno. Confondere i due livelli — per esempio mettere le regole permanenti dentro il messaggio dell'utente — rende l'agente fragile e facile da "dirottare", perché un'istruzione user può essere sovrascritta da quella successiva, mentre il system prompt resta stabile per tutta la conversazione.</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+<!-- ═══════════════════════════ S4 — TECNICHE ═══════════════════════════ -->
+<div class="sect" id="s4">
+  <div class="sect-head">
+    <div class="sect-num">Sezione 04 · Come si scrive</div>
+    <h2>Le <em>tecniche</em> documentate da Anthropic</h2>
+    <p>Scrivere un system prompt efficace è un mestiere con principi precisi. Anthropic ne pubblica una guida; qui sintetizzo le tecniche che contano di più, tutte documentate.</p>
+  </div>
+  <div class="wrap">
+    <div class="prose">
+      <p>La guida ufficiale di prompt engineering di Anthropic ruota attorno a poche tecniche ad alto impatto. Le riporto in ordine di importanza pratica per chi scrive il system prompt di un agente.</p>
+    </div>
+
+    <div class="h3">1 · Chiarezza e precisione</div>
+    <div class="prose">
+      <p>Il principio numero uno: <strong>di' esattamente cosa vuoi</strong>, incluso ambito, formato e criteri di successo. I modelli rispondono molto meglio a istruzioni esplicite che a intenti lasciati impliciti. Un'istruzione vaga produce output che "manca il bersaglio"; un'istruzione che dichiara scopo, vincoli e formato in termini non ambigui riduce la deriva e le invenzioni.</p>
+    </div>
+
+    <div class="h3">2 · Assegnare un ruolo</div>
+    <div class="prose">
+      <p>Definire un ruolo nel system prompt focalizza comportamento e tono. La documentazione è netta: <strong>anche una sola frase fa una differenza misurabile</strong>. "Sei un insegnante di scienze paziente che spiega a un bambino di 10 anni" comunica in un colpo solo tono (paziente, adatto all'età) e profondità attese.</p>
+    </div>
+
+    <div class="h3">3 · Strutturare con tag XML</div>
+    <div class="prose">
+      <p>Questa è una specificità di Claude che vale la pena conoscere: i modelli Claude sono stati addestrati con abbondanza di <strong>tag in stile XML</strong>, perciò strutturare il prompt con tag come <span style="font-family:'IBM Plex Mono',monospace;font-size:12px;color:var(--core2)">&lt;instructions&gt;</span>, <span style="font-family:'IBM Plex Mono',monospace;font-size:12px;color:var(--core2)">&lt;context&gt;</span>, <span style="font-family:'IBM Plex Mono',monospace;font-size:12px;color:var(--core2)">&lt;examples&gt;</span> aiuta il modello a distinguere le parti e riduce le interpretazioni errate. Anthropic raccomanda nomi di tag coerenti e descrittivi, e l'annidamento quando il contenuto ha una gerarchia naturale.</p>
+    </div>
+
+    <div class="codeblock"><span class="cm">// esempio di system prompt strutturato per un agente</span>
+<span class="tag">&lt;role&gt;</span>
+Sei un assistente di supporto clienti per un negozio di biciclette.
+<span class="tag">&lt;/role&gt;</span>
+
+<span class="tag">&lt;rules&gt;</span>
+- Rispondi solo a domande su prodotti, ordini e resi.
+- Se non conosci una risposta, dillo: non inventare.
+- Tono cordiale, risposte brevi.
+<span class="tag">&lt;/rules&gt;</span>
+
+<span class="tag">&lt;examples&gt;</span>
+<span class="tag">&lt;example&gt;</span>
+  Utente: Posso restituire un casco usato?
+  Tu: I caschi sono restituibili entro 30 giorni se non danneggiati...
+<span class="tag">&lt;/example&gt;</span>
+<span class="tag">&lt;/examples&gt;</span></div>
+
+    <div class="h3">4 · Dare esempi (few-shot)</div>
+    <div class="prose">
+      <p>Mostrare al modello 3–5 esempi del tipo di input e dell'output desiderato è una delle leve più potenti. Anthropic raccomanda di racchiuderli in tag <span style="font-family:'IBM Plex Mono',monospace;font-size:12px;color:var(--core2)">&lt;example&gt;</span> (più esempi in <span style="font-family:'IBM Plex Mono',monospace;font-size:12px;color:var(--core2)">&lt;examples&gt;</span>) perché il modello li distingua dalle istruzioni, e suggerisce di puntare a 3–5 esempi per i risultati migliori. Gli esempi comunicano il formato meglio di qualsiasi descrizione.</p>
+    </div>
+
+    <div class="h3">5 · Invitare al ragionamento</div>
+    <div class="prose">
+      <p>Per compiti che richiedono analisi, invitare il modello a ragionare per passi prima di dare la risposta finale (il "chain-of-thought") migliora la qualità. Sui modelli a ragionamento più recenti, parte di questo avviene in modo nativo, ma per molti compiti resta utile chiederlo esplicitamente.</p>
+    </div>
+
+    <div class="insight t">
+      <div class="insight-label">Un principio di metodo che vale più di ogni tecnica</div>
+      <p>Una raccomandazione ricorrente di chi fa prompt engineering in Anthropic: <strong>non chiedere al modello ciò che puoi gestire nel codice</strong>. Formattazione deterministica, calcoli, logiche di validazione: se puoi farli fuori dall'LLM, falli fuori. Il system prompt deve istruire il modello su ciò che solo il modello può fare, non diventare un sostituto del codice. È una delle differenze più nette tra un agente fragile e uno robusto.</p>
+    </div>
+  </div>
+</div>
+
+
+<!-- ═══════════════════════════ S5 — TRADE-OFF ═══════════════════════════ -->
+<div class="sect" id="s5">
+  <div class="sect-head">
+    <div class="sect-num">Sezione 05 · Le scelte</div>
+    <h2>I <em>trade-off</em> del system prompt</h2>
+    <p>Decisioni con pro e contro, da soppesare in base al tuo caso d'uso. Qui non c'è una risposta universale: c'è un equilibrio da trovare.</p>
+  </div>
+  <div class="wrap">
+    <div class="bp" style="border-color:var(--ink3);">
+      <div class="bp-head" style="background:var(--ink3);">Trade-off · da soppesare nel tuo contesto</div>
+      <div class="bp-body">
+        <div class="bp-single"><strong>Specificità vs flessibilità.</strong> Un system prompt molto dettagliato rende il comportamento prevedibile ma rigido: l'agente gestisce male le situazioni non previste. Uno più aperto è adattabile ma meno controllabile. Più il dominio è critico (legale, medico, finanziario), più conviene spostarsi verso la specificità.</div>
+        <div class="bp-single"><strong>Lunghezza vs budget di contesto.</strong> Ogni istruzione che aggiungi migliora il controllo ma consuma token a ogni singola chiamata — per sempre. Un system prompt di 5.000 token si paga su <em>ogni</em> messaggio della conversazione. La domanda da farsi per ogni riga: "questo controllo vale il suo costo permanente?"</div>
+        <div class="bp-single"><strong>Istruzioni vs esempi.</strong> Puoi descrivere il comportamento a parole o mostrarlo con esempi. Gli esempi sono spesso più efficaci ma occupano più spazio. Per formati complessi, un buon esempio batte tre paragrafi di descrizione; per regole semplici, vale il contrario.</div>
+        <div class="bp-single"><strong>Tutto nel system prompt vs logica nel codice.</strong> È tentante delegare tutto al prompt. Ma comportamenti deterministici (validazioni, instradamenti, formattazioni fisse) sono più affidabili e più economici se gestiti nel codice attorno al modello, lasciando al system prompt solo ciò che richiede davvero il giudizio del modello.</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+<!-- ═══════════════════════════ S6 — BEST PRACTICE ═══════════════════════════ -->
+<div class="sect" id="s6">
+  <div class="sect-head">
+    <div class="sect-num">Sezione 06 · Cosa porto a casa</div>
+    <h2>Best practice del <em>system prompt</em></h2>
+    <p>Indicazioni azionabili per scrivere il system prompt dei tuoi agenti, nel formato fai-così / non-fare-così della serie.</p>
+  </div>
+  <div class="wrap">
+
+    <div class="bp">
+      <div class="bp-head">Best practice · scrivere il system prompt</div>
+      <div class="bp-body">
+        <div class="bp-row">
+          <div class="bp-do">
+            <div class="bp-tag">Fai così</div>
+            <div class="bp-text">Apri sempre <strong>assegnando un ruolo chiaro</strong>. Anche una sola frase ("sei un assistente legale specializzato in contratti") orienta tono e comportamento in modo misurabile.</div>
+          </div>
+          <div class="bp-dont">
+            <div class="bp-tag">Non fare così</div>
+            <div class="bp-text">Non lasciare il modello senza identità sperando che "capisca da solo" il contesto. Senza ruolo, tono e profondità delle risposte diventano imprevedibili.</div>
+          </div>
+        </div>
+        <div class="bp-row">
+          <div class="bp-do">
+            <div class="bp-tag">Fai così</div>
+            <div class="bp-text">Struttura il prompt con <strong>tag XML</strong> (<span style="font-family:'IBM Plex Mono',monospace;font-size:11px">&lt;role&gt;</span>, <span style="font-family:'IBM Plex Mono',monospace;font-size:11px">&lt;rules&gt;</span>, <span style="font-family:'IBM Plex Mono',monospace;font-size:11px">&lt;examples&gt;</span>): Claude è addestrato a riconoscerli e ne trae confini più netti.</div>
+          </div>
+          <div class="bp-dont">
+            <div class="bp-tag">Non fare così</div>
+            <div class="bp-text">Non scrivere un muro di testo indistinto dove istruzioni, contesto ed esempi si confondono: il modello fatica a capire cosa è regola e cosa è esempio.</div>
+          </div>
+        </div>
+        <div class="bp-row">
+          <div class="bp-do">
+            <div class="bp-tag">Fai così</div>
+            <div class="bp-text">Includi <strong>3–5 esempi</strong> del comportamento desiderato in tag <span style="font-family:'IBM Plex Mono',monospace;font-size:11px">&lt;example&gt;</span>. Per i formati, un esempio vale più di una descrizione.</div>
+          </div>
+          <div class="bp-dont">
+            <div class="bp-tag">Non fare così</div>
+            <div class="bp-text">Non descrivere a parole un formato complesso sperando che il modello lo indovini: mostraglielo. E non esagerare con decine di esempi: gonfiano il contesto senza aggiungere chiarezza.</div>
+          </div>
+        </div>
+        <div class="bp-row">
+          <div class="bp-do">
+            <div class="bp-tag">Fai così</div>
+            <div class="bp-text">Metti nel system prompt ciò che deve valere <strong>sempre</strong> (identità, regole, limiti, formato), separandolo nettamente da ciò che cambia turno per turno.</div>
+          </div>
+          <div class="bp-dont">
+            <div class="bp-tag">Non fare così</div>
+            <div class="bp-text">Non mettere le regole permanenti nei messaggi dell'utente: sono più facili da sovrascrivere e rendono l'agente fragile e dirottabile.</div>
+          </div>
+        </div>
+        <div class="bp-row">
+          <div class="bp-do">
+            <div class="bp-tag">Fai così</div>
+            <div class="bp-text">Inietta tu le <strong>informazioni sul presente</strong> (data, contesto, dati freschi) come fa il chatbot con <em>"The current date is..."</em>: il modello non le conosce.</div>
+          </div>
+          <div class="bp-dont">
+            <div class="bp-tag">Non fare così</div>
+            <div class="bp-text">Non dare per scontato che il modello sappia che giorno è o conosca eventi recenti: senza iniezione esplicita, risponderà in base al solo addestramento.</div>
+          </div>
+        </div>
+        <div class="bp-row">
+          <div class="bp-do">
+            <div class="bp-tag">Fai così</div>
+            <div class="bp-text"><strong>Itera.</strong> Tratta il system prompt come codice vivo: misura, correggi, riprova. Anthropic stessa aggiorna i propri prompt versione dopo versione.</div>
+          </div>
+          <div class="bp-dont">
+            <div class="bp-tag">Non fare così</div>
+            <div class="bp-text">Non scriverlo una volta e dimenticarlo. Un system prompt mai rivisto è la causa più comune di comportamenti incoerenti che "non si capisce da dove vengano".</div>
+          </div>
+        </div>
+        <div class="bp-row">
+          <div class="bp-do">
+            <div class="bp-tag">Fai così</div>
+            <div class="bp-text">Delega al <strong>codice</strong> ciò che è deterministico (validazioni, formattazioni fisse, calcoli) e riserva il prompt a ciò che richiede il giudizio del modello.</div>
+          </div>
+          <div class="bp-dont">
+            <div class="bp-tag">Non fare così</div>
+            <div class="bp-text">Non trasformare il system prompt in un sostituto del codice: istruzioni su compiti meccanici sono meno affidabili e più costose di poche righe di programma.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="h3">Checklist dei blocchi di un system prompt</div>
+    <table class="sum-table">
+      <thead>
+        <tr><th>Blocco</th><th>Risponde alla domanda</th><th>Sempre necessario?</th></tr>
+      </thead>
+      <tbody>
+        <tr><td class="p-cell">Identità / ruolo</td><td>Chi è l'agente?</td><td><strong>Sì</strong> — è la base di tutto</td></tr>
+        <tr><td class="p-cell">Info temporali</td><td>Cosa sa del presente?</td><td>Se serve attualità</td></tr>
+        <tr><td class="p-cell">Conoscenza di contesto</td><td>Quali fatti deve avere a portata?</td><td>Dipende dal dominio</td></tr>
+        <tr><td class="p-cell">Comportamento / stile</td><td>Come deve rispondere?</td><td><strong>Sì</strong> — definisce la voce</td></tr>
+        <tr><td class="p-cell">Capacità / strumenti</td><td>Cosa può fare?</td><td>Se ha strumenti (Report 04)</td></tr>
+        <tr><td class="p-cell">Limiti / sicurezza</td><td>Cosa non deve fare?</td><td><strong>Sì</strong> in produzione</td></tr>
+        <tr><td class="p-cell">Esempi</td><td>Che aspetto ha una buona risposta?</td><td>Caldamente consigliato</td></tr>
+      </tbody>
+    </table>
+
+    <div class="srcnote">
+      <b>Affidabilità di queste indicazioni</b>
+      L'esistenza e lo scopo del system prompt di Claude, l'apertura <em>"The assistant is Claude..."</em>, l'iniezione della data, l'istruzione sul Markdown, la separazione del system prompt dall'API e le tecniche di prompt engineering (ruolo, tag XML, 3–5 esempi, chiarezza) sono <strong>documentate pubblicamente</strong> da Anthropic. La suddivisione in sei "blocchi" della Sezione 02 è una <strong>schematizzazione mia</strong> a fini didattici, ricostruita dai prompt pubblicati: utile come tavolozza, non una struttura ufficiale rigida. Le stime sulla dimensione in token del system prompt provengono da analisi di terze parti e variano per versione.
+    </div>
+
+    <div class="key-point">
+      <div class="kp-label">Verso il Report 03</div>
+      <div class="kp-text">Il system prompt dà un'identità stabile, ma vale per ogni conversazione allo stesso modo. Manca qualcosa che cambi nel tempo: il ricordo.</div>
+      <div class="kp-sub">Il prossimo strato — contesto e memoria — affronta il secondo limite del modello nudo: l'assenza di memoria tra un turno e l'altro, e tra una conversazione e l'altra.</div>
+    </div>
+
+  </div>
+</div>
+
+
+<!-- FOOTER -->
+<div class="footer">
+  <span>Serie Agenti AI · Parte II — Report 02 · Il System Prompt</span>
+  <span>Maggio 2026</span>
+</div>
+
+<script>
+function show(n) {
+  document.querySelectorAll('.sect').forEach(s => s.classList.remove('active'));
+  document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('s'+n).classList.add('active');
+  document.querySelectorAll('.nav-btn')[n].classList.add('active');
+  window.scrollTo({top:0, behavior:'smooth'});
+}
+</script>
+
+</body>
+</html>

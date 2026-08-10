@@ -1,0 +1,524 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Skills e Configurazione — Estendere senza Riaddestrare</title>
+<link href="https://fonts.googleapis.com/css2?family=Spectral:ital,wght@0,300;0,400;0,500;0,600;1,400&family=Sora:wght@200;300;400;500;600;700;800&family=IBM+Plex+Mono:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg:     #f7f4ee;
+  --bg2:    #f0ebe1;
+  --bg3:    #e7dfce;
+  --ink:    #1a1610;
+  --ink2:   #2b251a;
+  --ink3:   #61584734;
+  --ink3:   #635a47;
+  --ink4:   #9c917b;
+  --border: #dad1c0;
+  --border2:#c9bea9;
+
+  --core:   #c47a00;
+  --core2:  #9a5f00;
+  --warm:   #b3402a;
+  --good:   #3d7a45;
+  --bad:    #b3402a;
+  --teal:   #2e7d9c;
+  --violet: #7b5ea7;
+  --gold:   #b8860b;
+  --blue:   #3a7ca5;
+}
+
+* { margin:0; padding:0; box-sizing:border-box; }
+html { scroll-behavior:smooth; }
+
+body { background: var(--bg); color: var(--ink); font-family: 'Sora', sans-serif; font-weight: 300; font-size: 14px; line-height: 1.78; }
+
+.masthead { background: var(--ink); color: rgba(255,255,255,0.9); padding: 64px 56px 54px; position: relative; overflow: hidden; }
+.masthead::before { content: ''; position: absolute; inset: 0; background: radial-gradient(circle at 80% 35%, rgba(196,122,0,0.30) 0, transparent 45%), repeating-linear-gradient(0deg, rgba(255,255,255,0.012) 0, rgba(255,255,255,0.012) 1px, transparent 1px, transparent 58px); pointer-events: none; }
+.mh-eye { font-family: 'IBM Plex Mono', monospace; font-size: 10px; letter-spacing: 3px; text-transform: uppercase; color: rgba(255,255,255,0.28); margin-bottom: 20px; position: relative; }
+.masthead h1 { font-family: 'Spectral', serif; font-weight: 400; font-size: clamp(33px, 5.2vw, 60px); line-height: 1.06; letter-spacing: -1px; max-width: 720px; position: relative; }
+.masthead h1 em { font-style: italic; color: #f0b860; }
+.mh-sub { margin-top: 22px; font-size: 15px; font-weight: 300; color: rgba(255,255,255,0.4); max-width: 690px; line-height: 1.72; position: relative; }
+
+.nav { background: var(--ink2); position: sticky; top: 0; z-index: 100; display: flex; overflow-x: auto; border-bottom: 1px solid rgba(255,255,255,0.06); }
+.nav-btn { flex: 1; min-width: 116px; padding: 13px 14px; border: none; background: transparent; cursor: pointer; font-family: 'Sora', sans-serif; font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.4px; color: rgba(255,255,255,0.3); border-right: 1px solid rgba(255,255,255,0.06); transition: all 0.2s; white-space: nowrap; }
+.nav-btn:last-child { border-right: none; }
+.nav-btn:hover { color: rgba(255,255,255,0.62); }
+.nav-btn.active { color: #fff; background: rgba(255,255,255,0.05); }
+.nav-btn.active::after { content: ''; display: block; height: 2px; background: var(--core); margin-top: 6px; border-radius: 1px; }
+
+.sect { display: none; }
+.sect.active { display: block; animation: fadeIn 0.3s ease; }
+@keyframes fadeIn { from { opacity:0; transform:translateY(6px); } to { opacity:1; transform:translateY(0); } }
+.sect-head { padding: 50px 56px 36px; border-bottom: 1px solid var(--border); }
+.sect-num { font-family: 'IBM Plex Mono', monospace; font-size: 10px; letter-spacing: 3px; text-transform: uppercase; color: var(--ink4); margin-bottom: 12px; }
+.sect-head h2 { font-family: 'Spectral', serif; font-weight: 400; font-size: clamp(27px, 3.6vw, 43px); line-height: 1.1; letter-spacing: -0.5px; max-width: 660px; margin-bottom: 14px; }
+.sect-head h2 em { font-style: italic; }
+.sect-head p { color: var(--ink3); max-width: 700px; font-size: 14.5px; }
+.wrap { padding: 36px 56px 60px; }
+
+.prose { max-width: 760px; }
+.prose p { color: var(--ink3); margin-bottom: 18px; font-size: 14.5px; }
+.prose p strong { color: var(--ink2); font-weight: 500; }
+.prose p em { font-style: italic; color: var(--ink2); }
+.lead { font-size: 16px !important; color: var(--ink2) !important; }
+.prose ul { max-width: 760px; margin: 0 0 18px; padding-left: 0; list-style: none; }
+.prose ul li { color: var(--ink3); font-size: 14px; line-height: 1.7; padding: 4px 0 4px 22px; position: relative; }
+.prose ul li::before { content: '—'; position: absolute; left: 0; color: var(--core); font-weight: 500; }
+.prose ul li strong { color: var(--ink2); font-weight: 500; }
+
+.h3 { font-family: 'IBM Plex Mono', monospace; font-size: 10px; letter-spacing: 2px; text-transform: uppercase; color: var(--ink4); margin: 40px 0 16px; padding-bottom: 8px; border-bottom: 1px solid var(--border); max-width: 760px; }
+.h3:first-child { margin-top: 0; }
+
+.diagram-wrap { margin: 10px 0; padding: 36px 24px; background: var(--ink); border: 1px solid var(--border2); overflow-x: auto; }
+.diagram-wrap svg { display: block; margin: 0 auto; }
+.diagram-cap { font-family: 'IBM Plex Mono', monospace; font-size: 11px; color: var(--ink4); text-align: center; margin-top: 14px; letter-spacing: 0.5px; }
+
+.codeblock { font-family: 'IBM Plex Mono', monospace; font-size: 12px; line-height: 1.7; background: #16120c; color: rgba(255,255,255,0.82); padding: 20px 22px; margin: 18px 0; max-width: 820px; overflow-x: auto; white-space: pre-wrap; word-break: break-word; border-left: 3px solid var(--core); }
+.codeblock .cm { color: #9c917b; font-style: italic; }
+.codeblock .hl { color: #f0b860; }
+.codeblock .k { color: #7fc0e0; }
+
+.layers-cfg { margin: 18px 0; max-width: 820px; }
+.lc { display: grid; grid-template-columns: 5px 1fr; border: 1px solid var(--border); border-bottom: none; background: var(--bg); }
+.lc:last-child { border-bottom: 1px solid var(--border); }
+.lc-body { padding: 15px 20px; }
+.lc-name { font-weight: 600; font-size: 14px; color: var(--ink2); margin-bottom: 3px; display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap; }
+.lc-name span { font-family: 'IBM Plex Mono', monospace; font-size: 9px; font-weight: 400; color: var(--ink4); letter-spacing: 1px; text-transform: uppercase; }
+.lc-tag { font-family: 'IBM Plex Mono', monospace; font-size: 8px; padding: 2px 7px; border: 1px solid; letter-spacing: 0.5px; text-transform: uppercase; }
+.lc-tag.always { color: var(--blue); border-color: var(--blue); }
+.lc-tag.demand { color: var(--core2); border-color: var(--core); }
+.lc-desc { font-size: 13px; color: var(--ink3); line-height: 1.65; }
+.lc-desc strong { color: var(--ink2); font-weight: 500; }
+
+.types { display: grid; grid-template-columns: 1fr 1fr; gap: 1px; background: var(--border2); border: 1px solid var(--border2); margin: 20px 0; max-width: 880px; }
+.type-col { background: var(--bg); padding: 20px 22px; }
+.type-name { font-weight: 600; font-size: 15px; color: var(--ink2); margin-bottom: 4px; }
+.type-where { font-family: 'IBM Plex Mono', monospace; font-size: 9px; letter-spacing: 1px; text-transform: uppercase; color: var(--core2); margin-bottom: 12px; }
+.type-desc { font-size: 12.5px; color: var(--ink3); line-height: 1.62; }
+.type-desc strong { color: var(--ink2); font-weight: 500; }
+.type-desc em { font-style: italic; color: var(--ink2); }
+
+.insight { margin: 24px 0; padding: 18px 22px; border-left: 4px solid var(--teal); background: var(--bg2); max-width: 820px; }
+.insight-label { font-family: 'IBM Plex Mono', monospace; font-size: 9px; letter-spacing: 2px; text-transform: uppercase; margin-bottom: 6px; color: var(--teal); }
+.insight p { font-size: 13.5px; line-height: 1.7; color: var(--ink2); margin: 0; }
+.insight.w { border-left-color: var(--warm); }
+.insight.w .insight-label { color: var(--warm); }
+.insight.g { border-left-color: var(--gold); }
+.insight.g .insight-label { color: var(--gold); }
+.insight.v { border-left-color: var(--violet); }
+.insight.v .insight-label { color: var(--violet); }
+
+.key-point { margin: 36px 0 8px; padding: 26px 30px; border-left: 4px solid var(--core); background: var(--bg2); max-width: 820px; }
+.kp-label { font-family: 'IBM Plex Mono', monospace; font-size: 9px; letter-spacing: 2px; text-transform: uppercase; color: var(--core2); margin-bottom: 8px; }
+.kp-text { font-family: 'Spectral', serif; font-size: 20px; line-height: 1.42; color: var(--ink2); font-style: italic; }
+.kp-sub { margin-top: 12px; font-size: 13px; color: var(--ink3); line-height: 1.65; }
+
+.sum-table { width: 100%; max-width: 880px; border-collapse: collapse; font-size: 12.5px; margin: 20px 0; border: 1px solid var(--border2); }
+.sum-table th, .sum-table td { padding: 11px 14px; border: 1px solid var(--border); text-align: left; vertical-align: top; }
+.sum-table thead th { background: var(--ink); color: rgba(255,255,255,0.82); font-weight: 600; font-size: 10px; text-transform: uppercase; letter-spacing: 0.3px; }
+.sum-table tbody tr:nth-child(even) { background: var(--bg2); }
+.sum-table td { color: var(--ink3); }
+.sum-table .p-cell { font-weight: 600; color: var(--ink2); white-space: nowrap; }
+.sum-table td strong { color: var(--ink2); font-weight: 500; }
+
+.bp { margin: 28px 0 8px; border: 1px solid var(--good); background: var(--bg); max-width: 880px; }
+.bp-head { background: var(--good); color: #fff; padding: 12px 22px; font-family: 'IBM Plex Mono', monospace; font-size: 11px; letter-spacing: 2px; text-transform: uppercase; display: flex; align-items: center; gap: 10px; }
+.bp-head::before { content: '\25C6'; font-size: 11px; }
+.bp-body { padding: 0; }
+.bp-row { display: grid; grid-template-columns: 1fr 1fr; gap: 1px; background: var(--border); border-bottom: 1px solid var(--border); }
+.bp-row:last-child { border-bottom: none; }
+.bp-do, .bp-dont { padding: 14px 20px; background: var(--bg); }
+.bp-tag { font-family: 'IBM Plex Mono', monospace; font-size: 9px; letter-spacing: 1.5px; text-transform: uppercase; margin-bottom: 7px; display: flex; align-items: center; gap: 6px; }
+.bp-do .bp-tag { color: var(--good); }
+.bp-dont .bp-tag { color: var(--bad); }
+.bp-do .bp-tag::before { content: '\2713'; font-weight: 700; }
+.bp-dont .bp-tag::before { content: '\2717'; font-weight: 700; }
+.bp-text { font-size: 12.5px; color: var(--ink3); line-height: 1.6; }
+.bp-text strong { color: var(--ink2); font-weight: 500; }
+.bp-single { padding: 14px 20px; border-bottom: 1px solid var(--border); font-size: 13px; color: var(--ink3); line-height: 1.65; }
+.bp-single:last-child { border-bottom: none; }
+.bp-single strong { color: var(--ink2); font-weight: 600; }
+
+.srcnote { margin: 22px 0; padding: 14px 20px; background: var(--bg2); border: 1px dashed var(--border2); max-width: 820px; font-size: 12px; color: var(--ink3); line-height: 1.6; }
+.srcnote b { font-family: 'IBM Plex Mono', monospace; font-size: 9px; letter-spacing: 1.5px; text-transform: uppercase; color: var(--ink4); display: block; margin-bottom: 4px; }
+
+.footer { background: var(--ink); color: rgba(255,255,255,0.22); padding: 30px 56px; font-family: 'IBM Plex Mono', monospace; font-size: 10px; letter-spacing: 1px; display: flex; justify-content: space-between; }
+
+@media (max-width: 860px) {
+  .masthead, .sect-head, .wrap, .footer { padding-left: 20px; padding-right: 20px; }
+  .types, .bp-row { grid-template-columns: 1fr; }
+  .footer { flex-direction: column; gap: 6px; }
+}
+</style>
+</head>
+<body>
+
+<div class="masthead">
+  <div class="mh-eye">Serie Agenti AI &middot; Parte II &mdash; Report 06</div>
+  <h1>Skills e configurazione:<br>estendere senza <em>riaddestrare</em></h1>
+  <p class="mh-sub">Identit&agrave;, memoria, strumenti e conoscenza non bastano a spiegare come un chatbot cresce in capacit&agrave;. Questo strato &egrave; quello meno noto: come pacchetti di istruzioni, preferenze e competenze si aggiungono e si attivano al bisogno &mdash; estendendo il modello senza toccarne i pesi.</p>
+</div>
+
+<nav class="nav">
+  <button class="nav-btn active" onclick="show(0)">Il problema</button>
+  <button class="nav-btn" onclick="show(1)">Gli strati</button>
+  <button class="nav-btn" onclick="show(2)">Le Skills</button>
+  <button class="nav-btn" onclick="show(3)">Progressive disclosure</button>
+  <button class="nav-btn" onclick="show(4)">Due tipi</button>
+  <button class="nav-btn" onclick="show(5)">Trade-off</button>
+  <button class="nav-btn" onclick="show(6)">Best practice</button>
+</nav>
+
+
+<!-- S0 -->
+<div class="sect active" id="s0">
+  <div class="sect-head">
+    <div class="sect-num">Sezione 00 &middot; Il problema da risolvere</div>
+    <h2>Come si fa <em>crescere</em> un assistente</h2>
+    <p>I limiti del modello nudo sono colmati. Ma resta una domanda di prodotto: come si aggiungono competenze e comportamenti specifici senza l'unico strumento ovvio &mdash; e proibitivo &mdash; di riaddestrare il modello?</p>
+  </div>
+  <div class="wrap">
+    <div class="prose">
+      <p class="lead">Immagina di voler insegnare a Claude il formato esatto dei messaggi di commit della tua azienda, o il modo in cui il tuo studio legale redige le clausole di un NDA, o come compilare un certo tipo di modulo PDF. Il modello "sa" gi&agrave; fare commit, clausole e moduli in generale &mdash; ma non <em>nel tuo modo</em>. Come glielo insegni?</p>
+
+      <p>La via apparentemente ovvia &mdash; <strong>riaddestrare o fare fine-tuning</strong> del modello &mdash; &egrave; quasi sempre quella sbagliata per questo scopo: &egrave; costosa, lenta, richiede dati e competenze, e va rifatta a ogni cambiamento. Useresti un martello pneumatico per appendere un quadro. Il chatbot maturo risolve il problema in modo molto pi&ugrave; leggero: con <strong>strati di configurazione</strong> che si sovrappongono al modello e ne estendono il comportamento senza toccarne i pesi.</p>
+
+      <p>Questo strato della cipolla raccoglie tutto ci&ograve;: le istruzioni personalizzate sempre attive, gli stili di scrittura, e soprattutto le <strong>Skills</strong> &mdash; pacchetti di competenza che si attivano solo quando servono. &Egrave; lo strato meno raccontato perch&eacute; &egrave; il pi&ugrave; recente e il pi&ugrave; "di prodotto", ma per chi costruisce agenti &egrave; tra i pi&ugrave; preziosi: &egrave; qui che un agente generico diventa <em>il tuo</em> agente.</p>
+
+      <div class="key-point">
+        <div class="kp-label">Il principio di questo strato</div>
+        <div class="kp-text">Non si riaddestra il modello per specializzarlo: gli si forniscono istruzioni e competenze al momento giusto. La specializzazione vive nella configurazione, non nei pesi.</div>
+        <div class="kp-sub">&Egrave; la stessa lezione del Report 02 portata all'estremo: cos&igrave; come l'identit&agrave; sta nel system prompt e non nei pesi, anche le competenze specifiche stanno in file di configurazione che puoi scrivere, versionare e cambiare in un istante.</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+<!-- S1 -->
+<div class="sect" id="s1">
+  <div class="sect-head">
+    <div class="sect-num">Sezione 01 &middot; La mappa</div>
+    <h2>Gli strati di <em>configurazione</em></h2>
+    <p>"Configurazione" non &egrave; una cosa sola. Esistono pi&ugrave; livelli, distinti da una propriet&agrave; chiave: se sono sempre attivi o se si caricano solo al bisogno.</p>
+  </div>
+  <div class="wrap">
+    <div class="prose">
+      <p>La distinzione che organizza tutto questo strato &egrave; <strong>sempre-attivo vs su-richiesta</strong>. Alcune configurazioni sono caricate in ogni conversazione, a prescindere dal compito; altre restano "sullo scaffale" e vengono prelevate solo quando il compito le rende rilevanti. Ecco i livelli principali, dal pi&ugrave; sempre-presente al pi&ugrave; on-demand.</p>
+    </div>
+
+    <div class="layers-cfg">
+      <div class="lc">
+        <div style="background:var(--blue)"></div>
+        <div class="lc-body">
+          <div class="lc-name">Istruzioni personalizzate <span>custom instructions</span> <span class="lc-tag always">sempre attivo</span></div>
+          <div class="lc-desc">Un blocco di testo incluso in <strong>ogni</strong> conversazione: le tue preferenze di base, lo stile, il contesto ricorrente. Negli strumenti per sviluppatori prende forme come il file di istruzioni di progetto. Leggero (poche centinaia di parole) e applicato a tutto. Sono, di fatto, un'estensione del system prompt del Report 02 che <em>tu</em> controlli.</div>
+        </div>
+      </div>
+      <div class="lc">
+        <div style="background:var(--violet)"></div>
+        <div class="lc-body">
+          <div class="lc-name">Stili <span>writing styles</span> <span class="lc-tag always">sempre attivo</span></div>
+          <div class="lc-desc">Configurazioni che plasmano <strong>tono e formato</strong> dell'output (conciso, formale, didattico...). Sono una specializzazione mirata dello strato "comportamento e stile" del system prompt, estratta in un controllo a s&eacute; perch&eacute; l'utente la cambi con un gesto.</div>
+        </div>
+      </div>
+      <div class="lc">
+        <div style="background:var(--core)"></div>
+        <div class="lc-body">
+          <div class="lc-name">Skills <span>agent skills</span> <span class="lc-tag demand">su richiesta</span></div>
+          <div class="lc-desc">Pacchetti di competenza &mdash; istruzioni, modelli, script &mdash; che si caricano <strong>solo quando il compito li rende rilevanti</strong>. &Egrave; il cuore di questo report e la novit&agrave; pi&ugrave; significativa: permettono di avere decine di competenze installate senza pesare sul contesto finch&eacute; non servono.</div>
+        </div>
+      </div>
+      <div class="lc">
+        <div style="background:var(--green)"></div>
+        <div class="lc-body">
+          <div class="lc-name">Connettori esterni <span>MCP</span> <span class="lc-tag demand">su richiesta</span></div>
+          <div class="lc-desc">Collegamenti a servizi e strumenti esterni (database, CI/CD, app) che abilitano azioni che l'agente da solo non potrebbe compiere. Tecnicamente si appoggiano allo strato strumenti del Report 04, ma sul piano della <em>configurazione</em> sono un livello che attivi quando ti serve.</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="insight g">
+      <div class="insight-label">Perch&eacute; questa distinzione &egrave; importante</div>
+      <p>Ci&ograve; che &egrave; <strong>sempre attivo</strong> consuma contesto a ogni messaggio (come il system prompt): va tenuto leggero. Ci&ograve; che &egrave; <strong>su richiesta</strong> consuma contesto solo quando serve: pu&ograve; essere ricco e numeroso. Confondere i due piani &mdash; mettere tutto sempre-attivo &mdash; &egrave; l'errore che gonfia il contesto e fa lievitare costi e context rot. La regola pratica: poche istruzioni stabili sempre attive, molte competenze specifiche su richiesta.</p>
+    </div>
+  </div>
+</div>
+
+
+<!-- S2 -->
+<div class="sect" id="s2">
+  <div class="sect-head">
+    <div class="sect-num">Sezione 02 &middot; Il cuore dello strato</div>
+    <h2>Cosa sono le <em>Skills</em></h2>
+    <p>Le Agent Skills sono la forma pi&ugrave; potente e interessante di questo strato. Il loro modello mentale &egrave; semplice e illuminante: una libreria di competenze da cui l'agente preleva ci&ograve; che gli serve.</p>
+  </div>
+  <div class="wrap">
+    <div class="prose">
+      <p>Una Skill, nella sua essenza, &egrave; <strong>una cartella con un file SKILL.md</strong> &mdash; istruzioni e condizioni di attivazione &mdash; pi&ugrave; eventuali file di supporto: modelli, esempi, script. Il modello mentale, secondo la documentazione e la pratica, &egrave; quello di una <em>libreria</em>: l'agente ha uno scaffale di competenze e tira gi&ugrave; quella che gli serve quando gli serve. &Egrave; profondamente diverso da un system prompt, che gira in <em>ogni</em> sessione: la Skill si attiva solo quando il compito la richiede.</p>
+
+      <p>Il file SKILL.md ha una struttura minima e leggibile: un <strong>frontmatter YAML</strong> con due campi &mdash; <em>name</em> e <em>description</em> &mdash; seguito dalle istruzioni in Markdown. Ecco l'esempio minimo di una skill che insegna a scrivere test nello stile di un team:</p>
+    </div>
+
+    <div class="codeblock"><span class="cm"># ~/.claude/skills/test-writer/SKILL.md</span>
+<span class="k">---</span>
+<span class="k">name:</span> test-writer
+<span class="k">description:</span> <span class="hl">Usa questa skill quando scrivi o estendi test.</span>
+<span class="hl">  Copre Vitest e Playwright, e le preferenze di stile della casa</span>
+<span class="hl">  (integration test sopra gli unit, niente mock per il database).</span>
+<span class="k">---</span>
+
+<span class="cm"># Come scriviamo i test qui</span>
+- Preferisci i test di integrazione agli unit test.
+- Usa Vitest per la logica, Playwright per l'end-to-end.
+- Niente mock del database: usa un'istanza di test reale.
+<span class="cm"># ...altre istruzioni, esempi, riferimenti a file...</span></div>
+
+    <div class="prose">
+      <p>La <strong>description &egrave; la parte critica</strong>, esattamente come per gli strumenti del Report 04: &egrave; ci&ograve; che il modello legge per decidere se la skill &egrave; rilevante per il compito corrente. Una description vaga non si attiva quando dovrebbe; una precisa fa scattare la skill al momento giusto. Non a caso esiste uno strumento ufficiale, lo Skill Creator, che ottimizza proprio le description misurando il "trigger rate" su esempi di prova &mdash; la stessa disciplina del prompt engineering, applicata all'attivazione.</p>
+
+      <p>Tre proprietà rendono le Skills particolarmente potenti. Sono <strong>portabili</strong>: lo stesso formato SKILL.md funziona su pi&ugrave; agenti compatibili (esiste una specifica aperta, agentskills.io), quindi una skill scritta una volta vale in pi&ugrave; ambienti. Sono <strong>componibili</strong>: l'agente pu&ograve; usare pi&ugrave; skills insieme automaticamente, anche se una skill non pu&ograve; richiamarne esplicitamente un'altra. E possono <strong>eseguire codice</strong>: quando le istruzioni citano uno script, l'agente lo esegue &mdash; e qui c'&egrave; un dettaglio cruciale di efficienza, che vediamo nella prossima sezione.</p>
+    </div>
+  </div>
+</div>
+
+
+<!-- S3 -->
+<div class="sect" id="s3">
+  <div class="sect-head">
+    <div class="sect-num">Sezione 03 &middot; Il meccanismo chiave</div>
+    <h2>La <em>progressive disclosure</em></h2>
+    <p>Il motivo per cui puoi avere decine di Skills installate senza rallentare l'agente sta in un meccanismo elegante: si carica solo ci&ograve; che serve, quando serve. &Egrave; la lezione del budget di contesto resa sistema.</p>
+  </div>
+  <div class="wrap">
+    <div class="prose">
+      <p>Se ogni skill caricasse tutte le sue istruzioni in ogni sessione, dieci skills riempirebbero il contesto e l'idea non scalerebbe. La soluzione &egrave; il <strong>caricamento progressivo</strong> (progressive disclosure), che funziona su tre livelli di profondit&agrave; crescente.</p>
+    </div>
+
+    <div class="diagram-wrap">
+      <svg viewBox="0 0 700 290" width="700" height="290" xmlns="http://www.w3.org/2000/svg" font-family="'Sora', sans-serif">
+        <text x="350" y="28" text-anchor="middle" fill="rgba(255,255,255,0.85)" font-size="13" font-weight="500">Tre livelli: si scende solo se serve</text>
+
+        <!-- level 1 -->
+        <rect x="90" y="55" width="520" height="52" rx="4" fill="#c47a00" opacity="0.9"/>
+        <text x="110" y="78" fill="#fff" font-size="12" font-weight="500">1 &middot; Scansione di name + description</text>
+        <text x="110" y="96" fill="rgba(255,255,255,0.8)" font-size="10">~100 token per skill &mdash; sempre, per tutte le skills installate</text>
+
+        <text x="350" y="124" text-anchor="middle" fill="#f0b860" font-size="14">&darr; solo se la description &egrave; rilevante</text>
+
+        <!-- level 2 -->
+        <rect x="130" y="135" width="440" height="52" rx="4" fill="#9a5f00" opacity="0.9"/>
+        <text x="150" y="158" fill="#fff" font-size="12" font-weight="500">2 &middot; Caricamento di SKILL.md completo</text>
+        <text x="150" y="176" fill="rgba(255,255,255,0.8)" font-size="10">le istruzioni complete entrano nel contesto (sotto i ~5k token)</text>
+
+        <text x="350" y="204" text-anchor="middle" fill="#f0b860" font-size="14">&darr; solo se quel file specifico serve</text>
+
+        <!-- level 3 -->
+        <rect x="170" y="215" width="360" height="52" rx="4" fill="#6b4200" opacity="0.9"/>
+        <text x="190" y="238" fill="#fff" font-size="12" font-weight="500">3 &middot; File di supporto e script</text>
+        <text x="190" y="256" fill="rgba(255,255,255,0.8)" font-size="10">caricati uno a uno solo quando citati; il codice degli script non entra</text>
+      </svg>
+      <div class="diagram-cap">Decine di skills installate, ma nel contesto entra solo il sentiero effettivamente percorso.</div>
+    </div>
+
+    <div class="prose">
+      <p>Vale la pena esplicitare i numeri, perch&eacute; sono il cuore dell'efficienza. Al <strong>livello 1</strong>, l'agente scansiona solo name e description di ogni skill: circa 100 token a skill. Puoi averne decine installate e il costo resta trascurabile. Al <strong>livello 2</strong>, se una description risulta rilevante, viene caricato l'intero SKILL.md (in genere sotto i 5.000 token). Al <strong>livello 3</strong>, i file di supporto e gli script vengono letti solo se quel compito specifico li richiede: una skill pu&ograve; contenere decine di file di riferimento, ma se il tuo compito usa solo lo schema delle vendite, l'agente carica solo quel file e ignora il resto, che resta sul filesystem a consumare <em>zero</em> token.</p>
+
+      <div class="insight v">
+        <div class="insight-label">Il dettaglio pi&ugrave; elegante: gli script non entrano nel contesto</div>
+        <p>Quando una skill esegue uno script (per esempio <em>validate_form.py</em>), il <strong>codice dello script non entra mai nel contesto</strong>: l'agente lo esegue e riceve solo l'<em>output</em> ("Validazione superata", o un messaggio d'errore). &Egrave; il principio del Report 02 ("delega al codice ci&ograve; che &egrave; deterministico") portato alla sua forma pi&ugrave; pulita: la competenza vive in uno script eseguibile, il modello ne usa solo il risultato, e il budget di contesto non paga per la logica. Per i tuoi agenti &egrave; un pattern d'oro: la conoscenza procedurale complessa pu&ograve; stare in codice che gira, non in testo che ingombra.</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+<!-- S4 -->
+<div class="sect" id="s4">
+  <div class="sect-head">
+    <div class="sect-num">Sezione 04 &middot; Due nature diverse</div>
+    <h2>Capability uplift <em>vs</em> encoded preference</h2>
+    <p>Non tutte le Skills servono allo stesso scopo. Riconoscere a quale delle due famiglie appartiene una skill ti dice come scriverla e cosa aspettarti.</p>
+  </div>
+  <div class="wrap">
+    <div class="types">
+      <div class="type-col">
+        <div class="type-name">Capability uplift</div>
+        <div class="type-where">insegnare qualcosa di nuovo</div>
+        <div class="type-desc">Skills che danno all'agente una capacit&agrave; che <strong>non aveva</strong>: usare un framework specifico, un'API interna, un formato di file particolare. La skill insegna la procedura una volta, e da l&igrave; in poi l'agente la applica correttamente. Spesso includono <em>file di riferimento e script</em>, perch&eacute; la competenza &egrave; sostanziale.</div>
+      </div>
+      <div class="type-col">
+        <div class="type-name">Encoded preference</div>
+        <div class="type-where">codificare il "tuo modo"</div>
+        <div class="type-desc">Skills dove l'agente <strong>gi&agrave; sa</strong> fare il compito, ma la skill codifica il <em>tuo</em> modo di farlo: il formato dei tuoi commit, la checklist di code review del team, le clausole approvate dal tuo studio. Spesso sono <em>solo un SKILL.md</em> di istruzioni, senza codice di supporto.</div>
+      </div>
+    </div>
+
+    <div class="prose">
+      <p>La distinzione &egrave; pi&ugrave; che terminologica. Una skill di <strong>capability uplift</strong> va valutata su "l'agente ora <em>sa fare</em> ci&ograve; che prima sbagliava?" e tende a essere ricca di materiale (esempi, script, riferimenti). Una skill di <strong>encoded preference</strong> va valutata su "l'agente lo fa <em>nel modo giusto</em> per noi?" e tende a essere snella, fatta soprattutto di regole e vincoli.</p>
+
+      <p>Un esempio reale rende l'idea della seconda categoria. All'inizio del 2026, le critiche di un noto ricercatore sugli agenti di coding &mdash; che facevano assunzioni sbagliate tirando dritto, sovra-ingegnerizzavano trasformando 50 righe in 500, e toccavano codice che non dovevano &mdash; sono state trasformate da uno sviluppatore in un singolo file di istruzioni con pochi principi di comportamento. Il repository &egrave; esploso in popolarit&agrave; in poche settimane. Era una pura <em>encoded preference</em>: l'agente sapeva gi&agrave; programmare, il file codificava i guardrail comportamentali per impedirgli di sbagliare nei modi noti. Una manciata di righe, zero dipendenze, enorme impatto.</p>
+
+      <div class="insight">
+        <div class="insight-label">Cosa significa per i tuoi agenti</div>
+        <p>Prima di scrivere una skill, chiediti a quale famiglia appartiene. Se l'agente <strong>non sa fare</strong> qualcosa, ti serve capability uplift: prepara esempi, riferimenti, magari script. Se l'agente <strong>lo fa ma non come vuoi tu</strong>, ti serve encoded preference: bastano regole chiare e ben scritte. Confondere le due cose &mdash; scrivere paginate di istruzioni per qualcosa che il modello gi&agrave; sa, o poche righe vaghe per qualcosa che deve imparare da zero &mdash; &egrave; la causa pi&ugrave; comune di skills che non funzionano.</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+<!-- S5 -->
+<div class="sect" id="s5">
+  <div class="sect-head">
+    <div class="sect-num">Sezione 05 &middot; Le scelte</div>
+    <h2>I <em>trade-off</em> della configurazione</h2>
+    <p>Decisioni con pro e contro, da soppesare in base al tuo caso d'uso. Questo strato &egrave; potente proprio perch&eacute; flessibile &mdash; ma la flessibilit&agrave; va governata.</p>
+  </div>
+  <div class="wrap">
+    <div class="bp" style="border-color:var(--ink3);">
+      <div class="bp-head" style="background:var(--ink3);">Trade-off &middot; da soppesare nel tuo contesto</div>
+      <div class="bp-body">
+        <div class="bp-single"><strong>Sempre attivo vs su richiesta.</strong> Mettere una competenza nelle istruzioni sempre-attive la rende garantita ma costa contesto a ogni messaggio; metterla in una skill on-demand la rende gratuita finch&eacute; non serve ma dipende dal fatto che la description si attivi al momento giusto. Ci&ograve; che &egrave; davvero universale va sempre-attivo; tutto il resto, su richiesta.</div>
+        <div class="bp-single"><strong>Configurazione vs fine-tuning.</strong> Gli strati di configurazione sono immediati, economici e reversibili, ma vivono nel contesto e vanno riletti ogni volta; il fine-tuning incide il comportamento nei pesi (zero costo di contesto a runtime) ma &egrave; costoso, lento e rigido. Per quasi tutte le specializzazioni, la configurazione vince; il fine-tuning si giustifica solo per esigenze massicce e stabili.</div>
+        <div class="bp-single"><strong>Poche skills ricche vs molte skills granulari.</strong> Poche skills ampie sono facili da gestire ma rischiano di attivarsi a sproposito o di non attivarsi; molte skills mirate si attivano con precisione ma proliferano e possono sovrapporsi. La granularit&agrave; giusta dipende da quanto sono distinti i tuoi compiti ricorrenti.</div>
+        <div class="bp-single"><strong>Istruzioni vs script.</strong> Una competenza procedurale pu&ograve; stare in istruzioni testuali (lette dal modello) o in uno script (eseguito, output soltanto). Le istruzioni sono flessibili e trasparenti ma occupano contesto e sono soggette a interpretazione; gli script sono deterministici ed economici ma rigidi. Pi&ugrave; il compito &egrave; meccanico e ripetibile, pi&ugrave; conviene lo script.</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+<!-- S6 -->
+<div class="sect" id="s6">
+  <div class="sect-head">
+    <div class="sect-num">Sezione 06 &middot; Cosa porto a casa</div>
+    <h2>Best practice della <em>configurazione</em></h2>
+    <p>Indicazioni azionabili per estendere i tuoi agenti con skills e configurazione, nel formato fai-cos&igrave; / non-fare-cos&igrave; della serie.</p>
+  </div>
+  <div class="wrap">
+
+    <div class="bp">
+      <div class="bp-head">Best practice &middot; skills e configurazione</div>
+      <div class="bp-body">
+        <div class="bp-row">
+          <div class="bp-do">
+            <div class="bp-tag">Fai cos&igrave;</div>
+            <div class="bp-text">Estendi l'agente con la <strong>configurazione</strong>, non con il riaddestramento. Istruzioni, stili e skills sono immediati, economici e reversibili.</div>
+          </div>
+          <div class="bp-dont">
+            <div class="bp-tag">Non fare cos&igrave;</div>
+            <div class="bp-text">Non ricorrere al fine-tuning per specializzazioni che una skill risolverebbe: spenderesti tempo e denaro per un risultato pi&ugrave; rigido e difficile da aggiornare.</div>
+          </div>
+        </div>
+        <div class="bp-row">
+          <div class="bp-do">
+            <div class="bp-tag">Fai cos&igrave;</div>
+            <div class="bp-text">Tieni le <strong>istruzioni sempre-attive leggere</strong> (poche centinaia di parole, ci&ograve; che vale davvero per tutto) e sposta il resto in skills su richiesta.</div>
+          </div>
+          <div class="bp-dont">
+            <div class="bp-tag">Non fare cos&igrave;</div>
+            <div class="bp-text">Non accumulare ogni regola e competenza nelle istruzioni sempre-attive: gonfi il contesto a ogni messaggio, paghi di pi&ugrave; e rischi il context rot.</div>
+          </div>
+        </div>
+        <div class="bp-row">
+          <div class="bp-do">
+            <div class="bp-tag">Fai cos&igrave;</div>
+            <div class="bp-text">Cura la <strong>description</strong> di ogni skill come la sua parte pi&ugrave; importante: descrivi con precisione <em>quando</em> si applica. &Egrave; ci&ograve; che ne governa l'attivazione.</div>
+          </div>
+          <div class="bp-dont">
+            <div class="bp-tag">Non fare cos&igrave;</div>
+            <div class="bp-text">Non scrivere description vaghe: la skill non si attiver&agrave; quando serve, o si attiver&agrave; a sproposito, e non capirai perch&eacute; il comportamento &egrave; incoerente.</div>
+          </div>
+        </div>
+        <div class="bp-row">
+          <div class="bp-do">
+            <div class="bp-tag">Fai cos&igrave;</div>
+            <div class="bp-text">Distingui <strong>capability uplift</strong> (insegnare qualcosa di nuovo: ricca di esempi e script) da <strong>encoded preference</strong> (il tuo modo: snella, fatta di regole).</div>
+          </div>
+          <div class="bp-dont">
+            <div class="bp-tag">Non fare cos&igrave;</div>
+            <div class="bp-text">Non scrivere paginate per ci&ograve; che il modello gi&agrave; sa, n&eacute; poche righe vaghe per ci&ograve; che deve imparare da zero: &egrave; il mismatch che fa fallire le skills.</div>
+          </div>
+        </div>
+        <div class="bp-row">
+          <div class="bp-do">
+            <div class="bp-tag">Fai cos&igrave;</div>
+            <div class="bp-text">Sfrutta la <strong>progressive disclosure</strong>: metti la conoscenza voluminosa o procedurale in file di supporto e script, non tutta nel SKILL.md principale.</div>
+          </div>
+          <div class="bp-dont">
+            <div class="bp-tag">Non fare cos&igrave;</div>
+            <div class="bp-text">Non concentrare tutto in un unico file enorme: perdi il vantaggio del caricamento selettivo e fai entrare nel contesto materiale che spesso non serve.</div>
+          </div>
+        </div>
+        <div class="bp-row">
+          <div class="bp-do">
+            <div class="bp-tag">Fai cos&igrave;</div>
+            <div class="bp-text">Metti la logica deterministica in <strong>script</strong>: l'agente li esegue e usa solo l'output, senza che il codice occupi contesto. &Egrave; il pattern pi&ugrave; efficiente.</div>
+          </div>
+          <div class="bp-dont">
+            <div class="bp-tag">Non fare cos&igrave;</div>
+            <div class="bp-text">Non descrivere a parole una procedura meccanica che uno script eseguirebbe con precisione: occupi contesto e introduci interpretazioni dove servirebbe determinismo.</div>
+          </div>
+        </div>
+        <div class="bp-row">
+          <div class="bp-do">
+            <div class="bp-tag">Fai cos&igrave;</div>
+            <div class="bp-text"><strong>Testa l'attivazione</strong> in modo incrementale: verifica con prompt di prova che la skill scatti quando deve, e aggiusta la description di conseguenza.</div>
+          </div>
+          <div class="bp-dont">
+            <div class="bp-tag">Non fare cos&igrave;</div>
+            <div class="bp-text">Non costruire una skill complessa tutta in una volta senza provarla: un difetto nella description o nella struttura emerge solo testando, non rileggendo.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="h3">Gli strati di configurazione a confronto</div>
+    <table class="sum-table">
+      <thead>
+        <tr><th>Strato</th><th>Quando &egrave; caricato</th><th>Costo di contesto</th><th>Ideale per</th></tr>
+      </thead>
+      <tbody>
+        <tr><td class="p-cell">Istruzioni personalizzate</td><td>Sempre, ogni sessione</td><td>Permanente (tienilo basso)</td><td>Preferenze universali, contesto stabile</td></tr>
+        <tr><td class="p-cell">Stili</td><td>Sempre (se attivo)</td><td>Permanente, contenuto</td><td>Tono e formato dell'output</td></tr>
+        <tr><td class="p-cell">Skills</td><td>Su richiesta, se rilevanti</td><td>Quasi zero finch&eacute; inattive</td><td>Competenze e preferenze specifiche</td></tr>
+        <tr><td class="p-cell">Script (in skill)</td><td>Eseguiti su richiesta</td><td>Solo l'output, non il codice</td><td>Logica deterministica e ripetibile</td></tr>
+        <tr><td class="p-cell">Connettori (MCP)</td><td>Su richiesta, se configurati</td><td>Variabile</td><td>Azioni su servizi esterni</td></tr>
+      </tbody>
+    </table>
+
+    <div class="srcnote">
+      <b>Affidabilit&agrave; di queste indicazioni</b>
+      Il formato SKILL.md (frontmatter YAML con name e description + istruzioni Markdown), la progressive disclosure su tre livelli con i relativi ordini di grandezza (~100 token per la scansione, ~5k per il SKILL.md completo), l'esecuzione di script il cui codice non entra nel contesto, la distinzione capability uplift / encoded preference, la portabilit&agrave; (specifica aperta agentskills.io), la componibilit&agrave; e lo Skill Creator sono <strong>documentati</strong> da Anthropic e dalla pratica corrente. La mappa degli "strati di configurazione" della Sezione 01 &egrave; una <strong>schematizzazione</strong> a fini didattici: i confini esatti tra istruzioni, stili, skills e connettori variano tra i prodotti Anthropic e nel tempo. Le Skills sono una funzionalit&agrave; recente e in rapida evoluzione: verifica la documentazione corrente prima di implementare.
+    </div>
+
+    <div class="key-point">
+      <div class="kp-label">Verso il Report 07</div>
+      <div class="kp-text">L'agente ora &egrave; informato, capace e specializzato. Manca lo strato che lo rende sicuro: i guardrail che vigilano su ci&ograve; che entra e ci&ograve; che esce.</div>
+      <div class="kp-sub">Il prossimo strato &mdash; guardrail e sicurezza &mdash; esamina i controlli che intercettano richieste e risposte prima e dopo il modello, e perch&eacute; un agente in produzione non pu&ograve; farne a meno.</div>
+    </div>
+
+  </div>
+</div>
+
+
+<div class="footer">
+  <span>Serie Agenti AI &middot; Parte II &mdash; Report 06 &middot; Skills e Configurazione</span>
+  <span>Maggio 2026</span>
+</div>
+
+<script>
+function show(n) {
+  document.querySelectorAll('.sect').forEach(s => s.classList.remove('active'));
+  document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('s'+n).classList.add('active');
+  document.querySelectorAll('.nav-btn')[n].classList.add('active');
+  window.scrollTo({top:0, behavior:'smooth'});
+}
+</script>
+
+</body>
+</html>

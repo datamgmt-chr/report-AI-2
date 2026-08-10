@@ -1,0 +1,399 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Indice dei Report — LLM, AI e Agenti</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Serif:wght@500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --paper:#F4F3EE; --card:#FCFBF8; --ink:#1B2130; --ink-muted:#5B6270;
+    --accent:#2F6E68; --stamp:#B8862B; --line:#DAD7CC; --radius:3px;
+  }
+  *{ box-sizing:border-box; }
+  html{ scroll-behavior:smooth; }
+  body{
+    margin:0; background:var(--paper); color:var(--ink);
+    font-family:'IBM Plex Sans',sans-serif; line-height:1.55; font-size:16px;
+  }
+  a{ color:inherit; }
+  .wrap{ max-width:880px; margin:0 auto; padding:2.5rem 1.25rem 6rem; }
+
+  /* ---------- masthead ---------- */
+  .eyebrow{
+    font-family:'IBM Plex Mono',monospace; font-size:.78rem; letter-spacing:.14em;
+    text-transform:uppercase; color:var(--accent); margin:0 0 .6rem;
+  }
+  h1{
+    font-family:'IBM Plex Serif',serif; font-weight:700; font-size:2.3rem;
+    line-height:1.15; margin:0 0 .5rem;
+  }
+  .lede{ color:var(--ink-muted); max-width:56ch; margin:0 0 1.4rem; }
+  .stats{ font-family:'IBM Plex Mono',monospace; font-size:.82rem; color:var(--ink-muted); margin:0 0 1.8rem; }
+  .stats strong{ color:var(--ink); font-weight:600; }
+
+  .search-row{ display:flex; gap:.6rem; align-items:center; margin-bottom:.5rem; flex-wrap:wrap; }
+  #search{
+    flex:1 1 260px; font-family:'IBM Plex Sans',sans-serif; font-size:.95rem;
+    padding:.55rem .2rem; border:none; border-bottom:1px solid var(--ink);
+    background:transparent; color:var(--ink); outline:none;
+  }
+  #search::placeholder{ color:var(--ink-muted); }
+  #search:focus-visible{ border-bottom:2px solid var(--accent); }
+  .review-toggle{
+    font-family:'IBM Plex Mono',monospace; font-size:.78rem; color:var(--ink-muted);
+    display:flex; align-items:center; gap:.4rem; cursor:pointer; user-select:none;
+    white-space:nowrap;
+  }
+  .review-toggle input{ accent-color:var(--stamp); }
+  #empty-msg{ display:none; color:var(--ink-muted); font-size:.9rem; margin:1rem 0 0; }
+
+  /* ---------- sommario ---------- */
+  .toc{ margin:2.2rem 0 2.6rem; padding-top:1.4rem; border-top:1px solid var(--line); }
+  .toc h2{
+    font-family:'IBM Plex Mono',monospace; font-size:.78rem; letter-spacing:.12em;
+    text-transform:uppercase; color:var(--ink-muted); margin:0 0 .8rem; font-weight:500;
+  }
+  .toc ol{ list-style:none; margin:0; padding:0; }
+  .toc li a{
+    display:flex; align-items:baseline; gap:.5rem; text-decoration:none;
+    padding:.4rem 0; border-bottom:1px dotted transparent;
+  }
+  .toc li a:hover .toc-label{ color:var(--accent); }
+  .toc .toc-num{ font-family:'IBM Plex Mono',monospace; font-size:.8rem; color:var(--accent); flex:none; width:1.6em; }
+  .toc-label{ font-weight:500; }
+  .toc .leader{ flex:1; border-bottom:1px dotted var(--line); margin:0 .3rem; transform:translateY(-.3em); }
+  .toc .toc-count{ font-family:'IBM Plex Mono',monospace; font-size:.8rem; color:var(--ink-muted); flex:none; }
+
+  /* ---------- sezioni tema ---------- */
+  #content{ }
+  details.tema{ border-top:1px solid var(--line); padding:.2rem 0; }
+  details.tema:last-child{ border-bottom:1px solid var(--line); }
+  details.tema > summary{
+    list-style:none; cursor:pointer; padding:1rem 0 1rem .9rem;
+    border-left:4px solid var(--tema-accent,var(--accent));
+    display:flex; align-items:baseline; gap:.6rem; flex-wrap:wrap;
+  }
+  details.tema > summary::-webkit-details-marker{ display:none; }
+  details.tema > summary .arrow{ font-family:'IBM Plex Mono',monospace; color:var(--tema-accent,var(--accent)); font-size:.85rem; }
+  details.tema[open] > summary .arrow{ transform:rotate(90deg); display:inline-block; }
+  details.tema > summary .tema-title{
+    font-family:'IBM Plex Serif',serif; font-weight:600; font-size:1.28rem;
+  }
+  details.tema > summary .tema-count{ font-family:'IBM Plex Mono',monospace; font-size:.8rem; color:var(--ink-muted); }
+
+  .tema-body{ padding:.2rem 0 1.2rem 1.1rem; }
+
+  details.sotto{ margin:0 0 .3rem; }
+  details.sotto > summary{
+    list-style:none; cursor:pointer; padding:.55rem 0; font-weight:600; font-size:.98rem;
+    display:flex; align-items:baseline; gap:.5rem;
+  }
+  details.sotto > summary::-webkit-details-marker{ display:none; }
+  details.sotto > summary .arrow{ font-family:'IBM Plex Mono',monospace; color:var(--ink-muted); font-size:.8rem; }
+  details.sotto[open] > summary .arrow{ transform:rotate(90deg); display:inline-block; }
+  details.sotto > summary .sotto-count{ font-family:'IBM Plex Mono',monospace; font-size:.78rem; color:var(--ink-muted); font-weight:400; }
+
+  .sotto-body{ padding:0 0 .6rem .2rem; display:grid; gap:.5rem; }
+
+  /* ---------- entry: report singolo o gruppo serie ---------- */
+  .entry{
+    background:var(--card); border:1px solid var(--line); border-radius:var(--radius);
+    padding:.7rem .85rem;
+  }
+  a.entry{ display:block; text-decoration:none; transition:border-color .15s ease; }
+  a.entry:hover, a.entry:focus-visible{ border-color:var(--tema-accent,var(--accent)); }
+  .entry-top{ display:flex; align-items:baseline; gap:.55rem; flex-wrap:wrap; }
+  .code{ font-family:'IBM Plex Mono',monospace; font-size:.72rem; color:var(--tema-accent,var(--accent)); flex:none; }
+  .title{ font-weight:500; font-size:.95rem; }
+  .desc{ color:var(--ink-muted); font-size:.86rem; margin-top:.25rem; }
+  .tag{
+    font-family:'IBM Plex Mono',monospace; font-size:.68rem; color:var(--ink-muted);
+    border:1px solid var(--line); border-radius:999px; padding:.05em .55em; margin-left:.1em;
+  }
+  .nota{ display:none; font-size:.78rem; color:var(--stamp); margin-top:.35rem; }
+  body.mostra-note .nota:not(:empty){ display:block; }
+
+  .serie-block .serie-head{
+    font-family:'IBM Plex Mono',monospace; font-size:.74rem; letter-spacing:.06em;
+    text-transform:uppercase; color:var(--ink-muted); margin-bottom:.4rem;
+  }
+  .serie-parts{ display:grid; gap:.4rem; }
+
+  .hidden{ display:none !important; }
+
+  footer{
+    margin-top:3rem; padding-top:1.2rem; border-top:1px solid var(--line);
+    font-family:'IBM Plex Mono',monospace; font-size:.76rem; color:var(--ink-muted);
+  }
+  #load-error{
+    display:none; background:var(--card); border:1px solid var(--line); border-left:4px solid var(--stamp);
+    padding:1rem 1.1rem; font-size:.9rem; margin-top:2rem;
+  }
+  #load-error code{ background:var(--paper); padding:.1em .35em; border-radius:2px; }
+
+  @media (max-width:640px){
+    h1{ font-size:1.7rem; }
+    .wrap{ padding:1.6rem 1rem 4rem; }
+    details.tema > summary .tema-title{ font-size:1.08rem; }
+    .tema-body{ padding-left:.5rem; }
+  }
+  @media (prefers-reduced-motion:reduce){
+    *{ transition:none !important; scroll-behavior:auto !important; }
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <p class="eyebrow">Archivio interno — LLM · AI · Agenti</p>
+  <h1>Indice dei Report</h1>
+  <p class="lede">Raccolta di approfondimenti su come funzionano i modelli linguistici, come si scrivono prompt efficaci e come si costruiscono agenti AI. Organizzata per tema, con le serie in ordine di lettura.</p>
+  <p class="stats" id="stats">Caricamento in corso…</p>
+
+  <div class="search-row">
+    <input type="text" id="search" placeholder="Cerca per titolo, argomento o tag…" autocomplete="off">
+    <label class="review-toggle"><input type="checkbox" id="solo-da-rivedere"> Solo da rivedere</label>
+    <label class="review-toggle"><input type="checkbox" id="mostra-note"> Mostra note di revisione</label>
+  </div>
+  <p id="empty-msg">Nessun report corrisponde alla ricerca.</p>
+
+  <nav class="toc" id="toc" aria-label="Sommario">
+    <h2>Sommario</h2>
+    <ol id="toc-list"></ol>
+  </nav>
+
+  <main id="content"></main>
+
+  <div id="load-error">
+    Non riesco a caricare <code>report-data.json</code>. Se hai aperto questo file
+    direttamente dal disco, i browser bloccano il caricamento locale del JSON: avvia un
+    piccolo server (dalla cartella del progetto: <code>python -m http.server</code>) e apri
+    <code>http://localhost:8000/index.html</code> — oppure pubblica la cartella su GitHub Pages,
+    dove funziona senza nulla da configurare.
+  </div>
+
+  <footer>
+    Generato da report-data.json — aggiornato al <span id="agg-data"></span>. Per aggiungere,
+    rimuovere o riclassificare un report, modifica quel file: questa pagina si aggiorna da sola.
+  </footer>
+
+</div>
+
+<script>
+const TEMA_COLORS = ['#3B6E91', '#2F6E68', '#7A5C8E', '#4C7A3F', '#B8862B', '#8A6A4F', '#A14E3C'];
+
+function parteKey(p){
+  if(!p) return [2,0,''];
+  if(p==='quadro') return [0,0,''];
+  const m = /^(\d+)([A-Za-z]?)$/.exec(p);
+  if(m) return [1, parseInt(m[1],10), m[2]];
+  if(p.length===1 && /[A-Za-z]/.test(p)) return [1, p.toUpperCase().charCodeAt(0), ''];
+  return [2,0,p];
+}
+function parteCompare(a,b){
+  const ka=parteKey(a), kb=parteKey(b);
+  for(let i=0;i<3;i++){ if(ka[i]<kb[i]) return -1; if(ka[i]>kb[i]) return 1; }
+  return 0;
+}
+function codeFor(codice, parte){
+  if(!parte) return codice;
+  return codice + '·' + (parte==='quadro' ? 'Q' : parte);
+}
+function el(tag, cls, text){
+  const e = document.createElement(tag);
+  if(cls) e.className = cls;
+  if(text!==undefined) e.textContent = text;
+  return e;
+}
+
+fetch('report-data.json')
+  .then(r => { if(!r.ok) throw new Error('http '+r.status); return r.json(); })
+  .then(data => init(data))
+  .catch(err => {
+    document.getElementById('load-error').style.display = 'block';
+    document.getElementById('stats').textContent = '';
+    console.error(err);
+  });
+
+function init(data){
+  document.getElementById('agg-data').textContent = data.aggiornato || '';
+  const reports = data.report;
+  const struttura = data.struttura;
+
+  const nSerie = new Set(reports.filter(r=>r.serie).map(r=>r.serie)).size;
+  document.getElementById('stats').innerHTML =
+    '<strong>' + reports.length + '</strong> report · <strong>' + nSerie + '</strong> serie · <strong>' + struttura.length + '</strong> temi';
+
+  buildTOC(struttura, reports);
+  buildContent(struttura, reports);
+  attachInteractions(reports);
+}
+
+function buildTOC(struttura, reports){
+  const list = document.getElementById('toc-list');
+  struttura.forEach((tema, i) => {
+    const count = reports.filter(r => r.tema_1 === tema.tema).length;
+    const li = document.createElement('li');
+    const a = el('a'); a.href = '#tema-' + i;
+    a.appendChild(el('span','toc-num', String(i+1).padStart(2,'0')));
+    a.appendChild(el('span','toc-label', tema.tema));
+    a.appendChild(el('span','leader'));
+    a.appendChild(el('span','toc-count', String(count)));
+    a.addEventListener('click', e => {
+      e.preventDefault();
+      const details = document.getElementById('tema-'+i);
+      details.open = true;
+      details.scrollIntoView({behavior:'smooth', block:'start'});
+    });
+    li.appendChild(a);
+    list.appendChild(li);
+  });
+}
+
+function buildEntries(reports){
+  const bySerie = new Map();
+  const standalone = [];
+  reports.forEach(r => {
+    if(r.serie){
+      if(!bySerie.has(r.serie)) bySerie.set(r.serie, []);
+      bySerie.get(r.serie).push(r);
+    } else {
+      standalone.push(r);
+    }
+  });
+  const entries = [];
+  bySerie.forEach((parts, serie) => {
+    parts.sort((a,b)=>parteCompare(a.parte,b.parte));
+    entries.push({type:'serie', serie, parts, key: serie.toLowerCase()});
+  });
+  standalone.forEach(r => entries.push({type:'single', report:r, key:r.titolo.toLowerCase()}));
+  entries.sort((a,b)=>a.key.localeCompare(b.key,'it'));
+  return entries;
+}
+
+function renderReportCard(r, codice, tagAccent){
+  const a = el('a','entry report-card');
+  a.href = r.file;
+  a.dataset.search = (r.titolo+' '+r.descrizione+' '+r.serie+' '+r.tag_secondari.join(' ')).toLowerCase();
+  a.dataset.rivedi = r.da_rivedere ? '1' : '0';
+
+  const top = el('div','entry-top');
+  top.appendChild(el('span','code', codice));
+  top.appendChild(el('span','title', r.titolo));
+  (r.tag_secondari||[]).forEach(t => top.appendChild(el('span','tag', t)));
+  a.appendChild(top);
+
+  if(r.descrizione) a.appendChild(el('p','desc', r.descrizione));
+
+  const noteParts = [];
+  if(r.nota_sovrapposizione) noteParts.push('⚠ ' + r.nota_sovrapposizione);
+  if(r.nota_atipicita) noteParts.push('◆ ' + r.nota_atipicita);
+  a.appendChild(el('p','nota', noteParts.join('  ·  ')));
+
+  return a;
+}
+
+function buildContent(struttura, reports){
+  const content = document.getElementById('content');
+  struttura.forEach((tema, i) => {
+    const temaReports = reports.filter(r => r.tema_1 === tema.tema);
+    if(temaReports.length === 0) return;
+    const accent = TEMA_COLORS[i % TEMA_COLORS.length];
+
+    const det = document.createElement('details');
+    det.className = 'tema'; det.id = 'tema-'+i;
+    det.style.setProperty('--tema-accent', accent);
+
+    const summary = document.createElement('summary');
+    summary.appendChild(el('span','arrow','▸'));
+    summary.appendChild(el('span','tema-title', tema.tema));
+    summary.appendChild(el('span','tema-count', '(' + temaReports.length + ')'));
+    det.appendChild(summary);
+
+    const body = el('div','tema-body');
+
+    tema.sottotemi.forEach(sotto => {
+      const sub = reports.filter(r => r.tema_1===tema.tema && r.tema_2===sotto);
+      if(sub.length===0) return;
+
+      const sdet = document.createElement('details');
+      sdet.className = 'sotto';
+      const ssum = document.createElement('summary');
+      ssum.appendChild(el('span','arrow','▸'));
+      ssum.appendChild(document.createTextNode(sotto+' '));
+      ssum.appendChild(el('span','sotto-count','('+sub.length+')'));
+      sdet.appendChild(ssum);
+
+      const sbody = el('div','sotto-body');
+      buildEntries(sub).forEach(entry => {
+        if(entry.type === 'single'){
+          sbody.appendChild(renderReportCard(entry.report, codeFor(tema.codice, entry.report.parte), accent));
+        } else {
+          const block = el('div','entry serie-block');
+          block.appendChild(el('div','serie-head', 'Serie · ' + entry.serie + ' (' + entry.parts.length + ' parti)'));
+          const parts = el('div','serie-parts');
+          entry.parts.forEach(r => parts.appendChild(renderReportCard(r, codeFor(tema.codice, r.parte), accent)));
+          block.appendChild(parts);
+          sbody.appendChild(block);
+        }
+      });
+      sdet.appendChild(sbody);
+      body.appendChild(sdet);
+    });
+
+    det.appendChild(body);
+    content.appendChild(det);
+  });
+}
+
+function attachInteractions(reports){
+  const searchBox = document.getElementById('search');
+  const soloRivedi = document.getElementById('solo-da-rivedere');
+  const mostraNote = document.getElementById('mostra-note');
+  const emptyMsg = document.getElementById('empty-msg');
+
+  mostraNote.addEventListener('change', () => {
+    document.body.classList.toggle('mostra-note', mostraNote.checked);
+  });
+
+  function applyFilter(){
+    const q = searchBox.value.trim().toLowerCase();
+    const onlyReview = soloRivedi.checked;
+    let anyVisible = false;
+
+    document.querySelectorAll('.report-card').forEach(card => {
+      const matchesText = !q || card.dataset.search.includes(q);
+      const matchesReview = !onlyReview || card.dataset.rivedi === '1';
+      const visible = matchesText && matchesReview;
+      card.classList.toggle('hidden', !visible);
+      if(visible) anyVisible = true;
+    });
+
+    // nasconde blocchi-serie svuotati, mostra/apre sezioni con risultati
+    document.querySelectorAll('.serie-block').forEach(block => {
+      const hasVisible = block.querySelectorAll('.report-card:not(.hidden)').length > 0;
+      block.classList.toggle('hidden', !hasVisible);
+    });
+    document.querySelectorAll('details.sotto').forEach(sdet => {
+      const hasVisible = sdet.querySelectorAll('.report-card:not(.hidden)').length > 0;
+      sdet.classList.toggle('hidden', !hasVisible);
+      if(q || onlyReview) sdet.open = hasVisible; 
+    });
+    document.querySelectorAll('details.tema').forEach(det => {
+      const hasVisible = det.querySelectorAll('.report-card:not(.hidden)').length > 0;
+      det.classList.toggle('hidden', !hasVisible);
+      if(q || onlyReview) det.open = hasVisible;
+    });
+
+    emptyMsg.style.display = anyVisible ? 'none' : 'block';
+  }
+
+  searchBox.addEventListener('input', applyFilter);
+  soloRivedi.addEventListener('change', applyFilter);
+}
+</script>
+</body>
+</html>

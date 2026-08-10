@@ -1,0 +1,953 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Le 4 Famiglie dell'AI — Meccanica Interna</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=DM+Mono:ital,wght@0,300;0,400;0,500;1,300&family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,700;1,9..144,300&display=swap');
+
+  :root {
+    --bg: #0e0e0f;
+    --surface: #16161a;
+    --border: #2a2a30;
+    --text: #e8e6e0;
+    --muted: #6b6a72;
+    --c1: #e8c547; /* simbolico — giallo */
+    --c2: #5bc4a0; /* ml classico — verde acqua */
+    --c3: #e07b54; /* deep learning — arancio */
+    --c4: #7b9cf5; /* llm — azzurro */
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'DM Mono', monospace;
+    font-size: 13px;
+    line-height: 1.6;
+    min-height: 100vh;
+    padding: 40px 24px 80px;
+  }
+
+  header {
+    text-align: center;
+    margin-bottom: 60px;
+  }
+
+  header h1 {
+    font-family: 'Fraunces', serif;
+    font-size: clamp(28px, 5vw, 52px);
+    font-weight: 300;
+    letter-spacing: -0.02em;
+    color: var(--text);
+    margin-bottom: 8px;
+  }
+
+  header p {
+    color: var(--muted);
+    font-size: 12px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+  }
+
+  .tabs {
+    display: flex;
+    justify-content: center;
+    gap: 0;
+    margin-bottom: 40px;
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    overflow: hidden;
+    max-width: 700px;
+    margin-left: auto;
+    margin-right: auto;
+  }
+
+  .tab {
+    flex: 1;
+    padding: 12px 8px;
+    background: var(--surface);
+    border: none;
+    color: var(--muted);
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    cursor: pointer;
+    transition: all 0.2s;
+    border-right: 1px solid var(--border);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    text-align: center;
+  }
+
+  .tab:last-child { border-right: none; }
+
+  .tab:hover { color: var(--text); background: #1e1e24; }
+
+  .tab.active {
+    color: var(--bg);
+    font-weight: 500;
+  }
+
+  .tab[data-i="0"].active { background: var(--c1); }
+  .tab[data-i="1"].active { background: var(--c2); }
+  .tab[data-i="2"].active { background: var(--c3); }
+  .tab[data-i="3"].active { background: var(--c4); }
+
+  .panel { display: none; animation: fadeIn 0.3s ease; }
+  .panel.active { display: block; }
+
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+
+  .panel-header {
+    text-align: center;
+    margin-bottom: 40px;
+  }
+
+  .panel-header h2 {
+    font-family: 'Fraunces', serif;
+    font-size: 36px;
+    font-weight: 300;
+    margin-bottom: 6px;
+  }
+
+  .panel-header .tag {
+    display: inline-block;
+    font-size: 10px;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    padding: 3px 10px;
+    border-radius: 2px;
+    color: var(--bg);
+  }
+
+  .p0 .panel-header h2 { color: var(--c1); }
+  .p1 .panel-header h2 { color: var(--c2); }
+  .p2 .panel-header h2 { color: var(--c3); }
+  .p3 .panel-header h2 { color: var(--c4); }
+  .p0 .tag { background: var(--c1); }
+  .p1 .tag { background: var(--c2); }
+  .p2 .tag { background: var(--c3); }
+  .p3 .tag { background: var(--c4); }
+
+  .grid2 {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+    max-width: 900px;
+    margin: 0 auto 20px;
+  }
+
+  @media (max-width: 640px) { .grid2 { grid-template-columns: 1fr; } }
+
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 24px;
+  }
+
+  .card-label {
+    font-size: 10px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 16px;
+  }
+
+  /* ===== PANEL 0: SIMBOLICO ===== */
+  .rules-engine {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .fact-db {
+    background: #1a1a20;
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 14px;
+    font-size: 11px;
+  }
+
+  .fact-db .title { color: var(--c1); margin-bottom: 8px; font-size: 10px; letter-spacing: 0.1em; }
+
+  .fact { color: #a8c8a0; margin: 2px 0; }
+  .fact-new { color: var(--c1); margin: 2px 0; }
+
+  .arrow-down {
+    text-align: center;
+    color: var(--muted);
+    font-size: 18px;
+    line-height: 1;
+  }
+
+  .engine-box {
+    background: #1a1a20;
+    border: 1px solid var(--c1);
+    border-radius: 4px;
+    padding: 14px;
+    font-size: 11px;
+  }
+
+  .engine-box .title { color: var(--c1); margin-bottom: 8px; font-size: 10px; }
+
+  .rule {
+    padding: 6px 10px;
+    margin: 4px 0;
+    border-radius: 3px;
+    border-left: 2px solid transparent;
+    transition: all 0.4s;
+  }
+
+  .rule.dormant { color: var(--muted); border-left-color: var(--border); }
+  .rule.firing { color: var(--c1); border-left-color: var(--c1); background: rgba(232,197,71,0.08); }
+
+  .output-box {
+    background: rgba(232,197,71,0.06);
+    border: 1px solid rgba(232,197,71,0.3);
+    border-radius: 4px;
+    padding: 12px;
+    font-size: 11px;
+    color: var(--c1);
+  }
+
+  /* ===== PANEL 1: ML CLASSICO ===== */
+  .feature-space {
+    position: relative;
+    height: 200px;
+    background: #111116;
+    border-radius: 4px;
+    overflow: hidden;
+  }
+
+  .axis {
+    position: absolute;
+    background: var(--border);
+  }
+
+  .axis-x { bottom: 30px; left: 20px; right: 20px; height: 1px; }
+  .axis-y { left: 30px; top: 10px; bottom: 20px; width: 1px; }
+
+  .axis-label {
+    position: absolute;
+    font-size: 9px;
+    color: var(--muted);
+    letter-spacing: 0.05em;
+  }
+
+  .dot {
+    position: absolute;
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    transform: translate(-50%, -50%);
+  }
+
+  .hyperplane {
+    position: absolute;
+    height: 2px;
+    background: var(--c2);
+    opacity: 0.6;
+    transform-origin: left center;
+    left: 20px;
+    right: 20px;
+    bottom: 90px;
+    transform: rotate(-12deg);
+  }
+
+  .formula-box {
+    background: #111116;
+    border-radius: 4px;
+    padding: 16px;
+    font-size: 11px;
+  }
+
+  .formula-line {
+    padding: 4px 0;
+    color: var(--muted);
+    border-bottom: 1px solid var(--border);
+    margin-bottom: 6px;
+  }
+
+  .formula-line span { color: var(--c2); }
+  .formula-line .w { color: #e8e6e0; }
+
+  /* ===== PANEL 2: DEEP LEARNING ===== */
+  .network {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 16px 8px;
+    gap: 4px;
+  }
+
+  .layer {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+    flex: 1;
+  }
+
+  .layer-label {
+    font-size: 8px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--muted);
+    text-align: center;
+    margin-bottom: 4px;
+  }
+
+  .neuron {
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    border: 1.5px solid;
+    transition: all 0.3s;
+  }
+
+  .connections-svg {
+    position: absolute;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    pointer-events: none;
+  }
+
+  .network-wrap {
+    position: relative;
+  }
+
+  .abstract-levels {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .abstract-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 8px 12px;
+    background: #111116;
+    border-radius: 4px;
+    font-size: 11px;
+  }
+
+  .abstract-row .dot-small {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+
+  /* ===== PANEL 3: LLM ===== */
+  .token-row {
+    display: flex;
+    gap: 6px;
+    flex-wrap: wrap;
+    margin-bottom: 20px;
+  }
+
+  .token {
+    padding: 5px 10px;
+    border-radius: 3px;
+    font-size: 12px;
+    border: 1.5px solid var(--border);
+    color: var(--muted);
+    transition: all 0.4s;
+    cursor: default;
+  }
+
+  .token.target {
+    border-color: var(--c4);
+    color: var(--c4);
+    background: rgba(123,156,245,0.1);
+  }
+
+  .token.high { border-color: var(--c4); color: var(--text); opacity: 1; background: rgba(123,156,245,0.2); }
+  .token.mid { opacity: 0.6; }
+  .token.low { opacity: 0.25; }
+
+  .attention-matrix {
+    display: grid;
+    grid-template-columns: repeat(8, 1fr);
+    gap: 3px;
+    margin-bottom: 12px;
+  }
+
+  .att-cell {
+    aspect-ratio: 1;
+    border-radius: 2px;
+    transition: all 0.3s;
+  }
+
+  .att-label-row {
+    display: grid;
+    grid-template-columns: repeat(8, 1fr);
+    gap: 3px;
+    margin-bottom: 4px;
+  }
+
+  .att-lbl {
+    font-size: 7px;
+    text-align: center;
+    color: var(--muted);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .embedding-viz {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .emb-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 11px;
+  }
+
+  .emb-label { width: 80px; color: var(--muted); flex-shrink: 0; }
+
+  .emb-bar-wrap {
+    flex: 1;
+    display: flex;
+    gap: 2px;
+  }
+
+  .emb-bit {
+    height: 16px;
+    flex: 1;
+    border-radius: 1px;
+  }
+
+  /* ===== BOTTOM TABLE ===== */
+  .comparison {
+    max-width: 900px;
+    margin: 40px auto 0;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    overflow: hidden;
+  }
+
+  .comparison table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 11px;
+  }
+
+  .comparison th {
+    padding: 12px 16px;
+    text-align: left;
+    background: #111116;
+    color: var(--muted);
+    font-weight: 400;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    font-size: 10px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .comparison td {
+    padding: 10px 16px;
+    border-bottom: 1px solid var(--border);
+    vertical-align: top;
+    line-height: 1.5;
+  }
+
+  .comparison tr:last-child td { border-bottom: none; }
+
+  .comparison tr:hover td { background: #111116; }
+
+  .c-dot {
+    display: inline-block;
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    margin-right: 8px;
+    vertical-align: middle;
+  }
+
+  .btn-sim {
+    display: block;
+    margin: 16px auto 0;
+    padding: 8px 20px;
+    background: transparent;
+    border: 1px solid var(--border);
+    color: var(--muted);
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    border-radius: 3px;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+
+  .btn-sim:hover { color: var(--text); border-color: var(--text); }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>Le 4 Famiglie dell'AI</h1>
+  <p>Meccanica interna — come elaborano le informazioni</p>
+</header>
+
+<div class="tabs">
+  <button class="tab active" data-i="0">01 Simbolico</button>
+  <button class="tab" data-i="1">02 ML Classico</button>
+  <button class="tab" data-i="2">03 Deep Learning</button>
+  <button class="tab" data-i="3">04 LLM</button>
+</div>
+
+<!-- PANEL 0: SIMBOLICO -->
+<div class="panel p0 active" id="panel-0">
+  <div class="panel-header">
+    <h2>Sistemi Simbolici</h2>
+    <span class="tag">Regole esplicite + Motore inferenziale</span>
+  </div>
+
+  <div class="grid2">
+    <div class="card">
+      <div class="card-label">Architettura — flusso di elaborazione</div>
+      <div class="rules-engine">
+        <div class="fact-db">
+          <div class="title">BASE DI FATTI</div>
+          <div class="fact">paziente.febbre = 39.5°C</div>
+          <div class="fact">paziente.tosse = "secca"</div>
+          <div class="fact">paziente.età = 34</div>
+        </div>
+        <div class="arrow-down">↓</div>
+        <div class="engine-box">
+          <div class="title">MOTORE INFERENZIALE — scansione regole</div>
+          <div class="rule dormant" id="r0">SE età &lt; 10 → pediatria</div>
+          <div class="rule firing" id="r1">SE febbre &gt; 38 E tosse = secca → <strong>influenza</strong></div>
+          <div class="rule dormant" id="r2">SE febbre &gt; 38 E tosse = grassa → bronchite</div>
+        </div>
+        <div class="arrow-down">↓</div>
+        <div class="output-box">
+          <span id="sym-output">→ diagnosi = influenza_probabile</span>
+        </div>
+      </div>
+      <button class="btn-sim" id="btn-sym">▶ Cambia input / simula</button>
+    </div>
+
+    <div class="card">
+      <div class="card-label">Caratteristiche chiave</div>
+      <div style="display:flex;flex-direction:column;gap:16px;margin-top:8px;">
+        <div>
+          <div style="color:var(--c1);font-size:10px;letter-spacing:0.1em;text-transform:uppercase;margin-bottom:6px;">Modello relazionale</div>
+          <div style="color:var(--muted);font-size:12px;line-height:1.6;">Il sapere è un <strong style="color:var(--text)">grafo di fatti e regole</strong>. Le regole si concatenano: il risultato di una diventa il fatto che attiva la successiva.</div>
+        </div>
+        <div>
+          <div style="color:var(--c1);font-size:10px;letter-spacing:0.1em;text-transform:uppercase;margin-bottom:6px;">Cosa succede all'input</div>
+          <div style="color:var(--muted);font-size:12px;line-height:1.6;">I valori di input vengono <strong style="color:var(--text)">confrontati letteralmente</strong> con le condizioni delle regole. Nessun apprendimento, nessuna interpolazione.</div>
+        </div>
+        <div>
+          <div style="color:var(--c1);font-size:10px;letter-spacing:0.1em;text-transform:uppercase;margin-bottom:6px;">Limite fondamentale</div>
+          <div style="color:var(--muted);font-size:12px;line-height:1.6;">Se un caso non è coperto da nessuna regola scritta, il sistema <strong style="color:var(--c1)">si blocca</strong>. Non esiste zona grigia.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- PANEL 1: ML CLASSICO -->
+<div class="panel p1" id="panel-1">
+  <div class="panel-header">
+    <h2>ML Classico</h2>
+    <span class="tag">Feature vettoriali + Funzione parametrica</span>
+  </div>
+
+  <div class="grid2">
+    <div class="card">
+      <div class="card-label">Spazio delle feature — ogni punto è un appartamento</div>
+      <div class="feature-space" id="fs">
+        <div class="axis axis-x"></div>
+        <div class="axis axis-y"></div>
+        <div class="axis-label" style="bottom:14px;left:50%;transform:translateX(-50%)">superficie (mq)</div>
+        <div class="axis-label" style="left:4px;top:50%;transform:rotate(-90deg) translateX(-50%);transform-origin:left center;writing-mode:horizontal-tb;top:80px;left:2px;font-size:8px;">prezzo (k€)</div>
+        <div class="hyperplane"></div>
+        <!-- dots injected by JS -->
+      </div>
+      <div style="margin-top:14px;" class="formula-box">
+        <div class="card-label" style="margin-bottom:8px;">Formula appresa (regressione)</div>
+        <div class="formula-line">prezzo = <span class="w">2.500</span>×<span>mq</span> + <span class="w">15.000</span>×<span>camere</span></div>
+        <div class="formula-line" style="border:none;margin:0;">− <span class="w">8.000</span>×<span>dist_metro</span> + <span class="w">12.000</span>×<span>piano</span></div>
+      </div>
+      <button class="btn-sim" id="btn-ml">▶ Mostra nuovo punto</button>
+    </div>
+
+    <div class="card">
+      <div class="card-label">Caratteristiche chiave</div>
+      <div style="display:flex;flex-direction:column;gap:16px;margin-top:8px;">
+        <div>
+          <div style="color:var(--c2);font-size:10px;letter-spacing:0.1em;text-transform:uppercase;margin-bottom:6px;">Modello relazionale</div>
+          <div style="color:var(--muted);font-size:12px;line-height:1.6;"><strong style="color:var(--text)">Spazio vettoriale piatto.</strong> Ogni esempio è un punto in uno spazio N-dimensionale. Il modello trova l'iperpiano (o la curva) che separa/interpola meglio i punti.</div>
+        </div>
+        <div>
+          <div style="color:var(--c2);font-size:10px;letter-spacing:0.1em;text-transform:uppercase;margin-bottom:6px;">Cosa succede all'input</div>
+          <div style="color:var(--muted);font-size:12px;line-height:1.6;">Le feature devono essere <strong style="color:var(--text)">costruite a mano</strong> da un umano. Il modello apprende solo i pesi — quanto pesa ogni feature nel risultato finale.</div>
+        </div>
+        <div>
+          <div style="color:var(--c2);font-size:10px;letter-spacing:0.1em;text-transform:uppercase;margin-bottom:6px;">Limite fondamentale</div>
+          <div style="color:var(--muted);font-size:12px;line-height:1.6;">Se non costruisci la feature giusta, il modello <strong style="color:var(--c2)">non la scopre da solo</strong>. La qualità del risultato dipende dalla qualità delle feature.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- PANEL 2: DEEP LEARNING -->
+<div class="panel p2" id="panel-2">
+  <div class="panel-header">
+    <h2>Deep Learning</h2>
+    <span class="tag">Gerarchia di strati neurali + Backpropagation</span>
+  </div>
+
+  <div class="grid2">
+    <div class="card">
+      <div class="card-label">Rete neurale — strati e astrazioni</div>
+      <div class="network" id="network-viz">
+        <!-- layers injected by JS -->
+      </div>
+      <div style="height:1px;background:var(--border);margin:12px 0;"></div>
+      <div class="card-label" style="margin-bottom:10px;">Cosa impara ogni strato (esempio: riconoscimento gatto)</div>
+      <div class="abstract-levels">
+        <div class="abstract-row">
+          <div class="dot-small" style="background:#333;border:1px solid var(--c3);"></div>
+          <div style="color:var(--muted);width:70px;font-size:10px;">Input</div>
+          <div style="color:var(--muted);">pixel grezzi — 3 valori RGB per pixel</div>
+        </div>
+        <div class="abstract-row">
+          <div class="dot-small" style="background:rgba(224,123,84,0.2);border:1px solid var(--c3);"></div>
+          <div style="color:var(--muted);width:70px;font-size:10px;">Strato 1-2</div>
+          <div style="color:#c08060;">bordi, gradienti, contrasti</div>
+        </div>
+        <div class="abstract-row">
+          <div class="dot-small" style="background:rgba(224,123,84,0.4);border:1px solid var(--c3);"></div>
+          <div style="color:var(--muted);width:70px;font-size:10px;">Strato 3-4</div>
+          <div style="color:#d09070;">texture, forme, curve</div>
+        </div>
+        <div class="abstract-row">
+          <div class="dot-small" style="background:rgba(224,123,84,0.7);border:1px solid var(--c3);"></div>
+          <div style="color:var(--muted);width:70px;font-size:10px;">Strato 5-6</div>
+          <div style="color:#e0a080;">occhi, orecchie, muso</div>
+        </div>
+        <div class="abstract-row">
+          <div class="dot-small" style="background:var(--c3);"></div>
+          <div style="color:var(--muted);width:70px;font-size:10px;">Output</div>
+          <div style="color:var(--c3);font-weight:500;">gatto — 94.2%</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-label">Caratteristiche chiave</div>
+      <div style="display:flex;flex-direction:column;gap:16px;margin-top:8px;">
+        <div>
+          <div style="color:var(--c3);font-size:10px;letter-spacing:0.1em;text-transform:uppercase;margin-bottom:6px;">Modello relazionale</div>
+          <div style="color:var(--muted);font-size:12px;line-height:1.6;"><strong style="color:var(--text)">Spazio vettoriale gerarchico e non-lineare.</strong> Ogni strato trasforma i dati in una rappresentazione più astratta. Le feature non vengono scelte — emergono dal training.</div>
+        </div>
+        <div>
+          <div style="color:var(--c3);font-size:10px;letter-spacing:0.1em;text-transform:uppercase;margin-bottom:6px;">Backpropagation</div>
+          <div style="color:var(--muted);font-size:12px;line-height:1.6;">L'errore sull'output viene <strong style="color:var(--text)">"risalito" strato per strato</strong>, aggiustando i pesi di ogni connessione. Il processo si ripete su milioni di esempi.</div>
+        </div>
+        <div>
+          <div style="color:var(--c3);font-size:10px;letter-spacing:0.1em;text-transform:uppercase;margin-bottom:6px;">Limite fondamentale</div>
+          <div style="color:var(--muted);font-size:12px;line-height:1.6;">La gerarchia interna è <strong style="color:var(--c3)">opaca</strong>: non puoi leggere cosa "significa" un neurone al livello 4. Richiede enormi quantità di dati e calcolo.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- PANEL 3: LLM -->
+<div class="panel p3" id="panel-3">
+  <div class="panel-header">
+    <h2>LLM / Transformer</h2>
+    <span class="tag">Embedding + Attention contestuale</span>
+  </div>
+
+  <div class="grid2">
+    <div class="card">
+      <div class="card-label">Meccanismo Attention — token target: "banca"</div>
+      <div style="margin-bottom:12px;font-size:11px;color:var(--muted);">Ogni token pesa quanto gli altri sono rilevanti per interpretare <span style="color:var(--c4)">"banca"</span> in questo contesto</div>
+
+      <div class="token-row" id="token-row">
+        <span class="token" data-w="low">La</span>
+        <span class="token target" data-w="target">banca</span>
+        <span class="token" data-w="low">era</span>
+        <span class="token" data-w="mid">piena</span>
+        <span class="token" data-w="low">di</span>
+        <span class="token" data-w="mid">gente</span>
+        <span class="token" data-w="low">perché</span>
+        <span class="token" data-w="high">il</span>
+        <span class="token" data-w="high">fiume</span>
+        <span class="token" data-w="high">era</span>
+        <span class="token" data-w="mid">in</span>
+        <span class="token" data-w="high">piena</span>
+      </div>
+
+      <div style="background:#111116;border-radius:4px;padding:12px;font-size:11px;">
+        <div style="color:var(--muted);margin-bottom:10px;font-size:10px;letter-spacing:0.08em;text-transform:uppercase;">Punteggi attention su "banca"</div>
+        <div id="att-bars" style="display:flex;flex-direction:column;gap:6px;"></div>
+      </div>
+
+      <div style="margin-top:12px;background:rgba(123,156,245,0.06);border:1px solid rgba(123,156,245,0.2);border-radius:4px;padding:10px;font-size:11px;color:var(--c4);">
+        → "banca" interpretata come <strong>riva del fiume</strong> (non istituto finanziario)
+      </div>
+      <button class="btn-sim" id="btn-llm">▶ Cambia contesto</button>
+    </div>
+
+    <div class="card">
+      <div class="card-label">Caratteristiche chiave</div>
+      <div style="display:flex;flex-direction:column;gap:16px;margin-top:8px;">
+        <div>
+          <div style="color:var(--c4);font-size:10px;letter-spacing:0.1em;text-transform:uppercase;margin-bottom:6px;">Embedding</div>
+          <div style="color:var(--muted);font-size:12px;line-height:1.6;">Ogni token viene convertito in un <strong style="color:var(--text)">vettore in spazio ad alta dimensione</strong> (es. 12.000 dim). Parole semanticamente simili sono vicine in questo spazio.</div>
+        </div>
+        <div>
+          <div style="color:var(--c4);font-size:10px;letter-spacing:0.1em;text-transform:uppercase;margin-bottom:6px;">Modello relazionale</div>
+          <div style="color:var(--muted);font-size:12px;line-height:1.6;"><strong style="color:var(--text)">Spazio vettoriale contestuale e dinamico.</strong> La rappresentazione di un token <em>cambia</em> a seconda del contesto. Non è fissa come nel DL classico.</div>
+        </div>
+        <div>
+          <div style="color:var(--c4);font-size:10px;letter-spacing:0.1em;text-transform:uppercase;margin-bottom:6px;">Addestramento</div>
+          <div style="color:var(--muted);font-size:12px;line-height:1.6;">Obiettivo semplice: <strong style="color:var(--text)">predire il token successivo</strong> su trilioni di testi. Ma per farlo bene il modello deve costruire internamente una rappresentazione del mondo.</div>
+        </div>
+        <div>
+          <div style="color:var(--c4);font-size:10px;letter-spacing:0.1em;text-transform:uppercase;margin-bottom:6px;">Limite fondamentale</div>
+          <div style="color:var(--muted);font-size:12px;line-height:1.6;">Il sapere è <strong style="color:var(--c4)">distribuito su miliardi di pesi</strong>. Non localizzabile, non leggibile. Tende a "allucinare" quando interpola in zone del suo spazio dove i dati erano scarsi.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- COMPARISON TABLE -->
+<div class="comparison">
+  <table>
+    <thead>
+      <tr>
+        <th>Famiglia</th>
+        <th>Conoscenza</th>
+        <th>Feature</th>
+        <th>Relazioni tra input</th>
+        <th>Spazio interno</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><span class="c-dot" style="background:var(--c1)"></span>Simbolico</td>
+        <td>Esplicita, scritta</td>
+        <td>Concetti umani</td>
+        <td>Regole logiche</td>
+        <td>Grafo di fatti</td>
+      </tr>
+      <tr>
+        <td><span class="c-dot" style="background:var(--c2)"></span>ML Classico</td>
+        <td>Implicita nei pesi</td>
+        <td>Scelte a mano</td>
+        <td>Peso fisso per feature</td>
+        <td>Vettoriale piatto</td>
+      </tr>
+      <tr>
+        <td><span class="c-dot" style="background:var(--c3)"></span>Deep Learning</td>
+        <td>Implicita, gerarchica</td>
+        <td>Apprese dai dati</td>
+        <td>Locale, gerarchica</td>
+        <td>Vettoriale non-lineare</td>
+      </tr>
+      <tr>
+        <td><span class="c-dot" style="background:var(--c4)"></span>LLM</td>
+        <td>Implicita, distribuita</td>
+        <td>Contestuali, dinamiche</td>
+        <td>Globale (attention)</td>
+        <td>Vettoriale contestuale</td>
+      </tr>
+    </tbody>
+  </table>
+</div>
+
+<script>
+// TABS
+document.querySelectorAll('.tab').forEach(tab => {
+  tab.addEventListener('click', () => {
+    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+    document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+    tab.classList.add('active');
+    document.getElementById('panel-' + tab.dataset.i).classList.add('active');
+  });
+});
+
+// PANEL 0: SIMBOLICO SIM
+const symScenarios = [
+  { facts: ['paziente.febbre = 39.5°C', 'paziente.tosse = "secca"', 'paziente.età = 34'],
+    firing: 1, output: '→ diagnosi = influenza_probabile' },
+  { facts: ['paziente.febbre = 38.2°C', 'paziente.tosse = "grassa"', 'paziente.età = 34'],
+    firing: 2, output: '→ diagnosi = bronchite_probabile' },
+  { facts: ['paziente.febbre = 36.8°C', 'paziente.tosse = "secca"', 'paziente.età = 7'],
+    firing: 0, output: '→ diagnosi = pediatria (rinviato)' },
+  { facts: ['paziente.febbre = 36.8°C', 'paziente.tosse = null', 'paziente.età = 34'],
+    firing: -1, output: '→ nessuna regola applicabile — sistema bloccato' },
+];
+let symIdx = 0;
+document.getElementById('btn-sym').addEventListener('click', () => {
+  symIdx = (symIdx + 1) % symScenarios.length;
+  const s = symScenarios[symIdx];
+  const factEls = document.querySelectorAll('.fact');
+  factEls.forEach((el, i) => { el.textContent = s.facts[i]; el.className = 'fact'; });
+  document.querySelectorAll('.rule').forEach((el, i) => {
+    el.className = 'rule ' + (i === s.firing ? 'firing' : 'dormant');
+  });
+  const out = document.getElementById('sym-output');
+  out.textContent = s.output;
+  out.style.color = s.firing === -1 ? '#e07b54' : 'var(--c1)';
+});
+
+// PANEL 1: ML — scatter plot
+const fsEl = document.getElementById('fs');
+const apartments = [
+  {x:25,y:35,label:'45mq/130k',color:'#5bc4a0'},{x:40,y:52,label:'70mq/200k',color:'#5bc4a0'},
+  {x:55,y:70,label:'90mq/280k',color:'#5bc4a0'},{x:70,y:90,label:'120mq/360k',color:'#5bc4a0'},
+  {x:30,y:60,label:'50mq/240k (centro)',color:'#e8c547'},{x:60,y:40,label:'100mq/160k (periferia)',color:'#e07b54'},
+  {x:80,y:110,label:'140mq/440k',color:'#5bc4a0'},{x:45,y:65,label:'75mq/260k',color:'#5bc4a0'},
+];
+
+function renderDots(extra) {
+  document.querySelectorAll('.dot-ml').forEach(d => d.remove());
+  const all = extra ? [...apartments, extra] : apartments;
+  all.forEach(a => {
+    const d = document.createElement('div');
+    d.className = 'dot dot-ml';
+    const rect = fsEl.getBoundingClientRect();
+    d.style.left = (20 + a.x * (fsEl.offsetWidth - 40) / 100) + 'px';
+    d.style.bottom = (30 + a.y * (fsEl.offsetHeight - 40) / 120) + 'px';
+    d.style.background = a.color || '#5bc4a0';
+    d.style.width = a.big ? '12px' : '8px';
+    d.style.height = a.big ? '12px' : '8px';
+    d.style.border = a.big ? '2px solid white' : 'none';
+    d.title = a.label;
+    fsEl.appendChild(d);
+  });
+}
+renderDots();
+
+const newPoints = [
+  {x:50,y:75,label:'85mq/300k (nuovo)',color:'#fff',big:true},
+  {x:20,y:20,label:'30mq/80k (nuovo)',color:'#fff',big:true},
+  {x:90,y:120,label:'160mq/480k (nuovo)',color:'#fff',big:true},
+];
+let mlIdx = 0;
+document.getElementById('btn-ml').addEventListener('click', () => {
+  renderDots(newPoints[mlIdx % newPoints.length]);
+  mlIdx++;
+});
+
+// PANEL 2: NETWORK VIZ
+const netEl = document.getElementById('network-viz');
+const layers = [
+  { label: 'Input\npixel', n: 4, color: '#333', border: '#555' },
+  { label: 'Strato 1\nbordi', n: 5, color: 'rgba(224,123,84,0.2)', border: 'rgba(224,123,84,0.5)' },
+  { label: 'Strato 2\nforme', n: 5, color: 'rgba(224,123,84,0.4)', border: 'rgba(224,123,84,0.7)' },
+  { label: 'Strato 3\nstrutture', n: 4, color: 'rgba(224,123,84,0.6)', border: 'var(--c3)' },
+  { label: 'Output\nclasse', n: 2, color: 'var(--c3)', border: 'var(--c3)' },
+];
+layers.forEach(l => {
+  const lDiv = document.createElement('div');
+  lDiv.className = 'layer';
+  const lbl = document.createElement('div');
+  lbl.className = 'layer-label';
+  lbl.textContent = l.label;
+  lDiv.appendChild(lbl);
+  for (let i = 0; i < l.n; i++) {
+    const n = document.createElement('div');
+    n.className = 'neuron';
+    n.style.background = l.color;
+    n.style.borderColor = l.border;
+    lDiv.appendChild(n);
+  }
+  netEl.appendChild(lDiv);
+});
+
+// PANEL 3: LLM ATTENTION
+const contexts = [
+  {
+    tokens: ['La','banca','era','piena','di','gente','perché','il','fiume','era','in','piena'],
+    target: 1,
+    weights: [0.02, 1.0, 0.05, 0.25, 0.03, 0.2, 0.04, 0.3, 0.95, 0.3, 0.15, 0.8],
+    result: '"banca" → riva del fiume',
+  },
+  {
+    tokens: ['Ho','aperto','un','conto','in','banca','ieri','per','pagare','il','mutuo','casa'],
+    target: 5,
+    weights: [0.1, 0.05, 0.05, 0.85, 0.1, 1.0, 0.05, 0.1, 0.4, 0.05, 0.7, 0.5],
+    result: '"banca" → istituto finanziario',
+  },
+];
+let llmCtx = 0;
+
+function renderAttention() {
+  const ctx = contexts[llmCtx];
+  const rowEl = document.getElementById('token-row');
+  rowEl.innerHTML = '';
+  ctx.tokens.forEach((t, i) => {
+    const el = document.createElement('span');
+    el.className = 'token';
+    el.textContent = t;
+    if (i === ctx.target) { el.classList.add('target'); }
+    else if (ctx.weights[i] > 0.6) el.classList.add('high');
+    else if (ctx.weights[i] > 0.2) el.classList.add('mid');
+    else el.classList.add('low');
+    rowEl.appendChild(el);
+  });
+
+  const barsEl = document.getElementById('att-bars');
+  barsEl.innerHTML = '';
+  ctx.tokens.forEach((t, i) => {
+    if (i === ctx.target) return;
+    const w = ctx.weights[i];
+    if (w < 0.1) return;
+    const row = document.createElement('div');
+    row.style.display = 'flex';
+    row.style.alignItems = 'center';
+    row.style.gap = '8px';
+    const lbl = document.createElement('div');
+    lbl.style.width = '60px';
+    lbl.style.color = 'var(--muted)';
+    lbl.style.fontSize = '10px';
+    lbl.textContent = '"' + t + '"';
+    const bar = document.createElement('div');
+    bar.style.height = '10px';
+    bar.style.borderRadius = '2px';
+    bar.style.background = `rgba(123,156,245,${w})`;
+    bar.style.width = (w * 180) + 'px';
+    bar.style.transition = 'width 0.4s';
+    const val = document.createElement('div');
+    val.style.fontSize = '10px';
+    val.style.color = 'var(--muted)';
+    val.textContent = Math.round(w * 100) + '%';
+    row.appendChild(lbl); row.appendChild(bar); row.appendChild(val);
+    barsEl.appendChild(row);
+  });
+
+  const resultEl = document.querySelector('#panel-3 .grid2 .card:first-child > div:last-of-type');
+  document.querySelector('#panel-3 div[style*="rgba(123,156,245,0.06"]').innerHTML =
+    '→ ' + ctx.result;
+}
+
+renderAttention();
+
+document.getElementById('btn-llm').addEventListener('click', () => {
+  llmCtx = (llmCtx + 1) % contexts.length;
+  renderAttention();
+});
+</script>
+</body>
+</html>

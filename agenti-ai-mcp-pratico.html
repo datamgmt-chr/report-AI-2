@@ -1,0 +1,1638 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MCP — Guida Pratica per Chi Costruisce Agenti</title>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@300;400;500;600;700&family=IBM+Plex+Sans:wght@300;400;500;600;700&family=IBM+Plex+Serif:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg:       #fafaf7;
+  --bg2:      #f0efe8;
+  --bg3:      #e6e4db;
+  --ink:      #141410;
+  --ink2:     #2a2a24;
+  --ink3:     #5a5a50;
+  --ink4:     #9a9a8c;
+  --border:   #d0cfc4;
+  --border2:  #b8b7aa;
+
+  --blue:     #1a4fa8;
+  --blue-l:   #e8f0ff;
+  --green:    #1a6830;
+  --green-l:  #e8f8ee;
+  --amber:    #8a4e00;
+  --amber-l:  #fff4e0;
+  --red:      #9a1a1a;
+  --red-l:    #ffeaea;
+  --teal:     #006878;
+  --teal-l:   #e0f4f8;
+
+  --mcp:      #1a4fa8;   /* colore principale MCP */
+}
+
+* { margin:0; padding:0; box-sizing:border-box; }
+html { scroll-behavior:smooth; }
+
+body {
+  background: var(--bg);
+  color: var(--ink);
+  font-family: 'IBM Plex Sans', sans-serif;
+  font-weight: 300;
+  font-size: 14px;
+  line-height: 1.7;
+}
+
+/* ─── HEADER ─── */
+.header {
+  background: var(--ink);
+  padding: 52px 56px 44px;
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 40px;
+  align-items: end;
+  position: relative;
+  overflow: hidden;
+}
+
+.header::before {
+  content: 'MCP';
+  position: absolute;
+  right: -20px; bottom: -60px;
+  font-family: 'IBM Plex Mono', monospace;
+  font-weight: 700;
+  font-size: 220px;
+  color: rgba(255,255,255,0.03);
+  letter-spacing: -10px;
+  pointer-events: none;
+  line-height: 1;
+}
+
+.header-eye {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 10px;
+  letter-spacing: 3px;
+  text-transform: uppercase;
+  color: rgba(255,255,255,0.28);
+  margin-bottom: 14px;
+}
+
+.header h1 {
+  font-family: 'IBM Plex Serif', serif;
+  font-weight: 600;
+  font-size: clamp(28px, 4vw, 52px);
+  line-height: 1.1;
+  color: #fff;
+  letter-spacing: -0.5px;
+}
+
+.header h1 span {
+  color: rgba(255,255,255,0.35);
+  font-weight: 300;
+}
+
+.header-right {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  align-items: flex-end;
+}
+
+.header-badge {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 11px;
+  padding: 6px 14px;
+  border: 1px solid rgba(255,255,255,0.15);
+  color: rgba(255,255,255,0.5);
+  white-space: nowrap;
+}
+
+.header-badge.highlight {
+  border-color: var(--mcp);
+  color: #7aabff;
+  background: rgba(26,79,168,0.15);
+}
+
+/* ─── BODY WRAPPER ─── */
+.body { padding: 0 56px 80px; }
+
+/* ─── SECTION ─── */
+.section { margin-top: 64px; }
+
+.sec-label {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 10px;
+  letter-spacing: 3px;
+  text-transform: uppercase;
+  color: var(--ink4);
+  margin-bottom: 8px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.sec-label::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: var(--border);
+}
+
+.sec-title {
+  font-family: 'IBM Plex Serif', serif;
+  font-weight: 600;
+  font-size: clamp(22px, 3vw, 36px);
+  line-height: 1.1;
+  letter-spacing: -0.3px;
+  margin-bottom: 12px;
+}
+
+.sec-intro {
+  font-size: 14px;
+  color: var(--ink3);
+  max-width: 680px;
+  margin-bottom: 36px;
+  line-height: 1.75;
+}
+
+.sec-intro strong { color: var(--ink); font-weight: 500; }
+
+/* ─── ANALOGY BOX ─── */
+.analogy {
+  border: 1px solid var(--border2);
+  display: grid;
+  grid-template-columns: 1fr 48px 1fr;
+  gap: 0;
+  background: var(--bg);
+  margin-bottom: 32px;
+  overflow: hidden;
+}
+
+.analogy-side {
+  padding: 24px;
+}
+
+.analogy-side.before { background: var(--red-l); }
+.analogy-side.after  { background: var(--green-l); }
+
+.analogy-arrow {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--bg2);
+  border-left: 1px solid var(--border);
+  border-right: 1px solid var(--border);
+  font-size: 20px;
+  color: var(--ink4);
+}
+
+.analogy-label {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 9px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  margin-bottom: 10px;
+}
+
+.analogy-side.before .analogy-label { color: var(--red); }
+.analogy-side.after  .analogy-label { color: var(--green); }
+
+.analogy-title {
+  font-family: 'IBM Plex Sans', sans-serif;
+  font-weight: 600;
+  font-size: 15px;
+  margin-bottom: 8px;
+}
+
+.analogy-text {
+  font-size: 12px;
+  color: var(--ink3);
+  line-height: 1.6;
+}
+
+/* ─── FLOW DIAGRAM ─── */
+.flow-wrap {
+  border: 1px solid var(--border2);
+  overflow: hidden;
+  margin-bottom: 32px;
+}
+
+.flow-header {
+  background: var(--ink);
+  padding: 10px 20px;
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 10px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: rgba(255,255,255,0.4);
+  display: flex;
+  justify-content: space-between;
+}
+
+.flow-body {
+  background: var(--bg2);
+  padding: 32px 28px;
+}
+
+/* Flusso orizzontale */
+.flow-h {
+  display: flex;
+  align-items: center;
+  gap: 0;
+  overflow-x: auto;
+  padding-bottom: 8px;
+}
+
+.flow-node {
+  flex-shrink: 0;
+  padding: 14px 18px;
+  background: var(--bg);
+  border: 1.5px solid var(--border2);
+  text-align: center;
+  min-width: 120px;
+  position: relative;
+}
+
+.flow-node.mcp-node {
+  border-color: var(--mcp);
+  background: var(--blue-l);
+}
+
+.flow-node.agent-node {
+  border-color: var(--teal);
+  background: var(--teal-l);
+}
+
+.flow-node.tool-node {
+  border-color: var(--green);
+  background: var(--green-l);
+}
+
+.flow-node.llm-node {
+  border-color: var(--amber);
+  background: var(--amber-l);
+}
+
+.flow-node-label {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 9px;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  color: var(--ink4);
+  margin-bottom: 5px;
+}
+
+.flow-node-name {
+  font-family: 'IBM Plex Sans', sans-serif;
+  font-weight: 600;
+  font-size: 13px;
+  line-height: 1.2;
+}
+
+.flow-node-sub {
+  font-size: 10px;
+  color: var(--ink4);
+  margin-top: 4px;
+  font-family: 'IBM Plex Mono', monospace;
+}
+
+.flow-arrow {
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 0 8px;
+  min-width: 60px;
+}
+
+.flow-arrow-line {
+  width: 40px;
+  height: 1.5px;
+  background: var(--border2);
+  position: relative;
+}
+
+.flow-arrow-line::after {
+  content: '▶';
+  position: absolute;
+  right: -8px;
+  top: -7px;
+  font-size: 10px;
+  color: var(--ink4);
+}
+
+.flow-arrow-label {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 9px;
+  color: var(--ink4);
+  text-align: center;
+  margin-top: 6px;
+  white-space: nowrap;
+}
+
+/* Flusso verticale con step */
+.flow-v {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
+.flow-step {
+  display: grid;
+  grid-template-columns: 48px 1fr;
+  border-bottom: 1px solid var(--border);
+  background: var(--bg);
+}
+
+.flow-step:last-child { border-bottom: none; }
+
+.flow-step-num {
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  padding: 16px 0 16px;
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--mcp);
+  background: var(--blue-l);
+  border-right: 1px solid var(--border);
+}
+
+.flow-step-content {
+  padding: 16px 20px;
+}
+
+.flow-step-title {
+  font-weight: 600;
+  font-size: 13px;
+  margin-bottom: 4px;
+}
+
+.flow-step-desc {
+  font-size: 12px;
+  color: var(--ink3);
+  line-height: 1.5;
+}
+
+.flow-step-code {
+  margin-top: 8px;
+  background: var(--ink);
+  color: #7aabff;
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 11px;
+  padding: 8px 12px;
+  line-height: 1.6;
+}
+
+.flow-step-code .comment { color: rgba(255,255,255,0.25); }
+.flow-step-code .key { color: #7aabff; }
+.flow-step-code .val { color: #a8e06a; }
+.flow-step-code .str { color: #f5c842; }
+
+/* ─── COMPARISON TABLE ─── */
+.comp-table {
+  width: 100%;
+  border-collapse: collapse;
+  border: 1px solid var(--border2);
+  font-size: 13px;
+  margin-bottom: 32px;
+}
+
+.comp-table th {
+  padding: 11px 16px;
+  text-align: left;
+  background: var(--ink);
+  color: rgba(255,255,255,0.6);
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 10px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  border-right: 1px solid rgba(255,255,255,0.06);
+  font-weight: 400;
+}
+
+.comp-table th:last-child { border-right: none; }
+
+.comp-table td {
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--border);
+  border-right: 1px solid var(--border);
+  vertical-align: top;
+  line-height: 1.5;
+}
+
+.comp-table td:last-child { border-right: none; }
+.comp-table tr:last-child td { border-bottom: none; }
+.comp-table tr:nth-child(even) td { background: var(--bg2); }
+
+.comp-table .row-h {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 11px;
+  color: var(--ink3);
+  background: var(--bg2) !important;
+  font-weight: 500;
+}
+
+/* ─── DECISION TREE ─── */
+.dtree {
+  border: 1px solid var(--border2);
+  overflow: hidden;
+}
+
+.dtree-header {
+  background: var(--ink);
+  padding: 10px 20px;
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 10px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: rgba(255,255,255,0.4);
+}
+
+.dtree-body {
+  padding: 28px;
+  background: var(--bg2);
+}
+
+.dnode {
+  border: 1.5px solid var(--border2);
+  background: var(--bg);
+  padding: 14px 18px;
+  margin-bottom: 0;
+}
+
+.dnode.question {
+  border-color: var(--mcp);
+  background: var(--blue-l);
+}
+
+.dnode.result-yes {
+  border-color: var(--green);
+  background: var(--green-l);
+}
+
+.dnode.result-no {
+  border-color: var(--amber);
+  background: var(--amber-l);
+}
+
+.dnode.result-build {
+  border-color: var(--teal);
+  background: var(--teal-l);
+}
+
+.dnode-q {
+  font-weight: 600;
+  font-size: 13px;
+  margin-bottom: 4px;
+}
+
+.dnode-desc {
+  font-size: 12px;
+  color: var(--ink3);
+  line-height: 1.5;
+}
+
+.dtree-row {
+  display: grid;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.dtree-row-2 { grid-template-columns: 1fr 1fr; }
+.dtree-row-3 { grid-template-columns: 1fr 1fr 1fr; }
+
+.dtree-connector {
+  text-align: center;
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 11px;
+  color: var(--ink4);
+  margin-bottom: 8px;
+  display: flex;
+  justify-content: center;
+  gap: 40%;
+}
+
+.dtree-connector-c { text-align: center; margin-bottom: 8px; font-family: 'IBM Plex Mono', monospace; font-size: 20px; color: var(--ink4); }
+
+/* ─── INFO CARDS ─── */
+.cards-3 {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1px;
+  background: var(--border);
+  border: 1px solid var(--border2);
+  margin-bottom: 32px;
+}
+
+.cards-2 {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1px;
+  background: var(--border);
+  border: 1px solid var(--border2);
+  margin-bottom: 32px;
+}
+
+.info-card {
+  background: var(--bg);
+  padding: 24px 20px;
+}
+
+.ic-label {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 9px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: var(--ink4);
+  margin-bottom: 10px;
+}
+
+.ic-title {
+  font-weight: 600;
+  font-size: 15px;
+  margin-bottom: 10px;
+  line-height: 1.2;
+}
+
+.ic-text {
+  font-size: 12px;
+  color: var(--ink3);
+  line-height: 1.65;
+}
+
+.ic-text strong { color: var(--ink); font-weight: 500; }
+
+/* Accent borders */
+.accent-blue  { border-top: 3px solid var(--blue); }
+.accent-green { border-top: 3px solid var(--green); }
+.accent-amber { border-top: 3px solid var(--amber); }
+.accent-teal  { border-top: 3px solid var(--teal); }
+.accent-red   { border-top: 3px solid var(--red); }
+
+/* ─── CODE BLOCKS ─── */
+.code-block {
+  background: var(--ink);
+  padding: 20px 24px;
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 12px;
+  line-height: 1.8;
+  overflow-x: auto;
+  margin-bottom: 16px;
+  border-left: 3px solid var(--mcp);
+}
+
+.code-block .comment { color: rgba(255,255,255,0.2); }
+.code-block .key     { color: #7aabff; }
+.code-block .val     { color: #a8e06a; }
+.code-block .str     { color: #f5c842; }
+.code-block .fn      { color: #f5a842; }
+.code-block .kw      { color: #e06af5; }
+.code-block .plain   { color: rgba(255,255,255,0.75); }
+
+.code-label {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 10px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: var(--ink4);
+  margin-bottom: 8px;
+}
+
+/* ─── CATALOG TABLE ─── */
+.catalog {
+  border: 1px solid var(--border2);
+  overflow: hidden;
+  margin-bottom: 32px;
+}
+
+.catalog-header {
+  background: var(--ink);
+  padding: 10px 20px;
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 10px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: rgba(255,255,255,0.4);
+}
+
+.catalog-row {
+  display: grid;
+  grid-template-columns: 180px 100px 1fr 120px;
+  border-bottom: 1px solid var(--border);
+  align-items: center;
+}
+
+.catalog-row:last-child { border-bottom: none; }
+
+.catalog-row.cat-head {
+  background: var(--bg2);
+  border-bottom: 1.5px solid var(--border2);
+}
+
+.catalog-cell {
+  padding: 11px 16px;
+  font-size: 12px;
+  border-right: 1px solid var(--border);
+}
+
+.catalog-cell:last-child { border-right: none; }
+
+.catalog-row.cat-head .catalog-cell {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 9px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: var(--ink4);
+}
+
+.catalog-cell .name {
+  font-weight: 600;
+  font-size: 13px;
+  margin-bottom: 2px;
+}
+
+.catalog-cell .by {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 9px;
+  color: var(--ink4);
+  letter-spacing: 1px;
+}
+
+.catalog-cell .desc {
+  font-size: 11px;
+  color: var(--ink3);
+  line-height: 1.5;
+}
+
+.quality-badge {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 10px;
+  padding: 3px 8px;
+  border: 1px solid;
+  display: inline-block;
+}
+
+.q-high   { border-color: var(--green); color: var(--green); }
+.q-med    { border-color: var(--amber); color: var(--amber); }
+.q-var    { border-color: var(--ink4); color: var(--ink4); }
+
+/* ─── WARNING BOX ─── */
+.warning {
+  background: var(--amber-l);
+  border: 1px solid var(--amber);
+  border-left: 4px solid var(--amber);
+  padding: 20px 24px;
+  margin-bottom: 24px;
+  display: grid;
+  grid-template-columns: 24px 1fr;
+  gap: 12px;
+  align-items: start;
+}
+
+.warning-icon { font-size: 18px; }
+
+.warning-content .wt {
+  font-weight: 600;
+  font-size: 13px;
+  margin-bottom: 6px;
+  color: var(--amber);
+}
+
+.warning-content .wd {
+  font-size: 12px;
+  color: var(--ink3);
+  line-height: 1.6;
+}
+
+/* ─── STACK MATRIX ─── */
+.stack-matrix {
+  width: 100%;
+  border-collapse: collapse;
+  border: 1px solid var(--border2);
+  margin-bottom: 32px;
+}
+
+.stack-matrix th {
+  padding: 12px 16px;
+  background: var(--bg2);
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 10px;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  color: var(--ink4);
+  border-right: 1px solid var(--border);
+  border-bottom: 1.5px solid var(--border2);
+  text-align: left;
+  font-weight: 400;
+}
+
+.stack-matrix th:last-child { border-right: none; }
+
+.stack-matrix td {
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--border);
+  border-right: 1px solid var(--border);
+  font-size: 12px;
+  vertical-align: top;
+  line-height: 1.5;
+}
+
+.stack-matrix td:last-child { border-right: none; }
+.stack-matrix tr:last-child td { border-bottom: none; }
+
+.stack-matrix .stack-name {
+  font-weight: 600;
+  font-size: 13px;
+}
+
+.stack-matrix .stack-sub {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 9px;
+  color: var(--ink4);
+  margin-top: 2px;
+  letter-spacing: 1px;
+}
+
+.status-yes   { color: var(--green); font-weight: 600; font-family:'IBM Plex Mono',monospace; font-size:11px; }
+.status-part  { color: var(--amber); font-weight: 500; font-family:'IBM Plex Mono',monospace; font-size:11px; }
+.status-no    { color: var(--red);   font-weight: 500; font-family:'IBM Plex Mono',monospace; font-size:11px; }
+
+/* ─── CHECKLIST ─── */
+.checklist {
+  border: 1px solid var(--border2);
+  overflow: hidden;
+  margin-bottom: 32px;
+}
+
+.checklist-header {
+  background: var(--ink);
+  padding: 10px 20px;
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 10px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: rgba(255,255,255,0.4);
+}
+
+.cl-group {
+  border-bottom: 1.5px solid var(--border2);
+}
+
+.cl-group:last-child { border-bottom: none; }
+
+.cl-group-title {
+  background: var(--bg2);
+  padding: 10px 20px;
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 10px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: var(--ink3);
+  border-bottom: 1px solid var(--border);
+}
+
+.cl-item {
+  display: grid;
+  grid-template-columns: 24px 1fr auto;
+  gap: 12px;
+  padding: 12px 20px;
+  border-bottom: 1px solid var(--border);
+  align-items: start;
+  background: var(--bg);
+}
+
+.cl-item:last-child { border-bottom: none; }
+.cl-item:hover { background: var(--bg2); }
+
+.cl-check {
+  width: 18px; height: 18px;
+  border: 1.5px solid var(--border2);
+  border-radius: 3px;
+  flex-shrink: 0;
+  margin-top: 1px;
+}
+
+.cl-text { font-size: 13px; line-height: 1.5; }
+.cl-text .q { font-weight: 500; margin-bottom: 2px; }
+.cl-text .a { font-size: 11px; color: var(--ink3); font-style: italic; }
+
+.cl-priority {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 9px;
+  padding: 2px 8px;
+  border: 1px solid;
+  white-space: nowrap;
+  align-self: start;
+}
+
+.p-must   { border-color: var(--red);   color: var(--red); }
+.p-should { border-color: var(--amber); color: var(--amber); }
+.p-nice   { border-color: var(--green); color: var(--green); }
+
+/* ─── FOOTER ─── */
+footer {
+  border-top: 1px solid var(--border);
+  padding: 24px 56px;
+  display: flex;
+  justify-content: space-between;
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 10px;
+  color: var(--ink4);
+  letter-spacing: 1px;
+}
+
+/* ─── RESPONSIVE ─── */
+@media (max-width: 860px) {
+  .header, .body { padding-left: 20px; padding-right: 20px; }
+  .header { grid-template-columns: 1fr; }
+  .cards-3, .cards-2 { grid-template-columns: 1fr; }
+  .analogy { grid-template-columns: 1fr; }
+  .analogy-arrow { padding: 12px; writing-mode: horizontal-tb; }
+  .catalog-row { grid-template-columns: 1fr 1fr; }
+  .dtree-row-2, .dtree-row-3 { grid-template-columns: 1fr; }
+  footer { padding: 20px; flex-direction: column; gap: 6px; }
+}
+</style>
+</head>
+<body>
+
+<!-- HEADER -->
+<div class="header">
+  <div>
+    <div class="header-eye">Guida pratica · Model Context Protocol · Febbraio 2026</div>
+    <h1>MCP nella pratica<br><span>cosa cambia quando costruisci un agente</span></h1>
+  </div>
+  <div class="header-right">
+    <span class="header-badge highlight">Standard aperto · Anthropic 2024</span>
+    <span class="header-badge">JSON-RPC 2.0 over stdio / HTTP</span>
+    <span class="header-badge">Client ↔ Server protocol</span>
+  </div>
+</div>
+
+<div class="body">
+
+<!-- ═══════════════════════════════
+     01 — COSA È MCP IN CONCRETO
+═══════════════════════════════ -->
+<div class="section">
+  <div class="sec-label">01 — Definizione operativa</div>
+  <div class="sec-title">Cosa è MCP, concretamente</div>
+  <p class="sec-intro">
+    MCP è uno standard che definisce <strong>come un agente AI chiede e usa strumenti esterni</strong>. Non è una libreria, non è un servizio cloud, non è un'azienda. È una specifica — come HTTP o USB — che dice: "se vuoi che un agente possa usare il tuo strumento, implementa questa interfaccia". Il risultato è che agente e strumento si parlano senza che nessuno dei due debba sapere come è fatto l'altro.
+  </p>
+
+  <!-- ANALOGIA PRIMA/DOPO -->
+  <div class="analogy">
+    <div class="analogy-side before">
+      <div class="analogy-label">Prima di MCP</div>
+      <div class="analogy-title">N×M integrazioni custom</div>
+      <div class="analogy-text">
+        Hai 3 agenti (LangChain, Claude, Cursor) e 5 strumenti (GitHub, Slack, Notion, DB, Drive). Ogni coppia agente-strumento richiede codice custom. Risultato: 15 integrazioni diverse da scrivere, mantenere, aggiornare. Quando GitHub aggiorna la sua API, devi aggiornare 3 integrazioni separatamente.
+      </div>
+    </div>
+    <div class="analogy-arrow">→</div>
+    <div class="analogy-side after">
+      <div class="analogy-label">Con MCP</div>
+      <div class="analogy-title">N+M implementazioni standard</div>
+      <div class="analogy-text">
+        GitHub implementa un server MCP una volta sola. LangChain implementa il client MCP una volta sola. Ogni agente che supporta MCP può usare automaticamente ogni strumento che supporta MCP. 3+5=8 implementazioni invece di 15. Quando GitHub aggiorna, aggiorna solo il suo server MCP.
+      </div>
+    </div>
+  </div>
+
+  <!-- I TRE CONCETTI FONDAMENTALI -->
+  <div class="cards-3">
+    <div class="info-card accent-blue">
+      <div class="ic-label">Concetto 1</div>
+      <div class="ic-title">MCP Server</div>
+      <div class="ic-text">
+        Il lato dello <strong>strumento</strong>. Un server MCP espone le funzionalità di un sistema (es. GitHub) in formato standard: lista degli strumenti disponibili, schema degli input/output, logica di esecuzione. Chiunque lo implementa una volta, per tutti i client MCP.
+      </div>
+    </div>
+    <div class="info-card accent-teal">
+      <div class="ic-label">Concetto 2</div>
+      <div class="ic-title">MCP Client</div>
+      <div class="ic-text">
+        Il lato dell'<strong>agente</strong>. Un client MCP sa come connettersi a qualsiasi server MCP, scoprire i suoi strumenti e usarli. LangChain, Claude API, Cursor — tutti implementano MCP come client e guadagnano accesso a tutti i server esistenti automaticamente.
+      </div>
+    </div>
+    <div class="info-card accent-green">
+      <div class="ic-label">Concetto 3</div>
+      <div class="ic-title">Tool Discovery</div>
+      <div class="ic-text">
+        L'agente non deve sapere a priori cosa può fare un server. <strong>Chiede al server la lista degli strumenti disponibili a runtime</strong>. Il server risponde con nome, descrizione e schema di ogni tool. L'LLM decide autonomamente se e quale usare in base al task.
+      </div>
+    </div>
+  </div>
+
+  <!-- COSA PASSA NEL PROTOCOLLO -->
+  <div class="flow-wrap">
+    <div class="flow-header">
+      Cosa succede tecnicamente quando un agente usa un server MCP
+      <span>Flusso messaggi JSON-RPC</span>
+    </div>
+    <div class="flow-body">
+      <div class="flow-v" style="border:1px solid var(--border)">
+        <div class="flow-step">
+          <div class="flow-step-num">1</div>
+          <div class="flow-step-content">
+            <div class="flow-step-title">Il client si connette al server</div>
+            <div class="flow-step-desc">L'agente apre una connessione al server MCP (via stdio o HTTP/SSE). Avviene una volta all'avvio.</div>
+            <div class="flow-step-code"><span class="comment">// Connessione iniziale</span><br><span class="key">client</span>.<span class="fn">connect</span>(<span class="str">"npx @modelcontextprotocol/server-github"</span>)</div>
+          </div>
+        </div>
+        <div class="flow-step">
+          <div class="flow-step-num">2</div>
+          <div class="flow-step-content">
+            <div class="flow-step-title">Il client chiede "che strumenti hai?"</div>
+            <div class="flow-step-desc">Il client invia una richiesta <code>tools/list</code>. Il server risponde con la lista completa degli strumenti e i loro schemi.</div>
+            <div class="flow-step-code"><span class="comment">// Risposta del server: lista strumenti</span><br><span class="plain">[</span><br>&nbsp;&nbsp;{ <span class="key">name</span>: <span class="str">"create_issue"</span>, <span class="key">description</span>: <span class="str">"Crea un issue su GitHub"</span>,<br>&nbsp;&nbsp;&nbsp;&nbsp;<span class="key">inputSchema</span>: { <span class="key">repo</span>: <span class="str">"string"</span>, <span class="key">title</span>: <span class="str">"string"</span>, ... } },<br>&nbsp;&nbsp;{ <span class="key">name</span>: <span class="str">"list_prs"</span>, <span class="key">description</span>: <span class="str">"Lista le PR aperte"</span>, ... }<br><span class="plain">]</span></div>
+          </div>
+        </div>
+        <div class="flow-step">
+          <div class="flow-step-num">3</div>
+          <div class="flow-step-content">
+            <div class="flow-step-title">La lista degli strumenti va nel contesto del LLM</div>
+            <div class="flow-step-desc">Il framework inserisce automaticamente la descrizione degli strumenti MCP nel prompt del modello. <strong>L'LLM "vede" gli strumenti disponibili e decide se usarli.</strong></div>
+            <div class="flow-step-code"><span class="comment">// Cosa vede il LLM nel suo contesto</span><br><span class="str">"Hai accesso ai seguenti strumenti:</span><br><span class="str">- create_issue: Crea un issue su GitHub. Parametri: repo, title, body...</span><br><span class="str">- list_prs: Lista le PR aperte. Parametri: repo, state..."</span></div>
+          </div>
+        </div>
+        <div class="flow-step">
+          <div class="flow-step-num">4</div>
+          <div class="flow-step-content">
+            <div class="flow-step-title">Il LLM decide di chiamare uno strumento</div>
+            <div class="flow-step-desc">In risposta al task dell'utente, il modello produce una chiamata strumento strutturata invece di testo libero.</div>
+            <div class="flow-step-code"><span class="comment">// Output del LLM (non testo, ma tool call)</span><br>{ <span class="key">tool</span>: <span class="str">"create_issue"</span>,<br>&nbsp;&nbsp;<span class="key">input</span>: { <span class="key">repo</span>: <span class="str">"mia-azienda/backend"</span>, <span class="key">title</span>: <span class="str">"Bug nel login"</span>,<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="key">body</span>: <span class="str">"Il form non valida l'email"</span> } }</div>
+          </div>
+        </div>
+        <div class="flow-step">
+          <div class="flow-step-num">5</div>
+          <div class="flow-step-content">
+            <div class="flow-step-title">Il client esegue lo strumento sul server</div>
+            <div class="flow-step-desc">Il framework intercetta la tool call, la manda al server MCP con <code>tools/call</code>. Il server esegue l'azione reale (chiama l'API GitHub) e restituisce il risultato.</div>
+            <div class="flow-step-code"><span class="comment">// Risposta del server dopo l'esecuzione</span><br>{ <span class="key">content</span>: [{ <span class="key">type</span>: <span class="str">"text"</span>,<br>&nbsp;&nbsp;<span class="key">text</span>: <span class="str">"Issue #42 creato: https://github.com/mia-azienda/backend/issues/42"</span> }] }</div>
+          </div>
+        </div>
+        <div class="flow-step">
+          <div class="flow-step-num">6</div>
+          <div class="flow-step-content">
+            <div class="flow-step-title">Il risultato torna nel contesto del LLM</div>
+            <div class="flow-step-desc">Il framework aggiunge il risultato al contesto. Il LLM continua il ragionamento con questa nuova informazione e produce la risposta finale all'utente.</div>
+            <div class="flow-step-code"><span class="comment">// Il LLM risponde all'utente con l'esito</span><br><span class="str">"Ho creato l'issue #42 'Bug nel login' su mia-azienda/backend.</span><br><span class="str">Puoi trovarlo qui: [link]. Vuoi che assegni anche un assignee?"</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+<!-- ═══════════════════════════════
+     02 — COSA CAMBIA IN PRATICA
+═══════════════════════════════ -->
+<div class="section">
+  <div class="sec-label">02 — Impatto pratico</div>
+  <div class="sec-title">Cosa cambia concretamente<br>quando costruisci un agente</div>
+  <p class="sec-intro">
+    MCP non cambia la logica dell'agente — cambia <strong>come connetti gli strumenti</strong>. Invece di scrivere codice di integrazione, configuri una connessione a un server MCP. Questo ha impatti diretti su tempo, manutenzione e architettura.
+  </p>
+
+  <!-- BEFORE/AFTER TECNICO -->
+  <div class="flow-wrap">
+    <div class="flow-header">
+      Confronto: strumento custom vs strumento MCP
+      <span>Esempio pratico: connettere GitHub a un agente LangChain</span>
+    </div>
+    <div class="flow-body">
+      <div class="cards-2" style="margin-bottom:0; border:none; background:transparent; gap:16px">
+        <div>
+          <div class="code-label" style="color:var(--red)">❌ Senza MCP — integrazione custom (100+ righe)</div>
+          <div class="code-block">
+<span class="comment"># Scrivi tu tutto da zero</span><br>
+<span class="kw">import</span> <span class="plain">requests</span><br>
+<br>
+<span class="kw">class</span> <span class="fn">GitHubTool</span>:<br>
+&nbsp;&nbsp;<span class="kw">def</span> <span class="fn">__init__</span>(<span class="plain">self, token</span>):<br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="plain">self.headers</span> = {<span class="str">"Authorization"</span>: <span class="str">f"token {token}"</span>}<br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="plain">self.base_url</span> = <span class="str">"https://api.github.com"</span><br>
+<br>
+&nbsp;&nbsp;<span class="kw">def</span> <span class="fn">create_issue</span>(<span class="plain">self, repo, title, body</span>):<br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="comment"># gestione errori, retry, rate limiting,</span><br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="comment"># validazione input, parsing risposta...</span><br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="plain">url</span> = <span class="str">f"{self.base_url}/repos/{repo}/issues"</span><br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="plain">response</span> = <span class="fn">requests.post</span>(<span class="plain">url</span>,<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="plain">headers=self.headers</span>,<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="plain">json={</span><span class="str">"title"</span>: <span class="plain">title</span>, <span class="str">"body"</span>: <span class="plain">body</span>})<br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="kw">if</span> <span class="plain">response.status_code != 201</span>:<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="kw">raise</span> <span class="fn">Exception</span>(<span class="str">f"Errore: {response.text}"</span>)<br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="kw">return</span> <span class="plain">response.json()</span><br>
+<br>
+&nbsp;&nbsp;<span class="kw">def</span> <span class="fn">list_prs</span>(<span class="plain">self, repo, state</span>):<br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="comment"># ... altra logica custom ...</span><br>
+<br>
+<span class="comment"># Wrap come tool LangChain</span><br>
+<span class="kw">from</span> <span class="plain">langchain.tools</span> <span class="kw">import</span> <span class="plain">StructuredTool</span><br>
+<span class="plain">github</span> = <span class="fn">GitHubTool</span>(<span class="plain">token=os.getenv</span>(<span class="str">"GITHUB_TOKEN"</span>))<br>
+<span class="plain">tools</span> = [<span class="fn">StructuredTool.from_function</span>(<span class="plain">github.create_issue</span>), ...]
+          </div>
+        </div>
+        <div>
+          <div class="code-label" style="color:var(--green)">✓ Con MCP — 5 righe di configurazione</div>
+          <div class="code-block">
+<span class="comment"># Il server MCP GitHub è già scritto e mantenuto</span><br>
+<span class="comment"># Tu configuri solo la connessione</span><br>
+<br>
+<span class="kw">from</span> <span class="plain">langchain_mcp_adapters.client</span> <span class="kw">import</span> <span class="plain">MultiServerMCPClient</span><br>
+<br>
+<span class="plain">client</span> = <span class="fn">MultiServerMCPClient</span>({<br>
+&nbsp;&nbsp;<span class="str">"github"</span>: {<br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="str">"command"</span>: <span class="str">"npx"</span>,<br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="str">"args"</span>: [<span class="str">"@modelcontextprotocol/server-github"</span>],<br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="str">"env"</span>: {<span class="str">"GITHUB_PERSONAL_ACCESS_TOKEN"</span>: <span class="str">"..."</span>}<br>
+&nbsp;&nbsp;}<br>
+})<br>
+<br>
+<span class="comment"># Gli strumenti GitHub sono ora disponibili</span><br>
+<span class="comment"># per il tuo agente. Zero altro codice.</span><br>
+<span class="plain">tools</span> = <span class="kw">await</span> <span class="plain">client</span>.<span class="fn">get_tools</span>()
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- IMPATTO SU 4 DIMENSIONI -->
+  <div class="cards-2">
+    <div class="info-card accent-green">
+      <div class="ic-label">Impatto 1 — Tempo di sviluppo</div>
+      <div class="ic-title">Da giorni a ore per ogni integrazione</div>
+      <div class="ic-text">
+        Connettere GitHub a un agente senza MCP richiede 1-3 giorni (scrivere il tool, gestire errori, testare, documentare). Con MCP: configurare la connessione richiede 30 minuti. <strong>Il risparmio si moltiplica per ogni strumento che aggiungi.</strong> Un agente con 10 strumenti: 30 giorni → 5 ore.
+      </div>
+    </div>
+    <div class="info-card accent-teal">
+      <div class="ic-label">Impatto 2 — Manutenzione</div>
+      <div class="ic-title">Aggiornamenti automatici dagli owner</div>
+      <div class="ic-text">
+        Quando GitHub aggiorna la sua API, <strong>aggiorna il suo server MCP</strong>. Tu aggiorni una dipendenza npm/pip e hai subito la versione nuova — senza toccare il tuo codice. Senza MCP, dovresti aggiornare la tua integrazione custom ogni volta che cambia l'API esterna.
+      </div>
+    </div>
+    <div class="info-card accent-amber">
+      <div class="ic-label">Impatto 3 — Portabilità</div>
+      <div class="ic-title">Stesso server MCP funziona su tutti gli agenti</div>
+      <div class="ic-text">
+        Il server MCP che usi con LangChain funziona identicamente con Claude API, con Cursor, con Flowise. Se cambi framework agente, <strong>non devi riscrivere nessuna integrazione strumento</strong>. L'investimento nella configurazione dei server MCP è portabile tra stack diversi.
+      </div>
+    </div>
+    <div class="info-card accent-blue">
+      <div class="ic-label">Impatto 4 — Complessità architetturale</div>
+      <div class="ic-title">Un processo separato per ogni server</div>
+      <div class="ic-text">
+        Ogni server MCP gira come <strong>processo separato</strong> (tipicamente Node.js). Il tuo agente Python coordina N processi esterni via stdio. Questo aggiunge overhead di gestione dei processi e può complicare il deployment. È il trade-off principale da considerare.
+      </div>
+    </div>
+  </div>
+</div>
+
+
+<!-- ═══════════════════════════════
+     03 — CATALOGO SERVER MCP
+═══════════════════════════════ -->
+<div class="section">
+  <div class="sec-label">03 — Server disponibili oggi</div>
+  <div class="sec-title">Cosa puoi connettere<br>al tuo agente adesso</div>
+  <p class="sec-intro">
+    Questi sono i server MCP più stabili e usati. <strong>Prima di costruire un'integrazione custom, controlla sempre se esiste già un server MCP.</strong> La qualità varia: i server "ufficiali" (mantenuti dal vendor stesso o da Anthropic) sono affidabili; i server community sono variabili.
+  </p>
+
+  <div class="catalog">
+    <div class="catalog-header">Server MCP pubblici · Qualità e maturità</div>
+
+    <!-- UFFICIALI ANTHROPIC -->
+    <div class="catalog-row cat-head">
+      <div class="catalog-cell">Strumento</div>
+      <div class="catalog-cell">Categoria</div>
+      <div class="catalog-cell">Cosa espone</div>
+      <div class="catalog-cell">Qualità</div>
+    </div>
+
+    <div class="catalog-row" style="background:rgba(26,79,168,0.04)">
+      <div class="catalog-cell"><div class="name">GitHub</div><div class="by">UFFICIALE ANTHROPIC</div></div>
+      <div class="catalog-cell" style="font-size:11px;color:var(--ink3)">Dev / VCS</div>
+      <div class="catalog-cell"><div class="desc">Issue, PR, repository, file, search code, branch, release</div></div>
+      <div class="catalog-cell"><span class="quality-badge q-high">Stabile</span></div>
+    </div>
+
+    <div class="catalog-row" style="background:rgba(26,79,168,0.04)">
+      <div class="catalog-cell"><div class="name">Filesystem</div><div class="by">UFFICIALE ANTHROPIC</div></div>
+      <div class="catalog-cell" style="font-size:11px;color:var(--ink3)">Sistema locale</div>
+      <div class="catalog-cell"><div class="desc">Leggi/scrivi file locali con permessi configurabili. Sandbox sicura.</div></div>
+      <div class="catalog-cell"><span class="quality-badge q-high">Stabile</span></div>
+    </div>
+
+    <div class="catalog-row" style="background:rgba(26,79,168,0.04)">
+      <div class="catalog-cell"><div class="name">PostgreSQL</div><div class="by">UFFICIALE ANTHROPIC</div></div>
+      <div class="catalog-cell" style="font-size:11px;color:var(--ink3)">Database</div>
+      <div class="catalog-cell"><div class="desc">Query SQL read-only, schema inspection, table exploration</div></div>
+      <div class="catalog-cell"><span class="quality-badge q-high">Stabile</span></div>
+    </div>
+
+    <div class="catalog-row" style="background:rgba(26,79,168,0.04)">
+      <div class="catalog-cell"><div class="name">Brave Search</div><div class="by">UFFICIALE ANTHROPIC</div></div>
+      <div class="catalog-cell" style="font-size:11px;color:var(--ink3)">Web search</div>
+      <div class="catalog-cell"><div class="desc">Ricerca web e news in tempo reale via Brave Search API</div></div>
+      <div class="catalog-cell"><span class="quality-badge q-high">Stabile</span></div>
+    </div>
+
+    <div class="catalog-row" style="background:rgba(26,79,168,0.04)">
+      <div class="catalog-cell"><div class="name">Memory</div><div class="by">UFFICIALE ANTHROPIC</div></div>
+      <div class="catalog-cell" style="font-size:11px;color:var(--ink3)">Memoria</div>
+      <div class="catalog-cell"><div class="desc">Knowledge graph persistente — l'agente ricorda informazioni tra sessioni</div></div>
+      <div class="catalog-cell"><span class="quality-badge q-high">Stabile</span></div>
+    </div>
+
+    <div class="catalog-row" style="background:rgba(26,79,168,0.04)">
+      <div class="catalog-cell"><div class="name">Fetch</div><div class="by">UFFICIALE ANTHROPIC</div></div>
+      <div class="catalog-cell" style="font-size:11px;color:var(--ink3)">Web</div>
+      <div class="catalog-cell"><div class="desc">Fetcha URL, converte HTML in Markdown, estrae contenuto pagine web</div></div>
+      <div class="catalog-cell"><span class="quality-badge q-high">Stabile</span></div>
+    </div>
+
+    <!-- VENDOR UFFICIALI -->
+    <div class="catalog-row" style="background:rgba(0,104,120,0.04)">
+      <div class="catalog-cell"><div class="name">Slack</div><div class="by">VENDOR UFFICIALE</div></div>
+      <div class="catalog-cell" style="font-size:11px;color:var(--ink3)">Comunicazione</div>
+      <div class="catalog-cell"><div class="desc">Invia messaggi, leggi canali, cerca conversazioni, gestisci thread</div></div>
+      <div class="catalog-cell"><span class="quality-badge q-high">Stabile</span></div>
+    </div>
+
+    <div class="catalog-row" style="background:rgba(0,104,120,0.04)">
+      <div class="catalog-cell"><div class="name">ClickUp</div><div class="by">VENDOR UFFICIALE</div></div>
+      <div class="catalog-cell" style="font-size:11px;color:var(--ink3)">Project mgmt</div>
+      <div class="catalog-cell"><div class="desc">Task, spazi, liste, documenti, time tracking, workflow</div></div>
+      <div class="catalog-cell"><span class="quality-badge q-high">Stabile</span></div>
+    </div>
+
+    <div class="catalog-row" style="background:rgba(0,104,120,0.04)">
+      <div class="catalog-cell"><div class="name">Atlassian</div><div class="by">VENDOR UFFICIALE</div></div>
+      <div class="catalog-cell" style="font-size:11px;color:var(--ink3)">Dev / PM</div>
+      <div class="catalog-cell"><div class="desc">Jira (issue, sprint, board) + Confluence (pagine, spazi, ricerca)</div></div>
+      <div class="catalog-cell"><span class="quality-badge q-high">Stabile</span></div>
+    </div>
+
+    <div class="catalog-row" style="background:rgba(0,104,120,0.04)">
+      <div class="catalog-cell"><div class="name">Asana</div><div class="by">VENDOR UFFICIALE</div></div>
+      <div class="catalog-cell" style="font-size:11px;color:var(--ink3)">Project mgmt</div>
+      <div class="catalog-cell"><div class="desc">Task, progetti, portfolio, timeline, commenti, assegnazioni</div></div>
+      <div class="catalog-cell"><span class="quality-badge q-high">Stabile</span></div>
+    </div>
+
+    <!-- COMMUNITY -->
+    <div class="catalog-row" style="background:rgba(138,78,0,0.04)">
+      <div class="catalog-cell"><div class="name">Google Drive</div><div class="by">COMMUNITY</div></div>
+      <div class="catalog-cell" style="font-size:11px;color:var(--ink3)">File storage</div>
+      <div class="catalog-cell"><div class="desc">Cerca, leggi, crea documenti Google Docs/Sheets</div></div>
+      <div class="catalog-cell"><span class="quality-badge q-med">Variabile</span></div>
+    </div>
+
+    <div class="catalog-row" style="background:rgba(138,78,0,0.04)">
+      <div class="catalog-cell"><div class="name">Notion</div><div class="by">COMMUNITY</div></div>
+      <div class="catalog-cell" style="font-size:11px;color:var(--ink3)">Knowledge</div>
+      <div class="catalog-cell"><div class="desc">Leggi/scrivi pagine, database, ricerca nel workspace</div></div>
+      <div class="catalog-cell"><span class="quality-badge q-med">Variabile</span></div>
+    </div>
+
+    <div class="catalog-row" style="background:rgba(138,78,0,0.04)">
+      <div class="catalog-cell"><div class="name">Puppeteer</div><div class="by">COMMUNITY</div></div>
+      <div class="catalog-cell" style="font-size:11px;color:var(--ink3)">Browser</div>
+      <div class="catalog-cell"><div class="desc">Naviga web, clicca, compila form, screenshot — computer use base</div></div>
+      <div class="catalog-cell"><span class="quality-badge q-med">Variabile</span></div>
+    </div>
+
+    <div class="catalog-row" style="background:rgba(138,78,0,0.04)">
+      <div class="catalog-cell"><div class="name">SQLite</div><div class="by">COMMUNITY</div></div>
+      <div class="catalog-cell" style="font-size:11px;color:var(--ink3)">Database</div>
+      <div class="catalog-cell"><div class="desc">Query su database SQLite locale, schema inspection, CRUD</div></div>
+      <div class="catalog-cell"><span class="quality-badge q-med">Stabile</span></div>
+    </div>
+
+  </div>
+
+  <div class="warning">
+    <div class="warning-icon">⚠</div>
+    <div class="warning-content">
+      <div class="wt">Come valutare la qualità di un server MCP prima di usarlo</div>
+      <div class="wd">Controlla: stelle GitHub (>500 è un buon segnale), data dell'ultimo commit (non usare repo abbandonati da >6 mesi), presenza di test e documentazione, chi lo mantiene (vendor ufficiale > community attiva > singolo sviluppatore). Prima di deployare in produzione, testa ogni server MCP in ambiente isolato — alcuni server community hanno bug che causano comportamenti imprevedibili nell'agente.</div>
+    </div>
+  </div>
+</div>
+
+
+<!-- ═══════════════════════════════
+     04 — MCP PER STACK
+═══════════════════════════════ -->
+<div class="section">
+  <div class="sec-label">04 — Supporto per stack</div>
+  <div class="sec-title">Come MCP si integra<br>nel tuo stack attuale</div>
+  <p class="sec-intro">
+    Il supporto MCP varia molto a seconda dello stack che stai usando. Questa è la situazione attuale — in rapida evoluzione.
+  </p>
+
+  <table class="stack-matrix">
+    <thead>
+      <tr>
+        <th>Stack</th>
+        <th>Supporto MCP</th>
+        <th>Come si usa</th>
+        <th>Note pratiche</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><div class="stack-name">Claude API</div><div class="stack-sub">ANTHROPIC</div></td>
+        <td><span class="status-yes">✓ Nativo</span></td>
+        <td style="font-size:12px;color:var(--ink3)">Passa server MCP nel parametro <code>mcp_servers</code> della chiamata API. I tool vengono esposti automaticamente al modello.</td>
+        <td style="font-size:12px;color:var(--ink3)">Il modo più semplice. Nessuna libreria aggiuntiva. Funziona con URL di server MCP remoti (HTTP/SSE).</td>
+      </tr>
+      <tr>
+        <td><div class="stack-name">LangChain</div><div class="stack-sub">FRAMEWORK</div></td>
+        <td><span class="status-yes">✓ Supportato</span></td>
+        <td style="font-size:12px;color:var(--ink3)">Libreria <code>langchain-mcp-adapters</code>. Converte tool MCP in LangChain tools. Compatible con tutti gli agenti LangChain.</td>
+        <td style="font-size:12px;color:var(--ink3)">Richiede <code>pip install langchain-mcp-adapters</code>. Server stdio girano come subprocess Python.</td>
+      </tr>
+      <tr>
+        <td><div class="stack-name">LangGraph</div><div class="stack-sub">FRAMEWORK</div></td>
+        <td><span class="status-yes">✓ Supportato</span></td>
+        <td style="font-size:12px;color:var(--ink3)">Stesso adapter di LangChain. I tool MCP sono nodi del grafo come qualsiasi altro tool.</td>
+        <td style="font-size:12px;color:var(--ink3)">Ottima integrazione — i tool MCP possono essere usati in qualsiasi nodo del grafo agente.</td>
+      </tr>
+      <tr>
+        <td><div class="stack-name">LlamaIndex</div><div class="stack-sub">FRAMEWORK</div></td>
+        <td><span class="status-yes">✓ Supportato</span></td>
+        <td style="font-size:12px;color:var(--ink3)">Pacchetto <code>llama-index-tools-mcp</code>. Integrazione con agenti LlamaIndex tramite <code>MCPToolSpec</code>.</td>
+        <td style="font-size:12px;color:var(--ink3)">Particolarmente utile per connettere fonti dati via MCP al pipeline RAG.</td>
+      </tr>
+      <tr>
+        <td><div class="stack-name">CrewAI</div><div class="stack-sub">MULTI-AGENT</div></td>
+        <td><span class="status-yes">✓ Supportato</span></td>
+        <td style="font-size:12px;color:var(--ink3)">Tool MCP diventano tool CrewAI assegnabili agli agenti. Configurazione nel codice del crew.</td>
+        <td style="font-size:12px;color:var(--ink3)">Permette di dare a ogni agente del crew set di tool MCP diversi e specializzati.</td>
+      </tr>
+      <tr>
+        <td><div class="stack-name">Flowise</div><div class="stack-sub">NO-CODE</div></td>
+        <td><span class="status-part">~ Parziale</span></td>
+        <td style="font-size:12px;color:var(--ink3)">Nodo "MCP Tool" disponibile nell'editor visivo. Configurazione del server via UI senza codice.</td>
+        <td style="font-size:12px;color:var(--ink3)">Supporto in crescita. Non tutti i server MCP sono compatibili. Meglio testare prima.</td>
+      </tr>
+      <tr>
+        <td><div class="stack-name">n8n</div><div class="stack-sub">NO-CODE</div></td>
+        <td><span class="status-part">~ In arrivo</span></td>
+        <td style="font-size:12px;color:var(--ink3)">Supporto MCP annunciato. Integrazione tramite nodi HTTP per server MCP remoti (workaround).</td>
+        <td style="font-size:12px;color:var(--ink3)">Non ancora nativo. Per ora: usa HTTP request node per chiamare server MCP con trasporto HTTP/SSE.</td>
+      </tr>
+      <tr>
+        <td><div class="stack-name">Agentforce / M365 Copilot</div><div class="stack-sub">PROPRIETARIO</div></td>
+        <td><span class="status-no">✗ Non supportato</span></td>
+        <td style="font-size:12px;color:var(--ink3)">Le piattaforme enterprise chiuse non espongono MCP. Usano i propri sistemi di connettori proprietari.</td>
+        <td style="font-size:12px;color:var(--ink3)">Non applicabile. Con questi stack non hai controllo sull'implementazione dei tool.</td>
+      </tr>
+      <tr>
+        <td><div class="stack-name">Custom / Python puro</div><div class="stack-sub">VANILLA</div></td>
+        <td><span class="status-yes">✓ Via libreria</span></td>
+        <td style="font-size:12px;color:var(--ink3)">Libreria ufficiale <code>mcp</code> Python SDK. Implementa client e server MCP da zero nel tuo codice.</td>
+        <td style="font-size:12px;color:var(--ink3)">Massimo controllo. Puoi costruire sia client che server MCP custom con la SDK ufficiale.</td>
+      </tr>
+    </tbody>
+  </table>
+</div>
+
+
+<!-- ═══════════════════════════════
+     05 — COSTRUIRE UN SERVER MCP CUSTOM
+═══════════════════════════════ -->
+<div class="section">
+  <div class="sec-label">05 — Costruire server custom</div>
+  <div class="sec-title">Quando e come costruire<br>un server MCP aziendale</div>
+  <p class="sec-intro">
+    Se hai un sistema interno che non ha un server MCP pubblico, puoi costruirne uno. Il beneficio è trasformare il tuo sistema in uno <strong>strumento standard riutilizzabile da qualsiasi agente</strong> — anche futuri. È meno complesso di quanto sembri.
+  </p>
+
+  <!-- QUANDO COSTRUIRE -->
+  <div class="cards-3">
+    <div class="info-card accent-green">
+      <div class="ic-label">Costruisci un server MCP quando</div>
+      <div class="ic-title">Hai un sistema interno proprietario</div>
+      <div class="ic-text">
+        CRM custom, gestionale interno, database legacy, API proprietaria. <strong>Nessun server MCP pubblico lo copre.</strong> Costruire un server MCP lo rende accessibile a tutti gli agenti aziendali, ora e in futuro.
+      </div>
+    </div>
+    <div class="info-card accent-green">
+      <div class="ic-label">Costruisci un server MCP quando</div>
+      <div class="ic-title">Vuoi esporre un agente ad altri agenti</div>
+      <div class="ic-text">
+        Un agente RAG sui documenti aziendali può diventare un server MCP. <strong>Altri agenti lo chiamano come strumento</strong> — "cerca nella knowledge base". Stai costruendo un ecosistema agente modulare.
+      </div>
+    </div>
+    <div class="info-card accent-amber">
+      <div class="ic-label">Non costruire un server MCP quando</div>
+      <div class="ic-title">Esiste già un server pubblico</div>
+      <div class="ic-text">
+        Controlla sempre prima se esiste un server MCP ufficiale o community per lo strumento che vuoi connettere. <strong>Costruire un doppione è tempo sprecato</strong> e ti crei manutenzione inutile.
+      </div>
+    </div>
+  </div>
+
+  <!-- COME SI COSTRUISCE -->
+  <div class="flow-wrap">
+    <div class="flow-header">
+      Struttura di un server MCP Python — Esempio minimo funzionante
+      <span>Esporre un CRM interno come strumento MCP</span>
+    </div>
+    <div class="flow-body">
+      <div class="code-block">
+<span class="comment">## server_crm.py — Server MCP per CRM aziendale interno</span><br>
+<span class="kw">from</span> <span class="plain">mcp.server</span> <span class="kw">import</span> <span class="plain">Server, NotificationOptions</span><br>
+<span class="kw">from</span> <span class="plain">mcp.server.models</span> <span class="kw">import</span> <span class="plain">InitializationOptions</span><br>
+<span class="kw">import</span> <span class="plain">mcp.types as types</span><br>
+<span class="kw">import</span> <span class="plain">mcp.server.stdio</span><br>
+<br>
+<span class="comment"># 1. Crea il server</span><br>
+<span class="plain">server</span> = <span class="fn">Server</span>(<span class="str">"crm-aziendale"</span>)<br>
+<br>
+<span class="comment"># 2. Dichiara gli strumenti disponibili</span><br>
+<span class="plain">@server.list_tools()</span><br>
+<span class="kw">async def</span> <span class="fn">handle_list_tools</span>() -> <span class="plain">list[types.Tool]</span>:<br>
+&nbsp;&nbsp;<span class="kw">return</span> [<br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="plain">types.Tool</span>(<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="key">name</span>=<span class="str">"cerca_cliente"</span>,<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="key">description</span>=<span class="str">"Cerca un cliente nel CRM per nome o email"</span>,<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="key">inputSchema</span>={<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="str">"type"</span>: <span class="str">"object"</span>,<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="str">"properties"</span>: {<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="str">"query"</span>: {<span class="str">"type"</span>: <span class="str">"string"</span>, <span class="str">"description"</span>: <span class="str">"Nome o email del cliente"</span>}<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;},<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="str">"required"</span>: [<span class="str">"query"</span>]<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;}<br>
+&nbsp;&nbsp;&nbsp;&nbsp;),<br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="plain">types.Tool</span>(<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="key">name</span>=<span class="str">"aggiorna_stato"</span>,<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="key">description</span>=<span class="str">"Aggiorna lo stato di un'opportunità"</span>,<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<span class="key">inputSchema</span>={ ... }<br>
+&nbsp;&nbsp;&nbsp;&nbsp;)<br>
+&nbsp;&nbsp;]<br>
+<br>
+<span class="comment"># 3. Implementa l'esecuzione degli strumenti</span><br>
+<span class="plain">@server.call_tool()</span><br>
+<span class="kw">async def</span> <span class="fn">handle_call_tool</span>(<span class="plain">name: str, arguments: dict</span>):<br>
+&nbsp;&nbsp;<span class="kw">if</span> <span class="plain">name == </span><span class="str">"cerca_cliente"</span>:<br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="comment"># Chiama il tuo CRM interno reale</span><br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="plain">risultati</span> = <span class="kw">await</span> <span class="fn">crm_api.search</span>(<span class="plain">arguments[</span><span class="str">"query"</span><span class="plain">]</span>)<br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="kw">return</span> [<span class="plain">types.TextContent</span>(<span class="key">type</span>=<span class="str">"text"</span>, <span class="key">text</span>=<span class="fn">str</span>(<span class="plain">risultati</span>))]<br>
+<br>
+<span class="comment"># 4. Avvia il server (trasporto stdio)</span><br>
+<span class="kw">async def</span> <span class="fn">main</span>():<br>
+&nbsp;&nbsp;<span class="kw">async with</span> <span class="plain">mcp.server.stdio.stdio_server()</span> <span class="kw">as</span> <span class="plain">(read, write)</span>:<br>
+&nbsp;&nbsp;&nbsp;&nbsp;<span class="kw">await</span> <span class="plain">server.run(read, write, InitializationOptions(...))</span>
+      </div>
+      <div style="font-size:12px;color:var(--ink3);margin-top:8px;font-family:'IBM Plex Mono',monospace">
+        <span style="color:var(--green)">→</span> Salva come <code>server_crm.py</code> · Configura nel tuo agente: <code>"command": "python", "args": ["server_crm.py"]</code>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+<!-- ═══════════════════════════════
+     06 — DECISIONI PRATICHE
+═══════════════════════════════ -->
+<div class="section">
+  <div class="sec-label">06 — Decisioni concrete</div>
+  <div class="sec-title">Le 3 decisioni da prendere<br>su MCP per il tuo agente</div>
+  <p class="sec-intro">
+    Non devi "decidere se usare MCP" in astratto. Ci sono tre decisioni operative specifiche, ognuna con criteri chiari.
+  </p>
+
+  <!-- DECISIONE 1 -->
+  <div class="flow-wrap" style="margin-bottom:16px">
+    <div class="flow-header" style="background:rgba(26,79,168,0.85)">
+      Decisione 1 — Usare server MCP esistenti o integrazioni custom?
+    </div>
+    <div class="flow-body" style="padding:24px">
+      <div class="dtree">
+        <div class="dtree-body" style="padding:20px">
+          <div style="display:grid;grid-template-columns:1fr;gap:12px">
+            <div class="dnode question">
+              <div class="dnode-q">Lo strumento che vuoi connettere ha un server MCP pubblico stabile?</div>
+              <div class="dnode-desc">Cerca su github.com/modelcontextprotocol/servers e su mcp.so. Verifica qualità (stelle, commit recenti, mantenuto da vendor ufficiale).</div>
+            </div>
+            <div class="dtree-connector">
+              <span>SÌ → usa il server MCP</span>
+              <span>NO → valuta</span>
+            </div>
+            <div class="dtree-row-2">
+              <div class="dnode result-yes">
+                <div class="dnode-q">✓ Usa il server MCP esistente</div>
+                <div class="dnode-desc">Configura la connessione in 30 minuti. Non scrivere codice di integrazione. Se il server è ufficiale del vendor, fidati della sua qualità. Se è community, testa prima in staging.</div>
+              </div>
+              <div class="dnode result-no">
+                <div class="dnode-q">→ Esiste un server community con buona qualità?</div>
+                <div class="dnode-desc">Se sì: considera di usarlo ma monitora attentamente. Se no: scrivi un'integrazione custom tradizionale oppure costruisci il tuo server MCP (vedi Decisione 3).</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- DECISIONE 2 -->
+  <div class="flow-wrap" style="margin-bottom:16px">
+    <div class="flow-header" style="background:rgba(0,104,120,0.85)">
+      Decisione 2 — Il tuo stack supporta MCP? Cambia qualcosa?
+    </div>
+    <div class="flow-body" style="padding:24px">
+      <div class="dtree">
+        <div class="dtree-body" style="padding:20px">
+          <div style="display:grid;grid-template-columns:1fr;gap:12px">
+            <div class="dnode question">
+              <div class="dnode-q">Stai usando o valutando LangChain, LlamaIndex, CrewAI, o la Claude API diretta?</div>
+              <div class="dnode-desc">Questi stack supportano MCP nativamente o con un adapter leggero. Puoi iniziare a usare server MCP subito.</div>
+            </div>
+            <div class="dtree-connector">
+              <span>SÌ → puoi usare MCP ora</span>
+              <span>NO (es. Flowise, n8n, piattaforme enterprise)</span>
+            </div>
+            <div class="dtree-row-2">
+              <div class="dnode result-yes">
+                <div class="dnode-q">✓ Nessuna azione necessaria sullo stack</div>
+                <div class="dnode-desc">Installa l'adapter MCP per il tuo framework. Configura i server MCP che ti servono. Lo stack è già pronto.</div>
+              </div>
+              <div class="dnode result-no">
+                <div class="dnode-q">→ Verifica roadmap della piattaforma</div>
+                <div class="dnode-desc">Se usi piattaforme no-code, controlla se supportano MCP (Flowise in parte) o se è in roadmap. Se usi piattaforme enterprise chiuse, MCP non è applicabile — usa i connettori nativi del vendor.</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- DECISIONE 3 -->
+  <div class="flow-wrap">
+    <div class="flow-header" style="background:rgba(26,104,48,0.85)">
+      Decisione 3 — Esporre i tuoi agenti e sistemi come server MCP?
+    </div>
+    <div class="flow-body" style="padding:24px">
+      <div class="dtree">
+        <div class="dtree-body" style="padding:20px">
+          <div style="display:grid;grid-template-columns:1fr;gap:12px">
+            <div class="dnode question">
+              <div class="dnode-q">Hai sistemi interni o agenti che potrebbero essere utili ad altri agenti nel tuo ecosistema?</div>
+              <div class="dnode-desc">Es: agente RAG sui documenti aziendali, CRM interno, gestionale proprietario, database di prodotto.</div>
+            </div>
+            <div class="dtree-connector">
+              <span>SÌ, più agenti devono accedere</span>
+              <span>NO, solo un agente lo usa</span>
+            </div>
+            <div class="dtree-row-2">
+              <div class="dnode result-build">
+                <div class="dnode-q">→ Considera di costruire un server MCP</div>
+                <div class="dnode-desc">Esponi il sistema come server MCP. Ogni agente che vuole usarlo si connette allo stesso server standardizzato. Investimento iniziale: 1-3 giorni. Valore: non devi più riscrivere l'integrazione per ogni nuovo agente.</div>
+              </div>
+              <div class="dnode result-yes">
+                <div class="dnode-q">✓ Integrazione custom è sufficiente</div>
+                <div class="dnode-desc">Se solo un agente usa quel sistema, non vale la pena costruire un server MCP. Un'integrazione custom diretta è più semplice e richiede meno overhead.</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+<!-- ═══════════════════════════════
+     07 — CHECKLIST OPERATIVA
+═══════════════════════════════ -->
+<div class="section">
+  <div class="sec-label">07 — Checklist operativa</div>
+  <div class="sec-title">Prima di deployare un agente<br>con server MCP</div>
+  <p class="sec-intro">
+    MCP aggiunge complessità operativa. Questi sono i punti da verificare prima di mandare in produzione un agente che usa server MCP — molti vengono ignorati nei prototipi e diventano problemi in produzione.
+  </p>
+
+  <div class="checklist">
+    <div class="checklist-header">Checklist di produzione — Agente con MCP</div>
+
+    <div class="cl-group">
+      <div class="cl-group-title">Sicurezza</div>
+      <div class="cl-item">
+        <div class="cl-check"></div>
+        <div class="cl-text">
+          <div class="q">I server MCP girano in sandbox con permessi minimi</div>
+          <div class="a">Il server filesystem MCP deve accedere solo alle cartelle necessarie. Il server DB deve avere accesso read-only salvo necessità specifiche.</div>
+        </div>
+        <span class="cl-priority p-must">MUST</span>
+      </div>
+      <div class="cl-item">
+        <div class="cl-check"></div>
+        <div class="cl-text">
+          <div class="q">Le credenziali API dei server MCP sono in variabili d'ambiente, non nel codice</div>
+          <div class="a">GITHUB_TOKEN, SLACK_BOT_TOKEN ecc. non devono mai essere hardcoded nel codice o nei file di configurazione versionati.</div>
+        </div>
+        <span class="cl-priority p-must">MUST</span>
+      </div>
+      <div class="cl-item">
+        <div class="cl-check"></div>
+        <div class="cl-text">
+          <div class="q">Hai validato che i server MCP community non eseguono codice arbitrario</div>
+          <div class="a">Leggi il codice sorgente dei server community prima di usarli in produzione. I server ufficiali Anthropic sono sicuri; i community richiedono review.</div>
+        </div>
+        <span class="cl-priority p-must">MUST</span>
+      </div>
+    </div>
+
+    <div class="cl-group">
+      <div class="cl-group-title">Deployment e infrastruttura</div>
+      <div class="cl-item">
+        <div class="cl-check"></div>
+        <div class="cl-text">
+          <div class="q">Node.js è installato sull'ambiente di produzione</div>
+          <div class="a">La maggior parte dei server MCP ufficiali richiede Node.js (npx). Se il tuo agente gira in container Python, aggiungi Node.js al Dockerfile.</div>
+        </div>
+        <span class="cl-priority p-must">MUST</span>
+      </div>
+      <div class="cl-item">
+        <div class="cl-check"></div>
+        <div class="cl-text">
+          <div class="q">Il processo del server MCP si riavvia automaticamente in caso di crash</div>
+          <div class="a">Usa un process manager (systemd, supervisord, PM2) o gestisci il riavvio nel codice client. I server MCP stdio sono processi separati che possono crashare.</div>
+        </div>
+        <span class="cl-priority p-must">MUST</span>
+      </div>
+      <div class="cl-item">
+        <div class="cl-check"></div>
+        <div class="cl-text">
+          <div class="q">Hai testato cosa succede quando un server MCP è offline</div>
+          <div class="a">L'agente deve degradare gracefully — non crashare — se un server MCP non risponde. Implementa fallback e timeout espliciti.</div>
+        </div>
+        <span class="cl-priority p-should">SHOULD</span>
+      </div>
+    </div>
+
+    <div class="cl-group">
+      <div class="cl-group-title">Costi e performance</div>
+      <div class="cl-item">
+        <div class="cl-check"></div>
+        <div class="cl-text">
+          <div class="q">Hai misurato l'impatto sul context window dell'agente</div>
+          <div class="a">La lista degli strumenti MCP va nel prompt. 10 server con 5 tool ciascuno aggiungono ~2000 token a ogni chiamata. Con molti server, i costi aumentano significativamente.</div>
+        </div>
+        <span class="cl-priority p-should">SHOULD</span>
+      </div>
+      <div class="cl-item">
+        <div class="cl-check"></div>
+        <div class="cl-text">
+          <div class="q">Hai considerato di limitare gli strumenti esposti per ogni chiamata</div>
+          <div class="a">Non connettere 10 server MCP a ogni singola richiesta. Carica solo i server rilevanti per il task corrente — riduce i token e riduce la probabilità che il modello usi lo strumento sbagliato.</div>
+        </div>
+        <span class="cl-priority p-nice">NICE</span>
+      </div>
+    </div>
+
+    <div class="cl-group">
+      <div class="cl-group-title">Osservabilità</div>
+      <div class="cl-item">
+        <div class="cl-check"></div>
+        <div class="cl-text">
+          <div class="q">Stai loggando quali tool MCP vengono chiamati e con quali argomenti</div>
+          <div class="a">Fondamentale per debugging. Il log deve contenere: nome tool, input, output, durata, eventuali errori. Senza questo, è impossibile capire perché l'agente ha fatto una scelta sbagliata.</div>
+        </div>
+        <span class="cl-priority p-must">MUST</span>
+      </div>
+      <div class="cl-item">
+        <div class="cl-check"></div>
+        <div class="cl-text">
+          <div class="q">Hai definito alert per tool call fallite o con latenza anomala</div>
+          <div class="a">Un server MCP lento o che restituisce errori degrada silenziosamente la qualità dell'agente. Monitora la latenza e il tasso di errore per ogni server MCP in produzione.</div>
+        </div>
+        <span class="cl-priority p-should">SHOULD</span>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+</div><!-- /body -->
+
+<footer>
+  <span>Agenti AI · MCP guida pratica · Febbraio 2026</span>
+  <span>agenti-ai-mcp-pratico.html</span>
+</footer>
+
+</body>
+</html>

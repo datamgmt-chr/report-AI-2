@@ -1,0 +1,600 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>L'Agente che Impara — Self-Learning e Human-in-the-Loop</title>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,400;0,9..144,600;0,9..144,700;0,9..144,800;0,9..144,900;1,9..144,400&family=Karla:wght@300;400;500;600;700&family=IBM+Plex+Mono:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#f7f5f0;--bg2:#efece5;--bg3:#e5e1d8;--ink:#1e1d1a;--ink2:#2d2b25;--ink3:#65614f;--ink4:#9e9a89;--border:#d6d1c4;--border2:#c5c0b1;--accent:#7b5ea7;
+--s1:#3d7a45;--s2:#2e7d9c;--s3:#b07d24;--s4:#c0562b;--s5:#3a6b8c;--s6:#8b5c3a;--warn:#c0392b}
+*{margin:0;padding:0;box-sizing:border-box}html{scroll-behavior:smooth}
+body{background:var(--bg);color:var(--ink);font-family:'Karla',sans-serif;font-weight:400;font-size:14px;line-height:1.78}
+.masthead{background:var(--ink);color:rgba(255,255,255,0.9);padding:60px 56px 52px;position:relative;overflow:hidden}
+.masthead::before{content:'';position:absolute;inset:0;background:repeating-linear-gradient(90deg,rgba(255,255,255,0.01) 0,rgba(255,255,255,0.01) 1px,transparent 1px,transparent 60px),repeating-linear-gradient(0deg,rgba(255,255,255,0.01) 0,rgba(255,255,255,0.01) 1px,transparent 1px,transparent 60px);pointer-events:none}
+.mh-eye{font-family:'IBM Plex Mono',monospace;font-size:10px;letter-spacing:3px;text-transform:uppercase;color:rgba(255,255,255,0.25);margin-bottom:18px;position:relative}
+.masthead h1{font-family:'Fraunces',serif;font-weight:800;font-size:clamp(28px,4.5vw,50px);line-height:1.08;letter-spacing:-1px;max-width:700px;position:relative}
+.mh-sub{margin-top:20px;font-size:15px;font-weight:300;color:rgba(255,255,255,0.38);max-width:660px;line-height:1.7;position:relative}
+.nav{background:var(--ink2);position:sticky;top:0;z-index:100;display:flex;overflow-x:auto;border-bottom:1px solid rgba(255,255,255,0.06)}
+.nav-btn{flex:1;min-width:90px;padding:12px 8px;border:none;background:transparent;cursor:pointer;font-family:'Karla',sans-serif;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.2px;color:rgba(255,255,255,0.28);border-right:1px solid rgba(255,255,255,0.06);transition:all 0.2s;white-space:nowrap}
+.nav-btn:last-child{border-right:none}.nav-btn:hover{color:rgba(255,255,255,0.55)}.nav-btn.active{color:#fff;background:rgba(255,255,255,0.05)}
+.sect{display:none}.sect.active{display:block;animation:fadeIn 0.3s ease}
+@keyframes fadeIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
+.sect-head{padding:48px 56px 36px;border-bottom:1px solid var(--border)}
+.sect-num{font-family:'IBM Plex Mono',monospace;font-size:10px;letter-spacing:3px;text-transform:uppercase;color:var(--ink4);margin-bottom:10px}
+.sect-head h2{font-family:'Fraunces',serif;font-weight:800;font-size:clamp(24px,3.5vw,38px);line-height:1.12;max-width:620px;margin-bottom:14px}
+.sect-head p{color:var(--ink3);max-width:700px;font-size:14.5px}
+.wrap{padding:0 56px 56px}
+.prose{margin-top:20px;max-width:740px}.prose p{font-size:14px;color:var(--ink3);line-height:1.8;margin-bottom:14px}.prose p strong{color:var(--ink2);font-weight:600}
+.key-point{margin-top:32px;padding:22px 26px;border-left:4px solid var(--accent);background:var(--bg2)}
+.kp-label{font-family:'IBM Plex Mono',monospace;font-size:9px;letter-spacing:2px;text-transform:uppercase;color:var(--accent);margin-bottom:6px}
+.kp-text{font-family:'Fraunces',serif;font-weight:600;font-size:17px;line-height:1.45;color:var(--ink2)}
+.kp-sub{margin-top:8px;font-size:13px;color:var(--ink3);line-height:1.65}
+.insight{margin:16px 0;padding:16px 20px;border-left:4px solid;background:var(--bg2)}
+.insight-label{font-family:'IBM Plex Mono',monospace;font-size:9px;letter-spacing:2px;text-transform:uppercase;margin-bottom:4px}
+.insight p{font-size:13.5px;line-height:1.65;color:var(--ink2);max-width:700px}
+
+/* Strategy card */
+.strat{margin-top:28px;border:1px solid var(--border2)}
+.strat-header{display:grid;grid-template-columns:8px 48px 1fr auto;align-items:center;border-bottom:1px solid var(--border)}
+.strat-accent{}
+.strat-num{font-family:'Fraunces',serif;font-weight:900;font-size:22px;color:var(--bg3);text-align:center;padding:14px 0}
+.strat-title-wrap{padding:14px 18px}
+.strat-name{font-family:'Fraunces',serif;font-weight:700;font-size:18px;line-height:1.15}
+.strat-sub{font-size:12px;color:var(--ink4);margin-top:2px}
+.strat-meta{margin-right:18px;text-align:center}
+.strat-cost{font-family:'IBM Plex Mono',monospace;font-size:9px;letter-spacing:0.5px;text-transform:uppercase;padding:3px 8px;border:1px solid;border-radius:2px}
+.cost-low{color:var(--s1);border-color:var(--s1);background:rgba(61,122,69,0.05)}
+.cost-mid{color:var(--s3);border-color:var(--s3);background:rgba(176,125,36,0.05)}
+.cost-high{color:var(--s4);border-color:var(--s4);background:rgba(192,86,43,0.05)}
+.strat-body{padding:0}
+.ss{padding:20px 24px;border-bottom:1px solid var(--border)}.ss:last-child{border-bottom:none}
+.ss-label{font-family:'IBM Plex Mono',monospace;font-size:9px;letter-spacing:2px;text-transform:uppercase;color:var(--ink4);margin-bottom:10px;padding-bottom:5px;border-bottom:1px solid var(--border)}
+.ss p{font-size:14px;color:var(--ink3);line-height:1.8;max-width:740px}.ss p strong{color:var(--ink2);font-weight:600}
+
+/* Grid */
+.cg{display:grid;grid-template-columns:1fr 1fr;gap:1px;background:var(--border);margin-top:12px;border:1px solid var(--border2)}
+.cg-item{background:var(--bg);padding:14px 16px}
+.cg-title{font-weight:700;font-size:13px;margin-bottom:5px;color:var(--ink2)}
+.cg-text{font-size:12.5px;color:var(--ink3);line-height:1.6}.cg-text strong{color:var(--ink2);font-weight:600}
+
+/* Dark box */
+.dark-box{background:var(--ink);color:rgba(255,255,255,0.85);padding:28px 24px;margin-top:24px;position:relative;overflow:hidden}
+.dark-box::before{content:'';position:absolute;inset:0;background:repeating-linear-gradient(90deg,rgba(255,255,255,0.015) 0,rgba(255,255,255,0.015) 1px,transparent 1px,transparent 50px),repeating-linear-gradient(0deg,rgba(255,255,255,0.015) 0,rgba(255,255,255,0.015) 1px,transparent 1px,transparent 50px);pointer-events:none}
+.dark-title{font-family:'Fraunces',serif;font-weight:700;font-size:20px;margin-bottom:6px;position:relative}
+.dark-desc{font-size:13px;color:rgba(255,255,255,0.35);margin-bottom:20px;max-width:600px;position:relative}
+.dark-steps{display:flex;align-items:stretch;gap:0;position:relative}
+.dark-step{flex:1;padding:16px 14px;text-align:center;border:1px solid rgba(255,255,255,0.08);background:rgba(255,255,255,0.03);position:relative}
+.ds-num{font-family:'Fraunces',serif;font-weight:900;font-size:20px;line-height:1;margin-bottom:4px}
+.ds-name{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.3px;margin-bottom:4px}
+.ds-text{font-size:10.5px;color:rgba(255,255,255,0.35);line-height:1.4}
+.ds-arrow{position:absolute;right:-8px;top:50%;transform:translateY(-50%);font-size:14px;color:rgba(255,255,255,0.2);z-index:1}
+
+/* Anti-pattern */
+.anti{margin-top:16px;padding:18px 22px;border-left:4px solid var(--warn);background:rgba(192,57,43,0.04)}
+.anti-label{font-family:'IBM Plex Mono',monospace;font-size:9px;letter-spacing:2px;text-transform:uppercase;color:var(--warn);margin-bottom:4px}
+.anti-title{font-weight:700;font-size:14px;margin-bottom:6px;color:var(--ink2)}
+.anti-text{font-size:13px;color:var(--ink3);line-height:1.65;max-width:700px}.anti-text strong{color:var(--ink2);font-weight:600}
+
+/* Matrix */
+.matrix-scroll{overflow-x:auto;margin-top:20px;border:1px solid var(--border2)}
+.matrix{width:100%;border-collapse:collapse;font-size:11.5px;min-width:800px}
+.matrix th,.matrix td{padding:10px 12px;border:1px solid var(--border);vertical-align:top}
+.matrix thead th{background:var(--ink);color:rgba(255,255,255,0.82);font-weight:700;font-size:10px;text-transform:uppercase;letter-spacing:0.3px;text-align:center;position:sticky;top:42px;z-index:50}
+.matrix thead th:first-child{text-align:left;min-width:140px}
+.matrix .row-head{text-align:left;font-weight:700;background:var(--bg2);white-space:nowrap}
+.matrix td{text-align:center;color:var(--ink3)}.matrix td strong{color:var(--ink2);font-weight:600}
+.mx-y{background:rgba(61,122,69,0.08)!important;color:#2a6232;font-weight:600}
+.mx-p{background:rgba(176,125,36,0.08)!important;color:#8a6d1a;font-weight:500}
+.mx-n{background:rgba(192,86,43,0.08)!important;color:#a0421f;font-weight:500}
+.mx-x{background:rgba(150,150,150,0.06)!important;color:#aaa}
+
+/* Priority visual */
+.prio-bar{display:flex;align-items:stretch;gap:0;margin:24px 0;border:1px solid var(--border2);overflow:hidden}
+.pb-item{flex:1;padding:16px 12px;text-align:center;border-right:1px solid var(--border);background:var(--bg);position:relative}
+.pb-item:last-child{border-right:none}
+.pb-num{font-family:'Fraunces',serif;font-weight:900;font-size:24px;line-height:1;margin-bottom:4px}
+.pb-name{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.2px;margin-bottom:3px}
+.pb-cost{font-family:'IBM Plex Mono',monospace;font-size:9px;color:var(--ink4)}
+
+.footer{background:var(--ink);color:rgba(255,255,255,0.22);padding:28px 56px;font-family:'IBM Plex Mono',monospace;font-size:10px;letter-spacing:1px;display:flex;justify-content:space-between}
+@media(max-width:860px){.masthead,.sect-head,.wrap,.footer{padding-left:20px;padding-right:20px}.cg{grid-template-columns:1fr}.dark-steps{flex-direction:column}.ds-arrow{display:none}.prio-bar{flex-direction:column}.footer{flex-direction:column;gap:6px}}
+</style>
+</head>
+<body>
+
+<div class="masthead">
+  <div class="mh-eye">Serie Agenti AI — Report 17</div>
+  <h1>L'agente che impara:<br>self-learning e<br>human-in-the-loop</h1>
+  <p class="mh-sub">Un LLM non impara durante l'uso. Ma un agente può migliorare nel tempo grazie a un'architettura progettata per catturare il feedback umano e trasformarlo in miglioramento. Le 6 strategie, dal più semplice al più sofisticato.</p>
+</div>
+
+<nav class="nav">
+  <button class="nav-btn active" onclick="show(0)">Il chiarimento</button>
+  <button class="nav-btn" onclick="show(1)">Le 6 strategie</button>
+  <button class="nav-btn" onclick="show(2)">Il loop HITL</button>
+  <button class="nav-btn" onclick="show(3)">Le 5 alternative</button>
+  <button class="nav-btn" onclick="show(4)">Rischi</button>
+</nav>
+
+
+<!-- ═══════════════════
+     S0 — IL CHIARIMENTO
+═══════════════════ -->
+<div class="sect active" id="s0">
+  <div class="sect-head">
+    <div class="sect-num">Il chiarimento fondamentale</div>
+    <h2>Cosa può e cosa non può "imparare" un LLM</h2>
+    <p>La confusione più diffusa nel mercato: credere che un LLM impari dall'uso. Non è così — ma un agente può comunque migliorare nel tempo. Il meccanismo è diverso da quello che ci si aspetta.</p>
+  </div>
+  <div class="wrap">
+
+    <div class="prose">
+      <p>Quando correggi una risposta di Claude o ChatGPT, il modello <strong>non modifica i suoi pesi interni</strong>. Non "registra" la correzione. Non "ricorda" che hai detto che la risposta era sbagliata. La prossima volta che qualcuno fa la stessa domanda, il modello potrebbe dare la stessa risposta sbagliata. Questo è radicalmente diverso da un essere umano, che quando viene corretto aggiorna la propria comprensione.</p>
+      <p>Il motivo è strutturale: i pesi di un LLM vengono fissati durante il training — un processo che costa milioni di dollari e settimane di calcolo su migliaia di GPU. <strong>Non si modificano "a caldo" durante una conversazione.</strong> Il modello è un blocco statico di conoscenza e pattern: ciò che sa al momento del deploy è tutto ciò che saprà fino al prossimo training.</p>
+      <p>Ma questo non significa che un agente costruito su un LLM non possa migliorare. Significa che <strong>l'apprendimento non avviene nel modello — avviene nell'architettura intorno al modello</strong>: nella memoria, nel prompt, nella knowledge base, nei few-shot examples. Il modello resta lo stesso; ciò che cambia è il contesto che riceve.</p>
+    </div>
+
+    <div class="key-point">
+      <div class="kp-label">La distinzione chiave</div>
+      <div class="kp-text">Il modello non impara. L'agente — inteso come sistema composto da modello + memoria + prompt + knowledge — può imparare. Ma solo se l'architettura è progettata per farlo.</div>
+      <div class="kp-sub">Un agente senza meccanismo di cattura del feedback non migliora mai, indipendentemente da quante correzioni riceve. Un agente con il meccanismo giusto migliora ad ogni interazione — anche se il modello sottostante non cambia di una virgola.</div>
+    </div>
+
+    <div class="dark-box">
+      <div class="dark-title">L'analogia: il consulente con il quaderno</div>
+      <div class="dark-desc">Per capire il meccanismo, pensa a un consulente (il modello LLM) che lavora per la tua azienda</div>
+      <div class="dark-steps">
+        <div class="dark-step">
+          <div class="ds-num" style="color:var(--accent)">A</div>
+          <div class="ds-name">Senza quaderno</div>
+          <div class="ds-text">Il consulente arriva ogni mattina senza ricordarsi del giorno prima. Commette gli stessi errori. Non migliora. <strong>È un agente senza meccanismo di feedback.</strong></div>
+          <div class="ds-arrow">→</div>
+        </div>
+        <div class="dark-step">
+          <div class="ds-num" style="color:var(--accent)">B</div>
+          <div class="ds-name">Con un quaderno</div>
+          <div class="ds-text">Il consulente ha un quaderno dove segna le correzioni ricevute. Ogni mattina rilegge il quaderno prima di lavorare. <strong>Stessa persona, stesse competenze — ma il contesto migliora.</strong></div>
+          <div class="ds-arrow">→</div>
+        </div>
+        <div class="dark-step">
+          <div class="ds-num" style="color:var(--accent)">C</div>
+          <div class="ds-name">Con formazione</div>
+          <div class="ds-text">Periodicamente, il consulente va a un corso basato sulle correzioni accumulate. Torna con competenze aggiornate. <strong>È il fine-tuning: il modello stesso migliora.</strong></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="prose" style="margin-top:24px;">
+      <p>Le 6 strategie che vedremo nella prossima sezione corrispondono a diversi "livelli di quaderno" — dal più semplice (appunti sparsi) al più sofisticato (programma di formazione strutturato). La maggior parte degli agenti in produzione oggi funziona con i livelli A o B. Pochi arrivano al livello C — e ancora meno ne hanno davvero bisogno.</p>
+    </div>
+
+  </div>
+</div>
+
+
+<!-- ═══════════════════
+     S1 — LE 6 STRATEGIE
+═══════════════════ -->
+<div class="sect" id="s1">
+  <div class="sect-head">
+    <div class="sect-num">Le 6 strategie</div>
+    <h2>6 modi per far migliorare un agente</h2>
+    <p>Dalla più semplice (ore di implementazione, zero infrastruttura) alla più sofisticata (settimane di lavoro, competenze ML). In ordine di complessità crescente e — come per le 7 leve — si sale solo quando il livello precedente non basta.</p>
+  </div>
+  <div class="wrap">
+
+    <div class="prio-bar">
+      <div class="pb-item"><div class="pb-num" style="color:var(--s1)">1</div><div class="pb-name">Memoria correzioni</div><div class="pb-cost">ore</div></div>
+      <div class="pb-item"><div class="pb-num" style="color:var(--s2)">2</div><div class="pb-name">Prompt evolutivo</div><div class="pb-cost">ore/giorno</div></div>
+      <div class="pb-item"><div class="pb-num" style="color:var(--s3)">3</div><div class="pb-name">Knowledge update</div><div class="pb-cost">giorni</div></div>
+      <div class="pb-item"><div class="pb-num" style="color:var(--s4)">4</div><div class="pb-name">Few-shot dinamici</div><div class="pb-cost">giorni</div></div>
+      <div class="pb-item"><div class="pb-num" style="color:var(--s5)">5</div><div class="pb-name">Fine-tuning periodico</div><div class="pb-cost">settimane</div></div>
+      <div class="pb-item"><div class="pb-num" style="color:var(--s6)">6</div><div class="pb-name">RLHF applicato</div><div class="pb-cost">mesi</div></div>
+    </div>
+
+    <!-- STRATEGY 1 -->
+    <div class="strat">
+      <div class="strat-header">
+        <div class="strat-accent" style="background:var(--s1)"></div>
+        <div class="strat-num">01</div>
+        <div class="strat-title-wrap"><div class="strat-name">Memoria delle Correzioni</div><div class="strat-sub">Salva le correzioni, consultale nelle interazioni successive</div></div>
+        <div class="strat-meta"><span class="strat-cost cost-low">Costo basso</span></div>
+      </div>
+      <div class="strat-body">
+        <div class="ss">
+          <div class="ss-label">Come funziona</div>
+          <p>Quando l'umano corregge una risposta dell'agente, la correzione viene salvata in una <strong>memoria persistente</strong> — un database, un file JSON, un vector store. Nelle interazioni successive, prima di rispondere, l'agente cerca nella memoria delle correzioni se ci sono correzioni rilevanti per la domanda attuale. Se le trova, le include nel contesto: <em>"Nota: in passato ho risposto X a una domanda simile e sono stato corretto. La risposta corretta è Y."</em></p>
+          <p>Il meccanismo è semplice: è un <strong>mini-RAG sulle correzioni</strong>. La memoria cresce nel tempo: dopo 100 correzioni, l'agente ha 100 "regole apprese" che consulta. Dopo 500, ne ha 500. L'efficacia dipende dalla qualità del retrieval — se la correzione rilevante non viene trovata, è come non averla.</p>
+        </div>
+        <div class="ss">
+          <div class="ss-label">Cosa serve e quanto costa</div>
+          <div class="cg">
+            <div class="cg-item"><div class="cg-title">Implementazione</div><div class="cg-text"><strong>Ore, non giorni.</strong> Un database o un file dove salvare le coppie (domanda, risposta sbagliata, correzione). Un meccanismo di retrieval (search per similarità se vector store, search per keyword se database). Un'aggiunta al prompt che include le correzioni trovate.</div></div>
+            <div class="cg-item"><div class="cg-title">Infrastruttura</div><div class="cg-text"><strong>Minima.</strong> Un vector store leggero (Chroma) o anche un file JSON per le prime centinaia di correzioni. Nessun GPU, nessun training, nessuna competenza ML. Qualsiasi sviluppatore Python può implementarlo.</div></div>
+          </div>
+        </div>
+        <div class="ss">
+          <div class="ss-label">Efficacia e limiti</div>
+          <p><strong>Efficacia:</strong> alta per errori ricorrenti sullo stesso tipo di domanda. Se l'agente sbaglia sempre la stessa cosa, una correzione nella memoria risolve il problema per tutte le domande simili future. <strong>Limite principale:</strong> la memoria cresce — dopo migliaia di correzioni, il retrieval può diventare rumoroso (troppe correzioni recuperate, alcune non pertinenti) e la finestra di contesto del modello si riempie. Serve periodicamente una "pulizia" — rimuovere correzioni obsolete o consolidarle in regole generali.</p>
+        </div>
+        <div class="ss">
+          <div class="ss-label">Quando usarla</div>
+          <p><strong>Sempre come primo passo.</strong> È la strategia con il miglior rapporto impatto/costo. Va implementata prima di qualsiasi altra. Anche se poi aggiungi strategie più sofisticate, la memoria delle correzioni resta utile come "cattura rapida" degli errori emergenti.</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- STRATEGY 2 -->
+    <div class="strat">
+      <div class="strat-header">
+        <div class="strat-accent" style="background:var(--s2)"></div>
+        <div class="strat-num">02</div>
+        <div class="strat-title-wrap"><div class="strat-name">Prompt Evolutivo</div><div class="strat-sub">Le correzioni diventano aggiornamenti del prompt</div></div>
+        <div class="strat-meta"><span class="strat-cost cost-low">Costo basso</span></div>
+      </div>
+      <div class="strat-body">
+        <div class="ss">
+          <div class="ss-label">Come funziona</div>
+          <p>Periodicamente (ogni settimana, ogni mese), le correzioni accumulate vengono <strong>analizzate per identificare pattern ricorrenti</strong>. Se l'agente sbaglia costantemente lo stesso tipo di cosa — per esempio dà consigli troppo generici, o non cita le fonti, o confonde due prodotti — il pattern viene tradotto in un <strong>aggiornamento del prompt</strong>: una nuova regola, un nuovo vincolo, un nuovo esempio.</p>
+          <p>Il prompt diventa un <strong>documento vivente</strong> che evolve nel tempo. Versione 1.0 al lancio, versione 1.1 dopo la prima settimana di correzioni, versione 1.2 dopo la seconda. Ogni versione è migliore della precedente perché incorpora le lezioni apprese.</p>
+          <p>L'analisi può essere fatta da un <strong>umano</strong> (più affidabile, più lenta) o da un <strong>altro LLM</strong> (più veloce, meno affidabile): "ecco le 50 correzioni della settimana scorsa. Identifica i pattern ricorrenti e suggerisci modifiche al prompt." Questo meta-uso dell'LLM è un'applicazione potente e relativamente semplice.</p>
+        </div>
+        <div class="ss">
+          <div class="ss-label">Efficacia e limiti</div>
+          <p><strong>Efficacia:</strong> molto alta per problemi sistemici — errori che derivano da una regola mancante o imprecisa nel prompt. Una correzione al prompt risolve un'intera classe di errori, non solo un'istanza. <strong>Limite:</strong> il prompt ha una dimensione massima. Man mano che aggiungi regole e vincoli, occupa più contesto — lasciando meno spazio per la memoria, i documenti RAG e la conversazione. Serve disciplina nel tenere il prompt <strong>conciso</strong>: consolidare regole simili, rimuovere quelle superate, mantenere solo il necessario.</p>
+        </div>
+        <div class="ss">
+          <div class="ss-label">Quando usarla</div>
+          <p>Sempre, come <strong>complemento alla strategia 1</strong>. La memoria cattura le correzioni individuali in tempo reale; il prompt evolutivo consolida i pattern ricorrenti in regole strutturali. Insieme, coprono sia gli errori sporadici (memoria) sia gli errori sistematici (prompt).</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- STRATEGY 3 -->
+    <div class="strat">
+      <div class="strat-header">
+        <div class="strat-accent" style="background:var(--s3)"></div>
+        <div class="strat-num">03</div>
+        <div class="strat-title-wrap"><div class="strat-name">Aggiornamento della Knowledge Base</div><div class="strat-sub">Le correzioni fattuali diventano aggiornamenti ai documenti</div></div>
+        <div class="strat-meta"><span class="strat-cost cost-low">Costo basso-medio</span></div>
+      </div>
+      <div class="strat-body">
+        <div class="ss">
+          <div class="ss-label">Come funziona</div>
+          <p>Quando la correzione riguarda un <strong>contenuto fattuale</strong> — l'agente ha dato un'informazione sbagliata su un prodotto, una policy, una procedura — il problema non è nel modello né nel prompt, ma nella knowledge base. La correzione diventa un <strong>aggiornamento del documento</strong>: correggi l'informazione alla fonte, e la prossima volta che l'agente consulta quel documento trova l'informazione corretta.</p>
+          <p>Questa strategia è la più ovvia ma la più sottovalutata. Molti team cercano di correggere errori fattuali aggiungendo vincoli al prompt ("non dire mai che il prodotto X ha la funzionalità Y"), quando la soluzione corretta è semplicemente <strong>aggiornare il documento che contiene l'informazione sbagliata</strong>.</p>
+        </div>
+        <div class="ss">
+          <div class="ss-label">Efficacia e limiti</div>
+          <p><strong>Efficacia:</strong> massima per errori fattuali. Risolvono il problema alla radice — non lo mascherano con regole nel prompt. <strong>Limite:</strong> richiede che qualcuno mantenga la knowledge base aggiornata. Se i documenti non vengono aggiornati, le correzioni si accumulano come eccezioni nel prompt, creando un sistema fragile dove le regole compensano documenti sbagliati. Servono <strong>responsabili dei contenuti</strong> — persone che mantengono la knowledge base, non solo il codice dell'agente.</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- STRATEGY 4 -->
+    <div class="strat">
+      <div class="strat-header">
+        <div class="strat-accent" style="background:var(--s4)"></div>
+        <div class="strat-num">04</div>
+        <div class="strat-title-wrap"><div class="strat-name">Few-shot Examples Dinamici</div><div class="strat-sub">Le correzioni diventano esempi che il modello vede a runtime</div></div>
+        <div class="strat-meta"><span class="strat-cost cost-mid">Costo medio</span></div>
+      </div>
+      <div class="strat-body">
+        <div class="ss">
+          <div class="ss-label">Come funziona</div>
+          <p>Ogni correzione viene salvata come coppia <strong>(domanda, risposta corretta)</strong> in un database dedicato. Quando arriva una nuova domanda, il sistema cerca nel database le correzioni più simili e le include nel prompt come <strong>few-shot examples dinamici</strong>: "Ecco come ho risposto correttamente a domande simili in passato."</p>
+          <p>La differenza con la Strategia 1 (memoria delle correzioni): la memoria dice "attenzione, in passato ho sbagliato su questo tema". I few-shot dinamici dicono <strong>"ecco esattamente come devi rispondere a questo tipo di domanda"</strong>. I few-shot sono più potenti perché il modello imita gli esempi — non solo li "tiene a mente".</p>
+          <p>Tecnicamente: un vector store con le coppie (domanda, risposta corretta) embedded. Ad ogni interazione: embedding della domanda → ricerca dei 2-3 esempi più simili → inclusione nel prompt prima della domanda dell'utente. Il modello riceve di fatto un <strong>mini-dataset di training a runtime</strong>.</p>
+        </div>
+        <div class="ss">
+          <div class="ss-label">Efficacia e limiti</div>
+          <p><strong>Efficacia:</strong> molto alta. I few-shot sono il meccanismo più potente per guidare il comportamento dell'LLM senza fine-tuning. Dopo 200-300 correzioni trasformate in few-shot, l'agente "sa" rispondere a una varietà di domande molto più ampia. <strong>Limite:</strong> come per la memoria, il numero di few-shot inseribili è limitato dal contesto del modello. Servono <strong>2-3 esempi pertinenti</strong> per query — non 20. La qualità del retrieval (trovare gli esempi giusti) è critica.</p>
+        </div>
+        <div class="ss">
+          <div class="ss-label">Quando usarla</div>
+          <p>Quando le Strategie 1-3 non bastano: l'agente ha regole giuste, documenti corretti, memoria delle correzioni — ma continua a sbagliare lo stile, il formato, o l'approccio al ragionamento. I few-shot dinamici sono la risposta a <strong>"so cosa dire ma non so come dirlo"</strong>.</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- STRATEGY 5 -->
+    <div class="strat">
+      <div class="strat-header">
+        <div class="strat-accent" style="background:var(--s5)"></div>
+        <div class="strat-num">05</div>
+        <div class="strat-title-wrap"><div class="strat-name">Fine-tuning Periodico</div><div class="strat-sub">Le correzioni accumulate diventano dataset di training</div></div>
+        <div class="strat-meta"><span class="strat-cost cost-high">Costo alto</span></div>
+      </div>
+      <div class="strat-body">
+        <div class="ss">
+          <div class="ss-label">Come funziona</div>
+          <p>Qui il modello effettivamente <strong>"impara"</strong> — i suoi pesi interni vengono modificati. Le correzioni accumulate nel tempo vengono trasformate in un <strong>dataset di training</strong>: coppie di (input, output desiderato) che rappresentano il comportamento corretto. Periodicamente (ogni settimana, ogni mese), il modello base viene fine-tunato su questo dataset, producendo un modello specializzato che incorpora le lezioni apprese.</p>
+          <p>Il vantaggio rispetto alle strategie precedenti: il comportamento corretto diventa <strong>intrinseco al modello</strong>, non dipendente dal contesto. Non occupa spazio nel prompt. Non richiede retrieval. Il modello "sa" fare la cosa giusta nativamente.</p>
+        </div>
+        <div class="ss">
+          <div class="ss-label">Cosa serve</div>
+          <div class="cg">
+            <div class="cg-item"><div class="cg-title">Dataset di qualità</div><div class="cg-text"><strong>500+ coppie</strong> (input, output corretto) curate e validate. Non basta salvare le correzioni grezze — servono esempi puliti, coerenti, senza contraddizioni. Creare e mantenere questo dataset è il costo maggiore.</div></div>
+            <div class="cg-item"><div class="cg-title">Pipeline di training</div><div class="cg-text"><strong>Infrastruttura GPU</strong> (o un servizio come OpenAI fine-tuning API che la astrae). Competenze di ML engineering per gestire il processo, validare i risultati, evitare il catastrophic forgetting (il modello "dimentica" capacità generali mentre apprende quelle specifiche).</div></div>
+            <div class="cg-item"><div class="cg-title">Pipeline di eval</div><div class="cg-text"><strong>Un benchmark robusto</strong> per verificare che il fine-tuning migliori effettivamente le cose — e non peggiori le risposte su casi che prima funzionavano. Senza eval, il fine-tuning è una scommessa costosa.</div></div>
+            <div class="cg-item"><div class="cg-title">Processo periodico</div><div class="cg-text"><strong>Non è "una volta e basta".</strong> Il dataset cresce, le esigenze cambiano, il modello base viene aggiornato dal provider. Il fine-tuning va ripetuto periodicamente — ogni ciclo ha un costo.</div></div>
+          </div>
+        </div>
+        <div class="ss">
+          <div class="ss-label">Quando usarlo</div>
+          <p>Solo quando le Strategie 1-4 sono state esaurite e c'è ancora un gap di qualità documentato. I casi tipici: <strong>formato output molto rigido</strong> che il prompt non ottiene al 100%, <strong>stile/tono specifico</strong> su alto volume (il fine-tuning è più economico di few-shot ad ogni chiamata per migliaia di interazioni/giorno), o <strong>modello piccolo da specializzare</strong> per ridurre costi su volumi enormi.</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- STRATEGY 6 -->
+    <div class="strat">
+      <div class="strat-header">
+        <div class="strat-accent" style="background:var(--s6)"></div>
+        <div class="strat-num">06</div>
+        <div class="strat-title-wrap"><div class="strat-name">RLHF Applicato</div><div class="strat-sub">Le valutazioni umane addestrano un modello di reward</div></div>
+        <div class="strat-meta"><span class="strat-cost cost-high">Costo molto alto</span></div>
+      </div>
+      <div class="strat-body">
+        <div class="ss">
+          <div class="ss-label">Come funziona</div>
+          <p>RLHF (Reinforcement Learning from Human Feedback) è la tecnica che Anthropic e OpenAI usano per trasformare un LLM grezzo in un assistente allineato — quella che abbiamo visto nei report precedenti come fase di addestramento dei modelli base. Applicata al tuo agente, funziona così: le <strong>valutazioni umane</strong> (pollice su/giù, rating 1-5, confronto tra due risposte) vengono usate per addestrare un <strong>modello di reward</strong> — un secondo modello che impara a predire quale risposta l'umano preferirebbe. Poi il modello principale viene ottimizzato per massimizzare il punteggio del reward model.</p>
+          <p>È la strategia più potente in teoria, perché cattura <strong>preferenze implicite</strong> che le regole esplicite non riescono a codificare: "non so descrivere esattamente cosa voglio, ma lo riconosco quando lo vedo". Il reward model impara questa preferenza implicita.</p>
+        </div>
+        <div class="ss">
+          <div class="ss-label">Quando ha senso</div>
+          <p><strong>Quasi mai per un singolo agente aziendale.</strong> Il costo e la complessità sono giustificati solo se: hai milioni di interazioni da cui raccogliere feedback, hai un team di ML engineering dedicato, e le Strategie 1-5 non sono sufficienti. Nella pratica, è la strategia dei <strong>provider di modelli</strong> (Anthropic, OpenAI) che la applicano al modello base — non dei costruttori di agenti individuali. La includo per completezza e perché è utile sapere che esiste come opzione teorica.</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="key-point" style="margin-top:28px;">
+      <div class="kp-label">La sequenza pratica</div>
+      <div class="kp-text">Per il 90% degli agenti aziendali, le Strategie 1+2+3 sono sufficienti. Aggiungi la 4 se serve. Considera la 5 solo con dati e motivi precisi. Dimentica la 6.</div>
+      <div class="kp-sub">Il principio è lo stesso delle 7 leve di specializzazione: esaurisci ogni livello prima di salire al successivo. L'errore più comune è saltare direttamente al fine-tuning (Strategia 5) quando una memoria delle correzioni (Strategia 1) avrebbe risolto il problema in ore invece che in settimane.</div>
+    </div>
+
+  </div>
+</div>
+
+
+<!-- ═══════════════════
+     S2 — IL LOOP HITL
+═══════════════════ -->
+<div class="sect" id="s2">
+  <div class="sect-head">
+    <div class="sect-num">Il ciclo</div>
+    <h2>Progettare il loop human-in-the-loop</h2>
+    <p>Come catturare il feedback, come elaborarlo, e come trasformarlo in miglioramento. Il design del loop è tanto importante quanto la strategia scelta.</p>
+  </div>
+  <div class="wrap">
+
+    <div class="dark-box">
+      <div class="dark-title">Il ciclo in 4 fasi</div>
+      <div class="dark-desc">Ogni iterazione migliora l'agente — se il ciclo è progettato bene</div>
+      <div class="dark-steps">
+        <div class="dark-step">
+          <div class="ds-num" style="color:var(--accent)">1</div>
+          <div class="ds-name">Cattura</div>
+          <div class="ds-text">L'umano segnala un errore o valuta la risposta. Il feedback viene registrato automaticamente.</div>
+          <div class="ds-arrow">→</div>
+        </div>
+        <div class="dark-step">
+          <div class="ds-num" style="color:var(--accent)">2</div>
+          <div class="ds-name">Classificazione</div>
+          <div class="ds-text">Il feedback viene categorizzato: errore fattuale, tono sbagliato, formato errato, azione non eseguita.</div>
+          <div class="ds-arrow">→</div>
+        </div>
+        <div class="dark-step">
+          <div class="ds-num" style="color:var(--accent)">3</div>
+          <div class="ds-name">Elaborazione</div>
+          <div class="ds-text">In base alla categoria, il feedback alimenta la strategia appropriata: memoria, prompt, knowledge o few-shot.</div>
+          <div class="ds-arrow">→</div>
+        </div>
+        <div class="dark-step">
+          <div class="ds-num" style="color:var(--accent)">4</div>
+          <div class="ds-name">Verifica</div>
+          <div class="ds-text">Si testa che la modifica abbia effettivamente migliorato le risposte, senza causare regressioni su altri casi.</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="strat" style="margin-top:24px;">
+      <div class="strat-header">
+        <div class="strat-accent" style="background:var(--accent)"></div>
+        <div class="strat-num" style="font-size:16px">★</div>
+        <div class="strat-title-wrap"><div class="strat-name">Le decisioni di design del loop</div></div>
+      </div>
+      <div class="strat-body">
+        <div class="ss">
+          <div class="ss-label">Fase 1 — Come catturare il feedback senza essere invasivo</div>
+          <div class="cg">
+            <div class="cg-item"><div class="cg-title">Pollice su / pollice giù</div><div class="cg-text"><strong>Il più semplice e meno invasivo.</strong> L'utente clicca un bottone dopo ogni risposta. Dà un segnale binario (buono/cattivo) senza sforzo. Limite: non sai <em>perché</em> era cattiva. Sufficiente per le Strategie 1-2. Implementarlo è banale in qualsiasi interfaccia.</div></div>
+            <div class="cg-item"><div class="cg-title">Correzione esplicita</div><div class="cg-text"><strong>L'utente riscrive la risposta corretta.</strong> Dà il massimo di informazione — sai esattamente cosa avrebbe dovuto dire l'agente. Ma è oneroso per l'utente: lo farà solo per errori importanti. Ideale per alimentare few-shot dinamici (Strategia 4).</div></div>
+            <div class="cg-item"><div class="cg-title">Commento libero</div><div class="cg-text"><strong>"Era quasi giusto ma il tono era troppo formale."</strong> L'utente spiega cosa non andava in linguaggio naturale. Richiede elaborazione (un LLM può classificare il commento automaticamente). Buon compromesso tra ricchezza dell'informazione e sforzo dell'utente.</div></div>
+            <div class="cg-item"><div class="cg-title">Feedback implicito</div><div class="cg-text"><strong>L'utente non fa nulla esplicitamente</strong> — ma il sistema osserva: l'utente ha riformulato la domanda? (probabile insoddisfazione). Ha copiato la risposta? (probabile soddisfazione). Ha abbandonato la conversazione dopo la prima risposta? (probabile frustrazione). Meno affidabile ma zero sforzo per l'utente.</div></div>
+          </div>
+        </div>
+
+        <div class="ss">
+          <div class="ss-label">Fase 2 — Come classificare il feedback</div>
+          <p>Non tutti i feedback portano alla stessa azione. Un <strong>errore fattuale</strong> (l'agente ha dato un'informazione sbagliata) richiede un aggiornamento della knowledge base. Un <strong>problema di tono</strong> richiede un aggiornamento del prompt. Un <strong>tool che non funziona</strong> richiede un fix del connettore. Classificare il feedback nella categoria giusta è il passo che determina quale strategia viene attivata.</p>
+          <p>La classificazione può essere <strong>automatica</strong> (un LLM classifica il feedback: "questo è un errore fattuale sul prodotto X" → Strategia 3) o <strong>manuale</strong> (un umano rivede i feedback periodicamente e li smista). Per volumi bassi (decine di feedback al giorno), la revisione manuale è più affidabile. Per volumi alti, serve automazione.</p>
+        </div>
+
+        <div class="ss">
+          <div class="ss-label">Fase 3 — Come elaborare il feedback per ogni strategia</div>
+          <div class="cg">
+            <div class="cg-item"><div class="cg-title">→ Memoria (Strategia 1)</div><div class="cg-text"><strong>Automatico e immediato.</strong> La correzione viene salvata nel database appena l'utente la fornisce. Nessun intervento umano. L'agente migliora dalla prossima interazione.</div></div>
+            <div class="cg-item"><div class="cg-title">→ Prompt (Strategia 2)</div><div class="cg-text"><strong>Periodico, con revisione umana.</strong> Ogni settimana: analizza i feedback della settimana, identifica pattern, traduci in aggiornamenti del prompt. Testa il prompt aggiornato sul benchmark prima di metterlo in produzione.</div></div>
+            <div class="cg-item"><div class="cg-title">→ Knowledge (Strategia 3)</div><div class="cg-text"><strong>Caso per caso.</strong> Ogni errore fattuale segnalato viene verificato e, se confermato, il documento nella knowledge base viene aggiornato. Richiede un responsabile dei contenuti, non solo un tecnico.</div></div>
+            <div class="cg-item"><div class="cg-title">→ Few-shot (Strategia 4)</div><div class="cg-text"><strong>Semi-automatico.</strong> Ogni correzione esplicita (domanda → risposta corretta) viene validata e aggiunta al database di few-shot. Un umano verifica periodicamente che gli esempi siano coerenti tra loro.</div></div>
+          </div>
+        </div>
+
+        <div class="ss">
+          <div class="ss-label">Fase 4 — Come verificare che il miglioramento funzioni</div>
+          <p>Ogni modifica — al prompt, alla knowledge base, ai few-shot — viene <strong>testata sul benchmark</strong> (quello del Report 11) prima di andare in produzione. Questo previene il problema più insidioso: <strong>migliorare 5 risposte e peggiorarne 10</strong> senza accorgersene. Il regression test è obbligatorio per ogni modifica, indipendentemente dalla strategia usata.</p>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+
+<!-- ═══════════════════
+     S3 — LE 5 ALTERNATIVE
+═══════════════════ -->
+<div class="sect" id="s3">
+  <div class="sect-head">
+    <div class="sect-num">Per alternativa</div>
+    <h2>Quali strategie puoi implementare in ciascuna alternativa</h2>
+    <p>Non tutte le alternative di costruzione ti permettono di implementare tutte le strategie. Il marketplace è il più limitato, il framework il più flessibile.</p>
+  </div>
+  <div class="wrap">
+
+    <div class="matrix-scroll">
+      <table class="matrix">
+        <thead>
+          <tr>
+            <th>Strategia</th>
+            <th>Custom</th>
+            <th>Framework</th>
+            <th>No-code</th>
+            <th>Marketplace</th>
+            <th>Open Source</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td class="row-head" style="color:var(--s1)">1 · Memoria correzioni</td>
+            <td class="mx-y"><strong>Pieno</strong><br>Implementi da zero</td>
+            <td class="mx-y"><strong>Pieno</strong><br>Moduli pronti</td>
+            <td class="mx-p"><strong>Parziale</strong><br>Dipende dalla piattaforma</td>
+            <td class="mx-x"><strong>No</strong><br>Nessun meccanismo</td>
+            <td class="mx-y"><strong>Pieno</strong><br>Se nel repo, adatti</td>
+          </tr>
+          <tr>
+            <td class="row-head" style="color:var(--s2)">2 · Prompt evolutivo</td>
+            <td class="mx-y"><strong>Pieno</strong></td>
+            <td class="mx-y"><strong>Pieno</strong></td>
+            <td class="mx-y"><strong>Sì</strong><br>Modifichi il prompt nella UI</td>
+            <td class="mx-p"><strong>Parziale</strong><br>Puoi riscrivere le istruzioni</td>
+            <td class="mx-y"><strong>Pieno</strong></td>
+          </tr>
+          <tr>
+            <td class="row-head" style="color:var(--s3)">3 · Knowledge update</td>
+            <td class="mx-y"><strong>Pieno</strong></td>
+            <td class="mx-y"><strong>Pieno</strong></td>
+            <td class="mx-y"><strong>Sì</strong><br>Ricarichi/aggiorni file</td>
+            <td class="mx-p"><strong>Parziale</strong><br>Upload manuale di file</td>
+            <td class="mx-y"><strong>Pieno</strong></td>
+          </tr>
+          <tr>
+            <td class="row-head" style="color:var(--s4)">4 · Few-shot dinamici</td>
+            <td class="mx-y"><strong>Pieno</strong></td>
+            <td class="mx-y"><strong>Pieno</strong><br>Vector store + retrieval</td>
+            <td class="mx-n"><strong>Difficile</strong><br>Richiede logica custom</td>
+            <td class="mx-x"><strong>No</strong></td>
+            <td class="mx-y"><strong>Pieno</strong></td>
+          </tr>
+          <tr>
+            <td class="row-head" style="color:var(--s5)">5 · Fine-tuning</td>
+            <td class="mx-y"><strong>Pieno</strong></td>
+            <td class="mx-y"><strong>Pieno</strong></td>
+            <td class="mx-x"><strong>No</strong></td>
+            <td class="mx-x"><strong>No</strong></td>
+            <td class="mx-y"><strong>Pieno</strong></td>
+          </tr>
+          <tr>
+            <td class="row-head" style="color:var(--s6)">6 · RLHF</td>
+            <td class="mx-p"><strong>Teoricamente</strong><br>Complessità estrema</td>
+            <td class="mx-p"><strong>Teoricamente</strong></td>
+            <td class="mx-x"><strong>No</strong></td>
+            <td class="mx-x"><strong>No</strong></td>
+            <td class="mx-p"><strong>Teoricamente</strong></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="prose" style="margin-top:24px;">
+      <p>Il pattern è coerente con tutto ciò che abbiamo visto nei report precedenti: <strong>il marketplace è il più limitato</strong> (solo prompt e knowledge update, entrambi manuali), <strong>il no-code copre le strategie base</strong> (1-3 ma non 4-5), <strong>framework e custom hanno accesso a tutto</strong>.</p>
+      <p>La nota positiva per il marketplace: le Strategie 2 (prompt evolutivo) e 3 (knowledge update) sono entrambe possibili, anche se manuali. Per un agente marketplace usato internamente, questo può essere sufficiente: ogni settimana rivedi le istruzioni e aggiorni i documenti. Non è automatizzato, ma funziona. Ciò significa che <strong>anche un agente marketplace può migliorare nel tempo</strong> — basta che qualcuno si prenda la responsabilità di farlo.</p>
+      <p>La nota importante per il no-code: la Strategia 1 (memoria delle correzioni) dipende dalla piattaforma. Alcune (come Dify) supportano memoria persistente, altre no. <strong>Verifica prima di scegliere la piattaforma</strong> — è un criterio di selezione spesso trascurato che diventa critico quando vuoi che l'agente migliori.</p>
+    </div>
+
+  </div>
+</div>
+
+
+<!-- ═══════════════════
+     S4 — RISCHI
+═══════════════════ -->
+<div class="sect" id="s4">
+  <div class="sect-head">
+    <div class="sect-num">Rischi e anti-pattern</div>
+    <h2>Cosa può andare storto</h2>
+    <p>Il self-learning non è automaticamente positivo. Se il feedback è di bassa qualità, contraddittorio, o mal gestito, l'agente può peggiorare nel tempo invece di migliorare.</p>
+  </div>
+  <div class="wrap">
+
+    <div class="anti">
+      <div class="anti-label">Rischio 01</div>
+      <div class="anti-title">Feedback contraddittori</div>
+      <div class="anti-text">L'utente A corregge l'agente dicendo "sii più formale". L'utente B corregge dicendo "sii più amichevole". Se entrambi i feedback finiscono nella memoria o nei few-shot, l'agente riceve segnali opposti — e il risultato è <strong>comportamento incoerente</strong>. La soluzione: i feedback devono essere validati e consolidati da un responsabile prima di entrare nel sistema. Non tutti i feedback sono uguali — alcuni sono preferenze personali, non errori oggettivi.</div>
+    </div>
+
+    <div class="anti">
+      <div class="anti-label">Rischio 02</div>
+      <div class="anti-title">Overfitting su un singolo utente</div>
+      <div class="anti-text">Se un solo utente fornisce la maggior parte dei feedback, l'agente si adatta alle <strong>preferenze specifiche di quell'utente</strong> — che potrebbero non rappresentare gli altri utenti. La soluzione: raccogliere feedback da più utenti e pesare i feedback in proporzione alla rappresentatività dell'utente. Un feedback che arriva da 5 utenti diversi vale più di 10 feedback dallo stesso utente.</div>
+    </div>
+
+    <div class="anti">
+      <div class="anti-label">Rischio 03</div>
+      <div class="anti-title">Memoria che cresce senza controllo</div>
+      <div class="anti-text">La memoria delle correzioni cresce nel tempo. Dopo mesi, contiene migliaia di correzioni — molte obsolete (il documento è stato aggiornato, il prodotto è cambiato), molte ridondanti (la stessa correzione 10 volte), alcune contraddittorie con correzioni più recenti. Senza <strong>pulizia periodica</strong>, la memoria diventa rumore: il retrieval pesca correzioni irrilevanti o obsolete che peggiorano le risposte invece di migliorarle. Programma una revisione mensile della memoria.</div>
+    </div>
+
+    <div class="anti">
+      <div class="anti-label">Rischio 04</div>
+      <div class="anti-title">Degradazione da fine-tuning mal gestito</div>
+      <div class="anti-text">Il fine-tuning su un dataset di scarsa qualità — con errori, contraddizioni, o non rappresentativo dei casi d'uso reali — produce un modello che <strong>sbaglia in modo più sofisticato</strong>. Peggio: il <strong>catastrophic forgetting</strong> può far perdere al modello capacità generali che aveva prima. Un modello fine-tunato male è peggio del modello base. La soluzione: fine-tuning solo con dataset curato + eval rigorosa prima e dopo.</div>
+    </div>
+
+    <div class="anti">
+      <div class="anti-label">Rischio 05</div>
+      <div class="anti-title">Mancanza di un responsabile del miglioramento</div>
+      <div class="anti-text">Nessuna delle 6 strategie funziona "da sola". Tutte richiedono che <strong>qualcuno si occupi di: revisionare i feedback, aggiornare prompt e documenti, pulire la memoria, validare i miglioramenti</strong>. Se nessuno ha questa responsabilità esplicita, il loop si ferma dopo le prime settimane — i feedback si accumulano senza essere elaborati, e l'agente smette di migliorare. Il self-learning non è automatico: è un processo gestito.</div>
+    </div>
+
+    <div class="key-point" style="margin-top:28px;">
+      <div class="kp-label">La sintesi</div>
+      <div class="kp-text">Un agente LLM non impara da solo. Ma può migliorare sistematicamente se progetti il meccanismo giusto e assegni a qualcuno la responsabilità di gestirlo.</div>
+      <div class="kp-sub">Le Strategie 1-3 (memoria, prompt evolutivo, knowledge update) sono implementabili in poche ore e coprono la grande maggioranza dei casi. Non sono sofisticate, non richiedono ML engineering, non costano quasi nulla — ma fanno la differenza tra un agente che stagna e uno che migliora ogni settimana. La chiave non è la tecnologia: è il <strong>processo</strong> di cattura-classificazione-elaborazione-verifica del feedback, e la <strong>persona</strong> che se ne occupa.</div>
+    </div>
+
+  </div>
+</div>
+
+
+<div class="footer">
+  <span>Serie Agenti AI — Report 17 · Self-Learning e Human-in-the-Loop</span>
+  <span>Marzo 2026</span>
+</div>
+
+<script>
+function show(n){
+  document.querySelectorAll('.sect').forEach(s=>s.classList.remove('active'));
+  document.querySelectorAll('.nav-btn').forEach(b=>b.classList.remove('active'));
+  document.getElementById('s'+n).classList.add('active');
+  document.querySelectorAll('.nav-btn')[n].classList.add('active');
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+</script>
+
+</body>
+</html>

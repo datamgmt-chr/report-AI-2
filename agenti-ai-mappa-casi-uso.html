@@ -1,0 +1,763 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Mappa dei Casi d'Uso — Quando il Precostruito Basta</title>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,400;0,9..144,600;0,9..144,700;0,9..144,800;0,9..144,900;1,9..144,400&family=Karla:wght@300;400;500;600;700&family=IBM+Plex+Mono:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg:     #f7f5f0;
+  --bg2:    #efece5;
+  --bg3:    #e5e1d8;
+  --ink:    #1e1d1a;
+  --ink2:   #2d2b25;
+  --ink3:   #65614f;
+  --ink4:   #9e9a89;
+  --border: #d6d1c4;
+  --border2:#c5c0b1;
+
+  --commodity: #3d7a45;
+  --semi:      #b07d24;
+  --custom:    #c0562b;
+  --accent:    #2e7d9c;
+
+  --f1: #2e7d9c; --f2: #c0562b; --f3: #3d7a45; --f4: #7b5ea7;
+  --f5: #b07d24; --f6: #8b5c3a; --f7: #3a6b8c; --f8: #9e6b3a; --f9: #5a8a6a;
+}
+
+* { margin:0; padding:0; box-sizing:border-box; }
+html { scroll-behavior:smooth; }
+body { background:var(--bg); color:var(--ink); font-family:'Karla',sans-serif; font-weight:400; font-size:14px; line-height:1.78; }
+
+.masthead { background:var(--ink); color:rgba(255,255,255,0.9); padding:60px 56px 52px; position:relative; overflow:hidden; }
+.masthead::before { content:''; position:absolute; inset:0; background:repeating-linear-gradient(90deg,rgba(255,255,255,0.01) 0,rgba(255,255,255,0.01) 1px,transparent 1px,transparent 60px),repeating-linear-gradient(0deg,rgba(255,255,255,0.01) 0,rgba(255,255,255,0.01) 1px,transparent 1px,transparent 60px); pointer-events:none; }
+.mh-eye { font-family:'IBM Plex Mono',monospace; font-size:10px; letter-spacing:3px; text-transform:uppercase; color:rgba(255,255,255,0.25); margin-bottom:18px; position:relative; }
+.masthead h1 { font-family:'Fraunces',serif; font-weight:800; font-size:clamp(28px,4.5vw,50px); line-height:1.08; letter-spacing:-1px; max-width:700px; position:relative; }
+.mh-sub { margin-top:20px; font-size:15px; font-weight:300; color:rgba(255,255,255,0.38); max-width:660px; line-height:1.7; position:relative; }
+
+.nav { background:var(--ink2); position:sticky; top:0; z-index:100; display:flex; overflow-x:auto; border-bottom:1px solid rgba(255,255,255,0.06); }
+.nav-btn { flex:1; min-width:80px; padding:12px 8px; border:none; background:transparent; cursor:pointer; font-family:'Karla',sans-serif; font-size:10px; font-weight:700; text-transform:uppercase; letter-spacing:0.2px; color:rgba(255,255,255,0.28); border-right:1px solid rgba(255,255,255,0.06); transition:all 0.2s; white-space:nowrap; }
+.nav-btn:last-child { border-right:none; }
+.nav-btn:hover { color:rgba(255,255,255,0.55); }
+.nav-btn.active { color:#fff; background:rgba(255,255,255,0.05); }
+
+.sect { display:none; }
+.sect.active { display:block; animation:fadeIn 0.3s ease; }
+@keyframes fadeIn { from{opacity:0;transform:translateY(6px)} to{opacity:1;transform:translateY(0)} }
+
+.sect-head { padding:48px 56px 36px; border-bottom:1px solid var(--border); }
+.sect-num { font-family:'IBM Plex Mono',monospace; font-size:10px; letter-spacing:3px; text-transform:uppercase; color:var(--ink4); margin-bottom:10px; }
+.sect-head h2 { font-family:'Fraunces',serif; font-weight:800; font-size:clamp(24px,3.5vw,38px); line-height:1.12; max-width:620px; margin-bottom:14px; }
+.sect-head p { color:var(--ink3); max-width:700px; font-size:14.5px; }
+.wrap { padding:0 56px 56px; }
+
+/* ── LEGEND ── */
+.legend { display:flex; gap:24px; flex-wrap:wrap; padding:16px 20px; background:var(--bg2); border:1px solid var(--border); margin-top:24px; }
+.leg-item { display:flex; align-items:center; gap:8px; font-size:12px; font-weight:500; }
+.leg-box { width:22px; height:12px; border-radius:2px; flex-shrink:0; }
+
+/* ── FUNCTION BLOCK ── */
+.func { margin-top:36px; border:1px solid var(--border2); }
+.func-header { display:grid; grid-template-columns:8px 1fr; border-bottom:1px solid var(--border); }
+.func-accent {}
+.func-head-body { padding:22px 26px; }
+.func-name { font-family:'Fraunces',serif; font-weight:800; font-size:22px; line-height:1.15; margin-bottom:4px; }
+.func-sub { font-size:13px; color:var(--ink4); }
+.func-body { padding:0; }
+
+/* Use case rows */
+.uc-table { width:100%; border-collapse:collapse; font-size:12.5px; }
+.uc-table th,.uc-table td { padding:12px 14px; border:1px solid var(--border); text-align:left; vertical-align:top; }
+.uc-table thead th { background:var(--bg3); font-weight:700; font-size:10px; text-transform:uppercase; letter-spacing:0.3px; color:var(--ink3); }
+.uc-table .uc-name { font-weight:600; color:var(--ink2); min-width:160px; }
+.uc-table td { color:var(--ink3); line-height:1.55; }
+.uc-table td strong { color:var(--ink2); font-weight:600; }
+
+.cov-badge { font-family:'IBM Plex Mono',monospace; font-size:9px; letter-spacing:0.5px; text-transform:uppercase; padding:3px 8px; border-radius:2px; font-weight:500; display:inline-block; }
+.cov-com { background:rgba(61,122,69,0.1); color:var(--commodity); }
+.cov-semi { background:rgba(176,125,36,0.1); color:var(--semi); }
+.cov-cust { background:rgba(192,86,43,0.1); color:var(--custom); }
+
+/* Signal block */
+.signals { padding:18px 26px; border-top:1px solid var(--border); background:var(--bg2); }
+.sig-label { font-family:'IBM Plex Mono',monospace; font-size:9px; letter-spacing:2px; text-transform:uppercase; color:var(--custom); margin-bottom:8px; }
+.sig-list { list-style:none; }
+.sig-list li { font-size:12.5px; color:var(--ink3); padding:4px 0; display:flex; gap:8px; line-height:1.5; }
+.sig-list li::before { content:'⚠'; font-size:10px; color:var(--custom); flex-shrink:0; margin-top:2px; }
+.sig-list li strong { color:var(--ink2); font-weight:600; }
+
+/* ── KEY POINT ── */
+.key-point { margin-top:32px; padding:22px 26px; border-left:4px solid var(--accent); background:var(--bg2); }
+.kp-label { font-family:'IBM Plex Mono',monospace; font-size:9px; letter-spacing:2px; text-transform:uppercase; color:var(--accent); margin-bottom:6px; }
+.kp-text { font-family:'Fraunces',serif; font-weight:600; font-size:17px; line-height:1.45; color:var(--ink2); }
+.kp-sub { margin-top:8px; font-size:13px; color:var(--ink3); line-height:1.65; }
+
+/* ── CHECKLIST ── */
+.check-grid { display:grid; grid-template-columns:1fr 1fr; gap:1px; background:var(--border); border:1px solid var(--border2); margin-top:20px; }
+.check-item { background:var(--bg); padding:16px 18px; }
+.check-q { font-weight:700; font-size:13px; margin-bottom:6px; color:var(--ink2); }
+.check-answers { display:flex; gap:12px; margin-top:8px; }
+.check-a { font-size:12px; padding:4px 12px; border:1px solid var(--border2); color:var(--ink3); }
+.check-a.yes { border-color:var(--commodity); color:var(--commodity); background:rgba(61,122,69,0.04); }
+.check-a.no { border-color:var(--custom); color:var(--custom); background:rgba(192,86,43,0.04); }
+
+/* ── SEARCH GUIDE ── */
+.search-card { margin-top:24px; border:1px solid var(--border2); }
+.search-header { padding:18px 24px; background:var(--bg2); border-bottom:1px solid var(--border); display:flex; align-items:center; gap:14px; }
+.search-num { font-family:'Fraunces',serif; font-weight:900; font-size:24px; color:var(--bg3); }
+.search-title { font-weight:700; font-size:15px; }
+.search-body { padding:20px 24px; }
+.search-body p { font-size:13.5px; color:var(--ink3); line-height:1.7; max-width:720px; margin-bottom:12px; }
+.search-body p strong { color:var(--ink2); font-weight:600; }
+
+.source-grid { display:grid; grid-template-columns:1fr 1fr; gap:1px; background:var(--border); margin-top:12px; }
+.source-item { background:var(--bg); padding:14px 16px; }
+.source-name { font-weight:700; font-size:13px; margin-bottom:4px; color:var(--ink2); }
+.source-text { font-size:12px; color:var(--ink3); line-height:1.55; }
+.source-text strong { color:var(--ink2); font-weight:600; }
+
+.query-examples { margin-top:12px; }
+.qe-label { font-family:'IBM Plex Mono',monospace; font-size:9px; letter-spacing:1px; text-transform:uppercase; color:var(--ink4); margin-bottom:6px; }
+.qe-list { list-style:none; }
+.qe-list li { font-family:'IBM Plex Mono',monospace; font-size:11px; color:var(--ink3); padding:4px 0; border-bottom:1px solid var(--border); }
+.qe-list li:last-child { border-bottom:none; }
+
+/* ── PROSE ── */
+.prose { margin-top:20px; max-width:740px; }
+.prose p { font-size:14px; color:var(--ink3); line-height:1.8; margin-bottom:14px; }
+.prose p strong { color:var(--ink2); font-weight:600; }
+
+/* ── INSIGHT ── */
+.insight { margin:16px 0; padding:16px 20px; border-left:4px solid; background:var(--bg2); }
+.insight-label { font-family:'IBM Plex Mono',monospace; font-size:9px; letter-spacing:2px; text-transform:uppercase; margin-bottom:4px; }
+.insight p { font-size:13.5px; line-height:1.65; color:var(--ink2); max-width:700px; }
+
+.footer { background:var(--ink); color:rgba(255,255,255,0.22); padding:28px 56px; font-family:'IBM Plex Mono',monospace; font-size:10px; letter-spacing:1px; display:flex; justify-content:space-between; }
+
+@media (max-width:860px) {
+  .masthead,.sect-head,.wrap,.footer { padding-left:20px; padding-right:20px; }
+  .check-grid,.source-grid { grid-template-columns:1fr; }
+  .footer { flex-direction:column; gap:6px; }
+}
+</style>
+</head>
+<body>
+
+<div class="masthead">
+  <div class="mh-eye">Serie Agenti AI — Report 12</div>
+  <h1>Il mio caso d'uso è "comune"?<br>Mappa e guida alla ricerca</h1>
+  <p class="mh-sub">Panoramica dei casi d'uso coperti da soluzioni precostruite, organizzata per funzione aziendale. Con checklist decisionale e guida pratica su dove e come cercare soluzioni già pronte.</p>
+</div>
+
+<nav class="nav">
+  <button class="nav-btn active" onclick="show(0)">Panoramica</button>
+  <button class="nav-btn" onclick="show(1)">Customer Service</button>
+  <button class="nav-btn" onclick="show(2)">Sales & CRM</button>
+  <button class="nav-btn" onclick="show(3)">Marketing</button>
+  <button class="nav-btn" onclick="show(4)">HR</button>
+  <button class="nav-btn" onclick="show(5)">Finance</button>
+  <button class="nav-btn" onclick="show(6)">IT & Ops</button>
+  <button class="nav-btn" onclick="show(7)">Legal</button>
+  <button class="nav-btn" onclick="show(8)">Knowledge</button>
+  <button class="nav-btn" onclick="show(9)">Data</button>
+  <button class="nav-btn" onclick="show(10)">Checklist</button>
+  <button class="nav-btn" onclick="show(11)">Come cercare</button>
+</nav>
+
+
+<!-- ═══════════════════
+     S0 — PANORAMICA
+═══════════════════ -->
+<div class="sect active" id="s0">
+  <div class="sect-head">
+    <div class="sect-num">Vista d'insieme</div>
+    <h2>Il codice colore della copertura</h2>
+    <p>Per ogni caso d'uso, un livello di copertura che indica quanto è "pronto" il mercato a risolvere quel problema senza costruzione custom.</p>
+  </div>
+  <div class="wrap">
+    <div class="legend">
+      <div class="leg-item"><div class="leg-box" style="background:var(--commodity)"></div><strong>Commodity</strong> — 3+ prodotti maturi, personalizzazione minima. Il precostruito è quasi sempre la scelta giusta.</div>
+      <div class="leg-item"><div class="leg-box" style="background:var(--semi)"></div><strong>Semi-custom</strong> — prodotti esistono ma serve personalizzazione significativa. No-code o framework con componenti pronti.</div>
+      <div class="leg-item"><div class="leg-box" style="background:var(--custom)"></div><strong>Custom</strong> — soluzioni troppo generiche o assenti. Framework o codice custom necessario.</div>
+    </div>
+
+    <div class="prose">
+      <p>Le 9 funzioni aziendali nelle sezioni seguenti coprono la grande maggioranza dei casi d'uso agentici in ambito business. Per ogni funzione troverai: i casi d'uso più comuni con il livello di copertura, le categorie di precostruito che li coprono meglio con esempi concreti, e i <strong>segnali di allarme</strong> che indicano che il tuo caso specifico è troppo particolare per il precostruito.</p>
+      <p>Una nota importante: questa mappa riflette lo stato del mercato a <strong>inizio 2026</strong>. Il panorama evolve rapidamente — nuovi prodotti appaiono ogni mese e casi d'uso che oggi sono "custom" possono diventare "commodity" in 6-12 mesi. Per questo l'ultima sezione del report ti insegna <strong>dove e come cercare</strong>, così puoi aggiornare la mappa autonomamente.</p>
+    </div>
+  </div>
+</div>
+
+
+<!-- ═══════════════════
+     S1 — CUSTOMER SERVICE
+═══════════════════ -->
+<div class="sect" id="s1">
+  <div class="sect-head">
+    <div class="sect-num">Funzione 01</div>
+    <h2>Customer Service e Supporto</h2>
+    <p>La funzione aziendale più coperta in assoluto dall'ecosistema di agenti AI. Il motivo: alto volume, processi standardizzati, ROI dimostrabile.</p>
+  </div>
+  <div class="wrap">
+    <div class="func">
+      <div class="func-header">
+        <div class="func-accent" style="background:var(--f1)"></div>
+        <div class="func-head-body">
+          <div class="func-name">Customer Service e Supporto</div>
+          <div class="func-sub">La funzione con il maggior numero di soluzioni precostruite disponibili</div>
+        </div>
+      </div>
+      <div class="func-body">
+        <table class="uc-table">
+          <thead><tr><th>Caso d'uso</th><th>Copertura</th><th>Chi lo copre meglio</th><th>Note</th></tr></thead>
+          <tbody>
+            <tr>
+              <td class="uc-name">Chatbot FAQ su knowledge base</td>
+              <td><span class="cov-badge cov-com">Commodity</span></td>
+              <td><strong>Verticali SaaS:</strong> Intercom Fin, Zendesk AI, Freshdesk Freddy<br><strong>No-code:</strong> Dify, Flowise<br><strong>Enterprise:</strong> Salesforce Agentforce</td>
+              <td>Il caso d'uso più maturo. Decine di prodotti. La differenziazione è nel prezzo e nelle integrazioni, non nella funzionalità.</td>
+            </tr>
+            <tr>
+              <td class="uc-name">Triage e routing automatico dei ticket</td>
+              <td><span class="cov-badge cov-com">Commodity</span></td>
+              <td><strong>Enterprise:</strong> ServiceNow AI, Salesforce<br><strong>Verticali:</strong> Zendesk, Intercom</td>
+              <td>Classificazione automatica dei ticket per priorità, categoria, team. Integrato nativamente nei tool di ticketing.</td>
+            </tr>
+            <tr>
+              <td class="uc-name">Escalation intelligente a operatore</td>
+              <td><span class="cov-badge cov-com">Commodity</span></td>
+              <td><strong>Verticali:</strong> Intercom Fin, Sierra<br><strong>Enterprise:</strong> Salesforce</td>
+              <td>L'agente riconosce quando non può risolvere e passa a un umano con contesto completo. Feature standard nei verticali.</td>
+            </tr>
+            <tr>
+              <td class="uc-name">Customer service multilingua</td>
+              <td><span class="cov-badge cov-semi">Semi-custom</span></td>
+              <td><strong>Verticali:</strong> Intercom, Zendesk (con limiti)<br><strong>Framework:</strong> per lingue poco supportate</td>
+              <td>Le lingue principali sono coperte. Lingue meno comuni o terminologia tecnica in lingua richiedono personalizzazione.</td>
+            </tr>
+            <tr>
+              <td class="uc-name">Supporto con azioni (rimborsi, modifiche ordine)</td>
+              <td><span class="cov-badge cov-semi">Semi-custom</span></td>
+              <td><strong>Verticali:</strong> Sierra, Intercom con Actions<br><strong>No-code:</strong> n8n + LLM node</td>
+              <td>L'agente non solo risponde ma esegue. Richiede integrazioni con sistemi di ordini/pagamento. Coperto per i sistemi più comuni, custom per il resto.</td>
+            </tr>
+            <tr>
+              <td class="uc-name">Supporto tecnico con troubleshooting guidato</td>
+              <td><span class="cov-badge cov-semi">Semi-custom</span></td>
+              <td><strong>Framework:</strong> LangGraph con RAG<br><strong>Verticali:</strong> parzialmente</td>
+              <td>Il flusso diagnostico (domanda → risposta → domanda successiva) richiede orchestrazione più sofisticata. I verticali coprono i casi semplici.</td>
+            </tr>
+          </tbody>
+        </table>
+        <div class="signals">
+          <div class="sig-label">Segnali che il tuo caso non è "comune"</div>
+          <ul class="sig-list">
+            <li><strong>Il tuo sistema di ticketing è custom</strong> — i connettori precostruiti non funzionano, servono integrazioni da zero</li>
+            <li><strong>Il flusso di supporto ha logiche proprietarie complesse</strong> — regole di escalation, approvazioni, SLA dinamici non standard</li>
+            <li><strong>I tuoi clienti interagiscono in modi non-standard</strong> — video, condivisione schermo, input vocale con terminologia tecnica di nicchia</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+<!-- ═══════════════════
+     S2 — SALES
+═══════════════════ -->
+<div class="sect" id="s2">
+  <div class="sect-head">
+    <div class="sect-num">Funzione 02</div>
+    <h2>Sales e CRM</h2>
+    <p>Copertura forte sulle piattaforme CRM enterprise. Le soluzioni sono mature per chi già usa Salesforce, HubSpot o simili; più frammentate per chi non li usa.</p>
+  </div>
+  <div class="wrap">
+    <div class="func">
+      <div class="func-header"><div class="func-accent" style="background:var(--f2)"></div><div class="func-head-body"><div class="func-name">Sales e CRM</div><div class="func-sub">Forte sulle piattaforme enterprise, frammentato fuori</div></div></div>
+      <div class="func-body">
+        <table class="uc-table">
+          <thead><tr><th>Caso d'uso</th><th>Copertura</th><th>Chi lo copre meglio</th><th>Note</th></tr></thead>
+          <tbody>
+            <tr><td class="uc-name">Qualificazione automatica dei lead</td><td><span class="cov-badge cov-com">Commodity</span></td><td><strong>Enterprise:</strong> Salesforce Agentforce, HubSpot AI<br><strong>Verticali:</strong> Apollo, Clay</td><td>Scoring lead basato su profilo, comportamento, storico. Nativamente integrato nei CRM.</td></tr>
+            <tr><td class="uc-name">Email di follow-up personalizzate</td><td><span class="cov-badge cov-com">Commodity</span></td><td><strong>Enterprise:</strong> HubSpot, Salesforce<br><strong>Verticali:</strong> Apollo, Outreach<br><strong>Marketplace:</strong> GPT custom</td><td>Generazione email basata su profilo del lead e contesto CRM. Coperto da molti tool.</td></tr>
+            <tr><td class="uc-name">Riepilogo meeting e aggiornamento CRM</td><td><span class="cov-badge cov-semi">Semi-custom</span></td><td><strong>Verticali:</strong> Gong, Fireflies<br><strong>No-code:</strong> n8n + transcription + LLM</td><td>Trascrizione meeting → estrazione azioni → aggiornamento CRM. I verticali coprono bene; le integrazioni con CRM non standard richiedono personalizzazione.</td></tr>
+            <tr><td class="uc-name">Preparazione intelligente call di vendita</td><td><span class="cov-badge cov-semi">Semi-custom</span></td><td><strong>Enterprise:</strong> Salesforce Einstein<br><strong>Framework:</strong> agente custom con RAG</td><td>Raccolta automatica di info su prospect (azienda, news, profili social) prima della call. Coperto parzialmente dai CRM, serve customizzazione per fonti specifiche.</td></tr>
+            <tr><td class="uc-name">Pipeline forecasting con AI</td><td><span class="cov-badge cov-semi">Semi-custom</span></td><td><strong>Enterprise:</strong> Salesforce, HubSpot<br><strong>Verticali:</strong> Clari, Gong</td><td>Predizione dei deal in pipeline. I dati CRM devono essere puliti e completi — la qualità del risultato dipende dalla qualità dei dati, non del modello.</td></tr>
+          </tbody>
+        </table>
+        <div class="signals">
+          <div class="sig-label">Segnali che il tuo caso non è "comune"</div>
+          <ul class="sig-list">
+            <li><strong>Il tuo CRM è custom o proprietario</strong> — nessun connettore precostruito, servono integrazioni da zero</li>
+            <li><strong>Il processo di vendita ha logiche non standard</strong> — approvazioni multi-livello, pricing dinamico, configurazioni prodotto complesse</li>
+            <li><strong>Operi in un settore regolato</strong> dove le comunicazioni commerciali hanno vincoli specifici (finance, pharma, assicurazioni)</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+<!-- ═══════════════════
+     S3 — MARKETING
+═══════════════════ -->
+<div class="sect" id="s3">
+  <div class="sect-head">
+    <div class="sect-num">Funzione 03</div>
+    <h2>Marketing e Contenuti</h2>
+    <p>Ampia copertura sulla generazione di contenuti. Più frammentata su pianificazione strategica e analisi.</p>
+  </div>
+  <div class="wrap">
+    <div class="func">
+      <div class="func-header"><div class="func-accent" style="background:var(--f3)"></div><div class="func-head-body"><div class="func-name">Marketing e Contenuti</div><div class="func-sub">Generazione matura, strategia e analisi meno coperte</div></div></div>
+      <div class="func-body">
+        <table class="uc-table">
+          <thead><tr><th>Caso d'uso</th><th>Copertura</th><th>Chi lo copre meglio</th><th>Note</th></tr></thead>
+          <tbody>
+            <tr><td class="uc-name">Generazione copy (email, landing, ads)</td><td><span class="cov-badge cov-com">Commodity</span></td><td><strong>Verticali:</strong> Jasper, Copy.ai<br><strong>Marketplace:</strong> GPT custom, Claude Projects<br><strong>Embedded:</strong> Notion AI, Canva</td><td>Il caso d'uso più coperto dopo il customer service. La differenziazione è sulla brand voice e il rispetto delle linee guida.</td></tr>
+            <tr><td class="uc-name">Social media content creation</td><td><span class="cov-badge cov-com">Commodity</span></td><td><strong>Verticali:</strong> Jasper, Buffer AI<br><strong>Marketplace:</strong> GPT custom</td><td>Generazione post per diversi canali. Coperto come generazione; la pianificazione strategica e l'analisi trend sono meno coperte.</td></tr>
+            <tr><td class="uc-name">SEO content e ottimizzazione</td><td><span class="cov-badge cov-com">Commodity</span></td><td><strong>Verticali:</strong> Surfer SEO, Jasper<br><strong>No-code:</strong> n8n + LLM + API SEO</td><td>Generazione articoli ottimizzati per keyword, analisi di competitor content, suggerimenti di miglioramento.</td></tr>
+            <tr><td class="uc-name">Repurposing multi-formato</td><td><span class="cov-badge cov-semi">Semi-custom</span></td><td><strong>Verticali:</strong> Jasper, Descript<br><strong>No-code:</strong> n8n workflow</td><td>Trasformare un contenuto in formati multipli (blog → social → newsletter → video script). I tool coprono i formati standard; combinazioni creative richiedono personalizzazione.</td></tr>
+            <tr><td class="uc-name">Analisi performance e insight strategici</td><td><span class="cov-badge cov-cust">Custom</span></td><td><strong>Framework:</strong> agente custom con accesso a analytics<br><strong>No-code:</strong> n8n per casi semplici</td><td>Analisi dati cross-canale, identificazione trend, suggerimenti strategici basati su dati. Richiede integrazioni multiple e ragionamento complesso.</td></tr>
+          </tbody>
+        </table>
+        <div class="signals">
+          <div class="sig-label">Segnali che il tuo caso non è "comune"</div>
+          <ul class="sig-list">
+            <li><strong>Brand voice molto specifica e non negoziabile</strong> — i generatori commodity producono contenuti generici; se la voce è un asset strategico, serve personalizzazione profonda</li>
+            <li><strong>Workflow editoriale con approvazioni multi-step</strong> — bozza → revisione → legale → approvazione finale non è coperto dai tool di generazione</li>
+            <li><strong>Contenuti tecnici o regolati</strong> — settori dove le affermazioni devono essere documentabili (finance, healthcare)</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+<!-- ═══════════════════
+     S4-S9 — REMAINING FUNCTIONS (compact)
+═══════════════════ -->
+
+<!-- S4 — HR -->
+<div class="sect" id="s4">
+  <div class="sect-head"><div class="sect-num">Funzione 04</div><h2>HR e People</h2><p>Buona copertura su screening CV e FAQ interne. Più frammentata su processi complessi come performance review e compensation.</p></div>
+  <div class="wrap">
+    <div class="func">
+      <div class="func-header"><div class="func-accent" style="background:var(--f4)"></div><div class="func-head-body"><div class="func-name">HR e People</div><div class="func-sub">Screening e FAQ maturi; processi HR complessi meno coperti</div></div></div>
+      <div class="func-body">
+        <table class="uc-table">
+          <thead><tr><th>Caso d'uso</th><th>Copertura</th><th>Chi lo copre</th><th>Note</th></tr></thead>
+          <tbody>
+            <tr><td class="uc-name">FAQ dipendenti (policy, benefit, procedure)</td><td><span class="cov-badge cov-com">Commodity</span></td><td><strong>Enterprise:</strong> ServiceNow, M365 Copilot<br><strong>No-code:</strong> Dify, Flowise con RAG</td><td>Knowledge base su documenti HR. Il caso più semplice di RAG applicato.</td></tr>
+            <tr><td class="uc-name">Screening CV e pre-selezione</td><td><span class="cov-badge cov-semi">Semi-custom</span></td><td><strong>Verticali:</strong> HireVue, Eightfold<br><strong>No-code:</strong> n8n + LLM</td><td>Analisi CV contro job description. I verticali hanno modelli di bias già calibrati; soluzioni custom richiedono attenzione ai bias.</td></tr>
+            <tr><td class="uc-name">Onboarding guidato per nuovi assunti</td><td><span class="cov-badge cov-semi">Semi-custom</span></td><td><strong>Enterprise:</strong> ServiceNow HR<br><strong>No-code:</strong> workflow guidato</td><td>Sequenza di task, documenti da compilare, FAQ personalizzate per ruolo. I prodotti coprono il flusso standard; processi custom richiedono adattamento.</td></tr>
+            <tr><td class="uc-name">Analisi engagement e sentiment dipendenti</td><td><span class="cov-badge cov-cust">Custom</span></td><td><strong>Framework:</strong> agente custom con accesso a survey e dati HR</td><td>Analisi qualitativa di survey, identificazione temi ricorrenti, insight su clima aziendale. Richiede ragionamento sofisticato e sensibilità ai dati personali.</td></tr>
+          </tbody>
+        </table>
+        <div class="signals">
+          <div class="sig-label">Segnali che il tuo caso non è "comune"</div>
+          <ul class="sig-list">
+            <li><strong>Normativa locale specifica</strong> — CCNL, regolamenti aziendali, policy di settore che richiedono knowledge base molto curata</li>
+            <li><strong>Processi HR proprietari</strong> — sistemi di performance review, compensation o succession planning non standard</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- S5 — FINANCE -->
+<div class="sect" id="s5">
+  <div class="sect-head"><div class="sect-num">Funzione 05</div><h2>Finance e Amministrazione</h2><p>Copertura crescente su reportistica e analisi. I vincoli di compliance e la sensibilità dei dati rendono molti casi semi-custom o custom.</p></div>
+  <div class="wrap">
+    <div class="func">
+      <div class="func-header"><div class="func-accent" style="background:var(--f5)"></div><div class="func-head-body"><div class="func-name">Finance e Amministrazione</div><div class="func-sub">Compliance e sensibilità dati spostano molti casi verso il custom</div></div></div>
+      <div class="func-body">
+        <table class="uc-table">
+          <thead><tr><th>Caso d'uso</th><th>Copertura</th><th>Chi lo copre</th><th>Note</th></tr></thead>
+          <tbody>
+            <tr><td class="uc-name">Report finanziari in linguaggio naturale</td><td><span class="cov-badge cov-semi">Semi-custom</span></td><td><strong>Enterprise:</strong> M365 Copilot (Excel)<br><strong>Verticali:</strong> alcune soluzioni emergenti</td><td>Domande in italiano → query sui dati → report. Coperto per dati in Excel/fogli; custom per ERP o database interni.</td></tr>
+            <tr><td class="uc-name">Classificazione automatica fatture/documenti</td><td><span class="cov-badge cov-semi">Semi-custom</span></td><td><strong>Verticali:</strong> Rossum, Nanonets<br><strong>No-code:</strong> n8n + vision LLM</td><td>Estrazione dati da PDF, categorizzazione. I verticali sono maturi per formati standard; formati proprietari richiedono personalizzazione.</td></tr>
+            <tr><td class="uc-name">Analisi scostamenti budget vs actual</td><td><span class="cov-badge cov-cust">Custom</span></td><td><strong>Framework:</strong> agente con accesso DB finance<br><strong>Embedded:</strong> Copilot Excel per analisi base</td><td>Richiede accesso a dati finanziari, ragionamento analitico, generazione insight. La sensibilità dei dati esclude molte soluzioni cloud.</td></tr>
+            <tr><td class="uc-name">Compliance monitoring e alerting</td><td><span class="cov-badge cov-cust">Custom</span></td><td><strong>Framework:</strong> agente custom<br><strong>Verticali:</strong> poche soluzioni specializzate</td><td>Monitoraggio normativo, verifiche di conformità, alerting su scadenze. Molto specifico per settore e giurisdizione.</td></tr>
+          </tbody>
+        </table>
+        <div class="signals">
+          <div class="sig-label">Segnali che il tuo caso non è "comune"</div>
+          <ul class="sig-list">
+            <li><strong>Dati finanziari che non possono uscire dall'infrastruttura</strong> — esclude tutte le soluzioni cloud non enterprise</li>
+            <li><strong>Normativa di settore specifica</strong> (bancaria, assicurativa, finanziaria) che impone requisiti di audit e spiegabilità</li>
+            <li><strong>ERP proprietario o legacy</strong> — nessun connettore precostruito disponibile</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- S6 — IT OPS -->
+<div class="sect" id="s6">
+  <div class="sect-head"><div class="sect-num">Funzione 06</div><h2>IT e Operations</h2><p>Helpdesk IT ben coperto dalle piattaforme enterprise. Automazione processi operativi più frammentata.</p></div>
+  <div class="wrap">
+    <div class="func">
+      <div class="func-header"><div class="func-accent" style="background:var(--f6)"></div><div class="func-head-body"><div class="func-name">IT e Operations</div><div class="func-sub">Helpdesk maturo, automazione processi variabile</div></div></div>
+      <div class="func-body">
+        <table class="uc-table">
+          <thead><tr><th>Caso d'uso</th><th>Copertura</th><th>Chi lo copre</th><th>Note</th></tr></thead>
+          <tbody>
+            <tr><td class="uc-name">IT Helpdesk (password reset, accessi, FAQ)</td><td><span class="cov-badge cov-com">Commodity</span></td><td><strong>Enterprise:</strong> ServiceNow AI, M365 Copilot<br><strong>No-code:</strong> Dify + integrazioni</td><td>Il secondo caso d'uso più maturo dopo il customer service. Integrazione nativa con Active Directory, ITSM.</td></tr>
+            <tr><td class="uc-name">Ticket routing e prioritizzazione</td><td><span class="cov-badge cov-com">Commodity</span></td><td><strong>Enterprise:</strong> ServiceNow, Jira + AI</td><td>Classificazione automatica per urgenza, team, categoria. Standard nelle piattaforme ITSM moderne.</td></tr>
+            <tr><td class="uc-name">Automazione runbook IT</td><td><span class="cov-badge cov-semi">Semi-custom</span></td><td><strong>No-code:</strong> n8n, Zapier<br><strong>Enterprise:</strong> ServiceNow Orchestration</td><td>Esecuzione automatica di procedure IT standard (riavvio servizio, pulizia log, scaling). Coperto per azioni standard; custom per infrastruttura proprietaria.</td></tr>
+            <tr><td class="uc-name">Monitoring intelligente con analisi anomalie</td><td><span class="cov-badge cov-cust">Custom</span></td><td><strong>Framework:</strong> agente custom con accesso a metriche<br><strong>Verticali:</strong> Datadog AI, PagerDuty AI (emergenti)</td><td>Correlazione eventi, root cause analysis, suggerimenti di remediation. Ancora territorio custom per la maggior parte delle organizzazioni.</td></tr>
+          </tbody>
+        </table>
+        <div class="signals">
+          <div class="sig-label">Segnali che il tuo caso non è "comune"</div>
+          <ul class="sig-list">
+            <li><strong>Infrastruttura on-premise o ibrida complessa</strong> — le soluzioni cloud-native non coprono ambienti legacy</li>
+            <li><strong>Sicurezza critica</strong> — ambienti dove l'agente non può avere accesso diretto ai sistemi (air-gapped, classificati)</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- S7 — LEGAL -->
+<div class="sect" id="s7">
+  <div class="sect-head"><div class="sect-num">Funzione 07</div><h2>Legal e Compliance</h2><p>Verticali specializzati emergenti (Harvey, Casetext). Ma la sensibilità del dominio rende la personalizzazione quasi sempre necessaria.</p></div>
+  <div class="wrap">
+    <div class="func">
+      <div class="func-header"><div class="func-accent" style="background:var(--f7)"></div><div class="func-head-body"><div class="func-name">Legal e Compliance</div><div class="func-sub">Verticali emergenti, ma quasi sempre serve personalizzazione</div></div></div>
+      <div class="func-body">
+        <table class="uc-table">
+          <thead><tr><th>Caso d'uso</th><th>Copertura</th><th>Chi lo copre</th><th>Note</th></tr></thead>
+          <tbody>
+            <tr><td class="uc-name">Revisione e analisi contratti</td><td><span class="cov-badge cov-semi">Semi-custom</span></td><td><strong>Verticali:</strong> Harvey, Casetext, Luminance<br><strong>Framework:</strong> RAG su documenti legali</td><td>Identificazione clausole critiche, confronto con standard, segnalazione rischi. I verticali sono forti ma richiedono calibrazione sulla giurisprudenza locale.</td></tr>
+            <tr><td class="uc-name">Ricerca giurisprudenziale</td><td><span class="cov-badge cov-semi">Semi-custom</span></td><td><strong>Verticali:</strong> Harvey, Westlaw AI<br><strong>Framework:</strong> RAG specializzato</td><td>Ricerca e sintesi di precedenti. I verticali coprono bene il diritto anglosassone; il diritto continentale europeo è meno coperto.</td></tr>
+            <tr><td class="uc-name">Draft contratti da template</td><td><span class="cov-badge cov-semi">Semi-custom</span></td><td><strong>Verticali:</strong> Harvey, Ironclad<br><strong>Marketplace:</strong> GPT custom con template</td><td>Generazione bozze da template personalizzabili. La qualità dipende dalla knowledge base di template e clausole.</td></tr>
+            <tr><td class="uc-name">Compliance check su documenti interni</td><td><span class="cov-badge cov-cust">Custom</span></td><td><strong>Framework:</strong> agente custom con RAG su normativa<br><strong>Verticali:</strong> poche soluzioni per normativa specifica</td><td>Verifica conformità di documenti interni rispetto a normativa specifica. Molto dipendente dalla giurisdizione e dal settore.</td></tr>
+          </tbody>
+        </table>
+        <div class="signals">
+          <div class="sig-label">Segnali che il tuo caso non è "comune"</div>
+          <ul class="sig-list">
+            <li><strong>Diritto locale non anglosassone</strong> — la maggior parte dei verticali è ottimizzata per il sistema giuridico US/UK</li>
+            <li><strong>Requisiti di riservatezza estremi</strong> — documenti legali privilegiati che non possono transitare su cloud di terze parti</li>
+            <li><strong>Normativa di nicchia</strong> — regolamenti settoriali molto specifici non presenti nelle knowledge base dei verticali</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- S8 — KNOWLEDGE -->
+<div class="sect" id="s8">
+  <div class="sect-head"><div class="sect-num">Funzione 08</div><h2>Knowledge Management</h2><p>Uno dei casi d'uso più naturali per gli agenti AI: rendere interrogabile la conoscenza aziendale.</p></div>
+  <div class="wrap">
+    <div class="func">
+      <div class="func-header"><div class="func-accent" style="background:var(--f8)"></div><div class="func-head-body"><div class="func-name">Knowledge Management</div><div class="func-sub">Il caso d'uso più naturale per RAG — maturità variabile per complessità</div></div></div>
+      <div class="func-body">
+        <table class="uc-table">
+          <thead><tr><th>Caso d'uso</th><th>Copertura</th><th>Chi lo copre</th><th>Note</th></tr></thead>
+          <tbody>
+            <tr><td class="uc-name">Q&A su documentazione interna</td><td><span class="cov-badge cov-com">Commodity</span></td><td><strong>No-code:</strong> Dify, Flowise<br><strong>Embedded:</strong> Notion AI, Confluence AI<br><strong>Marketplace:</strong> GPT custom</td><td>Carichi documenti, fai domande. Il caso più semplice di RAG. Decine di soluzioni disponibili.</td></tr>
+            <tr><td class="uc-name">Ricerca semantica su base documentale</td><td><span class="cov-badge cov-com">Commodity</span></td><td><strong>Verticali:</strong> Glean, Guru<br><strong>Enterprise:</strong> M365 Copilot<br><strong>No-code:</strong> qualsiasi piattaforma con RAG</td><td>"Trovami quel documento dove si parlava di X" — ricerca per significato, non per keyword. Coperto ampiamente.</td></tr>
+            <tr><td class="uc-name">Generazione documentazione da conoscenza esistente</td><td><span class="cov-badge cov-semi">Semi-custom</span></td><td><strong>Embedded:</strong> Notion AI<br><strong>Framework:</strong> RAG + generation</td><td>L'agente consulta la knowledge base e genera nuova documentazione (onboarding guide, procedure, FAQ). Coperto per formati standard; custom per template specifici.</td></tr>
+            <tr><td class="uc-name">Knowledge base cross-sistema</td><td><span class="cov-badge cov-cust">Custom</span></td><td><strong>Verticali:</strong> Glean (parzialmente)<br><strong>Framework:</strong> agente custom multi-source</td><td>Interrogare contemporaneamente documenti, email, Slack, CRM, ticketing. Richiede connettori multipli e ranking cross-source.</td></tr>
+          </tbody>
+        </table>
+        <div class="signals">
+          <div class="sig-label">Segnali che il tuo caso non è "comune"</div>
+          <ul class="sig-list">
+            <li><strong>Documenti in formati non standard</strong> — PDF scansionati, immagini, fogli di calcolo complessi, documenti tecnici con diagrammi</li>
+            <li><strong>Knowledge distribuita su 5+ sistemi diversi</strong> — il problema diventa di integrazione, non di RAG</li>
+            <li><strong>Aggiornamento frequente dei documenti</strong> — la pipeline di ingestion deve gestire versioning e scadenza, non solo upload</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- S9 — DATA -->
+<div class="sect" id="s9">
+  <div class="sect-head"><div class="sect-num">Funzione 09</div><h2>Data e Analytics</h2><p>Territorio prevalentemente custom. Le soluzioni precostruite coprono l'analisi base; l'insight strategico richiede quasi sempre personalizzazione.</p></div>
+  <div class="wrap">
+    <div class="func">
+      <div class="func-header"><div class="func-accent" style="background:var(--f9)"></div><div class="func-head-body"><div class="func-name">Data e Analytics</div><div class="func-sub">Analisi base coperta; insight strategico quasi sempre custom</div></div></div>
+      <div class="func-body">
+        <table class="uc-table">
+          <thead><tr><th>Caso d'uso</th><th>Copertura</th><th>Chi lo copre</th><th>Note</th></tr></thead>
+          <tbody>
+            <tr><td class="uc-name">Query in linguaggio naturale su database</td><td><span class="cov-badge cov-semi">Semi-custom</span></td><td><strong>Embedded:</strong> M365 Copilot (Excel/Power BI)<br><strong>Verticali:</strong> Mode, ThoughtSpot<br><strong>No-code:</strong> Dify + SQL tool</td><td>"Quali sono i 10 clienti con il fatturato più alto nel Q3?" → query SQL generata dall'agente. Coperto per database standard; custom per schemi complessi.</td></tr>
+            <tr><td class="uc-name">Report automatici periodici</td><td><span class="cov-badge cov-semi">Semi-custom</span></td><td><strong>No-code:</strong> n8n (raccolta dati + LLM + invio)<br><strong>Framework:</strong> agente schedulato</td><td>Raccolta dati da fonti, analisi, generazione report, invio. Le piattaforme no-code coprono il flusso; il template del report è da personalizzare.</td></tr>
+            <tr><td class="uc-name">Analisi esplorativa e insight</td><td><span class="cov-badge cov-cust">Custom</span></td><td><strong>Framework:</strong> agente con code execution<br><strong>Embedded:</strong> ChatGPT/Claude con code interpreter</td><td>"Analizza questi dati e dimmi cosa emerge di interessante." Richiede ragionamento complesso, spesso con code execution. Il code interpreter dei chatbot copre i casi semplici.</td></tr>
+            <tr><td class="uc-name">Dashboard conversazionale</td><td><span class="cov-badge cov-cust">Custom</span></td><td><strong>Framework:</strong> agente custom<br><strong>Verticali:</strong> ThoughtSpot (parzialmente)</td><td>Interagire con le dashboard in linguaggio naturale: "mostrami il trend delle vendite filtrato per regione". Richiede integrazioni profonde con il layer di visualizzazione.</td></tr>
+          </tbody>
+        </table>
+        <div class="signals">
+          <div class="sig-label">Segnali che il tuo caso non è "comune"</div>
+          <ul class="sig-list">
+            <li><strong>Schema dati complesso o non documentato</strong> — l'agente ha bisogno di capire la struttura dei dati, e se è complessa serve molta personalizzazione</li>
+            <li><strong>Dati distribuiti su più fonti eterogenee</strong> — il problema è di data engineering prima che di AI</li>
+            <li><strong>Insight che richiedono conoscenza di dominio specifica</strong> — un'analisi che un analista junior non saprebbe fare non la farà nemmeno l'agente senza guida</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+<!-- ═══════════════════
+     S10 — CHECKLIST
+═══════════════════ -->
+<div class="sect" id="s10">
+  <div class="sect-head">
+    <div class="sect-num">Strumento decisionale</div>
+    <h2>Il tuo caso è "comune"? Checklist</h2>
+    <p>6 domande per capire rapidamente se il tuo caso d'uso rientra nel territorio coperto dal precostruito o se sei nel territorio custom.</p>
+  </div>
+  <div class="wrap">
+
+    <div class="check-grid">
+      <div class="check-item">
+        <div class="check-q">1. Il tuo workflow è simile a quelli descritti nei siti dei prodotti del settore?</div>
+        <p style="font-size:12.5px;color:var(--ink3);line-height:1.5;margin-top:6px">Visita 2-3 prodotti verticali per la tua funzione. Se i loro casi d'uso demo assomigliano al tuo, sei in territorio coperto.</p>
+        <div class="check-answers">
+          <span class="check-a yes">Sì → Coperto</span>
+          <span class="check-a no">No → Verso custom</span>
+        </div>
+      </div>
+      <div class="check-item">
+        <div class="check-q">2. I sistemi con cui l'agente deve integrarsi sono standard (Salesforce, HubSpot, Gmail, Slack, ecc.)?</div>
+        <p style="font-size:12.5px;color:var(--ink3);line-height:1.5;margin-top:6px">Le piattaforme precostruite hanno connettori per i sistemi più diffusi. Se i tuoi sistemi sono in quella lista, le integrazioni sono risolte.</p>
+        <div class="check-answers">
+          <span class="check-a yes">Sì → Coperto</span>
+          <span class="check-a no">No → Verso custom</span>
+        </div>
+      </div>
+      <div class="check-item">
+        <div class="check-q">3. Le regole di business dell'agente sono relativamente stabili e standardizzate?</div>
+        <p style="font-size:12.5px;color:var(--ink3);line-height:1.5;margin-top:6px">Regole standard = il precostruito le implementa. Regole proprietarie, complesse o che cambiano spesso = serve flessibilità di un framework.</p>
+        <div class="check-answers">
+          <span class="check-a yes">Sì → Coperto</span>
+          <span class="check-a no">No → Verso custom</span>
+        </div>
+      </div>
+      <div class="check-item">
+        <div class="check-q">4. I dati che l'agente usa possono transitare su cloud di terze parti?</div>
+        <p style="font-size:12.5px;color:var(--ink3);line-height:1.5;margin-top:6px">La maggior parte dei precostruiti è cloud-based. Se i tuoi dati non possono uscire dall'infrastruttura, il perimetro si restringe a soluzioni self-hosted.</p>
+        <div class="check-answers">
+          <span class="check-a yes">Sì → Coperto</span>
+          <span class="check-a no">No → Solo self-hosted</span>
+        </div>
+      </div>
+      <div class="check-item">
+        <div class="check-q">5. Il livello di personalizzazione richiesto è principalmente su contenuto (prompt, documenti) piuttosto che su logica?</div>
+        <p style="font-size:12.5px;color:var(--ink3);line-height:1.5;margin-top:6px">Se devi personalizzare cosa dice l'agente → il precostruito basta. Se devi personalizzare come ragiona e agisce → serve più controllo.</p>
+        <div class="check-answers">
+          <span class="check-a yes">Contenuto → Coperto</span>
+          <span class="check-a no">Logica → Verso custom</span>
+        </div>
+      </div>
+      <div class="check-item">
+        <div class="check-q">6. Il caso d'uso differenziante risiede nell'agente stesso o nel contesto in cui opera?</div>
+        <p style="font-size:12.5px;color:var(--ink3);line-height:1.5;margin-top:6px">Se il valore differenziante è nei dati o nel processo, un agente commodity basta. Se il valore è in come l'agente lavora, serve custom.</p>
+        <div class="check-answers">
+          <span class="check-a yes">Nel contesto → Coperto</span>
+          <span class="check-a no">Nell'agente → Custom</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="key-point" style="margin-top:28px;">
+      <div class="kp-label">Come leggere i risultati</div>
+      <div class="kp-text">5-6 risposte verdi → il precostruito è quasi certamente la scelta giusta. 3-4 → territorio semi-custom, valuta no-code o framework con componenti. 0-2 → il custom è probabilmente necessario.</div>
+      <div class="kp-sub">Attenzione: una singola risposta rossa su un punto critico può spostare tutto verso il custom. Se la risposta alla domanda 4 (privacy) è "no", esclude la maggior parte dei precostruiti indipendentemente dalle altre risposte. Il contesto conta più del conteggio.</div>
+    </div>
+
+  </div>
+</div>
+
+
+<!-- ═══════════════════
+     S11 — COME CERCARE
+═══════════════════ -->
+<div class="sect" id="s11">
+  <div class="sect-head">
+    <div class="sect-num">Guida pratica</div>
+    <h2>Dove e come cercare soluzioni già pronte</h2>
+    <p>Il panorama evolve continuamente. Questa sezione ti dà un metodo strutturato per trovare soluzioni precostruite — aggiornabile nel tempo, indipendentemente da questo report.</p>
+  </div>
+  <div class="wrap">
+
+    <div class="search-card">
+      <div class="search-header"><div class="search-num" style="color:var(--accent)">1</div><div class="search-title">Cerca per categoria di prodotto</div></div>
+      <div class="search-body">
+        <p>Il primo passo è cercare se esistono <strong>prodotti verticali</strong> specifici per la tua funzione aziendale. Questi sono i più maturi e richiedono meno personalizzazione.</p>
+        <div class="source-grid">
+          <div class="source-item">
+            <div class="source-name">G2 e Capterra</div>
+            <div class="source-text">I più grandi marketplace di software B2B. Cerca per <strong>categoria</strong> (es. "AI Customer Service", "AI Legal Assistant"). Filtra per rating, recensioni recenti e integrazioni. Le recensioni degli utenti sono la fonte più affidabile per capire cosa funziona davvero vs il marketing.</div>
+          </div>
+          <div class="source-item">
+            <div class="source-name">Product Hunt</div>
+            <div class="source-text">Per scoprire <strong>prodotti nuovi e emergenti</strong>. Cerca "AI agent" + la tua funzione. I lanci recenti (ultimi 6 mesi) indicano dove il mercato si sta muovendo. Utile per trovare alternative meno note ma potenzialmente migliori per il tuo caso.</div>
+          </div>
+          <div class="source-item">
+            <div class="source-name">There's An AI For That</div>
+            <div class="source-text">Directory specializzata in tool AI, con <strong>categorizzazione per caso d'uso</strong>. Oltre 10.000 tool indicizzati. Meno affidabile di G2 per le recensioni, ma più completo come catalogo. Utile come primo screening di cosa esiste.</div>
+          </div>
+          <div class="source-item">
+            <div class="source-name">Ricerca web mirata</div>
+            <div class="source-text">Query tipo: <strong>"best AI tools for [funzione] 2026"</strong>, <strong>"[caso d'uso] AI agent comparison"</strong>, <strong>"alternative to [prodotto noto] AI"</strong>. I blog di comparazione (spesso sponsorizzati) danno una panoramica iniziale; verificare sempre con G2 e prove gratuite.</div>
+          </div>
+        </div>
+        <div class="query-examples">
+          <div class="qe-label">Esempi di ricerca</div>
+          <ul class="qe-list">
+            <li>"AI customer service agent comparison 2026"</li>
+            <li>"best AI tools for contract review"</li>
+            <li>"AI helpdesk automation ServiceNow alternatives"</li>
+            <li>"AI sales assistant CRM integration"</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    <div class="search-card">
+      <div class="search-header"><div class="search-num" style="color:var(--accent)">2</div><div class="search-title">Cerca nelle piattaforme no-code</div></div>
+      <div class="search-body">
+        <p>Se non trovi un prodotto verticale, verifica se il caso d'uso è <strong>costruibile con una piattaforma no-code</strong>. Questo è particolarmente utile per casi semi-custom.</p>
+        <div class="source-grid">
+          <div class="source-item">
+            <div class="source-name">Template gallery delle piattaforme</div>
+            <div class="source-text"><strong>n8n</strong>, <strong>Dify</strong>, <strong>Flowise</strong>, <strong>Relevance AI</strong> hanno tutte gallery di template pronti. Cerca template per la tua funzione: se esiste un template simile al tuo caso d'uso, puoi partire da quello e personalizzarlo. È l'equivalente no-code dell'open source da repository.</div>
+          </div>
+          <div class="source-item">
+            <div class="source-name">Community e forum</div>
+            <div class="source-text">I <strong>forum delle piattaforme</strong> (n8n community, Dify GitHub discussions) contengono workflow condivisi dagli utenti. Cerca il tuo caso d'uso nei forum: è probabile che qualcun altro abbia già affrontato un problema simile. Le community Discord delle piattaforme sono spesso più attive dei forum ufficiali.</div>
+          </div>
+        </div>
+        <div class="query-examples">
+          <div class="qe-label">Dove cercare</div>
+          <ul class="qe-list">
+            <li>n8n: n8n.io/workflows — library di workflow condivisi</li>
+            <li>Dify: dify.ai/explore — template gallery</li>
+            <li>Flowise: flowiseai.com — documentazione e template</li>
+            <li>Relevance AI: relevanceai.com/templates</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    <div class="search-card">
+      <div class="search-header"><div class="search-num" style="color:var(--accent)">3</div><div class="search-title">Cerca nei repository open source</div></div>
+      <div class="search-body">
+        <p>Se servono personalizzazione e controllo ma vuoi un punto di partenza, cerca <strong>template e boilerplate su GitHub</strong>.</p>
+        <div class="source-grid">
+          <div class="source-item">
+            <div class="source-name">GitHub search</div>
+            <div class="source-text">Cerca per <strong>caso d'uso + "agent"</strong> o <strong>caso d'uso + framework</strong>. Filtra per: <strong>star (&gt;100)</strong> come indicatore di qualità, <strong>ultimo aggiornamento (&lt;3 mesi)</strong> come indicatore di manutenzione, <strong>lingua (Python)</strong> per compatibilità con il tuo stack. Leggi il README: se è curato, il progetto probabilmente lo è.</div>
+          </div>
+          <div class="source-item">
+            <div class="source-name">Awesome lists</div>
+            <div class="source-text">Cerca <strong>"awesome AI agents"</strong> o <strong>"awesome LangChain"</strong> su GitHub. Queste liste curate dalla community raccolgono i migliori progetti per categoria. Sono il modo più efficiente per fare una panoramica di cosa esiste in open source.</div>
+          </div>
+          <div class="source-item">
+            <div class="source-name">LangChain Hub e LangSmith Hub</div>
+            <div class="source-text">Prompt e catene <strong>condivisi dalla community LangChain</strong>. Se usi LangChain/LangGraph, cerca qui prima di scrivere da zero: è probabile che qualcuno abbia già pubblicato un prompt o un flusso simile al tuo.</div>
+          </div>
+          <div class="source-item">
+            <div class="source-name">Hugging Face Spaces</div>
+            <div class="source-text">Non solo modelli: Hugging Face ospita anche <strong>demo di agenti funzionanti</strong>. Cerca per caso d'uso e guarda le demo: se una ti convince, il codice è spesso disponibile. Utile anche per valutare l'impatto visivo di un agente prima di costruirlo.</div>
+          </div>
+        </div>
+        <div class="query-examples">
+          <div class="qe-label">Esempi di ricerca su GitHub</div>
+          <ul class="qe-list">
+            <li>"customer service agent langchain" stars:>50</li>
+            <li>"RAG chatbot template" language:Python pushed:>2025-09-01</li>
+            <li>"AI sales agent CRM" stars:>100</li>
+            <li>"awesome AI agents" (per le awesome lists)</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    <div class="search-card">
+      <div class="search-header"><div class="search-num" style="color:var(--accent)">4</div><div class="search-title">Cerca nei marketplace di agenti</div></div>
+      <div class="search-body">
+        <p>Per casi semplici (knowledge + prompt), verifica se un <strong>agente configurabile</strong> basta.</p>
+        <div class="source-grid">
+          <div class="source-item">
+            <div class="source-name">GPT Store (OpenAI)</div>
+            <div class="source-text">Migliaia di GPT custom per ogni categoria. Cerca il tuo caso d'uso e <strong>prova quelli con più utilizzi</strong>. Se un GPT custom fa l'80% di ciò che ti serve, potrebbe bastare — o almeno validare l'idea prima di costruire.</div>
+          </div>
+          <div class="source-item">
+            <div class="source-name">Poe (Quora)</div>
+            <div class="source-text">Marketplace di bot con accesso a modelli diversi (Claude, GPT, Gemini). Utile per <strong>testare rapidamente</strong> un caso d'uso con modelli diversi e vedere quale funziona meglio.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="search-card">
+      <div class="search-header"><div class="search-num" style="color:var(--accent)">5</div><div class="search-title">Valuta quello che trovi</div></div>
+      <div class="search-body">
+        <p>Trovare una soluzione è il primo passo. Valutarla è il passo critico. Ecco i <strong>criteri di valutazione rapida</strong>.</p>
+        <div class="source-grid">
+          <div class="source-item">
+            <div class="source-name">Per i prodotti verticali / SaaS</div>
+            <div class="source-text"><strong>Prova gratuita disponibile?</strong> Non fidarti del marketing — testa sul tuo caso reale. <strong>Integrazioni con i tuoi sistemi?</strong> Verifica che i connettori esistano, non basta che siano "in roadmap". <strong>Pricing trasparente?</strong> Attenzione ai costi per conversazione/utente che a volume diventano significativi. <strong>Recensioni su G2/Capterra?</strong> Leggi le recensioni negative: sono più informative di quelle positive.</div>
+          </div>
+          <div class="source-item">
+            <div class="source-name">Per i repository open source</div>
+            <div class="source-text"><strong>Ultimo commit &lt;3 mesi?</strong> Un progetto non mantenuto è un rischio. <strong>Star &gt;100?</strong> Indicatore (imperfetto) di qualità e community. <strong>Issues aperte gestite?</strong> Un progetto con issues aperte ma risposte dell'autore è meglio di uno con zero issues. <strong>README chiaro e documentazione?</strong> Se la documentazione è scarsa, il codice probabilmente lo è.</div>
+          </div>
+          <div class="source-item">
+            <div class="source-name">Per le piattaforme no-code</div>
+            <div class="source-text"><strong>Il tuo caso è nei template?</strong> Se sì, parti da lì. <strong>I connettori che ti servono esistono?</strong> Verifica la lista dei nodi/integrazioni. <strong>Limiti di complessità?</strong> Testa con un flusso semplice, poi aggiungi complessità gradualmente per capire dove la piattaforma ti blocca.</div>
+          </div>
+          <div class="source-item">
+            <div class="source-name">Per tutti: il test definitivo</div>
+            <div class="source-text"><strong>Prova con 5 casi reali</strong> del tuo contesto — non con gli esempi della demo. Se 4 su 5 producono risultati accettabili, la soluzione è probabilmente adeguata. Se 2 su 5 falliscono, probabilmente serve personalizzazione o un'alternativa diversa.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="key-point" style="margin-top:28px;">
+      <div class="kp-label">Il metodo di ricerca in sintesi</div>
+      <div class="kp-text">Prodotto verticale → Template no-code → Repository open source → Marketplace → Custom. In questo ordine: dal più pronto al più flessibile.</div>
+      <div class="kp-sub">Segui l'ordine e fermati appena trovi qualcosa che copre il tuo caso al 70-80%. Il restante 20-30% si copre con personalizzazione — ed è quasi sempre meno costoso che costruire da zero. Se nessuno dei primi 4 livelli funziona, allora il custom è giustificato — ma almeno avrai validato che non esistono alternative.</div>
+    </div>
+
+  </div>
+</div>
+
+
+<div class="footer">
+  <span>Serie Agenti AI — Report 12 · Mappa dei Casi d'Uso</span>
+  <span>Marzo 2026</span>
+</div>
+
+<script>
+function show(n) {
+  document.querySelectorAll('.sect').forEach(s => s.classList.remove('active'));
+  document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('s'+n).classList.add('active');
+  document.querySelectorAll('.nav-btn')[n].classList.add('active');
+  window.scrollTo({top:0, behavior:'smooth'});
+}
+</script>
+
+</body>
+</html>

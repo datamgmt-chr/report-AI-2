@@ -1,0 +1,619 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Agenti AI — Scheda 1 · Mappa delle leve</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=Syne+Mono&family=Literata:ital,wght@0,300;1,300&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg:      #f6f4ef;
+  --bg2:     #edeae2;
+  --bg3:     #e1ddd3;
+  --ink:     #17140e;
+  --ink2:    #2a2620;
+  --ink3:    #635e54;
+  --ink4:    #9a9489;
+  --border:  #d4cfc3;
+  --border2: #bfb9ab;
+
+  --l01: #2d6e36; --l01b: #e8f5eb;
+  --l02: #5a4a3a; --l02b: #f2ede8;
+  --l03: #3a6b52; --l03b: #e8f2ed;
+  --l04: #1a5f5f; --l04b: #e5f3f3;
+  --l05: #2a4878; --l05b: #e8edf6;
+  --l06: #1c5a8a; --l06b: #e5eef6;
+  --lm:  #5c3f96; --lmb:  #eeebf8;
+  --l07: #7a2e2e; --l07b: #f5e9e9;
+}
+
+* { margin:0; padding:0; box-sizing:border-box; }
+html { background: var(--bg); }
+body {
+  background: var(--bg);
+  color: var(--ink);
+  font-family: 'Syne', sans-serif;
+  font-weight: 400;
+  max-width: 860px;
+  margin: 0 auto;
+  padding: 40px 36px 52px;
+}
+
+/* ── HEADER ── */
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  margin-bottom: 28px;
+  padding-bottom: 16px;
+  border-bottom: 1.5px solid var(--ink);
+}
+.sheet-label {
+  font-family: 'Syne Mono', monospace;
+  font-size: 8.5px;
+  letter-spacing: 3px;
+  text-transform: uppercase;
+  color: var(--ink4);
+  margin-bottom: 5px;
+}
+.header h1 {
+  font-family: 'Syne', sans-serif;
+  font-size: 22px;
+  font-weight: 800;
+  letter-spacing: -0.5px;
+  color: var(--ink);
+  line-height: 1.1;
+}
+.header-right {
+  font-family: 'Syne Mono', monospace;
+  font-size: 9px;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  color: var(--ink4);
+  text-align: right;
+  line-height: 1.8;
+}
+
+/* ── CHART WRAPPER ── */
+.chart-wrap {
+  position: relative;
+  margin-left: 28px;
+  margin-bottom: 28px;
+}
+.axis-label-y {
+  position: absolute;
+  left: -28px;
+  top: 50%;
+  transform: translateX(-100%) translateY(-50%) rotate(-90deg);
+  transform-origin: right center;
+  font-family: 'Syne Mono', monospace;
+  font-size: 7.5px;
+  letter-spacing: 2.5px;
+  text-transform: uppercase;
+  color: var(--ink4);
+  white-space: nowrap;
+}
+.axis-label-x-left {
+  position: absolute;
+  bottom: -22px;
+  left: 0;
+  font-family: 'Syne Mono', monospace;
+  font-size: 7.5px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: var(--ink4);
+}
+.axis-label-x-right {
+  position: absolute;
+  bottom: -22px;
+  right: 0;
+  font-family: 'Syne Mono', monospace;
+  font-size: 7.5px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: var(--ink4);
+}
+
+/* ── CHART PLANE ── */
+.chart {
+  position: relative;
+  width: 100%;
+  height: 680px;
+  background: var(--bg);
+  border: 1px solid var(--border2);
+  overflow: visible;
+}
+.chart::before {
+  content: '';
+  position: absolute;
+  left: 50%; top: 0; bottom: 0;
+  width: 1px;
+  background: var(--border);
+  pointer-events: none;
+}
+.chart::after {
+  content: '';
+  position: absolute;
+  top: 50%; left: 0; right: 0;
+  height: 1px;
+  background: var(--border);
+  pointer-events: none;
+}
+.q-label {
+  position: absolute;
+  font-family: 'Syne Mono', monospace;
+  font-size: 8px;
+  letter-spacing: 1.2px;
+  text-transform: uppercase;
+  color: var(--border2);
+  pointer-events: none;
+  line-height: 1.6;
+}
+
+/* ── LEVA CARD ── */
+.leva {
+  position: absolute;
+  transform: translate(-50%, -50%);
+  cursor: default;
+  transition: transform .18s ease;
+  z-index: 2;
+}
+.leva:hover {
+  transform: translate(-50%, -50%) scale(1.03);
+  z-index: 10;
+}
+.leva-inner {
+  border: 1.5px solid;
+  background: var(--bg);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 2px 8px rgba(0,0,0,.07);
+}
+.leva-top {
+  display: flex;
+  align-items: stretch;
+}
+.leva-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  line-height: 1;
+}
+.leva-name-wrap {
+  padding: 7px 10px;
+  flex: 1;
+}
+.leva-num {
+  font-family: 'Syne Mono', monospace;
+  font-size: 7.5px;
+  letter-spacing: 1.5px;
+  line-height: 1;
+  margin-bottom: 3px;
+  text-transform: uppercase;
+}
+.leva-name {
+  font-family: 'Syne', sans-serif;
+  font-weight: 700;
+  line-height: 1.1;
+  color: var(--ink);
+}
+.leva-tag {
+  font-family: 'Syne Mono', monospace;
+  font-size: 8.5px;
+  letter-spacing: .4px;
+  color: var(--ink3);
+  line-height: 1.3;
+  padding: 5px 10px;
+  border-top: 1px solid;
+  width: 100%;
+}
+.leva-impact-bar {
+  display: flex;
+  gap: 3px;
+  padding: 5px 10px 6px;
+  align-items: center;
+  border-top: 1px solid;
+  background: rgba(0,0,0,.02);
+}
+.impact-dot {
+  width: 7px; height: 7px;
+  border-radius: 1px;
+  flex-shrink: 0;
+}
+.impact-label {
+  font-family: 'Syne Mono', monospace;
+  font-size: 7.5px;
+  letter-spacing: .8px;
+  text-transform: uppercase;
+  margin-left: 5px;
+  color: var(--ink4);
+}
+.rev-tag {
+  font-family: 'Syne Mono', monospace;
+  font-size: 7.5px;
+  letter-spacing: .5px;
+  padding: 2px 8px 3px;
+  margin: 0 10px 7px;
+  display: inline-block;
+  border-radius: 2px;
+  align-self: flex-start;
+}
+
+/* ── TESTING BANNER ── */
+.testing-banner {
+  margin-top: 36px;
+  border: 1.5px dashed var(--l06);
+  background: var(--l06b);
+  padding: 14px 20px;
+  display: flex;
+  align-items: center;
+  gap: 20px;
+}
+.tb-icon { font-size: 24px; flex-shrink: 0; }
+.tb-body { flex: 1; }
+.tb-num {
+  font-family: 'Syne Mono', monospace;
+  font-size: 8px;
+  letter-spacing: 2.5px;
+  text-transform: uppercase;
+  color: var(--l06);
+  margin-bottom: 3px;
+}
+.tb-name {
+  font-family: 'Syne', sans-serif;
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--l06);
+  line-height: 1.1;
+}
+.tb-sub {
+  font-family: 'Syne Mono', monospace;
+  font-size: 9px;
+  letter-spacing: .3px;
+  color: var(--l06);
+  opacity: .7;
+  margin-top: 3px;
+}
+.tb-rule {
+  font-size: 12.5px;
+  color: var(--l06);
+  font-style: italic;
+  font-family: 'Literata', serif;
+  font-weight: 300;
+  border-left: 2px solid var(--l06);
+  padding-left: 14px;
+  max-width: 360px;
+  line-height: 1.5;
+  opacity: .85;
+  flex-shrink: 0;
+}
+
+/* ── BOTTOM ── */
+.bottom-section {
+  margin-top: 20px;
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 16px;
+  align-items: start;
+}
+.impact-legend {
+  padding: 10px 14px;
+  border: 1px solid var(--border);
+  background: var(--bg2);
+  display: flex;
+  gap: 20px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+.il-label {
+  font-family: 'Syne Mono', monospace;
+  font-size: 8px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: var(--ink4);
+  flex-shrink: 0;
+}
+.il-items { display: flex; gap: 16px; flex-wrap: wrap; }
+.il-item { display: flex; align-items: center; gap: 5px; }
+.il-dots { display: flex; gap: 2px; }
+.il-text { font-family: 'Syne Mono', monospace; font-size: 8.5px; color: var(--ink3); }
+
+.axis-legend { display: flex; flex-direction: column; gap: 6px; }
+.al-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  padding: 7px 10px;
+  border: 1px solid var(--border);
+  background: var(--bg);
+}
+.al-sym { font-family: 'Syne Mono', monospace; font-size: 12px; color: var(--ink4); flex-shrink: 0; margin-top: 1px; }
+.al-title { font-size: 11px; font-weight: 600; color: var(--ink2); margin-bottom: 1px; }
+.al-desc { font-family: 'Syne Mono', monospace; font-size: 8.5px; color: var(--ink3); line-height: 1.4; }
+
+.footer-line {
+  margin-top: 20px;
+  padding-top: 12px;
+  border-top: 1px solid var(--border);
+  display: flex;
+  justify-content: space-between;
+  font-family: 'Syne Mono', monospace;
+  font-size: 8px;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  color: var(--ink4);
+}
+</style>
+</head>
+<body>
+
+<!-- HEADER -->
+<div class="header">
+  <div class="header-left">
+    <div class="sheet-label">Agenti AI · Scheda 1 di 2</div>
+    <h1>Mappa delle leve</h1>
+  </div>
+  <div class="header-right">
+    <div>Asse X → Costo / irreversibilità</div>
+    <div>Asse Y ↑ Impatto sulla qualità</div>
+    <div>Dimensione card = ampiezza d'azione</div>
+  </div>
+</div>
+
+<!-- CHART -->
+<div class="chart-wrap">
+  <div class="axis-label-y">Impatto alto ↑ · Impatto specifico ↓</div>
+
+  <div class="chart">
+
+    <!-- Quadrant labels -->
+    <div class="q-label" style="top:14px; left:14px;">Alto impatto<br>Basso costo<br>→ attiva subito</div>
+    <div class="q-label" style="top:14px; right:14px; text-align:right;">Alto impatto<br>Alto costo<br>→ valuta attentamente</div>
+    <div class="q-label" style="bottom:14px; left:14px;">Impatto specifico<br>Basso costo<br>→ attiva se serve</div>
+    <div class="q-label" style="bottom:14px; right:14px; text-align:right;">Impatto specifico<br>Alto costo<br>→ ultima risorsa</div>
+
+    <!-- 01 PROMPT — top-left, largest -->
+    <div class="leva" style="left:20%; top:17%;">
+      <div class="leva-inner" style="border-color:var(--l01); width:174px;">
+        <div class="leva-top">
+          <div class="leva-icon" style="width:44px; height:44px; font-size:20px; background:var(--l01b); border-right:1px solid var(--l01);">✏️</div>
+          <div class="leva-name-wrap">
+            <div class="leva-num" style="color:var(--l01);">Leva 01</div>
+            <div class="leva-name" style="font-size:15px;">Prompt Eng.</div>
+          </div>
+        </div>
+        <div class="leva-tag" style="border-color:var(--l01);">Comportamento</div>
+        <div class="leva-impact-bar" style="border-color:var(--l01);">
+          <div class="impact-dot" style="background:var(--l01)"></div>
+          <div class="impact-dot" style="background:var(--l01)"></div>
+          <div class="impact-dot" style="background:var(--l01)"></div>
+          <div class="impact-dot" style="background:var(--l01)"></div>
+          <div class="impact-dot" style="background:var(--l01)"></div>
+          <span class="impact-label" style="color:var(--l01);">massimo</span>
+        </div>
+        <div class="rev-tag" style="background:var(--l01b); color:var(--l01); border:1px solid var(--l01);">↺ minuti</div>
+      </div>
+    </div>
+
+    <!-- 03 TOOL — top, slightly right -->
+    <div class="leva" style="left:40%; top:24%;">
+      <div class="leva-inner" style="border-color:var(--l03); width:162px;">
+        <div class="leva-top">
+          <div class="leva-icon" style="width:42px; height:42px; font-size:19px; background:var(--l03b); border-right:1px solid var(--l03);">🔧</div>
+          <div class="leva-name-wrap">
+            <div class="leva-num" style="color:var(--l03);">Leva 03</div>
+            <div class="leva-name" style="font-size:14px;">Tool Design</div>
+          </div>
+        </div>
+        <div class="leva-tag" style="border-color:var(--l03);">Capacità d'azione</div>
+        <div class="leva-impact-bar" style="border-color:var(--l03);">
+          <div class="impact-dot" style="background:var(--l03)"></div>
+          <div class="impact-dot" style="background:var(--l03)"></div>
+          <div class="impact-dot" style="background:var(--l03)"></div>
+          <div class="impact-dot" style="background:var(--l03)"></div>
+          <div class="impact-dot" style="background:var(--l03)"></div>
+          <span class="impact-label" style="color:var(--l03);">massimo</span>
+        </div>
+        <div class="rev-tag" style="background:var(--l03b); color:var(--l03); border:1px solid var(--l03);">↺ ore</div>
+      </div>
+    </div>
+
+    <!-- 02 MODELLO — upper right -->
+    <div class="leva" style="left:65%; top:20%;">
+      <div class="leva-inner" style="border-color:var(--l02); width:152px;">
+        <div class="leva-top">
+          <div class="leva-icon" style="width:40px; height:40px; font-size:18px; background:var(--l02b); border-right:1px solid var(--l02);">🧠</div>
+          <div class="leva-name-wrap">
+            <div class="leva-num" style="color:var(--l02);">Leva 02</div>
+            <div class="leva-name" style="font-size:14px;">Modello</div>
+          </div>
+        </div>
+        <div class="leva-tag" style="border-color:var(--l02);">Qualità base</div>
+        <div class="leva-impact-bar" style="border-color:var(--l02);">
+          <div class="impact-dot" style="background:var(--l02)"></div>
+          <div class="impact-dot" style="background:var(--l02)"></div>
+          <div class="impact-dot" style="background:var(--l02)"></div>
+          <div class="impact-dot" style="background:var(--l02)"></div>
+          <div class="impact-dot" style="background:var(--bg3)"></div>
+          <span class="impact-label" style="color:var(--l02);">alto</span>
+        </div>
+        <div class="rev-tag" style="background:var(--l02b); color:var(--l02); border:1px solid var(--l02);">↺ ore/giorni</div>
+      </div>
+    </div>
+
+    <!-- 04 RAG — below midline, left -->
+    <div class="leva" style="left:26%; top:61%;">
+      <div class="leva-inner" style="border-color:var(--l04); width:158px;">
+        <div class="leva-top">
+          <div class="leva-icon" style="width:40px; height:40px; font-size:18px; background:var(--l04b); border-right:1px solid var(--l04);">📚</div>
+          <div class="leva-name-wrap">
+            <div class="leva-num" style="color:var(--l04);">Leva 04</div>
+            <div class="leva-name" style="font-size:14px;">RAG</div>
+          </div>
+        </div>
+        <div class="leva-tag" style="border-color:var(--l04);">Conoscenza</div>
+        <div class="leva-impact-bar" style="border-color:var(--l04);">
+          <div class="impact-dot" style="background:var(--l04)"></div>
+          <div class="impact-dot" style="background:var(--l04)"></div>
+          <div class="impact-dot" style="background:var(--l04)"></div>
+          <div class="impact-dot" style="background:var(--l04)"></div>
+          <div class="impact-dot" style="background:var(--bg3)"></div>
+          <span class="impact-label" style="color:var(--l04);">alto</span>
+        </div>
+        <div class="rev-tag" style="background:var(--l04b); color:var(--l04); border:1px solid var(--l04);">↺ giorni</div>
+      </div>
+    </div>
+
+    <!-- M MEMORIA — below midline, center -->
+    <div class="leva" style="left:52%; top:63%;">
+      <div class="leva-inner" style="border-color:var(--lm); width:148px;">
+        <div class="leva-top">
+          <div class="leva-icon" style="width:38px; height:38px; font-size:17px; background:var(--lmb); border-right:1px solid var(--lm);">💾</div>
+          <div class="leva-name-wrap">
+            <div class="leva-num" style="color:var(--lm);">Leva M</div>
+            <div class="leva-name" style="font-size:13.5px;">Memoria</div>
+          </div>
+        </div>
+        <div class="leva-tag" style="border-color:var(--lm);">Continuità</div>
+        <div class="leva-impact-bar" style="border-color:var(--lm);">
+          <div class="impact-dot" style="background:var(--lm)"></div>
+          <div class="impact-dot" style="background:var(--lm)"></div>
+          <div class="impact-dot" style="background:var(--lm)"></div>
+          <div class="impact-dot" style="background:var(--bg3)"></div>
+          <div class="impact-dot" style="background:var(--bg3)"></div>
+          <span class="impact-label" style="color:var(--lm);">medio</span>
+        </div>
+        <div class="rev-tag" style="background:var(--lmb); color:var(--lm); border:1px solid var(--lm);">↺ giorni</div>
+      </div>
+    </div>
+
+    <!-- 05 ORCHESTRAZIONE — center-right -->
+    <div class="leva" style="left:77%; top:46%;">
+      <div class="leva-inner" style="border-color:var(--l05); width:146px;">
+        <div class="leva-top">
+          <div class="leva-icon" style="width:38px; height:38px; font-size:17px; background:var(--l05b); border-right:1px solid var(--l05);">🔀</div>
+          <div class="leva-name-wrap">
+            <div class="leva-num" style="color:var(--l05);">Leva 05</div>
+            <div class="leva-name" style="font-size:13px;">Orchestrazione</div>
+          </div>
+        </div>
+        <div class="leva-tag" style="border-color:var(--l05);">Coordinazione</div>
+        <div class="leva-impact-bar" style="border-color:var(--l05);">
+          <div class="impact-dot" style="background:var(--l05)"></div>
+          <div class="impact-dot" style="background:var(--l05)"></div>
+          <div class="impact-dot" style="background:var(--l05)"></div>
+          <div class="impact-dot" style="background:var(--bg3)"></div>
+          <div class="impact-dot" style="background:var(--bg3)"></div>
+          <span class="impact-label" style="color:var(--l05);">medio</span>
+        </div>
+        <div class="rev-tag" style="background:var(--l05b); color:var(--l05); border:1px solid var(--l05);">↺ settimane</div>
+      </div>
+    </div>
+
+    <!-- 07 FINE-TUNING — bottom-right, smallest -->
+    <div class="leva" style="left:84%; top:77%;">
+      <div class="leva-inner" style="border-color:var(--l07); width:138px;">
+        <div class="leva-top">
+          <div class="leva-icon" style="width:36px; height:36px; font-size:16px; background:var(--l07b); border-right:1px solid var(--l07);">🎓</div>
+          <div class="leva-name-wrap">
+            <div class="leva-num" style="color:var(--l07);">Leva 07</div>
+            <div class="leva-name" style="font-size:12.5px;">Fine-tuning</div>
+          </div>
+        </div>
+        <div class="leva-tag" style="border-color:var(--l07);">Specializzazione</div>
+        <div class="leva-impact-bar" style="border-color:var(--l07);">
+          <div class="impact-dot" style="background:var(--l07)"></div>
+          <div class="impact-dot" style="background:var(--l07)"></div>
+          <div class="impact-dot" style="background:var(--l07)"></div>
+          <div class="impact-dot" style="background:var(--bg3)"></div>
+          <div class="impact-dot" style="background:var(--bg3)"></div>
+          <span class="impact-label" style="color:var(--l07);">selettivo</span>
+        </div>
+        <div class="rev-tag" style="background:var(--l07b); color:var(--l07); border:1px solid var(--l07);">↺ mesi</div>
+      </div>
+    </div>
+
+  </div><!-- /chart -->
+
+  <div class="axis-label-x-left">← Reversibile · Basso costo</div>
+  <div class="axis-label-x-right">Irreversibile · Alto costo →</div>
+</div>
+
+<!-- TESTING BANNER -->
+<div class="testing-banner">
+  <div class="tb-icon">🧪</div>
+  <div class="tb-body">
+    <div class="tb-num">Leva 06 · Testing e Valutazione · Affidabilità</div>
+    <div class="tb-name">Testing & Valutazione</div>
+    <div class="tb-sub">Non ha posizione sul piano · Attiva subito · Permane in parallelo a tutte le leve indefinitamente</div>
+  </div>
+  <div class="tb-rule">
+    "Non si migliora ciò che non si misura. La suite di test è più importante del prompt stesso."
+  </div>
+</div>
+
+<!-- BOTTOM -->
+<div class="bottom-section">
+  <div class="impact-legend">
+    <div class="il-label">Impatto →</div>
+    <div class="il-items">
+      <div class="il-item">
+        <div class="il-dots">
+          <div style="width:7px;height:7px;border-radius:1px;background:var(--ink2)"></div>
+          <div style="width:7px;height:7px;border-radius:1px;background:var(--ink2)"></div>
+          <div style="width:7px;height:7px;border-radius:1px;background:var(--ink2)"></div>
+          <div style="width:7px;height:7px;border-radius:1px;background:var(--ink2)"></div>
+          <div style="width:7px;height:7px;border-radius:1px;background:var(--ink2)"></div>
+        </div>
+        <span class="il-text">Massimo — sempre rilevante</span>
+      </div>
+      <div class="il-item">
+        <div class="il-dots">
+          <div style="width:7px;height:7px;border-radius:1px;background:var(--ink2)"></div>
+          <div style="width:7px;height:7px;border-radius:1px;background:var(--ink2)"></div>
+          <div style="width:7px;height:7px;border-radius:1px;background:var(--ink2)"></div>
+          <div style="width:7px;height:7px;border-radius:1px;background:var(--ink2)"></div>
+          <div style="width:7px;height:7px;border-radius:1px;background:var(--bg3)"></div>
+        </div>
+        <span class="il-text">Alto — impatto su molti task</span>
+      </div>
+      <div class="il-item">
+        <div class="il-dots">
+          <div style="width:7px;height:7px;border-radius:1px;background:var(--ink2)"></div>
+          <div style="width:7px;height:7px;border-radius:1px;background:var(--ink2)"></div>
+          <div style="width:7px;height:7px;border-radius:1px;background:var(--ink2)"></div>
+          <div style="width:7px;height:7px;border-radius:1px;background:var(--bg3)"></div>
+          <div style="width:7px;height:7px;border-radius:1px;background:var(--bg3)"></div>
+        </div>
+        <span class="il-text">Medio/selettivo — dipende dal caso</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="axis-legend">
+    <div class="al-item">
+      <div class="al-sym">→</div>
+      <div>
+        <div class="al-title">Asse X</div>
+        <div class="al-desc">Costo e irreversibilità.<br>Agisci prima sulle leve a sinistra.</div>
+      </div>
+    </div>
+    <div class="al-item">
+      <div class="al-sym">↑</div>
+      <div>
+        <div class="al-title">Asse Y</div>
+        <div class="al-desc">Impatto sulla qualità generale.<br>Le leve in alto migliorano ogni output.</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="footer-line">
+  <span>Agenti AI · Scheda 1 · Mappa delle leve</span>
+  <span>Serie Agenti AI · 2026</span>
+</div>
+
+</body>
+</html>

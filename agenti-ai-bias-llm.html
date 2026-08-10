@@ -1,0 +1,591 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>I Bias degli LLM — Riconoscerli, Capirli, Contenerli</title>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,400;0,9..144,600;0,9..144,700;0,9..144,800;0,9..144,900;1,9..144,400&family=Karla:wght@300;400;500;600;700&family=IBM+Plex+Mono:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#f7f5f0;--bg2:#efece5;--bg3:#e5e1d8;--ink:#1e1d1a;--ink2:#2d2b25;--ink3:#65614f;--ink4:#9e9a89;--border:#d6d1c4;--border2:#c5c0b1;--accent:#c0392b;
+--f1:#c0562b;--f2:#7b5ea7;--f3:#2e7d9c;--f4:#b07d24;--fix:#3d7a45;--warn:#c0392b}
+*{margin:0;padding:0;box-sizing:border-box}html{scroll-behavior:smooth}
+body{background:var(--bg);color:var(--ink);font-family:'Karla',sans-serif;font-weight:400;font-size:14px;line-height:1.78}
+.masthead{background:var(--ink);color:rgba(255,255,255,0.9);padding:60px 56px 52px;position:relative;overflow:hidden}
+.masthead::before{content:'';position:absolute;inset:0;background:repeating-linear-gradient(90deg,rgba(255,255,255,0.01) 0,rgba(255,255,255,0.01) 1px,transparent 1px,transparent 60px),repeating-linear-gradient(0deg,rgba(255,255,255,0.01) 0,rgba(255,255,255,0.01) 1px,transparent 1px,transparent 60px);pointer-events:none}
+.mh-eye{font-family:'IBM Plex Mono',monospace;font-size:10px;letter-spacing:3px;text-transform:uppercase;color:rgba(255,255,255,0.25);margin-bottom:18px;position:relative}
+.masthead h1{font-family:'Fraunces',serif;font-weight:800;font-size:clamp(28px,4.5vw,50px);line-height:1.08;letter-spacing:-1px;max-width:700px;position:relative}
+.mh-sub{margin-top:20px;font-size:15px;font-weight:300;color:rgba(255,255,255,0.38);max-width:660px;line-height:1.7;position:relative}
+.nav{background:var(--ink2);position:sticky;top:0;z-index:100;display:flex;overflow-x:auto;border-bottom:1px solid rgba(255,255,255,0.06)}
+.nav-btn{flex:1;min-width:90px;padding:12px 8px;border:none;background:transparent;cursor:pointer;font-family:'Karla',sans-serif;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.2px;color:rgba(255,255,255,0.28);border-right:1px solid rgba(255,255,255,0.06);transition:all 0.2s;white-space:nowrap}
+.nav-btn:last-child{border-right:none}.nav-btn:hover{color:rgba(255,255,255,0.55)}.nav-btn.active{color:#fff;background:rgba(255,255,255,0.05)}
+.sect{display:none}.sect.active{display:block;animation:fadeIn 0.3s ease}
+@keyframes fadeIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
+.sect-head{padding:48px 56px 36px;border-bottom:1px solid var(--border)}
+.sect-num{font-family:'IBM Plex Mono',monospace;font-size:10px;letter-spacing:3px;text-transform:uppercase;color:var(--ink4);margin-bottom:10px}
+.sect-head h2{font-family:'Fraunces',serif;font-weight:800;font-size:clamp(24px,3.5vw,38px);line-height:1.12;max-width:620px;margin-bottom:14px}
+.sect-head p{color:var(--ink3);max-width:700px;font-size:14.5px}
+.wrap{padding:0 56px 56px}
+.prose{margin-top:20px;max-width:740px}.prose p{font-size:14px;color:var(--ink3);line-height:1.8;margin-bottom:14px}.prose p strong{color:var(--ink2);font-weight:600}
+.key-point{margin-top:32px;padding:22px 26px;border-left:4px solid var(--accent);background:var(--bg2)}
+.kp-label{font-family:'IBM Plex Mono',monospace;font-size:9px;letter-spacing:2px;text-transform:uppercase;color:var(--accent);margin-bottom:6px}
+.kp-text{font-family:'Fraunces',serif;font-weight:600;font-size:17px;line-height:1.45;color:var(--ink2)}
+.kp-sub{margin-top:8px;font-size:13px;color:var(--ink3);line-height:1.65}
+.insight{margin:16px 0;padding:16px 20px;border-left:4px solid;background:var(--bg2)}
+.insight-label{font-family:'IBM Plex Mono',monospace;font-size:9px;letter-spacing:2px;text-transform:uppercase;margin-bottom:4px}
+.insight p{font-size:13.5px;line-height:1.65;color:var(--ink2);max-width:700px}
+
+/* Bias card */
+.bias{margin-top:24px;border:1px solid var(--border2)}
+.bias-header{display:grid;grid-template-columns:8px 1fr auto;align-items:center;border-bottom:1px solid var(--border)}
+.bias-accent{}
+.bias-head-body{padding:16px 22px}
+.bias-name{font-family:'Fraunces',serif;font-weight:700;font-size:17px;line-height:1.2}
+.bias-sub{font-size:12px;color:var(--ink4);margin-top:2px}
+.bias-danger{margin-right:18px;text-align:center}
+.bias-danger-val{font-family:'Fraunces',serif;font-weight:900;font-size:18px;line-height:1}
+.bias-danger-label{font-family:'IBM Plex Mono',monospace;font-size:8px;letter-spacing:0.5px;text-transform:uppercase;color:var(--ink4);margin-top:2px}
+.bias-body{padding:0}
+.bs{padding:18px 22px;border-bottom:1px solid var(--border)}.bs:last-child{border-bottom:none}
+.bs-label{font-family:'IBM Plex Mono',monospace;font-size:9px;letter-spacing:2px;text-transform:uppercase;color:var(--ink4);margin-bottom:8px;padding-bottom:4px;border-bottom:1px solid var(--border)}
+.bs p{font-size:13.5px;color:var(--ink3);line-height:1.75;max-width:720px}.bs p strong{color:var(--ink2);font-weight:600}
+
+/* Family card */
+.fam{margin-top:32px;border:1px solid var(--border2)}
+.fam-header{display:grid;grid-template-columns:8px 1fr;border-bottom:1px solid var(--border)}
+.fam-accent{}
+.fam-head-body{padding:20px 24px}
+.fam-name{font-family:'Fraunces',serif;font-weight:800;font-size:22px;line-height:1.15;margin-bottom:4px}
+.fam-sub{font-size:13px;color:var(--ink4)}
+.fam-body{padding:0}
+.fs{padding:20px 24px;border-bottom:1px solid var(--border)}.fs:last-child{border-bottom:none}
+.fs-label{font-family:'IBM Plex Mono',monospace;font-size:9px;letter-spacing:2px;text-transform:uppercase;color:var(--ink4);margin-bottom:10px;padding-bottom:5px;border-bottom:1px solid var(--border)}
+.fs p{font-size:14px;color:var(--ink3);line-height:1.8;max-width:740px}.fs p strong{color:var(--ink2);font-weight:600}
+
+/* Grid */
+.cg{display:grid;grid-template-columns:1fr 1fr;gap:1px;background:var(--border);margin-top:12px;border:1px solid var(--border2)}
+.cg-item{background:var(--bg);padding:14px 16px}
+.cg-title{font-weight:700;font-size:13px;margin-bottom:5px;color:var(--ink2)}
+.cg-text{font-size:12.5px;color:var(--ink3);line-height:1.6}.cg-text strong{color:var(--ink2);font-weight:600}
+
+/* Fix block */
+.fix{margin-top:12px;padding:14px 18px;border-left:4px solid var(--fix);background:rgba(61,122,69,0.03)}
+.fix-label{font-family:'IBM Plex Mono',monospace;font-size:9px;letter-spacing:1.5px;text-transform:uppercase;color:var(--fix);margin-bottom:4px}
+.fix-text{font-size:13px;color:var(--ink3);line-height:1.65;max-width:700px}.fix-text strong{color:var(--ink2);font-weight:600}
+
+/* Limit block */
+.limit{margin-top:12px;padding:14px 18px;border-left:4px solid var(--warn);background:rgba(192,57,43,0.03)}
+.limit-label{font-family:'IBM Plex Mono',monospace;font-size:9px;letter-spacing:1.5px;text-transform:uppercase;color:var(--warn);margin-bottom:4px}
+.limit-text{font-size:13px;color:var(--ink3);line-height:1.65;max-width:700px}.limit-text strong{color:var(--ink2);font-weight:600}
+
+/* Dark box */
+.dark-box{background:var(--ink);color:rgba(255,255,255,0.85);padding:28px 24px;margin-top:24px;position:relative;overflow:hidden}
+.dark-box::before{content:'';position:absolute;inset:0;background:repeating-linear-gradient(90deg,rgba(255,255,255,0.015) 0,rgba(255,255,255,0.015) 1px,transparent 1px,transparent 50px),repeating-linear-gradient(0deg,rgba(255,255,255,0.015) 0,rgba(255,255,255,0.015) 1px,transparent 1px,transparent 50px);pointer-events:none}
+.dark-title{font-family:'Fraunces',serif;font-weight:700;font-size:20px;margin-bottom:6px;position:relative}
+.dark-desc{font-size:13px;color:rgba(255,255,255,0.35);margin-bottom:20px;max-width:600px;position:relative}
+.dark-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;position:relative}
+.dark-card{background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);padding:18px 16px}
+.dk-label{font-family:'IBM Plex Mono',monospace;font-size:9px;letter-spacing:1.5px;text-transform:uppercase;color:rgba(255,255,255,0.3);margin-bottom:6px}
+.dk-title{font-weight:700;font-size:14px;margin-bottom:6px}
+.dk-text{font-size:12px;color:rgba(255,255,255,0.4);line-height:1.6}.dk-text strong{color:rgba(255,255,255,0.7);font-weight:600}
+
+.footer{background:var(--ink);color:rgba(255,255,255,0.22);padding:28px 56px;font-family:'IBM Plex Mono',monospace;font-size:10px;letter-spacing:1px;display:flex;justify-content:space-between}
+@media(max-width:860px){.masthead,.sect-head,.wrap,.footer{padding-left:20px;padding-right:20px}.cg,.dark-grid{grid-template-columns:1fr}.bias-header{grid-template-columns:8px 1fr}.bias-danger{display:none}.footer{flex-direction:column;gap:6px}}
+</style>
+</head>
+<body>
+
+<div class="masthead">
+  <div class="mh-eye">Serie Agenti AI — Report 18</div>
+  <h1>I bias degli LLM:<br>riconoscerli, capirli,<br>contenerli</h1>
+  <p class="mh-sub">Le distorsioni sistematiche dei modelli linguistici: da dove vengono, come si manifestano, quali sono le più pericolose nel contesto degli agenti AI, e cosa si può fare concretamente per contenerle.</p>
+</div>
+
+<nav class="nav">
+  <button class="nav-btn active" onclick="show(0)">Bias vs errore</button>
+  <button class="nav-btn" onclick="show(1)">Bias dai dati</button>
+  <button class="nav-btn" onclick="show(2)">Bias da allineamento</button>
+  <button class="nav-btn" onclick="show(3)">Bias strutturali</button>
+  <button class="nav-btn" onclick="show(4)">Bias culturali</button>
+  <button class="nav-btn" onclick="show(5)">I più pericolosi</button>
+  <button class="nav-btn" onclick="show(6)">Contromisure</button>
+  <button class="nav-btn" onclick="show(7)">Limiti</button>
+</nav>
+
+
+<!-- ═══════════════════
+     S0 — BIAS VS ERRORE
+═══════════════════ -->
+<div class="sect active" id="s0">
+  <div class="sect-head">
+    <div class="sect-num">Il punto di partenza</div>
+    <h2>Bias non è errore — la distinzione che conta</h2>
+    <p>Un errore è una risposta sbagliata. Un bias è una distorsione sistematica: l'errore ricorre sempre nella stessa direzione. La distinzione è fondamentale perché le contromisure sono completamente diverse.</p>
+  </div>
+  <div class="wrap">
+    <div class="prose">
+      <p>Quando un LLM dice che Parigi è la capitale della Germania, è un <strong>errore</strong> — un'allucinazione puntuale, che può capitare in qualsiasi direzione, senza uno schema prevedibile. Quando un LLM tende sistematicamente a dare ragione all'utente anche quando ha torto, è un <strong>bias</strong> — una distorsione che si ripete, che ha una direzione costante, e che è prevedibile una volta che la conosci.</p>
+      <p>Perché questa distinzione conta nella pratica: un errore lo correggi migliorando il contesto (knowledge base migliore, prompt più preciso). Un bias non si corregge con più contesto — <strong>è radicato nel modello stesso</strong> o nel processo che lo ha prodotto. Puoi mitigarlo, compensarlo, costruire guardrail intorno — ma non eliminarlo, perché non è un problema di informazione mancante: è un problema di come il modello elabora e produce informazione.</p>
+      <p>I bias degli LLM vengono da <strong>4 fonti diverse</strong> — e capire da dove viene un bias è il primo passo per decidere come contrastarlo.</p>
+    </div>
+
+    <div class="dark-box">
+      <div class="dark-title">Le 4 famiglie di bias</div>
+      <div class="dark-desc">Fonti diverse, manifestazioni diverse, contromisure diverse</div>
+      <div class="dark-grid">
+        <div class="dark-card" style="border-top:3px solid var(--f1)">
+          <div class="dk-label" style="color:var(--f1)">Famiglia 1</div>
+          <div class="dk-title">Bias dai dati di training</div>
+          <div class="dk-text">Il modello ha assorbito i pregiudizi presenti nei testi su cui è stato addestrato. <strong>Il web non è neutro</strong> — e il modello riflette le sue distorsioni.</div>
+        </div>
+        <div class="dark-card" style="border-top:3px solid var(--f2)">
+          <div class="dk-label" style="color:var(--f2)">Famiglia 2</div>
+          <div class="dk-title">Bias dall'allineamento</div>
+          <div class="dk-text">Il processo che rende il modello "utile e sicuro" (RLHF) introduce distorsioni proprie. <strong>L'accondiscendenza è la più nota</strong>, ma non l'unica.</div>
+        </div>
+        <div class="dark-card" style="border-top:3px solid var(--f3)">
+          <div class="dk-label" style="color:var(--f3)">Famiglia 3</div>
+          <div class="dk-title">Bias strutturali</div>
+          <div class="dk-text">Derivano da come funziona l'architettura del modello, non da cosa ha imparato. <strong>Il recency bias e il position bias</strong> sono i più rilevanti.</div>
+        </div>
+        <div class="dark-card" style="border-top:3px solid var(--f4)">
+          <div class="dk-label" style="color:var(--f4)">Famiglia 4</div>
+          <div class="dk-title">Bias culturali e linguistici</div>
+          <div class="dk-text">Il modello è stato addestrato prevalentemente su testi in inglese e da fonti occidentali. <strong>La visione del mondo è anglocentrica.</strong></div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+
+<!-- ═══════════════════
+     S1 — BIAS DAI DATI
+═══════════════════ -->
+<div class="sect" id="s1">
+  <div class="sect-head">
+    <div class="sect-num">Famiglia 01</div>
+    <h2>Bias ereditati dai dati di training</h2>
+    <p>Il modello ha imparato da miliardi di testi scritti da esseri umani — e gli esseri umani hanno pregiudizi. Il modello li ha assorbiti come pattern statistici, senza saperli distinguere da fatti.</p>
+  </div>
+  <div class="wrap">
+    <div class="fam">
+      <div class="fam-header"><div class="fam-accent" style="background:var(--f1)"></div><div class="fam-head-body"><div class="fam-name">Bias dai Dati di Training</div><div class="fam-sub">Il web non è neutro, e il modello riflette le sue distorsioni</div></div></div>
+      <div class="fam-body">
+        <div class="fs">
+          <div class="fs-label">Da dove vengono</div>
+          <p>I modelli LLM sono addestrati su enormi quantità di testo dal web, da libri, da articoli. Questi testi <strong>non rappresentano la realtà in modo neutro</strong>: riflettono i pregiudizi, le sovrarappresentazioni e le narrazioni dominanti della società che li ha prodotti. Se il web contiene più testi che descrivono un CEO come uomo che come donna, il modello apprende statisticamente che "CEO" è associato al maschile — non perché lo "pensi", ma perché il pattern ricorre più frequentemente.</p>
+          <p>I provider (Anthropic, OpenAI, Google) lavorano attivamente per mitigare questi bias durante l'allineamento, ma <strong>non possono eliminarli completamente</strong> senza eliminare anche le capacità del modello — perché i pattern "utili" e i pattern "pregiudizievoli" sono intrecciati nello stesso tessuto di pesi neuronali.</p>
+        </div>
+        <div class="fs">
+          <div class="fs-label">Come si manifestano concretamente</div>
+          <div class="cg">
+            <div class="cg-item"><div class="cg-title">Stereotipi demografici</div><div class="cg-text">Associazioni tra genere, etnia, età e ruoli professionali, competenze, comportamenti. <strong>Esempio:</strong> se chiedi all'agente di scrivere un profilo per un ruolo di leadership senza specificare il genere, tende a usare pronomi maschili. Se chiedi di descrivere un assistente, tende al femminile. Non sempre, non in modo grossolano — ma la tendenza statistica esiste.</div></div>
+            <div class="cg-item"><div class="cg-title">Sovrarappresentazione di temi e prospettive</div><div class="cg-text">Il modello "sa più cose" sui temi più rappresentati nel training: la storia americana è più dettagliata della storia africana, la medicina occidentale più della medicina tradizionale, il diritto anglosassone più del diritto continentale. <strong>Non è che sbagli — è che sa di più su certe cose e meno su altre</strong>, in modo non proporzionale alla loro importanza reale.</div></div>
+            <div class="cg-item"><div class="cg-title">Bias di "normalità"</div><div class="cg-text">Il modello tratta come "default" ciò che era più frequente nel training. <strong>Esempio:</strong> se chiedi "un matrimonio tipico" senza contesto culturale, il modello descrive un matrimonio occidentale. Se chiedi "una colazione tipica", descrive una colazione nord-europea o americana. Non è un errore — è una prospettiva implicita che potrebbe non corrispondere al contesto dell'utente.</div></div>
+            <div class="cg-item"><div class="cg-title">Bias di popolarità</div><div class="cg-text">Il modello favorisce opzioni, prodotti, approcci più "popolari" nel web — che non sono necessariamente i migliori per il caso specifico. <strong>Esempio:</strong> se chiedi una raccomandazione software, tende a suggerire i prodotti più menzionati online (che hanno più marketing budget) rispetto ad alternative meno note ma potenzialmente migliori.</div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+<!-- ═══════════════════
+     S2 — BIAS DA ALLINEAMENTO
+═══════════════════ -->
+<div class="sect" id="s2">
+  <div class="sect-head">
+    <div class="sect-num">Famiglia 02</div>
+    <h2>Bias introdotti dall'allineamento</h2>
+    <p>Il processo che rende il modello "utile e sicuro" (RLHF) introduce distorsioni proprie. Sono i bias più rilevanti per chi costruisce agenti, perché influenzano direttamente il comportamento dell'agente.</p>
+  </div>
+  <div class="wrap">
+    <div class="fam">
+      <div class="fam-header"><div class="fam-accent" style="background:var(--f2)"></div><div class="fam-head-body"><div class="fam-name">Bias dall'Allineamento (RLHF)</div><div class="fam-sub">Il modello è stato addestrato a compiacere — e questo ha effetti collaterali</div></div></div>
+      <div class="fam-body">
+        <div class="fs">
+          <div class="fs-label">Da dove vengono</div>
+          <p>Durante l'RLHF, valutatori umani giudicano le risposte del modello e le classificano da migliore a peggiore. Il modello viene poi ottimizzato per produrre risposte che i valutatori preferiscono. Il problema: <strong>i valutatori umani hanno le loro distorsioni</strong>. Tendono a preferire risposte lunghe e articolate rispetto a risposte brevi e dirette. Tendono a premiare risposte che suonano sicure rispetto a risposte che esprimono incertezza. Tendono a penalizzare risposte che contraddicono l'utente, anche quando l'utente ha torto. Queste preferenze si consolidano nel modello come bias.</p>
+        </div>
+        <div class="fs">
+          <div class="fs-label">I bias principali di questa famiglia</div>
+        </div>
+
+        <!-- Sycophancy -->
+        <div class="bias">
+          <div class="bias-header">
+            <div class="bias-accent" style="background:var(--f2)"></div>
+            <div class="bias-head-body"><div class="bias-name">Sycophancy (Accondiscendenza)</div><div class="bias-sub">Il modello tende a dare ragione all'utente</div></div>
+            <div class="bias-danger"><div class="bias-danger-val" style="color:var(--warn)">5/5</div><div class="bias-danger-label">Pericolosità</div></div>
+          </div>
+          <div class="bias-body">
+            <div class="bs"><div class="bs-label">Come si manifesta</div>
+              <p>L'utente esprime un'opinione, e il modello la conferma — anche quando è sbagliata. L'utente dice "penso che il nostro fatturato sia in crescita del 20%", e il modello risponde "sì, effettivamente…" invece di verificare il dato. L'utente propone una strategia con falle evidenti, e il modello la elogia aggiungendo al massimo un "però si potrebbe anche considerare…" debole. <strong>Il modello è stato addestrato a essere "utile", e ha imparato che dare ragione è percepito come più utile di contraddire.</strong></p>
+            </div>
+            <div class="bs"><div class="bs-label">Perché è il bias più pericoloso per gli agenti</div>
+              <p>In un contesto agentico, l'accondiscendenza può portare a <strong>decisioni sbagliate validate dall'agente</strong>. Se un manager chiede all'agente di analizzare una proposta e l'agente tende a confermare anziché criticare, l'agente diventa un amplificatore di confirmation bias umano — il contrario di ciò che dovrebbe fare. L'utente crede di avere una seconda opinione indipendente; in realtà ha un echo chamber.</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Verbosity -->
+        <div class="bias">
+          <div class="bias-header">
+            <div class="bias-accent" style="background:var(--f2)"></div>
+            <div class="bias-head-body"><div class="bias-name">Verbosity Bias (Prolissità)</div><div class="bias-sub">Risposte più lunghe del necessario</div></div>
+            <div class="bias-danger"><div class="bias-danger-val" style="color:var(--f4)">3/5</div><div class="bias-danger-label">Pericolosità</div></div>
+          </div>
+          <div class="bias-body">
+            <div class="bs"><div class="bs-label">Come si manifesta</div>
+              <p>Il modello tende a produrre risposte lunghe, articolate, con premesse, qualificazioni e conclusioni — anche quando la risposta corretta è una frase. Se chiedi "quante regioni ha l'Italia?", invece di rispondere "20" il modello risponde con un paragrafo che include contesto storico, distinzione tra regioni a statuto ordinario e speciale, e una nota sulla riforma costituzionale. <strong>L'RLHF ha premiato le risposte complete, e il modello ha imparato che "più è meglio".</strong></p>
+            </div>
+            <div class="bs"><div class="bs-label">Impatto sugli agenti</div>
+              <p>In un agente, la prolissità ha un impatto concreto: <strong>costa di più</strong> (più token in output = più costi API), <strong>è più lenta</strong> (generare 500 token richiede più tempo di generarne 50), e può <strong>diluire le informazioni importanti</strong> in un mare di qualificazioni. In un loop agentico dove l'output di uno step è l'input del successivo, la prolissità si propaga e amplifica.</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Excessive caution -->
+        <div class="bias">
+          <div class="bias-header">
+            <div class="bias-accent" style="background:var(--f2)"></div>
+            <div class="bias-head-body"><div class="bias-name">Cautela Eccessiva</div><div class="bias-sub">Rifiutare richieste innocue per evitare rischi</div></div>
+            <div class="bias-danger"><div class="bias-danger-val" style="color:var(--f4)">3/5</div><div class="bias-danger-label">Pericolosità</div></div>
+          </div>
+          <div class="bias-body">
+            <div class="bs"><div class="bs-label">Come si manifesta</div>
+              <p>Il modello rifiuta richieste perfettamente legittime perché le interpreta come potenzialmente rischiose. Chiedere informazioni su farmaci per un contesto medico professionale viene rifiutato "per sicurezza". Chiedere di scrivere un testo critico verso un'azienda viene rifiutato perché "potrebbe essere diffamatorio". <strong>L'RLHF ha penalizzato le risposte potenzialmente dannose, e il modello ha imparato che rifiutare è più sicuro di rischiare.</strong></p>
+            </div>
+            <div class="bs"><div class="bs-label">Impatto sugli agenti</div>
+              <p>Un agente eccessivamente cauto è <strong>inutile per i task che richiedono giudizio critico, analisi di rischi, o discussione di temi sensibili</strong> — che sono spesso i task di maggior valore. Un agente di analisi legale che rifiuta di discutere clausole contrattuali "potenzialmente problematiche" non sta proteggendo nessuno — sta fallendo nel suo compito.</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- False balance -->
+        <div class="bias">
+          <div class="bias-header">
+            <div class="bias-accent" style="background:var(--f2)"></div>
+            <div class="bias-head-body"><div class="bias-name">Falso Equilibrio</div><div class="bias-sub">Presentare tutte le posizioni come ugualmente valide</div></div>
+            <div class="bias-danger"><div class="bias-danger-val" style="color:var(--f1)">4/5</div><div class="bias-danger-label">Pericolosità</div></div>
+          </div>
+          <div class="bias-body">
+            <div class="bs"><div class="bs-label">Come si manifesta</div>
+              <p>Su temi dove la posizione scientifica o fattuale è chiara, il modello presenta "entrambi i lati" come se avessero uguale validità. Questo vale per temi oggettivi (dove il consenso scientifico è netto) ma anche, in modo più insidioso, per <strong>decisioni di business</strong>: se chiedi all'agente di valutare due opzioni strategiche di cui una è chiaramente migliore, il modello tende a presentarle come ugualmente valide con "pro e contro di entrambe", invece di dirti chiaramente quale è superiore.</p>
+            </div>
+            <div class="bs"><div class="bs-label">Impatto sugli agenti</div>
+              <p>Un agente che presenta sempre "pro e contro bilanciati" è un agente che <strong>non prende mai una posizione netta</strong> — il che lo rende inutile come strumento decisionale. Il valore di un analista (umano o AI) sta nella capacità di dire "l'opzione A è migliore per questi motivi", non di elencare vantaggi e svantaggi in modo equidistante.</p>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+</div>
+
+
+<!-- ═══════════════════
+     S3 — BIAS STRUTTURALI
+═══════════════════ -->
+<div class="sect" id="s3">
+  <div class="sect-head">
+    <div class="sect-num">Famiglia 03</div>
+    <h2>Bias strutturali dell'architettura</h2>
+    <p>Non derivano da cosa il modello ha imparato, ma da come funziona il meccanismo del Transformer. Sono i più prevedibili e, per certi versi, i più facili da compensare.</p>
+  </div>
+  <div class="wrap">
+    <div class="fam">
+      <div class="fam-header"><div class="fam-accent" style="background:var(--f3)"></div><div class="fam-head-body"><div class="fam-name">Bias Strutturali</div><div class="fam-sub">Conseguenze del meccanismo di attention e della generazione autoregressiva</div></div></div>
+      <div class="fam-body">
+
+        <div class="bias" style="margin-top:0;border-top:none">
+          <div class="bias-header">
+            <div class="bias-accent" style="background:var(--f3)"></div>
+            <div class="bias-head-body"><div class="bias-name">Recency Bias</div><div class="bias-sub">Le informazioni alla fine del contesto pesano di più</div></div>
+            <div class="bias-danger"><div class="bias-danger-val" style="color:var(--f1)">4/5</div><div class="bias-danger-label">Pericolosità</div></div>
+          </div>
+          <div class="bias-body">
+            <div class="bs"><div class="bs-label">Come funziona</div>
+              <p>In un contesto lungo (prompt + documenti + conversazione), il modello tende a dare <strong>più peso alle informazioni che appaiono per ultime</strong>. Se il prompt dice "rispondi in italiano" all'inizio e l'ultimo messaggio dell'utente è in inglese, il modello potrebbe rispondere in inglese. Se un documento RAG contraddice il system prompt, e il documento viene inserito dopo il prompt, il modello tende a seguire il documento.</p>
+              <p><strong>Per gli agenti è critico:</strong> in un loop agentico dove il contesto si accumula (risultati di tool, risposte precedenti, documenti), le informazioni iniziali (il system prompt, le regole fondamentali) possono essere "dimenticate" man mano che il contesto si riempie. È come un collega che dopo 3 ore di riunione si dimentica delle istruzioni iniziali.</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="bias">
+          <div class="bias-header">
+            <div class="bias-accent" style="background:var(--f3)"></div>
+            <div class="bias-head-body"><div class="bias-name">Position Bias nelle Liste</div><div class="bias-sub">Il primo e l'ultimo elemento di una lista sono favoriti</div></div>
+            <div class="bias-danger"><div class="bias-danger-val" style="color:var(--f4)">3/5</div><div class="bias-danger-label">Pericolosità</div></div>
+          </div>
+          <div class="bias-body">
+            <div class="bs"><div class="bs-label">Come funziona</div>
+              <p>Quando il modello deve scegliere tra opzioni presentate in una lista (candidati, prodotti, soluzioni), tende a favorire il <strong>primo o l'ultimo elemento</strong> indipendentemente dalla qualità. Se chiedi "quale di questi 5 candidati è il migliore?" l'ordine in cui li presenti influenza la risposta. Questo è un effetto noto del meccanismo di attention, che distribuisce i pesi in modo non uniforme sulla lunghezza della sequenza.</p>
+              <p><strong>Per gli agenti:</strong> se l'agente deve fare ranking o selezione (quale lead è più caldo? quale documento è più rilevante?), il position bias può distorcere sistematicamente i risultati. La soluzione tecnica è randomizzare l'ordine di presentazione o, meglio, far valutare ciascun elemento indipendentemente e poi confrontare i punteggi.</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="bias">
+          <div class="bias-header">
+            <div class="bias-accent" style="background:var(--f3)"></div>
+            <div class="bias-head-body"><div class="bias-name">Anchoring Bias</div><div class="bias-sub">Il modello si "ancora" alle prime informazioni o al primo framework proposto</div></div>
+            <div class="bias-danger"><div class="bias-danger-val" style="color:var(--f4)">3/5</div><div class="bias-danger-label">Pericolosità</div></div>
+          </div>
+          <div class="bias-body">
+            <div class="bs"><div class="bs-label">Come funziona</div>
+              <p>Se l'utente propone un'ipotesi ("penso che il calo sia dovuto alla stagionalità"), il modello tende a <strong>costruire il suo ragionamento intorno a quell'ipotesi</strong> — confermandola, qualificandola, arricchendola — piuttosto che considerare ipotesi alternative con la stessa profondità. È una combinazione di sycophancy (tendenza ad assecondare) e di generazione autoregressiva (il modello continua nella direzione iniziata): una volta che il ragionamento è "partito" in una direzione, è costoso computazionalmente cambiarla a metà.</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="bias">
+          <div class="bias-header">
+            <div class="bias-accent" style="background:var(--f3)"></div>
+            <div class="bias-head-body"><div class="bias-name">Confidence Bias</div><div class="bias-sub">Il modello esprime certezza anche quando non dovrebbe</div></div>
+            <div class="bias-danger"><div class="bias-danger-val" style="color:var(--f1)">4/5</div><div class="bias-danger-label">Pericolosità</div></div>
+          </div>
+          <div class="bias-body">
+            <div class="bs"><div class="bs-label">Come funziona</div>
+              <p>Il modello presenta le sue risposte con un tono di <strong>certezza che non riflette il suo effettivo grado di confidenza</strong>. Dice "il fatturato del settore è cresciuto del 12% nel 2025" con lo stesso tono di certezza con cui dice "l'Italia è in Europa" — ma il primo dato potrebbe essere inventato e il secondo è un fatto verificabile. Il modello non ha un meccanismo interno per segnalare "su questo sono sicuro, su quello sto indovinando".</p>
+              <p><strong>Per gli agenti è critico:</strong> un utente che riceve informazioni presentate con sicurezza tende a fidarsi, anche quando non dovrebbe. Un agente che presenta numeri inventati con lo stesso tono di numeri reali è peggio di un agente che non risponde — perché crea una falsa fiducia.</p>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+</div>
+
+
+<!-- ═══════════════════
+     S4 — BIAS CULTURALI
+═══════════════════ -->
+<div class="sect" id="s4">
+  <div class="sect-head">
+    <div class="sect-num">Famiglia 04</div>
+    <h2>Bias culturali e linguistici</h2>
+    <p>Il modello vede il mondo attraverso lenti anglofone e occidentali. Per chi opera in italiano o in contesti non anglosassoni, questo è un bias concreto e quotidiano.</p>
+  </div>
+  <div class="wrap">
+    <div class="fam">
+      <div class="fam-header"><div class="fam-accent" style="background:var(--f4)"></div><div class="fam-head-body"><div class="fam-name">Bias Culturali e Linguistici</div><div class="fam-sub">Il mondo visto dall'anglosfera</div></div></div>
+      <div class="fam-body">
+
+        <div class="fs">
+          <div class="fs-label">Come si manifestano in pratica</div>
+          <div class="cg">
+            <div class="cg-item"><div class="cg-title">Conoscenza asimmetrica</div><div class="cg-text">Il modello sa molto di più sulla <strong>realtà americana e britannica</strong> che su quella italiana o di altri paesi. Normativa, sistemi fiscali, convenzioni di business, struttura aziendale — il modello tende a proporre framework anglosassoni anche quando il contesto è chiaramente diverso. Se chiedi "come funziona l'IVA?" senza specificare il paese, la risposta potrebbe riflettere il sistema VAT britannico.</div></div>
+            <div class="cg-item"><div class="cg-title">Qualità linguistica asimmetrica</div><div class="cg-text">La qualità delle risposte in <strong>inglese è sistematicamente superiore</strong> a quella in italiano o in altre lingue. Non perché il modello non "sappia" l'italiano, ma perché ha visto molti più esempi di ragionamento di alta qualità in inglese. Su task complessi (analisi, ragionamento multi-step), la qualità in italiano può essere sensibilmente inferiore — con sfumature perse, strutture più rigide, vocabolario meno ricco.</div></div>
+            <div class="cg-item"><div class="cg-title">Riferimenti culturali impliciti</div><div class="cg-text">Il modello usa <strong>riferimenti, metafore, framework di pensiero</strong> che sono naturali per un anglosassone ma possono essere estranei o irrilevanti per un contesto italiano. Suggerisce approcci di management americani, cita normative US come default, propone strumenti più diffusi nel mercato anglofono. Non è sbagliato — è fuori contesto.</div></div>
+            <div class="cg-item"><div class="cg-title">Normativa e compliance</div><div class="cg-text">Particolarmente critico per agenti in ambito legale, HR o finance: il modello può <strong>mescolare normativa di giurisdizioni diverse</strong> o applicare principi del diritto anglosassone (common law) a contesti di diritto continentale (civil law). Può citare il GDPR correttamente e poi applicare logiche interpretative tipiche della privacy law americana.</div></div>
+          </div>
+        </div>
+
+        <div class="fs">
+          <div class="fs-label">Impatto per chi opera in italiano</div>
+          <p>Per un agente che opera in italiano su un mercato italiano, il bias culturale ha un impatto quotidiano e spesso <strong>invisibile</strong>: non produce errori grossolani che saltano all'occhio, ma una sottile distorsione nella prospettiva che può accumularsi nel tempo. Un agente che suggerisce strategie di marketing calibrate sul consumatore americano, o che applica logiche fiscali non italiane, o che propone approcci HR non allineati con la cultura lavorativa italiana — tutto questo è bias culturale in azione. La contromisura principale è nel prompt e nella knowledge base: <strong>ancorare l'agente al contesto locale</strong> con istruzioni esplicite e documenti localizzati.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+<!-- ═══════════════════
+     S5 — I PIÙ PERICOLOSI
+═══════════════════ -->
+<div class="sect" id="s5">
+  <div class="sect-head">
+    <div class="sect-num">Priorità</div>
+    <h2>I bias più pericolosi per gli agenti AI</h2>
+    <p>Non tutti i bias hanno lo stesso impatto. In un contesto aziendale dove l'agente supporta decisioni, assiste clienti o gestisce processi, alcuni bias sono significativamente più pericolosi di altri.</p>
+  </div>
+  <div class="wrap">
+
+    <div class="prose">
+      <p>La pericolosità di un bias dipende da due fattori: quanto è <strong>frequente</strong> (un bias che si attiva una volta su mille è meno pericoloso di uno che si attiva una volta su tre) e quanto è <strong>invisibile</strong> (un bias che produce errori evidenti viene catturato; uno che distorce sottilmente il ragionamento senza generare errori apparenti è molto più insidioso).</p>
+    </div>
+
+    <div class="dark-box">
+      <div class="dark-title">Classifica per pericolosità in contesto agentico</div>
+      <div class="dark-desc">Dal più pericoloso al meno pericoloso nella pratica quotidiana</div>
+      <div class="dark-grid" style="grid-template-columns:1fr">
+        <div class="dark-card" style="border-left:4px solid var(--warn)">
+          <div class="dk-label" style="color:var(--warn)">Pericolosità 5/5</div>
+          <div class="dk-title">Sycophancy (accondiscendenza)</div>
+          <div class="dk-text">Il più pericoloso perché è <strong>il più invisibile</strong>. L'utente non si accorge che l'agente gli sta dando ragione invece di analizzare obiettivamente. Crea un falso senso di validazione. Particolarmente pericoloso quando l'agente è usato per decisioni strategiche, valutazione di rischi, o analisi critiche — cioè esattamente i task dove il valore di un secondo parere è massimo.</div>
+        </div>
+        <div class="dark-card" style="border-left:4px solid var(--warn)">
+          <div class="dk-label" style="color:var(--f1)">Pericolosità 4/5</div>
+          <div class="dk-title">Confidence bias (falsa certezza)</div>
+          <div class="dk-text">Il modello presenta informazioni incerte con lo stesso tono di certezza dei fatti verificati. <strong>L'utente non ha modo di distinguere</strong> quando l'agente "sa" da quando l'agente "indovina". Particolarmente pericoloso per agenti che forniscono dati, cifre, riferimenti normativi — dove una cifra inventata ma presentata con sicurezza può guidare decisioni sbagliate.</div>
+        </div>
+        <div class="dark-card" style="border-left:4px solid var(--f1)">
+          <div class="dk-label" style="color:var(--f1)">Pericolosità 4/5</div>
+          <div class="dk-title">Falso equilibrio</div>
+          <div class="dk-text">Pericoloso nei contesti decisionali: l'agente presenta tutte le opzioni come equivalenti quando una è chiaramente migliore. <strong>Rallenta le decisioni e dà legittimità a opzioni scadenti.</strong> Meno visibile dell'accondiscendenza ma altrettanto dannoso nel lungo periodo.</div>
+        </div>
+        <div class="dark-card" style="border-left:4px solid var(--f1)">
+          <div class="dk-label" style="color:var(--f1)">Pericolosità 4/5</div>
+          <div class="dk-title">Recency bias</div>
+          <div class="dk-text">In un agente con contesto lungo (conversazioni multi-turn, risultati di tool accumulati), le istruzioni iniziali del system prompt perdono peso. <strong>L'agente può "dimenticare" le regole fondamentali</strong> durante un'interazione lunga — con risultati potenzialmente gravi se le regole riguardano sicurezza, compliance o limiti di azione.</div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+
+<!-- ═══════════════════
+     S6 — CONTROMISURE
+═══════════════════ -->
+<div class="sect" id="s6">
+  <div class="sect-head">
+    <div class="sect-num">Contromisure</div>
+    <h2>Come contenerli: tecniche concrete</h2>
+    <p>Per ciascuna famiglia di bias, le contromisure pratiche che funzionano — e quelle che danno solo l'illusione di funzionare.</p>
+  </div>
+  <div class="wrap">
+
+    <!-- Counter: Sycophancy -->
+    <div class="fam">
+      <div class="fam-header"><div class="fam-accent" style="background:var(--fix)"></div><div class="fam-head-body"><div class="fam-name">Contro l'accondiscendenza</div><div class="fam-sub">Contromisure per il bias più pericoloso</div></div></div>
+      <div class="fam-body">
+        <div class="fs">
+          <div class="fs-label">Nel prompt</div>
+          <div class="cg">
+            <div class="cg-item"><div class="cg-title">Istruzioni esplicite di contraddizione</div><div class="cg-text"><strong>"Se l'utente afferma qualcosa di fattualmente errato, correggi esplicitamente. Non confermare informazioni che non puoi verificare. Quando non sei d'accordo con un'analisi, spiega perché."</strong> Istruzioni dirette nel system prompt. Non eliminano la sycophancy ma la riducono significativamente — il modello ha un'istruzione esplicita che controbilancia la tendenza implicita.</div></div>
+            <div class="cg-item"><div class="cg-title">Ruolo di "critico" o "avvocato del diavolo"</div><div class="cg-text">Definire nel prompt un ruolo che include esplicitamente la critica: <strong>"Il tuo ruolo è analizzare le proposte identificando debolezze, rischi e assunzioni non verificate. Non confermare un piano senza aver elencato almeno 3 rischi."</strong> Il ruolo di critico è più efficace dell'istruzione generica perché attiva un pattern di comportamento diverso.</div></div>
+          </div>
+        </div>
+        <div class="fs">
+          <div class="fs-label">Nell'architettura</div>
+          <div class="cg">
+            <div class="cg-item"><div class="cg-title">Doppia valutazione indipendente</div><div class="cg-text">Fai valutare la stessa analisi da <strong>due chiamate LLM separate</strong>: una con il prompt standard, una con un prompt esplicitamente contrarian ("trova i problemi in questa proposta"). Confronta i risultati. Pattern più costoso (2x chiamate) ma molto più robusto contro la sycophancy.</div></div>
+            <div class="cg-item"><div class="cg-title">Omettere l'opinione dell'utente</div><div class="cg-text">Se l'utente chiede "penso che dovremmo espanderci in Germania, cosa ne pensi?", <strong>riformula per l'agente omettendo l'opinione</strong>: "Valuta l'espansione in Germania." Questo rimuove l'ancora a cui il modello si aggrapperebbe. Tecnicamente è un intervento dell'orchestratore che filtra l'input prima di passarlo al modello.</div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Counter: Confidence -->
+    <div class="fam" style="margin-top:24px">
+      <div class="fam-header"><div class="fam-accent" style="background:var(--fix)"></div><div class="fam-head-body"><div class="fam-name">Contro la falsa certezza</div><div class="fam-sub">Far emergere l'incertezza del modello</div></div></div>
+      <div class="fam-body">
+        <div class="fs">
+          <div class="fs-label">Tecniche</div>
+          <div class="cg">
+            <div class="cg-item"><div class="cg-title">Istruzioni di calibrazione</div><div class="cg-text"><strong>"Quando citi un dato numerico, specifica sempre la fonte. Se il dato viene dalla tua conoscenza di training e non da un documento fornito, segnalalo esplicitamente con [dato non verificato]. Se non sei sicuro di un'informazione, dillo."</strong> Questa istruzione nel prompt riduce significativamente le affermazioni false presentate come certe.</div></div>
+            <div class="cg-item"><div class="cg-title">Separazione fatti da opinioni</div><div class="cg-text">Chiedi al modello di <strong>strutturare l'output</strong> distinguendo esplicitamente: "Fatti verificati dai documenti: … / Dati dal mio training (non verificati): … / Mia interpretazione: …". Il formato strutturato obbliga il modello a categorizzare ogni affermazione — e rende visibile all'utente il livello di certezza.</div></div>
+            <div class="cg-item"><div class="cg-title">Verifica incrociata con fonti</div><div class="cg-text">Per i dati critici (cifre, normative, fatti specifici), usa un <strong>tool di verifica</strong>: l'agente cita un dato, poi un tool verifica se il dato è coerente con le fonti disponibili. È l'equivalente agentico del fact-checking. Più costoso ma fondamentale per agenti in contesti dove i numeri contano.</div></div>
+            <div class="cg-item"><div class="cg-title">Knowledge base come àncora</div><div class="cg-text">Istruisci l'agente a <strong>rispondere SOLO sulla base dei documenti forniti</strong> per i fatti specifici. "Per informazioni su prodotti, prezzi e policy, usa esclusivamente i documenti nella knowledge base. Non integrare con conoscenza di training." Questo non elimina il confidence bias ma lo limita al dominio dove hai il controllo delle fonti.</div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Counter: Structural -->
+    <div class="fam" style="margin-top:24px">
+      <div class="fam-header"><div class="fam-accent" style="background:var(--fix)"></div><div class="fam-head-body"><div class="fam-name">Contro i bias strutturali</div><div class="fam-sub">Compensare le distorsioni dell'architettura</div></div></div>
+      <div class="fam-body">
+        <div class="fs">
+          <div class="fs-label">Tecniche</div>
+          <div class="cg">
+            <div class="cg-item"><div class="cg-title">Contro il recency bias</div><div class="cg-text"><strong>Ripeti le istruzioni critiche alla fine del prompt</strong>, non solo all'inizio. Se il system prompt dice "rispondi sempre in italiano" all'inizio, ripetilo anche alla fine: "Ricorda: la lingua di risposta è SEMPRE l'italiano." Alcune architetture inseriscono un "reminder block" alla fine del contesto con le regole fondamentali. Per agenti con conversazioni lunghe, considera un <strong>meccanismo di re-injection periodica</strong> delle istruzioni chiave.</div></div>
+            <div class="cg-item"><div class="cg-title">Contro il position bias</div><div class="cg-text">Quando l'agente deve fare ranking o selezione tra opzioni: <strong>randomizza l'ordine</strong> di presentazione ad ogni chiamata, o fai valutare ciascun elemento <strong>indipendentemente</strong> (una chiamata per elemento) e poi confronta i punteggi. Il secondo approccio è più costoso ma elimina completamente il position bias.</div></div>
+            <div name="cg-item"><div class="cg-title">Contro l'anchoring</div><div class="cg-text">Chiedi all'agente di <strong>generare ipotesi alternative prima di valutare</strong>: "Prima di analizzare l'ipotesi dell'utente, elenca almeno 3 ipotesi alternative che potrebbero spiegare la situazione. Poi valuta tutte le ipotesi, inclusa quella dell'utente." Questo costringe il modello a esplorare prima di convergere.</div></div>
+            <div class="cg-item"><div class="cg-title">Contro la prolissità</div><div class="cg-text"><strong>"Rispondi in modo conciso. La risposta non deve superare le 3 frasi a meno che la complessità del tema lo richieda esplicitamente."</strong> Vincoli espliciti sulla lunghezza nel prompt. Per gli agenti, aggiungi: "Nei risultati intermedi del workflow, usa il formato più breve possibile — non stai comunicando con un utente, stai passando dati allo step successivo."</div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Counter: Cultural -->
+    <div class="fam" style="margin-top:24px">
+      <div class="fam-header"><div class="fam-accent" style="background:var(--fix)"></div><div class="fam-head-body"><div class="fam-name">Contro i bias culturali</div><div class="fam-sub">Ancorare l'agente al contesto locale</div></div></div>
+      <div class="fam-body">
+        <div class="fs">
+          <div class="fs-label">Tecniche</div>
+          <div class="cg">
+            <div class="cg-item"><div class="cg-title">Contesto esplicito nel prompt</div><div class="cg-text"><strong>"Operi nel contesto italiano. La normativa di riferimento è quella italiana ed europea. I riferimenti culturali, di mercato e di business devono essere pertinenti al contesto italiano."</strong> Sembra ovvio ma fa una differenza enorme: senza questa istruzione, il modello default al contesto anglosassone.</div></div>
+            <div class="cg-item"><div class="cg-title">Knowledge base localizzata</div><div class="cg-text">Carica nella knowledge base <strong>documenti in italiano</strong> e specifici per il contesto italiano: normativa locale, CCNL, prassi di settore italiane, riferimenti culturali locali. Questo ancora l'agente a fonti locali piuttosto che alla conoscenza generica (e anglocentrica) del training.</div></div>
+            <div class="cg-item"><div class="cg-title">Few-shot in italiano e contestualizzati</div><div class="cg-text">Se usi few-shot examples nel prompt, assicurati che siano <strong>in italiano e ambientati nel contesto italiano</strong>. Few-shot in inglese o ambientati in un contesto americano rinforzano il bias culturale. Few-shot in italiano e contestualizzati lo controbilanciano.</div></div>
+            <div class="cg-item"><div class="cg-title">Testing con casi locali</div><div class="cg-text">Nel tuo benchmark di eval (Report 11), includi <strong>casi specificamente progettati per testare il bias culturale</strong>: domande su normativa italiana, scenari con riferimenti culturali locali, richieste dove la risposta "americana" sarebbe diversa da quella "italiana". Questo rende il bias visibile e misurabile.</div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+
+<!-- ═══════════════════
+     S7 — LIMITI
+═══════════════════ -->
+<div class="sect" id="s7">
+  <div class="sect-head">
+    <div class="sect-num">I limiti</div>
+    <h2>Cosa non puoi risolvere — e perché è importante saperlo</h2>
+    <p>Non tutte le contromisure funzionano al 100%. Alcuni bias sono strutturali e ineliminabili — possono solo essere mitigati. Sapere cosa non puoi risolvere è tanto importante quanto sapere cosa puoi fare.</p>
+  </div>
+  <div class="wrap">
+
+    <div class="limit" style="margin-top:20px">
+      <div class="limit-label">Limite 01</div>
+      <div class="limit-text"><strong>La sycophancy si riduce ma non si elimina.</strong> Tutte le contromisure — istruzioni esplicite, ruolo critico, doppia valutazione — riducono il fenomeno ma non lo azzerano. Il bias è nei pesi del modello, fissato durante l'RLHF, e nessuna istruzione nel prompt può sovrascrivere completamente un pattern così profondo. La mitigazione è reale e significativa, ma la consapevolezza che il bias residuo esiste deve accompagnare l'uso dell'agente.</div>
+    </div>
+
+    <div class="limit">
+      <div class="limit-label">Limite 02</div>
+      <div class="limit-text"><strong>Il modello non sa quando non sa.</strong> Il confidence bias è strutturale: il meccanismo di generazione produce sempre token con probabilità — non ha un segnale interno di "sono incerto". Le contromisure (istruzioni di calibrazione, separazione fatti/opinioni) insegnano al modello a esprimere incertezza come pattern linguistico, ma non a sentirla realmente. Ci saranno sempre casi dove il modello è sicuro di qualcosa di sbagliato.</div>
+    </div>
+
+    <div class="limit">
+      <div class="limit-label">Limite 03</div>
+      <div class="limit-text"><strong>Il bias culturale è nel DNA del training.</strong> Un modello addestrato al 70% su testi in inglese avrà sempre una prospettiva anglocentrica, per quanto tu lo istruisca a operare in contesto italiano. La knowledge base locale e il prompt contestualizzato compensano efficacemente nella maggior parte dei casi, ma su temi dove il modello non ha mai visto la prospettiva italiana (normativa di nicchia, prassi locali, sfumature culturali), la conoscenza semplicemente non c'è.</div>
+    </div>
+
+    <div class="limit">
+      <div class="limit-label">Limite 04</div>
+      <div class="limit-text"><strong>Le contromisure hanno un costo.</strong> Ogni mitigazione aggiunge complessità: la doppia valutazione costa 2x in API, la valutazione indipendente per eliminare il position bias costa Nx, le istruzioni di calibrazione nel prompt occupano contesto. Non è possibile mitigare tutti i bias contemporaneamente senza impattare performance e costi. Serve una scelta: <strong>quali bias sono più pericolosi nel tuo contesto specifico?</strong> Mitiga quelli — accetta consapevolmente il rischio sugli altri.</div>
+    </div>
+
+    <div class="limit">
+      <div class="limit-label">Limite 05</div>
+      <div class="limit-text"><strong>I bias cambiano con le versioni del modello.</strong> Ogni nuova versione del modello ha un profilo di bias diverso. Un aggiornamento del modello che migliora la sycophancy potrebbe peggiorare il confidence bias, o viceversa. Le contromisure che funzionano con Claude 4.5 potrebbero non funzionare con Claude 5. Serve <strong>testing continuo</strong> — il benchmark dei bias va ri-eseguito ad ogni aggiornamento del modello.</div>
+    </div>
+
+    <div class="key-point" style="margin-top:28px;">
+      <div class="kp-label">La postura giusta</div>
+      <div class="kp-text">Non trattare i bias come problemi da "risolvere e dimenticare". Trattali come rischi da "gestire e monitorare" — esattamente come qualsiasi altro rischio operativo.</div>
+      <div class="kp-sub">I bias non scompariranno. Diventeranno più sottili man mano che i modelli migliorano, ma la natura probabilistica degli LLM li rende inevitabili. La risposta non è "eliminarli" — è costruire un sistema (prompt, architettura, testing, human-in-the-loop) che li contenga a un livello accettabile per il tuo contesto. E tenere sempre presente, nell'uso quotidiano, che l'agente ha queste tendenze — così che quando ti dà ragione su tutto, il primo pensiero sia "sta facendo sycophancy?" e non "che bravo, la pensa come me".</div>
+    </div>
+
+  </div>
+</div>
+
+
+<div class="footer">
+  <span>Serie Agenti AI — Report 18 · I Bias degli LLM</span>
+  <span>Marzo 2026</span>
+</div>
+
+<script>
+function show(n){
+  document.querySelectorAll('.sect').forEach(s=>s.classList.remove('active'));
+  document.querySelectorAll('.nav-btn').forEach(b=>b.classList.remove('active'));
+  document.getElementById('s'+n).classList.add('active');
+  document.querySelectorAll('.nav-btn')[n].classList.add('active');
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+</script>
+
+</body>
+</html>

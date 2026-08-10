@@ -1,0 +1,942 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Valutare le Performance di un Modello LLM — Fondamenti</title>
+<link href="https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500;1,600&family=IBM+Plex+Mono:wght@300;400;500&family=IBM+Plex+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+:root {
+  --paper:  #fafaf7;
+  --paper2: #f2f2ed;
+  --paper3: #e8e8e1;
+  --paper4: #dcdcd4;
+  --ink:    #1a1a14;
+  --ink2:   #2e2e24;
+  --ink3:   #5a5a4a;
+  --ink4:   #8a8a78;
+  --rule:   #d0d0c4;
+  --rule2:  #bbbbb0;
+
+  --d1: #1e3a5c;  --d1b: #e8eef5;
+  --d2: #3a1e00;  --d2b: #f5ede0;
+  --d3: #1e3a1e;  --d3b: #e8f5e8;
+  --d4: #3a003a;  --d4b: #f5e0f5;
+}
+
+* { margin:0; padding:0; box-sizing:border-box; }
+html { scroll-behavior:smooth; }
+
+body {
+  background: var(--paper);
+  color: var(--ink);
+  font-family: 'IBM Plex Sans', sans-serif;
+  font-weight: 300;
+  font-size: 14px;
+  line-height: 1.7;
+}
+
+.page { max-width: 1200px; margin: 0 auto; }
+
+/* ─── MASTHEAD ─── */
+.masthead {
+  padding: 72px 0 0;
+  display: grid;
+  grid-template-columns: 1fr 320px;
+  border-bottom: 2px solid var(--ink);
+}
+
+.mh-main { padding: 0 60px 48px; border-right: 1px solid var(--rule2); }
+
+.mh-kicker {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 10px;
+  letter-spacing: 3px;
+  text-transform: uppercase;
+  color: var(--ink4);
+  margin-bottom: 24px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.mh-kicker::before { content:''; display:block; width:24px; height:1px; background:var(--ink4); }
+
+.mh-h1 {
+  font-family: 'Lora', serif;
+  font-size: clamp(30px, 5vw, 60px);
+  font-weight: 700;
+  line-height: 1.02;
+  letter-spacing: -0.5px;
+  margin-bottom: 20px;
+}
+.mh-h1 em { font-style: italic; font-weight: 400; color: var(--ink3); }
+
+.mh-intro { font-size: 14px; color: var(--ink3); max-width: 520px; line-height: 1.8; }
+.mh-intro strong { color: var(--ink2); font-weight: 500; }
+
+.mh-sidebar { padding: 36px 32px; display:flex; flex-direction:column; gap:8px; justify-content:flex-end; }
+
+.mh-index-label {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 9px; letter-spacing: 2px; text-transform: uppercase;
+  color: var(--ink4); margin-bottom: 8px;
+}
+
+.mh-idx {
+  font-size: 12px; color: var(--ink3);
+  padding: 6px 0; border-bottom: 1px solid var(--rule);
+  cursor: pointer; display: flex; gap: 10px; text-decoration: none;
+  transition: color 0.12s;
+}
+.mh-idx:hover { color: var(--ink); }
+.mh-idx-num { font-family:'IBM Plex Mono',monospace; font-size:10px; color:var(--ink4); flex-shrink:0; }
+
+/* ─── CHAPTER ─── */
+.chapter { border-bottom: 1px solid var(--rule); padding: 60px; }
+.chapter:last-child { border-bottom: none; }
+
+.ch-header {
+  display: grid; grid-template-columns: 100px 1fr;
+  gap: 32px; align-items: start;
+  margin-bottom: 44px; padding-bottom: 32px; border-bottom: 1px solid var(--rule);
+}
+
+.ch-num {
+  font-family: 'Lora', serif;
+  font-size: 72px; font-weight: 700;
+  color: var(--paper3); line-height: 1; letter-spacing: -3px;
+}
+
+.ch-label {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 9px; letter-spacing: 3px; text-transform: uppercase;
+  color: var(--ink4); margin-bottom: 8px;
+}
+
+.ch-title {
+  font-family: 'Lora', serif;
+  font-size: clamp(20px, 3.5vw, 40px);
+  font-weight: 600; line-height: 1.1;
+  letter-spacing: -0.3px; margin-bottom: 12px;
+}
+.ch-title em { font-style: italic; font-weight: 400; color: var(--ink3); }
+
+.ch-desc { font-size: 13px; color: var(--ink3); max-width: 600px; line-height: 1.75; }
+.ch-desc strong { color: var(--ink2); font-weight: 500; }
+
+/* ─── LAYOUT ─── */
+.two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 48px; margin-bottom: 40px; }
+.three-col { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 32px; margin-bottom: 40px; }
+
+/* ─── CONCEPT ─── */
+.concept { padding: 22px; border: 1px solid var(--rule); margin-bottom: 18px; }
+.concept-num { font-family:'IBM Plex Mono',monospace; font-size:9px; letter-spacing:2px; text-transform:uppercase; color:var(--ink4); margin-bottom:8px; }
+.concept-title { font-family:'Lora',serif; font-size:18px; font-weight:600; margin-bottom:10px; line-height:1.2; }
+.concept-body { font-size:13px; color:var(--ink3); line-height:1.7; }
+.concept-body strong { color:var(--ink2); font-weight:500; }
+.concept-body em { font-style:italic; color:var(--ink4); }
+
+/* ─── DIMENSION CARDS ─── */
+.dim-grid {
+  display: grid; grid-template-columns: 1fr 1fr;
+  gap: 1px; background: var(--rule2);
+  border: 1px solid var(--rule2); margin-bottom: 40px;
+}
+
+.dim-card { background: var(--paper); padding: 26px 22px; position:relative; overflow:hidden; }
+.dim-card::before { content:''; position:absolute; top:0;left:0; width:100%; height:3px; }
+.dim-card.d1::before { background: var(--d1); }
+.dim-card.d2::before { background: var(--d2); }
+.dim-card.d3::before { background: var(--d3); }
+.dim-card.d4::before { background: var(--d4); }
+
+.dc-tag { font-family:'IBM Plex Mono',monospace; font-size:9px; letter-spacing:2px; text-transform:uppercase; margin-bottom:10px; }
+.d1 .dc-tag { color:var(--d1); }
+.d2 .dc-tag { color:var(--d2); }
+.d3 .dc-tag { color:var(--d3); }
+.d4 .dc-tag { color:var(--d4); }
+
+.dc-title { font-family:'Lora',serif; font-size:20px; font-weight:600; margin-bottom:10px; line-height:1.1; }
+.dc-body { font-size:12px; color:var(--ink3); line-height:1.7; margin-bottom:14px; }
+.dc-body strong { color:var(--ink2); font-weight:500; }
+
+.dc-metrics { display:flex; flex-direction:column; gap:1px; background:var(--rule); border:1px solid var(--rule); }
+.dc-metric { background:var(--paper2); padding:8px 12px; display:grid; grid-template-columns:140px 1fr; gap:10px; }
+.dc-m-name { font-family:'IBM Plex Mono',monospace; font-size:10px; color:var(--ink2); font-weight:500; }
+.dc-m-desc { font-size:11px; color:var(--ink3); line-height:1.45; }
+
+/* ─── PARAMETER ROWS ─── */
+.spectrum-row { margin-bottom:24px; border:1px solid var(--rule); overflow:hidden; }
+.sr-header {
+  background:var(--paper2); padding:14px 20px; border-bottom:1px solid var(--rule);
+  display:grid; grid-template-columns:200px 1fr auto; gap:16px; align-items:center;
+}
+.sr-name { font-family:'Lora',serif; font-size:15px; font-weight:600; }
+.sr-desc { font-size:12px; color:var(--ink3); line-height:1.5; }
+.sr-type { font-family:'IBM Plex Mono',monospace; font-size:9px; padding:3px 8px; border:1px solid var(--rule2); color:var(--ink4); letter-spacing:1px; white-space:nowrap; }
+.sr-body { padding:14px 20px; display:grid; grid-template-columns:1fr 1fr 1fr; gap:1px; background:var(--rule); }
+.sr-cell { background:var(--paper); padding:10px 14px; }
+.src-label { font-family:'IBM Plex Mono',monospace; font-size:8px; letter-spacing:1.5px; text-transform:uppercase; color:var(--ink4); margin-bottom:4px; }
+.src-text { font-size:12px; color:var(--ink3); line-height:1.5; }
+.src-text strong { color:var(--ink2); font-weight:500; }
+
+/* ─── CATEGORY CARDS ─── */
+.cat-card { border:1px solid var(--rule2); overflow:hidden; margin-bottom:22px; background:var(--paper); }
+.cc-header { padding:20px 24px; border-bottom:1px solid var(--rule); display:grid; grid-template-columns:1fr auto; align-items:start; gap:16px; }
+.cc-num { font-family:'IBM Plex Mono',monospace; font-size:9px; letter-spacing:2px; text-transform:uppercase; color:var(--ink4); margin-bottom:6px; }
+.cc-title { font-family:'Lora',serif; font-size:19px; font-weight:600; line-height:1.15; margin-bottom:4px; }
+.cc-subtitle { font-size:12px; color:var(--ink4); font-style:italic; font-family:'Lora',serif; }
+.cc-badge { font-family:'IBM Plex Mono',monospace; font-size:9px; padding:4px 10px; letter-spacing:1px; text-transform:uppercase; white-space:nowrap; align-self:start; }
+.cc-body { padding:18px 24px; border-bottom:1px solid var(--rule); }
+.cc-what { font-size:13px; color:var(--ink3); line-height:1.75; margin-bottom:14px; }
+.cc-what strong { color:var(--ink2); font-weight:500; }
+.cc-measures { display:grid; grid-template-columns:repeat(3,1fr); gap:1px; background:var(--rule); border:1px solid var(--rule); }
+.cc-m { background:var(--paper2); padding:10px 12px; }
+.ccm-icon { font-size:13px; margin-bottom:3px; }
+.ccm-label { font-family:'IBM Plex Mono',monospace; font-size:8px; letter-spacing:1px; text-transform:uppercase; color:var(--ink4); margin-bottom:2px; }
+.ccm-text { font-size:11px; color:var(--ink3); line-height:1.4; }
+.cc-footer { padding:14px 24px; display:grid; grid-template-columns:1fr 1fr; gap:1px; background:var(--rule); }
+.ccf-cell { background:var(--paper2); padding:10px 14px; }
+.ccf-label { font-family:'IBM Plex Mono',monospace; font-size:8px; letter-spacing:2px; text-transform:uppercase; color:var(--ink4); margin-bottom:4px; }
+.ccf-list { list-style:none; display:flex; flex-direction:column; gap:3px; }
+.ccf-list li { font-size:11px; color:var(--ink3); display:flex; gap:6px; }
+.ccf-list li.pro::before { content:'✓'; color:#2a7a2a; flex-shrink:0; font-weight:600; }
+.ccf-list li.con::before { content:'—'; color:var(--ink4); flex-shrink:0; }
+
+/* ─── COMPARISON MATRIX ─── */
+.matrix { border:1px solid var(--rule2); overflow-x:auto; margin-bottom:40px; }
+.matrix table { width:100%; border-collapse:collapse; font-size:12px; }
+.matrix th { background:var(--paper2); padding:10px 12px; font-family:'IBM Plex Mono',monospace; font-size:9px; letter-spacing:1.5px; text-transform:uppercase; color:var(--ink4); border-right:1px solid var(--rule); border-bottom:1px solid var(--rule2); text-align:left; font-weight:400; }
+.matrix th:last-child { border-right:none; }
+.matrix td { padding:10px 12px; border-bottom:1px solid var(--rule); border-right:1px solid var(--rule); color:var(--ink3); vertical-align:top; line-height:1.5; }
+.matrix td:last-child { border-right:none; }
+.matrix tr:last-child td { border-bottom:none; }
+.matrix tr:hover td { background:var(--paper2); }
+.matrix .mname { color:var(--ink); font-weight:500; font-size:13px; font-family:'Lora',serif; }
+.matrix .good { color:#2a6a2a; }
+.matrix .mid  { color:#7a5010; }
+.matrix .bad  { color:#8a2020; }
+
+/* ─── CALLOUT ─── */
+.callout { border-left:3px solid var(--ink4); padding:16px 22px; margin-bottom:26px; background:var(--paper2); }
+.callout.primary { border-left-color:var(--ink); }
+.callout.warn { border-left-color:#c08020; background:#fdf8ee; }
+.callout.key { border-left-color:var(--ink); background:var(--paper); border:1px solid var(--rule2); border-left:3px solid var(--ink); }
+.callout p { font-family:'Lora',serif; font-size:14px; font-style:italic; color:var(--ink2); line-height:1.75; margin-bottom:6px; }
+.callout p strong { font-style:normal; font-weight:600; }
+.callout .cl-source { font-family:'IBM Plex Mono',monospace; font-size:10px; color:var(--ink4); letter-spacing:1px; }
+
+/* ─── FLOW DIAGRAM ─── */
+.flow { border:1px solid var(--rule2); overflow:hidden; margin-bottom:32px; }
+.flow-header { background:var(--paper2); padding:10px 20px; font-family:'IBM Plex Mono',monospace; font-size:9px; letter-spacing:2px; text-transform:uppercase; color:var(--ink4); border-bottom:1px solid var(--rule); }
+.flow-steps { display:flex; overflow-x:auto; }
+.flow-step { flex:1; min-width:160px; border-right:1px solid var(--rule); }
+.flow-step:last-child { border-right:none; }
+.fs-top { background:var(--paper2); padding:14px 16px; border-bottom:1px solid var(--rule); min-height:72px; }
+.fs-num { font-family:'IBM Plex Mono',monospace; font-size:9px; letter-spacing:1px; color:var(--ink4); margin-bottom:4px; }
+.fs-title { font-family:'Lora',serif; font-size:14px; font-weight:600; line-height:1.25; }
+.fs-body { padding:12px 16px; font-size:11px; color:var(--ink3); line-height:1.55; }
+.fs-body strong { color:var(--ink2); font-weight:500; }
+
+/* ─── INSIGHTS ─── */
+.insights { display:grid; grid-template-columns:repeat(3,1fr); gap:1px; background:var(--rule); border:1px solid var(--rule2); margin-bottom:32px; }
+.insight { background:var(--paper); padding:20px 18px; }
+.ins-label { font-family:'IBM Plex Mono',monospace; font-size:9px; letter-spacing:2px; text-transform:uppercase; color:var(--ink4); margin-bottom:8px; }
+.ins-title { font-family:'Lora',serif; font-size:15px; font-weight:600; margin-bottom:8px; line-height:1.2; }
+.ins-body { font-size:12px; color:var(--ink3); line-height:1.65; }
+.ins-body strong { color:var(--ink2); font-weight:500; }
+
+/* ─── FINAL CHAPTER ─── */
+.final-chapter { background:var(--ink); padding:64px 60px; }
+.fc-label { font-family:'IBM Plex Mono',monospace; font-size:9px; letter-spacing:3px; text-transform:uppercase; color:rgba(255,255,255,0.25); margin-bottom:20px; }
+.fc-title { font-family:'Lora',serif; font-size:clamp(26px,4vw,50px); font-weight:700; color:#fff; line-height:1.05; margin-bottom:36px; letter-spacing:-0.5px; }
+.fc-title em { font-style:italic; font-weight:400; color:rgba(255,255,255,0.4); }
+
+.fc-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:1px; background:rgba(255,255,255,0.06); border:1px solid rgba(255,255,255,0.06); margin-bottom:36px; }
+.fc-col { background:rgba(255,255,255,0.02); padding:22px 18px; }
+.fc-col-title { font-family:'Lora',serif; font-size:15px; font-weight:600; color:rgba(255,255,255,0.55); margin-bottom:14px; padding-bottom:10px; border-bottom:1px solid rgba(255,255,255,0.06); }
+.fc-item { margin-bottom:10px; padding-bottom:10px; border-bottom:1px solid rgba(255,255,255,0.04); }
+.fc-item:last-child { border-bottom:none; margin-bottom:0; padding-bottom:0; }
+.fc-item-name { font-size:11px; font-weight:500; color:rgba(255,255,255,0.5); margin-bottom:2px; font-family:'IBM Plex Mono',monospace; }
+.fc-item-note { font-size:11px; color:rgba(255,255,255,0.22); line-height:1.45; }
+
+.fc-principle { background:rgba(255,255,255,0.04); border:1px solid rgba(255,255,255,0.07); padding:24px; }
+.fcp-title { font-family:'Lora',serif; font-size:15px; font-weight:600; color:rgba(255,255,255,0.5); margin-bottom:14px; font-style:italic; }
+.fcp-rules { display:flex; flex-direction:column; gap:8px; counter-reset:rule; }
+.fcp-rule { display:grid; grid-template-columns:20px 1fr; gap:10px; font-size:12px; color:rgba(255,255,255,0.28); line-height:1.5; counter-increment:rule; }
+.fcp-rule::before { content:counter(rule); font-family:'IBM Plex Mono',monospace; font-size:9px; color:rgba(255,255,255,0.15); padding-top:2px; }
+
+/* ─── FOOTER ─── */
+footer {
+  background:var(--paper); border-top:2px solid var(--ink);
+  padding:20px 60px; display:flex; justify-content:space-between;
+  font-family:'IBM Plex Mono',monospace; font-size:10px; color:var(--ink4); letter-spacing:1px;
+}
+
+/* ─── RESPONSIVE ─── */
+@media (max-width:900px) {
+  .masthead { grid-template-columns:1fr; }
+  .mh-main { padding:0 24px 36px; border-right:none; }
+  .mh-sidebar { display:none; }
+  .chapter { padding:40px 24px; }
+  .ch-header { grid-template-columns:1fr; gap:14px; }
+  .ch-num { font-size:44px; }
+  .two-col,.three-col { grid-template-columns:1fr; }
+  .dim-grid { grid-template-columns:1fr; }
+  .cc-measures { grid-template-columns:1fr 1fr; }
+  .fc-grid { grid-template-columns:1fr; }
+  .insights { grid-template-columns:1fr; }
+  .flow-steps { flex-direction:column; }
+  .flow-step { border-right:none; border-bottom:1px solid var(--rule); }
+  .sr-body { grid-template-columns:1fr; }
+  .sr-header { grid-template-columns:1fr; }
+  footer { padding:16px 24px; flex-direction:column; gap:6px; }
+}
+</style>
+</head>
+<body>
+<div class="page">
+
+<!-- MASTHEAD -->
+<div class="masthead">
+  <div class="mh-main">
+    <div class="mh-kicker">Fondamenti · Valutazione Modelli LLM · 2026</div>
+    <h1 class="mh-h1">Cosa significa<br><em>valutare</em> un modello</h1>
+    <p class="mh-intro">
+      Prima degli strumenti, prima delle metriche: <strong>i concetti fondamentali</strong> della valutazione di un sistema LLM. Cosa si misura, perché, con quali approcci, e come le diverse categorie di strumenti si inseriscono nel ciclo di vita di un agente.
+    </p>
+  </div>
+  <div class="mh-sidebar">
+    <div class="mh-index-label">Indice</div>
+    <a class="mh-idx" href="#ch1"><span class="mh-idx-num">I</span> Cosa vuol dire valutare</a>
+    <a class="mh-idx" href="#ch2"><span class="mh-idx-num">II</span> Le quattro dimensioni</a>
+    <a class="mh-idx" href="#ch3"><span class="mh-idx-num">III</span> I parametri fondamentali</a>
+    <a class="mh-idx" href="#ch4"><span class="mh-idx-num">IV</span> Le categorie di strumenti</a>
+    <a class="mh-idx" href="#ch5"><span class="mh-idx-num">V</span> Differenze e quando usarli</a>
+    <a class="mh-idx" href="#ch6"><span class="mh-idx-num">VI</span> Sintesi e principi</a>
+  </div>
+</div>
+
+
+<!-- ══ I — COSA SIGNIFICA VALUTARE ══ -->
+<div class="chapter" id="ch1">
+  <div class="ch-header">
+    <div class="ch-num">I</div>
+    <div class="ch-meta">
+      <div class="ch-label">Capitolo Primo</div>
+      <div class="ch-title">Cosa significa <em>valutare</em><br>un modello LLM</div>
+      <div class="ch-desc">La domanda sembra ovvia ma non lo è. Valutare un LLM è fondamentalmente diverso dal valutare un algoritmo classico — capire perché è il punto di partenza necessario.</div>
+    </div>
+  </div>
+
+  <div class="two-col">
+    <div>
+      <div class="concept">
+        <div class="concept-num">Il problema fondamentale</div>
+        <div class="concept-title">Non esiste una risposta giusta unica</div>
+        <div class="concept-body">
+          Con un algoritmo di ordinamento posso verificare se l'output è corretto — c'è una sola risposta giusta. Con un LLM, alla domanda "spiega il concetto di inflazione" esistono centinaia di risposte tutte ugualmente valide, con toni, profondità e stili diversi. <strong>La valutazione non è verifica di correttezza binaria: è misurazione di qualità lungo più dimensioni.</strong>
+        </div>
+      </div>
+      <div class="concept">
+        <div class="concept-num">La domanda sbagliata</div>
+        <div class="concept-title">"Qual è il modello migliore?"</div>
+        <div class="concept-body">
+          Non esiste risposta a questa domanda senza specificare <em>meglio per cosa</em>. Un modello può essere il migliore per ragionamento matematico e il peggiore per tono conversazionale. Il migliore in inglese e mediocre in italiano. Il migliore su documenti brevi e inadeguato su testi lunghi. <strong>Valutare significa sempre: migliore rispetto a un criterio specifico, su un task specifico, nel proprio contesto.</strong>
+        </div>
+      </div>
+      <div class="concept">
+        <div class="concept-num">La domanda giusta</div>
+        <div class="concept-title">"Questo modello è abbastanza buono per il mio task?"</div>
+        <div class="concept-body">
+          La valutazione risponde a domande operative: questo modello classifica le email dei clienti con sufficiente accuratezza? Produce risposte fedeli ai documenti della knowledge base? È abbastanza veloce per la chat real-time? Costa abbastanza poco per il volume previsto? <strong>Ogni domanda richiede una metrica diversa e un metodo di valutazione diverso.</strong>
+        </div>
+      </div>
+    </div>
+
+    <div>
+      <div class="callout key">
+        <p>Valutare un LLM significa <strong>misurare sistematicamente quanto bene un modello — con una configurazione specifica — si comporta su un insieme rappresentativo di input reali del proprio caso d'uso</strong>, rispetto a criteri di qualità definiti prima dell'esperimento.</p>
+        <div class="cl-source">Definizione operativa per sviluppatori di agenti</div>
+      </div>
+      <div class="concept">
+        <div class="concept-num">Tre prerequisiti</div>
+        <div class="concept-title">Prima di valutare, servono</div>
+        <div class="concept-body">
+          <strong>1. Un task definito:</strong> qual è esattamente l'input che riceverà il modello e quale output ci si aspetta?<br><br>
+          <strong>2. Esempi rappresentativi:</strong> casi reali o realistici che coprono i pattern tipici e i casi limite.<br><br>
+          <strong>3. Una metrica o criterio:</strong> come si misura "buono"? Senza questo, la valutazione è opinione, non misura.
+        </div>
+      </div>
+      <div class="concept">
+        <div class="concept-num">Distinzione chiave</div>
+        <div class="concept-title">Valutazione ≠ Benchmark pubblico</div>
+        <div class="concept-body">
+          I <em>benchmark pubblici</em> (MMLU, HumanEval) misurano capacità generali in condizioni di laboratorio. La <em>valutazione sul proprio task</em> misura performance reale nel proprio contesto. <strong>Solo la seconda è utile per decidere quale modello usare in produzione.</strong> I benchmark pubblici servono solo come primo filtro grossolano.
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="callout warn">
+    <p>Il <strong>grande errore di partenza:</strong> scegliere il modello guardando i leaderboard pubblici senza mai testarlo sul proprio task specifico. È come scegliere uno chef guardando la sua laurea invece di assaggiare i suoi piatti nella cucina in cui dovrà lavorare.</p>
+  </div>
+</div>
+
+
+<!-- ══ II — LE QUATTRO DIMENSIONI ══ -->
+<div class="chapter" id="ch2">
+  <div class="ch-header">
+    <div class="ch-num">II</div>
+    <div class="ch-meta">
+      <div class="ch-label">Capitolo Secondo</div>
+      <div class="ch-title">Le quattro dimensioni<br><em>della valutazione</em></div>
+      <div class="ch-desc">Qualunque valutazione di un sistema LLM si muove lungo quattro assi fondamentali. Non tutte pesano uguale per ogni task — <strong>la prima scelta è decidere quale dimensione conta di più nel proprio contesto.</strong></div>
+    </div>
+  </div>
+
+  <div class="dim-grid">
+    <div class="dim-card d1">
+      <div class="dc-tag">Dimensione 1</div>
+      <div class="dc-title">Qualità dell'output</div>
+      <div class="dc-body"><strong>La dimensione più importante per la maggior parte dei task.</strong> Misura quanto l'output è accurato, rilevante, completo e privo di errori rispetto a ciò che ci si aspettava. Comprende correttezza fattuale e qualità espressiva.</div>
+      <div class="dc-metrics">
+        <div class="dc-metric"><div class="dc-m-name">Accuratezza</div><div class="dc-m-desc">Le informazioni fornite sono corrette? Non vengono inventate cose false?</div></div>
+        <div class="dc-metric"><div class="dc-m-name">Fedeltà al contesto</div><div class="dc-m-desc">In RAG: la risposta si basa sui documenti senza aggiungere informazioni non presenti?</div></div>
+        <div class="dc-metric"><div class="dc-m-name">Completezza</div><div class="dc-m-desc">La risposta copre tutti gli aspetti rilevanti della domanda?</div></div>
+        <div class="dc-metric"><div class="dc-m-name">Rilevanza</div><div class="dc-m-desc">La risposta è pertinente? Non divaga, non aggiunge informazioni irrilevanti?</div></div>
+        <div class="dc-metric"><div class="dc-m-name">Formato corretto</div><div class="dc-m-desc">L'output rispetta il formato richiesto (JSON, lista, prosa, lunghezza)?</div></div>
+        <div class="dc-metric"><div class="dc-m-name">Tono e stile</div><div class="dc-m-desc">Il registro è appropriato al contesto? Coerente con le istruzioni del system prompt?</div></div>
+      </div>
+    </div>
+
+    <div class="dim-card d2">
+      <div class="dc-tag">Dimensione 2</div>
+      <div class="dc-title">Comportamento e affidabilità</div>
+      <div class="dc-body">Misura quanto il modello si comporta in modo <strong>coerente, prevedibile e sicuro</strong> nel tempo e su input diversi. Un modello può produrre output di alta qualità in media ma fallire su certi casi limite in modo inaccettabile.</div>
+      <div class="dc-metrics">
+        <div class="dc-metric"><div class="dc-m-name">Consistenza</div><div class="dc-m-desc">A domande simili risponde in modo simile? O la stessa domanda produce output molto diversi?</div></div>
+        <div class="dc-metric"><div class="dc-m-name">Instruction following</div><div class="dc-m-desc">Segue le istruzioni del system prompt su tutti i tipi di input, anche quelli anomali?</div></div>
+        <div class="dc-metric"><div class="dc-m-name">Gestione dell'incertezza</div><div class="dc-m-desc">Quando non sa, lo dice? O inventa risposte plausibili ma false?</div></div>
+        <div class="dc-metric"><div class="dc-m-name">Comportamento su edge case</div><div class="dc-m-desc">Come si comporta su input anomali, ambigui, incompleti o in lingue diverse?</div></div>
+        <div class="dc-metric"><div class="dc-m-name">Robustezza a manipolazione</div><div class="dc-m-desc">In sistemi esposti a utenti non fidati: resiste a tentativi di manipolazione?</div></div>
+        <div class="dc-metric"><div class="dc-m-name">Tasso di errori critici</div><div class="dc-m-desc">Frequenza di output completamente sbagliati o che causano problemi applicativi.</div></div>
+      </div>
+    </div>
+
+    <div class="dim-card d3">
+      <div class="dc-tag">Dimensione 3</div>
+      <div class="dc-title">Efficienza operativa</div>
+      <div class="dc-body">Misura le <strong>caratteristiche di performance tecnica</strong>: velocità, consumo di risorse, costo. In produzione, un modello con qualità leggermente inferiore ma latenza 10× minore può essere la scelta corretta.</div>
+      <div class="dc-metrics">
+        <div class="dc-metric"><div class="dc-m-name">Latenza (P50, P95)</div><div class="dc-m-desc">Tempo di risposta mediano e al 95° percentile. Il P95 rappresenta l'esperienza peggiore dell'utente.</div></div>
+        <div class="dc-metric"><div class="dc-m-name">Throughput</div><div class="dc-m-desc">Quante richieste può gestire per unità di tempo prima di degradare?</div></div>
+        <div class="dc-metric"><div class="dc-m-name">Costo per task</div><div class="dc-m-desc">Token input + output × prezzi, sommati su tutte le chiamate del task completo.</div></div>
+        <div class="dc-metric"><div class="dc-m-name">Efficienza dei token</div><div class="dc-m-desc">Il modello usa i token necessari, o è eccessivamente verboso o troppo conciso?</div></div>
+        <div class="dc-metric"><div class="dc-m-name">Time to first token</div><div class="dc-m-desc">In streaming: tempo prima che l'utente veda la prima parola della risposta.</div></div>
+        <div class="dc-metric"><div class="dc-m-name">Tasso di errori API</div><div class="dc-m-desc">Frequenza di rate limit, timeout, errori che richiedono retry e degradano l'esperienza.</div></div>
+      </div>
+    </div>
+
+    <div class="dim-card d4">
+      <div class="dc-tag">Dimensione 4</div>
+      <div class="dc-title">Robustezza e generalizzazione</div>
+      <div class="dc-body">Misura quanto il modello mantiene le proprie performance <strong>al variare delle condizioni</strong>: diversi utenti, diversi stili di input, nel tempo, su sottogruppi diversi.</div>
+      <div class="dc-metrics">
+        <div class="dc-metric"><div class="dc-m-name">Stabilità nel tempo</div><div class="dc-m-desc">Le performance rimangono costanti tra versioni? I provider aggiornano i modelli senza preavviso.</div></div>
+        <div class="dc-metric"><div class="dc-m-name">Performance su sottogruppi</div><div class="dc-m-desc">Il modello performa bene su tutti i tipi di utenti o ha punti ciechi su certi sottogruppi?</div></div>
+        <div class="dc-metric"><div class="dc-m-name">Varianza degli output</div><div class="dc-m-desc">Quanto variano gli output a parità di input? Alta varianza = sistema imprevedibile.</div></div>
+        <div class="dc-metric"><div class="dc-m-name">Distributional shift</div><div class="dc-m-desc">Il modello continua a performare quando gli input reali differiscono dall'eval set?</div></div>
+        <div class="dc-metric"><div class="dc-m-name">Multilingual performance</div><div class="dc-m-desc">Se gli utenti scrivono in lingue diverse, le performance sono distribuite equamente?</div></div>
+        <div class="dc-metric"><div class="dc-m-name">Degrado sotto carico</div><div class="dc-m-desc">La qualità cambia quando il sistema è sotto carico elevato (latenza alta, timeout)?</div></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="insights">
+    <div class="insight">
+      <div class="ins-label">Principio 1</div>
+      <div class="ins-title">Pesi diversi per contesti diversi</div>
+      <div class="ins-body">Per un chatbot real-time, la latenza pesa molto. Per un sistema batch notturno, la latenza non conta nulla. <strong>La prima scelta in una valutazione è decidere la gerarchia di importanza delle dimensioni</strong> per il proprio caso d'uso.</div>
+    </div>
+    <div class="insight">
+      <div class="ins-label">Principio 2</div>
+      <div class="ins-title">Media vs. distribuzione degli errori</div>
+      <div class="ins-body">Un modello con accuracy 95% può essere perfetto o inaccettabile — dipende dal 5% di errori. <strong>Se quel 5% sono errori critici</strong> (informazioni finanziarie errate, istruzioni mediche sbagliate), il modello è inutilizzabile nonostante la media alta.</div>
+    </div>
+    <div class="insight">
+      <div class="ins-label">Principio 3</div>
+      <div class="ins-title">Le dimensioni interagiscono</div>
+      <div class="ins-body">Spesso c'è tensione tra dimensioni: un modello più accurato è anche più lento e costoso. Aumentare il system prompt migliora il comportamento ma aumenta il costo. <strong>La valutazione rivela questi trade-off</strong> e permette di scegliere consapevolmente.</div>
+    </div>
+  </div>
+</div>
+
+
+<!-- ══ III — I PARAMETRI ══ -->
+<div class="chapter" id="ch3">
+  <div class="ch-header">
+    <div class="ch-num">III</div>
+    <div class="ch-meta">
+      <div class="ch-label">Capitolo Terzo</div>
+      <div class="ch-title">I parametri fondamentali<br><em>di valutazione</em></div>
+      <div class="ch-desc">Le metriche concrete che misurano le quattro dimensioni. <strong>Alcune sono automatiche e calcolabili algoritmicamente, altre richiedono giudizio umano o un secondo LLM come giudice.</strong></div>
+    </div>
+  </div>
+
+  <div class="spectrum-row">
+    <div class="sr-header">
+      <div class="sr-name">Accuracy / F1 Score</div>
+      <div class="sr-desc">Frazione di output corretti su totale. F1 bilancia precision e recall per task con classi sbilanciate.</div>
+      <span class="sr-type">Automatica</span>
+    </div>
+    <div class="sr-body">
+      <div class="sr-cell"><div class="src-label">Quando usarla</div><div class="src-text">Classificazione (categorie ticket, sentiment, intento utente), labeling, routing. <strong>Richiede che esista una risposta giusta univoca confrontabile programmaticamente.</strong></div></div>
+      <div class="sr-cell"><div class="src-label">Come si calcola</div><div class="src-text">Confronto output del modello con label attesa. Accuracy = corretti / totale. F1 = media armonica tra precision e recall per ogni classe.</div></div>
+      <div class="sr-cell"><div class="src-label">Limite principale</div><div class="src-text">Inapplicabile a output aperti (testo libero, ragionamento) dove non esiste una singola risposta corretta da confrontare.</div></div>
+    </div>
+  </div>
+
+  <div class="spectrum-row">
+    <div class="sr-header">
+      <div class="sr-name">Faithfulness (RAG)</div>
+      <div class="sr-desc">Misura se ogni affermazione nella risposta è supportata dai documenti forniti come contesto. Principale metrica anti-allucinazione per sistemi RAG.</div>
+      <span class="sr-type">LLM-as-judge</span>
+    </div>
+    <div class="sr-body">
+      <div class="sr-cell"><div class="src-label">Quando usarla</div><div class="src-text">Qualsiasi sistema che risponde usando una knowledge base. <strong>Misura esattamente il problema più critico del RAG: inventare informazioni non presenti nei documenti.</strong></div></div>
+      <div class="sr-cell"><div class="src-label">Come si calcola</div><div class="src-text">Un LLM giudice verifica ogni claim nella risposta contro il contesto. Score = claims supportati / claims totali. RAGAS lo automatizza.</div></div>
+      <div class="sr-cell"><div class="src-label">Limite principale</div><div class="src-text">Dipende dalla qualità del LLM giudice. Un giudice debole non rileva allucinazioni sottili o contraddizioni indirette.</div></div>
+    </div>
+  </div>
+
+  <div class="spectrum-row">
+    <div class="sr-header">
+      <div class="sr-name">Answer Relevance</div>
+      <div class="sr-desc">Misura quanto la risposta è pertinente alla domanda posta, indipendentemente dalla sua accuratezza fattuale.</div>
+      <span class="sr-type">LLM-as-judge</span>
+    </div>
+    <div class="sr-body">
+      <div class="sr-cell"><div class="src-label">Quando usarla</div><div class="src-text">Customer service, QA su documenti, assistenti virtuali. Rileva risposte che divagano o rispondono a una domanda diversa da quella posta.</div></div>
+      <div class="sr-cell"><div class="src-label">Come si calcola</div><div class="src-text">Il giudice valuta: "questa risposta risponde a questa domanda?" Su scala 0–1 con rubrica strutturata. Alternativa: similarità semantica domanda-risposta.</div></div>
+      <div class="sr-cell"><div class="src-label">Limite principale</div><div class="src-text">Una risposta può essere rilevante ma fattualmente errata. Faithfulness e relevance misurano cose diverse — vanno usate insieme.</div></div>
+    </div>
+  </div>
+
+  <div class="spectrum-row">
+    <div class="sr-header">
+      <div class="sr-name">Task Success Rate</div>
+      <div class="sr-desc">Percentuale di task completati con successo end-to-end dall'agente. La metrica più importante per sistemi agentici.</div>
+      <span class="sr-type">Programmatica / Ibrida</span>
+    </div>
+    <div class="sr-body">
+      <div class="sr-cell"><div class="src-label">Quando usarla</div><div class="src-text"><strong>Sempre, per agenti.</strong> Non misurare solo la qualità della singola risposta, ma se l'agente ha raggiunto l'obiettivo finale attraverso il suo loop di ragionamento e tool use.</div></div>
+      <div class="sr-cell"><div class="src-label">Come si calcola</div><div class="src-text">Dipende dal task. Per un agente che prenota riunioni: la riunione è stata prenotata? Richiede definire criteri di successo verificabili per ogni task.</div></div>
+      <div class="sr-cell"><div class="src-label">Limite principale</div><div class="src-text">Richiede definire "successo" in modo verificabile — difficile per task aperti. Più costoso perché richiede eseguire l'agente fino alla fine su ogni esempio.</div></div>
+    </div>
+  </div>
+
+  <div class="spectrum-row">
+    <div class="sr-header">
+      <div class="sr-name">LLM-as-judge Score</div>
+      <div class="sr-desc">Un secondo LLM valuta l'output del primo con una rubrica definita. Permette valutazione automatica scalabile di qualità soggettiva.</div>
+      <span class="sr-type">LLM-as-judge</span>
+    </div>
+    <div class="sr-body">
+      <div class="sr-cell"><div class="src-label">Quando usarla</div><div class="src-text">Tono, completezza, chiarezza, professionalità — qualità che un umano saprebbe valutare ma che non si può codificare come regola. <strong>Scalabile: valuta migliaia di esempi automaticamente.</strong></div></div>
+      <div class="sr-cell"><div class="src-label">Come si calcola</div><div class="src-text">Il giudice riceve domanda, contesto, risposta + rubrica. Risponde con punteggio e motivazione. Si aggregano i punteggi sull'eval set.</div></div>
+      <div class="sr-cell"><div class="src-label">Limite principale</div><div class="src-text">Introduce bias del modello giudice. Non affidabile per correttezza fattuale. <strong>Non usare mai lo stesso modello come giudice di se stesso.</strong></div></div>
+    </div>
+  </div>
+
+  <div class="spectrum-row">
+    <div class="sr-header">
+      <div class="sr-name">Latenza P50 / P95 / P99</div>
+      <div class="sr-desc">Distribuzione statistica dei tempi di risposta. Il percentile alto è più importante della media per capire l'esperienza reale degli utenti.</div>
+      <span class="sr-type">Automatica</span>
+    </div>
+    <div class="sr-body">
+      <div class="sr-cell"><div class="src-label">Quando usarla</div><div class="src-text">Sempre in produzione. Critica per sistemi real-time. <strong>Il P95 rappresenta cosa succede al 5% peggiore delle richieste</strong> — spesso molto più alto della media.</div></div>
+      <div class="sr-cell"><div class="src-label">Come si calcola</div><div class="src-text">Registra il tempo dall'invio al completamento per ogni chiamata. Ordina tutti i valori e prendi il valore al 50°, 95°, 99° percentile.</div></div>
+      <div class="sr-cell"><div class="src-label">Limite principale</div><div class="src-text">Dipende dal carico del server del provider, dalla lunghezza input/output, e dalla rete. Può variare significativamente nel tempo.</div></div>
+    </div>
+  </div>
+
+  <div class="spectrum-row">
+    <div class="sr-header">
+      <div class="sr-name">Costo per task</div>
+      <div class="sr-desc">Costo monetario totale per completare un singolo task, sommando tutti i token di tutte le chiamate nel loop dell'agente.</div>
+      <span class="sr-type">Automatica</span>
+    </div>
+    <div class="sr-body">
+      <div class="sr-cell"><div class="src-label">Quando usarla</div><div class="src-text">Sempre, fin dal prototipo. <strong>Il costo per task determina la sostenibilità economica del sistema in produzione</strong> — va misurato prima di scalare.</div></div>
+      <div class="sr-cell"><div class="src-label">Come si calcola</div><div class="src-text">token_input × prezzo_input + token_output × prezzo_output, sommato su tutte le chiamate LLM del task. I sistemi agentici multi-step possono essere molto più costosi di una singola chiamata.</div></div>
+      <div class="sr-cell"><div class="src-label">Limite principale</div><div class="src-text">I prezzi cambiano. Il costo per task tende a crescere con aggiornamenti al prompt o alla logica se non monitorato attivamente.</div></div>
+    </div>
+  </div>
+
+  <div class="spectrum-row">
+    <div class="sr-header">
+      <div class="sr-name">Human preference / rating</div>
+      <div class="sr-desc">Valutazione diretta da parte di umani — il gold standard per qualità soggettiva, ma costosa e non scalabile.</div>
+      <span class="sr-type">Umana</span>
+    </div>
+    <div class="sr-body">
+      <div class="sr-cell"><div class="src-label">Quando usarla</div><div class="src-text">Per validare le metriche automatiche (verificare che LLM-as-judge concordi con umani). Per casi limite importanti. Per la valutazione iniziale prima di automatizzare.</div></div>
+      <div class="sr-cell"><div class="src-label">Come si calcola</div><div class="src-text">Annotation diretta (1–5 su criteri definiti) o comparative (quale tra A e B è migliore?). Il formato comparative elimina le derive sistematiche dei valutatori.</div></div>
+      <div class="sr-cell"><div class="src-label">Limite principale</div><div class="src-text">Costosa, lenta, non scalabile oltre qualche centinaia di esempi. I valutatori umani non concordano sempre — misura sempre l'inter-rater agreement.</div></div>
+    </div>
+  </div>
+</div>
+
+
+<!-- ══ IV — CATEGORIE STRUMENTI ══ -->
+<div class="chapter" id="ch4">
+  <div class="ch-header">
+    <div class="ch-num">IV</div>
+    <div class="ch-meta">
+      <div class="ch-label">Capitolo Quarto</div>
+      <div class="ch-title">Le categorie di strumenti<br><em>per la valutazione</em></div>
+      <div class="ch-desc">Non esiste uno strumento unico. Cinque categorie rispondono a domande diverse nel ciclo di vita del sistema. <strong>Un team maturo usa strumenti di almeno tre categorie diverse, integrate tra loro.</strong></div>
+    </div>
+  </div>
+
+  <div class="cat-card">
+    <div class="cc-header">
+      <div class="cc-title-area">
+        <div class="cc-num">Categoria 01 · 05</div>
+        <div class="cc-title">Benchmark pubblici e Leaderboard</div>
+        <div class="cc-subtitle">La mappa del territorio prima di entrare nella foresta</div>
+      </div>
+      <div class="cc-badge" style="background:var(--d1b);color:var(--d1);border:1px solid rgba(30,58,92,0.2)">Selezione iniziale</div>
+    </div>
+    <div class="cc-body">
+      <div class="cc-what">Classifiche pubbliche che confrontano modelli su dataset standardizzati con valutatori automatici o voti umani aggregati. <strong>Non richiedono setup</strong> — si consultano come riferimento prima di iniziare. La loro utilità è nella fase di orientamento: restringere il campo da 20+ modelli a 2–3 candidati da testare direttamente. Esempi: LMSYS Chatbot Arena, Open LLM Leaderboard, SWE-bench, LiveBench.</div>
+      <div class="cc-measures">
+        <div class="cc-m"><div class="ccm-icon">🧠</div><div class="ccm-label">Misura</div><div class="ccm-text">Capacità generali del modello su task standardizzati</div></div>
+        <div class="cc-m"><div class="ccm-icon">📊</div><div class="ccm-label">Output</div><div class="ccm-text">Classifica comparativa tra modelli, punteggi per categoria</div></div>
+        <div class="cc-m"><div class="ccm-icon">⏱</div><div class="ccm-label">Quando</div><div class="ccm-text">All'inizio, prima di scegliere i candidati da testare</div></div>
+      </div>
+    </div>
+    <div class="cc-footer">
+      <div class="ccf-cell">
+        <div class="ccf-label">Vantaggi</div>
+        <ul class="ccf-list">
+          <li class="pro">Zero setup — si consultano online</li>
+          <li class="pro">Coprono decine di modelli in un colpo solo</li>
+          <li class="pro">Utili per escludere modelli chiaramente inadatti</li>
+        </ul>
+      </div>
+      <div class="ccf-cell">
+        <div class="ccf-label">Limiti critici</div>
+        <ul class="ccf-list">
+          <li class="con">Non predicono performance sul task specifico</li>
+          <li class="con">Modelli spesso ottimizzati sui benchmark stessi</li>
+          <li class="con">Non coprono latenza, costo, privacy</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <div class="cat-card">
+    <div class="cc-header">
+      <div class="cc-title-area">
+        <div class="cc-num">Categoria 02 · 05</div>
+        <div class="cc-title">Framework di Eval Programmatica</div>
+        <div class="cc-subtitle">Il laboratorio dove si costruiscono gli esperimenti</div>
+      </div>
+      <div class="cc-badge" style="background:var(--d2b);color:var(--d2);border:1px solid rgba(58,30,0,0.2)">Sviluppo e test</div>
+    </div>
+    <div class="cc-body">
+      <div class="cc-what">Librerie Python che forniscono infrastruttura per eval sistematiche: dataset management, runner, metriche calcolabili automaticamente, integrazione CI/CD. <strong>Permettono di scrivere suite di test per l'agente come si scrivono unit test per il codice</strong> — eseguibili, versionabili, automatizzabili. Esempi: RAGAS (specializzato su RAG), DeepEval (unit testing agenti), PromptFoo (A/B testing prompt e modelli).</div>
+      <div class="cc-measures">
+        <div class="cc-m"><div class="ccm-icon">🎯</div><div class="ccm-label">Misura</div><div class="ccm-text">Metriche specifiche su dataset custom: faithfulness, task success, format correctness</div></div>
+        <div class="cc-m"><div class="ccm-icon">📋</div><div class="ccm-label">Output</div><div class="ccm-text">Score aggregati, diff tra varianti, report CI con pass/fail per il deploy</div></div>
+        <div class="cc-m"><div class="ccm-icon">⏱</div><div class="ccm-label">Quando</div><div class="ccm-text">Durante sviluppo, prima del deploy, su ogni modifica significativa</div></div>
+      </div>
+    </div>
+    <div class="cc-footer">
+      <div class="ccf-cell">
+        <div class="ccf-label">Vantaggi</div>
+        <ul class="ccf-list">
+          <li class="pro">Misura esattamente il task specifico con i propri dati</li>
+          <li class="pro">Automatizzabile in CI — blocca deploy se le metriche peggiorano</li>
+          <li class="pro">Metriche specializzate (RAGAS per RAG, DeepEval per agenti)</li>
+        </ul>
+      </div>
+      <div class="ccf-cell">
+        <div class="ccf-label">Limiti critici</div>
+        <ul class="ccf-list">
+          <li class="con">Richiede costruire e mantenere l'eval set</li>
+          <li class="con">Non mostra il comportamento in produzione su input reali</li>
+          <li class="con">LLM-as-judge introduce bias del modello giudice</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <div class="cat-card">
+    <div class="cc-header">
+      <div class="cc-title-area">
+        <div class="cc-num">Categoria 03 · 05</div>
+        <div class="cc-title">Piattaforme di Eval e Dataset Management</div>
+        <div class="cc-subtitle">Il quartier generale della valutazione sistematica nel tempo</div>
+      </div>
+      <div class="cc-badge" style="background:var(--d3b);color:var(--d3);border:1px solid rgba(30,58,30,0.2)">Sviluppo → Produzione</div>
+    </div>
+    <div class="cc-body">
+      <div class="cc-what">Ambienti integrati con UI, storage centralizzato per dataset e risultati, runner gestiti, confronto visivo tra esperimenti e versioni. <strong>Aggiungono UI, collaborazione e storico</strong> a ciò che i framework programmatici fanno solo via codice. Permettono di costruire dataset raccogliendo esempi dalle trace di produzione, eseguire esperimenti A/B tra versioni, e tenere traccia dell'evoluzione delle metriche nel tempo. Esempi: LangSmith, Langfuse, Braintrust.</div>
+      <div class="cc-measures">
+        <div class="cc-m"><div class="ccm-icon">📈</div><div class="ccm-label">Misura</div><div class="ccm-text">Qualità su dataset custom + trend nel tempo + confronto tra esperimenti</div></div>
+        <div class="cc-m"><div class="ccm-icon">🗂</div><div class="ccm-label">Output</div><div class="ccm-text">Dashboard esperimenti, dataset versionati, confronti A/B visuali</div></div>
+        <div class="cc-m"><div class="ccm-icon">⏱</div><div class="ccm-label">Quando</div><div class="ccm-text">Durante tutto il ciclo, dal prototipo alla produzione continua</div></div>
+      </div>
+    </div>
+    <div class="cc-footer">
+      <div class="ccf-cell">
+        <div class="ccf-label">Vantaggi</div>
+        <ul class="ccf-list">
+          <li class="pro">Integra tracing + dataset building + eval in un flusso unico</li>
+          <li class="pro">UI per confrontare esperimenti senza scrivere codice</li>
+          <li class="pro">Collaborazione tra team su dataset e risultati</li>
+        </ul>
+      </div>
+      <div class="ccf-cell">
+        <div class="ccf-label">Limiti critici</div>
+        <ul class="ccf-list">
+          <li class="con">Dati spesso transitano su cloud del vendor (privacy)</li>
+          <li class="con">Dipendenza da piattaforma esterna per fase critica</li>
+          <li class="con">Costo cresce con il volume di trace</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <div class="cat-card">
+    <div class="cc-header">
+      <div class="cc-title-area">
+        <div class="cc-num">Categoria 04 · 05</div>
+        <div class="cc-title">Strumenti di Observability e Tracing</div>
+        <div class="cc-subtitle">Gli occhi sul sistema mentre gira in produzione reale</div>
+      </div>
+      <div class="cc-badge" style="background:var(--d4b);color:var(--d4);border:1px solid rgba(58,0,58,0.2)">Deploy e produzione</div>
+    </div>
+    <div class="cc-body">
+      <div class="cc-what">Strumenti per registrare e ispezionare ogni operazione del sistema in esecuzione reale: ogni chiamata LLM, ogni tool use, ogni step del loop agente — con input, output, latenza, token, costo. <strong>La differenza rispetto all'eval è fondamentale: l'observability misura il comportamento su input reali di produzione, non su dataset fissi.</strong> Rivelano problemi che l'eval non può anticipare: pattern d'uso inattesi, errori su certi tipi di utenti, degrado nel tempo. Esempi: Langfuse, Arize Phoenix, Helicone.</div>
+      <div class="cc-measures">
+        <div class="cc-m"><div class="ccm-icon">🔍</div><div class="ccm-label">Misura</div><div class="ccm-text">Comportamento reale in produzione: latenza, errori, costi, pattern d'uso</div></div>
+        <div class="cc-m"><div class="ccm-icon">🌳</div><div class="ccm-label">Output</div><div class="ccm-text">Trace gerarchici per ogni run, dashboard metriche aggregate, alert</div></div>
+        <div class="cc-m"><div class="ccm-icon">⏱</div><div class="ccm-label">Quando</div><div class="ccm-text">Sempre attivo in produzione — si monitora continuamente, non si esegue</div></div>
+      </div>
+    </div>
+    <div class="cc-footer">
+      <div class="ccf-cell">
+        <div class="ccf-label">Vantaggi</div>
+        <ul class="ccf-list">
+          <li class="pro">Misura il sistema su input reali, non dataset artificiali</li>
+          <li class="pro">Rivela problemi imprevedibili in fase di sviluppo</li>
+          <li class="pro">Alimenta il ciclo di miglioramento continuo</li>
+        </ul>
+      </div>
+      <div class="ccf-cell">
+        <div class="ccf-label">Limiti critici</div>
+        <ul class="ccf-list">
+          <li class="con">Non misura automaticamente la qualità dell'output</li>
+          <li class="con">Richiede valutazione aggiuntiva per sapere se l'output era corretto</li>
+          <li class="con">Il volume di dati può diventare enorme — serve campionamento</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <div class="cat-card">
+    <div class="cc-header">
+      <div class="cc-title-area">
+        <div class="cc-num">Categoria 05 · 05</div>
+        <div class="cc-title">Human Evaluation e Annotation</div>
+        <div class="cc-subtitle">Il giudice finale che nessuna metrica automatica può sostituire</div>
+      </div>
+      <div class="cc-badge" style="background:var(--paper3);color:var(--ink3);border:1px solid var(--rule2)">Validazione critica</div>
+    </div>
+    <div class="cc-body">
+      <div class="cc-what">Processi strutturati per raccogliere valutazioni da annotatori umani su campioni dell'output del sistema. <strong>Rimane il gold standard irrinunciabile</strong> perché alcune dimensioni della qualità (sfumature di tono, appropriatezza culturale, errori sottili di ragionamento) sono difficili da catturare con metriche automatiche. Non è un'alternativa alle metriche automatiche: è il modo per calibrarle e validarle. Un buon LLM-as-judge deve essere validato contro la valutazione umana.</div>
+      <div class="cc-measures">
+        <div class="cc-m"><div class="ccm-icon">👤</div><div class="ccm-label">Misura</div><div class="ccm-text">Qualità soggettiva, sfumature, appropriatezza, errori sottili non catturabili automaticamente</div></div>
+        <div class="cc-m"><div class="ccm-icon">📝</div><div class="ccm-label">Output</div><div class="ccm-text">Dataset annotati, preference pairs, score con motivazioni testuali</div></div>
+        <div class="cc-m"><div class="ccm-icon">⏱</div><div class="ccm-label">Quando</div><div class="ccm-text">Validazione iniziale, lancio nuove versioni, campionamento periodico</div></div>
+      </div>
+    </div>
+    <div class="cc-footer">
+      <div class="ccf-cell">
+        <div class="ccf-label">Vantaggi</div>
+        <ul class="ccf-list">
+          <li class="pro">Gold standard — unica misura diretta di qualità percepita</li>
+          <li class="pro">Cattura sfumature che le metriche automatiche perdono</li>
+          <li class="pro">Permette di calibrare e validare i giudici automatici</li>
+        </ul>
+      </div>
+      <div class="ccf-cell">
+        <div class="ccf-label">Limiti critici</div>
+        <ul class="ccf-list">
+          <li class="con">Lenta: ore o giorni per raccogliere dati significativi</li>
+          <li class="con">Costosa: annotatori interni o servizi esterni</li>
+          <li class="con">Non scalabile oltre qualche centinaia di esempi</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+<!-- ══ V — DIFFERENZE E QUANDO USARLI ══ -->
+<div class="chapter" id="ch5">
+  <div class="ch-header">
+    <div class="ch-num">V</div>
+    <div class="ch-meta">
+      <div class="ch-label">Capitolo Quinto</div>
+      <div class="ch-title">Differenze fondamentali<br><em>e quando usare cosa</em></div>
+      <div class="ch-desc">Le cinque categorie rispondono a domande diverse. Conoscere la domanda a cui si sta cercando di rispondere è il modo corretto per scegliere lo strumento.</div>
+    </div>
+  </div>
+
+  <div class="flow">
+    <div class="flow-header">Il ciclo di vita della valutazione — quale strumento in quale fase</div>
+    <div class="flow-steps">
+      <div class="flow-step">
+        <div class="fs-top"><div class="fs-num">Fase 1 · Selezione</div><div class="fs-title">Quale modello candidare?</div></div>
+        <div class="fs-body"><strong>Benchmark pubblici.</strong> Guarda LMSYS Arena, Open LLM Leaderboard, SWE-bench. Escludi i modelli fuori dai vincoli (privacy, costo, context). Rimane una shortlist di 2–4 candidati.</div>
+      </div>
+      <div class="flow-step">
+        <div class="fs-top"><div class="fs-num">Fase 2 · Prototipo</div><div class="fs-title">Qual è il baseline?</div></div>
+        <div class="fs-body"><strong>Human evaluation su 20–50 esempi.</strong> Prima di automatizzare, valuta manualmente. Costruisci intuizione sui pattern di errore. Definisci cosa significa "buono" in modo preciso.</div>
+      </div>
+      <div class="flow-step">
+        <div class="fs-top"><div class="fs-num">Fase 3 · Sviluppo</div><div class="fs-title">Questa modifica migliora?</div></div>
+        <div class="fs-body"><strong>Framework programmatico + Piattaforma eval.</strong> Costruisci eval set 50–200 esempi. Esegui metriche automatiche su ogni variante. Confronta A/B. Integra in CI.</div>
+      </div>
+      <div class="flow-step">
+        <div class="fs-top"><div class="fs-num">Fase 4 · Deploy</div><div class="fs-title">Funziona in produzione?</div></div>
+        <div class="fs-body"><strong>Observability e Tracing.</strong> Attiva il tracing su tutte le richieste reali. Monitora latenza P95, errori, costo per task. Campiona il 5% degli output per revisione umana periodica.</div>
+      </div>
+      <div class="flow-step">
+        <div class="fs-top"><div class="fs-num">Fase 5 · Evoluzione</div><div class="fs-title">Come migliorare?</div></div>
+        <div class="fs-body"><strong>Ciclo continuo.</strong> Le trace di produzione alimentano nuovi casi nel dataset. I feedback negativi diventano casi di test. L'eval set cresce. Le metriche si affinano. Il loop ricomincia dalla Fase 3.</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="matrix">
+    <table>
+      <thead>
+        <tr>
+          <th>Categoria</th>
+          <th>Domanda a cui risponde</th>
+          <th>Dati usati</th>
+          <th>Automatizzabile</th>
+          <th>Costo operativo</th>
+          <th>Privacy</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><span class="mname">Benchmark pubblici</span></td>
+          <td>Quale modello è migliore in generale?</td>
+          <td>Dataset pubblici standardizzati</td>
+          <td class="good">✓ Già fatto — si consulta</td>
+          <td class="good">Zero</td>
+          <td class="good">Nessun dato condiviso</td>
+        </tr>
+        <tr>
+          <td><span class="mname">Framework eval programmatico</span></td>
+          <td>Questo modello/prompt funziona sul mio task?</td>
+          <td>Dataset annotato proprio</td>
+          <td class="good">✓ Integra in CI/CD</td>
+          <td class="mid">Basso (costo LLM giudice)</td>
+          <td class="good">Dati rimangono locali</td>
+        </tr>
+        <tr>
+          <td><span class="mname">Piattaforma eval</span></td>
+          <td>Come evolvono le metriche? Quale variante è migliore?</td>
+          <td>Dataset + trace di sviluppo</td>
+          <td class="good">✓ Runner gestito con UI</td>
+          <td class="mid">Medio (piano SaaS)</td>
+          <td class="bad">Trace inviate al vendor cloud</td>
+        </tr>
+        <tr>
+          <td><span class="mname">Observability / Tracing</span></td>
+          <td>Come si comporta il sistema su utenti reali?</td>
+          <td>Input/output reali di produzione</td>
+          <td class="good">✓ Sempre attivo</td>
+          <td class="mid">Basso-medio (dipende dal volume)</td>
+          <td class="mid">Self-host disponibile</td>
+        </tr>
+        <tr>
+          <td><span class="mname">Human evaluation</span></td>
+          <td>L'output è davvero buono secondo un umano?</td>
+          <td>Campione output produzione</td>
+          <td class="bad">✗ Non automatizzabile</td>
+          <td class="bad">Alto (tempo umano)</td>
+          <td class="good">Controllabile internamente</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="callout primary">
+    <p>La distinzione più importante: <strong>eval offline</strong> (categorie 1, 2, 3) misura performance su un dataset fisso e controllato costruito prima del deploy. <strong>Monitoring in produzione</strong> (categoria 4) misura il comportamento su input reali che non hai mai visto. L'eval ti dice se sei pronto al deploy, il monitoring ti dice se stai effettivamente funzionando.</p>
+    <div class="cl-source">Distinzione fondamentale per sviluppatori di sistemi agentici</div>
+  </div>
+</div>
+
+
+<!-- ══ VI — SINTESI ══ -->
+<div class="final-chapter" id="ch6">
+  <div class="fc-label">Capitolo Sesto · Sintesi e principi</div>
+  <div class="fc-title">Cosa tenere a mente<br><em>prima degli strumenti</em></div>
+
+  <div class="fc-grid">
+    <div class="fc-col">
+      <div class="fc-col-title">Dimensioni</div>
+      <div class="fc-item"><div class="fc-item-name">Qualità output</div><div class="fc-item-note">Accuratezza, fedeltà, completezza, formato. Di solito la più importante.</div></div>
+      <div class="fc-item"><div class="fc-item-name">Comportamento</div><div class="fc-item-note">Consistenza, instruction following, gestione incertezza.</div></div>
+      <div class="fc-item"><div class="fc-item-name">Efficienza operativa</div><div class="fc-item-note">Latenza P95, costo per task, throughput.</div></div>
+      <div class="fc-item"><div class="fc-item-name">Robustezza</div><div class="fc-item-note">Stabilità nel tempo, performance su sottogruppi, varianza.</div></div>
+    </div>
+    <div class="fc-col">
+      <div class="fc-col-title">Metriche principali</div>
+      <div class="fc-item"><div class="fc-item-name">Accuracy / F1</div><div class="fc-item-note">Per classificazione — automatica e precisa.</div></div>
+      <div class="fc-item"><div class="fc-item-name">Faithfulness + Relevance</div><div class="fc-item-note">Per RAG — le due metriche imprescindibili.</div></div>
+      <div class="fc-item"><div class="fc-item-name">Task Success Rate</div><div class="fc-item-note">Per agenti — l'unica che conta end-to-end.</div></div>
+      <div class="fc-item"><div class="fc-item-name">Latenza P95 + Costo/task</div><div class="fc-item-note">Per produzione — la sostenibilità operativa.</div></div>
+      <div class="fc-item"><div class="fc-item-name">Human preference</div><div class="fc-item-note">Gold standard per qualità soggettiva e calibrazione.</div></div>
+    </div>
+    <div class="fc-col">
+      <div class="fc-col-title">Categorie strumenti</div>
+      <div class="fc-item"><div class="fc-item-name">Benchmark pubblici</div><div class="fc-item-note">Orientamento iniziale — non per la decisione finale.</div></div>
+      <div class="fc-item"><div class="fc-item-name">Framework eval (RAGAS...)</div><div class="fc-item-note">Metriche automatiche sul tuo task. Cuore del ciclo.</div></div>
+      <div class="fc-item"><div class="fc-item-name">Piattaforme (LangSmith...)</div><div class="fc-item-note">UI + storage + confronto esperimenti nel tempo.</div></div>
+      <div class="fc-item"><div class="fc-item-name">Observability (Langfuse...)</div><div class="fc-item-note">Comportamento reale su input reali di produzione.</div></div>
+      <div class="fc-item"><div class="fc-item-name">Human evaluation</div><div class="fc-item-note">Gold standard e calibrazione delle metriche automatiche.</div></div>
+    </div>
+  </div>
+
+  <div class="fc-principle">
+    <div class="fcp-title">I cinque principi fondamentali della valutazione</div>
+    <div class="fcp-rules">
+      <div class="fcp-rule">Valutare significa sempre: rispetto a un criterio specifico, su un task specifico, con dati rappresentativi reali. Non esiste "il modello migliore" in assoluto.</div>
+      <div class="fcp-rule">I benchmark pubblici servono per orientarsi, non per decidere. La decisione finale si prende sempre sul proprio eval set con i propri dati.</div>
+      <div class="fcp-rule">Eval offline e monitoring in produzione sono complementari, non alternativi. Il primo prepara al deploy, il secondo dice se si sta effettivamente funzionando.</div>
+      <div class="fcp-rule">Qualità media e distribuzione degli errori sono informazioni diverse. Un modello con 95% di accuracy può essere inutilizzabile se il 5% di errori cade su casi critici.</div>
+      <div class="fcp-rule">La valutazione non è una fase — è un ciclo. Ogni output in produzione è potenzialmente un nuovo caso di test. Il sistema migliora solo se il loop si chiude.</div>
+    </div>
+  </div>
+</div>
+
+<footer>
+  <span>Agenti AI · Fondamenti della valutazione LLM · Febbraio 2026</span>
+  <span>agenti-ai-valutazione-fondamenti.html</span>
+</footer>
+
+</div>
+</body>
+</html>

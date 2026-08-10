@@ -1,0 +1,548 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Gli Strumenti — Dal Parlare all'Agire</title>
+<link href="https://fonts.googleapis.com/css2?family=Spectral:ital,wght@0,300;0,400;0,500;0,600;1,400&family=Sora:wght@200;300;400;500;600;700;800&family=IBM+Plex+Mono:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg:     #f3f6f1;
+  --bg2:    #eaefe7;
+  --bg3:    #dde6d8;
+  --ink:    #131810;
+  --ink2:   #212a1c;
+  --ink3:   #57614f;
+  --ink4:   #909a87;
+  --border: #d3dccc;
+  --border2:#c0cab8;
+
+  --core:   #4a8c3f;
+  --core2:  #357029;
+  --warm:   #b3402a;
+  --good:   #3d7a45;
+  --bad:    #b3402a;
+  --teal:   #2e7d9c;
+  --violet: #7b5ea7;
+  --gold:   #b8860b;
+}
+
+* { margin:0; padding:0; box-sizing:border-box; }
+html { scroll-behavior:smooth; }
+
+body { background: var(--bg); color: var(--ink); font-family: 'Sora', sans-serif; font-weight: 300; font-size: 14px; line-height: 1.78; }
+
+.masthead { background: var(--ink); color: rgba(255,255,255,0.9); padding: 64px 56px 54px; position: relative; overflow: hidden; }
+.masthead::before { content: ''; position: absolute; inset: 0; background: radial-gradient(circle at 80% 35%, rgba(74,140,63,0.30) 0, transparent 45%), repeating-linear-gradient(0deg, rgba(255,255,255,0.012) 0, rgba(255,255,255,0.012) 1px, transparent 1px, transparent 58px); pointer-events: none; }
+.mh-eye { font-family: 'IBM Plex Mono', monospace; font-size: 10px; letter-spacing: 3px; text-transform: uppercase; color: rgba(255,255,255,0.28); margin-bottom: 20px; position: relative; }
+.masthead h1 { font-family: 'Spectral', serif; font-weight: 400; font-size: clamp(33px, 5.2vw, 60px); line-height: 1.06; letter-spacing: -1px; max-width: 720px; position: relative; }
+.masthead h1 em { font-style: italic; color: #8fd182; }
+.mh-sub { margin-top: 22px; font-size: 15px; font-weight: 300; color: rgba(255,255,255,0.4); max-width: 690px; line-height: 1.72; position: relative; }
+
+.nav { background: var(--ink2); position: sticky; top: 0; z-index: 100; display: flex; overflow-x: auto; border-bottom: 1px solid rgba(255,255,255,0.06); }
+.nav-btn { flex: 1; min-width: 116px; padding: 13px 14px; border: none; background: transparent; cursor: pointer; font-family: 'Sora', sans-serif; font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.4px; color: rgba(255,255,255,0.3); border-right: 1px solid rgba(255,255,255,0.06); transition: all 0.2s; white-space: nowrap; }
+.nav-btn:last-child { border-right: none; }
+.nav-btn:hover { color: rgba(255,255,255,0.62); }
+.nav-btn.active { color: #fff; background: rgba(255,255,255,0.05); }
+.nav-btn.active::after { content: ''; display: block; height: 2px; background: var(--core); margin-top: 6px; border-radius: 1px; }
+
+.sect { display: none; }
+.sect.active { display: block; animation: fadeIn 0.3s ease; }
+@keyframes fadeIn { from { opacity:0; transform:translateY(6px); } to { opacity:1; transform:translateY(0); } }
+.sect-head { padding: 50px 56px 36px; border-bottom: 1px solid var(--border); }
+.sect-num { font-family: 'IBM Plex Mono', monospace; font-size: 10px; letter-spacing: 3px; text-transform: uppercase; color: var(--ink4); margin-bottom: 12px; }
+.sect-head h2 { font-family: 'Spectral', serif; font-weight: 400; font-size: clamp(27px, 3.6vw, 43px); line-height: 1.1; letter-spacing: -0.5px; max-width: 660px; margin-bottom: 14px; }
+.sect-head h2 em { font-style: italic; }
+.sect-head p { color: var(--ink3); max-width: 700px; font-size: 14.5px; }
+.wrap { padding: 36px 56px 60px; }
+
+.prose { max-width: 760px; }
+.prose p { color: var(--ink3); margin-bottom: 18px; font-size: 14.5px; }
+.prose p strong { color: var(--ink2); font-weight: 500; }
+.prose p em { font-style: italic; color: var(--ink2); }
+.lead { font-size: 16px !important; color: var(--ink2) !important; }
+.prose ul { max-width: 760px; margin: 0 0 18px; padding-left: 0; list-style: none; }
+.prose ul li { color: var(--ink3); font-size: 14px; line-height: 1.7; padding: 4px 0 4px 22px; position: relative; }
+.prose ul li::before { content: '—'; position: absolute; left: 0; color: var(--core); font-weight: 500; }
+.prose ul li strong { color: var(--ink2); font-weight: 500; }
+
+.h3 { font-family: 'IBM Plex Mono', monospace; font-size: 10px; letter-spacing: 2px; text-transform: uppercase; color: var(--ink4); margin: 40px 0 16px; padding-bottom: 8px; border-bottom: 1px solid var(--border); max-width: 760px; }
+.h3:first-child { margin-top: 0; }
+
+.diagram-wrap { margin: 10px 0; padding: 36px 24px; background: var(--ink); border: 1px solid var(--border2); overflow-x: auto; }
+.diagram-wrap svg { display: block; margin: 0 auto; }
+.diagram-cap { font-family: 'IBM Plex Mono', monospace; font-size: 11px; color: var(--ink4); text-align: center; margin-top: 14px; letter-spacing: 0.5px; }
+
+.codeblock { font-family: 'IBM Plex Mono', monospace; font-size: 12px; line-height: 1.7; background: #141a10; color: rgba(255,255,255,0.82); padding: 20px 22px; margin: 18px 0; max-width: 820px; overflow-x: auto; white-space: pre-wrap; word-break: break-word; border-left: 3px solid var(--core); }
+.codeblock .cm { color: #909a87; font-style: italic; }
+.codeblock .hl { color: #8fd182; }
+.codeblock .k { color: #7ec7e0; }
+.codeblock .s { color: #e0c878; }
+
+.steps { margin: 18px 0; max-width: 820px; }
+.step { display: grid; grid-template-columns: 44px 1fr; gap: 0; border: 1px solid var(--border); border-bottom: none; background: var(--bg); }
+.step:last-child { border-bottom: 1px solid var(--border); }
+.step-n { background: var(--core); color: #fff; font-family: 'IBM Plex Mono', monospace; font-size: 15px; font-weight: 500; display: flex; align-items: center; justify-content: center; }
+.step-n.alt { background: var(--ink3); }
+.step-body { padding: 14px 18px; }
+.step-title { font-weight: 600; font-size: 13.5px; color: var(--ink2); margin-bottom: 3px; }
+.step-title span { font-family: 'IBM Plex Mono', monospace; font-size: 9px; font-weight: 400; color: var(--core2); letter-spacing: 0.5px; margin-left: 8px; }
+.step-desc { font-size: 12.5px; color: var(--ink3); line-height: 1.6; }
+.step-desc strong { color: var(--ink2); font-weight: 500; }
+
+.types { display: grid; grid-template-columns: 1fr 1fr; gap: 1px; background: var(--border2); border: 1px solid var(--border2); margin: 20px 0; max-width: 880px; }
+.type-col { background: var(--bg); padding: 20px 22px; }
+.type-name { font-weight: 600; font-size: 15px; color: var(--ink2); margin-bottom: 4px; }
+.type-where { font-family: 'IBM Plex Mono', monospace; font-size: 9px; letter-spacing: 1px; text-transform: uppercase; color: var(--core2); margin-bottom: 12px; }
+.type-desc { font-size: 12.5px; color: var(--ink3); line-height: 1.62; }
+.type-desc strong { color: var(--ink2); font-weight: 500; }
+.type-desc em { font-style: italic; color: var(--ink2); }
+
+.insight { margin: 24px 0; padding: 18px 22px; border-left: 4px solid var(--teal); background: var(--bg2); max-width: 820px; }
+.insight-label { font-family: 'IBM Plex Mono', monospace; font-size: 9px; letter-spacing: 2px; text-transform: uppercase; margin-bottom: 6px; color: var(--teal); }
+.insight p { font-size: 13.5px; line-height: 1.7; color: var(--ink2); margin: 0; }
+.insight.w { border-left-color: var(--warm); }
+.insight.w .insight-label { color: var(--warm); }
+.insight.g { border-left-color: var(--gold); }
+.insight.g .insight-label { color: var(--gold); }
+
+.key-point { margin: 36px 0 8px; padding: 26px 30px; border-left: 4px solid var(--core); background: var(--bg2); max-width: 820px; }
+.kp-label { font-family: 'IBM Plex Mono', monospace; font-size: 9px; letter-spacing: 2px; text-transform: uppercase; color: var(--core2); margin-bottom: 8px; }
+.kp-text { font-family: 'Spectral', serif; font-size: 20px; line-height: 1.42; color: var(--ink2); font-style: italic; }
+.kp-sub { margin-top: 12px; font-size: 13px; color: var(--ink3); line-height: 1.65; }
+
+.sum-table { width: 100%; max-width: 880px; border-collapse: collapse; font-size: 12.5px; margin: 20px 0; border: 1px solid var(--border2); }
+.sum-table th, .sum-table td { padding: 11px 14px; border: 1px solid var(--border); text-align: left; vertical-align: top; }
+.sum-table thead th { background: var(--ink); color: rgba(255,255,255,0.82); font-weight: 600; font-size: 10px; text-transform: uppercase; letter-spacing: 0.3px; }
+.sum-table tbody tr:nth-child(even) { background: var(--bg2); }
+.sum-table td { color: var(--ink3); }
+.sum-table .p-cell { font-weight: 600; color: var(--ink2); white-space: nowrap; }
+.sum-table td strong { color: var(--ink2); font-weight: 500; }
+
+.bp { margin: 28px 0 8px; border: 1px solid var(--good); background: var(--bg); max-width: 880px; }
+.bp-head { background: var(--good); color: #fff; padding: 12px 22px; font-family: 'IBM Plex Mono', monospace; font-size: 11px; letter-spacing: 2px; text-transform: uppercase; display: flex; align-items: center; gap: 10px; }
+.bp-head::before { content: '\25C6'; font-size: 11px; }
+.bp-body { padding: 0; }
+.bp-row { display: grid; grid-template-columns: 1fr 1fr; gap: 1px; background: var(--border); border-bottom: 1px solid var(--border); }
+.bp-row:last-child { border-bottom: none; }
+.bp-do, .bp-dont { padding: 14px 20px; background: var(--bg); }
+.bp-tag { font-family: 'IBM Plex Mono', monospace; font-size: 9px; letter-spacing: 1.5px; text-transform: uppercase; margin-bottom: 7px; display: flex; align-items: center; gap: 6px; }
+.bp-do .bp-tag { color: var(--good); }
+.bp-dont .bp-tag { color: var(--bad); }
+.bp-do .bp-tag::before { content: '\2713'; font-weight: 700; }
+.bp-dont .bp-tag::before { content: '\2717'; font-weight: 700; }
+.bp-text { font-size: 12.5px; color: var(--ink3); line-height: 1.6; }
+.bp-text strong { color: var(--ink2); font-weight: 500; }
+.bp-single { padding: 14px 20px; border-bottom: 1px solid var(--border); font-size: 13px; color: var(--ink3); line-height: 1.65; }
+.bp-single:last-child { border-bottom: none; }
+.bp-single strong { color: var(--ink2); font-weight: 600; }
+
+.srcnote { margin: 22px 0; padding: 14px 20px; background: var(--bg2); border: 1px dashed var(--border2); max-width: 820px; font-size: 12px; color: var(--ink3); line-height: 1.6; }
+.srcnote b { font-family: 'IBM Plex Mono', monospace; font-size: 9px; letter-spacing: 1.5px; text-transform: uppercase; color: var(--ink4); display: block; margin-bottom: 4px; }
+
+.footer { background: var(--ink); color: rgba(255,255,255,0.22); padding: 30px 56px; font-family: 'IBM Plex Mono', monospace; font-size: 10px; letter-spacing: 1px; display: flex; justify-content: space-between; }
+
+@media (max-width: 860px) {
+  .masthead, .sect-head, .wrap, .footer { padding-left: 20px; padding-right: 20px; }
+  .types, .bp-row { grid-template-columns: 1fr; }
+  .footer { flex-direction: column; gap: 6px; }
+}
+</style>
+</head>
+<body>
+
+<div class="masthead">
+  <div class="mh-eye">Serie Agenti AI · Parte II — Report 04</div>
+  <h1>Gli strumenti:<br>dal parlare all'<em>agire</em></h1>
+  <p class="mh-sub">Il modello nudo &egrave; passivo: produce solo testo, non pu&ograve; fare nulla nel mondo. Questo strato rompe l'ultimo dei tre limiti. &Egrave; anche il confine esatto tra "chatbot" e "agente": &egrave; lo strumento che trasforma un assistente che risponde in un sistema che agisce.</p>
+</div>
+
+<nav class="nav">
+  <button class="nav-btn active" onclick="show(0)">Il limite</button>
+  <button class="nav-btn" onclick="show(1)">Il contratto</button>
+  <button class="nav-btn" onclick="show(2)">Il ciclo</button>
+  <button class="nav-btn" onclick="show(3)">Client vs server</button>
+  <button class="nav-btn" onclick="show(4)">La descrizione</button>
+  <button class="nav-btn" onclick="show(5)">Trade-off</button>
+  <button class="nav-btn" onclick="show(6)">Best practice</button>
+</nav>
+
+
+<!-- S0 -->
+<div class="sect active" id="s0">
+  <div class="sect-head">
+    <div class="sect-num">Sezione 00 · Il problema da risolvere</div>
+    <h2>Un modello che <em>parla soltanto</em></h2>
+    <p>&Egrave; il terzo e ultimo dei limiti del modello nudo elencati nel Report 01, ed &egrave; quello che segna il confine pi&ugrave; importante di tutta la serie: quello tra un chatbot e un agente.</p>
+  </div>
+  <div class="wrap">
+    <div class="prose">
+      <p class="lead">Il modello, da solo, <strong>produce solo testo</strong>. Non naviga il web, non esegue codice, non interroga un database, non invia un'email, non prenota nulla. Qualunque cosa "sappia", sa dirla; nulla di ci&ograve; che dice ha effetto sul mondo. &Egrave; un oracolo eloquente ma immobile.</p>
+
+      <p>Questo &egrave; il limite che gli strumenti &mdash; il <em>tool use</em>, o <em>function calling</em> &mdash; vengono a colmare. La documentazione di Anthropic lo inquadra in modo netto: l'accesso agli strumenti &egrave; <strong>uno dei primitivi a pi&ugrave; alta leva</strong> che si possano dare a un agente. Su benchmark di interpretazione di figure scientifiche o di ingegneria del software reale, aggiungere anche solo strumenti di base produce guadagni di capacit&agrave; sproporzionati, a volte superando i riferimenti umani esperti.</p>
+
+      <p>Vale la pena fermarsi su un punto che chiarisce l'intera serie. Nei tuoi report precedenti, il confine tra "chatbot" e "agente" poteva sembrare sfumato. Qui diventa preciso: <strong>un agente &egrave; un LLM a cui &egrave; stato dato accesso a strumenti</strong>, dentro un ciclo che gli permette di usarli per perseguire un obiettivo. Senza strumenti hai un assistente conversazionale; con gli strumenti e il ciclo che li orchestra, hai un agente. Questo strato <em>&egrave;</em> la linea di confine.</p>
+
+      <div class="key-point">
+        <div class="kp-label">Il principio di questo strato</div>
+        <div class="kp-text">Il modello non agisce mai da solo. Decide cosa fare e lo chiede; &egrave; il tuo codice &mdash; o l'infrastruttura &mdash; a eseguire. Lo strumento &egrave; un contratto, non un potere del modello.</div>
+        <div class="kp-sub">Interiorizzare questa separazione &mdash; il modello propone, il codice dispone &mdash; &egrave; la chiave per progettare agenti sicuri e prevedibili. Il modello non ha le mani: ha solo la voce con cui chiede che qualcun altro le usi.</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+<!-- S1 -->
+<div class="sect" id="s1">
+  <div class="sect-head">
+    <div class="sect-num">Sezione 01 · Il modello concettuale</div>
+    <h2>Uno strumento &egrave; un <em>contratto</em></h2>
+    <p>Prima del meccanismo, l'idea. Il tool use &egrave; descritto da Anthropic come un contratto tra la tua applicazione e il modello: tu dichiari quali operazioni esistono e che forma hanno; il modello decide quando e come invocarle.</p>
+  </div>
+  <div class="wrap">
+    <div class="prose">
+      <p>La formulazione ufficiale &egrave; illuminante: il tool use &egrave; <strong>un contratto tra la tua applicazione e il modello</strong>. Tu specifichi quali operazioni sono disponibili e che forma hanno i loro input e output; Claude decide quando e come chiamarle. Il modello non esegue mai nulla per conto proprio &mdash; emette una <em>richiesta strutturata</em>, il tuo codice (o i server di Anthropic) esegue l'operazione, e il risultato rientra nella conversazione.</p>
+
+      <p>Questa cornice rende il modello, parole della documentazione, <strong>"meno un generatore di testo e pi&ugrave; una funzione che chiami"</strong>. Per chi viene dalla programmazione classica &egrave; un'analogia potente: definisci lo schema, gestisci la callback, restituisci un risultato &mdash; esattamente come con qualsiasi interfaccia tipizzata. La differenza &egrave; che dall'altra parte il chiamante &egrave; un modello linguistico che sceglie quale funzione invocare in base alla conversazione.</p>
+
+      <p>Concretamente, uno strumento si definisce con tre elementi:</p>
+      <ul>
+        <li><strong>name</strong> &mdash; il nome univoco dello strumento, con cui il modello lo richiama.</li>
+        <li><strong>description</strong> &mdash; la descrizione in linguaggio naturale di cosa fa e quando usarlo. &Egrave; la parte su cui il modello basa la decisione di chiamarlo: la Sezione 04 spiega perch&eacute; &egrave; la pi&ugrave; importante.</li>
+        <li><strong>input_schema</strong> &mdash; lo schema (in stile JSON Schema) che dichiara quali parametri lo strumento accetta e di che tipo. &Egrave; il "tipo" della funzione.</li>
+      </ul>
+    </div>
+
+    <div class="codeblock"><span class="cm">// definizione di uno strumento meteo</span>
+{
+  <span class="k">"name"</span>: <span class="s">"get_weather"</span>,
+  <span class="k">"description"</span>: <span class="s">"Restituisce il meteo attuale per una citta'.</span>
+<span class="s">                  Usalo quando l'utente chiede del tempo."</span>,
+  <span class="k">"input_schema"</span>: {
+    <span class="k">"type"</span>: <span class="s">"object"</span>,
+    <span class="k">"properties"</span>: {
+      <span class="k">"location"</span>: { <span class="k">"type"</span>: <span class="s">"string"</span>,
+                    <span class="k">"description"</span>: <span class="s">"Citta', es. Milano"</span> }
+    },
+    <span class="k">"required"</span>: [<span class="s">"location"</span>]
+  }
+}</div>
+
+    <div class="insight g">
+      <div class="insight-label">Una garanzia utile: lo "strict mode"</div>
+      <p>Un modello probabilistico potrebbe, in teoria, produrre una chiamata che non rispetta lo schema. Per questo Anthropic offre la modalit&agrave; <strong>strict</strong>: aggiungendo <em>strict: true</em> alla definizione, le chiamate del modello sono garantite conformi allo schema dichiarato. Per i tuoi agenti significa poter trattare l'output del modello come dati tipizzati affidabili, senza dover difendersi da ogni possibile malformazione.</p>
+    </div>
+  </div>
+</div>
+
+
+<!-- S2 -->
+<div class="sect" id="s2">
+  <div class="sect-head">
+    <div class="sect-num">Sezione 02 · Il meccanismo</div>
+    <h2>Il <em>ciclo agentico</em>, passo per passo</h2>
+    <p>Il cuore del tool use &egrave; un ciclo. Capirlo nei dettagli &egrave; capire come funziona davvero un agente: non &egrave; una singola chiamata, ma un dialogo a pi&ugrave; round tra modello e codice.</p>
+  </div>
+  <div class="wrap">
+    <div class="prose">
+      <p>Poich&eacute; il modello non pu&ograve; eseguire il tuo codice, ogni uso di uno strumento client &egrave; un <strong>viaggio di andata e ritorno</strong>: il modello chiede, tu esegui, tu riferisci, il modello prosegue. La documentazione descrive la forma canonica come un ciclo <em>while</em> governato dal campo <strong>stop_reason</strong> della risposta. Ecco i passi.</p>
+    </div>
+
+    <div class="steps">
+      <div class="step">
+        <div class="step-n">1</div>
+        <div class="step-body">
+          <div class="step-title">Invio con gli strumenti <span>tu &rarr; modello</span></div>
+          <div class="step-desc">Invii la richiesta includendo l'array degli strumenti disponibili e il messaggio dell'utente. Il modello ora <strong>sa</strong> quali operazioni potrebbe invocare.</div>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-n">2</div>
+        <div class="step-body">
+          <div class="step-title">Il modello chiede uno strumento <span>stop_reason: tool_use</span></div>
+          <div class="step-desc">Se decide che uno strumento serve, il modello <strong>non produce una risposta finale</strong>: restituisce uno o pi&ugrave; blocchi <em>tool_use</em>, ciascuno con il nome dello strumento e gli input scelti. La risposta si ferma con stop_reason "tool_use".</div>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-n alt">3</div>
+        <div class="step-body">
+          <div class="step-title">Tu esegui <span>il tuo codice</span></div>
+          <div class="step-desc">Il tuo codice riceve la richiesta, <strong>esegue l'operazione</strong> (chiama l'API meteo, interroga il DB...) e ne raccoglie il risultato. &Egrave; qui, e solo qui, che qualcosa accade davvero nel mondo.</div>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-n alt">4</div>
+        <div class="step-body">
+          <div class="step-title">Riferisci il risultato <span>tu &rarr; modello</span></div>
+          <div class="step-desc">Reinvii tutta la conversazione (messaggi originali + risposta dell'assistente) pi&ugrave; un nuovo messaggio con i blocchi <em>tool_result</em> che contengono l'esito. Il modello riprende da dove aveva lasciato.</div>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-n">5</div>
+        <div class="step-body">
+          <div class="step-title">Il modello prosegue &mdash; o conclude <span>ripeti / esci</span></div>
+          <div class="step-desc">Col risultato in mano, il modello pu&ograve; produrre la risposta finale (stop_reason "end_turn") oppure <strong>chiedere un altro strumento</strong> (di nuovo "tool_use"), e si torna al passo 3. Il ciclo continua finch&eacute; lo stop_reason non &egrave; pi&ugrave; "tool_use".</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="diagram-wrap">
+      <svg viewBox="0 0 700 300" width="700" height="300" xmlns="http://www.w3.org/2000/svg" font-family="'Sora', sans-serif">
+        <text x="350" y="28" text-anchor="middle" fill="rgba(255,255,255,0.85)" font-size="13" font-weight="500">Il ciclo: while (stop_reason == "tool_use")</text>
+
+        <!-- model box -->
+        <rect x="80" y="70" width="180" height="60" rx="4" fill="#4a8c3f" opacity="0.9"/>
+        <text x="170" y="98" text-anchor="middle" fill="#fff" font-size="13" font-weight="500">MODELLO</text>
+        <text x="170" y="116" text-anchor="middle" fill="rgba(255,255,255,0.75)" font-size="10">decide e chiede</text>
+
+        <!-- code box -->
+        <rect x="440" y="70" width="180" height="60" rx="4" fill="#57614f" opacity="0.9"/>
+        <text x="530" y="98" text-anchor="middle" fill="#fff" font-size="13" font-weight="500">IL TUO CODICE</text>
+        <text x="530" y="116" text-anchor="middle" fill="rgba(255,255,255,0.75)" font-size="10">esegue</text>
+
+        <!-- arrows -->
+        <path d="M 260 90 L 435 90" stroke="#8fd182" stroke-width="1.5" fill="none" marker-end="url(#ah)"/>
+        <text x="347" y="82" text-anchor="middle" fill="#8fd182" font-size="9" font-family="'IBM Plex Mono', monospace">tool_use &rarr;</text>
+
+        <path d="M 435 112 L 260 112" stroke="#e0c878" stroke-width="1.5" fill="none" marker-end="url(#ah2)"/>
+        <text x="347" y="128" text-anchor="middle" fill="#e0c878" font-size="9" font-family="'IBM Plex Mono', monospace">&larr; tool_result</text>
+
+        <defs>
+          <marker id="ah" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto"><path d="M0,0 L6,3 L0,6 Z" fill="#8fd182"/></marker>
+          <marker id="ah2" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto"><path d="M0,0 L6,3 L0,6 Z" fill="#e0c878"/></marker>
+        </defs>
+
+        <!-- loop indicator -->
+        <path d="M 170 130 Q 170 180 250 180 L 450 180 Q 530 180 530 130" stroke="rgba(255,255,255,0.25)" stroke-width="1" fill="none" stroke-dasharray="4 4"/>
+        <text x="350" y="198" text-anchor="middle" fill="rgba(255,255,255,0.5)" font-size="10">il giro si ripete finch&eacute; serve</text>
+
+        <!-- exit -->
+        <path d="M 170 130 L 170 240" stroke="rgba(255,255,255,0.3)" stroke-width="1.5" fill="none" marker-end="url(#ah3)"/>
+        <text x="185" y="250" fill="rgba(255,255,255,0.6)" font-size="10" font-family="'IBM Plex Mono', monospace">stop_reason: "end_turn" &rarr; risposta finale all'utente</text>
+        <defs><marker id="ah3" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto"><path d="M0,0 L6,3 L0,6 Z" fill="rgba(255,255,255,0.5)"/></marker></defs>
+      </svg>
+      <div class="diagram-cap">Il modello propone, il tuo codice dispone, il risultato torna indietro. Ripetere fino a conclusione.</div>
+    </div>
+
+    <div class="insight">
+      <div class="insight-label">Perch&eacute; questo &egrave; il confine chatbot/agente</div>
+      <p>Una singola chiamata all'API &egrave; un chatbot. <strong>Questo ciclo</strong> &mdash; modello che chiede, codice che esegue, risultato che rientra, ripetere &mdash; &egrave; ci&ograve; che chiamiamo agente. Tutta la complessit&agrave; dell'orchestrazione (Report 08) nasce dal gestire bene questo ciclo: cosa fare se uno strumento fallisce, come evitare loop infiniti, quando fermarsi. Il ciclo &egrave; semplice da descrivere e difficile da rendere robusto: &egrave; qui che si gioca la qualit&agrave; di un agente.</p>
+    </div>
+  </div>
+</div>
+
+
+<!-- S3 -->
+<div class="sect" id="s3">
+  <div class="sect-head">
+    <div class="sect-num">Sezione 03 · Dove gira il codice</div>
+    <h2>Strumenti <em>client</em> e strumenti <em>server</em></h2>
+    <p>Anthropic distingue gli strumenti in base a un solo asse: dove viene eseguito il codice. La distinzione cambia chi ha la responsabilit&agrave; dell'esecuzione, e quindi cosa devi costruire.</p>
+  </div>
+  <div class="wrap">
+    <div class="types">
+      <div class="type-col">
+        <div class="type-name">Strumenti client</div>
+        <div class="type-where">eseguiti sui tuoi sistemi</div>
+        <div class="type-desc">Le funzioni che <strong>definisci ed esegui tu</strong>: la tua API meteo, la query al tuo database, l'invio di un'email dal tuo sistema. Includono anche strumenti definiti da Anthropic (come il controllo del computer o l'editor di testo) che per&ograve; <em>richiedono la tua implementazione</em>. Per questi, sei tu a guidare il ciclo del passo precedente: il modello chiede, tu esegui, tu riferisci.</div>
+      </div>
+      <div class="type-col">
+        <div class="type-name">Strumenti server</div>
+        <div class="type-where">eseguiti sull'infrastruttura Anthropic</div>
+        <div class="type-desc">Strumenti come la <strong>ricerca web</strong>, l'<strong>esecuzione di codice</strong> o il <strong>recupero di pagine</strong> che girano sui server di Anthropic. Li dichiari nella richiesta ma <em>non devi implementarne l'esecuzione</em>: ricevi direttamente i risultati. Il ciclo di andata e ritorno avviene, ma &egrave; gestito per te dall'infrastruttura.</div>
+      </div>
+    </div>
+
+    <div class="prose">
+      <p>Gli strumenti definiti da Anthropic usano <strong>tipi versionati</strong> (per esempio <em>web_search_20260209</em>, <em>text_editor_20250124</em>) per garantire la compatibilit&agrave; tra le versioni dei modelli: il numero &egrave; una data, e ti permette di sapere esattamente quale comportamento stai usando.</p>
+
+      <p>Per i tuoi agenti la distinzione &egrave; pratica: gli strumenti server riducono il codice che devi scrivere (Anthropic gestisce l'esecuzione di operazioni comuni come la ricerca web), mentre gli strumenti client ti danno il controllo totale sulle operazioni specifiche del tuo dominio. La maggior parte degli agenti reali usa un mix: strumenti server per le capacit&agrave; generali, strumenti client per la logica di business proprietaria.</p>
+
+      <div class="insight g">
+        <div class="insight-label">Un dettaglio che torna dal Report 03</div>
+        <p>Quando nel Report 03 dicevamo che la "ricerca chat passate" di Claude &egrave; tecnicamente RAG e <strong>compare come una chiamata a uno strumento</strong>, stavamo gi&agrave; parlando di tool use. La ricerca web del chatbot, l'esecuzione di codice, gli artefatti: dal punto di vista architetturale sono tutti strumenti che il modello pu&ograve; decidere di invocare. Il tool use &egrave; il meccanismo trasversale che alimenta gran parte di ci&ograve; che il chatbot "sa fare".</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+<!-- S4 -->
+<div class="sect" id="s4">
+  <div class="sect-head">
+    <div class="sect-num">Sezione 04 · La parte che conta di pi&ugrave;</div>
+    <h2>La <em>descrizione</em> &egrave; tutto</h2>
+    <p>Se c'&egrave; una lezione che chi sviluppa agenti impara a proprie spese, &egrave; questa: la qualit&agrave; del tool use dipende pi&ugrave; dalle descrizioni degli strumenti che da qualsiasi altra cosa.</p>
+  </div>
+  <div class="wrap">
+    <div class="prose">
+      <p>Il modello decide <strong>se</strong> e <strong>come</strong> usare uno strumento basandosi sulla sua <em>description</em> e sulla descrizione dei suoi parametri. Non vede il tuo codice, non sa cosa fa la funzione davvero: conosce solo ci&ograve; che le parole della descrizione gli dicono. La descrizione &egrave; l'unica finestra del modello sullo strumento &mdash; ed &egrave; per questo che &egrave; la leva pi&ugrave; potente sulla qualit&agrave; del tool use.</p>
+
+      <p>Una descrizione vaga produce errori prevedibili: il modello chiama lo strumento quando non serve, lo ignora quando servirebbe, o passa parametri sbagliati. Una descrizione precisa &mdash; che dice <em>cosa fa</em>, <em>quando usarlo</em> e <em>quando non usarlo</em>, e che documenta ogni parametro &mdash; &egrave; il singolo intervento che pi&ugrave; migliora l'affidabilit&agrave; di un agente. In un certo senso, <strong>scrivere buoni strumenti &egrave; soprattutto scrivere buone descrizioni</strong>: la stessa disciplina del prompt engineering del Report 02, applicata qui.</p>
+    </div>
+
+    <div class="insight w">
+      <div class="insight-label">Il rischio nuovo che gli strumenti introducono</div>
+      <p>Dare al modello la capacit&agrave; di agire introduce un rischio che il testo da solo non aveva: <strong>le azioni hanno conseguenze</strong>. Uno strumento che invia email, modifica dati o spende denaro pu&ograve; causare danni reali se invocato male. Per questo gli strumenti che agiscono in modo irreversibile vanno trattati con cautela: validazione rigorosa degli input prima dell'esecuzione, conferme umane per le operazioni critiche, e permessi minimi (uno strumento dovrebbe poter fare solo ci&ograve; che gli serve). Questo prepara il terreno per i guardrail del Report 07.</p>
+    </div>
+
+    <div class="prose">
+      <p>C'&egrave; infine un tema di gestione del contesto specifico degli strumenti. Un agente che fa molte chiamate accumula nel contesto tutti i <em>tool_result</em>, che possono diventare voluminosi (pensa al risultato di una ricerca web). I modelli recenti offrono meccanismi per <strong>ripulire automaticamente i vecchi risultati degli strumenti</strong> man mano che ci si avvicina ai limiti di token &mdash; un ponte diretto con la gestione del contesto del Report 03: anche il tool use, come tutto il resto, vive dentro il budget della finestra.</p>
+    </div>
+  </div>
+</div>
+
+
+<!-- S5 -->
+<div class="sect" id="s5">
+  <div class="sect-head">
+    <div class="sect-num">Sezione 05 · Le scelte</div>
+    <h2>I <em>trade-off</em> degli strumenti</h2>
+    <p>Decisioni con pro e contro, da soppesare in base al tuo caso d'uso. Con gli strumenti, "di pi&ugrave;" &egrave; spesso "peggio".</p>
+  </div>
+  <div class="wrap">
+    <div class="bp" style="border-color:var(--ink3);">
+      <div class="bp-head" style="background:var(--ink3);">Trade-off &middot; da soppesare nel tuo contesto</div>
+      <div class="bp-body">
+        <div class="bp-single"><strong>Molti strumenti vs pochi.</strong> Pi&ugrave; strumenti danno all'agente pi&ugrave; capacit&agrave;, ma confondono la scelta del modello: con decine di strumenti dalle descrizioni simili, sbaglia pi&ugrave; spesso quale invocare. Pochi strumenti ben distinti battono molti strumenti sovrapposti. Le descrizioni occupano anche contesto, sempre.</div>
+        <div class="bp-single"><strong>Strumenti client vs server.</strong> I server riducono il codice da scrivere ma ti legano alle operazioni che Anthropic offre; i client ti danno controllo totale ma sei tu a gestire esecuzione, errori e sicurezza. La scelta dipende da quanto l'operazione &egrave; standard o specifica del tuo dominio.</div>
+        <div class="bp-single"><strong>Autonomia vs controllo.</strong> Un ciclo che lascia il modello libero di concatenare molti strumenti &egrave; potente ma imprevedibile e potenzialmente costoso; uno che richiede conferme o limita i passi &egrave; pi&ugrave; sicuro ma meno fluido. Pi&ugrave; le azioni sono irreversibili, pi&ugrave; conviene spostarsi verso il controllo.</div>
+        <div class="bp-single"><strong>Granularit&agrave; degli strumenti.</strong> Strumenti molto specifici ("ottieni_meteo_oggi") sono facili da usare bene ma proliferano; strumenti generici ("esegui_query") sono flessibili ma pi&ugrave; facili da usare male e pi&ugrave; pericolosi. L'equilibrio giusto dipende da quanto ti fidi del giudizio del modello nel tuo dominio.</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+<!-- S6 -->
+<div class="sect" id="s6">
+  <div class="sect-head">
+    <div class="sect-num">Sezione 06 · Cosa porto a casa</div>
+    <h2>Best practice degli <em>strumenti</em></h2>
+    <p>Indicazioni azionabili per dare strumenti ai tuoi agenti, nel formato fai-cos&igrave; / non-fare-cos&igrave; della serie.</p>
+  </div>
+  <div class="wrap">
+
+    <div class="bp">
+      <div class="bp-head">Best practice &middot; tool use</div>
+      <div class="bp-body">
+        <div class="bp-row">
+          <div class="bp-do">
+            <div class="bp-tag">Fai cos&igrave;</div>
+            <div class="bp-text">Investi nelle <strong>descrizioni</strong>: di' cosa fa lo strumento, <em>quando</em> usarlo e <em>quando no</em>, e documenta ogni parametro. &Egrave; l'unica finestra del modello sullo strumento.</div>
+          </div>
+          <div class="bp-dont">
+            <div class="bp-tag">Non fare cos&igrave;</div>
+            <div class="bp-text">Non liquidare la descrizione con una riga vaga ("cerca cose"): il modello sbaglier&agrave; quando e come chiamare lo strumento, e non capirai perch&eacute;.</div>
+          </div>
+        </div>
+        <div class="bp-row">
+          <div class="bp-do">
+            <div class="bp-tag">Fai cos&igrave;</div>
+            <div class="bp-text">Gestisci gli <strong>errori in modo informativo</strong>: quando uno strumento fallisce, restituisci un tool_result chiaro (con is_error) che spieghi cosa &egrave; andato storto, cos&igrave; il modello pu&ograve; correggersi.</div>
+          </div>
+          <div class="bp-dont">
+            <div class="bp-tag">Non fare cos&igrave;</div>
+            <div class="bp-text">Non restituire un generico "Errore": il modello non saprebbe se ritentare, cambiare parametri o avvisare l'utente. Un errore muto &egrave; un'occasione persa.</div>
+          </div>
+        </div>
+        <div class="bp-row">
+          <div class="bp-do">
+            <div class="bp-tag">Fai cos&igrave;</div>
+            <div class="bp-text">Dai all'agente <strong>pochi strumenti ben distinti</strong>, ciascuno con uno scopo chiaro e non sovrapposto agli altri.</div>
+          </div>
+          <div class="bp-dont">
+            <div class="bp-tag">Non fare cos&igrave;</div>
+            <div class="bp-text">Non aggiungere strumenti "perch&eacute; potrebbero servire": ogni strumento in pi&ugrave; confonde la scelta del modello e consuma contesto a ogni chiamata.</div>
+          </div>
+        </div>
+        <div class="bp-row">
+          <div class="bp-do">
+            <div class="bp-tag">Fai cos&igrave;</div>
+            <div class="bp-text">Progetta il <strong>ciclo</strong> con cura: un limite massimo di iterazioni, una via d'uscita per i fallimenti, e un controllo sui loop. Il ciclo &egrave; il cuore dell'agente.</div>
+          </div>
+          <div class="bp-dont">
+            <div class="bp-tag">Non fare cos&igrave;</div>
+            <div class="bp-text">Non lasciare il ciclo senza freni: un agente che continua a chiamare strumenti senza un tetto pu&ograve; entrare in loop, bruciare token e non concludere mai.</div>
+          </div>
+        </div>
+        <div class="bp-row">
+          <div class="bp-do">
+            <div class="bp-tag">Fai cos&igrave;</div>
+            <div class="bp-text"><strong>Valida gli input</strong> del modello prima di eseguire, e richiedi conferma umana per le azioni irreversibili (inviare denaro, cancellare dati).</div>
+          </div>
+          <div class="bp-dont">
+            <div class="bp-tag">Non fare cos&igrave;</div>
+            <div class="bp-text">Non eseguire ciecamente ci&ograve; che il modello chiede su operazioni critiche: le azioni hanno conseguenze reali, e un parametro sbagliato pu&ograve; fare danni veri.</div>
+          </div>
+        </div>
+        <div class="bp-row">
+          <div class="bp-do">
+            <div class="bp-tag">Fai cos&igrave;</div>
+            <div class="bp-text">Usa lo <strong>strict mode</strong> dove disponibile per garantire che le chiamate rispettino lo schema, e gli strumenti <strong>server</strong> per le operazioni standard, risparmiando codice.</div>
+          </div>
+          <div class="bp-dont">
+            <div class="bp-tag">Non fare cos&igrave;</div>
+            <div class="bp-text">Non reimplementare a mano ci&ograve; che esiste gi&agrave; come strumento server (ricerca web, esecuzione codice) n&eacute; difenderti da malformazioni che lo strict mode previene a monte.</div>
+          </div>
+        </div>
+        <div class="bp-row">
+          <div class="bp-do">
+            <div class="bp-tag">Fai cos&igrave;</div>
+            <div class="bp-text"><strong>Delega al codice</strong> ci&ograve; che &egrave; deterministico: lo strumento esegue, il modello decide. Calcoli e validazioni stanno nello strumento, non nel ragionamento del modello.</div>
+          </div>
+          <div class="bp-dont">
+            <div class="bp-tag">Non fare cos&igrave;</div>
+            <div class="bp-text">Non chiedere al modello di fare a mente ci&ograve; che uno strumento farebbe con precisione: &egrave; lo stesso principio del Report 02, qui applicato all'esecuzione.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="h3">Il ciclo in sintesi</div>
+    <table class="sum-table">
+      <thead>
+        <tr><th>Passo</th><th>Chi agisce</th><th>Cosa succede</th><th>Segnale</th></tr>
+      </thead>
+      <tbody>
+        <tr><td class="p-cell">1 · Invio</td><td>Tu</td><td>Mandi messaggio + array strumenti</td><td>&mdash;</td></tr>
+        <tr><td class="p-cell">2 · Richiesta</td><td>Modello</td><td>Emette blocchi tool_use</td><td><strong>stop_reason: tool_use</strong></td></tr>
+        <tr><td class="p-cell">3 · Esecuzione</td><td>Tuo codice</td><td>Esegue l'operazione reale</td><td>&mdash;</td></tr>
+        <tr><td class="p-cell">4 · Ritorno</td><td>Tu</td><td>Reinvii tutto + tool_result</td><td>&mdash;</td></tr>
+        <tr><td class="p-cell">5 · Prosegui/esci</td><td>Modello</td><td>Altro strumento o risposta finale</td><td><strong>tool_use o end_turn</strong></td></tr>
+      </tbody>
+    </table>
+
+    <div class="srcnote">
+      <b>Affidabilit&agrave; di queste indicazioni</b>
+      Il modello concettuale del "contratto", il fatto che il modello non esegua mai nulla da solo, il ciclo agentico governato da stop_reason, i blocchi tool_use/tool_result, la struttura name/description/input_schema, la distinzione client/server, i tipi versionati, lo strict mode, la gestione degli errori con is_error e la pulizia automatica dei risultati sono <strong>documentati pubblicamente</strong> da Anthropic. Le best practice su numero, granularit&agrave; e sicurezza degli strumenti combinano raccomandazioni documentate e pattern <strong>generali</strong> dello sviluppo di agenti. I nomi versionati degli strumenti (es. date nei suffissi) cambiano nel tempo: verifica sempre la documentazione corrente.
+    </div>
+
+    <div class="key-point">
+      <div class="kp-label">Verso il Report 05</div>
+      <div class="kp-text">Con gli strumenti l'agente pu&ograve; agire. Uno degli usi pi&ugrave; importanti di questa capacit&agrave; &egrave; procurarsi informazioni che il modello non ha: &egrave; il RAG.</div>
+      <div class="kp-sub">Il prossimo strato &mdash; RAG e accesso alla conoscenza &mdash; &egrave; in larga parte un'applicazione specializzata del tool use: usare uno strumento di ricerca o recupero per portare nel contesto informazioni fresche o private, e superare cos&igrave; il limite del knowledge cutoff.</div>
+    </div>
+
+  </div>
+</div>
+
+
+<div class="footer">
+  <span>Serie Agenti AI &middot; Parte II &mdash; Report 04 &middot; Gli Strumenti</span>
+  <span>Maggio 2026</span>
+</div>
+
+<script>
+function show(n) {
+  document.querySelectorAll('.sect').forEach(s => s.classList.remove('active'));
+  document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('s'+n).classList.add('active');
+  document.querySelectorAll('.nav-btn')[n].classList.add('active');
+  window.scrollTo({top:0, behavior:'smooth'});
+}
+</script>
+
+</body>
+</html>

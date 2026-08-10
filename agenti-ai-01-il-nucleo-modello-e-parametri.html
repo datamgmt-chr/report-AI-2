@@ -1,0 +1,919 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Il Nucleo — Il Modello e i suoi Parametri</title>
+<link href="https://fonts.googleapis.com/css2?family=Spectral:ital,wght@0,300;0,400;0,500;0,600;1,400&family=Sora:wght@200;300;400;500;600;700;800&family=IBM+Plex+Mono:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg:     #f4f6f3;
+  --bg2:    #eaeee9;
+  --bg3:    #dde4dc;
+  --ink:    #14180f;
+  --ink2:   #232a1d;
+  --ink3:   #5a6450;
+  --ink4:   #939c8a;
+  --border: #d2d9cd;
+  --border2:#bfc7b8;
+
+  --core:   #2e7d9c;   /* lo strato di questo report: parametri — teal */
+  --core2:  #1f5e76;
+  --warm:   #b3402a;
+  --good:   #3d7a45;
+  --bad:    #b3402a;
+  --gold:   #b8860b;
+  --violet: #7b5ea7;
+}
+
+* { margin:0; padding:0; box-sizing:border-box; }
+html { scroll-behavior:smooth; }
+
+body {
+  background: var(--bg);
+  color: var(--ink);
+  font-family: 'Sora', sans-serif;
+  font-weight: 300;
+  font-size: 14px;
+  line-height: 1.78;
+}
+
+/* ── HEADER ── */
+.masthead {
+  background: var(--ink);
+  color: rgba(255,255,255,0.9);
+  padding: 64px 56px 54px;
+  position: relative;
+  overflow: hidden;
+}
+.masthead::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(circle at 80% 35%, rgba(46,125,156,0.28) 0, transparent 45%),
+    repeating-linear-gradient(0deg, rgba(255,255,255,0.012) 0, rgba(255,255,255,0.012) 1px, transparent 1px, transparent 58px);
+  pointer-events: none;
+}
+.mh-eye {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 10px;
+  letter-spacing: 3px;
+  text-transform: uppercase;
+  color: rgba(255,255,255,0.28);
+  margin-bottom: 20px;
+  position: relative;
+}
+.masthead h1 {
+  font-family: 'Spectral', serif;
+  font-weight: 400;
+  font-size: clamp(33px, 5.2vw, 60px);
+  line-height: 1.06;
+  letter-spacing: -1px;
+  max-width: 720px;
+  position: relative;
+}
+.masthead h1 em { font-style: italic; color: #7ec7e0; }
+.mh-sub {
+  margin-top: 22px;
+  font-size: 15px;
+  font-weight: 300;
+  color: rgba(255,255,255,0.4);
+  max-width: 680px;
+  line-height: 1.72;
+  position: relative;
+}
+
+/* ── NAV ── */
+.nav {
+  background: var(--ink2);
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  display: flex;
+  overflow-x: auto;
+  border-bottom: 1px solid rgba(255,255,255,0.06);
+}
+.nav-btn {
+  flex: 1;
+  min-width: 116px;
+  padding: 13px 14px;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  font-family: 'Sora', sans-serif;
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+  color: rgba(255,255,255,0.3);
+  border-right: 1px solid rgba(255,255,255,0.06);
+  transition: all 0.2s;
+  white-space: nowrap;
+}
+.nav-btn:last-child { border-right: none; }
+.nav-btn:hover { color: rgba(255,255,255,0.62); }
+.nav-btn.active { color: #fff; background: rgba(255,255,255,0.05); }
+.nav-btn.active::after {
+  content: '';
+  display: block;
+  height: 2px;
+  background: var(--core);
+  margin-top: 6px;
+  border-radius: 1px;
+}
+
+/* ── SECTIONS ── */
+.sect { display: none; }
+.sect.active { display: block; animation: fadeIn 0.3s ease; }
+@keyframes fadeIn { from { opacity:0; transform:translateY(6px); } to { opacity:1; transform:translateY(0); } }
+
+.sect-head {
+  padding: 50px 56px 36px;
+  border-bottom: 1px solid var(--border);
+}
+.sect-num {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 10px;
+  letter-spacing: 3px;
+  text-transform: uppercase;
+  color: var(--ink4);
+  margin-bottom: 12px;
+}
+.sect-head h2 {
+  font-family: 'Spectral', serif;
+  font-weight: 400;
+  font-size: clamp(27px, 3.6vw, 43px);
+  line-height: 1.1;
+  letter-spacing: -0.5px;
+  max-width: 660px;
+  margin-bottom: 14px;
+}
+.sect-head h2 em { font-style: italic; }
+.sect-head p {
+  color: var(--ink3);
+  max-width: 700px;
+  font-size: 14.5px;
+}
+.wrap { padding: 36px 56px 60px; }
+
+/* prose */
+.prose { max-width: 760px; }
+.prose p { color: var(--ink3); margin-bottom: 18px; font-size: 14.5px; }
+.prose p strong { color: var(--ink2); font-weight: 500; }
+.prose p em { font-style: italic; color: var(--ink2); }
+.lead { font-size: 16px !important; color: var(--ink2) !important; }
+.prose ul { max-width: 760px; margin: 0 0 18px; padding-left: 0; list-style: none; }
+.prose ul li {
+  color: var(--ink3); font-size: 14px; line-height: 1.7;
+  padding: 4px 0 4px 22px; position: relative;
+}
+.prose ul li::before {
+  content: '—'; position: absolute; left: 0; color: var(--core); font-weight: 500;
+}
+.prose ul li strong { color: var(--ink2); font-weight: 500; }
+
+.h3 {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 10px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: var(--ink4);
+  margin: 40px 0 16px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid var(--border);
+  max-width: 760px;
+}
+.h3:first-child { margin-top: 0; }
+
+/* diagram */
+.diagram-wrap {
+  margin: 10px 0;
+  padding: 36px 24px;
+  background: var(--ink);
+  border: 1px solid var(--border2);
+  overflow-x: auto;
+}
+.diagram-wrap svg { display: block; margin: 0 auto; }
+.diagram-cap {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 11px;
+  color: var(--ink4);
+  text-align: center;
+  margin-top: 14px;
+  letter-spacing: 0.5px;
+}
+
+/* parameter card */
+.pcard {
+  border: 1px solid var(--border2);
+  background: var(--bg);
+  margin: 22px 0;
+  max-width: 820px;
+}
+.pcard-head {
+  display: grid;
+  grid-template-columns: 5px 1fr auto;
+  align-items: center;
+  border-bottom: 1px solid var(--border);
+}
+.pcard-accent { height: 100%; }
+.pcard-titles { padding: 14px 20px; }
+.pcard-name {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 16px;
+  font-weight: 500;
+  color: var(--ink);
+}
+.pcard-sub { font-size: 12px; color: var(--ink4); margin-top: 2px; }
+.pcard-range {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 10px;
+  letter-spacing: 0.5px;
+  color: var(--ink3);
+  padding: 4px 12px;
+  border: 1px solid var(--border2);
+  margin-right: 18px;
+  white-space: nowrap;
+}
+.pcard-body { padding: 18px 20px; }
+.pcard-body p { font-size: 13.5px; color: var(--ink3); line-height: 1.72; margin-bottom: 12px; }
+.pcard-body p:last-child { margin-bottom: 0; }
+.pcard-body strong { color: var(--ink2); font-weight: 500; }
+.pcard-body em { font-style: italic; color: var(--ink2); }
+
+/* mini scale visual */
+.scale {
+  display: flex;
+  align-items: stretch;
+  margin: 14px 0;
+  border: 1px solid var(--border);
+  font-size: 11.5px;
+}
+.scale-end {
+  padding: 10px 14px;
+  flex: 1;
+  background: var(--bg2);
+}
+.scale-end .se-val {
+  font-family: 'IBM Plex Mono', monospace;
+  font-weight: 500;
+  color: var(--core2);
+  display: block;
+  margin-bottom: 3px;
+}
+.scale-end .se-txt { color: var(--ink3); line-height: 1.5; }
+.scale-end.right { text-align: right; border-left: 1px solid var(--border); }
+
+/* vs comparison reused from R00 */
+.vs {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1px;
+  background: var(--border2);
+  border: 1px solid var(--border2);
+  margin: 18px 0;
+  max-width: 880px;
+}
+.vs-col { background: var(--bg); padding: 22px 24px; }
+.vs-col.api { background: var(--bg2); }
+.vs-tag {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 9px;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  padding: 4px 10px;
+  display: inline-block;
+  margin-bottom: 14px;
+  border: 1px solid;
+}
+.vs-tag.api { color: var(--ink3); border-color: var(--border2); }
+.vs-tag.bot { color: var(--core); border-color: var(--core); }
+.vs-out { font-size: 13px; color: var(--ink3); line-height: 1.65; }
+.vs-out strong { color: var(--ink2); font-weight: 500; }
+.vs-code {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 11.5px;
+  color: var(--ink2);
+  background: var(--bg3);
+  padding: 10px 12px;
+  margin-bottom: 12px;
+  line-height: 1.6;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+/* insight */
+.insight {
+  margin: 24px 0;
+  padding: 18px 22px;
+  border-left: 4px solid var(--gold);
+  background: var(--bg2);
+  max-width: 820px;
+}
+.insight-label {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 9px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  margin-bottom: 6px;
+  color: var(--gold);
+}
+.insight p { font-size: 13.5px; line-height: 1.7; color: var(--ink2); margin: 0; }
+.insight.v { border-left-color: var(--violet); }
+.insight.v .insight-label { color: var(--violet); }
+
+/* key point */
+.key-point {
+  margin: 36px 0 8px;
+  padding: 26px 30px;
+  border-left: 4px solid var(--core);
+  background: var(--bg2);
+  max-width: 820px;
+}
+.kp-label {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 9px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: var(--core);
+  margin-bottom: 8px;
+}
+.kp-text {
+  font-family: 'Spectral', serif;
+  font-size: 20px;
+  line-height: 1.42;
+  color: var(--ink2);
+  font-style: italic;
+}
+.kp-sub { margin-top: 12px; font-size: 13px; color: var(--ink3); line-height: 1.65; }
+
+/* table */
+.sum-table {
+  width: 100%;
+  max-width: 880px;
+  border-collapse: collapse;
+  font-size: 12.5px;
+  margin: 20px 0;
+  border: 1px solid var(--border2);
+}
+.sum-table th, .sum-table td {
+  padding: 11px 14px;
+  border: 1px solid var(--border);
+  text-align: left;
+  vertical-align: top;
+}
+.sum-table thead th {
+  background: var(--ink);
+  color: rgba(255,255,255,0.82);
+  font-weight: 600;
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+}
+.sum-table tbody tr:nth-child(even) { background: var(--bg2); }
+.sum-table td { color: var(--ink3); }
+.sum-table .p-cell { font-family: 'IBM Plex Mono', monospace; color: var(--core2); font-weight: 500; white-space: nowrap; }
+.sum-table td strong { color: var(--ink2); font-weight: 500; }
+
+/* best practice block (formato ricorrente) */
+.bp {
+  margin: 28px 0 8px;
+  border: 1px solid var(--good);
+  background: var(--bg);
+  max-width: 880px;
+}
+.bp-head {
+  background: var(--good);
+  color: #fff;
+  padding: 12px 22px;
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 11px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.bp-head::before { content: '◆'; font-size: 11px; }
+.bp-body { padding: 0; }
+.bp-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1px;
+  background: var(--border);
+  border-bottom: 1px solid var(--border);
+}
+.bp-row:last-child { border-bottom: none; }
+.bp-do, .bp-dont { padding: 14px 20px; background: var(--bg); }
+.bp-tag {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 9px;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  margin-bottom: 7px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.bp-do .bp-tag { color: var(--good); }
+.bp-dont .bp-tag { color: var(--bad); }
+.bp-do .bp-tag::before { content: '✓'; font-weight: 700; }
+.bp-dont .bp-tag::before { content: '✕'; font-weight: 700; }
+.bp-text { font-size: 12.5px; color: var(--ink3); line-height: 1.6; }
+.bp-text strong { color: var(--ink2); font-weight: 500; }
+.bp-single {
+  padding: 14px 20px;
+  border-bottom: 1px solid var(--border);
+  font-size: 13px;
+  color: var(--ink3);
+  line-height: 1.65;
+}
+.bp-single:last-child { border-bottom: none; }
+.bp-single strong { color: var(--ink2); font-weight: 600; }
+
+/* source note */
+.srcnote {
+  margin: 22px 0;
+  padding: 14px 20px;
+  background: var(--bg2);
+  border: 1px dashed var(--border2);
+  max-width: 820px;
+  font-size: 12px;
+  color: var(--ink3);
+  line-height: 1.6;
+}
+.srcnote b {
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 9px;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  color: var(--ink4);
+  display: block;
+  margin-bottom: 4px;
+}
+
+/* footer */
+.footer {
+  background: var(--ink);
+  color: rgba(255,255,255,0.22);
+  padding: 30px 56px;
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 10px;
+  letter-spacing: 1px;
+  display: flex;
+  justify-content: space-between;
+}
+
+@media (max-width: 860px) {
+  .masthead, .sect-head, .wrap, .footer { padding-left: 20px; padding-right: 20px; }
+  .vs, .bp-row { grid-template-columns: 1fr; }
+  .footer { flex-direction: column; gap: 6px; }
+}
+</style>
+</head>
+<body>
+
+<!-- HEADER -->
+<div class="masthead">
+  <div class="mh-eye">Serie Agenti AI · Parte II — Report 01</div>
+  <h1>Il nucleo:<br>il modello e i suoi <em>parametri</em></h1>
+  <p class="mh-sub">Lo strato più interno della cipolla. Cosa fa un LLM quando è completamente solo, come "sceglie" ogni parola, e quali manopole — temperature, top-p, lunghezza, contesto — un chatbot regola al posto tuo. È il punto da cui ogni altro strato parte.</p>
+</div>
+
+<!-- NAV -->
+<nav class="nav">
+  <button class="nav-btn active" onclick="show(0)">Il modello nudo</button>
+  <button class="nav-btn" onclick="show(1)">Come sceglie</button>
+  <button class="nav-btn" onclick="show(2)">Le manopole</button>
+  <button class="nav-btn" onclick="show(3)">Lunghezza & contesto</button>
+  <button class="nav-btn" onclick="show(4)">La svolta 2026</button>
+  <button class="nav-btn" onclick="show(5)">Trade-off</button>
+  <button class="nav-btn" onclick="show(6)">Best practice</button>
+</nav>
+
+
+<!-- ═══════════════════════════ S0 — IL MODELLO NUDO ═══════════════════════════ -->
+<div class="sect active" id="s0">
+  <div class="sect-head">
+    <div class="sect-num">Sezione 00 · Che cos'è davvero il nucleo</div>
+    <h2>Cosa fa un LLM <em>quando è solo</em></h2>
+    <p>Prima di parlare di parametri bisogna capire con precisione cosa sia il modello spogliato di ogni strato. È più semplice — e più limitato — di quanto l'esperienza del chatbot lasci immaginare.</p>
+  </div>
+  <div class="wrap">
+    <div class="prose">
+      <p class="lead">Un grande modello linguistico, alla base, fa una cosa sola: dato un testo, <strong>predice quale pezzo di testo viene dopo</strong>. Nient'altro. Non "ragiona" nel senso umano, non consulta un database, non sa che giorno è. Riceve una sequenza di token e produce, un token alla volta, la continuazione che ritiene più probabile sulla base di ciò che ha visto in addestramento.</p>
+
+      <p>Un <strong>token</strong> è l'unità minima con cui il modello lavora: non è esattamente una parola, più spesso è un frammento. Parole comuni occupano un solo token, parole rare o lunghe si spezzano in più token. Come ordine di grandezza, per l'inglese vale la regola che <em>circa 750 parole equivalgono a 1.000 token</em>; per l'italiano il rapporto è un po' meno favorevole perché molte forme flesse vengono spezzate. Tutto, nel mondo di un LLM, è conteggiato in token: ciò che entra, ciò che esce, ciò che costa.</p>
+
+      <p>Il modello, da solo, ha tre caratteristiche che è fondamentale interiorizzare perché spiegano l'esistenza di <em>tutti</em> gli strati successivi della serie:</p>
+
+      <ul>
+        <li><strong>È congelato nel tempo.</strong> Le sue conoscenze si fermano alla data di "knowledge cutoff", il momento in cui è terminato l'addestramento. Non sa nulla di ciò che è accaduto dopo, e non ha alcun senso del "presente". È questo limite che giustifica gli strati di system prompt (che gli iniettano la data) e di RAG (che gli iniettano informazioni fresche).</li>
+        <li><strong>È senza memoria.</strong> Ogni chiamata è indipendente. Il modello non ricorda nulla della richiesta precedente: l'unica cosa che "sa" è ciò che gli viene passato in quel preciso momento dentro la finestra di contesto. È questo limite che giustifica lo strato di memoria.</li>
+        <li><strong>È passivo.</strong> Non può agire sul mondo: non naviga, non esegue codice, non invia email. Produce solo testo. È questo limite che giustifica lo strato degli strumenti.</li>
+      </ul>
+
+      <div class="key-point">
+        <div class="kp-label">Il principio di questo report</div>
+        <div class="kp-text">Tutti gli strati che studieremo esistono per compensare un limite del nucleo. Il modello nudo predice testo: tutto il resto serve a renderlo informato, persistente e capace di agire.</div>
+        <div class="kp-sub">Capire bene il nucleo significa capire <em>perché</em> esistono gli altri strati. Chi salta questo passaggio tende ad aggiungere componenti a caso; chi lo padroneggia aggiunge solo lo strato che colma un limite reale per il proprio caso d'uso.</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+<!-- ═══════════════════════════ S1 — COME SCEGLIE ═══════════════════════════ -->
+<div class="sect" id="s1">
+  <div class="sect-head">
+    <div class="sect-num">Sezione 01 · Il meccanismo</div>
+    <h2>Come il modello <em>sceglie</em> ogni parola</h2>
+    <p>I parametri non si capiscono se non si capisce prima il meccanismo su cui agiscono. È sorprendentemente intuitivo: tutto ruota attorno a una distribuzione di probabilità sul prossimo token.</p>
+  </div>
+  <div class="wrap">
+    <div class="prose">
+      <p>A ogni passo, il modello non produce direttamente "la parola successiva". Produce una <strong>distribuzione di probabilità su tutti i token possibili</strong> — decine di migliaia di candidati, ciascuno con una probabilità. Per la frase "Il cielo è" potrebbe assegnare il 60% a "blu", il 12% a "limpido", il 5% a "grigio", e così via in una lunga coda di alternative sempre meno probabili.</p>
+      <p>La domanda è: <em>quale token pesco da questa distribuzione?</em> È esattamente qui che intervengono i parametri di sampling (campionamento). Non cambiano ciò che il modello "pensa" — la distribuzione è quella — ma cambiano <strong>il modo in cui peschiamo</strong> da essa. Questa distinzione è cruciale: i parametri sono impostazioni del momento dell'inferenza, regolabili a ogni singola chiamata, e del tutto separate dai pesi del modello, che sono fissi dopo l'addestramento.</p>
+    </div>
+
+    <div class="diagram-wrap">
+      <svg viewBox="0 0 700 340" width="700" height="340" xmlns="http://www.w3.org/2000/svg" font-family="'Sora', sans-serif">
+        <text x="350" y="30" text-anchor="middle" fill="rgba(255,255,255,0.85)" font-size="13" font-weight="500">"Il cielo è ___"  →  distribuzione sul prossimo token</text>
+
+        <!-- bars -->
+        <g font-size="11">
+          <!-- blu -->
+          <rect x="120" y="70" width="300" height="26" fill="#2e7d9c"/>
+          <text x="110" y="88" text-anchor="end" fill="rgba(255,255,255,0.75)" font-family="'IBM Plex Mono', monospace">blu</text>
+          <text x="430" y="88" fill="rgba(255,255,255,0.6)" font-family="'IBM Plex Mono', monospace">60%</text>
+          <!-- limpido -->
+          <rect x="120" y="106" width="60" height="26" fill="#4a8c3f"/>
+          <text x="110" y="124" text-anchor="end" fill="rgba(255,255,255,0.75)" font-family="'IBM Plex Mono', monospace">limpido</text>
+          <text x="190" y="124" fill="rgba(255,255,255,0.6)" font-family="'IBM Plex Mono', monospace">12%</text>
+          <!-- grigio -->
+          <rect x="120" y="142" width="25" height="26" fill="#b8860b"/>
+          <text x="110" y="160" text-anchor="end" fill="rgba(255,255,255,0.75)" font-family="'IBM Plex Mono', monospace">grigio</text>
+          <text x="155" y="160" fill="rgba(255,255,255,0.6)" font-family="'IBM Plex Mono', monospace">5%</text>
+          <!-- terso -->
+          <rect x="120" y="178" width="15" height="26" fill="#7b5ea7"/>
+          <text x="110" y="196" text-anchor="end" fill="rgba(255,255,255,0.75)" font-family="'IBM Plex Mono', monospace">terso</text>
+          <text x="145" y="196" fill="rgba(255,255,255,0.6)" font-family="'IBM Plex Mono', monospace">3%</text>
+          <!-- coda -->
+          <rect x="120" y="214" width="40" height="26" fill="rgba(255,255,255,0.18)"/>
+          <text x="110" y="232" text-anchor="end" fill="rgba(255,255,255,0.5)" font-family="'IBM Plex Mono', monospace">…coda lunga</text>
+          <text x="170" y="232" fill="rgba(255,255,255,0.4)" font-family="'IBM Plex Mono', monospace">20%</text>
+        </g>
+
+        <line x1="120" y1="262" x2="580" y2="262" stroke="rgba(255,255,255,0.15)" stroke-width="1"/>
+        <text x="120" y="290" fill="rgba(255,255,255,0.55)" font-size="11">I parametri non cambiano queste probabilità —</text>
+        <text x="120" y="308" fill="rgba(255,255,255,0.55)" font-size="11">cambiano <tspan fill="#7ec7e0">come</tspan> scegliamo un token a partire da esse.</text>
+      </svg>
+      <div class="diagram-cap">Il sampling agisce sul modo di pescare dalla distribuzione, non sulla distribuzione stessa.</div>
+    </div>
+
+    <div class="prose">
+      <p>Agli estremi ci sono due strategie. Scegliere <strong>sempre il token più probabile</strong> (qui "blu") è il sampling "greedy": massimamente prevedibile, ma ripetitivo e piatto. Pescare <strong>a caso rispettando le probabilità</strong> rende l'output vario e naturale, ma rischia di far emergere ogni tanto un token improbabile e fuori luogo. I parametri servono a posizionarsi consapevolmente tra questi due estremi.</p>
+    </div>
+  </div>
+</div>
+
+
+<!-- ═══════════════════════════ S2 — LE MANOPOLE ═══════════════════════════ -->
+<div class="sect" id="s2">
+  <div class="sect-head">
+    <div class="sect-num">Sezione 02 · I parametri classici</div>
+    <h2>Le <em>manopole</em>, una per una</h2>
+    <p>Tre parametri governano la casualità del campionamento, più uno governa la lunghezza. Il chatbot li imposta per te su valori bilanciati; via API li controlli tu. Vediamo cosa fa ciascuno e quando toccarlo.</p>
+  </div>
+  <div class="wrap">
+
+    <!-- TEMPERATURE -->
+    <div class="pcard">
+      <div class="pcard-head">
+        <div class="pcard-accent" style="background:var(--core)"></div>
+        <div class="pcard-titles">
+          <div class="pcard-name">temperature</div>
+          <div class="pcard-sub">quanto "rischia" il modello nella scelta</div>
+        </div>
+        <div class="pcard-range">0.0 – 1.0 · default 1.0</div>
+      </div>
+      <div class="pcard-body">
+        <p>È la manopola più usata. Tecnicamente <strong>rimodella la distribuzione</strong> prima del campionamento: una temperature bassa la rende più "appuntita" (il token più probabile diventa ancora più dominante), una temperature alta la rende più "piatta" (i token meno probabili acquistano una chance). Detto in modo intuitivo: la temperature decide se il modello gioca sul sicuro o si concede dei rischi.</p>
+        <div class="scale">
+          <div class="scale-end">
+            <span class="se-val">→ 0.0</span>
+            <span class="se-txt">Quasi deterministico, preciso, ripetitivo. Ideale per estrazione dati, classificazione, risposte fattuali, codice.</span>
+          </div>
+          <div class="scale-end right">
+            <span class="se-val">→ 1.0</span>
+            <span class="se-txt">Vario, creativo, sorprendente. Ideale per brainstorming, scrittura, generazione di alternative.</span>
+          </div>
+        </div>
+        <p>Sull'API di Claude la temperature va da 0.0 a 1.0 con default 1.0. Un'avvertenza che sorprende molti: <strong>temperature 0 non garantisce risposte identiche</strong>. Riduce moltissimo la varianza, ma per ragioni legate al calcolo in virgola mobile e all'esecuzione su hardware parallelo, un residuo di non-determinismo resta. "Temperature 0" significa "il più deterministico possibile", non "deterministico".</p>
+      </div>
+    </div>
+
+    <!-- TOP-P -->
+    <div class="pcard">
+      <div class="pcard-head">
+        <div class="pcard-accent" style="background:var(--core)"></div>
+        <div class="pcard-titles">
+          <div class="pcard-name">top_p</div>
+          <div class="pcard-sub">nucleus sampling — quanti candidati considerare</div>
+        </div>
+        <div class="pcard-range">0.0 – 1.0 · "avanzato"</div>
+      </div>
+      <div class="pcard-body">
+        <p>Detto anche <em>nucleus sampling</em>. Invece di rimodellare la distribuzione, la <strong>tronca</strong>: ordina i token dal più probabile al meno probabile, somma le probabilità finché non raggiunge la soglia <em>p</em>, e scarta tutto il resto. Con top_p = 0.9 il modello considera solo i token che insieme coprono il 90% della probabilità, ignorando la coda lunga. È adattivo: quando il modello è molto sicuro, restano pochi candidati; quando è incerto, ne restano molti.</p>
+        <p>La raccomandazione esplicita di Anthropic è netta: <strong>regola la temperature <em>oppure</em> il top_p, non entrambi insieme</strong>. Agendo su due meccanismi diversi che si influenzano a vicenda, usarli contemporaneamente produce interazioni difficili da prevedere. Nella pratica: tieni il top_p al default e lavora sulla temperature, che basta per la quasi totalità dei casi.</p>
+      </div>
+    </div>
+
+    <!-- TOP-K -->
+    <div class="pcard">
+      <div class="pcard-head">
+        <div class="pcard-accent" style="background:var(--core)"></div>
+        <div class="pcard-titles">
+          <div class="pcard-name">top_k</div>
+          <div class="pcard-sub">considera solo i K token più probabili</div>
+        </div>
+        <div class="pcard-range">intero · "uso avanzato"</div>
+      </div>
+      <div class="pcard-body">
+        <p>Simile al top_p, ma più rozzo: invece di una soglia di probabilità usa un <strong>numero fisso</strong>. Con top_k = 40 il modello considera solo i 40 token più probabili, sempre, indipendentemente da quanto sia sicuro o incerto. Questa rigidità è il suo limite: troppo restrittivo quando il modello è incerto (taglia opzioni valide), troppo permissivo quando è sicuro (lascia entrare token spazzatura).</p>
+        <p>La documentazione di Anthropic lo marca come <strong>parametro per soli usi avanzati</strong>: "di norma serve solo la temperature". Per la stragrande maggioranza dei progetti il top_k non va toccato.</p>
+      </div>
+    </div>
+
+    <!-- MAX TOKENS -->
+    <div class="pcard">
+      <div class="pcard-head">
+        <div class="pcard-accent" style="background:var(--gold)"></div>
+        <div class="pcard-titles">
+          <div class="pcard-name">max_tokens</div>
+          <div class="pcard-sub">il tetto massimo della risposta</div>
+        </div>
+        <div class="pcard-range">obbligatorio sull'API</div>
+      </div>
+      <div class="pcard-body">
+        <p>Non governa la casualità ma la <strong>lunghezza</strong>: è il numero massimo di token che il modello può generare in una singola risposta. Sull'API di Claude è un parametro <em>obbligatorio</em> — devi sempre dichiararlo. È un tetto, non un obiettivo: se il modello conclude prima, si ferma; se raggiunge il tetto mentre sta ancora scrivendo, la risposta viene <strong>troncata a metà</strong>, ed è uno degli errori più comuni e insidiosi per chi inizia.</p>
+        <p>Attenzione a non confonderlo con la finestra di contesto (sezione successiva): il max_tokens limita solo l'<em>output</em>, mentre la finestra comprende input e output insieme. I modelli recenti hanno alzato moltissimo questo tetto — fino a decine o centinaia di migliaia di token di output — ma resta una scelta da fare a ogni chiamata.</p>
+      </div>
+    </div>
+
+    <div class="insight">
+      <div class="insight-label">Cosa fa il chatbot al posto tuo</div>
+      <p>In Claude.ai non vedi nessuna di queste manopole. Il chatbot le imposta su valori bilanciati per la conversazione generale e gestisce automaticamente il troncamento e la continuazione delle risposte lunghe. Via API <strong>tutto questo diventa una tua responsabilità</strong>: è la prima, più concreta differenza tra "usare il modello" e "costruirci sopra".</p>
+    </div>
+  </div>
+</div>
+
+
+<!-- ═══════════════════════════ S3 — LUNGHEZZA & CONTESTO ═══════════════════════════ -->
+<div class="sect" id="s3">
+  <div class="sect-head">
+    <div class="sect-num">Sezione 03 · Lo spazio di lavoro</div>
+    <h2>La finestra di <em>contesto</em></h2>
+    <p>Il parametro che condiziona di più l'architettura di un agente non è di sampling: è la dimensione dello spazio entro cui il modello può "vedere". Tutto ciò che gli strati successivi aggiungono deve stare qui dentro.</p>
+  </div>
+  <div class="wrap">
+    <div class="prose">
+      <p>La <strong>finestra di contesto</strong> è la quantità massima di token che il modello può considerare in una volta sola. È la sua memoria di lavoro: tutto ciò che vuoi che il modello "veda" — il system prompt, la cronologia della conversazione, i documenti del RAG, le definizioni degli strumenti, e infine la tua domanda — deve entrare in questa finestra. È un budget, e ogni strato della cipolla ne consuma una fetta prima ancora che tu scriva.</p>
+
+      <p>Le dimensioni sono cresciute enormemente. Per dare un riferimento concreto al momento in cui scriviamo (metà 2026): i modelli Claude più recenti offrono finestre molto ampie, dell'ordine delle centinaia di migliaia fino a un milione di token, mentre le generazioni precedenti si fermavano a 200.000. Per intuire la scala: <strong>un milione di token equivale all'incirca a 750.000 parole</strong> — l'ordine di grandezza di diversi romanzi, o di un'intera codebase di medie dimensioni.</p>
+
+      <div class="insight v">
+        <div class="insight-label">Una sottigliezza importante: il "context rot"</div>
+        <p>Avere una finestra enorme non significa che il modello usi bene tutto ciò che vi sta dentro. È documentato che le prestazioni possono <strong>degradare man mano che la finestra si riempie</strong>: informazioni cruciali sepolte in mezzo a centinaia di migliaia di token possono essere "diluite". Questo fenomeno — a volte chiamato <em>context rot</em> — è una delle ragioni per cui la gestione attenta del contesto (Report 03) conta più della pura capienza. Riempire la finestra non è gratis, né in costo né in qualità.</p>
+      </div>
+
+      <p>C'è anche una dimensione economica che diventa centrale negli agenti. Ogni token nella finestra <strong>si paga</strong>, sia in input sia in output. Un agente che a ogni turno trascina una cronologia lunga, documenti RAG voluminosi e molte definizioni di strumenti può avere un costo per richiesta molto superiore a una semplice domanda secca — anche a parità di modello. La finestra di contesto è il luogo dove costo, qualità e capacità si incontrano: è il vincolo che condiziona quasi tutte le decisioni architetturali degli strati successivi.</p>
+    </div>
+
+    <div class="key-point">
+      <div class="kp-label">Il concetto da portare a casa</div>
+      <div class="kp-text">La finestra di contesto è il budget condiviso di tutti gli strati. Progettare un agente è, in larga parte, decidere come spendere bene questo budget.</div>
+      <div class="kp-sub">Quando nei prossimi report parleremo di memoria, RAG e strumenti, la domanda ricorrente sarà sempre la stessa: "quanto contesto costa questo strato, e ne vale la pena per il mio caso d'uso?"</div>
+    </div>
+  </div>
+</div>
+
+
+<!-- ═══════════════════════════ S4 — LA SVOLTA 2026 ═══════════════════════════ -->
+<div class="sect" id="s4">
+  <div class="sect-head">
+    <div class="sect-num">Sezione 04 · L'evoluzione in corso</div>
+    <h2>Quando le manopole <em>spariscono</em></h2>
+    <p>Una notizia che cambia il quadro: nei modelli di punta più recenti, i parametri di sampling classici stanno venendo deprecati. Capire perché aiuta a capire dove sta andando il nucleo.</p>
+  </div>
+  <div class="wrap">
+    <div class="prose">
+      <p>Fino a poco fa, regolare temperature e top_p era il pane quotidiano dello sviluppatore. Con i modelli "a ragionamento" più recenti, la situazione sta cambiando in modo sostanziale. I modelli di punta della famiglia Claude della generazione 4.7 e successive hanno <strong>deprecato i parametri di sampling</strong>: passare temperature, top_p o top_k a questi modelli può restituire un errore. La manopola non c'è più.</p>
+
+      <p>La ragione è architetturale e illuminante. Questi modelli integrano un <strong>modulo di "adaptive thinking"</strong>: gestiscono internamente quanto e come "ragionare", e gestiscono di conseguenza anche l'incertezza del campionamento. Secondo Anthropic, in base alle valutazioni interne, questo ragionamento adattivo supera in modo consistente la combinazione di ragionamento esteso più temperature impostata a mano. In altre parole: forzare i parametri di sampling dall'esterno <strong>interferirebbe con il percorso di ottimizzazione interno</strong> del modello, peggiorando il risultato anziché migliorarlo.</p>
+
+      <p>Al posto delle vecchie manopole emerge un nuovo tipo di controllo, di livello più alto: il <strong>"thinking effort"</strong> — quanto sforzo di ragionamento dedicare a una richiesta, tipicamente su livelli discreti (per esempio basso / medio / alto / massimo). Non controlli più <em>come pescare i token</em>, ma <em>quanto far ragionare il modello</em>. Ed è importante per i costi: i token di ragionamento si pagano come output, quindi il livello di sforzo diventa la principale leva di controllo della spesa negli agenti che fanno molte chiamate.</p>
+
+      <div class="insight">
+        <div class="insight-label">Perché questo conta per i tuoi agenti</div>
+        <p>Lo strato "parametri" non è statico: sta migrando da controlli a basso livello (come scegliere i token) verso controlli a più alto livello (quanto ragionare). Per i tuoi progetti significa due cose. Primo: <strong>non dare per scontato che temperature esista</strong> — dipende dal modello, e i più capaci la stanno abbandonando. Secondo: la leva di ottimizzazione del futuro prossimo non è la casualità, ma <strong>il bilanciamento tra sforzo di ragionamento, qualità e costo</strong>.</p>
+      </div>
+
+      <p>Va aggiunta una sfumatura sulla portata di questa transizione: non tutti i modelli sono allo stesso punto. I modelli più leggeri e le generazioni precedenti continuano a esporre i parametri classici, e moltissimi sistemi in produzione li usano ancora. Inoltre alcuni modelli a ragionamento adottano vie di mezzo — per esempio bloccano temperature e top_k ma consentono ancora un top_p entro un intervallo molto ristretto. La fotografia corretta non è "i parametri sono morti", ma "il nucleo sta acquisendo una propria autonomia di regolazione, e il controllo si sposta verso l'alto".</p>
+    </div>
+  </div>
+</div>
+
+
+<!-- ═══════════════════════════ S5 — TRADE-OFF ═══════════════════════════ -->
+<div class="sect" id="s5">
+  <div class="sect-head">
+    <div class="sect-num">Sezione 05 · Le scelte</div>
+    <h2>I <em>trade-off</em> del nucleo</h2>
+    <p>Non sono regole, ma decisioni con pro e contro che dipendono dal tuo caso d'uso. Distinte dalle best practice perché qui non c'è una risposta giusta universale: c'è una scelta da fare.</p>
+  </div>
+  <div class="wrap">
+
+    <div class="bp" style="border-color:var(--ink3);">
+      <div class="bp-head" style="background:var(--ink3);">Trade-off · da soppesare nel tuo contesto</div>
+      <div class="bp-body">
+        <div class="bp-single"><strong>Determinismo vs naturalezza.</strong> Temperature bassa ti dà output ripetibili e affidabili ma legnosi; temperature alta ti dà varietà e calore ma meno controllo. Un assistente fattuale e un compagno di brainstorming vogliono estremi opposti dello stesso parametro. Non esiste un valore "giusto" in assoluto, solo giusto per il compito.</div>
+        <div class="bp-single"><strong>Modello capace vs modello economico.</strong> Il modello più potente non è sempre la scelta giusta. Per classificazione, estrazione o smistamento, un modello più piccolo e veloce costa una frazione e basta. Riservare il modello di punta ai compiti che lo richiedono davvero è una delle leve di costo più efficaci in un agente.</div>
+        <div class="bp-single"><strong>Finestra ampia vs contesto curato.</strong> Una finestra enorme tenta a "buttarci dentro tutto". Ma più contesto significa più costo e, per via del context rot, talvolta meno qualità. Spesso un contesto piccolo e ben selezionato batte un contesto enorme e disordinato. La capienza è un'opzione, non un obbligo da saturare.</div>
+        <div class="bp-single"><strong>Sforzo di ragionamento vs latenza e costo.</strong> Sui modelli recenti, più "thinking effort" significa risposte migliori sui problemi difficili, ma anche più token, più attesa e più spesa. Usare il massimo sforzo per compiti banali è uno spreco; usare il minimo per problemi complessi produce risposte superficiali.</div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+
+<!-- ═══════════════════════════ S6 — BEST PRACTICE ═══════════════════════════ -->
+<div class="sect" id="s6">
+  <div class="sect-head">
+    <div class="sect-num">Sezione 06 · Cosa porto a casa</div>
+    <h2>Best practice <em>del nucleo</em></h2>
+    <p>Indicazioni azionabili per scegliere e configurare il modello nei tuoi agenti. Il formato fai-così / non-fare-così è lo stesso di tutta la serie.</p>
+  </div>
+  <div class="wrap">
+
+    <div class="bp">
+      <div class="bp-head">Best practice · modello e parametri</div>
+      <div class="bp-body">
+        <div class="bp-row">
+          <div class="bp-do">
+            <div class="bp-tag">Fai così</div>
+            <div class="bp-text">Parti dai <strong>default</strong> e cambia un parametro alla volta, osservando l'effetto. I default esistono perché sono buoni punti di partenza per la maggior parte dei casi.</div>
+          </div>
+          <div class="bp-dont">
+            <div class="bp-tag">Non fare così</div>
+            <div class="bp-text">Non copiare <em>temperature=0.7</em> da un tutorial e non toccarla mai più. È il "numero magico" che quasi tutti trascinano senza capire, ritrovandosi output sbagliati senza sapere quale manopola girare.</div>
+          </div>
+        </div>
+        <div class="bp-row">
+          <div class="bp-do">
+            <div class="bp-tag">Fai così</div>
+            <div class="bp-text">Regola <strong>o la temperature o il top_p</strong>, mai entrambi. Per il 95% dei casi basta la temperature: lascia top_p e top_k ai loro default.</div>
+          </div>
+          <div class="bp-dont">
+            <div class="bp-tag">Non fare così</div>
+            <div class="bp-text">Non muovere più parametri di sampling insieme "per sicurezza": le loro interazioni sono difficili da prevedere e renderai impossibile capire cosa ha causato cosa.</div>
+          </div>
+        </div>
+        <div class="bp-row">
+          <div class="bp-do">
+            <div class="bp-tag">Fai così</div>
+            <div class="bp-text">Abbassa la temperature (verso 0) per compiti <strong>fattuali, strutturati o di codice</strong>; alzala (verso 1) per compiti <strong>creativi o generativi</strong>. Adatta la manopola al compito.</div>
+          </div>
+          <div class="bp-dont">
+            <div class="bp-tag">Non fare così</div>
+            <div class="bp-text">Non aspettarti che <em>temperature 0</em> renda l'output perfettamente riproducibile: riduce la varianza, non la azzera. Non costruirci sopra logiche che richiedono identità bit-a-bit.</div>
+          </div>
+        </div>
+        <div class="bp-row">
+          <div class="bp-do">
+            <div class="bp-tag">Fai così</div>
+            <div class="bp-text">Imposta <strong>max_tokens</strong> con un margine sufficiente alla risposta attesa e gestisci esplicitamente il caso di troncamento (motivo di stop = limite raggiunto).</div>
+          </div>
+          <div class="bp-dont">
+            <div class="bp-tag">Non fare così</div>
+            <div class="bp-text">Non lasciare max_tokens troppo basso "per risparmiare": otterrai risposte tagliate a metà, l'errore silenzioso più frustrante per chi inizia con l'API.</div>
+          </div>
+        </div>
+        <div class="bp-row">
+          <div class="bp-do">
+            <div class="bp-tag">Fai così</div>
+            <div class="bp-text">Scegli il modello <strong>in base al compito</strong>: uno piccolo e veloce per smistamento ed estrazione, uno potente per ragionamento complesso. Spesso un agente usa più modelli insieme.</div>
+          </div>
+          <div class="bp-dont">
+            <div class="bp-tag">Non fare così</div>
+            <div class="bp-text">Non usare di default il modello più costoso per tutto. È lo spreco più comune: paghi capacità di ragionamento che la maggior parte dei tuoi compiti non richiede.</div>
+          </div>
+        </div>
+        <div class="bp-row">
+          <div class="bp-do">
+            <div class="bp-tag">Fai così</div>
+            <div class="bp-text">Verifica <strong>quali parametri supporta il modello scelto</strong> prima di scriverli nel codice: i modelli a ragionamento recenti possono rifiutare temperature e top_k.</div>
+          </div>
+          <div class="bp-dont">
+            <div class="bp-tag">Non fare così</div>
+            <div class="bp-text">Non dare per scontato che le manopole classiche esistano sempre: su un modello che le ha deprecate, passarle genera un errore 400 e blocca la chiamata.</div>
+          </div>
+        </div>
+        <div class="bp-row">
+          <div class="bp-do">
+            <div class="bp-tag">Fai così</div>
+            <div class="bp-text">Tratta la <strong>finestra di contesto come un budget</strong>: misura quanti token consuma ogni strato e tieni il contesto curato, non saturo.</div>
+          </div>
+          <div class="bp-dont">
+            <div class="bp-tag">Non fare così</div>
+            <div class="bp-text">Non riempire la finestra solo perché è grande: paghi più token e rischi il context rot, con informazioni cruciali diluite e ignorate dal modello.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="h3">Riepilogo dei parametri</div>
+    <table class="sum-table">
+      <thead>
+        <tr>
+          <th>Parametro</th>
+          <th>Cosa controlla</th>
+          <th>Quando toccarlo</th>
+          <th>Regola pratica</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td class="p-cell">temperature</td>
+          <td>Casualità della scelta del token</td>
+          <td>Spesso — è la manopola principale</td>
+          <td><strong>Bassa</strong> per fatti/codice, <strong>alta</strong> per creatività</td>
+        </tr>
+        <tr>
+          <td class="p-cell">top_p</td>
+          <td>Quanti candidati considerare (a soglia)</td>
+          <td>Raramente — in alternativa a temperature</td>
+          <td>Lascialo al default; non usarlo con temperature</td>
+        </tr>
+        <tr>
+          <td class="p-cell">top_k</td>
+          <td>Quanti candidati considerare (a numero)</td>
+          <td>Quasi mai — uso avanzato</td>
+          <td>Non toccarlo salvo necessità specifiche</td>
+        </tr>
+        <tr>
+          <td class="p-cell">max_tokens</td>
+          <td>Lunghezza massima dell'output</td>
+          <td>Sempre — obbligatorio sull'API</td>
+          <td>Margine ampio + gestione del troncamento</td>
+        </tr>
+        <tr>
+          <td class="p-cell">finestra contesto</td>
+          <td>Spazio totale visibile (input+output)</td>
+          <td>In fase di progettazione</td>
+          <td>Budget da spendere bene, non da saturare</td>
+        </tr>
+        <tr>
+          <td class="p-cell">thinking effort</td>
+          <td>Quanto ragiona (modelli recenti)</td>
+          <td>Sui modelli a ragionamento</td>
+          <td>Minimo necessario al compito, per il costo</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <div class="srcnote">
+      <b>Affidabilità di queste indicazioni</b>
+      I parametri, i loro intervalli e le raccomandazioni (regolare temperature <em>o</em> top_p; top_k per usi avanzati; deprecazione dei parametri di sampling sui modelli a ragionamento recenti) sono <strong>documentati pubblicamente</strong> da Anthropic e dalla letteratura tecnica. I valori numerici di finestre e output sono riferiti a metà 2026 e cambiano rapidamente: <strong>verifica sempre la documentazione del modello specifico</strong> prima di scrivere codice, perché questa è l'area della serie che evolve più in fretta.
+    </div>
+
+    <div class="key-point">
+      <div class="kp-label">Verso il Report 02</div>
+      <div class="kp-text">Configurato il nucleo, manca dargli un'identità. Il prossimo strato — il system prompt — è quello che trasforma un predittore di testo in "Claude".</div>
+      <div class="kp-sub">Vedremo cosa contiene davvero un system prompt, perché può occupare oltre il 10% della finestra di contesto, e come scriverne uno per i tuoi agenti senza renderlo ingestibile.</div>
+    </div>
+
+  </div>
+</div>
+
+
+<!-- FOOTER -->
+<div class="footer">
+  <span>Serie Agenti AI · Parte II — Report 01 · Il Nucleo: Modello e Parametri</span>
+  <span>Maggio 2026</span>
+</div>
+
+<script>
+function show(n) {
+  document.querySelectorAll('.sect').forEach(s => s.classList.remove('active'));
+  document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('s'+n).classList.add('active');
+  document.querySelectorAll('.nav-btn')[n].classList.add('active');
+  window.scrollTo({top:0, behavior:'smooth'});
+}
+</script>
+
+</body>
+</html>
